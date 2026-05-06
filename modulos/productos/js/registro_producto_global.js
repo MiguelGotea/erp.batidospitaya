@@ -310,17 +310,18 @@ async function toggleReceta() {
 
     // ── DESACTIVAR RECETA (Receta → Producto presentación) ───────────────
     } else {
-        // Si hay un producto existente CON receta, pedir confirmación
+        // El toggle YA está desactivado (lo acaba de desactivar el usuario).
+        // Solo lo reactivamos si el usuario cancela o hay error del servidor.
+
         const tieneRecetaCargada = componentesReceta.length > 0 ||
-                                   $('#nombreReceta').val().trim() !== '';
+                                   $('#nombreReceta').val().trim() !== '' ||
+                                   $('#tipoReceta').val() !== '';
 
         if (idProductoActual > 0 && tieneRecetaCargada) {
-            // Revertir el toggle mientras esperamos la confirmación
-            $('#tieneReceta').prop('checked', true);
-
+            // Pedir confirmación (el toggle ya está OFF, no lo tocamos)
             const result = await Swal.fire({
                 title: '¿Eliminar la receta?',
-                html: 'Se eliminarán <strong>todos los componentes</strong> de la receta vinculada a este producto.<br><br>Esta acción no se puede deshacer.',
+                html: 'Se eliminarán <strong>todos los datos de la receta</strong> vinculada a este producto (componentes y registro).<br><br>Esta acción no se puede deshacer.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
@@ -329,14 +330,12 @@ async function toggleReceta() {
             });
 
             if (!result.isConfirmed) {
-                // Usuario canceló → dejar toggle en ON y no hacer nada
+                // Usuario canceló → reactivar toggle y salir sin hacer nada
+                $('#tieneReceta').prop('checked', true);
                 return;
             }
 
-            // Confirmo → desactivar toggle definitivamente
-            $('#tieneReceta').prop('checked', false);
-
-            // Limpiar en BD
+            // Usuario confirmó → limpiar en BD
             try {
                 const res = await fetch('ajax/registro_producto_limpiar_modo.php', {
                     method: 'POST',
@@ -344,29 +343,33 @@ async function toggleReceta() {
                     body: JSON.stringify({ id: idProductoActual, modo: 'a_producto' })
                 });
                 const data = await res.json();
-                if (data.success) {
-                    const Toast = Swal.mixin({
-                        toast: true, position: 'top-end',
-                        showConfirmButton: false, timer: 2500, timerProgressBar: true
-                    });
-                    Toast.fire({
-                        icon: 'success',
-                        title: `Receta eliminada (${data.componentes_eliminados} componente(s) borrado(s))`
-                    });
-                } else {
+
+                if (!data.success) {
                     Swal.fire('Error', data.message, 'error');
-                    // Revertir si falló el servidor
+                    // Error del servidor → reactivar toggle
                     $('#tieneReceta').prop('checked', true);
                     return;
                 }
+
+                const Toast = Swal.mixin({
+                    toast: true, position: 'top-end',
+                    showConfirmButton: false, timer: 2500, timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: `Receta eliminada (${data.componentes_eliminados} componente(s) borrado(s))`
+                });
+
             } catch (err) {
                 console.error('Error limpiando modo producto:', err);
                 Swal.fire('Error', 'No se pudo limpiar la receta en el servidor', 'error');
+                // Error de red → reactivar toggle
                 $('#tieneReceta').prop('checked', true);
                 return;
             }
+
         } else if (idProductoActual > 0) {
-            // Producto existente SIN receta cargada → limpiar igual por seguridad
+            // Sin datos de receta cargados → limpiar silenciosamente por seguridad
             try {
                 await fetch('ajax/registro_producto_limpiar_modo.php', {
                     method: 'POST',
@@ -378,13 +381,12 @@ async function toggleReceta() {
             }
         }
 
-        // Limpiar UI de receta
+        // ── Limpiar UI de receta (siempre al llegar aquí) ──────────────
         $('#datosReceta').slideUp();
         $('#tipoReceta').removeAttr('required');
         $('#contenedorCamposMaestros').show();
         $('#productoMaestro, #unidad, #cantidad').attr('required', true);
 
-        // Limpiar arreglo de componentes y UI de receta
         componentesReceta = [];
         renderizarComponentes();
         actualizarBadges();

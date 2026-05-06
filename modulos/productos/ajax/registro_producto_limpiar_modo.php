@@ -59,16 +59,15 @@ try {
     } else {
         // -------------------------------------------------------
         // RECETA → PRODUCTO PRESENTACIÓN
-        // 1. Obtener id_receta_producto vinculado al producto
-        // 2. Eliminar todos los componentes_receta_producto de esa receta
-        // 3. Limpiar Id_receta_producto = NULL en producto_presentacion
-        // (La receta global en receta_producto_global se deja intacta para
-        //  poder recuperarla si el usuario vuelve a activar; se limpiará
-        //  definitivamente al guardar sin receta)
+        // Cascada de eliminación:
+        //   1. Obtener id de la receta vinculada
+        //   2. DELETE componentes_receta_producto  (hijos)
+        //   3. DELETE receta_producto_global       (padre)
+        //   4. UPDATE producto_presentacion        (limpiar FK)
         // -------------------------------------------------------
         $idReceta = $producto['Id_receta_producto'];
 
-        // Buscar también por id_presentacion_producto como respaldo
+        // Respaldo: buscar por id_presentacion_producto si el FK no está puesto
         if (!$idReceta) {
             $stmtBuscar = $conn->prepare(
                 "SELECT id FROM receta_producto_global WHERE id_presentacion_producto = :id LIMIT 1"
@@ -80,15 +79,21 @@ try {
         $componentesEliminados = 0;
 
         if ($idReceta) {
-            // Eliminar componentes vinculados a esa receta
+            // 1. Eliminar componentes (hijos)
             $stmtDelComp = $conn->prepare(
                 "DELETE FROM componentes_receta_producto WHERE id_receta_producto_global = :id_receta"
             );
             $stmtDelComp->execute([':id_receta' => $idReceta]);
             $componentesEliminados = $stmtDelComp->rowCount();
+
+            // 2. Eliminar la receta global (padre)
+            $stmtDelReceta = $conn->prepare(
+                "DELETE FROM receta_producto_global WHERE id = :id_receta"
+            );
+            $stmtDelReceta->execute([':id_receta' => $idReceta]);
         }
 
-        // Limpiar el vínculo de receta en el producto
+        // 3. Limpiar FK en el producto presentación
         $stmtLimpiar = $conn->prepare(
             "UPDATE producto_presentacion SET
                 Id_receta_producto = NULL,
@@ -102,7 +107,7 @@ try {
             'success'                => true,
             'message'                => 'Receta y componentes eliminados del producto',
             'modo'                   => $modo,
-            'id_receta_limpiada'     => $idReceta,
+            'id_receta_eliminada'    => $idReceta,
             'componentes_eliminados' => $componentesEliminados
         ]);
     }
