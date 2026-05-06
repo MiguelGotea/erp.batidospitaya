@@ -16,35 +16,37 @@ const operarioInput = document.getElementById('operario');
 const operarioIdInput = document.getElementById('operario_id');
 const sugerenciasDiv = document.getElementById('operarios-sugerencias');
 
-operarioInput.addEventListener('input', function () {
-    const texto = this.value.trim();
-    if (texto === '') {
-        operarioIdInput.value = '0';
-        sugerenciasDiv.style.display = 'none';
-        return;
-    }
-    const resultados = buscarOperarios(texto);
-    sugerenciasDiv.innerHTML = '';
-    if (resultados.length > 0) {
-        resultados.forEach(op => {
-            const div = document.createElement('div');
-            div.textContent = op.nombre;
-            div.style.padding = '8px';
-            div.style.cursor = 'pointer';
-            div.addEventListener('click', function () {
-                operarioInput.value = op.nombre;
-                operarioIdInput.value = op.id;
-                sugerenciasDiv.style.display = 'none';
+if (operarioInput) {
+    operarioInput.addEventListener('input', function () {
+        const texto = this.value.trim();
+        if (texto === '') {
+            operarioIdInput.value = '0';
+            sugerenciasDiv.style.display = 'none';
+            return;
+        }
+        const resultados = buscarOperarios(texto);
+        sugerenciasDiv.innerHTML = '';
+        if (resultados.length > 0) {
+            resultados.forEach(op => {
+                const div = document.createElement('div');
+                div.textContent = op.nombre;
+                div.style.padding = '8px';
+                div.style.cursor = 'pointer';
+                div.addEventListener('click', function () {
+                    operarioInput.value = op.nombre;
+                    operarioIdInput.value = op.id;
+                    sugerenciasDiv.style.display = 'none';
+                });
+                div.addEventListener('mouseover', function () { this.style.backgroundColor = '#f5f5f5'; });
+                div.addEventListener('mouseout', function () { this.style.backgroundColor = 'white'; });
+                sugerenciasDiv.appendChild(div);
             });
-            div.addEventListener('mouseover', function () { this.style.backgroundColor = '#f5f5f5'; });
-            div.addEventListener('mouseout', function () { this.style.backgroundColor = 'white'; });
-            sugerenciasDiv.appendChild(div);
-        });
-        sugerenciasDiv.style.display = 'block';
-    } else {
-        sugerenciasDiv.style.display = 'none';
-    }
-});
+            sugerenciasDiv.style.display = 'block';
+        } else {
+            sugerenciasDiv.style.display = 'none';
+        }
+    });
+}
 
 document.addEventListener('click', function (e) {
     if (e.target !== operarioInput) {
@@ -52,18 +54,20 @@ document.addEventListener('click', function (e) {
     }
 });
 
-operarioInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        const texto = this.value.trim();
-        const resultados = buscarOperarios(texto);
-        if (resultados.length > 0) {
-            this.value = resultados[0].nombre;
-            operarioIdInput.value = resultados[0].id;
+if (operarioInput) {
+    operarioInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const texto = this.value.trim();
+            const resultados = buscarOperarios(texto);
+            if (resultados.length > 0) {
+                this.value = resultados[0].nombre;
+                operarioIdInput.value = resultados[0].id;
+            }
+            sugerenciasDiv.style.display = 'none';
         }
-        sugerenciasDiv.style.display = 'none';
-    }
-});
+    });
+}
 
 // =============================================
 // FILTROS
@@ -265,72 +269,96 @@ function cerrarModal() {
 // EVENTOS: botones, sucursal, fecha, submit
 // =============================================
 
-document.getElementById('nueva_operario').addEventListener('change', function () {
-    var btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
-    btnConsultar.disabled = !this.value || !document.getElementById('nueva_fecha').value;
-});
+var _elNuevaOperario   = document.getElementById('nueva_operario');
+var _elNuevaFecha      = document.getElementById('nueva_fecha');
+var _elNuevaSucursal   = document.getElementById('nueva_sucursal');
+var _elBtnConsultarNew = document.getElementById('btnConsultarMarcacionesNueva');
+var _elBtnConsultarEdt = document.getElementById('btnConsultarMarcacionesEditar');
+var _elFormNueva       = document.getElementById('formNuevaTardanza');
 
-document.getElementById('nueva_fecha').addEventListener('change', function () {
-    var btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
-    btnConsultar.disabled = !this.value || !document.getElementById('nueva_operario').value;
-    var sucursalSelect = document.getElementById('nueva_sucursal');
-    if (sucursalSelect.value && this.value) {
-        cargarOperariosSucursal(sucursalSelect.value, this.value);
-    }
-});
+if (_elNuevaOperario) {
+    _elNuevaOperario.addEventListener('change', function () {
+        var btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
+        if (btnConsultar) {
+            btnConsultar.disabled = !this.value || !document.getElementById('nueva_fecha').value;
+        }
+    });
+}
 
-document.getElementById('btnConsultarMarcacionesNueva').addEventListener('click', function () {
-    var codOperario = document.getElementById('nueva_operario').value;
-    var fecha = document.getElementById('nueva_fecha').value;
-    var nombre = document.getElementById('nueva_operario').options[document.getElementById('nueva_operario').selectedIndex].text;
-    var sucursal = document.getElementById('nueva_sucursal').options[document.getElementById('nueva_sucursal').selectedIndex].text;
-    if (!codOperario || !fecha) {
-        alert('Seleccione un colaborador y una fecha para consultar las marcaciones');
-        return;
-    }
-    mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, 0);
-});
+if (_elNuevaFecha) {
+    _elNuevaFecha.addEventListener('change', function () {
+        var btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
+        if (btnConsultar) {
+            btnConsultar.disabled = !this.value || !document.getElementById('nueva_operario').value;
+        }
+        var sucursalSelect = document.getElementById('nueva_sucursal');
+        if (sucursalSelect && sucursalSelect.value && this.value) {
+            cargarOperariosSucursal(sucursalSelect.value, this.value);
+        }
+    });
+}
 
-document.getElementById('btnConsultarMarcacionesEditar').addEventListener('click', function () {
-    var nombre = document.getElementById('editar_nombre').textContent;
-    var sucursal = document.getElementById('editar_sucursal').textContent;
-    var fecha = document.getElementById('editar_fecha').textContent;
-    var minutos = parseInt(document.getElementById('editar_minutos').textContent);
-    var codOperario = document.getElementById('editar_cod_operario').value;
-    mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, minutos);
-});
+if (_elBtnConsultarNew) {
+    _elBtnConsultarNew.addEventListener('click', function () {
+        var codOperario = document.getElementById('nueva_operario').value;
+        var fecha = document.getElementById('nueva_fecha').value;
+        var nombre = document.getElementById('nueva_operario').options[document.getElementById('nueva_operario').selectedIndex].text;
+        var sucursal = document.getElementById('nueva_sucursal').options[document.getElementById('nueva_sucursal').selectedIndex].text;
+        if (!codOperario || !fecha) {
+            alert('Seleccione un colaborador y una fecha para consultar las marcaciones');
+            return;
+        }
+        mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, 0);
+    });
+}
 
-document.getElementById('nueva_sucursal').addEventListener('change', function () {
-    var fechaInput = document.getElementById('nueva_fecha');
-    if (fechaInput.value) {
-        cargarOperariosSucursal(this.value, fechaInput.value);
-    } else {
-        document.getElementById('nueva_operario').innerHTML = '<option value="">Primero seleccione una fecha</option>';
-    }
-});
+if (_elBtnConsultarEdt) {
+    _elBtnConsultarEdt.addEventListener('click', function () {
+        var nombre = document.getElementById('editar_nombre').textContent;
+        var sucursal = document.getElementById('editar_sucursal').textContent;
+        var fecha = document.getElementById('editar_fecha').textContent;
+        var minutos = parseInt(document.getElementById('editar_minutos').textContent);
+        var codOperario = document.getElementById('editar_cod_operario').value;
+        mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, minutos);
+    });
+}
 
-document.getElementById('formNuevaTardanza').addEventListener('submit', function (e) {
-    var fotoInput = document.getElementById('nueva_foto');
-    if (!fotoInput.files || fotoInput.files.length === 0) {
-        alert('Debe seleccionar una foto como evidencia');
-        e.preventDefault();
-        return false;
-    }
-    var file = fotoInput.files[0];
-    if (!file.type.match('image.*')) {
-        alert('El archivo debe ser una imagen');
-        e.preventDefault();
-        return false;
-    }
-    var selectOperario = document.getElementById('nueva_operario');
-    var optionSeleccionada = selectOperario.options[selectOperario.selectedIndex];
-    if (optionSeleccionada && optionSeleccionada.dataset.sinContrato === 'true') {
-        e.preventDefault();
-        alert('Este colaborador no tiene registro de contrato. Por favor contactar con el área de RH antes de registrar una tardanza.');
-        return false;
-    }
-    return true;
-});
+if (_elNuevaSucursal) {
+    _elNuevaSucursal.addEventListener('change', function () {
+        var fechaInput = document.getElementById('nueva_fecha');
+        if (fechaInput && fechaInput.value) {
+            cargarOperariosSucursal(this.value, fechaInput.value);
+        } else {
+            var selectOp = document.getElementById('nueva_operario');
+            if (selectOp) selectOp.innerHTML = '<option value="">Primero seleccione una fecha</option>';
+        }
+    });
+}
+
+if (_elFormNueva) {
+    _elFormNueva.addEventListener('submit', function (e) {
+        var fotoInput = document.getElementById('nueva_foto');
+        if (!fotoInput.files || fotoInput.files.length === 0) {
+            alert('Debe seleccionar una foto como evidencia');
+            e.preventDefault();
+            return false;
+        }
+        var file = fotoInput.files[0];
+        if (!file.type.match('image.*')) {
+            alert('El archivo debe ser una imagen');
+            e.preventDefault();
+            return false;
+        }
+        var selectOperario = document.getElementById('nueva_operario');
+        var optionSeleccionada = selectOperario.options[selectOperario.selectedIndex];
+        if (optionSeleccionada && optionSeleccionada.dataset.sinContrato === 'true') {
+            e.preventDefault();
+            alert('Este colaborador no tiene registro de contrato. Por favor contactar con el área de RH antes de registrar una tardanza.');
+            return false;
+        }
+        return true;
+    });
+}
 
 // =============================================
 // MODAL CONSULTAR MARCACIONES
