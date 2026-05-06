@@ -3,9 +3,10 @@
    AJAX: Stock Mín y Stock Máx Final para un producto
    modulos/productos/ajax/balance_inventario_get_stock_minmax.php
 
-   Calcula stock_minimo y stock_max_final usando la misma lógica
-   que pedido_sugerido_calcular.php pero para un solo id_pp y
-   usando siempre las 5 semanas completas más recientes.
+   Calcula stock_minimo y stock_max_final en UNIDADES DE CONTROL
+   (las mismas que usa la gráfica del kardex — NO se convierte a
+   unidades de despacho/paquete como hace pedido_sugerido).
+   Usa siempre las 5 semanas completas más recientes.
 
    Params POST:
      id_pp        int   — id de producto_presentacion
@@ -329,73 +330,22 @@ try {
     $sMin      = $diaC * $dSM;
     $sMax      = $diaC * ($dC + $dD + $dSM);
 
-    /* Factor congelados (cat B) */
+    /* Factor congelados (cat B) — se aplica igual que en pedido_sugerido */
     $sMaxFinal = $sMax;
     if ($cat === 'B' && $capC !== null && $sMax > 0) {
-        /* Calcular suma de stock_maximo de todos los B para esta sucursal
-           (aproximación: usamos solo el producto actual para el factor) */
-        $facC = min(1.0, $capC / $sMax);
+        $facC      = min(1.0, $capC / $sMax);
         $sMaxFinal = $sMax * $facC;
     }
 
-    /* Factor de despacho para convertir a unidades de despacho */
-    $df = 1.0;
-    $despNombre = null;
-    /* Paso B: receta-paquete cuyo único componente es este id_pp */
-    $stmtDB = $conn->prepare("
-        SELECT crp.cantidad AS d_receta_cant, ppd.Nombre AS d_nombre
-        FROM producto_presentacion ppd
-        INNER JOIN componentes_receta_producto crp
-               ON crp.id_receta_producto_global = ppd.Id_receta_producto
-        WHERE ppd.presentacion_despacho = 1 AND ppd.Activo = 'SI'
-          AND crp.id_presentacion_producto = ?
-          AND (SELECT COUNT(DISTINCT crp2.id_presentacion_producto)
-               FROM componentes_receta_producto crp2
-               WHERE crp2.id_receta_producto_global = ppd.Id_receta_producto) = 1
-        ORDER BY ppd.id ASC LIMIT 1
-    ");
-    $stmtDB->execute([$idPP]);
-    $dfRow = $stmtDB->fetch(PDO::FETCH_ASSOC);
-    if ($dfRow && $dfRow['d_receta_cant'] > 0) {
-        $df = (float)$dfRow['d_receta_cant'];
-        $despNombre = $dfRow['d_nombre'];
-    } elseif ($idM) {
-        /* Paso A: presentación de despacho del mismo maestro */
-        $stmtDA = $conn->prepare("
-            SELECT ppd.cantidad AS d_cant, ppd.id_unidad_producto AS d_uid,
-                   pp.cantidad AS pp_cant_base, pp.id_unidad_producto AS pp_uid,
-                   ppd.Nombre AS d_nombre
-            FROM producto_presentacion pp
-            INNER JOIN producto_presentacion ppd
-                   ON ppd.id_producto_maestro = pp.id_producto_maestro
-                  AND ppd.presentacion_despacho = 1 AND ppd.Activo = 'SI'
-            WHERE pp.id = ? AND pp.Activo = 'SI'
-            ORDER BY ppd.id ASC LIMIT 1
-        ");
-        $stmtDA->execute([$idPP]);
-        $daRow = $stmtDA->fetch(PDO::FETCH_ASSOC);
-        if ($daRow) {
-            $uidPP = (int)$daRow['pp_uid'];
-            $uidD  = (int)$daRow['d_uid'];
-            if ($uidPP === $uidD) {
-                $df = (float)$daRow['d_cant'] / max((float)$daRow['pp_cant_base'], 0.001);
-            } else {
-                $facConv = resolverFactorConv_SMM($uidPP, $uidD, $convIndex);
-                if ($facConv !== null && $facConv != 0)
-                    $df = (float)$daRow['d_cant'] / (max((float)$daRow['pp_cant_base'], 0.001) * $facConv);
-            }
-            $despNombre = $daRow['d_nombre'];
-        }
-    }
-
-    $stockMinDesp    = $df > 0 ? round($sMin    / $df, 4) : round($sMin, 4);
-    $stockMaxFinDesp = $df > 0 ? round($sMaxFinal / $df, 4) : round($sMaxFinal, 4);
-
+    /* ─────────────────────────────────────────────────────────────────────
+       IMPORTANTE: devolvemos los valores en UNIDADES DE CONTROL (misma
+       escala que la gráfica del kardex). NO dividimos por el factor de
+       despacho porque el kardex trabaja en unidades base, no en paquetes.
+       ───────────────────────────────────────────────────────────────────── */
     echo json_encode([
         'ok'              => true,
-        'stock_minimo'    => $stockMinDesp,
-        'stock_max_final' => $stockMaxFinDesp,
-        'despacho_nombre' => $despNombre,
+        'stock_minimo'    => round($sMin,      2),
+        'stock_max_final' => round($sMaxFinal, 2),
         'cons_diario'     => round($diaC, 6),
         'sem_desde'       => $numDesde,
         'sem_hasta'       => $numHasta,
