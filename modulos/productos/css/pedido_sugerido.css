@@ -195,9 +195,7 @@ html { overflow-y: scroll; }
 
 /* ── Sticky header ──────────────────────────────────── */
 #tablaWrapper {
-    max-height: calc(100vh - 280px);
-    overflow-y: auto;
-    overflow-x: auto;
+    overflow: visible;
 }
 
 .ps-tabla thead th {

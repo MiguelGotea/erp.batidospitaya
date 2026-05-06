@@ -191,7 +191,7 @@ try {
                                         style="max-width:200px">
                                 </div>
                             </div>
-                            <div class="table-responsive" id="tablaWrapper">
+                            <div id="tablaWrapper">
                                 <table class="table table-hover ps-tabla mb-0" id="tablaProductos">
                                     <thead>
                                         <tr>
