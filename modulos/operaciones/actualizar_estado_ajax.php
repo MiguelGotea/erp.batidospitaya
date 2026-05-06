@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Verificar permisos
-if (!verificarAccesoCargo([11, 16, 13, 28, 39, 30, 37]) && !$esAdmin) {
+if (!verificarAccesoCargo([11, 16, 13, 28, 39, 30, 37, 49]) && !$esAdmin) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para realizar esta acción']);
     exit;
 }
@@ -20,16 +20,16 @@ try {
     $id = $_POST['id'] ?? null;
     $estado = $_POST['estado'] ?? null;
     $observaciones = $_POST['observaciones'] ?? '';
-    
+
     if (!$id || !$estado) {
         throw new Exception('Datos incompletos');
     }
-    
+
     // Validar estado
     if (!in_array($estado, ['Justificado', 'No Válido'])) {
         throw new Exception('Estado no válido');
     }
-    
+
     // Actualizar en la base de datos
     $sql = "UPDATE TardanzasManuales 
             SET estado = ?, 
@@ -37,15 +37,15 @@ try {
                 actualizado_por = ?,
                 fecha_actualizacion = NOW()
             WHERE id = ?";
-    
+
     $stmt = $conn->prepare($sql);
     $resultado = $stmt->execute([
-        $estado, 
+        $estado,
         $observaciones,
         $_SESSION['usuario_id'],
         $id
     ]);
-    
+
     if ($resultado) {
         // Registrar en log
         registrarLogSistema(
@@ -57,26 +57,27 @@ try {
                 'usuario_id' => $_SESSION['usuario_id']
             ]
         );
-        
+
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Estado actualizado correctamente',
             'estado' => $estado
         ]);
     } else {
         throw new Exception('Error al actualizar el estado');
     }
-    
+
 } catch (Exception $e) {
     echo json_encode([
-        'success' => false, 
+        'success' => false,
         'message' => $e->getMessage()
     ]);
 }
 
-function registrarLogSistema($tipo, $mensaje, $datos = []) {
+function registrarLogSistema($tipo, $mensaje, $datos = [])
+{
     global $conn;
-    
+
     try {
         $sql = "INSERT INTO logs_sistema (tipo, mensaje, datos, fecha) VALUES (?, ?, ?, NOW())";
         $stmt = $conn->prepare($sql);
