@@ -7,6 +7,7 @@ require_once '../../core/auth/auth.php';
 require_once '../../core/helpers/funciones.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 // Verificar conexión
 if (!$conn) {
@@ -20,20 +21,25 @@ $sucursales = [];
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
 
-
-if (!verificarAccesoCargo([5, 46, 43, 16, 8, 13, 28, 39, 30, 37, 49])) {
+// Verificar acceso a la herramienta
+if (!tienePermiso('tardanzas_manual', 'vista', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-$cargoOperario = $usuario['CodNivelesCargos'];
 
-// Definir qué cargos ven la vista completa
-$cargosVistaCompleta = [13, 28, 39, 30, 37, 5, 43, 46, 49];
-$verVistaCompleta = verificarAccesoCargo($cargosVistaCompleta);
+// Permisos via sistema de permisos
+$verVistaCompleta  = tienePermiso('tardanzas_manual', 'vista_completa',  $cargoOperario);
+$puedeNuevoRegistro = tienePermiso('tardanzas_manual', 'nuevo_registro', $cargoOperario);
+$puedeExportar      = tienePermiso('tardanzas_manual', 'exportar',        $cargoOperario);
+
+// Variables legacy para compatibilidad con funciones internas
+$esLider       = $puedeNuevoRegistro;
+$esOperaciones = $verVistaCompleta;
 
 // Agrega al inicio del archivo (antes de cualquier output)
 ini_set('memory_limit', '512M');
@@ -276,8 +282,7 @@ function obtenerConteoTardanzasPorOperario($codSucursal, $fechaDesde, $fechaHast
     return $conteo;
 }
 
-$esLider = verificarAccesoCargo([5, 43, 46]);
-$esOperaciones = verificarAccesoCargo([11, 8, 28, 39, 30, 37, 13, 49]);
+// $esLider y $esOperaciones ya definidos arriba via tienePermiso
 $esSucursales = verificarAccesoCargo([27]);
 
 // Handler AJAX para obtener operarios → movido a ajax/tardanzas_manual_obtener_operarios.php
@@ -2099,7 +2104,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
 
             <div class="filters-container">
                 <div class="filters-form">
-                    <?php if (!verificarAccesoCargo([5, 43, 2, 46])): ?>
+                    <?php if (!$verVistaCompleta): ?>
                         <div class="filter-group">
                             <label for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
@@ -2167,14 +2172,14 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                     </div>
 
                     <div class="action-buttons">
-                        <?php if ($esLider): ?>
+                        <?php if ($puedeNuevoRegistro): ?>
                             <button type="button" onclick="mostrarModalNuevaTardanza()" class="btn btn-success">
                                 <i class="fas fa-plus"></i> Nuevo
                             </button>
                         <?php endif; ?>
                     </div>
 
-                    <?php if (verificarAccesoCargo([8, 16])): ?>
+                    <?php if ($puedeExportar): ?>
                         <div class="action-buttons">
                             <a style="display:none;" href="tardanzas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
