@@ -58,8 +58,8 @@ $horariosInfo = obtenerInformacionHorariosTardanza(
         <?php endif; ?>
     </td>
     
-    <?php if ($esAdmin || verificarAccesoCargo([11, 13, 16, 28, 39, 30, 37])): ?>
-        <td style="text-align: center;">
+    <td style="text-align: center;">
+        <?php if ($esAdmin || verificarAccesoCargo([11, 13, 16, 28, 39, 30, 37])): ?>
             <div class="action-buttons-inline" id="actions-<?= $tardanza['id'] ?>">
                 <?php if ($tardanza['estado'] === 'Pendiente'): ?>
                     <button type="button" class="btn-action btn-approve" onclick="actualizarEstado(<?= $tardanza['id'] ?>, 'Justificado')" title="Aprobar">
@@ -89,6 +89,6 @@ $horariosInfo = obtenerInformacionHorariosTardanza(
                     <i class="fas fa-ban"></i>
                 </button>
             </div>
-        </td>
-    <?php endif; ?>
+        <?php endif; ?>
+    </td>
 </tr>
