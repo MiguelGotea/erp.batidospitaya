@@ -179,9 +179,12 @@ try {
                 $diccionarioMap = [];
                 if (!empty($codCotBuscar)) {
                     $phC = implode(',', array_fill(0, count($codCotBuscar), '?'));
+                    
+                    // Paso A: resolución directa
                     $stmtD = $conn->prepare("
                         SELECT d.CodCotizacion, pp.id, pp.cantidad as pp_cant, pp.Id_receta_producto,
                                pp.id_producto_maestro as id_m, pp.Nombre as n, pp.categoria_insumo as cat,
+                               pp.presentacion_basica_inventario,
                                u.id as uid, u.abreviado as uab
                         FROM diccionario_productos_legado d
                         INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
@@ -190,6 +193,50 @@ try {
                     ");
                     $stmtD->execute(array_values($codCotBuscar));
                     foreach ($stmtD->fetchAll() as $row) $diccionarioMap[(string)$row['CodCotizacion']] = $row;
+
+                    // Paso B: rastreo por maestro de la presentación mapeada (para redirigir a la básica)
+                    $sinResolverB = array_values(array_filter($codCotBuscar, fn($c) => !isset($diccionarioMap[(string)$c])));
+                    if (!empty($sinResolverB)) {
+                        $phB = implode(',', array_fill(0, count($sinResolverB), '?'));
+                        $stmtB = $conn->prepare("
+                            SELECT d.CodCotizacion, pp_base.id, pp_base.cantidad as pp_cant, pp_base.Id_receta_producto,
+                                   pp_base.id_producto_maestro as id_m, pp_base.Nombre as n, pp_base.categoria_insumo as cat,
+                                   pp_base.presentacion_basica_inventario,
+                                   u_base.id as uid, u_base.abreviado as uab
+                            FROM diccionario_productos_legado d
+                            INNER JOIN producto_presentacion pp_orig ON pp_orig.id = d.id_producto_presentacion
+                            INNER JOIN producto_presentacion pp_base ON pp_base.id_producto_maestro = pp_orig.id_producto_maestro
+                                   AND pp_base.presentacion_basica_inventario = 1 AND pp_base.Activo = 'SI' AND pp_base.Id_receta_producto IS NULL
+                            LEFT JOIN unidad_producto u_base ON u_base.id = pp_base.id_unidad_producto
+                            WHERE d.CodCotizacion IN ($phB) AND pp_orig.Activo = 'SI' AND pp_orig.id_producto_maestro IS NOT NULL
+                            GROUP BY d.CodCotizacion
+                        ");
+                        $stmtB->execute(array_values($sinResolverB));
+                        foreach ($stmtB->fetchAll() as $row) $diccionarioMap[(string)$row['CodCotizacion']] = $row;
+                    }
+
+                    // Paso C: fallback vía CodIngrediente -> todas sus cotizaciones -> maestro -> básica
+                    $sinResolverC = array_values(array_filter($codCotBuscar, fn($c) => !isset($diccionarioMap[(string)$c])));
+                    if (!empty($sinResolverC)) {
+                        $phC2 = implode(',', array_fill(0, count($sinResolverC), '?'));
+                        $stmtPC = $conn->prepare("
+                            SELECT c_src.CodCotizacion, pp_base.id, pp_base.cantidad as pp_cant, pp_base.Id_receta_producto,
+                                   pp_base.id_producto_maestro as id_m, pp_base.Nombre as n, pp_base.categoria_insumo as cat,
+                                   pp_base.presentacion_basica_inventario,
+                                   u_base.id as uid, u_base.abreviado as uab
+                            FROM Cotizaciones c_src
+                            INNER JOIN Cotizaciones c_all ON c_all.CodIngrediente = c_src.CodIngrediente
+                            INNER JOIN diccionario_productos_legado d2 ON d2.CodCotizacion = c_all.CodCotizacion
+                            INNER JOIN producto_presentacion pp_any ON pp_any.id = d2.id_producto_presentacion AND pp_any.Activo = 'SI' AND pp_any.id_producto_maestro IS NOT NULL
+                            INNER JOIN producto_presentacion pp_base ON pp_base.id_producto_maestro = pp_any.id_producto_maestro
+                                   AND pp_base.presentacion_basica_inventario = 1 AND pp_base.Activo = 'SI' AND pp_base.Id_receta_producto IS NULL
+                            LEFT JOIN unidad_producto u_base ON u_base.id = pp_base.id_unidad_producto
+                            WHERE c_src.CodCotizacion IN ($phC2)
+                            GROUP BY c_src.CodCotizacion
+                        ");
+                        $stmtPC->execute(array_values($sinResolverC));
+                        foreach ($stmtPC->fetchAll() as $row) $diccionarioMap[(string)$row['CodCotizacion']] = $row;
+                    }
                 }
 
                 // Unidades y conversiones
@@ -214,7 +261,7 @@ try {
                 $idMs = array_unique(array_filter(array_column($diccionarioMap, 'id_m')));
                 if (!empty($idMs)) {
                     $phM = implode(',', array_fill(0, count($idMs), '?'));
-                    $stmtPP = $conn->prepare("SELECT id, id_producto_maestro, cantidad, id_unidad_producto FROM producto_presentacion WHERE id_producto_maestro IN ($phM) AND Id_receta_producto IS NULL AND Activo='SI'");
+                    $stmtPP = $conn->prepare("SELECT id, id_producto_maestro, cantidad, id_unidad_producto FROM producto_presentacion WHERE id_producto_maestro IN ($phM) AND Id_receta_producto IS NULL AND Activo='SI' AND presentacion_basica_inventario = 1");
                     $stmtPP->execute(array_values($idMs));
                     foreach ($stmtPP->fetchAll() as $pp) {
                         $presentPorMaestro[(int)$pp['id_producto_maestro']][(int)$pp['id_unidad_producto']] = $pp;
@@ -240,6 +287,22 @@ try {
                     // Nivel 3: Cotizaciones p3
                     if (!$m && isset($cotMap[$ci]['p3']) && isset($diccionarioMap[(string)$cotMap[$ci]['p3']])) $m = $diccionarioMap[(string)$cotMap[$ci]['p3']];
                     if (!$m) continue;
+
+                    // Redirección a presentación básica si el mapeo resolvió a otra presentación del mismo maestro
+                    if (empty($m['Id_receta_producto']) && ($m['presentacion_basica_inventario'] ?? 1) != 1 && !empty($m['id_m'])) {
+                        $basicasMaestro = $presentPorMaestro[(int)$m['id_m']] ?? [];
+                        if (!empty($basicasMaestro)) {
+                            $ppBasica = reset($basicasMaestro);
+                            $uidBasica = (int)$ppBasica['id_unidad_producto'];
+                            $m = array_merge($m, [
+                                'id' => $ppBasica['id'],
+                                'pp_cant' => $ppBasica['cantidad'],
+                                'uid' => $uidBasica,
+                                'uab' => $unidadPorId[$uidBasica]['abreviado'] ?? $m['uab'],
+                                'presentacion_basica_inventario' => 1
+                            ]);
+                        }
+                    }
 
                     $idPP = (int)$m['id'];
                     $ppC  = max((float)$m['pp_cant'], 0.001);
