@@ -253,7 +253,22 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             <span class="dc-insumo-panel-hint">— selecciona para ver KPIs, tendencia y métricas</span>
                         </div>
                         <div class="dc-insumo-sel-wrap">
-                            <select class="form-select form-select-sm dc-select dc-insumo-sel-main" id="chartInsumoSel">
+                            <div class="dc-suc-trigger" id="dcInsumoTrigger">
+                                <div class="dc-suc-trigger-inner">
+                                    <input type="text" class="dc-suc-search w-100" id="dcInsumoSearch" 
+                                        placeholder="— Selecciona un insumo —" autocomplete="off" 
+                                        style="background:transparent; border:none; outline:none; font-size:.84rem; font-weight:600; color:var(--neu-accent-dark);">
+                                </div>
+                                <div class="dc-suc-trigger-right">
+                                    <i class="fas fa-chevron-down dc-suc-chevron" id="dcInsumoChevron"></i>
+                                </div>
+                            </div>
+                            <!-- Dropdown panel -->
+                            <div class="dc-suc-dropdown" id="dcInsumoDropdown">
+                                <div class="dc-suc-list" id="dcInsumoList"></div>
+                            </div>
+                            <!-- Select oculto para compatibilidad con el JS existente -->
+                            <select id="chartInsumoSel" style="display:none">
                                 <option value="">— Selecciona un insumo —</option>
                             </select>
                         </div>

@@ -234,6 +234,7 @@ const SucPicker = (() => {
 function inicializarSelect2() {
     // Reemplazado por SucPicker — llamar init al arrancar
     SucPicker.init();
+    InsumoPicker.init();
 }
 
 
@@ -1092,22 +1093,150 @@ function renderInsumoSel(data) {
     const prevVal = $sel.val();   // conservar selección si ya hay una al recargar
 
     $sel.empty().append('<option value="">— Selecciona un insumo —</option>');
-    data.consumo.forEach(item => {
+    
+    const opciones = data.consumo.map(item => {
         const tipoLabel = item.es_global ? ' [Global]' : '';
-        $sel.append(`<option value="${item.id}">${escHtml(item.nombre)}${tipoLabel}</option>`);
+        const label = `${item.nombre}${tipoLabel}`;
+        $sel.append(`<option value="${item.id}">${escHtml(label)}</option>`);
+        return { value: item.id, label: label, subtext: item.maestro };
     });
+
+    InsumoPicker.setOpciones(opciones);
 
     // Si ya había una selección válida, restaurarla y re-renderizar
     if (prevVal && $sel.find(`option[value="${prevVal}"]`).length) {
-        $sel.val(prevVal).trigger('change');
+        $sel.val(prevVal);
+        InsumoPicker.setValue(prevVal);
+        // Notar que el trigger('change') ya no es necesario aquí si llamamos a renderKPIs/Grafico directamente
+        // pero renderInsumoSel suele llamarse al inicio.
+        $('#chartInsumoSel').trigger('change');
     } else {
         // Estado inicial: mostrar placeholder
         $('#chartPlaceholder').removeClass('d-none');
         $('#chartWrap').addClass('d-none');
         if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
         $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Tendencia');
+        InsumoPicker.setValue(null);
     }
 }
+
+
+/* ── InsumoPicker — Single Searchable Select ─────────────── */
+const InsumoPicker = (() => {
+    let _opciones = []; // { value, label, subtext }
+    let _seleccionado = null;
+
+    const $trigger = $('#dcInsumoTrigger');
+    const $search = $('#dcInsumoSearch');
+    const $dropdown = $('#dcInsumoDropdown');
+    const $list = $('#dcInsumoList');
+    const $hiddenSel = $('#chartInsumoSel');
+
+    function open() {
+        $trigger.addClass('open');
+        $dropdown.addClass('open');
+        renderList($search.val());
+    }
+
+    function close() {
+        $trigger.removeClass('open');
+        $dropdown.removeClass('open');
+        // Restaurar el label del seleccionado si se cierra sin elegir
+        if (_seleccionado) {
+            const opt = _opciones.find(o => String(o.value) === String(_seleccionado));
+            $search.val(opt ? opt.label : '');
+        } else {
+            $search.val('');
+        }
+    }
+
+    function toggle() { $dropdown.hasClass('open') ? close() : open(); }
+
+    function renderList(query) {
+        $list.empty();
+        const q = (query || '').toLowerCase();
+        const filtradas = _opciones.filter(o => 
+            o.label.toLowerCase().includes(q) || 
+            (o.subtext && o.subtext.toLowerCase().includes(q))
+        );
+
+        if (filtradas.length === 0) {
+            $list.append('<div class="dc-suc-empty"><i class="fas fa-search me-1"></i>Sin resultados</div>');
+            return;
+        }
+
+        filtradas.forEach(o => {
+            const sel = String(_seleccionado) === String(o.value);
+            const $item = $(`
+                <div class="dc-suc-item ${sel ? 'selected' : ''}" data-v="${o.value}">
+                    <span class="dc-suc-checkbox">
+                        <i class="fas fa-check dc-suc-checkbox-icon"></i>
+                    </span>
+                    <div class="dc-suc-item-label">
+                        <div class="fw-bold" style="font-size:.82rem">${escHtml(o.label)}</div>
+                        <div class="text-muted" style="font-size:.7rem">${escHtml(o.subtext || '')}</div>
+                    </div>
+                </div>`);
+            $list.append($item);
+        });
+    }
+
+    function select(value) {
+        const v = value ? String(value) : null;
+        _seleccionado = v;
+        $hiddenSel.val(v || '').trigger('change');
+        
+        if (v) {
+            const opt = _opciones.find(o => String(o.value) === v);
+            $search.val(opt ? opt.label : '');
+        } else {
+            $search.val('');
+        }
+        close();
+    }
+
+    function init() {
+        $search.on('focus', open);
+        
+        $search.on('input', function () {
+            if (!$dropdown.hasClass('open')) open();
+            renderList($(this).val());
+        });
+
+        $list.on('click', '.dc-suc-item', function () {
+            select($(this).data('v'));
+        });
+
+        // Click en el chevron abre/cierra
+        $('#dcInsumoChevron').on('click', function(e) {
+            e.stopPropagation();
+            toggle();
+        });
+
+        $(document).on('click.insumopicker', function (e) {
+            if (!$trigger.is(e.target) && $trigger.has(e.target).length === 0
+                && !$dropdown.is(e.target) && $dropdown.has(e.target).length === 0) {
+                close();
+            }
+        });
+    }
+
+    function setOpciones(arr) {
+        _opciones = arr;
+    }
+
+    function setValue(v) {
+        _seleccionado = v ? String(v) : null;
+        if (_seleccionado) {
+            const opt = _opciones.find(o => String(o.value) === _seleccionado);
+            $search.val(opt ? opt.label : '');
+        } else {
+            $search.val('');
+        }
+    }
+
+    return { init, setOpciones, setValue };
+})();
 
 /* ── Modal Desglose ──────────────────────────────────────── */
 window.mostrarDesglose = function (idInsumo) {
