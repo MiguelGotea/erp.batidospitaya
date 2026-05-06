@@ -146,7 +146,6 @@ function renderizarTabla(res, semInv) {
 
         const calcControl = `
             <span class="despacho-val">${fmt(totalControl)}</span>
-            <div class="despacho-unit-label" style="opacity:0.8; font-weight:500;">${p.unidad ?? ''}</div>
         `;
 
         tbody.append(`
