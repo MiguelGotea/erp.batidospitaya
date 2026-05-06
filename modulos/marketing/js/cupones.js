@@ -728,17 +728,30 @@ function buscarEnOpciones(input) {
 
 // Formatear fecha
 function formatearFecha(fecha) {
-    if (!fecha) return '-';
+    if (!fecha || fecha === '0000-00-00' || fecha === '0000-00-00 00:00:00') return '-';
+    
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const d = new Date(fecha);
-    const año = String(d.getFullYear()).slice(-2);
-    return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}-${año}`;
+    
+    // Parsear manualmente para evitar desfases de zona horaria
+    // El formato esperado es YYYY-MM-DD o YYYY-MM-DD HH:MM:SS
+    const partesFecha = fecha.split(' ')[0].split('-');
+    if (partesFecha.length !== 3) return fecha;
+    
+    const año = partesFecha[0].slice(-2);
+    const mes = parseInt(partesFecha[1]) - 1;
+    const dia = partesFecha[2];
+    
+    return `${dia.padStart(2, '0')}-${meses[mes]}-${año}`;
 }
 
 // Formatear fecha larga para mostrar en el rango seleccionado
 function formatearFechaLarga(fecha) {
-    if (!fecha) return '-';
+    if (!fecha || fecha === '0000-00-00') return '-';
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const d = new Date(fecha);
-    return `${String(d.getDate()).padStart(2, '0')} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+    const partesFecha = fecha.split(' ')[0].split('-');
+    if (partesFecha.length !== 3) return fecha;
+    const año = partesFecha[0];
+    const mes = parseInt(partesFecha[1]) - 1;
+    const dia = partesFecha[2];
+    return `${dia.padStart(2, '0')} ${meses[mes]} ${año}`;
 }
