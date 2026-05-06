@@ -248,9 +248,8 @@ try {
         $stmtUpdateProductoReceta = $conn->prepare($sqlUpdateProductoReceta);
         $stmtUpdateProductoReceta->execute([':id' => $idProducto]);
 
-        // Red de seguridad: eliminar cualquier componente huérfano vinculado
-        // a recetas que tengan este producto como presentación (por si el endpoint
-        // de limpieza no se ejecutó antes de guardar)
+        // Red de seguridad: eliminar recetas huérfanas vinculadas a este producto
+        // (por si el endpoint de limpieza no se ejecutó antes de guardar)
         $sqlBuscarRecetaHuerfana = "SELECT id FROM receta_producto_global WHERE id_presentacion_producto = :id_p";
         $stmtBuscarRecetaHuerfana = $conn->prepare($sqlBuscarRecetaHuerfana);
         $stmtBuscarRecetaHuerfana->execute([':id_p' => $idProducto]);
@@ -258,10 +257,18 @@ try {
 
         if (!empty($idsRecetasHuerfanas)) {
             $placeholders = implode(',', array_fill(0, count($idsRecetasHuerfanas), '?'));
+
+            // 1. Eliminar componentes huérfanos (hijos)
             $stmtDelCompHuerfanos = $conn->prepare(
                 "DELETE FROM componentes_receta_producto WHERE id_receta_producto_global IN ($placeholders)"
             );
             $stmtDelCompHuerfanos->execute($idsRecetasHuerfanas);
+
+            // 2. Eliminar las recetas huérfanas (padres)
+            $stmtDelRecetasHuerfanas = $conn->prepare(
+                "DELETE FROM receta_producto_global WHERE id IN ($placeholders)"
+            );
+            $stmtDelRecetasHuerfanas->execute($idsRecetasHuerfanas);
         }
     }
 
