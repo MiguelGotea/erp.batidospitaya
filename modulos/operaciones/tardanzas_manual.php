@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -280,109 +280,7 @@ $esLider = verificarAccesoCargo([5, 43, 46]);
 $esOperaciones = verificarAccesoCargo([11, 8, 28, 39, 30, 37, 13, 49]);
 $esSucursales = verificarAccesoCargo([27]);
 
-// AJAX Handler para obtener operarios dinámicamente
-if (isset($_GET['action']) && $_GET['action'] == 'obtener_operarios' && isset($_GET['sucursal'])) {
-    // CRÍTICO: Limpiar cualquier output previo
-    ob_clean(); // Limpia el buffer de salida
-
-    header('Content-Type: application/json');
-
-    $codSucursal = $_GET['sucursal'];
-    $fechaTardanza = $_GET['fecha_tardanza'] ?? null;
-
-    // Si NO se proporciona fecha, usar fecha de ayer por defecto
-    if (!$fechaTardanza) {
-        $fechaTardanza = date('Y-m-d', strtotime('-1 day'));
-    }
-
-    // NUEVA LÓGICA: Obtener operarios considerando fecha de liquidación
-    $operarios = obtenerOperariosSucursalParaTardanzasPorFecha($codSucursal, $fechaTardanza);
-
-    // Agregar información de contrato para validaciones en frontend
-    foreach ($operarios as &$operario) {
-        $estadoContrato = obtenerMensajeEstadoContrato($operario['CodOperario']);
-        $operario['tiene_contrato'] = operarioTieneContrato($operario['CodOperario']);
-        $operario['estado_contrato'] = $estadoContrato['tipo'];
-        $operario['mensaje_contrato'] = $estadoContrato['mensaje'];
-    }
-
-    echo json_encode($operarios);
-    exit(); // IMPORTANTE: Salir inmediatamente
-}
-
-/**
- * Obtiene operarios de una sucursal para registrar tardanzas manuales
- * NUEVA FUNCIÓN: Considera fecha específica y fecha de liquidación
- * @param string|int $codSucursal
- * @param string $fechaReferencia
- * @return array
- */
-function obtenerOperariosSucursalParaTardanzasPorFecha($codSucursal, $fechaReferencia)
-{
-    global $conn;
-
-    $stmt = $conn->prepare("
-        SELECT DISTINCT 
-            o.CodOperario, 
-            o.Nombre, 
-            o.Nombre2,
-            o.Apellido, 
-            o.Apellido2,
-            c.fecha_liquidacion,
-            c.CodContrato
-        FROM Operarios o
-        INNER JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
-        INNER JOIN marcaciones m ON o.CodOperario = m.CodOperario
-        LEFT JOIN (
-            -- Subquery para obtener el último contrato de cada operario
-            SELECT c1.cod_operario, c1.CodContrato, c1.fecha_liquidacion
-            FROM Contratos c1
-            INNER JOIN (
-                SELECT cod_operario, MAX(CodContrato) as max_contrato
-                FROM Contratos
-                GROUP BY cod_operario
-            ) c2 ON c1.cod_operario = c2.cod_operario AND c1.CodContrato = c2.max_contrato
-        ) c ON o.CodOperario = c.cod_operario
-        WHERE anc.Sucursal = ?
-        AND m.sucursal_codigo = ?
-        -- Operarios con marcaciones en los últimos 30 días
-        AND m.fecha BETWEEN DATE_SUB(?, INTERVAL 30 DAY) AND ?
-        AND m.hora_ingreso IS NOT NULL
-        -- Verificar que estaba asignado a la sucursal en esa fecha
-        AND anc.Fecha <= ?
-        AND (anc.Fin IS NULL OR anc.Fin >= ?)
-        -- Excluir cargo 27
-        AND o.CodOperario NOT IN (
-            SELECT DISTINCT anc2.CodOperario 
-            FROM AsignacionNivelesCargos anc2
-            WHERE anc2.CodNivelesCargos = 27
-            AND anc2.Fecha <= ?
-            AND (anc2.Fin IS NULL OR anc2.Fin >= ?)
-        )
-        -- FILTRO NUEVO: Solo operarios activos según fecha de liquidación
-        AND (
-            c.fecha_liquidacion IS NULL 
-            OR c.fecha_liquidacion = '0000-00-00'
-            OR c.fecha_liquidacion >= ?
-        )
-        GROUP BY o.CodOperario, o.Nombre, o.Nombre2, o.Apellido, o.Apellido2, o.Sucursal
-        ORDER BY o.Nombre, o.Apellido, o.Apellido2
-    ");
-
-    $stmt->execute([
-        $codSucursal,           // Para anc.Sucursal
-        $codSucursal,           // Para m.sucursal_codigo
-        $fechaReferencia,       // Para DATE_SUB
-        $fechaReferencia,       // Para rango de marcaciones
-        $fechaReferencia,       // Para anc.Fecha
-        $fechaReferencia,       // Para anc.Fin
-        $fechaReferencia,       // Para cargo 27 fecha
-        $fechaReferencia,       // Para cargo 27 fin
-        $fechaReferencia        // Para fecha_liquidacion
-    ]);
-
-    return $stmt->fetchAll();
-}
+// Handler AJAX para obtener operarios → movido a ajax/tardanzas_manual_obtener_operarios.php
 
 /**
  * Obtiene operarios de una sucursal en un rango de fechas

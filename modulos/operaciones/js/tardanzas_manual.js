@@ -139,7 +139,7 @@ function cargarOperariosSucursal(codSucursal, fechaTardanza) {
     selectOperario.innerHTML = `<option value="">⏳ Cargando operarios para ${fechaTardanza}...</option>`;
     selectOperario.disabled = true;
 
-    let url = `tardanzas_manual.php?action=obtener_operarios&sucursal=${codSucursal}&fecha_tardanza=${fechaTardanza}`;
+    let url = `ajax/tardanzas_manual_obtener_operarios.php?sucursal=${codSucursal}&fecha_tardanza=${fechaTardanza}`;
 
     fetch(url)
         .then(response => {
