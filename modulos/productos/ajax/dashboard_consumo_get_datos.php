@@ -379,31 +379,6 @@ try {
         }
     }
 
-    // 3h. Pre-cargar configuración logística (sucursales y productos)
-    $configSucursales = []; // [cod_sucursal] => dias_stock_minimo
-    if (!empty($sucursalesPresentes)) {
-        $phS = implode(',', array_fill(0, count($sucursalesPresentes), '?'));
-        $stmtCS = $conn->prepare("SELECT cod_sucursal, dias_stock_minimo FROM configuracion_logistica_sucursal WHERE cod_sucursal IN ($phS)");
-        $stmtCS->execute($sucursalesPresentes);
-        foreach ($stmtCS->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $configSucursales[$row['cod_sucursal']] = (float) $row['dias_stock_minimo'];
-        }
-    }
-
-    $configProductos = []; // [categoria_insumo] => {ajuste_demanda, dias_ciclo, dias_desfase}
-    // Como las categorías son pocas, las cargamos todas para las sucursales involucradas
-    if (!empty($sucursalesPresentes)) {
-        $phS = implode(',', array_fill(0, count($sucursalesPresentes), '?'));
-        $stmtCP = $conn->prepare("SELECT cod_sucursal, codigo_insumo, ajuste_demanda, dias_ciclo, dias_desfase FROM configuracion_logistica_producto WHERE cod_sucursal IN ($phS)");
-        $stmtCP->execute($sucursalesPresentes);
-        foreach ($stmtCP->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $configProductos[$row['cod_sucursal']][$row['codigo_insumo']] = [
-                'ajuste' => (float) $row['ajuste_demanda'],
-                'ciclo' => (float) $row['dias_ciclo'],
-                'desfase' => (float) $row['dias_desfase']
-            ];
-        }
-    }
 
     /* ══════════════════════════════════════════════════════════
        PASO 4: Funciones auxiliares (PHP puro)
@@ -604,6 +579,44 @@ try {
     $sucursalesPresentes = array_keys($sucursalesSet);
     $semanasNros = array_keys($semanasMap);
 
+    // ── Mapeo de Sucursales (Nombre <-> ID) para Configuración Logística ──
+    $nombresSucursales = []; // [id] => nombre
+    $idsSucursales = [];     // [nombre] => id
+    $stmtSuc = $conn->query("SELECT id, nombre FROM sucursales");
+    foreach ($stmtSuc->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $nombresSucursales[$row['id']] = $row['nombre'];
+        $idsSucursales[$row['nombre']] = $row['id'];
+    }
+
+    $sucIdsPresentes = [];
+    foreach ($sucursalesPresentes as $nombre) {
+        if (isset($idsSucursales[$nombre])) $sucIdsPresentes[] = $idsSucursales[$nombre];
+    }
+
+    $configSucursales = []; // [cod_sucursal] => dias_stock_minimo
+    if (!empty($sucIdsPresentes)) {
+        $phS = implode(',', array_fill(0, count($sucIdsPresentes), '?'));
+        $stmtCS = $conn->prepare("SELECT cod_sucursal, dias_stock_minimo FROM configuracion_logistica_sucursal WHERE cod_sucursal IN ($phS)");
+        $stmtCS->execute($sucIdsPresentes);
+        foreach ($stmtCS->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $configSucursales[$row['cod_sucursal']] = (float) $row['dias_stock_minimo'];
+        }
+    }
+
+    $configProductos = []; // [cod_sucursal][categoria] => {ajuste_demanda, ...}
+    if (!empty($sucIdsPresentes)) {
+        $phS = implode(',', array_fill(0, count($sucIdsPresentes), '?'));
+        $stmtCP = $conn->prepare("SELECT cod_sucursal, codigo_insumo, ajuste_demanda, dias_ciclo, dias_desfase FROM configuracion_logistica_producto WHERE cod_sucursal IN ($phS)");
+        $stmtCP->execute($sucIdsPresentes);
+        foreach ($stmtCP->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $configProductos[$row['cod_sucursal']][$row['codigo_insumo']] = [
+                'ajuste' => (float) $row['ajuste_demanda'],
+                'ciclo' => (float) $row['dias_ciclo'],
+                'desfase' => (float) $row['dias_desfase']
+            ];
+        }
+    }
+
     $listaConsumo = [];
     foreach ($consumoAgg as $idPP => $porSuc) {
         $meta = $metaPP[$idPP];
@@ -691,9 +704,10 @@ try {
             $desvActivo = calcularDesviacionEstandar($valsActivo);
             $semC = $promActivo + $desvActivo;
 
-            $dSM = $configSucursales[$suc] ?? 0;
+            $sucId = $idsSucursales[$suc] ?? null;
+            $dSM = $sucId ? ($configSucursales[$sucId] ?? 0) : 0;
             $cat = $meta['categoria_insumo'];
-            $cP = $configProductos[$suc][$cat] ?? null;
+            $cP = $sucId ? ($configProductos[$sucId][$cat] ?? null) : null;
             $adj = $cP ? (float) $cP['ajuste'] : 0;
 
             $diaC = ($semC * (1 + $adj)) / 7;
