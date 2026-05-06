@@ -1,4 +1,10 @@
 <?php
+/**
+ * Variables inyectadas desde el contexto del include en tardanzas_manual.php
+ *
+ * @var array   $tardanza        Fila de la tabla TardanzasManuales con datos del operario
+ * @var bool    $puedeAprobar    Si el usuario puede aprobar/rechazar/modificar estados
+ */
 $nombreCompleto = trim(
     $tardanza['operario_nombre'] . ' ' . 
     ($tardanza['operario_nombre2'] ?? '') . ' ' . 
@@ -58,37 +64,37 @@ $horariosInfo = obtenerInformacionHorariosTardanza(
         <?php endif; ?>
     </td>
     
+    <?php if ($puedeAprobar): ?>
     <td style="text-align: center;">
-        <?php if ($esAdmin || verificarAccesoCargo([11, 13, 16, 28, 39, 30, 37])): ?>
-            <div class="action-buttons-inline" id="actions-<?= $tardanza['id'] ?>">
-                <?php if ($tardanza['estado'] === 'Pendiente'): ?>
-                    <button type="button" class="btn-action btn-approve" onclick="actualizarEstado(<?= $tardanza['id'] ?>, 'Justificado')" title="Aprobar">
-                        <i class="fas fa-check"></i>
-                    </button>
-                    <button type="button" class="btn-action btn-reject" onclick="actualizarEstado(<?= $tardanza['id'] ?>, 'No Válido')" title="Rechazar">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <button type="button" class="btn-action btn-edit" onclick="toggleEditObservaciones(<?= $tardanza['id'] ?>)" title="Editar observaciones">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                <?php else: ?>
-                    <button type="button" class="btn-action btn-change" onclick="cambiarEstado(<?= $tardanza['id'] ?>, '<?= $tardanza['estado'] ?>')" title="Cambiar estado">
-                        <i class="fas fa-exchange-alt"></i>
-                    </button>
-                    <button type="button" class="btn-action btn-edit" onclick="toggleEditObservaciones(<?= $tardanza['id'] ?>)" title="Editar observaciones">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                <?php endif; ?>
-            </div>
-            
-            <div class="save-cancel-buttons" id="save-cancel-<?= $tardanza['id'] ?>" style="display: none;">
-                <button type="button" class="btn-action btn-save" onclick="guardarObservaciones(<?= $tardanza['id'] ?>)" title="Guardar">
-                    <i class="fas fa-save"></i>
+        <div class="action-buttons-inline" id="actions-<?= $tardanza['id'] ?>">
+            <?php if ($tardanza['estado'] === 'Pendiente'): ?>
+                <button type="button" class="btn-action btn-approve" onclick="actualizarEstado(<?= $tardanza['id'] ?>, 'Justificado')" title="Aprobar">
+                    <i class="fas fa-check"></i>
                 </button>
-                <button type="button" class="btn-action btn-cancel" onclick="cancelarEditObservaciones(<?= $tardanza['id'] ?>)" title="Cancelar">
-                    <i class="fas fa-ban"></i>
+                <button type="button" class="btn-action btn-reject" onclick="actualizarEstado(<?= $tardanza['id'] ?>, 'No Válido')" title="Rechazar">
+                    <i class="fas fa-times"></i>
                 </button>
-            </div>
-        <?php endif; ?>
+                <button type="button" class="btn-action btn-edit" onclick="toggleEditObservaciones(<?= $tardanza['id'] ?>)" title="Editar observaciones">
+                    <i class="fas fa-edit"></i>
+                </button>
+            <?php else: ?>
+                <button type="button" class="btn-action btn-change" onclick="cambiarEstado(<?= $tardanza['id'] ?>, '<?= $tardanza['estado'] ?>')" title="Cambiar estado">
+                    <i class="fas fa-exchange-alt"></i>
+                </button>
+                <button type="button" class="btn-action btn-edit" onclick="toggleEditObservaciones(<?= $tardanza['id'] ?>)" title="Editar observaciones">
+                    <i class="fas fa-edit"></i>
+                </button>
+            <?php endif; ?>
+        </div>
+        
+        <div class="save-cancel-buttons" id="save-cancel-<?= $tardanza['id'] ?>" style="display: none;">
+            <button type="button" class="btn-action btn-save" onclick="guardarObservaciones(<?= $tardanza['id'] ?>)" title="Guardar">
+                <i class="fas fa-save"></i>
+            </button>
+            <button type="button" class="btn-action btn-cancel" onclick="cancelarEditObservaciones(<?= $tardanza['id'] ?>)" title="Cancelar">
+                <i class="fas fa-ban"></i>
+            </button>
+        </div>
     </td>
-</tr>
+    <?php endif; ?>
+</tr>
