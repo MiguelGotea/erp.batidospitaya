@@ -1,5 +1,5 @@
 <?php
-require_once 'conexion.php';
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
 
 // Obtener el ID del registro a eliminar
 $id = $_GET['id'];

@@ -4,7 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Incluir la conexiÃ³n a la base de datos
-require 'conexion.php';
+require '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
 
 // Incluir TFPDF
 require_once('tfpdf/tfpdf.php');

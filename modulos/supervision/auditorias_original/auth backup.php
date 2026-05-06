@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'conexion.php';
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditoría
 
 // Verificar autenticaciÃ³n, usuario_id es el codoperario de quien se loguea

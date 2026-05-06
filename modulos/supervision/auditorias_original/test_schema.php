@@ -1,5 +1,5 @@
 <?php
-require 'conexion.php';
+require '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
 $stmt = $conn->query('SHOW COLUMNS FROM ventas_meta');
 print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
 $stmt2 = $conn->query('SELECT * FROM ventas_meta LIMIT 1');

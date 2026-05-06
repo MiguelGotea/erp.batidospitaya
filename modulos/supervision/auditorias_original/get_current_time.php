@@ -1,5 +1,5 @@
 <?php
-require_once 'conexion.php'; // Si necesitas la conexión
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core; // Si necesitas la conexión
 date_default_timezone_set('America/Managua');
 
 function formatFechaEspanol($fecha = 'now') {

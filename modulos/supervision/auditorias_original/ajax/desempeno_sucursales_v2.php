@@ -1,6 +1,6 @@
 <?php
 // ajax/desempeno_sucursales_v2.php
-require_once '../conexion.php';
+require_once '../../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
 header('Content-Type: application/json');
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

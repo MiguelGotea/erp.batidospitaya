@@ -33,7 +33,7 @@ $es_pagina_auditorias = $pagina_actual == 'index_auditorias_publico.php';
 $es_pagina_promedio = $pagina_actual == 'promedio.php';
 $es_pagina_reclamos = ($pagina_actual == 'index_reclamos_publico.php');
 
-require_once 'conexion.php';
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
 
 // Obtener el mes y aÃ±o seleccionados (si existen)
 $mes_seleccionado = isset($_GET['mes']) ? (int) $_GET['mes'] : date('n');

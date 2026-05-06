@@ -1,6 +1,6 @@
 <?php
 // auditorias_get_opciones_filtro.php
-require_once '../conexion.php';
+require_once '../../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
 header('Content-Type: application/json');
 
 try {
