@@ -430,7 +430,8 @@ try {
     function calcularDesviacionEstandar(array $valores): float
     {
         $n = count($valores);
-        if ($n <= 1) return 0.0;
+        if ($n <= 1)
+            return 0.0;
         $media = array_sum($valores) / $n;
         $varianza = array_sum(array_map(fn($v) => ($v - $media) ** 2, $valores)) / ($n - 1);
         return sqrt($varianza);
@@ -673,7 +674,8 @@ try {
             $lastIdx = null;
             foreach ($valsSuc as $i => $v) {
                 if ($v >= $umbral) {
-                    if ($firstIdx === null) $firstIdx = $i;
+                    if ($firstIdx === null)
+                        $firstIdx = $i;
                     $lastIdx = $i;
                 }
             }
@@ -794,3 +796,4 @@ try {
     http_response_code(500);
     echo json_encode(['ok' => false, 'msg' => 'Error al calcular consumo: ' . $e->getMessage()]);
 }
+
