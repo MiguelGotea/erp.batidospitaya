@@ -2,7 +2,8 @@
 // Incluir configuración y verificar autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditora
-require_once 'config.php';
+// require_once 'config.php'; // Comentado por migración al core
+require_once '../../../../core/helpers/config.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
@@ -33,7 +34,8 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $faltante_id = intval($_GET['id']);
 
 try {
-    $db = conectarDB();
+    // $db = conectarDB(); // Comentado por migración al core
+    $db = $conn; // Usar la conexión global del core
     
     // Obtener información principal del faltante
     $stmt = $db->prepare("

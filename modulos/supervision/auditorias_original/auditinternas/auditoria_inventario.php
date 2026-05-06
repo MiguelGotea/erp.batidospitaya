@@ -2,7 +2,8 @@
 // Incluir configuración y verificar autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditora
-require_once 'config.php';
+// require_once 'config.php'; // Comentado por migración al core
+require_once '../../../../core/helpers/config.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
@@ -30,10 +31,12 @@ $auditor_id = $usuario['CodOperario'] ?? null;
 date_default_timezone_set('America/Managua');
 
 try {
-    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    // $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME); // Comentado por migración al core
+    // Usaremos las constantes que ahora están en conexion.php (vía auth.php)
+    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME); 
     
     if ($conn->connect_error) {
-        die("Error de conexión: " . $conn->connect_error);
+        die("Error de conexión: " . $conn->connect_error); 
     }
     
     $conn->set_charset("utf8mb4");

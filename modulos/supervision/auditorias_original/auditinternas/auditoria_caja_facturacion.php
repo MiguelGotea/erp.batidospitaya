@@ -1,9 +1,11 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditora
-require_once 'config.php';
+// require_once 'config.php'; // Comentado por migración al core
 
-$db = conectarDB();
+// $conn = conectarDB(); // Comentado por migración al core
+$conn = $conn ?? null; // Asegurar que $conn esté disponible si se usa más abajo
+$db = $conn; // En este archivo se usa $db para la conexión
 
 //******************************Estándar para header******************************
 verificarAutenticacion();

@@ -2,7 +2,7 @@
 // Incluir configuración y verificar autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditora
-require_once 'config.php';
+// require_once 'config.php'; // Comentado por migración al core
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
@@ -42,13 +42,15 @@ function formatFechaEspanolAuditoria($fecha) {
 
 // Conexión a la base de datos
 $host = 'localhost';
-$dbname = 'u839374897_avisos';
-$username = 'u839374897_avisos';
-$password = '8GLVR9*k';
+// $host = 'localhost';
+// $dbname = 'u839374897_avisos';
+// $username = 'u839374897_avisos';
+// $password = '8GLVR9*k';
 
 try {
     // Conexión a la base de datos usando PDO y las constantes de config.php
-    $conn = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME.";charset=utf8mb4", DB_USER, DB_PASS);
+    // $conn = conectarDB(); // Comentado por migración al core
+    global $conn;
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch(PDOException $e) {
     die("Error de conexión: " . $e->getMessage());

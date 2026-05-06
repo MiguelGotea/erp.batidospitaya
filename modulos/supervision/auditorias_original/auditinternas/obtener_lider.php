@@ -1,7 +1,7 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditora
-require_once 'config.php';
+// require_once 'config.php'; // Comentado por migración al core
 
 header('Content-Type: application/json');
 
@@ -11,7 +11,7 @@ if (!isset($_GET['sucursal_id'])) {
 }
 
 $sucursalId = $_GET['sucursal_id'];
-$conn = conectarDB();
+// $conn = conectarDB(); // Comentado por migración al core
 
 function obtenerLiderSucursal($sucursalId, $conn) {
     $stmt = $conn->prepare("
