@@ -116,6 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/form_modern.css">
+    <!-- Library for HEIC support -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -339,11 +341,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.getElementById('foto').addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    showPreview(e.target.result);
-                };
-                reader.readAsDataURL(file);
+                const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+                
+                if (isHeic) {
+                    heic2any({ 
+                        blob: file, 
+                        toType: "image/jpeg",
+                        quality: 0.6
+                    }).then(conversionResult => {
+                        const convertedBlob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            showPreview(e.target.result);
+                            // Reemplazar el archivo en el input para que se suba como JPG
+                            const dt = new DataTransfer();
+                            dt.items.add(new File([convertedBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' }));
+                            document.getElementById('foto').files = dt.files;
+                        };
+                        reader.readAsDataURL(convertedBlob);
+                    }).catch(e => {
+                        console.error("Error converting HEIC:", e);
+                        alert("Error al procesar la imagen HEIC");
+                    });
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        showPreview(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
             }
         });
 

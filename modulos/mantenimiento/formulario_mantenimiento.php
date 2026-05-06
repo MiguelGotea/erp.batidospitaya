@@ -151,6 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/form_modern.css">
+    <!-- Library for HEIC support -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -496,16 +498,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    fotosSeleccionadas.push({
-                        tipo: 'file',
-                        data: e.target.result,
-                        file: file
+                const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+                
+                if (isHeic) {
+                    heic2any({ 
+                        blob: file, 
+                        toType: "image/jpeg",
+                        quality: 0.6
+                    }).then(conversionResult => {
+                        const convertedBlob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            fotosSeleccionadas.push({
+                                tipo: 'file',
+                                data: e.target.result,
+                                file: new File([convertedBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' })
+                            });
+                            updatePhotosPreview();
+                        };
+                        reader.readAsDataURL(convertedBlob);
+                    }).catch(e => {
+                        console.error("Error converting HEIC:", e);
+                        alert("Error al procesar la imagen HEIC");
                     });
-                    updatePhotosPreview();
-                };
-                reader.readAsDataURL(file);
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        fotosSeleccionadas.push({
+                            tipo: 'file',
+                            data: e.target.result,
+                            file: file
+                        });
+                        updatePhotosPreview();
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
         });
 

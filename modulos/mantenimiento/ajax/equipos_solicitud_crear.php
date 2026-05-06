@@ -77,7 +77,7 @@ try {
                 $mimeType = finfo_file($finfo, $tmp_name);
                 finfo_close($finfo);
                 
-                $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
                 if (!in_array($mimeType, $allowedTypes)) {
                     continue;
                 }

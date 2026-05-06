@@ -1,11 +1,11 @@
 # Permitir solo imágenes
-<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|heic|heif|JPG|JPEG|PNG|GIF|WEBP|HEIC|HEIF)$">
     Order allow,deny
     Allow from all
 </FilesMatch>
 
 # Denegar todo lo demás
-<FilesMatch "^(?!.*\.(jpg|jpeg|png|gif|webp)$).*$">
+<FilesMatch "^(?!.*\.(jpg|jpeg|png|gif|webp|heic|heif|JPG|JPEG|PNG|GIF|WEBP|HEIC|HEIF)$).*$">
     Order allow,deny
     Deny from all
 </FilesMatch>

@@ -452,11 +452,41 @@ function mostrarFotos(ticketId) {
 
                 response.fotos.forEach((foto, index) => {
                     const activeClass = index === 0 ? 'active' : '';
+                    const isHeic = foto.foto.toLowerCase().endsWith('.heic') || foto.foto.toLowerCase().endsWith('.heif');
+                    const imgId = `img-ticket-photo-${index}`;
+                    
                     carouselInner.append(`
                         <div class="carousel-item ${activeClass}">
-                            <img src="${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}">
+                            <div class="d-flex justify-content-center align-items-center" style="min-height: 200px; background: #f8f9fa;">
+                                <img id="${imgId}" src="${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}" onerror="this.src='/assets/img/broken-image.png'">
+                                <div id="loader-${imgId}" class="spinner-border text-primary position-absolute" role="status" style="display: none;">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </div>
                         </div>
                     `);
+
+                    if (isHeic) {
+                        const loader = document.getElementById(`loader-${imgId}`);
+                        if (loader) loader.style.display = 'block';
+                        
+                        fetch(foto.foto)
+                            .then(res => res.blob())
+                            .then(blob => heic2any({ 
+                                blob, 
+                                toType: "image/jpeg",
+                                quality: 0.6
+                            }))
+                            .then(conversionResult => {
+                                const url = URL.createObjectURL(Array.isArray(conversionResult) ? conversionResult[0] : conversionResult);
+                                document.getElementById(imgId).src = url;
+                                if (loader) loader.style.display = 'none';
+                            })
+                            .catch(e => {
+                                console.error("Error converting HEIC:", e);
+                                if (loader) loader.style.display = 'none';
+                            });
+                    }
                 });
 
                 $('#modalFotos').modal('show');
