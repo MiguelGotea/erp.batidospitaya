@@ -2162,7 +2162,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin, 'Registro de Tardanzas'); ?>
+            <?php echo renderHeader($usuario, false, 'Registro de Tardanzas'); ?>
 
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success">
@@ -2632,7 +2632,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
 
