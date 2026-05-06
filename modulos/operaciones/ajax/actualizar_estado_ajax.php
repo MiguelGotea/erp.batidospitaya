@@ -1,6 +1,9 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../../core/auth/auth.php';
+require_once '../../../core/helpers/funciones.php';
+require_once '../../../core/permissions/permissions.php';
+
+verificarAutenticacion();
 
 header('Content-Type: application/json');
 
@@ -11,7 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Verificar permisos
-if (!verificarAccesoCargo([11, 16, 13, 28, 39, 30, 37, 49]) && !$esAdmin) {
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+if (!tienePermiso('tardanzas_manual', 'nuevo_registro', $cargoOperario)) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para realizar esta acción']);
     exit;
 }
