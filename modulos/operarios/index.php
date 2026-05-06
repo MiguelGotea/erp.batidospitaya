@@ -1,8 +1,8 @@
 <?php
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
-require_once '../../includes/menu_lateral.php';
-require_once '../../includes/header_universal.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';

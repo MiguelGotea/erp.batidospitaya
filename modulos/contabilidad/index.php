@@ -1,8 +1,8 @@
 <?php
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
-require_once '../../includes/menu_lateral.php';
-require_once '../../includes/header_universal.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 
 // Verificar acceso al módulo RH (Código 13 para Jefe de RH)
 //verificarAccesoModulo('contabilidad');

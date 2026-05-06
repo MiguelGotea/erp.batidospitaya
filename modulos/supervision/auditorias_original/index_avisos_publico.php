@@ -1,8 +1,8 @@
 <?php
 $version = "1.0.17";
 require_once '../../../includes/auth.php';
-require_once '../../../includes/menu_lateral.php';
-require_once '../../../includes/header_universal.php';
+require_once '../../../core/layout/menu_lateral.php';
+require_once '../../../core/layout/header_universal.php';
 require_once '../../../core/permissions/permissions.php';
 
 

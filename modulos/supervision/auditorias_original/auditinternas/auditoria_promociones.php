@@ -3,8 +3,8 @@
 require_once '../auth.php';
 require_once '../funciones.php';
 require_once 'config.php';
-require_once '../../../../includes/menu_lateral.php';
-require_once '../../../../includes/header_universal.php';
+require_once '../../../../core/layout/menu_lateral.php';
+require_once '../../../../core/layout/header_universal.php';
 
 $db = conectarDB();
 
