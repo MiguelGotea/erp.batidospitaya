@@ -247,6 +247,25 @@ try {
         foreach ($stmtDM->fetchAll(PDO::FETCH_ASSOC) as $row)
             $dicMap[(string)$row['CodCotizacion']] = $row;
 
+        /* 4b-bis. Presentación básica por maestro — necesaria para redirigir
+                   presentaciones de despacho a su equivalente en unidades de control.
+                   La gráfica del kardex trabaja en unidades base, NO en despacho. */
+        $presentPorMaestro = [];
+        $idMsAll = array_values(array_unique(array_filter(array_column(array_values($dicMap), 'id_m'))));
+        if (!empty($idMsAll)) {
+            $phM = implode(',', array_fill(0, count($idMsAll), '?'));
+            $stmtPPB = $conn->prepare("
+                SELECT id, id_producto_maestro, cantidad, id_unidad_producto
+                FROM producto_presentacion
+                WHERE id_producto_maestro IN ($phM)
+                  AND Id_receta_producto IS NULL AND Activo = 'SI'
+                  AND presentacion_basica_inventario = 1
+            ");
+            $stmtPPB->execute($idMsAll);
+            foreach ($stmtPPB->fetchAll(PDO::FETCH_ASSOC) as $pb)
+                $presentPorMaestro[(int)$pb['id_producto_maestro']] = $pb;
+        }
+
         /* 4c. CodIngrediente via Cotizaciones → cotMap (p2=prioridad1, p3=cualquiera)
                Igual que pedido_sugerido_calcular.php — permite capturar ventas cuyo
                codporcion en SubReceta no está directamente en el diccionario */
@@ -330,6 +349,27 @@ try {
             if (!$m && isset($cotMap[$ci]['p3']) && isset($dicMap[(string)$cotMap[$ci]['p3']]))
                 $m = $dicMap[(string)$cotMap[$ci]['p3']];
             if (!$m) continue;
+
+            /* ── Redirigir a presentación BÁSICA si la resuelta es de despacho ──────
+               CRÍTICO: la gráfica del kardex trabaja en unidades de CONTROL.
+               Si el diccionario/cotMap resuelve a una presentación de despacho
+               (presentacion_basica_inventario = 0), el $ppC sería la cantidad
+               del paquete y los valores de min/max quedarían en unidades de despacho.
+               Lo corregimos redirigiendo a la presentación básica del mismo maestro,
+               exactamente igual que pedido_sugerido_calcular.php (líneas 321-339). */
+            if (empty($m['Id_receta_producto'])
+                && ($m['presentacion_basica_inventario'] ?? 1) != 1
+                && !empty($m['id_m'])
+                && isset($presentPorMaestro[(int)$m['id_m']])
+            ) {
+                $pb = $presentPorMaestro[(int)$m['id_m']];
+                $m  = array_merge($m, [
+                    'id'                          => $pb['id'],
+                    'pp_cant'                     => $pb['cantidad'],
+                    'uid'                         => (int)$pb['id_unidad_producto'],
+                    'presentacion_basica_inventario' => 1,
+                ]);
+            }
 
             $ppId  = (int)$m['id'];
             $ppC   = max((float)$m['pp_cant'], 0.001);
