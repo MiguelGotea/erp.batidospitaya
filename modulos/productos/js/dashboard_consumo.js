@@ -790,12 +790,13 @@ function renderGrafico(data) {
             },
         ];
 
-        // ── LÍNEA DE STOCK MÍNIMO (Linea total / Barras cuando hay UNA sola tienda)
-        if (!hayDesglose && (esLineaTotal || modoGrafico === 'barras') && item.stock_min > 0) {
+        // ── LÍNEA DE STOCK MÍNIMO (modo Línea Total y Barras — siempre que haya valor)
+        // Se muestra en cualquier cantidad de sucursales cuando el modo es linea_total o barras
+        if ((esLineaTotal || modoGrafico === 'barras') && item.stock_min > 0) {
             datasets.push({
                 label: `Stock Mín: ${formatNum(item.stock_min)} ${escHtml(item.unidad)}`,
-                data: labelsExtended.map(() => item.stock_min),
-                borderColor: '#e74c3c', // Rojo suave
+                data: labelsExtended.map(() => item.stock_min),  // ya cubre zona proyección
+                borderColor: '#e74c3c',
                 borderWidth: 2,
                 borderDash: [8, 4],
                 pointRadius: 0,
@@ -803,6 +804,7 @@ function renderGrafico(data) {
                 tension: 0,
                 type: 'line',
                 order: 5,
+                _stockMin: true,  // marca para excluir del null-padding
             });
         }
     }
@@ -810,8 +812,10 @@ function renderGrafico(data) {
 
     if (!esLineaSuc) {
         // Pad todos los datasets históricos con null para las 3 semanas proyectadas
+        // EXCEPCIÓN: datasets marcados con _stockMin ya tienen datos para toda la zona (labelsExtended)
         datasets.forEach(ds => {
             if (!Array.isArray(ds.data)) return;
+            if (ds._stockMin) return;  // ya cubre labelsExtended completo — no padear
             ds.data = [...ds.data, null, null, null];
             if (Array.isArray(ds.pointRadius)) {
                 ds.pointRadius = [...ds.pointRadius, 0, 0, 0];
