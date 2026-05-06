@@ -112,7 +112,7 @@ function renderizarTabla(res, semInv) {
             const labelGrupo = cat !== '—' ? `${cat} — ${nomCat}` : nomCat;
             tbody.append(`
                 <tr class="table-light">
-                    <td colspan="12" class="fw-bold py-2 ps-3" style="background-color: #e9ecef; color: #495057; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
+                    <td colspan="11" class="fw-bold py-2 ps-3" style="background-color: #e9ecef; color: #495057; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
                         ${labelGrupo}
                     </td>
                 </tr>
@@ -140,13 +140,7 @@ function renderizarTabla(res, semInv) {
         const despFactor = p.despacho_factor ? parseFloat(p.despacho_factor) : 0;
         const invPresNum = invPres !== '' ? parseFloat(invPres) : null;
 
-        // Valor inicial en Unidades de Control
-        const invUnidNum = invUnid !== '' ? parseFloat(invUnid) : 0;
-        const totalControl = invUnidNum + (invPresNum !== null ? invPresNum * despFactor : 0);
 
-        const calcControl = `
-            <span class="despacho-val">${fmt(totalControl)}</span>
-        `;
 
         tbody.append(`
             <tr data-id="${idPP}" data-cat="${cat}"
@@ -166,7 +160,6 @@ function renderizarTabla(res, semInv) {
                 <td class="small text-muted">
                     ${p.despacho_nombre ? p.despacho_nombre : ''}
                 </td>
-                <td class="col-inv-despacho">${calcControl}</td>
                 <td class="bg-light">${fmt(p._stock_min)}</td>
                 <td class="bg-light">${sMaxHtml}</td>
                 <td class="col-sug">${pedidoHtml}</td>
@@ -216,16 +209,7 @@ function recalcularFila(tr, target, porcentajes) {
     tr.find('.bg-highlight-p1').text(fmt(p1));
     tr.find('.bg-highlight-p2').text(fmt(p2));
 
-    // Recalcular columna En presentación Unidades de Control
-    // Fórmula: En Unidades sueltas + (Presentación * Factor de Despacho)
-    const invUnid = parseFloat(tr.find('.input-inv-unidades').val()) || 0;
-    const despFactor = parseFloat(tr.data('despacho-factor')) || 0;
-    
-    // Si no hay factor de despacho, el factor es 1 (misma unidad)
-    const factorEfectivo = despFactor > 0 ? despFactor : 1;
-    const totalControl = invUnid + (invPres * factorEfectivo);
-    
-    tr.find('.despacho-val').text(fmt(totalControl));
+
 }
 
 /* ── guardar inventario ───────────────────────────────────── */

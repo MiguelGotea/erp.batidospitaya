@@ -102,22 +102,9 @@
 }
 
 /* ── Columna calculada \u2261 En Pres. Despacho ─────────────────────── */
-.col-inv-despacho {
-    background: #fffde7 !important;
-    text-align: center;
-    font-weight: 600;
-    color: #6d4c00;
-    min-width: 90px;
-    white-space: nowrap;
-}
 
-.despacho-unit-label {
-    font-size: .66rem;
-    color: #a68000;
-    font-weight: 400;
-    display: block;
-    margin-top: 1px;
-}
+
+
 
 /* Colores de encabezados según imagen */
 .th-inventario {
@@ -138,9 +125,4 @@
     font-weight: bold;
 }
 
-/* Encabezado de la columna despacho */
-.tabla-inventario thead th.th-despacho-col {
-    background-color: #4e342e !important;
-    color: white !important;
-    font-size: .75rem;
-}
+

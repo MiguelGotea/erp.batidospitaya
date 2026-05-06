@@ -86,7 +86,7 @@ $version = mt_rand(1, 10000);
                             <thead>
                                 <tr>
                                     <th rowspan="2" style="width:20%;">Producto</th>
-                                    <th colspan="5" class="th-inventario">INVENTARIO SEMANAL</th>
+                                    <th colspan="4" class="th-inventario">INVENTARIO SEMANAL</th>
                                     <th class="th-inventario">Stock Mínimo</th>
                                     <th class="th-inventario">Stock Máximo (B)</th>
                                     <th class="th-pedido-sugerido">PEDIDO SUGERIDO (+B - A)</th>
@@ -95,7 +95,6 @@ $version = mt_rand(1, 10000);
                                 <tr>
                                     <th colspan="2" class="th-inventario">En Unidades</th>
                                     <th colspan="2" class="th-inventario">(A) En Presentación Envío</th>
-                                    <th class="th-despacho-col">En presentación Unidades de Control</th>
                                     <th class="th-inventario">Presentación de Envío</th>
                                     <th class="th-inventario">Presentación de Envío</th>
                                     <th class="th-pedido-sugerido">Presentación de Envío</th>
