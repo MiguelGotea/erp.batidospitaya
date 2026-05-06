@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         echo "<script>
             alert('Solicitud de cambio de equipo creada exitosamente.');
-            window.close();
+            window.location.href = 'historial_solicitudes.php';
         </script>";
 
     } catch (Exception $e) {

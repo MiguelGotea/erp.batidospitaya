@@ -122,10 +122,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        // Fallback tradicional
         echo "<script>
             alert('Ticket creado exitosamente. Código: TKT" . date('Ym') . str_pad($ticket_id, 4, '0', STR_PAD_LEFT) . "');
-            window.close();
+            window.location.href = 'historial_solicitudes.php';
         </script>";
 
     } catch (Exception $e) {
@@ -480,7 +479,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         function cerrarYVolver() {
             bootstrap.Modal.getInstance(document.getElementById('modalTicketCreado')).hide();
-            window.close();
+            window.location.href = 'historial_solicitudes.php';
         }
 
         // Manejar carga de archivos
