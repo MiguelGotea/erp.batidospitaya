@@ -3,10 +3,10 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-require_once '../../includes/menu_lateral.php';
-require_once '../../includes/header_universal.php';
+require_once '../../core/auth/auth.php';
+require_once '../../core/helpers/funciones.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 
 // Verificar conexión
 if (!$conn) {
@@ -2631,7 +2631,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
 
