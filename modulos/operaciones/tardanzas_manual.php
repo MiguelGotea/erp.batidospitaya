@@ -20,9 +20,8 @@ $sucursales = [];
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-if (!verificarAccesoCargo([5, 46, 43, 16, 8, 13, 28, 39, 30, 37, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([5, 46, 43, 16, 8, 13, 28, 39, 30, 37, 49])) {
     header('Location: ../index.php');
     exit();
 }
@@ -33,7 +32,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Definir qué cargos ven la vista completa
 $cargosVistaCompleta = [13, 28, 39, 30, 37, 5, 43, 46, 49];
-$verVistaCompleta = $esAdmin || verificarAccesoCargo($cargosVistaCompleta);
+$verVistaCompleta = verificarAccesoCargo($cargosVistaCompleta);
 
 // Agrega al inicio del archivo (antes de cualquier output)
 ini_set('memory_limit', '512M');
@@ -2632,7 +2631,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
 
