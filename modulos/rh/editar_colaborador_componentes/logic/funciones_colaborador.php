@@ -3,10 +3,14 @@
 require_once 'compliance_logic.php';
 
 // Inicializar variables globales si no están definidas (para evitar warnings al incluir el archivo)
-if (!isset($codOperario)) $codOperario = null;
-if (!isset($cargoId)) $cargoId = 0;
-if (!isset($pestaña)) $pestaña = '';
-if (!isset($usuario)) $usuario = null;
+if (!isset($codOperario))
+    $codOperario = null;
+if (!isset($cargoId))
+    $cargoId = 0;
+if (!isset($pestaña))
+    $pestaña = '';
+if (!isset($usuario))
+    $usuario = null;
 
 /**
  * Calcula el porcentaje de documentos obligatorios completados para un contrato específico
@@ -3412,21 +3416,38 @@ function guardarFormatoSalida($datos)
         $existente = obtenerFormatoSalidaPorContrato($codContrato);
 
         $campos = [
-            'cod_contrato', 'fecha', 'induccion_p1', 'induccion_p2', 
-            'laboral_p1', 'laboral_p2', 'laboral_p3', 'laboral_p4', 'laboral_p5', 'laboral_p6',
-            'sat_salario', 'sat_ambiente', 'sat_relacion_companeros', 'sat_relacion_jefe', 
-            'sat_relacion_superiores', 'sat_horario', 'sat_trabajo_equipo', 'sat_recomendaria',
-            'opinion_clima', 'firma_entrevistado', 'firma_entrevistador', 
-            'usuario_ultima_modificacion', 'fecha_ultima_modificacion'
+            'cod_contrato',
+            'fecha',
+            'induccion_p1',
+            'induccion_p2',
+            'laboral_p1',
+            'laboral_p2',
+            'laboral_p3',
+            'laboral_p4',
+            'laboral_p5',
+            'laboral_p6',
+            'sat_salario',
+            'sat_ambiente',
+            'sat_relacion_companeros',
+            'sat_relacion_jefe',
+            'sat_relacion_superiores',
+            'sat_horario',
+            'sat_trabajo_equipo',
+            'sat_recomendaria',
+            'opinion_clima',
+            'firma_entrevistado',
+            'firma_entrevistador',
+            'usuario_ultima_modificacion',
+            'fecha_ultima_modificacion'
         ];
 
         if (!$existente) {
             $campos[] = 'usuario_registro';
             $campos[] = 'usuario_creador';
-            
+
             $placeholders = str_repeat('?,', count($campos) - 1) . '?';
             $sql = "INSERT INTO formato_salida (" . implode(', ', $campos) . ") VALUES ($placeholders)";
-            
+
             $valores = [];
             foreach ($campos as $campo) {
                 if ($campo == 'fecha_ultima_modificacion') {
@@ -3441,7 +3462,7 @@ function guardarFormatoSalida($datos)
                 $setClause[] = "$campo = ?";
             }
             $sql = "UPDATE formato_salida SET " . implode(', ', $setClause) . " WHERE id = ?";
-            
+
             $valores = [];
             foreach ($campos as $campo) {
                 if ($campo == 'fecha_ultima_modificacion') {
