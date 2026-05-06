@@ -211,17 +211,33 @@ try {
         cerrarTransitivas_SMM($convIndex);
 
         /* Ventas × SubReceta agrupadas por semana para los CodCotizacion del producto */
-        $stmtV = $conn->prepare("
-            SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
-                   SUM(v.Cantidad * sr.Cantidad) as cant
-            FROM VentasGlobalesAccessCSV v
-            INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
-            WHERE v.Anulado = 0 AND v.Semana BETWEEN ? AND ?
-              AND v.Fecha BETWEEN ? AND ?
-              AND sr.codporcion IN ($ph)
-            GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
-        ");
-        $paramsV = array_merge([$numDesde, $numHasta, $rDates['f1'], $rDates['f2']], array_values($codCots));
+        /* IMPORTANTE: filtrar por sucursal igual que pedido_sugerido_calcular.php */
+        if ($codSuc) {
+            $stmtV = $conn->prepare("
+                SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
+                       SUM(v.Cantidad * sr.Cantidad) as cant
+                FROM VentasGlobalesAccessCSV v
+                INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
+                WHERE v.Anulado = 0 AND v.local = ? AND v.Semana BETWEEN ? AND ?
+                  AND v.Fecha BETWEEN ? AND ?
+                  AND sr.codporcion IN ($ph)
+                GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
+            ");
+            $paramsV = array_merge([$codSuc, $numDesde, $numHasta, $rDates['f1'], $rDates['f2']], array_values($codCots));
+        } else {
+            /* Sin sucursal: sumar todas (caso poco probable en este contexto) */
+            $stmtV = $conn->prepare("
+                SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
+                       SUM(v.Cantidad * sr.Cantidad) as cant
+                FROM VentasGlobalesAccessCSV v
+                INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
+                WHERE v.Anulado = 0 AND v.Semana BETWEEN ? AND ?
+                  AND v.Fecha BETWEEN ? AND ?
+                  AND sr.codporcion IN ($ph)
+                GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
+            ");
+            $paramsV = array_merge([$numDesde, $numHasta, $rDates['f1'], $rDates['f2']], array_values($codCots));
+        }
         $stmtV->execute($paramsV);
         $filasV = $stmtV->fetchAll(PDO::FETCH_ASSOC);
 
