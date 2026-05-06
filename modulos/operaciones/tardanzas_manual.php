@@ -36,6 +36,7 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 $verVistaCompleta  = tienePermiso('tardanzas_manual', 'vista_completa',  $cargoOperario);
 $puedeNuevoRegistro = tienePermiso('tardanzas_manual', 'nuevo_registro', $cargoOperario);
 $puedeExportar      = tienePermiso('tardanzas_manual', 'exportar',        $cargoOperario);
+$puedeAprobar       = tienePermiso('tardanzas_manual', 'aprobar',         $cargoOperario);
 
 // Variables legacy para compatibilidad con funciones internas
 $esLider       = $puedeNuevoRegistro;
@@ -2219,7 +2220,9 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                                 <th>Observaciones</th>
                                 <th>Registrado por</th>
                                 <th>Foto</th>
+                                <?php if ($puedeAprobar): ?>
                                 <th style="text-align: center;">Acciones</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -2231,7 +2234,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                             <!-- SECCIÓN 2: TARDANZAS NO REPORTADAS (solo para vista completa) -->
                             <?php if ($verVistaCompleta && !empty($tardanzasNoReportadas)): ?>
                                 <tr class="separador-tardanzas">
-                                    <td colspan="10"
+                                    <td colspan="<?= $puedeAprobar ? 10 : 9 ?>"
                                         style="background-color: #f8f9fa; font-weight: bold; text-align: center; padding: 10px;">
                                         <i class="fas fa-exclamation-triangle" style="color: #ffc107;"></i>
                                         TARDANZAS NO REPORTADAS (DETECTADAS POR SISTEMA)

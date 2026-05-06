@@ -1,4 +1,11 @@
 <?php
+/**
+ * Variables inyectadas desde el contexto del include en tardanzas_manual.php
+ *
+ * @var array   $tardanza            Fila de tardanza detectada automáticamente por el sistema
+ * @var bool    $puedeAprobar        Si el usuario puede ver/gestionar la columna de acciones
+ * @var bool    $puedeNuevoRegistro  Si el usuario puede registrar manualmente esta tardanza
+ */
 $horariosInfo = [
     'entrada_programada' => $tardanza['horario_entrada_programada'],
     'salida_programada' => $tardanza['horario_salida_programada'],
@@ -34,9 +41,10 @@ $horariosInfo = [
         <i class="fas fa-camera" style="color: #ccc; font-size: 18px;" title="Sin foto"></i>
     </td>
     
+    <?php if ($puedeAprobar): ?>
     <td style="text-align: center;">
         <div class="action-buttons-inline">
-            <?php// if ($esOperaciones): ?>
+            <?php if ($puedeNuevoRegistro): ?>
                 <button type="button" class="btn-action btn-registrar" 
                         onclick="registrarTardanzaNoReportada(
                             <?= $tardanza['cod_operario'] ?>, 
@@ -48,7 +56,7 @@ $horariosInfo = [
                         title="Registrar esta tardanza">
                     <i class="fas fa-plus-circle"></i>
                 </button>
-            <?php// endif; ?>
+            <?php endif; ?>
             
             <button type="button" class="btn-action btn-info" 
                     onclick="verDetallesTardanzaNoReportada(
@@ -62,4 +70,5 @@ $horariosInfo = [
             </button>
         </div>
     </td>
-</tr>
+    <?php endif; ?>
+</tr>
