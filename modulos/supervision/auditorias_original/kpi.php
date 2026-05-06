@@ -3,8 +3,8 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 // Al inicio del archivo, verificar autenticación y acceso al módulo
-require_once 'auth.php';
-require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditor�a
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
+require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
 require_once 'conexion.php';
 
 // Verificar acceso al módulo 'publico' (o el nombre que corresponda según tus permisos)

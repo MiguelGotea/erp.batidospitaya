@@ -1,7 +1,7 @@
 <?php
 // ver_auditoria_promociones.php
-require_once '../auth.php';
-require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditoría
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorÃ­as, ahora llama al auth del core
+require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditora
 require_once 'config.php';
 
 $db = conectarDB();
