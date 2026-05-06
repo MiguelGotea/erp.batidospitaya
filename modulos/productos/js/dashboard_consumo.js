@@ -679,6 +679,14 @@ function renderGrafico(data) {
     // Ocultar botón "Línea x Suc." si no hay desglose
     $('#chartModoLineaSuc').toggle(hayDesglose);
 
+    // ── Extender labels para proyección (se necesitan antes de construir los datasets de Stock Mín)
+    const labelsExtended = esLineaSuc ? labels : [
+        ...labels,
+        `Proy. ${ultimaSem + 1}`,
+        `Proy. ${ultimaSem + 2}`,
+        `Proy. ${ultimaSem + 3}`,
+    ];
+
     if (esLineaSuc || esBarraSuc) {
         // ━━ Modo Multi-Sucursal ━━
 
@@ -799,14 +807,7 @@ function renderGrafico(data) {
         }
     }
 
-    // ── Proyección 3 semanas — solo en modo Total o Barra por sucursal ─────────
-    // En modo Línea por sucursal (esLineaSuc) NO se muestran semanas proyectadas
-    const labelsExtended = esLineaSuc ? labels : [
-        ...labels,
-        `Proy. ${ultimaSem + 1}`,
-        `Proy. ${ultimaSem + 2}`,
-        `Proy. ${ultimaSem + 3}`,
-    ];
+    const nSems = semanasNros.length;
     const nSems = semanasNros.length;
 
     if (!esLineaSuc) {
