@@ -1,7 +1,7 @@
 <?php
 // Configuración inicial y autenticación
 require_once '../auth.php';
-require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditor�a
+require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditor�a
 require_once 'config.php';
 
 // Establecer conexión a la base de datos
@@ -18,7 +18,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 //verificarAccesoCargo([2, 5, 8, 11, 16, 13]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([2, 5, 8, 11, 16, 13]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([2, 5, 8, 11, 16, 13, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -36,16 +36,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_fecha'])) {
     $id_referencia = $_POST['id_referencia'];
     $fecha_deduccion = $_POST['fecha_deduccion'];
     $usuario_id = $_SESSION['usuario_id'];
-    
+
     try {
         // Validar fecha
         $fecha_obj = DateTime::createFromFormat('Y-m-d', $fecha_deduccion);
         if (!$fecha_obj) {
             throw new Exception("Formato de fecha inválido");
         }
-        
+
         // Actualizar en la tabla original correspondiente
-        switch($tipo) {
+        switch ($tipo) {
             case 'facturacion':
                 $sql = "UPDATE auditoria_facturacion SET fecha_deduccion = ? WHERE id = ?";
                 break;
@@ -67,16 +67,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_fecha'])) {
             default:
                 throw new Exception("Tipo de deducción inválido");
         }
-        
+
         $stmt = $db->prepare($sql);
         $stmt->execute([$fecha_deduccion, $id_referencia]);
-        
+
         // Registrar en la tabla de deducciones_operaciones
         $sql_insert = "INSERT INTO deducciones_operaciones (
             tipo_deduccion, id_referencia, operario_id, sucursal_id, monto, 
             fecha_evento, fecha_deduccion, comentarios, usuario_registro
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
+
         $stmt_insert = $db->prepare($sql_insert);
         $stmt_insert->execute([
             $tipo,
@@ -89,11 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_fecha'])) {
             $_POST['comentarios'],
             $usuario_id
         ]);
-        
+
         // Redirigir para evitar reenvío del formulario
         header("Location: deducciones_total.php?" . http_build_query($_GET));
         exit();
-        
+
     } catch (Exception $e) {
         $error_asignacion = "Error al asignar fecha: " . $e->getMessage();
     }
@@ -124,18 +124,18 @@ try {
     if ($esOperarioOLider) {
         // Obtener el último CodContrato del operario
         $ultimo_cod_contrato = obtenerUltimoCodigoContrato($_SESSION['usuario_id']);
-        
+
         if ($ultimo_cod_contrato) {
             $operario_id = $ultimo_cod_contrato; // Usar CodContrato en lugar de CodOperario
         } else {
             $operario_id = $_SESSION['usuario_id']; // Fallback al CodOperario
         }
-        
+
         // MODIFICADO: Usar últimos 20 días en lugar de quincena
         $fecha_hasta = date('Y-m-d');
         $fecha_desde = date('Y-m-d', strtotime('-19 days')); // 20 días incluyendo hoy
     }
-    
+
     // Consulta para obtener todas las deducciones de los diferentes tipos
     $sql = "
         (SELECT 
@@ -343,49 +343,49 @@ try {
         FROM faltante_caja fc
         JOIN sucursales s ON fc.sucursal_id = s.codigo)
     ";
-    
+
     // Aplicar filtros SOBRE LA FECHA LOCAL
     $where = [];
     $params = [];
-    
+
     if ($operario_id > 0) {
         // Siempre buscar por cod_contrato (operario_id ahora representa el cod_contrato)
         $where[] = "cod_contrato = ?";
         $params[] = $operario_id;
     }
-    
+
     if ($sucursal_id != 'todas') {
         $where[] = "sucursal_id = ?";
         $params[] = $sucursal_id;
     }
-    
+
     if (!empty($fecha_desde)) {
         $where[] = "DATE(fecha_evento_local) >= ?";  // FILTRAR POR FECHA LOCAL
         $params[] = $fecha_desde;
     }
-    
+
     if (!empty($fecha_hasta)) {
         $where[] = "DATE(fecha_evento_local) <= ?";  // FILTRAR POR FECHA LOCAL
         $params[] = $fecha_hasta;
     }
-    
+
     if ($cobrado_filtro !== 'todos') {
         $where[] = "cobrado = ?";
         $params[] = ($cobrado_filtro === 'si' ? 1 : 0);
     }
-    
+
     // Crear una consulta derivada para aplicar los filtros
     if (!empty($where)) {
         $sql = "SELECT * FROM ($sql) AS subquery WHERE " . implode(" AND ", $where);
     }
-    
+
     // Ordenar por fecha de evento local descendente
     $sql .= " ORDER BY fecha_evento_local DESC";
-    
+
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Solo obtener lista de operarios y sucursales si NO es operario/líder
     if (!$esOperarioOLider) {
         // Obtener lista de operarios para el filtro (mostrando cod_contrato como identificador)
@@ -410,12 +410,12 @@ try {
                          GROUP BY o.CodOperario
                          ORDER BY nombre_completo";
         $operarios = $db->query($sql_operarios)->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Obtener lista de sucursales para el filtro
         $sql_sucursales = "SELECT codigo, nombre FROM sucursales WHERE activa = 1 ORDER BY nombre";
         $sucursales = $db->query($sql_sucursales)->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
 } catch (PDOException $e) {
     die("Error en la consulta: " . $e->getMessage());
 }
@@ -430,36 +430,37 @@ if (isset($_GET['exportar_excel'])) {
         WHERE monto != 0
         ORDER BY fecha_evento_local DESC
     ";
-    
+
     // Usar los mismos parámetros del filtro principal (ya incluyen las fechas)
     $params_export = $params;
-    
+
     // Ejecutar la consulta modificada
     $stmt_export = $db->prepare($sql_export);
     $stmt_export->execute($params_export);
     $registros_export = $stmt_export->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Configurar headers para descarga de archivo Excel - CON RANGO DE FECHAS
     $nombre_archivo = "deducciones_" . str_replace('-', '', $fecha_desde) . "_" . str_replace('-', '', $fecha_hasta) . ".xls";
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
-    
+
     // Función para calcular fecha de aplicación basada en estado y fecha de evento
-    function calcularFechaAplicacion($estado, $fecha_evento_local) {  // CAMBIAR PARÁMETRO
+    function calcularFechaAplicacion($estado, $fecha_evento_local)
+    {  // CAMBIAR PARÁMETRO
         $fecha = new DateTime($fecha_evento_local);  // USAR fecha_evento_local DIRECTAMENTE
-        $dia_evento = (int)$fecha->format('d');
-        
-        switch($estado) {
+        $dia_evento = (int) $fecha->format('d');
+
+        switch ($estado) {
             case 'Planilla Primer Quincena':
                 // 15 del mismo mes
                 $fecha->setDate($fecha->format('Y'), $fecha->format('m'), 15);
                 return $fecha->format('d-M-y');
-                
+
             case 'Planilla Segunda Quincena':
                 // Último día del mismo mes
                 $fecha->modify('last day of this month');
                 return $fecha->format('d-M-y');
-                
+
             case 'Propina':
                 // Si el evento es después del día 7, la propina se aplica el 7 del SIGUIENTE mes
                 // Si el evento es antes o igual al día 7, la propina se aplica el 7 del MISMO mes
@@ -468,24 +469,36 @@ if (isset($_GET['exportar_excel'])) {
                 }
                 $fecha->setDate($fecha->format('Y'), $fecha->format('m'), 7);
                 return $fecha->format('d-M-y');
-                
+
             default:
                 return 'Fecha no definida';
         }
     }
-    
+
     // Iniciar salida
-    
+
     // MARCAR COMO COBRADOS AL EXPORTAR
     foreach ($registros_export as $reg) {
         $tabla_update = '';
-        switch($reg['tipo']) {
-            case 'facturacion': $tabla_update = 'auditoria_facturacion'; break;
-            case 'caja_chica': $tabla_update = 'auditoria_caja_chica'; break;
-            case 'inventario': $tabla_update = 'auditoria_inventario_operarios'; break;
-            case 'faltante_inventario': $tabla_update = 'faltante_inventario_operarios'; break;
-            case 'faltante_danos': $tabla_update = 'faltante_danos_operarios'; break;
-            case 'faltante_caja': $tabla_update = 'faltante_caja'; break;
+        switch ($reg['tipo']) {
+            case 'facturacion':
+                $tabla_update = 'auditoria_facturacion';
+                break;
+            case 'caja_chica':
+                $tabla_update = 'auditoria_caja_chica';
+                break;
+            case 'inventario':
+                $tabla_update = 'auditoria_inventario_operarios';
+                break;
+            case 'faltante_inventario':
+                $tabla_update = 'faltante_inventario_operarios';
+                break;
+            case 'faltante_danos':
+                $tabla_update = 'faltante_danos_operarios';
+                break;
+            case 'faltante_caja':
+                $tabla_update = 'faltante_caja';
+                break;
         }
         if ($tabla_update) {
             $stmt_upd = $db->prepare("UPDATE `$tabla_update` SET cobrado = 1 WHERE id = ?");
@@ -508,11 +521,11 @@ if (isset($_GET['exportar_excel'])) {
     echo '<th>Cobrado</th>'; // NUEVA COLUMNA
     // ELIMINAR: echo '<th>Código Contrato</th>'; // Eliminamos esta columna
     echo '</tr>';
-    
+
     foreach ($registros_export as $registro) {
         // USAR fecha_evento_local DIRECTAMENTE (ya convertida)
         $fecha_evento_formatted = formatoFechaCorta($registro['fecha_evento_local']);
-        
+
         $fecha_deduccion = '';
         if (!empty($registro['fecha_deduccion'])) {
             // Para fecha_deduccion también aplicar conversión si es necesario
@@ -522,12 +535,12 @@ if (isset($_GET['exportar_excel'])) {
             }
             $fecha_deduccion = formatoFechaCorta($fecha_ded->format('Y-m-d'));
         }
-        
+
         // Determinar el tipo de auditoría
         $tipo = $registro['tipo'];
         $tipo_text = '';
-        
-        switch($tipo) {
+
+        switch ($tipo) {
             case 'facturacion':
                 $tipo_text = 'Caja Facturación';
                 break;
@@ -547,13 +560,13 @@ if (isset($_GET['exportar_excel'])) {
                 $tipo_text = 'Faltante de Caja';
                 break;
         }
-        
+
         // Obtener el monto como valor absoluto
         $monto_exportar = abs($registro['monto']);
-        
+
         // Obtener código de contrato
         $cod_contrato = $registro['cod_contrato'] ?? '';
-        
+
         // Combinar comentarios con tipo de concepto entre paréntesis
         $detalle_combinado = htmlspecialchars($registro['comentarios'] ?? '');
         if (!empty($detalle_combinado)) {
@@ -561,7 +574,7 @@ if (isset($_GET['exportar_excel'])) {
         } else {
             $detalle_combinado = "(" . $tipo_text . ")";
         }
-        
+
         // Formatear fecha de registro (ajustar -6 horas para tipos que no son faltante_caja)
         $fecha_registro = '';
         if (!empty($registro['fecha_registro'])) {
@@ -571,16 +584,16 @@ if (isset($_GET['exportar_excel'])) {
             }
             $fecha_registro = $fecha_reg->format('d-m-Y H:i:s');
         }
-        
+
         // Calcular fecha de aplicación basada en el estado
         $fecha_aplicacion = calcularFechaAplicacion(
-            $registro['estado_deduccion'] ?? '', 
+            $registro['estado_deduccion'] ?? '',
             $registro['fecha_evento_local']  // Usar fecha local
         );
-        
+
         // Mostrar código de contrato + nombre en la columna Persona
         $persona_completa = $cod_contrato . ' ' . $registro['operario_nombre'];
-        
+
         echo '<tr>';
         //echo '<td>' . $registro['operario_id'] . '</td>';
         echo '<td>' . htmlspecialchars($cod_contrato) . '</td>'; // Mostrar código de contrato
@@ -598,7 +611,7 @@ if (isset($_GET['exportar_excel'])) {
         // ELIMINAR: echo '<td>' . htmlspecialchars($cod_contrato) . '</td>'; // Eliminamos esta columna
         echo '</tr>';
     }
-    
+
     echo '</table>';
     exit;
 }
@@ -613,12 +626,12 @@ if (isset($_GET['exportar_contabilidad'])) {
         WHERE monto != 0
         ORDER BY operario_nombre, fecha_evento DESC
     ";
-    
+
     // Ejecutar la consulta modificada
     $stmt_export = $db->prepare($sql_export);
     $stmt_export->execute($params);
     $registros_export = $stmt_export->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Agrupar por operario
     $deducciones_por_operario = [];
     foreach ($registros_export as $registro) {
@@ -632,24 +645,24 @@ if (isset($_GET['exportar_contabilidad'])) {
                 'deducciones' => []
             ];
         }
-        
+
         // Formatear fechas
         $fecha_evento = new DateTime($registro['fecha_evento']);
         $fecha_evento->sub(new DateInterval('PT6H'));
         $fecha_evento_formatted = $fecha_evento->format('d-m-Y H:i');
-        
+
         $fecha_deduccion = '';
         if (!empty($registro['fecha_deduccion'])) {
             $fecha_ded = new DateTime($registro['fecha_deduccion']);
             $fecha_ded->sub(new DateInterval('PT6H'));
             $fecha_deduccion = $fecha_ded->format('d-m-Y');
         }
-        
+
         // Determinar el tipo de auditoría
         $tipo = $registro['tipo'];
         $tipo_text = '';
-        
-        switch($tipo) {
+
+        switch ($tipo) {
             case 'facturacion':
                 $tipo_text = 'Caja Facturación';
                 break;
@@ -669,7 +682,7 @@ if (isset($_GET['exportar_contabilidad'])) {
                 $tipo_text = 'Faltante de Caja';
                 break;
         }
-        
+
         $deducciones_por_operario[$operario_id]['deducciones'][] = [
             'id' => $registro['id'], // AGREGAR
             'fecha_evento' => $fecha_evento_formatted,
@@ -680,29 +693,41 @@ if (isset($_GET['exportar_contabilidad'])) {
             'cobrado' => $registro['cobrado'] // AGREGAR
         ];
     }
-    
+
     // MARCAR COMO COBRADOS AL EXPORTAR CONTABILIDAD
     foreach ($registros_export as $reg) {
         $tabla_update = '';
-        switch($reg['tipo']) {
-            case 'facturacion': $tabla_update = 'auditoria_facturacion'; break;
-            case 'caja_chica': $tabla_update = 'auditoria_caja_chica'; break;
-            case 'inventario': $tabla_update = 'auditoria_inventario_operarios'; break;
-            case 'faltante_inventario': $tabla_update = 'faltante_inventario_operarios'; break;
-            case 'faltante_danos': $tabla_update = 'faltante_danos_operarios'; break;
-            case 'faltante_caja': $tabla_update = 'faltante_caja'; break;
+        switch ($reg['tipo']) {
+            case 'facturacion':
+                $tabla_update = 'auditoria_facturacion';
+                break;
+            case 'caja_chica':
+                $tabla_update = 'auditoria_caja_chica';
+                break;
+            case 'inventario':
+                $tabla_update = 'auditoria_inventario_operarios';
+                break;
+            case 'faltante_inventario':
+                $tabla_update = 'faltante_inventario_operarios';
+                break;
+            case 'faltante_danos':
+                $tabla_update = 'faltante_danos_operarios';
+                break;
+            case 'faltante_caja':
+                $tabla_update = 'faltante_caja';
+                break;
         }
         if ($tabla_update) {
             $stmt_upd = $db->prepare("UPDATE `$tabla_update` SET cobrado = 1 WHERE id = ?");
             $stmt_upd->execute([$reg['id']]);
         }
     }
-    
+
     // Configurar headers para descarga de archivo Excel - CON RANGO DE FECHAS
     $nombre_archivo = "deducciones_contabilidad_" . str_replace('-', '', $fecha_desde) . "_" . str_replace('-', '', $fecha_hasta) . ".xls";
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
-    
+
     // Iniciar salida
     echo '<table border="1">';
     echo '<tr>';
@@ -718,7 +743,7 @@ if (isset($_GET['exportar_contabilidad'])) {
     echo '<th>Cobrado</th>'; // NUEVA COLUMNA
     // ELIMINAR: echo '<th>Código Contrato</th>'; // Eliminamos esta columna
     echo '</tr>';
-    
+
     foreach ($deducciones_por_operario as $operario) {
         foreach ($operario['deducciones'] as $deduccion) {
             // Ajustar fecha_evento (UTC a hora local Nicaragua -6 horas), excepto para faltante_caja
@@ -731,7 +756,7 @@ if (isset($_GET['exportar_contabilidad'])) {
                 $fecha_evento->sub(new DateInterval('PT6H'));
                 $fecha_evento_formatted = formatoFechaCorta($fecha_evento->format('Y-m-d'));
             }
-            
+
             // MODIFICADO: Combinar comentarios con tipo de concepto
             $detalle_combinado = htmlspecialchars($deduccion['comentarios'] ?? '');
             if (!empty($detalle_combinado)) {
@@ -739,7 +764,7 @@ if (isset($_GET['exportar_contabilidad'])) {
             } else {
                 $detalle_combinado = "(" . $deduccion['tipo'] . ")";
             }
-            
+
             // Formatear fecha de registro
             $fecha_registro = '';
             if (!empty($deduccion['fecha_registro'])) {
@@ -747,10 +772,10 @@ if (isset($_GET['exportar_contabilidad'])) {
                 $fecha_reg->sub(new DateInterval('PT6H'));
                 $fecha_registro = $fecha_reg->format('d-m-Y H:i:s');
             }
-            
+
             // MODIFICADO: Mostrar código de contrato + nombre
             $nombre_completo_con_codigo = $operario['cod_contrato'] . ' ' . $operario['nombre_completo'];
-            
+
             echo '<tr>';
             // echo '<td>' . $operario['cod_operario'] . '</td>';
             echo '<td>' . htmlspecialchars($operario['cod_contrato'] ?? '') . '</td>'; // MODIFICADO: código de contrato
@@ -766,7 +791,7 @@ if (isset($_GET['exportar_contabilidad'])) {
             echo '</tr>';
         }
     }
-    
+
     echo '</table>';
     exit;
 }
@@ -788,12 +813,13 @@ foreach ($registros as $registro) {
  * Primera quincena: 12 días antes del 15 (del 3 al 12)
  * Segunda quincena: 13 días antes del fin de mes (del 13 al 28)
  */
-function obtenerFechasQuincenaActual() {
+function obtenerFechasQuincenaActual()
+{
     $hoy = new DateTime();
-    $diaActual = (int)$hoy->format('d');
-    $mesActual = (int)$hoy->format('m');
-    $anioActual = (int)$hoy->format('Y');
-    
+    $diaActual = (int) $hoy->format('d');
+    $mesActual = (int) $hoy->format('m');
+    $anioActual = (int) $hoy->format('Y');
+
     // Determinar en qué quincena estamos
     if ($diaActual <= 15) {
         // Primera quincena (1-15): mostrar del 28 del mes anterior al 12 del actual
@@ -804,14 +830,14 @@ function obtenerFechasQuincenaActual() {
         // Segunda quincena (16-fin de mes): mostrar del 13 al 28 del actual
         $fechaDesde = new DateTime("$anioActual-$mesActual-13");
         $fechaHasta = new DateTime("$anioActual-$mesActual-28");
-        
+
         // Si el mes tiene menos de 28 días, ajustar al último día
-        $ultimoDiaMes = (int)$fechaHasta->format('t');
+        $ultimoDiaMes = (int) $fechaHasta->format('t');
         if ($ultimoDiaMes < 28) {
             $fechaHasta = new DateTime("$anioActual-$mesActual-$ultimoDiaMes");
         }
     }
-    
+
     return [
         'desde' => $fechaDesde->format('Y-m-d'),
         'hasta' => $fechaHasta->format('Y-m-d')
@@ -838,43 +864,43 @@ if (isset($_GET['exportar_faltante_caja'])) {
         JOIN sucursales s ON fc.sucursal_id = s.codigo
         WHERE 1=1
     ";
-    
+
     $params_export = [];
-    
+
     // Aplicar mismos filtros
     if ($operario_id > 0) {
         $sql_export .= " AND fc.cod_contrato = ?"; // Buscar por cod_contrato
         $params_export[] = $operario_id;
     }
-    
+
     if ($sucursal_id != 'todas') {
         $sql_export .= " AND fc.sucursal_id = ?";
         $params_export[] = $sucursal_id;
     }
-    
+
     if (!empty($fecha_desde)) {
         $sql_export .= " AND DATE(fc.fecha) >= ?";
         $params_export[] = $fecha_desde;
     }
-    
+
     if (!empty($fecha_hasta)) {
         $sql_export .= " AND DATE(fc.fecha) <= ?";
         $params_export[] = $fecha_hasta;
     }
-    
+
     $sql_export .= " ORDER BY fc.fecha DESC";
-    
+
     $stmt_export = $db->prepare($sql_export);
     $stmt_export->execute($params_export);
     $registros_export = $stmt_export->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Configurar headers para descarga de archivo Excel - INCLUYENDO RANGO DE FECHAS
     $nombre_archivo = "faltantes_caja_" . str_replace('-', '', $fecha_desde) . "_" . str_replace('-', '', $fecha_hasta) . ".xls";
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
-    
+
     // Iniciar salida
-    
+
     // MARCAR COMO COBRADOS AL EXPORTAR FALTANTE CAJA
     foreach ($registros_export as $reg) {
         $stmt_upd = $db->prepare("UPDATE `faltante_caja` SET cobrado = 1 WHERE id = ?");
@@ -894,16 +920,16 @@ if (isset($_GET['exportar_faltante_caja'])) {
     echo '<th>Cobrado</th>'; // NUEVA COLUMNA
     // ELIMINAR: echo '<th>Código Contrato</th>'; // Eliminamos esta columna
     echo '</tr>';
-    
+
     foreach ($registros_export as $registro) {
         // Para faltante_caja, usar fecha directamente sin restar 6 horas
         $fecha_evento_formatted = formatoFechaCorta($registro['fecha_evento']);
-        
+
         $fecha_deduccion = '';
         if (!empty($registro['fecha_deduccion'])) {
             $fecha_deduccion = formatoFechaCorta($registro['fecha_deduccion']);
         }
-        
+
         // MODIFICADO: Combinar comentarios con tipo de concepto
         $detalle_combinado = htmlspecialchars($registro['comentarios'] ?? '');
         if (!empty($detalle_combinado)) {
@@ -911,7 +937,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
         } else {
             $detalle_combinado = "(Faltante de Caja)";
         }
-        
+
         // Formatear fecha de registro
         $fecha_registro = '';
         if (!empty($registro['fecha_registro'])) {
@@ -919,10 +945,10 @@ if (isset($_GET['exportar_faltante_caja'])) {
             $fecha_reg->sub(new DateInterval('PT6H'));
             $fecha_registro = $fecha_reg->format('d-m-Y H:i:s');
         }
-        
+
         // MODIFICADO: Mostrar código de contrato + nombre
         $persona_completa = $registro['cod_contrato'] . ' ' . $registro['operario_nombre'];
-        
+
         echo '<tr>';
         // echo '<td>' . $registro['operario_id'] . '</td>';
         echo '<td>' . htmlspecialchars($registro['cod_contrato'] ?? '') . '</td>'; // MODIFICADO: código de contrato
@@ -937,7 +963,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
         // ELIMINAR: echo '<td>' . htmlspecialchars($registro['cod_contrato'] ?? '') . '</td>'; // Eliminamos esta columna
         echo '</tr>';
     }
-    
+
     echo '</table>';
     exit;
 }
@@ -945,6 +971,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -975,115 +1002,115 @@ if (isset($_GET['exportar_faltante_caja'])) {
             width: 99%;
         }
 
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
 
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 0 5px;
-    box-sizing: border-box;
-    margin: 1px auto;
-    flex-wrap: wrap;
-}
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 5px;
+            box-sizing: border-box;
+            margin: 1px auto;
+            flex-wrap: wrap;
+        }
 
-.logo {
-    height: 50px;
-}
+        .logo {
+            height: 50px;
+        }
 
-.logo-container {
-    flex-shrink: 0;
-    margin-right: auto;
-}
+        .logo-container {
+            flex-shrink: 0;
+            margin-right: auto;
+        }
 
-.buttons-container {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    flex-grow: 1;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex-grow: 1;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-left: auto;
-}
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
 
-.btn-agregar {
-    background-color: transparent;
-    color: #51B8AC;
-    border: 1px solid #51B8AC;
-    text-decoration: none;
-    padding: 6px 10px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s;
-    white-space: nowrap;
-    font-size: 14px;
-    flex-shrink: 0;
-}
+        .btn-agregar {
+            background-color: transparent;
+            color: #51B8AC;
+            border: 1px solid #51B8AC;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
 
-.btn-agregar.activo {
-    background-color: #51B8AC;
-    color: white;
-    font-weight: normal;
-}
+        .btn-agregar.activo {
+            background-color: #51B8AC;
+            color: white;
+            font-weight: normal;
+        }
 
-.btn-agregar:hover {
-    background-color: #0E544C;
-    color: white;
-    border-color: #0E544C;
-}
+        .btn-agregar:hover {
+            background-color: #0E544C;
+            color: white;
+            border-color: #0E544C;
+        }
 
-.user-avatar {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background-color: #51B8AC;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-}
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #51B8AC;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
 
-.btn-logout {
-    background: #51B8AC;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
+        .btn-logout {
+            background: #51B8AC;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
 
-.btn-logout:hover {
-    background: #0E544C;
-}
+        .btn-logout:hover {
+            background: #0E544C;
+        }
 
         .btn-agregar.excel {
             background-color: transparent;
             color: #1d6f42;
             border: 1px solid #1d6f42;
         }
-        
+
         .btn-agregar.excel:hover {
             background-color: #1d6f42;
             color: white;
@@ -1102,7 +1129,8 @@ header {
             background-color: white;
         }
 
-        th, td {
+        th,
+        td {
             padding: 10px;
             border: 1px solid #ddd;
         }
@@ -1117,7 +1145,7 @@ header {
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .filtros-form {
@@ -1188,90 +1216,92 @@ header {
             font-weight: bold;
             color: white;
         }
-        
+
         .badge-facturacion {
             background-color: #3498db;
             border: 1px solid #2980b9;
         }
-        
+
         .badge-caja_chica {
             background-color: #9b59b6;
             border: 1px solid #8e44ad;
         }
-        
+
         .badge-inventario {
             background-color: #2ecc71;
             border: 1px solid #27ae60;
         }
-        
+
         .badge-faltante_inventario {
             background-color: #e67e22;
             border: 1px solid #d35400;
         }
-        
+
         .badge-faltante_danos {
             background-color: #e74c3c;
             border: 1px solid #c0392b;
         }
-        
+
         .badge-faltante_caja {
             background-color: #f39c12;
             border: 1px solid #e67e22;
         }
-        
+
         .monto-faltante {
-            font-weight: bold; /* Verde para valores 0 */
+            font-weight: bold;
+            /* Verde para valores 0 */
         }
-        
+
         .monto-positivo {
-            color: #27ae60; /* Rojo para valores > 0 */
+            color: #27ae60;
+            /* Rojo para valores > 0 */
         }
-        
+
         .monto-negativo {
             color: #e74c3c;
         }
-        
+
         /* Efecto al pasar el mouse sobre las filas */
         tr:hover {
             background-color: rgba(81, 184, 172, 0.1) !important;
         }
 
         @media (max-width: 768px) {
-    .header-container {
-        flex-direction: row;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .buttons-container {
-        position: static;
-        transform: none;
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        margin-top: 10px;
-    }
-    
-    .logo-container {
-        order: 1;
-        margin-right: 0;
-    }
-    
-    .user-info {
-        order: 2;
-        margin-left: auto;
-    }
-    
-    .btn-agregar {
-        padding: 6px 10px;
-        font-size: 13px;
-    }
-    
+            .header-container {
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .buttons-container {
+                position: static;
+                transform: none;
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px;
+            }
+
+            .logo-container {
+                order: 1;
+                margin-right: 0;
+            }
+
+            .user-info {
+                order: 2;
+                margin-left: auto;
+            }
+
+            .btn-agregar {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+
             .filtros-form {
                 grid-template-columns: 1fr;
             }
         }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -1280,105 +1310,109 @@ header {
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
         }
-        
+
         .modal-contenido {
             background-color: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         .modal-contenido h3 {
             margin-top: 0;
             color: #333;
             border-bottom: 1px solid #eee;
             padding-bottom: 10px;
         }
-        
+
         .btn-agregar.excel-contabilidad {
             background-color: #6f42c1;
             border-color: #6f42c1;
             color: white;
         }
-        
+
         .btn-agregar.excel-contabilidad:hover {
             background-color: #5a2d9e;
             border-color: #5a2d9e;
         }
-        
-@media (max-width: 480px) {
-    .btn-agregar {
-        flex-grow: 1;
-        justify-content: center;
-        white-space: normal;
-        text-align: center;
-        padding: 8px 5px;
-    }
-    
-    .user-info {
-        flex-direction: column;
-        align-items: flex-end;
-    }
-}
 
-/* Estilos para el autocompletado */
-#operarios-sugerencias {
-    width: calc(100% - 2px); /* Mismo ancho que el input */
-    border: 1px solid #ddd;
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-top: -1px; /* Para que se pegue al input */
-    position: absolute;
-    top: 100%; /* Posiciona el dropdown justo debajo del input */
-    left: 0;
-    z-index: 1000;
-}
+        @media (max-width: 480px) {
+            .btn-agregar {
+                flex-grow: 1;
+                justify-content: center;
+                white-space: normal;
+                text-align: center;
+                padding: 8px 5px;
+            }
 
-#operarios-sugerencias div:hover {
-    background-color: #51B8AC !important;
-}
+            .user-info {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+        }
 
-#operarios-sugerencias div:last-child {
-    border-bottom: none;
-}
+        /* Estilos para el autocompletado */
+        #operarios-sugerencias {
+            width: calc(100% - 2px);
+            /* Mismo ancho que el input */
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-top: -1px;
+            /* Para que se pegue al input */
+            position: absolute;
+            top: 100%;
+            /* Posiciona el dropdown justo debajo del input */
+            left: 0;
+            z-index: 1000;
+        }
 
-/* Asegurar que el input tenga un z-index menor */
-.filtro-group input[type="text"] {
-    position: relative;
-    z-index: 1;
-}
+        #operarios-sugerencias div:hover {
+            background-color: #51B8AC !important;
+        }
 
-.encabezado{
-    text-align: center;
-}
+        #operarios-sugerencias div:last-child {
+            border-bottom: none;
+        }
 
-/* Agregar estos estilos en la sección CSS existente */
-.badge-primary {
-    background-color: #3498db;
-    border: 1px solid #2980b9;
-}
+        /* Asegurar que el input tenga un z-index menor */
+        .filtro-group input[type="text"] {
+            position: relative;
+            z-index: 1;
+        }
 
-.badge-info {
-    background-color: #17a2b8;
-    border: 1px solid #138496;
-}
+        .encabezado {
+            text-align: center;
+        }
 
-.badge-warning {
-    background-color: #f39c12;
-    border: 1px solid #e67e22;
-}
+        /* Agregar estos estilos en la sección CSS existente */
+        .badge-primary {
+            background-color: #3498db;
+            border: 1px solid #2980b9;
+        }
 
-.badge-secondary {
-    background-color: #6c757d;
-    border: 1px solid #545b62;
-}
+        .badge-info {
+            background-color: #17a2b8;
+            border: 1px solid #138496;
+        }
+
+        .badge-warning {
+            background-color: #f39c12;
+            border: 1px solid #e67e22;
+        }
+
+        .badge-secondary {
+            background-color: #6c757d;
+            border: 1px solid #545b62;
+        }
     </style>
 </head>
+
 <body>
     <div class="contenedor-principal">
         <header>
@@ -1386,42 +1420,46 @@ header {
                 <div class="logo-container">
                     <img src="../Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
-                
+
                 <div class="buttons-container">
                     <?php if ($esAdmin || verificarAccesoCargo([11, 16, 21])): ?>
-                        <a href="auditorias_consolidadas.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
+                        <a href="auditorias_consolidadas.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Historial</span>
                         </a>
                     <?php endif; ?>
-                    
-                    <a href="deducciones_total.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'deducciones_total.php' ? 'activo' : '' ?>">
+
+                    <a href="deducciones_total.php"
+                        class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'deducciones_total.php' ? 'activo' : '' ?>">
                         <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Deducciones</span>
                     </a>
-                    
+
                     <?php if ($esAdmin || verificarAccesoCargo([2, 5])): ?>
-                        <a href="../../../contabilidad/boleta_pago.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'boleta_pago.php' ? 'activo' : '' ?>">
+                        <a href="../../../contabilidad/boleta_pago.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'boleta_pago.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Boleta de Pago</span>
                         </a>
                     <?php endif; ?>
-                    
+
                     <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
-                        <a href="faltante_caja.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_caja.php' ? 'activo' : '' ?>">
+                        <a href="faltante_caja.php"
+                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_caja.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Faltante de Caja</span>
                         </a>
                     <?php endif; ?>
                 </div>
-                
+
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
+                        <?= $esAdmin ?
+                            strtoupper(substr($usuario['nombre'], 0, 1)) :
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+                            <?= $esAdmin ?
+                                htmlspecialchars($usuario['nombre']) :
+                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                         </div>
                         <small>
                             <?= htmlspecialchars($cargoUsuario) ?>
@@ -1433,190 +1471,194 @@ header {
                 </div>
             </div>
         </header>
-        
-        <?php if (!$esOperarioOLider): ?>
-        <!-- Filtros - Solo visible para cargos diferentes a 2 y 5 -->
-        <div class="filtros-container">
-            <form method="get" action="deducciones_total.php" class="filtros-form">
-                <div class="filtro-group">
-                    <label for="sucursal">Sucursal</label>
-                    <select id="sucursal" name="sucursal">
-                        <option value="todas">Todas las sucursales</option>
-                        <?php foreach ($sucursales as $sucursal): ?>
-                            <option value="<?php echo $sucursal['codigo']; ?>" <?php echo $sucursal['codigo'] == $sucursal_id ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($sucursal['nombre']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="filtro-group" style="position: relative;">
-                    <label for="operario">Colaborador</label>
-                    <input type="text" id="operario" name="operario_text" 
-                           placeholder="Escriba para buscar..." 
-                           value="<?php 
-                               if ($operario_id > 0) {
-                                   foreach ($operarios as $op) {
-                                       if ($op['id_display'] == $operario_id) { // CAMBIADO: usar id_display
-                                           echo htmlspecialchars($op['nombre_completo']);
-                                           break;
-                                       }
-                                   }
-                               } else {
-                                   echo 'Todos los colaboradores';
-                               }
-                           ?>" 
-                           autocomplete="off">
-                    <input type="hidden" id="operario_id" name="operario" value="<?php echo $operario_id; ?>">
-                    <div id="operarios-sugerencias" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ddd; border-top: none; max-height: 200px; overflow-y: auto; z-index: 1000;"></div>
-                </div>
-                
-                <div class="filtro-group">
-                    <label for="fecha_desde">Desde</label>
-                    <input type="date" id="fecha_desde" name="fecha_desde" value="<?php echo htmlspecialchars($fecha_desde); ?>">
-                </div>
-                
-                <div class="filtro-group">
-                    <label for="fecha_hasta">Hasta</label>
-                    <input type="date" id="fecha_hasta" name="fecha_hasta" value="<?php echo htmlspecialchars($fecha_hasta); ?>">
-                </div>
 
-                <div class="filtro-group" style="display:none;">
-                    <label for="cobrado">Estado de Cobro</label>
-                    <select id="cobrado" name="cobrado">
-                        <option value="todos" <?php echo $cobrado_filtro === 'todos' ? 'selected' : ''; ?>>Todos</option>
-                        <option value="si" <?php echo $cobrado_filtro === 'si' ? 'selected' : ''; ?>>Cobrados</option>
-                        <option value="no" <?php echo $cobrado_filtro === 'no' ? 'selected' : ''; ?>>Pendientes</option>
-                    </select>
-                </div>
-                
-                <div class="filtro-buttons">
-                    <button type="submit" class="btn-aplicar">
-                        <i class="fas fa-search"></i> Buscar
-                    </button>
-                    <a style="display:none;" href="deducciones_total.php" class="btn-limpiar">
-                        <i class="fas fa-times"></i> Limpiar
-                    </a>
-                    
-                    <a href="deducciones_total.php?<?php 
+        <?php if (!$esOperarioOLider): ?>
+            <!-- Filtros - Solo visible para cargos diferentes a 2 y 5 -->
+            <div class="filtros-container">
+                <form method="get" action="deducciones_total.php" class="filtros-form">
+                    <div class="filtro-group">
+                        <label for="sucursal">Sucursal</label>
+                        <select id="sucursal" name="sucursal">
+                            <option value="todas">Todas las sucursales</option>
+                            <?php foreach ($sucursales as $sucursal): ?>
+                                <option value="<?php echo $sucursal['codigo']; ?>" <?php echo $sucursal['codigo'] == $sucursal_id ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($sucursal['nombre']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="filtro-group" style="position: relative;">
+                        <label for="operario">Colaborador</label>
+                        <input type="text" id="operario" name="operario_text" placeholder="Escriba para buscar..." value="<?php
+                        if ($operario_id > 0) {
+                            foreach ($operarios as $op) {
+                                if ($op['id_display'] == $operario_id) { // CAMBIADO: usar id_display
+                                    echo htmlspecialchars($op['nombre_completo']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo 'Todos los colaboradores';
+                        }
+                        ?>" autocomplete="off">
+                        <input type="hidden" id="operario_id" name="operario" value="<?php echo $operario_id; ?>">
+                        <div id="operarios-sugerencias"
+                            style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ddd; border-top: none; max-height: 200px; overflow-y: auto; z-index: 1000;">
+                        </div>
+                    </div>
+
+                    <div class="filtro-group">
+                        <label for="fecha_desde">Desde</label>
+                        <input type="date" id="fecha_desde" name="fecha_desde"
+                            value="<?php echo htmlspecialchars($fecha_desde); ?>">
+                    </div>
+
+                    <div class="filtro-group">
+                        <label for="fecha_hasta">Hasta</label>
+                        <input type="date" id="fecha_hasta" name="fecha_hasta"
+                            value="<?php echo htmlspecialchars($fecha_hasta); ?>">
+                    </div>
+
+                    <div class="filtro-group" style="display:none;">
+                        <label for="cobrado">Estado de Cobro</label>
+                        <select id="cobrado" name="cobrado">
+                            <option value="todos" <?php echo $cobrado_filtro === 'todos' ? 'selected' : ''; ?>>Todos</option>
+                            <option value="si" <?php echo $cobrado_filtro === 'si' ? 'selected' : ''; ?>>Cobrados</option>
+                            <option value="no" <?php echo $cobrado_filtro === 'no' ? 'selected' : ''; ?>>Pendientes</option>
+                        </select>
+                    </div>
+
+                    <div class="filtro-buttons">
+                        <button type="submit" class="btn-aplicar">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                        <a style="display:none;" href="deducciones_total.php" class="btn-limpiar">
+                            <i class="fas fa-times"></i> Limpiar
+                        </a>
+
+                        <a href="deducciones_total.php?<?php
                         echo http_build_query([
                             'operario' => $operario_id,
                             'sucursal' => $sucursal_id,
                             'fecha_desde' => $fecha_desde,
                             'fecha_hasta' => $fecha_hasta,
                             'exportar_excel' => 1
-                        ]); 
-                    ?>" class="btn-agregar excel">
-                        <i class="fas fa-file-excel"></i> Exportar
-                    </a>
-                </div>
-            </form>
-        </div>
+                        ]);
+                        ?>" class="btn-agregar excel">
+                            <i class="fas fa-file-excel"></i> Exportar
+                        </a>
+                    </div>
+                </form>
+            </div>
         <?php else: ?>
             <!-- Nota informativa para operarios y líderes -->
-            <div style="background-color: #e7f3ff; border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+            <div
+                style="background-color: #e7f3ff; border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
                 <h4 style="margin: 0 0 10px 0; color: #1976D2;">
                     <i class="fas fa-info-circle"></i> Información Importante
                 </h4>
                 <p style="margin: 0; color: #555; line-height: 1.5;">
-                    <strong>Nota:</strong> Este reporte muestra las deducciones correspondientes a los últimos 20 días, correspondientes a auditorías de desempeño y de efectivo del período 
+                    <strong>Nota:</strong> Este reporte muestra las deducciones correspondientes a los últimos 20 días,
+                    correspondientes a auditorías de desempeño y de efectivo del período
                     <?php echo formatoFechaCorta($fecha_desde) . ' al ' . formatoFechaCorta($fecha_hasta); ?>.
                 </p>
             </div>
         <?php endif; ?>
-        
+
         <!-- Botón de exportar a Excel -->
         <div style="text-align: right; margin-bottom: 10px;">
             <h3 style="margin: 0; color: #333; display:none;">
-                Total de Deducciones: 
+                Total de Deducciones:
                 <span style="color: #e74c3c; font-weight: bold;">
                     C$ <?php echo isset($total_deducciones) ? number_format($total_deducciones, 2) : '0.00'; ?>
                 </span>
             </h3>
-            
-            <a style="display:none;" href="deducciones_total.php?<?php 
-                echo http_build_query([
-                    'operario' => $operario_id,
-                    'sucursal' => $sucursal_id,
-                    'fecha_desde' => $fecha_desde,
-                    'fecha_hasta' => $fecha_hasta,
-                    'exportar_excel' => 1
-                ]); 
+
+            <a style="display:none;" href="deducciones_total.php?<?php
+            echo http_build_query([
+                'operario' => $operario_id,
+                'sucursal' => $sucursal_id,
+                'fecha_desde' => $fecha_desde,
+                'fecha_hasta' => $fecha_hasta,
+                'exportar_excel' => 1
+            ]);
             ?>" class="btn-agregar excel">
                 <i class="fas fa-file-excel"></i> Exportar
             </a>
-            
+
             <!-- Nuevo botón para exportar para contabilidad -->
-            <a style="display:none;" href="deducciones_total.php?<?php 
+            <a style="display:none;" href="deducciones_total.php?<?php
+            echo http_build_query([
+                'operario' => $operario_id,
+                'sucursal' => $sucursal_id,
+                'fecha_desde' => $fecha_desde,
+                'fecha_hasta' => $fecha_hasta,
+                'exportar_contabilidad' => 1
+            ]);
+            ?>" class="btn-agregar excel-contabilidad" style="background-color: #6f42c1; border-color: #6f42c1;">
+                <i class="fas fa-file-excel"></i> Exportar para Contabilidad
+            </a>
+
+            <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                <!-- Nuevo botón para exportar solo faltantes de caja -->
+                <a style="display:none;" href="deducciones_total.php?<?php
                 echo http_build_query([
                     'operario' => $operario_id,
                     'sucursal' => $sucursal_id,
                     'fecha_desde' => $fecha_desde,
                     'fecha_hasta' => $fecha_hasta,
-                    'exportar_contabilidad' => 1
-                ]); 
-            ?>" class="btn-agregar excel-contabilidad" style="background-color: #6f42c1; border-color: #6f42c1;">
-                <i class="fas fa-file-excel"></i> Exportar para Contabilidad
-            </a>
-            
-            <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
-                <!-- Nuevo botón para exportar solo faltantes de caja -->
-                <a style="display:none;" href="deducciones_total.php?<?php 
-                    echo http_build_query([
-                        'operario' => $operario_id,
-                        'sucursal' => $sucursal_id,
-                        'fecha_desde' => $fecha_desde,
-                        'fecha_hasta' => $fecha_hasta,
-                        'exportar_faltante_caja' => 1
-                    ]); 
+                    'exportar_faltante_caja' => 1
+                ]);
                 ?>" class="btn-agregar excel" style="background-color: #f39c12; border-color: #f39c12; color: white;">
                     <i class="fas fa-file-excel"></i> Exportar Faltantes Caja
                 </a>
             <?php endif; ?>
         </div>
-        
+
         <!-- Resumen de total de deducciones -->
-        <div style="background-color: #f8f9fa; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd; text-align: center; display:none;">
+        <div
+            style="background-color: #f8f9fa; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd; text-align: center; display:none;">
             <h3 style="margin: 0; color: #333;">
-                Total de Deducciones: 
+                Total de Deducciones:
                 <span style="color: #e74c3c; font-weight: bold;">
                     C$ <?php echo number_format($total_deducciones, 2); ?>
                 </span>
             </h3>
             <?php if (!empty($registros)): ?>
                 <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
-                    Mostrando <?php echo $total_registros; ?> registro(s) - 
+                    Mostrando <?php echo $total_registros; ?> registro(s) -
                     <?php if ($operario_id > 0): ?>
-                        Operario: <?php 
-                            $nombre_operario = '';
-                            foreach ($operarios as $op) {
-                                if ($op['CodOperario'] == $operario_id) {
-                                    $nombre_operario = $op['nombre_completo'];
-                                    break;
-                                }
+                        Operario: <?php
+                        $nombre_operario = '';
+                        foreach ($operarios as $op) {
+                            if ($op['CodOperario'] == $operario_id) {
+                                $nombre_operario = $op['nombre_completo'];
+                                break;
                             }
-                            echo htmlspecialchars($nombre_operario);
-                        ?> | 
+                        }
+                        echo htmlspecialchars($nombre_operario);
+                        ?> |
                     <?php endif; ?>
                     <?php if ($sucursal_id != 'todas'): ?>
-                        Sucursal: <?php 
-                            $nombre_sucursal = '';
-                            foreach ($sucursales as $suc) {
-                                if ($suc['codigo'] == $sucursal_id) {
-                                    $nombre_sucursal = $suc['nombre'];
-                                    break;
-                                }
+                        Sucursal: <?php
+                        $nombre_sucursal = '';
+                        foreach ($sucursales as $suc) {
+                            if ($suc['codigo'] == $sucursal_id) {
+                                $nombre_sucursal = $suc['nombre'];
+                                break;
                             }
-                            echo htmlspecialchars($nombre_sucursal);
-                        ?> | 
+                        }
+                        echo htmlspecialchars($nombre_sucursal);
+                        ?> |
                     <?php endif; ?>
-                    Período: <?php 
-                        echo formatoFechaCorta($fecha_desde) . ' - ' . formatoFechaCorta($fecha_hasta);
+                    Período: <?php
+                    echo formatoFechaCorta($fecha_desde) . ' - ' . formatoFechaCorta($fecha_hasta);
                     ?>
                 </p>
             <?php endif; ?>
         </div>
-        
+
         <!-- Tabla de resultados -->
         <table id="listaDeducciones">
             <thead>
@@ -1640,18 +1682,19 @@ header {
             <tbody>
                 <?php if (empty($registros)): ?>
                     <tr>
-                        <td colspan="<?php echo $esOperarioOLider ? '5' : '7'; ?>" style="text-align:center; background-color:#fff;">
+                        <td colspan="<?php echo $esOperarioOLider ? '5' : '7'; ?>"
+                            style="text-align:center; background-color:#fff;">
                             No se encontraron registros con los filtros aplicados.
                         </td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($registros as $registro): ?>
-                    <tr>
-                        <?php if (!$esOperarioOLider): ?>
-                            <td><?php echo htmlspecialchars($registro['operario_nombre'] ?? ''); ?></td>
-                        <?php endif; ?>
-                        <td>
-                            <?php
+                        <tr>
+                            <?php if (!$esOperarioOLider): ?>
+                                <td><?php echo htmlspecialchars($registro['operario_nombre'] ?? ''); ?></td>
+                            <?php endif; ?>
+                            <td>
+                                <?php
                                 // USAR DIRECTAMENTE fecha_evento_local QUE YA ESTÁ CONVERTIDA
                                 if ($registro['tipo'] == 'faltante_caja') {
                                     // Para faltante_caja, ya está en hora local
@@ -1661,61 +1704,62 @@ header {
                                     $fecha_evento = new DateTime($registro['fecha_evento_local']);
                                     echo formatoFechaCorta($fecha_evento->format('Y-m-d')) . ' ' . $fecha_evento->format('H:i');
                                 }
-                            ?>
-                        </td>
-                        <?php if (verificarAccesoCargo([11]) && !$esOperarioOLider): ?>
-                            <!--<td>
-                                 <?php
-                                    /**if (!empty($registro['fecha_deduccion'])) {
-                                        $fecha_deduccion = new DateTime($registro['fecha_deduccion']);
-                                        $fecha_deduccion->sub(new DateInterval('PT6H'));
-                                        echo formatoFechaCorta($fecha_deduccion->format('Y-m-d'));
-                                        echo ' <button onclick="abrirModalAsignacion(\''.$registro['tipo'].'\', '.$registro['id'].', '.$registro['operario_id'].', \''.$registro['sucursal_id'].'\', '.$registro['monto'].', \''.$registro['fecha_evento'].'\', \''.htmlspecialchars($registro['comentarios'], ENT_QUOTES).'\')" style="background: none; border: none; color: #51B8AC; cursor: pointer;">
-                                            <i class="fas fa-edit"></i>
-                                        </button>';
-                                    } else {
-                                        echo '<span style="color: #999;">No asignada</span>';
-                                        echo ' <button onclick="abrirModalAsignacion(\''.$registro['tipo'].'\', '.$registro['id'].', '.$registro['operario_id'].', \''.$registro['sucursal_id'].'\', '.$registro['monto'].', \''.$registro['fecha_evento'].'\', \''.htmlspecialchars($registro['comentarios'] ?? '', ENT_QUOTES).'\')" style="background: none; border: none; color: #51B8AC; cursor: pointer;">
-                                                <i class="fas fa-calendar-plus"></i> Asignar
-                                            </button>';
-                                    }*/
                                 ?>
+                            </td>
+                            <?php if (verificarAccesoCargo([11]) && !$esOperarioOLider): ?>
+                                <!--<td>
+                                 <?php
+                                 /**if (!empty($registro['fecha_deduccion'])) {
+                                     $fecha_deduccion = new DateTime($registro['fecha_deduccion']);
+                                     $fecha_deduccion->sub(new DateInterval('PT6H'));
+                                     echo formatoFechaCorta($fecha_deduccion->format('Y-m-d'));
+                                     echo ' <button onclick="abrirModalAsignacion(\''.$registro['tipo'].'\', '.$registro['id'].', '.$registro['operario_id'].', \''.$registro['sucursal_id'].'\', '.$registro['monto'].', \''.$registro['fecha_evento'].'\', \''.htmlspecialchars($registro['comentarios'], ENT_QUOTES).'\')" style="background: none; border: none; color: #51B8AC; cursor: pointer;">
+                                         <i class="fas fa-edit"></i>
+                                     </button>';
+                                 } else {
+                                     echo '<span style="color: #999;">No asignada</span>';
+                                     echo ' <button onclick="abrirModalAsignacion(\''.$registro['tipo'].'\', '.$registro['id'].', '.$registro['operario_id'].', \''.$registro['sucursal_id'].'\', '.$registro['monto'].', \''.$registro['fecha_evento'].'\', \''.htmlspecialchars($registro['comentarios'] ?? '', ENT_QUOTES).'\')" style="background: none; border: none; color: #51B8AC; cursor: pointer;">
+                                             <i class="fas fa-calendar-plus"></i> Asignar
+                                         </button>';
+                                 }*/
+                                 ?>
                             </td> -->
-                        <?php endif; ?>
-                        <td><?php echo htmlspecialchars($registro['sucursal_nombre']); ?></td>
-                        <td style="text-align: left;">
-                            <?php if (!empty($registro['comentarios'])): ?>
-                                <?php echo htmlspecialchars($registro['comentarios']); ?>
-                            <?php else: ?>
-                                <span style="color: #6c757d; font-style: italic; font-size: 0.9em;">
-                                    <?php
-                                    // Mostrar "Faltante de caja + fecha" cuando no hay comentarios
-                                    if ($registro['tipo'] == 'faltante_caja') {
-                                        // USAR fecha_evento_local QUE YA ESTÁ CONVERTIDA
-                                        $fecha_evento = new DateTime($registro['fecha_evento_local']);
-                                        echo 'Faltante de caja ' . $fecha_evento->format('d/m/Y');
-                                    } else {
-                                        // Para otros tipos, mantener el texto original
-                                        echo 'Sin comentarios';
-                                    }
-                                    ?>
-                                </span>
                             <?php endif; ?>
-                        </td>
-                        <td class="monto-faltante <?php echo ($registro['monto'] == 0) ? 'monto-positivo' : 'monto-negativo'; ?>">
-                            <?php 
-                            // Mostrar el monto formateado según el tipo
-                            echo number_format(abs($registro['monto']), 2);
-                            ?>
-                        </td>
-                        <td>
-                            <?php 
+                            <td><?php echo htmlspecialchars($registro['sucursal_nombre']); ?></td>
+                            <td style="text-align: left;">
+                                <?php if (!empty($registro['comentarios'])): ?>
+                                    <?php echo htmlspecialchars($registro['comentarios']); ?>
+                                <?php else: ?>
+                                    <span style="color: #6c757d; font-style: italic; font-size: 0.9em;">
+                                        <?php
+                                        // Mostrar "Faltante de caja + fecha" cuando no hay comentarios
+                                        if ($registro['tipo'] == 'faltante_caja') {
+                                            // USAR fecha_evento_local QUE YA ESTÁ CONVERTIDA
+                                            $fecha_evento = new DateTime($registro['fecha_evento_local']);
+                                            echo 'Faltante de caja ' . $fecha_evento->format('d/m/Y');
+                                        } else {
+                                            // Para otros tipos, mantener el texto original
+                                            echo 'Sin comentarios';
+                                        }
+                                        ?>
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                            <td
+                                class="monto-faltante <?php echo ($registro['monto'] == 0) ? 'monto-positivo' : 'monto-negativo'; ?>">
+                                <?php
+                                // Mostrar el monto formateado según el tipo
+                                echo number_format(abs($registro['monto']), 2);
+                                ?>
+                            </td>
+                            <td>
+                                <?php
                                 // Mostrar el tipo de auditoría con un badge de color
                                 $tipo = $registro['tipo'] ?? '';
                                 $badge_class = 'badge-' . $tipo;
                                 $tipo_text = '';
-                                
-                                switch($tipo) {
+
+                                switch ($tipo) {
                                     case 'facturacion':
                                         $tipo_text = 'Caja Facturación';
                                         break;
@@ -1738,32 +1782,34 @@ header {
                                         $tipo_text = 'Desconocido';
                                         $badge_class = 'badge-default';
                                 }
-                                
+
                                 echo '<span class="badge-tipo ' . $badge_class . '">' . $tipo_text . '</span>';
-                            ?>
-                        </td>
-                        <!-- NUEVA COLUMNA: Estado -->
-                        <td>
-                            <?php 
-                            // Mostrar el estado de la deducción SIN BADGE - SOLO TEXTO PLANO
-                            $estado = $registro['estado_deduccion'] ?? '';
-                            echo htmlspecialchars($estado);
-                            ?>
-                        </td>
-                        <td>
-                            <?php if ($registro['cobrado'] == 1): ?>
-                                <span class="badge-tipo badge-success" style="background-color: #28a745;"><i class="fas fa-check-circle"></i> Sí</span>
-                            <?php else: ?>
-                                <span class="badge-tipo badge-secondary" style="background-color: #6c757d;"><i class="fas fa-clock"></i> No</span>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
+                                ?>
+                            </td>
+                            <!-- NUEVA COLUMNA: Estado -->
+                            <td>
+                                <?php
+                                // Mostrar el estado de la deducción SIN BADGE - SOLO TEXTO PLANO
+                                $estado = $registro['estado_deduccion'] ?? '';
+                                echo htmlspecialchars($estado);
+                                ?>
+                            </td>
+                            <td>
+                                <?php if ($registro['cobrado'] == 1): ?>
+                                    <span class="badge-tipo badge-success" style="background-color: #28a745;"><i
+                                            class="fas fa-check-circle"></i> Sí</span>
+                                <?php else: ?>
+                                    <span class="badge-tipo badge-secondary" style="background-color: #6c757d;"><i
+                                            class="fas fa-clock"></i> No</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
-    
+
     <!-- Modal para asignar fecha de deducción -->
     <div id="modalDeduccion" class="modal" style="display: none;">
         <div class="modal-contenido" style="width: 400px;">
@@ -1777,27 +1823,28 @@ header {
                 <input type="hidden" name="monto" id="modalMonto">
                 <input type="hidden" name="fecha_evento" id="modalFechaEvento">
                 <input type="hidden" name="comentarios" id="modalComentarios">
-                
+
                 <div style="margin-bottom: 15px;">
-                    <label for="fecha_deduccion" style="display: block; margin-bottom: 5px; text-align: left;">Fecha a Deducir:</label>
-                    <input type="date" id="fecha_deduccion" name="fecha_deduccion" required 
-                           style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+                    <label for="fecha_deduccion" style="display: block; margin-bottom: 5px; text-align: left;">Fecha a
+                        Deducir:</label>
+                    <input type="date" id="fecha_deduccion" name="fecha_deduccion" required
+                        style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
                 </div>
-                
+
                 <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                    <button type="button" onclick="cerrarModal()" 
-                            style="padding: 8px 15px; background-color: #f1f1f1; border: none; border-radius: 5px; cursor: pointer;">
+                    <button type="button" onclick="cerrarModal()"
+                        style="padding: 8px 15px; background-color: #f1f1f1; border: none; border-radius: 5px; cursor: pointer;">
                         Cancelar
                     </button>
-                    <button type="submit" 
-                            style="padding: 8px 15px; background-color: #51B8AC; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    <button type="submit"
+                        style="padding: 8px 15px; background-color: #51B8AC; color: white; border: none; border-radius: 5px; cursor: pointer;">
                         Guardar
                     </button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <!-- Mostrar error si existe -->
     <?php if (!empty($error_asignacion)): ?>
         <div style="background-color: #ffebee; color: #d32f2f; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
@@ -1812,7 +1859,7 @@ header {
             // Puedes usar un modal o un campo editable directamente en la tabla
             alert('Función para editar fecha de deducción para ' + tipo + ' ID: ' + id);
         }
-        
+
         // Función para abrir el modal de asignación de fecha
         function abrirModalAsignacion(tipo, idReferencia, operarioId, sucursalId, monto, fechaEvento, comentarios) {
             document.getElementById('modalTipo').value = tipo;
@@ -1822,79 +1869,79 @@ header {
             document.getElementById('modalMonto').value = monto;
             document.getElementById('modalFechaEvento').value = fechaEvento;
             document.getElementById('modalComentarios').value = comentarios;
-            
+
             // Establecer fecha mínima (hoy)
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('fecha_deduccion').min = hoy;
-            
+
             // Mostrar modal
             document.getElementById('modalDeduccion').style.display = 'flex';
         }
-        
+
         // Función para cerrar el modal
         function cerrarModal() {
             document.getElementById('modalDeduccion').style.display = 'none';
         }
-        
+
         // Cerrar modal al hacer clic fuera del contenido
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('modalDeduccion');
             if (event.target == modal) {
                 cerrarModal();
             }
         }
     </script>
-    
+
     <script>
         // Datos de operarios para el autocompletado
         const operariosData = [
-            {id: 0, nombre: 'Todos los colaboradores'},
+            { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-            {id: <?php echo $op['id_display']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>'},
+                { id: <?php echo $op['id_display']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
-        
+
         // Función para buscar operarios
         function buscarOperarios(texto) {
             if (!texto || texto === 'Todos los colaboradores') {
                 return [];
             }
-            return operariosData.filter(op => 
+            return operariosData.filter(op =>
                 op.nombre.toLowerCase().includes(texto.toLowerCase()) && op.id !== 0
             );
         }
-        
+
         // Manejar el input de operario
         const operarioInput = document.getElementById('operario');
         const operarioIdInput = document.getElementById('operario_id');
         const sugerenciasDiv = document.getElementById('operarios-sugerencias');
-        
+
         // Mostrar sugerencias al enfocar el campo si tiene texto
-        operarioInput.addEventListener('focus', function() {
+        operarioInput.addEventListener('focus', function () {
             const texto = this.value.trim();
             if (texto && texto !== 'Todos los colaboradores') {
                 mostrarSugerencias(texto);
             }
         });
-        
+
         // Modificar el evento input del campo operario
-        operarioInput.addEventListener('input', function() {
+        operarioInput.addEventListener('input', function () {
             const texto = this.value.trim();
             mostrarSugerencias(texto);
         });
-        
+
         // Ocultar sugerencias al hacer clic fuera
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!operarioInput.contains(e.target) && !sugerenciasDiv.contains(e.target)) {
                 sugerenciasDiv.style.display = 'none';
             }
         });
-        
+
         function mostrarSugerencias(texto) {
             const resultados = buscarOperarios(texto);
-            
+
             sugerenciasDiv.innerHTML = '';
-            
+
             if (resultados.length > 0) {
                 resultados.forEach(op => {
                     const div = document.createElement('div');
@@ -1903,23 +1950,23 @@ header {
                     div.style.cursor = 'pointer';
                     div.style.borderBottom = '1px solid #f0f0f0';
                     div.style.fontSize = '14px';
-                    
-                    div.addEventListener('click', function() {
+
+                    div.addEventListener('click', function () {
                         operarioInput.value = op.nombre;
                         operarioIdInput.value = op.id;
                         sugerenciasDiv.style.display = 'none';
                     });
-                    
-                    div.addEventListener('mouseover', function() {
+
+                    div.addEventListener('mouseover', function () {
                         this.style.backgroundColor = '#51B8AC';
                         this.style.color = 'white';
                     });
-                    
-                    div.addEventListener('mouseout', function() {
+
+                    div.addEventListener('mouseout', function () {
                         this.style.backgroundColor = 'white';
                         this.style.color = 'black';
                     });
-                    
+
                     sugerenciasDiv.appendChild(div);
                 });
                 sugerenciasDiv.style.display = 'block';
@@ -1931,12 +1978,12 @@ header {
                 }
             }
         }
-        
+
         // Manejar teclas en el input
-        operarioInput.addEventListener('keydown', function(e) {
+        operarioInput.addEventListener('keydown', function (e) {
             const sugerenciasVisibles = sugerenciasDiv.style.display === 'block';
             const itemsSugerencias = sugerenciasDiv.querySelectorAll('div');
-            
+
             if (e.key === 'ArrowDown' && sugerenciasVisibles && itemsSugerencias.length > 0) {
                 e.preventDefault();
                 itemsSugerencias[0].focus();
@@ -1957,13 +2004,13 @@ header {
                 sugerenciasDiv.style.display = 'none';
             }
         });
-        
+
         // Permitir navegación con teclado en las sugerencias
-        sugerenciasDiv.addEventListener('keydown', function(e) {
+        sugerenciasDiv.addEventListener('keydown', function (e) {
             const items = this.querySelectorAll('div');
             const itemActivo = document.activeElement;
             let index = Array.from(items).indexOf(itemActivo);
-            
+
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 index = (index + 1) % items.length;
@@ -1977,8 +2024,8 @@ header {
                 itemActivo.click();
             }
         });
-        
-        $(document).ready(function() {
+
+        $(document).ready(function () {
             $('#listaDeducciones').DataTable({
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
@@ -1986,12 +2033,12 @@ header {
                 dom: '<"top"l>rt<"bottom"ip>', // Quitamos la "f" en "top"lf (filter/search)
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
                 pageLength: 25,
-                
+
                 // CONFIGURACIÓN PARA 3 CLICKS
                 order: [], // Sin orden inicial - respeta el orden de la consulta SQL
                 ordering: true, // Habilitar ordenamiento
                 orderMulti: true, // Permitir ordenamiento múltiple con Ctrl+click
-                
+
                 // Configuración específica para el ciclo de 3 clicks
                 columnDefs: [{
                     orderable: true, // Todas las columnas son ordenables
@@ -1999,6 +2046,7 @@ header {
                 }]
             });
         });
-        </script>
+    </script>
 </body>
+
 </html>
