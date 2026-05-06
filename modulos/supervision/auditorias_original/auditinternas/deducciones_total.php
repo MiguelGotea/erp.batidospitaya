@@ -1,7 +1,7 @@
 <?php
 // Configuración inicial y autenticación
 require_once '../auth.php';
-require_once '../funciones.php';
+require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditor�a
 require_once 'config.php';
 
 // Establecer conexión a la base de datos

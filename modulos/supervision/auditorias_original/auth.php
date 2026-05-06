@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'conexion.php';
-require_once 'funciones.php';
+require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditoría
 
 // Verificar autenticaciÃ³n, usuario_id es el codoperario de quien se loguea
 function verificarAutenticacion() {

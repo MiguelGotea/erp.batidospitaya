@@ -1,7 +1,7 @@
 <?php
 // index.php - Registros de AuditorÃ­a con filtros avanzados
 require_once 'auth.php';
-require_once 'funciones.php';
+require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditoría
 require_once 'conexion.php';
 require_once '../../../core/layout/menu_lateral.php';
 require_once '../../../core/layout/header_universal.php';

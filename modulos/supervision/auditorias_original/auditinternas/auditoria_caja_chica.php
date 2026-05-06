@@ -1,7 +1,7 @@
 <?php
 // Incluir configuraci贸n y verificar autenticaci贸n
 require_once '../auth.php';
-require_once '../funciones.php';
+require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditor韆
 require_once 'config.php';
 
 // Conexi贸n a la base de datos usando la funci贸n de config.php

@@ -1,7 +1,7 @@
 <?php
 // Al inicio del archivo, verificar autenticación y acceso al módulo
 require_once '../auth.php';
-require_once '../funciones.php';
+require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditor�a
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

@@ -1,7 +1,7 @@
 <?php
 // ver_auditoria_promociones.php
 require_once '../auth.php';
-require_once '../funciones.php';
+require_once '../../../../core/helpers/funciones.php'; // Antes llamaba a ../funciones.php de auditoría
 require_once 'config.php';
 
 $db = conectarDB();
