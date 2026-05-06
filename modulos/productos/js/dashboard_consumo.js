@@ -1092,7 +1092,7 @@ function renderInsumoSel(data) {
     const $sel = $('#chartInsumoSel');
     const prevVal = $sel.val();   // conservar selección si ya hay una al recargar
 
-    $sel.empty().append('<option value="">— Selecciona un insumo —</option>');
+    $sel.empty().append('<option value=""></option>');
     
     const opciones = data.consumo.map(item => {
         const tipoLabel = item.es_global ? ' [Global]' : '';
@@ -1107,8 +1107,6 @@ function renderInsumoSel(data) {
     if (prevVal && $sel.find(`option[value="${prevVal}"]`).length) {
         $sel.val(prevVal);
         InsumoPicker.setValue(prevVal);
-        // Notar que el trigger('change') ya no es necesario aquí si llamamos a renderKPIs/Grafico directamente
-        // pero renderInsumoSel suele llamarse al inicio.
         $('#chartInsumoSel').trigger('change');
     } else {
         // Estado inicial: mostrar placeholder
@@ -1168,10 +1166,7 @@ const InsumoPicker = (() => {
         filtradas.forEach(o => {
             const sel = String(_seleccionado) === String(o.value);
             const $item = $(`
-                <div class="dc-suc-item ${sel ? 'selected' : ''}" data-v="${o.value}">
-                    <span class="dc-suc-checkbox">
-                        <i class="fas fa-check dc-suc-checkbox-icon"></i>
-                    </span>
+                <div class="dc-suc-item ${sel ? 'selected' : ''}" data-v="${o.value}" style="padding-left:15px">
                     <div class="dc-suc-item-label">
                         <div class="fw-bold" style="font-size:.82rem">${escHtml(o.label)}</div>
                         <div class="text-muted" style="font-size:.7rem">${escHtml(o.subtext || '')}</div>

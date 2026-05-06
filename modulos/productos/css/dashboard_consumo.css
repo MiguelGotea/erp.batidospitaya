@@ -561,6 +561,7 @@ body {
     flex:      1;
     min-width: 240px;
     max-width: 460px;
+    position:  relative;
 }
 
 /* Selector dentro del header oscuro — sigue siendo inset pero sobre fondo oscuro */
