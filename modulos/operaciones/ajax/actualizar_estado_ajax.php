@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Verificar permisos
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-if (!tienePermiso('tardanzas_manual', 'nuevo_registro', $cargoOperario)) {
+if (!tienePermiso('tardanzas_manual', 'aprobar', $cargoOperario)) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para realizar esta acción']);
     exit;
 }
