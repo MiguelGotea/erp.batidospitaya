@@ -2225,7 +2225,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                         <tbody>
                             <!-- SECCIÓN 1: TARDANZAS YA REGISTRADAS -->
                             <?php foreach ($tardanzasManuales as $tardanza): ?>
-                                <?php include 'row_tardanza_registrada.php'; ?>
+                                <?php include 'includes/row_tardanza_registrada.php'; ?>
                             <?php endforeach; ?>
 
                             <!-- SECCIÓN 2: TARDANZAS NO REPORTADAS (solo para vista completa) -->
@@ -2240,7 +2240,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                                 </tr>
 
                                 <?php foreach ($tardanzasNoReportadas as $tardanza): ?>
-                                    <?php include 'row_tardanza_no_reportada.php'; ?>
+                                    <?php include 'includes/row_tardanza_no_reportada.php'; ?>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>
