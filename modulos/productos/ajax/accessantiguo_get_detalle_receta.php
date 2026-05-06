@@ -394,6 +394,7 @@ try {
         }
 
         // --- Paso C: Fallback 2 para NO porciones (ya se ejecutó en Paso A para porciones) ---
+        // Busca receta-paquete de despacho cuyo único componente sea la Presentación Uso exacta.
         if (!$ingr['presentacion_despacho'] && !$esPorcion) {
             $idPresentacionUso = $ingr['nuevo_producto']['id_presentacion'] ?? null;
             if ($idPresentacionUso) {
@@ -432,6 +433,44 @@ try {
                 $stmtPkgB->execute([$idPresentacionUso]);
                 $ingr['presentacion_despacho'] = $stmtPkgB->fetch(PDO::FETCH_ASSOC) ?: null;
             }
+        }
+
+        // --- Paso D: Fallback 3 — receta-paquete de despacho cuyo componente es cualquier
+        //     presentación del mismo maestro (cubre el caso donde la cajilla de despacho está
+        //     registrada como receta con un componente distinto a la presentación de uso).
+        //     Ej: Naranja oz (uso) → Cajilla 100u (despacho, receta con componente "Naranja Unidad").
+        if (!$ingr['presentacion_despacho'] && $idMaestroResolucion) {
+            $stmtPkgD = $conn->prepare("
+                SELECT
+                    pp.id       AS id_presentacion,
+                    pp.SKU,
+                    pp.Nombre   AS NombreNuevo,
+                    pp.cantidad,
+                    pp.Activo   AS activoNuevo,
+                    u.nombre    AS unidadNueva,
+                    pm.id       AS id_maestro,
+                    pm.Nombre   AS productoMaestro,
+                    pp.presentacion_receta,
+                    pp.presentacion_basica_inventario,
+                    pp.presentacion_despacho
+                FROM producto_presentacion pp
+                LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
+                LEFT JOIN unidad_producto u   ON u.id  = pp.id_unidad_producto
+                WHERE pp.Id_receta_producto IS NOT NULL
+                  AND pp.Activo = 'SI'
+                  AND pp.presentacion_despacho = 1
+                  AND EXISTS (
+                      SELECT 1
+                      FROM componentes_receta_producto crp
+                      INNER JOIN producto_presentacion pp_comp
+                          ON pp_comp.id = crp.id_presentacion_producto
+                      WHERE crp.id_receta_producto_global = pp.Id_receta_producto
+                        AND pp_comp.id_producto_maestro = ?
+                  )
+                LIMIT 1
+            ");
+            $stmtPkgD->execute([$idMaestroResolucion]);
+            $ingr['presentacion_despacho'] = $stmtPkgD->fetch(PDO::FETCH_ASSOC) ?: null;
         }
 
 
