@@ -288,11 +288,33 @@ try {
         }
         $codsIngFiltro = array_keys($cotMap);
 
-        /* 4d. Ventas × SubReceta filtradas por CodIngrediente (no por codporcion)
-               Esto captura TODOS los batidos que usan este ingrediente */
+        /* 4d. Ventas × SubReceta con filtro COMBINADO:
+               - sr.codporcion IN ($codCots)   → porciones/recetas (CodCotizacion directo)
+               - OR sr.CodIngrediente IN (...)  → ingredientes vía cotMap (fallback para
+                 productos cuyo codporcion no está en diccionario, como Kiwi)
+               Ambos en un OR evita doble conteo (GROUP BY lo colapsa).
+               Subproducto=1 quedaba excluido del cotMap → las porciones perdían consumo.
+               El OR restaura la cobertura de las porciones sin romper el caso Kiwi. */
         $filasV = [];
-        if (!empty($codsIngFiltro)) {
-            $phI2 = implode(',', array_fill(0, count($codsIngFiltro), '?'));
+        // Construir cláusula WHERE dinámica según qué listas están disponibles
+        $hasCodCots     = !empty($codCots);
+        $hasIngFiltro   = !empty($codsIngFiltro);
+
+        if ($hasCodCots || $hasIngFiltro) {
+            $partsWhere = [];
+            $paramsExtra = [];
+
+            if ($hasCodCots) {
+                $partsWhere[] = "sr.codporcion IN (" . implode(',', array_fill(0, count($codCots), '?')) . ")";
+                $paramsExtra  = array_merge($paramsExtra, array_values($codCots));
+            }
+            if ($hasIngFiltro) {
+                $phI2 = implode(',', array_fill(0, count($codsIngFiltro), '?'));
+                $partsWhere[] = "sr.CodIngrediente IN ($phI2)";
+                $paramsExtra  = array_merge($paramsExtra, array_values($codsIngFiltro));
+            }
+            $whereExtra = "AND (" . implode(" OR ", $partsWhere) . ")";
+
             if ($codSuc) {
                 $stmtV = $conn->prepare("
                     SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
@@ -301,10 +323,10 @@ try {
                     INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
                     WHERE v.Anulado = 0 AND v.local = ? AND v.Semana BETWEEN ? AND ?
                       AND v.Fecha BETWEEN ? AND ?
-                      AND sr.CodIngrediente IN ($phI2)
+                      $whereExtra
                     GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
                 ");
-                $paramsV = array_merge([$codSuc, $numDesde, $numHasta, $rDates['f1'], $rDates['f2']], array_values($codsIngFiltro));
+                $paramsV = array_merge([$codSuc, $numDesde, $numHasta, $rDates['f1'], $rDates['f2']], $paramsExtra);
             } else {
                 $stmtV = $conn->prepare("
                     SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
@@ -313,14 +335,15 @@ try {
                     INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
                     WHERE v.Anulado = 0 AND v.Semana BETWEEN ? AND ?
                       AND v.Fecha BETWEEN ? AND ?
-                      AND sr.CodIngrediente IN ($phI2)
+                      $whereExtra
                     GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
                 ");
-                $paramsV = array_merge([$numDesde, $numHasta, $rDates['f1'], $rDates['f2']], array_values($codsIngFiltro));
+                $paramsV = array_merge([$numDesde, $numHasta, $rDates['f1'], $rDates['f2']], $paramsExtra);
             }
             $stmtV->execute($paramsV);
             $filasV = $stmtV->fetchAll(PDO::FETCH_ASSOC);
         }
+
 
         /* 4e. DBIngredientes para resolución de unidades */
         $dbIng = [];
