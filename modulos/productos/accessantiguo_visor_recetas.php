@@ -1304,22 +1304,26 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                             <td>
                                                 <strong>① Paso A</strong> — Busca primero la <em>receta-paquete</em>: presentación con
                                                 <code>Id_receta_producto IS NOT NULL</code>, <code>despacho=1</code>, con exactamente
-                                                1 componente = Presentación Uso.<br>
-                                                <strong>② Paso B</strong> — Si no existe paquete: Nivel 1 &rarr; Nivel 2 &rarr; Fallback 1 (flujo normal por unidad).
+                                                1 componente = Presentación Uso exacta.<br>
+                                                <strong>② Paso B</strong> — Si no existe paquete exacto: Nivel 1 &rarr; Nivel 2 &rarr; Fallback 1 (flujo normal por unidad).<br>
+                                                <strong>③ Paso D</strong> — Si aún no encuentra: receta-paquete cuyo componente sea cualquier presentación del mismo maestro.
                                             </td>
                                             <td>
-                                                <strong>Con paquete:</strong><br>Fresa Congelada 2oz &rarr; <em>Fresa paquete 10 unid</em> ✓<br><br>
-                                                <strong>Sin paquete:</strong><br>Banano congelado &rarr; sin receta-paquete &rarr; Fallback 1 (mismo maestro) &rarr; <em>Banano Cajilla 100u</em> ✓
+                                                <strong>Con paquete exacto:</strong><br>Fresa Congelada 2oz &rarr; <em>Fresa paquete 10 unid</em> ✓<br><br>
+                                                <strong>Sin paquete exacto:</strong><br>Banano congelado &rarr; sin receta-paquete &rarr; Fallback 1 (mismo maestro) &rarr; <em>Banano Cajilla 100u</em> ✓
                                             </td>
                                         </tr>
                                         <tr>
                                             <td><em style="color:#555">no porción</em></td>
                                             <td>
                                                 <strong>① Paso B</strong> — Flujo normal: Nivel 1 &rarr; Nivel 2 &rarr; Fallback 1.<br>
-                                                <strong>② Paso C</strong> — Si aún no encontró: Fallback 2 (receta-paquete como último recurso).
+                                                <strong>② Paso C</strong> — Fallback 2: receta-paquete con Presentación Uso exacta como componente.<br>
+                                                <strong>③ Paso D</strong> — Fallback 3: receta-paquete cuyo componente sea cualquier presentación del mismo maestro.
                                             </td>
                                             <td>
-                                                Naranja oz &rarr; busca despacho por unidad &rarr; <em>Naranja Dulce Cajilla 100u</em> ✓
+                                                Naranja oz &rarr; busca despacho por unidad &rarr; falla<br>
+                                                &rarr; Paso C falla (componente no es "Naranja oz")<br>
+                                                &rarr; Paso D: cajilla contiene "Naranja Unidad" (mismo maestro) &rarr; <em>Naranja Dulce Cajilla 100u</em> ✓
                                             </td>
                                         </tr>
                                     </tbody>
@@ -1355,23 +1359,30 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-2 rounded h-100" style="background:#e8eaf6;border-left:3px solid #283593;font-size:.77rem">
-                                        <strong style="color:#283593">Fallback 2 — Receta-paquete de 1 solo componente</strong><br>
-                                        <span class="badge" style="background:#1565c0;color:#fff;font-size:.6rem">1º para porciones</span>
-                                        <span class="badge ms-1" style="background:#283593;color:#fff;font-size:.6rem">último recurso para otros</span><br>
+                                        <strong style="color:#283593">Fallback 2 (Paso C) — Receta-paquete de 1 solo componente = Presentación Uso</strong><br>
+                                        <span class="badge" style="background:#1565c0;color:#fff;font-size:.6rem">1º para porciones (Paso A)</span>
+                                        <span class="badge ms-1" style="background:#283593;color:#fff;font-size:.6rem">2º recurso para no-porciones</span><br>
                                         Busca una presentación con <code>Id_receta_producto IS NOT NULL</code>,
-                                        <code>despacho=1</code>, cuya receta tenga <strong>exactamente 1 componente</strong> = Presentación Uso.<br>
-                                        <small style="color:#c62828">⚠ La restricción <code>COUNT(componentes) = 1</code> es crítica: evita que recetas complejas (con múltiples ingredientes) sean identificadas erróneamente como paquetes de despacho.</small><br>
-                                        <em>Ej: Fresa Congelada 2oz &rarr; Fresa paquete 10 unid ✓</em><br>
-                                        <em>Banano congelado &rarr; ningún paquete exclusivo &rarr; no aplica (cae a Fallback 1).</em>
+                                        <code>despacho=1</code>, cuya receta tenga <strong>exactamente 1 componente</strong> = Presentación Uso exacta.<br>
+                                        <small style="color:#c62828">⚠ La restricción <code>COUNT(componentes) = 1</code> es crítica: evita que recetas complejas sean identificadas erróneamente como paquetes.</small><br>
+                                        <em>Ej: Fresa Congelada 2oz &rarr; Fresa paquete 10 unid ✓</em>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 rounded h-100" style="background:#e8f5e9;border-left:3px solid #2e7d32;font-size:.77rem">
+                                        <strong style="color:#2e7d32">Fallback 3 (Paso D) — Receta-paquete con componente del mismo maestro <span class="badge ms-1" style="background:#43a047;color:#fff;font-size:.6rem">Nuevo</span></strong><br>
+                                        Último recurso: busca una receta de despacho cuyo componente sea <strong>cualquier presentación del mismo <code>id_producto_maestro</code></strong>, sin exigir que sea exactamente la Presentación Uso.<br>
+                                        <small style="color:#1b5e20">Cubre el caso donde la cajilla tiene como componente una presentación diferente pero del mismo ingrediente maestro.</small><br>
+                                        <em>Ej: Naranja oz &rarr; Cajilla 100u (receta: 100 × "Naranja Unidad", mismo maestro) ✓</em>
                                     </div>
                                 </div>
                             </div>
                             <div class="p-2 rounded" style="background:#fff3e0;border-left:3px solid #ff9800;font-size:.77rem">
                                 <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
-                                <strong>Si muestra "Sin despacho":</strong> ninguno de los pasos encontró una presentación válida.
-                                Verifica que exista un producto con <code>presentacion_despacho = 1</code> correctamente configurado
-                                en el ERP para ese ingrediente, o que su receta de paquete tenga exactamente 1 componente
-                                apuntando a la Presentación Uso.
+                                <strong>Si muestra "Sin despacho":</strong> ninguno de los 4 pasos encontró una presentación válida.
+                                Verifica que exista un producto con <code>presentacion_despacho = 1</code> configurado en el ERP,
+                                y que si es una receta-paquete, alguno de sus componentes pertenezca al mismo <code>id_producto_maestro</code>
+                                del ingrediente (el Paso D lo detectará automáticamente).
                             </div>
                         </div>
 
