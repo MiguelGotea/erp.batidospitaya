@@ -64,6 +64,7 @@ try {
         exit;
     }
 
+
     // INSERT ON DUPLICATE KEY UPDATE (clave única: CodCotizacion)
     $stmt = $conn->prepare("
         INSERT INTO diccionario_productos_legado
