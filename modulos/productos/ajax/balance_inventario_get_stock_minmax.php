@@ -104,6 +104,25 @@ try {
     $cat   = $ppRow['cat'];
     $idM   = $ppRow['id_m'] ? (int)$ppRow['id_m'] : null;
 
+    /* 1b. Si la presentación no tiene categoria_insumo propia, intentar
+           obtenerla de la presentación básica del mismo maestro
+           (mismo enfoque que pedido_sugerido_calcular.php) */
+    if (!$cat && $idM) {
+        $stmtCat = $conn->prepare("
+            SELECT categoria_insumo FROM producto_presentacion
+            WHERE id_producto_maestro = ? AND presentacion_basica_inventario = 1
+              AND Activo = 'SI' AND categoria_insumo IS NOT NULL AND categoria_insumo != ''
+            LIMIT 1
+        ");
+        $stmtCat->execute([$idM]);
+        $rowCat = $stmtCat->fetch(PDO::FETCH_ASSOC);
+        if ($rowCat) $cat = $rowCat['categoria_insumo'];
+    }
+    /* 1c. Sin maestro pero sin cat: buscar en cualquier otra presentación activa del mismo producto */
+    if (!$cat && !$idM) {
+        // último recurso: buscar por Nombre similar no es fiable, se deja como null
+    }
+
     /* 2. Rango de fechas para las 5 semanas */
     $stmtR = $conn->prepare("SELECT MIN(fecha_inicio) as f1, MAX(fecha_fin) as f2
                               FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?");
@@ -158,9 +177,13 @@ try {
     $dD  = (float)$cP['dias_desfase'];
 
     /* 4. Consumo por semana del producto en la ventana activa
-          Usamos el mismo approach que pedido_sugerido: ventas × subreceta → mapeo → presentacion básica */
-    
-    /* Primero necesitamos los CodCotizacion que mapean al id_pp */
+          Misma estrategia que pedido_sugerido_calcular.php:
+          - Obtener CodCotizacion del diccionario para el id_pp/maestro
+          - Obtener CodIngrediente vía tabla Cotizaciones (cotMap p2/p3)
+          - Consultar ventas filtrando por CodIngrediente (NO por codporcion)
+          - Resolver presentación con cascade P1→P2→P3 */
+
+    /* 4a. CodCotizacion que mapean al id_pp o a cualquier presentación del mismo maestro */
     $stmtDic = $conn->prepare("
         SELECT d.CodCotizacion
         FROM diccionario_productos_legado d
@@ -170,7 +193,6 @@ try {
     $stmtDic->execute([$idPP, $idM ?? -1]);
     $codCots = array_column($stmtDic->fetchAll(PDO::FETCH_ASSOC), 'CodCotizacion');
 
-    /* También buscar por maestro */
     if ($idM) {
         $stmtDicM = $conn->prepare("
             SELECT d.CodCotizacion
@@ -187,9 +209,6 @@ try {
 
     if (!empty($codCots)) {
         $ph = implode(',', array_fill(0, count($codCots), '?'));
-        /* Consumo real del Kardex para el producto: despachos + mermas */
-        /* Usamos directamente la tabla KardexBalance o bien VentasGlobalesAccessCSV × SubReceta */
-        /* Para consistencia usamos el mismo método del pedido sugerido */
 
         /* Unidades y conversiones */
         $unidadPorNombre = [];
@@ -210,57 +229,81 @@ try {
         }
         cerrarTransitivas_SMM($convIndex);
 
-        /* Ventas × SubReceta agrupadas por semana para los CodCotizacion del producto */
-        /* IMPORTANTE: filtrar por sucursal igual que pedido_sugerido_calcular.php */
-        if ($codSuc) {
-            $stmtV = $conn->prepare("
-                SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
-                       SUM(v.Cantidad * sr.Cantidad) as cant
-                FROM VentasGlobalesAccessCSV v
-                INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
-                WHERE v.Anulado = 0 AND v.local = ? AND v.Semana BETWEEN ? AND ?
-                  AND v.Fecha BETWEEN ? AND ?
-                  AND sr.codporcion IN ($ph)
-                GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
-            ");
-            $paramsV = array_merge([$codSuc, $numDesde, $numHasta, $rDates['f1'], $rDates['f2']], array_values($codCots));
-        } else {
-            /* Sin sucursal: sumar todas (caso poco probable en este contexto) */
-            $stmtV = $conn->prepare("
-                SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
-                       SUM(v.Cantidad * sr.Cantidad) as cant
-                FROM VentasGlobalesAccessCSV v
-                INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
-                WHERE v.Anulado = 0 AND v.Semana BETWEEN ? AND ?
-                  AND v.Fecha BETWEEN ? AND ?
-                  AND sr.codporcion IN ($ph)
-                GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
-            ");
-            $paramsV = array_merge([$numDesde, $numHasta, $rDates['f1'], $rDates['f2']], array_values($codCots));
-        }
-        $stmtV->execute($paramsV);
-        $filasV = $stmtV->fetchAll(PDO::FETCH_ASSOC);
-
-        /* Mapeo diccionario para los codporcion */
+        /* 4b. Mapeo diccionario completo para todos los codCots */
         $dicMap = [];
-        if (!empty($codCots)) {
-            $stmtDM = $conn->prepare("
-                SELECT d.CodCotizacion,
-                       pp.id AS id, pp.cantidad AS pp_cant, pp.Id_receta_producto,
-                       pp.id_producto_maestro AS id_m, pp.Nombre AS n,
-                       pp.categoria_insumo AS cat, pp.presentacion,
-                       pp.presentacion_basica_inventario,
-                       u.id AS uid, u.abreviado AS uab
-                FROM diccionario_productos_legado d
-                INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
-                LEFT  JOIN unidad_producto u        ON u.id  = pp.id_unidad_producto
-                WHERE d.CodCotizacion IN ($ph) AND pp.Activo = 'SI'
-            ");
-            $stmtDM->execute(array_values($codCots));
-            foreach ($stmtDM->fetchAll(PDO::FETCH_ASSOC) as $row)
-                $dicMap[(string)$row['CodCotizacion']] = $row;
+        $stmtDM = $conn->prepare("
+            SELECT d.CodCotizacion,
+                   pp.id AS id, pp.cantidad AS pp_cant, pp.Id_receta_producto,
+                   pp.id_producto_maestro AS id_m, pp.Nombre AS n,
+                   pp.categoria_insumo AS cat, pp.presentacion,
+                   pp.presentacion_basica_inventario,
+                   u.id AS uid, u.abreviado AS uab
+            FROM diccionario_productos_legado d
+            INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
+            LEFT  JOIN unidad_producto u        ON u.id  = pp.id_unidad_producto
+            WHERE d.CodCotizacion IN ($ph) AND pp.Activo = 'SI'
+        ");
+        $stmtDM->execute(array_values($codCots));
+        foreach ($stmtDM->fetchAll(PDO::FETCH_ASSOC) as $row)
+            $dicMap[(string)$row['CodCotizacion']] = $row;
+
+        /* 4c. CodIngrediente via Cotizaciones → cotMap (p2=prioridad1, p3=cualquiera)
+               Igual que pedido_sugerido_calcular.php — permite capturar ventas cuyo
+               codporcion en SubReceta no está directamente en el diccionario */
+        $cotMap = [];
+        $stmtCot = $conn->prepare("
+            SELECT CodIngrediente, CodCotizacion, Conversion, Prioridad
+            FROM Cotizaciones
+            WHERE CodCotizacion IN ($ph)
+              AND (Subproducto IS NULL OR Subproducto != 1)
+              AND (Marca IS NULL OR Marca != 'Almacen Global')
+            ORDER BY Conversion DESC, Prioridad ASC
+        ");
+        $stmtCot->execute(array_values($codCots));
+        foreach ($stmtCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
+            $ci = $c['CodIngrediente'];
+            if (!isset($cotMap[$ci])) $cotMap[$ci] = ['p2' => null, 'p3' => null];
+            if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotMap[$ci]['p2'])
+                $cotMap[$ci]['p2'] = $c['CodCotizacion'];
+            if (!$cotMap[$ci]['p3']) $cotMap[$ci]['p3'] = $c['CodCotizacion'];
+        }
+        $codsIngFiltro = array_keys($cotMap);
+
+        /* 4d. Ventas × SubReceta filtradas por CodIngrediente (no por codporcion)
+               Esto captura TODOS los batidos que usan este ingrediente */
+        $filasV = [];
+        if (!empty($codsIngFiltro)) {
+            $phI2 = implode(',', array_fill(0, count($codsIngFiltro), '?'));
+            if ($codSuc) {
+                $stmtV = $conn->prepare("
+                    SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
+                           SUM(v.Cantidad * sr.Cantidad) as cant
+                    FROM VentasGlobalesAccessCSV v
+                    INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
+                    WHERE v.Anulado = 0 AND v.local = ? AND v.Semana BETWEEN ? AND ?
+                      AND v.Fecha BETWEEN ? AND ?
+                      AND sr.CodIngrediente IN ($phI2)
+                    GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
+                ");
+                $paramsV = array_merge([$codSuc, $numDesde, $numHasta, $rDates['f1'], $rDates['f2']], array_values($codsIngFiltro));
+            } else {
+                $stmtV = $conn->prepare("
+                    SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion,
+                           SUM(v.Cantidad * sr.Cantidad) as cant
+                    FROM VentasGlobalesAccessCSV v
+                    INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
+                    WHERE v.Anulado = 0 AND v.Semana BETWEEN ? AND ?
+                      AND v.Fecha BETWEEN ? AND ?
+                      AND sr.CodIngrediente IN ($phI2)
+                    GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
+                ");
+                $paramsV = array_merge([$numDesde, $numHasta, $rDates['f1'], $rDates['f2']], array_values($codsIngFiltro));
+            }
+            $stmtV->execute($paramsV);
+            $filasV = $stmtV->fetchAll(PDO::FETCH_ASSOC);
         }
 
+        /* 4e. DBIngredientes para resolución de unidades */
         $dbIng = [];
         $codsIng = array_unique(array_column($filasV, 'cod_ing'));
         if (!empty($codsIng)) {
@@ -270,12 +313,22 @@ try {
             foreach ($stmtI->fetchAll() as $row) $dbIng[$row['CodIngrediente']] = $row;
         }
 
+        /* 4f. Acumular consumo con cascade P1→P2→P3 (igual que pedido_sugerido) */
         foreach ($filasV as $f) {
             $cp   = $f['codporcion'];
             $ci   = $f['cod_ing'];
             $sem  = (int)$f['sem'];
             $cant = (float)$f['cant'];
-            $m    = $dicMap[(string)$cp] ?? null;
+
+            /* Resolver presentación: P1=codporcion en diccionario, P2/P3 vía cotMap */
+            $m = null;
+            if (!empty($cp) && isset($dicMap[(string)$cp])) {
+                $m = $dicMap[(string)$cp];
+            }
+            if (!$m && isset($cotMap[$ci]['p2']) && isset($dicMap[(string)$cotMap[$ci]['p2']]))
+                $m = $dicMap[(string)$cotMap[$ci]['p2']];
+            if (!$m && isset($cotMap[$ci]['p3']) && isset($dicMap[(string)$cotMap[$ci]['p3']]))
+                $m = $dicMap[(string)$cotMap[$ci]['p3']];
             if (!$m) continue;
 
             $ppId  = (int)$m['id'];
