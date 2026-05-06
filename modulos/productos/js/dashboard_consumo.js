@@ -732,6 +732,28 @@ function renderGrafico(data) {
             });
         }
 
+        // ── LÍNEA DE STOCK MÍNIMO (Línea x Tienda cuando hay varias tiendas)
+        if (esLineaSuc && item.stock_min_suc) {
+            sucConTotal.forEach(({ suc, nombre, idx }) => {
+                const color = SUCURSAL_COLORS[idx % SUCURSAL_COLORS.length];
+                const valMin = item.stock_min_suc[suc] || 0;
+                if (valMin > 0) {
+                    datasets.push({
+                        label: `Stock Mín (${nombre}): ${formatNum(valMin)}`,
+                        data: labelsExtended.map(() => valMin),
+                        borderColor: color.border,
+                        borderWidth: 1.5,
+                        borderDash: [3, 6], // puntos/guiones muy finos
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0,
+                        type: 'line',
+                        order: 5, // por debajo de las líneas principales
+                    });
+                }
+            });
+        }
+
     } else {
         // ━━ Modo Total / Línea Total (1 línea con promedio y proyección) ━━
         const valores = semanasNros.map(n => round2(item.por_semana[n] || 0));
@@ -759,6 +781,22 @@ function renderGrafico(data) {
                 type:        'line',
             },
         ];
+
+        // ── LÍNEA DE STOCK MÍNIMO (Linea total / Barras cuando hay UNA sola tienda)
+        if (!hayDesglose && (esLineaTotal || modoGrafico === 'barras') && item.stock_min > 0) {
+            datasets.push({
+                label:       `Stock Mín: ${formatNum(item.stock_min)} ${escHtml(item.unidad)}`,
+                data:        labelsExtended.map(() => item.stock_min),
+                borderColor: '#e74c3c', // Rojo suave
+                borderWidth: 2,
+                borderDash:  [8, 4],
+                pointRadius: 0,
+                fill:        false,
+                tension:     0,
+                type:        'line',
+                order:       5,
+            });
+        }
     }
 
     // ── Proyección 3 semanas — solo en modo Total o Barra por sucursal ─────────
@@ -851,7 +889,7 @@ function renderGrafico(data) {
                         usePointStyle: true,
                         // filtrar el dataset "Prom" de la leyenda si hay muchas series
                         filter: (item) => numSucursales > 6
-                            ? !item.text.startsWith('Prom.')
+                            ? (!item.text.startsWith('Prom.') && !item.text.startsWith('Stock Mín'))
                             : true,
                         generateLabels: function(chart) {
                             // Usar el generador nativo y añadir el sufijo de hint solo en el primero

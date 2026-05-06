@@ -379,8 +379,34 @@ try {
         }
     }
 
+    // 3h. Pre-cargar configuración logística (sucursales y productos)
+    $configSucursales = []; // [cod_sucursal] => dias_stock_minimo
+    if (!empty($sucursalesPresentes)) {
+        $phS = implode(',', array_fill(0, count($sucursalesPresentes), '?'));
+        $stmtCS = $conn->prepare("SELECT cod_sucursal, dias_stock_minimo FROM configuracion_logistica_sucursal WHERE cod_sucursal IN ($phS)");
+        $stmtCS->execute($sucursalesPresentes);
+        foreach ($stmtCS->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $configSucursales[$row['cod_sucursal']] = (float) $row['dias_stock_minimo'];
+        }
+    }
+
+    $configProductos = []; // [categoria_insumo] => {ajuste_demanda, dias_ciclo, dias_desfase}
+    // Como las categorías son pocas, las cargamos todas para las sucursales involucradas
+    if (!empty($sucursalesPresentes)) {
+        $phS = implode(',', array_fill(0, count($sucursalesPresentes), '?'));
+        $stmtCP = $conn->prepare("SELECT cod_sucursal, codigo_insumo, ajuste_demanda, dias_ciclo, dias_desfase FROM configuracion_logistica_producto WHERE cod_sucursal IN ($phS)");
+        $stmtCP->execute($sucursalesPresentes);
+        foreach ($stmtCP->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $configProductos[$row['cod_sucursal']][$row['codigo_insumo']] = [
+                'ajuste' => (float) $row['ajuste_demanda'],
+                'ciclo' => (float) $row['dias_ciclo'],
+                'desfase' => (float) $row['dias_desfase']
+            ];
+        }
+    }
+
     /* ══════════════════════════════════════════════════════════
-       PASO 4: Función de resolución de unidades (PHP puro)
+       PASO 4: Funciones auxiliares (PHP puro)
        Solo usa los arrays pre-cargados — sin queries
        ══════════════════════════════════════════════════════════ */
     function resolverUnidadId($nombreAccess, &$unidadPorNombre)
@@ -399,6 +425,15 @@ try {
     function buscarPresentacionEnMaestro($idMaestro, $idUnidad, &$presentPorMaestro)
     {
         return $presentPorMaestro[$idMaestro][$idUnidad] ?? null;
+    }
+
+    function calcularDesviacionEstandar(array $valores): float
+    {
+        $n = count($valores);
+        if ($n <= 1) return 0.0;
+        $media = array_sum($valores) / $n;
+        $varianza = array_sum(array_map(fn($v) => ($v - $media) ** 2, $valores)) / ($n - 1);
+        return sqrt($varianza);
     }
 
     /* ══════════════════════════════════════════════════════════
@@ -614,6 +649,59 @@ try {
         $n = count($consPorSem);
         $promSemana = $n > 0 ? $totalGeneral / $n : 0;
 
+        // ── Cálculo de Stock Mínimo Profesional (pedido_sugerido_calcular.php) ──
+        $stockMinPorSucursal = [];
+        $stockMinTotalSum = 0;
+
+        foreach ($sucursalesPresentes as $suc) {
+            $valsSuc = [];
+            foreach ($semanasNros as $sem) {
+                $valsSuc[] = (float) ($consumoAgg[$idPP][$suc][$sem] ?? 0);
+            }
+
+            // Ventana Activa (mismo algoritmo que pedido_sugerido_calcular.php)
+            $nonZeroVals = array_filter($valsSuc, fn($v) => $v > 0);
+            if (empty($nonZeroVals)) {
+                $stockMinPorSucursal[$suc] = 0;
+                continue;
+            }
+
+            $meanNonZero = array_sum($nonZeroVals) / count($nonZeroVals);
+            $umbral = max(0.01, $meanNonZero * 0.10);
+
+            $firstIdx = null;
+            $lastIdx = null;
+            foreach ($valsSuc as $i => $v) {
+                if ($v >= $umbral) {
+                    if ($firstIdx === null) $firstIdx = $i;
+                    $lastIdx = $i;
+                }
+            }
+
+            if ($firstIdx === null) {
+                $stockMinPorSucursal[$suc] = 0;
+                continue;
+            }
+
+            $nActiva = $lastIdx - $firstIdx + 1;
+            $valsActivo = array_slice($valsSuc, $firstIdx, $nActiva);
+            $promActivo = array_sum($valsActivo) / $nActiva;
+            $desvActivo = calcularDesviacionEstandar($valsActivo);
+            $semC = $promActivo + $desvActivo;
+
+            $dSM = $configSucursales[$suc] ?? 0;
+            $cat = $meta['categoria_insumo'];
+            $cP = $configProductos[$suc][$cat] ?? null;
+            $adj = $cP ? (float) $cP['ajuste'] : 0;
+
+            $diaC = ($semC * (1 + $adj)) / 7;
+            $sMin = $diaC * $dSM;
+
+            $valMin = round($sMin, 4);
+            $stockMinPorSucursal[$suc] = $valMin;
+            $stockMinTotalSum += $valMin;
+        }
+
         // Tendencia
         $tendencia = 'flat';
         if ($n >= 2) {
@@ -648,7 +736,8 @@ try {
             'total' => $totalGeneral,
             'prom_semana' => round($promSemana, $itemEsP1 ? 1 : 4),
             'proyeccion_4sem' => round($promSemana * 4, $itemEsP1 ? 1 : 4),
-            'stock_min' => round($promSemana, $itemEsP1 ? 1 : 4),
+            'stock_min' => round($stockMinTotalSum, 4),
+            'stock_min_suc' => $stockMinPorSucursal,
             'stock_max' => round($promSemana * 2, $itemEsP1 ? 1 : 4),
             'semana_pico_num' => $semanaPico,
             'semana_low_num' => $semanaLow,
