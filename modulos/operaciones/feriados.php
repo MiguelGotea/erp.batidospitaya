@@ -15,7 +15,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 //verificarAccesoCargo([8, 11, 21, 16, 13]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 11, 21, 16, 13, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([8, 11, 21, 16, 13, 21, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
@@ -1663,7 +1663,7 @@ function obtenerNombreOperario($codOperario)
                                         rows="3"><?= htmlspecialchars($ft['observaciones'] ?? '') ?></textarea>
                                 </td>
 
-                                <?php if ($esAdmin || verificarAccesoCargo([11, 16, 8,21])): ?>
+                                <?php if ($esAdmin || verificarAccesoCargo([11, 16, 8, 21])): ?>
                                     <td style="text-align: center;">
                                         <div class="action-buttons-inline"
                                             id="actions-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
@@ -2178,7 +2178,7 @@ function obtenerNombreOperario($codOperario)
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                            { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
+                                { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
             <?php endforeach; ?>
         ];
 
