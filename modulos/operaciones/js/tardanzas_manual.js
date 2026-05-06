@@ -1,4 +1,4 @@
-﻿// =============================================
+// =============================================
 // BÚSQUEDA DE OPERARIOS (autocomplete)
 // =============================================
 
@@ -185,20 +185,26 @@ function cargarOperariosSucursal(codSucursal, fechaTardanza) {
         });
 }
 
-document.getElementById('nueva_foto').addEventListener('change', function (e) {
-    const preview = document.getElementById('nueva_foto_preview');
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    } else {
-        preview.style.display = 'none';
+(function() {
+    var elNuevaFoto = document.getElementById('nueva_foto');
+    if (elNuevaFoto) {
+        elNuevaFoto.addEventListener('change', function (e) {
+            var preview = document.getElementById('nueva_foto_preview');
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
     }
-});
+})();
+
 
 
 
@@ -261,76 +267,103 @@ function cerrarModal() {
     document.getElementById('modalEditarTardanza').style.display = 'none';
 }
 
+
 // =============================================
 // EVENTOS: botones, sucursal, fecha, submit
+// (con null-guards para elementos opcionales según rol)
 // =============================================
 
-document.getElementById('nueva_operario').addEventListener('change', function () {
-    var btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
-    btnConsultar.disabled = !this.value || !document.getElementById('nueva_fecha').value;
-});
+(function () {
+    var elNuevaOperario      = document.getElementById('nueva_operario');
+    var elNuevaFecha         = document.getElementById('nueva_fecha');
+    var elNuevaSucursal      = document.getElementById('nueva_sucursal');
+    var elBtnConsultarNueva  = document.getElementById('btnConsultarMarcacionesNueva');
+    var elBtnConsultarEditar = document.getElementById('btnConsultarMarcacionesEditar');
+    var elFormNueva          = document.getElementById('formNuevaTardanza');
 
-document.getElementById('nueva_fecha').addEventListener('change', function () {
-    var btnConsultar = document.getElementById('btnConsultarMarcacionesNueva');
-    btnConsultar.disabled = !this.value || !document.getElementById('nueva_operario').value;
-    var sucursalSelect = document.getElementById('nueva_sucursal');
-    if (sucursalSelect.value && this.value) {
-        cargarOperariosSucursal(sucursalSelect.value, this.value);
+    if (elNuevaOperario) {
+        elNuevaOperario.addEventListener('change', function () {
+            if (elBtnConsultarNueva) {
+                elBtnConsultarNueva.disabled = !this.value || !elNuevaFecha.value;
+            }
+        });
     }
-});
 
-document.getElementById('btnConsultarMarcacionesNueva').addEventListener('click', function () {
-    var codOperario = document.getElementById('nueva_operario').value;
-    var fecha = document.getElementById('nueva_fecha').value;
-    var nombre = document.getElementById('nueva_operario').options[document.getElementById('nueva_operario').selectedIndex].text;
-    var sucursal = document.getElementById('nueva_sucursal').options[document.getElementById('nueva_sucursal').selectedIndex].text;
-    if (!codOperario || !fecha) {
-        alert('Seleccione un colaborador y una fecha para consultar las marcaciones');
-        return;
+    if (elNuevaFecha) {
+        elNuevaFecha.addEventListener('change', function () {
+            if (elBtnConsultarNueva && elNuevaOperario) {
+                elBtnConsultarNueva.disabled = !this.value || !elNuevaOperario.value;
+            }
+            if (elNuevaSucursal && elNuevaSucursal.value && this.value) {
+                cargarOperariosSucursal(elNuevaSucursal.value, this.value);
+            }
+        });
     }
-    mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, 0);
-});
 
-document.getElementById('btnConsultarMarcacionesEditar').addEventListener('click', function () {
-    var nombre = document.getElementById('editar_nombre').textContent;
-    var sucursal = document.getElementById('editar_sucursal').textContent;
-    var fecha = document.getElementById('editar_fecha').textContent;
-    var minutos = parseInt(document.getElementById('editar_minutos').textContent);
-    var codOperario = document.getElementById('editar_cod_operario').value;
-    mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, minutos);
-});
+    if (elBtnConsultarNueva) {
+        elBtnConsultarNueva.addEventListener('click', function () {
+            var codOperario = elNuevaOperario ? elNuevaOperario.value : '';
+            var fecha = elNuevaFecha ? elNuevaFecha.value : '';
+            var nombre = elNuevaOperario ? elNuevaOperario.options[elNuevaOperario.selectedIndex].text : '';
+            var sucursal = elNuevaSucursal ? elNuevaSucursal.options[elNuevaSucursal.selectedIndex].text : '';
+            if (!codOperario || !fecha) {
+                alert('Seleccione un colaborador y una fecha para consultar las marcaciones');
+                return;
+            }
+            mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, 0);
+        });
+    }
 
-document.getElementById('nueva_sucursal').addEventListener('change', function () {
-    var fechaInput = document.getElementById('nueva_fecha');
-    if (fechaInput.value) {
-        cargarOperariosSucursal(this.value, fechaInput.value);
-    } else {
-        document.getElementById('nueva_operario').innerHTML = '<option value="">Primero seleccione una fecha</option>';
+    if (elBtnConsultarEditar) {
+        elBtnConsultarEditar.addEventListener('click', function () {
+            var nombre = document.getElementById('editar_nombre').textContent;
+            var sucursal = document.getElementById('editar_sucursal').textContent;
+            var fecha = document.getElementById('editar_fecha').textContent;
+            var minutos = parseInt((document.getElementById('editar_minutos') || {}).textContent || '0');
+            var codOperario = document.getElementById('editar_cod_operario').value;
+            mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fecha, minutos);
+        });
     }
-});
 
-document.getElementById('formNuevaTardanza').addEventListener('submit', function (e) {
-    var fotoInput = document.getElementById('nueva_foto');
-    if (!fotoInput.files || fotoInput.files.length === 0) {
-        alert('Debe seleccionar una foto como evidencia');
-        e.preventDefault();
-        return false;
+    if (elNuevaSucursal) {
+        elNuevaSucursal.addEventListener('change', function () {
+            if (elNuevaFecha && elNuevaFecha.value) {
+                cargarOperariosSucursal(this.value, elNuevaFecha.value);
+            } else if (elNuevaOperario) {
+                elNuevaOperario.innerHTML = '<option value="">Primero seleccione una fecha</option>';
+            }
+        });
     }
-    var file = fotoInput.files[0];
-    if (!file.type.match('image.*')) {
-        alert('El archivo debe ser una imagen');
-        e.preventDefault();
-        return false;
+
+    if (elFormNueva) {
+        elFormNueva.addEventListener('submit', function (e) {
+            var fotoInput = document.getElementById('nueva_foto');
+            if (!fotoInput || !fotoInput.files || fotoInput.files.length === 0) {
+                alert('Debe seleccionar una foto como evidencia');
+                e.preventDefault();
+                return false;
+            }
+            var file = fotoInput.files[0];
+            if (!file.type.match('image.*')) {
+                alert('El archivo debe ser una imagen');
+                e.preventDefault();
+                return false;
+            }
+            if (elNuevaOperario) {
+                var optionSeleccionada = elNuevaOperario.options[elNuevaOperario.selectedIndex];
+                if (optionSeleccionada && optionSeleccionada.dataset.sinContrato === 'true') {
+                    e.preventDefault();
+                    alert('Este colaborador no tiene registro de contrato. Por favor contactar con el área de RH antes de registrar una tardanza.');
+                    return false;
+                }
+            }
+            return true;
+        });
     }
-    var selectOperario = document.getElementById('nueva_operario');
-    var optionSeleccionada = selectOperario.options[selectOperario.selectedIndex];
-    if (optionSeleccionada && optionSeleccionada.dataset.sinContrato === 'true') {
-        e.preventDefault();
-        alert('Este colaborador no tiene registro de contrato. Por favor contactar con el área de RH antes de registrar una tardanza.');
-        return false;
-    }
-    return true;
-});
+})();
+
+
+
 
 // =============================================
 // MODAL CONSULTAR MARCACIONES
