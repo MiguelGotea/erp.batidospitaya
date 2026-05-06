@@ -86,44 +86,29 @@ try {
         $convIndex[(int) $c['f']][(int) $c['i']] = $c['fac'] != 0 ? 1 / (float) $c['fac'] : 0;
     }
 
-    // ── Mapeo Completo (Lógica Robusta: Directo, Maestro, Ingrediente) ──
-    $codMap = []; // CodCotizacion => {factor, nombre, tipo, ...}
-
-    // 1. Identificar ingredientes asociados al producto base (idPP)
-    // Buscamos cualquier cotización que mapee directamente o vía maestro a nuestro idPP
-    $stmtRel = $conn->prepare("
-        SELECT DISTINCT c.CodIngrediente
-        FROM Cotizaciones c
-        INNER JOIN diccionario_productos_legado d ON d.CodCotizacion = c.CodCotizacion
-        INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
-        WHERE pp.id = :id 
-           OR (pp.id_producto_maestro = :mid AND pp.Activo='SI' AND :mid2 > 0)
+    // ── Mapeo Completo (REPLICA de balance_inventario_get_datos.php) ──
+    
+    // 1. Todos los productos base para construir maestroToBase
+    $rMetaAll = $conn->prepare("
+        SELECT pp.id, pp.id_unidad_producto AS unid, pp.cantidad AS cant, pp.id_producto_maestro AS mid
+        FROM producto_presentacion pp
+        WHERE pp.presentacion_basica_inventario=1 AND pp.Activo='SI'
     ");
-    $stmtRel->execute([':id' => $idPP, ':mid' => $idMaestro, ':mid2' => $idMaestro]);
-    $ingsBase = $stmtRel->fetchAll(PDO::FETCH_COLUMN);
-
-    // También incluimos ingredientes vía Step C (Ingrediente -> otro producto con mismo maestro)
-    if ($idMaestro > 0) {
-        $stmtStepC_Ings = $conn->prepare("
-            SELECT DISTINCT c_src.CodIngrediente
-            FROM Cotizaciones c_src
-            INNER JOIN Cotizaciones c_all ON c_all.CodIngrediente = c_src.CodIngrediente
-            INNER JOIN diccionario_productos_legado d2 ON d2.CodCotizacion = c_all.CodCotizacion
-            INNER JOIN producto_presentacion pp_any ON pp_any.id = d2.id_producto_presentacion
-            WHERE pp_any.id_producto_maestro = :mid AND pp_any.Activo='SI'
-        ");
-        $stmtStepC_Ings->execute([':mid' => $idMaestro]);
-        $ingsBase = array_unique(array_merge($ingsBase, $stmtStepC_Ings->fetchAll(PDO::FETCH_COLUMN)));
+    $rMetaAll->execute();
+    $maestroToBase = [];
+    foreach ($rMetaAll->fetchAll(PDO::FETCH_ASSOC) as $pm) {
+        $mid = (int) $pm['mid'];
+        if ($mid > 0) {
+            // Nota: Si hay varios base para un maestro, el último gana (igual que en get_datos.php)
+            $maestroToBase[$mid] = [
+                'base_pp_id' => (int)$pm['id'], 
+                'base_unid'  => (int)$pm['unid'], 
+                'base_cant'  => max((float)$pm['cant'], 0.001)
+            ];
+        }
     }
 
-    if (empty($ingsBase)) {
-        // Fallback: si no hay mapeos aún, al menos el ingrediente directo del idPP si existe en diccionario
-        $stmtF = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones c INNER JOIN diccionario_productos_legado d ON d.CodCotizacion = c.CodCotizacion WHERE d.id_producto_presentacion = ?");
-        $stmtF->execute([$idPP]);
-        $ingsBase = $stmtF->fetchAll(PDO::FETCH_COLUMN);
-    }
-
-    // Cascade Map (Paquetes)
+    // 2. Cascade Map (Paquetes -> Base)
     $rCas = $conn->prepare("
         SELECT pp_pkg.id AS pkg_id, crp.id_presentacion_producto AS base_id, crp.cantidad AS factor
         FROM producto_presentacion pp_pkg
@@ -139,87 +124,91 @@ try {
         $cascadeMap[(int)$row['pkg_id']] = ['base_id' => (int)$row['base_id'], 'factor' => (float)$row['factor']];
     }
 
-    if (!empty($ingsBase)) {
-        $phI = implode(',', array_fill(0, count($ingsBase), '?'));
+    // 3. Diccionario Completo (CodCotizacion -> Producto)
+    $rDic = $conn->prepare("
+        SELECT d.CodCotizacion, pp.id AS pp_id, pp.Nombre,
+               pp.presentacion_basica_inventario AS es_base, pp.presentacion_receta AS es_receta,
+               pp.id_unidad_producto AS pp_unid, pp.cantidad AS pp_cant,
+               pp.id_producto_maestro AS id_maestro, pp.Id_receta_producto
+        FROM diccionario_productos_legado d
+        INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
+        WHERE pp.Activo='SI'
+    ");
+    $rDic->execute();
+    $diccionarioRaw = $rDic->fetchAll(PDO::FETCH_ASSOC);
+    $diccionario = [];
+    foreach($diccionarioRaw as $d) $diccionario[(int)$d['CodCotizacion']] = $d;
+
+    // 4. altMap (Presentaciones alternativas -> Base)
+    $altMap = [];
+    foreach ($diccionario as $dic) {
+        $pp_id = (int)$dic['pp_id'];
+        if ($dic['es_base'] || $dic['es_receta']) continue;
+        if (isset($cascadeMap[$pp_id])) continue;
         
-        // 2. Cargar TODAS las cotizaciones de estos ingredientes
-        $stmtAllCots = $conn->prepare("SELECT CodCotizacion, CodIngrediente, Conversion, Prioridad FROM Cotizaciones WHERE CodIngrediente IN ($phI)");
-        $stmtAllCots->execute($ingsBase);
-        $allCots = $stmtAllCots->fetchAll(PDO::FETCH_ASSOC);
+        $mid = (int)$dic['id_maestro'];
+        if (!$mid || !isset($maestroToBase[$mid])) continue;
+        
+        $base = $maestroToBase[$mid];
+        $altUnid = (int)$dic['pp_unid'];
+        $basUnid = (int)$base['base_unid'];
+        
+        if ($altUnid === $basUnid) {
+            $factor = (float)$dic['pp_cant'] / $base['base_cant'];
+        } elseif (isset($convIndex[$altUnid][$basUnid])) {
+            $factor = ((float)$dic['pp_cant'] * $convIndex[$altUnid][$basUnid]) / $base['base_cant'];
+        } else {
+            continue;
+        }
+        $altMap[$pp_id] = ['base_id' => $base['base_pp_id'], 'factor' => $factor];
+    }
 
-        // 3. Cargar el diccionario para estas cotizaciones
-        $phC_list = array_column($allCots, 'CodCotizacion');
-        if (!empty($phC_list)) {
-            $phC = implode(',', array_fill(0, count($phC_list), '?'));
-            $stmtDic = $conn->prepare("
-                SELECT d.CodCotizacion, pp.id AS pp_id, pp.Nombre, pp.id_unidad_producto, pp.cantidad, pp.id_producto_maestro,
-                       pp.presentacion_basica_inventario, pp.presentacion_receta
-                FROM diccionario_productos_legado d
-                INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
-                WHERE d.CodCotizacion IN ($phC) AND pp.Activo='SI'
-            ");
-            $stmtDic->execute($phC_list);
-            $dicMap = [];
-            foreach ($stmtDic->fetchAll(PDO::FETCH_ASSOC) as $r) $dicMap[(int)$r['CodCotizacion']] = $r;
+    // 5. Mapeo para Balance (Elementos: inv, ajuste, merma, despacho, compra)
+    // Solo incluimos lo que resolverCodCot resolvería hacia nuestro idPP
+    $codMapBalance = [];
+    foreach ($diccionario as $cod => $dic) {
+        $pp_id = (int)$dic['pp_id'];
+        $resBid = null;
+        $resFac = 1.0;
+        $resType = 'base';
 
-            // 4. Resolver cada cotización hacia nuestro idPP
-            foreach ($allCots as $cot) {
-                $cid = (int)$cot['CodCotizacion'];
-                $mapeoRow = null;
-                $type = 'alternativa';
-                $fac = null;
+        if (isset($cascadeMap[$pp_id])) {
+            $resBid = $cascadeMap[$pp_id]['base_id'];
+            $resFac = $cascadeMap[$pp_id]['factor'];
+            $resType = 'cascada';
+        } elseif (isset($altMap[$pp_id])) {
+            $resBid = $altMap[$pp_id]['base_id'];
+            $resFac = $altMap[$pp_id]['factor'];
+            $resType = 'alternativa';
+        } elseif ($dic['es_base']) {
+            $resBid = $pp_id;
+            $resFac = 1.0;
+            $resType = 'base';
+        }
 
-                // A. Mapeo Directo (si está en diccionario)
-                if (isset($dicMap[$cid])) {
-                    $row = $dicMap[$cid];
-                    if ((int)$row['pp_id'] === $idPP) {
-                        $fac = 1.0;
-                        $type = 'base';
-                    } 
-                    // B. Maestro
-                    elseif ($idMaestro > 0 && (int)$row['id_producto_maestro'] === $idMaestro) {
-                        $u = (int)$row['id_unidad_producto'];
-                        $c = max((float)$row['cantidad'], 0.001);
-                        if ($u === $baseUnid) $fac = $c / $baseCant;
-                        elseif (isset($convIndex[$u][$baseUnid])) $fac = ($c * $convIndex[$u][$baseUnid]) / $baseCant;
-                        if ($row['presentacion_basica_inventario']) $type = 'base';
-                    }
-                    // C. Cascada
-                    elseif (isset($cascadeMap[(int)$row['pp_id']]) && $cascadeMap[(int)$row['pp_id']]['base_id'] === $idPP) {
-                        $fac = $cascadeMap[(int)$row['pp_id']]['factor'];
-                        $type = 'cascada';
-                    }
-                    $mapeoRow = $row;
-                }
-
-                // D. Step C Fallback (si no se resolvió arriba, pero pertenece a un ingrediente base)
-                if ($fac === null && in_array($cot['CodIngrediente'], $ingsBase)) {
-                    // Si no tenemos mapeo ERP, asumimos factor 1.0 (unidad base del ingrediente)
-                    $fac = 1.0; 
-                    $type = 'auto_ingrediente';
-                }
-
-                if ($fac !== null) {
-                    $codMap[$cid] = [
-                        'factor'  => $fac,
-                        'nombre'  => $mapeoRow['Nombre'] ?? ('Cod: '.$cid),
-                        'tipo'    => $type,
-                        'pp_id'   => $mapeoRow['pp_id'] ?? $idPP,
-                        'id_unid' => $mapeoRow['id_unidad_producto'] ?? $baseUnid,
-                        'pp_cant' => $mapeoRow['cantidad'] ?? $baseCant,
-                        'id_mae'  => $mapeoRow['id_producto_maestro'] ?? $idMaestro
-                    ];
-                }
-            }
+        if ($resBid === $idPP) {
+            $codMapBalance[$cod] = [
+                'factor'  => $resFac,
+                'nombre'  => $dic['Nombre'],
+                'tipo'    => $resType,
+                'pp_id'   => $pp_id,
+                'id_unid' => (int)$dic['pp_unid'],
+                'pp_cant' => (float)$dic['pp_cant'],
+                'id_mae'  => (int)$dic['id_maestro']
+            ];
         }
     }
 
-    $allCods = array_keys($codMap);
+    $allCods = array_keys($codMapBalance);
+    if (empty($allCods)) {
+        echo json_encode(['ok' => true, 'registros' => [], 'producto' => $prodMeta, 'msg' => 'No hay códigos mapeados para balance']);
+        exit();
+    }
+
     if (empty($allCods)) {
         echo json_encode(['ok' => true, 'registros' => [], 'producto' => $prodMeta, 'msg' => 'No hay códigos mapeados']);
         exit();
     }
-
     $phCods = implode(',', array_fill(0, count($allCods), '?'));
     $phSucs = implode(',', array_fill(0, count($sucFiltro), '?'));
 
@@ -248,28 +237,28 @@ try {
     $stmt1 = $conn->prepare("SELECT k.Fecha, k.Sucursal, k.CodCotizacion, k.Cantidad, ss.numero_semana AS semana FROM msaccess_masivo_InventarioCotizacion k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phCods) AND k.Sucursal IN ($phSucs)");
     $stmt1->execute(array_merge([$semAnt], $allCods, $sucFiltro));
     foreach ($stmt1->fetchAll(PDO::FETCH_ASSOC) as $r) {
-        $addReg('inv_inicial', $r, $codMap[(int)$r['CodCotizacion']]);
+        $addReg('inv_inicial', $r, $codMapBalance[(int)$r['CodCotizacion']]);
     }
 
     // 2. Inventario Final
     $stmt2 = $conn->prepare("SELECT k.Fecha, k.Sucursal, k.CodCotizacion, k.Cantidad, ss.numero_semana AS semana FROM msaccess_masivo_InventarioCotizacion k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phCods) AND k.Sucursal IN ($phSucs)");
     $stmt2->execute(array_merge([$semHasta], $allCods, $sucFiltro));
     foreach ($stmt2->fetchAll(PDO::FETCH_ASSOC) as $r) {
-        $addReg('inv_final', $r, $codMap[(int)$r['CodCotizacion']]);
+        $addReg('inv_final', $r, $codMapBalance[(int)$r['CodCotizacion']]);
     }
 
     // 3. Ajustes
     $stmt3 = $conn->prepare("SELECT k.Fecha, k.Sucursal, k.CodCotizacion, k.Cantidad, ss.numero_semana AS semana FROM msaccess_masivo_AjustesInventario k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana BETWEEN ? AND ? AND k.CodCotizacion IN ($phCods) AND k.Sucursal IN ($phSucs)");
     $stmt3->execute(array_merge([$semDesde, $semHasta], $allCods, $sucFiltro));
     foreach ($stmt3->fetchAll(PDO::FETCH_ASSOC) as $r) {
-        $addReg('ajuste', $r, $codMap[(int)$r['CodCotizacion']]);
+        $addReg('ajuste', $r, $codMapBalance[(int)$r['CodCotizacion']]);
     }
 
     // 4. Mermas
     $stmt4 = $conn->prepare("SELECT k.Fecha, k.Sucursal, k.CodCotizacion, k.Cantidad, ss.numero_semana AS semana FROM msaccess_masivo_MermaCotizacion k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana BETWEEN ? AND ? AND k.CodCotizacion IN ($phCods) AND k.Sucursal IN ($phSucs)");
     $stmt4->execute(array_merge([$semDesde, $semHasta], $allCods, $sucFiltro));
     foreach ($stmt4->fetchAll(PDO::FETCH_ASSOC) as $r) {
-        $addReg('merma', $r, $codMap[(int)$r['CodCotizacion']]);
+        $addReg('merma', $r, $codMapBalance[(int)$r['CodCotizacion']]);
     }
 
     // 5. Despachos
@@ -280,7 +269,7 @@ try {
         $suc = (int)$m[1];
         if (!in_array($suc, $sucFiltro)) continue;
         $r['Sucursal'] = $suc; // Requerido para addReg
-        $addReg('despacho', $r, $codMap[(int)$r['CodCotizacion']]);
+        $addReg('despacho', $r, $codMapBalance[(int)$r['CodCotizacion']]);
     }
 
     // 6. Compras
@@ -288,27 +277,79 @@ try {
     $stmt6->execute(array_merge([$semDesde, $semHasta], $allCods, $sucFiltro));
     foreach ($stmt6->fetchAll(PDO::FETCH_ASSOC) as $r) {
         $r['Destino'] = ''; // no aplica
-        $addReg('compras', $r, $codMap[(int)$r['CodCotizacion']]);
+        $addReg('compras', $r, $codMapBalance[(int)$r['CodCotizacion']]);
     }
+    // ── Consumo Teórico (REPLICA de lógica P1/P2/P3 de dashboard_consumo / balance_get_datos) ──
     $consTeoDiario = [];
+    $codMapConsumo = [];
+    
+    // Paso A & B: Directo y AUTO por maestro
+    foreach ($diccionario as $cod => $dic) {
+        $mid = (int)$dic['id_maestro'];
+        if ($dic['es_base'] && (int)$dic['pp_id'] === $idPP) {
+            $codMapConsumo[$cod] = [
+                'pp_id'   => (int)$dic['pp_id'],
+                'pp_cant' => (float)$dic['pp_cant'],
+                'id_unid' => (int)$dic['pp_unid'],
+                'id_mae'  => $mid,
+                'Id_receta_producto' => $dic['Id_receta_producto'],
+                'tipo'    => 'consumo_directo'
+            ];
+        } elseif ($mid > 0 && isset($maestroToBase[$mid]) && $maestroToBase[$mid]['base_pp_id'] === $idPP) {
+            $base = $maestroToBase[$mid];
+            $codMapConsumo[$cod] = [
+                'pp_id'   => $base['base_pp_id'],
+                'pp_cant' => $base['base_cant'],
+                'id_unid' => $base['base_unid'],
+                'id_mae'  => $mid,
+                'Id_receta_producto' => null,
+                'tipo'    => 'consumo_auto'
+            ];
+        }
+    }
 
-    // 1. Identificar ingredientes relevantes para filtrar las consultas
-    $rI1 = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phCods)");
-    $rI1->execute($allCods);
+    // Paso C: Fallback via CodIngrediente
+    $codsEnConsumo = array_keys($codMapConsumo);
+    if (!empty($codsEnConsumo)) {
+        $phC_C = implode(',', array_fill(0, count($codsEnConsumo), '?'));
+        $stmtIngs = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phC_C)");
+        $stmtIngs->execute($codsEnConsumo);
+        $ingsEnConsumo = $stmtIngs->fetchAll(PDO::FETCH_COLUMN);
+
+        if (!empty($ingsEnConsumo)) {
+            $phI_C = implode(',', array_fill(0, count($ingsEnConsumo), '?'));
+            $stmtFallback = $conn->prepare("SELECT CodCotizacion FROM Cotizaciones WHERE CodIngrediente IN ($phI_C)");
+            $stmtFallback->execute($ingsEnConsumo);
+            foreach ($stmtFallback->fetchAll(PDO::FETCH_ASSOC) as $cf) {
+                $cc = (int)$cf['CodCotizacion'];
+                if (!isset($codMapConsumo[$cc])) {
+                    $codMapConsumo[$cc] = [
+                        'pp_id'   => $idPP,
+                        'pp_cant' => $baseCant,
+                        'id_unid' => $baseUnid,
+                        'id_mae'  => $idMaestro,
+                        'Id_receta_producto' => null,
+                        'tipo'    => 'consumo_fallback'
+                    ];
+                }
+            }
+        }
+    }
+
+    // Filtros de ventas
+    $allCodsConsumo = array_keys($codMapConsumo);
+    $phCodsCons = !empty($allCodsConsumo) ? implode(',', array_fill(0, count($allCodsConsumo), '?')) : '0';
+    
+    $rI1 = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phCodsCons)");
+    $rI1->execute(!empty($allCodsConsumo) ? $allCodsConsumo : []);
     $ingsRel = $rI1->fetchAll(PDO::FETCH_COLUMN);
 
-    if (!empty($ingsRel) || !empty($allCods)) {
-        // 2. Pre-cargar cotizaciones para P2/P3 SOLO de ingredientes relevantes
+    if (!empty($ingsRel) || !empty($allCodsConsumo)) {
+        // 2. Pre-cargar cotizaciones para P2/P3
         $cotP2P3 = [];
         if (!empty($ingsRel)) {
             $phI = implode(',', array_fill(0, count($ingsRel), '?'));
-            $stmtCot = $conn->prepare("
-                SELECT CodIngrediente, CodCotizacion, Conversion, Prioridad 
-                FROM Cotizaciones 
-                WHERE CodIngrediente IN ($phI)
-                  AND (Subproducto IS NULL OR Subproducto!=1) AND (Marca IS NULL OR Marca!='Almacen Global')
-                ORDER BY CodIngrediente, Conversion DESC, Prioridad ASC
-            ");
+            $stmtCot = $conn->prepare("SELECT CodIngrediente, CodCotizacion, Conversion, Prioridad FROM Cotizaciones WHERE CodIngrediente IN ($phI) AND (Subproducto IS NULL OR Subproducto!=1) AND (Marca IS NULL OR Marca!='Almacen Global') ORDER BY CodIngrediente, Conversion DESC, Prioridad ASC");
             $stmtCot->execute($ingsRel);
             foreach ($stmtCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
                 $ci = $c['CodIngrediente'];
@@ -316,15 +357,12 @@ try {
                 if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotP2P3[$ci]['p2']) $cotP2P3[$ci]['p2'] = (int)$c['CodCotizacion'];
                 if (!$cotP2P3[$ci]['p3']) $cotP2P3[$ci]['p3'] = (int)$c['CodCotizacion'];
             }
-
-            // 3. Pre-cargar ingredientes para unidades
             $stmtIng = $conn->prepare("SELECT CodIngrediente, Unidad FROM DBIngredientes WHERE CodIngrediente IN ($phI)");
             $stmtIng->execute($ingsRel);
             $dbIng = [];
             foreach ($stmtIng->fetchAll(PDO::FETCH_ASSOC) as $row) $dbIng[$row['CodIngrediente']] = $row;
         }
 
-        // 4. Unidades para conversión (estático pequeño)
         $stmtU = $conn->prepare("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto");
         $stmtU->execute();
         $uPorNom = [];
@@ -332,35 +370,15 @@ try {
             $uid = (int)$u['id'];
             $uPorNom[strtolower(trim($u['nombre']))] = $uid;
             if ($u['abreviado']) $uPorNom[strtolower(trim($u['abreviado']))] = $uid;
-            if (!empty($u['nombres_opcionales'])) {
-                foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $al) {
-                    $ak = strtolower(trim($al));
-                    if ($ak) $uPorNom[$ak] = $uid;
-                }
-            }
+            if (!empty($u['nombres_opcionales'])) foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $al) { $ak = strtolower(trim($al)); if ($ak) $uPorNom[$ak] = $uid; }
         }
 
-        // 5. Ventas Globales con FILTRO de relevancia
         $whereEx = "1=0";
         $pValSales = array_merge([$fechaInicioRange, $fechaFinRange, $semDesde, $semHasta], $sucFiltro);
-        if (!empty($ingsRel)) {
-            $whereEx .= " OR sr.CodIngrediente IN (" . implode(',', array_fill(0, count($ingsRel), '?')) . ")";
-            $pValSales = array_merge($pValSales, $ingsRel);
-        }
-        if (!empty($allCods)) {
-            $whereEx .= " OR sr.codporcion IN ($phCods)";
-            $pValSales = array_merge($pValSales, $allCods);
-        }
+        if (!empty($ingsRel)) { $whereEx .= " OR sr.CodIngrediente IN (" . implode(',', array_fill(0, count($ingsRel), '?')) . ")"; $pValSales = array_merge($pValSales, $ingsRel); }
+        if (!empty($allCodsConsumo)) { $whereEx .= " OR sr.codporcion IN ($phCodsCons)"; $pValSales = array_merge($pValSales, $allCodsConsumo); }
 
-        $sqlV = "
-            SELECT v.Fecha, sr.CodIngrediente, sr.codporcion, SUM(v.Cantidad * sr.Cantidad) AS total
-            FROM VentasGlobalesAccessCSV v
-            INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
-            WHERE v.Anulado=0 AND v.Fecha BETWEEN ? AND ? AND v.Semana BETWEEN ? AND ? AND v.local IN ($phSucs)
-              AND v.CodProducto IS NOT NULL AND ($whereEx)
-              AND (sr.codporcion IS NULL OR sr.codporcion NOT IN (SELECT CodCotizacionPorcion FROM MezclaPorcionesAccess WHERE CodCotizacionPorcion IS NOT NULL))
-            GROUP BY v.Fecha, sr.CodIngrediente, sr.codporcion
-        ";
+        $sqlV = "SELECT v.Fecha, sr.CodIngrediente, sr.codporcion, SUM(v.Cantidad * sr.Cantidad) AS total FROM VentasGlobalesAccessCSV v INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto WHERE v.Anulado=0 AND v.Fecha BETWEEN ? AND ? AND v.Semana BETWEEN ? AND ? AND v.local IN ($phSucs) AND v.CodProducto IS NOT NULL AND ($whereEx) AND (sr.codporcion IS NULL OR sr.codporcion NOT IN (SELECT CodCotizacionPorcion FROM MezclaPorcionesAccess WHERE CodCotizacionPorcion IS NOT NULL)) GROUP BY v.Fecha, sr.CodIngrediente, sr.codporcion";
         $stmtV = $conn->prepare($sqlV);
         $stmtV->execute($pValSales);
 
@@ -370,34 +388,31 @@ try {
             $cp = $f['codporcion'] ? (int)$f['codporcion'] : null;
             $ci = $f['CodIngrediente'];
 
-            if ($cp && isset($codMap[$cp])) {
-                $mapeo = $codMap[$cp];
+            if ($cp && isset($codMapConsumo[$cp])) {
+                $mapeo = $codMapConsumo[$cp];
                 $esP1 = true;
             } elseif ($ci && isset($cotP2P3[$ci])) {
                 $p2 = $cotP2P3[$ci]['p2'];
                 $p3 = $cotP2P3[$ci]['p3'];
-                if ($p2 && isset($codMap[$p2])) $mapeo = $codMap[$p2];
-                elseif ($p3 && isset($codMap[$p3])) $mapeo = $codMap[$p3];
+                if ($p2 && isset($codMapConsumo[$p2])) $mapeo = $codMapConsumo[$p2];
+                elseif ($p3 && isset($codMapConsumo[$p3])) $mapeo = $codMapConsumo[$p3];
             }
 
             if ($mapeo) {
                 $cantTotal = (float)$f['total'];
                 $val = 0;
-                if ($mapeo['tipo'] === 'cascada') {
+                $esGlobal = !empty($mapeo['Id_receta_producto']);
+                
+                if ($esGlobal) {
                     $val = $cantTotal;
                 } else {
                     $unAcc = $dbIng[$ci]['Unidad'] ?? '';
                     $idUnAcc = isset($uPorNom[strtolower(trim($unAcc))]) ? $uPorNom[strtolower(trim($unAcc))] : null;
                     $factor = 1.0;
-                    if ($idUnAcc && $idUnAcc !== $mapeo['id_unid']) {
-                        if (isset($convIndex[$idUnAcc][$mapeo['id_unid']])) {
-                            $factor = $convIndex[$idUnAcc][$mapeo['id_unid']];
-                        }
-                    }
+                    if ($idUnAcc && $idUnAcc !== $mapeo['id_unid']) { if (isset($convIndex[$idUnAcc][$mapeo['id_unid']])) { $factor = $convIndex[$idUnAcc][$mapeo['id_unid']]; } }
                     $val = ($cantTotal * $factor) / $mapeo['pp_cant'];
                     if ($esP1) $val = round($val * 2) / 2;
                 }
-
                 $fec = $f['Fecha'];
                 if (!isset($consTeoDiario[$fec])) $consTeoDiario[$fec] = 0;
                 $consTeoDiario[$fec] += $val;
@@ -423,7 +438,7 @@ try {
         'consumo_real' => $consumoReal,
         'consumo_teorico' => round(array_sum($consTeoDiario), 4),
         'consumo_teorico_diario' => $consTeoDiario,
-        'num_mapeos' => count($codMap)
+        'num_mapeos' => count($codMapBalance)
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
