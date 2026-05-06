@@ -6,21 +6,21 @@
 'use strict';
 
 /* ── Referencias DOM ─────────────────────────────────────── */
-const $semDesde    = $('#filtroSemanaDesde');
-const $semHasta    = $('#filtroSemanaHasta');
-const $sucursales  = $('#filtroSucursales');
-const $btnAplicar  = $('#btnAplicar');
+const $semDesde = $('#filtroSemanaDesde');
+const $semHasta = $('#filtroSemanaHasta');
+const $sucursales = $('#filtroSucursales');
+const $btnAplicar = $('#btnAplicar');
 const $btnExportar = $('#btnExportar');
 
 
 const $panelInicial = $('#panelInicial');
-const $panelLoader  = $('#panelLoader');
-const $panelDatos   = $('#panelDatos');
+const $panelLoader = $('#panelLoader');
+const $panelDatos = $('#panelDatos');
 
 /* ── Estado global ───────────────────────────────────────── */
-let datosActuales  = null;   // Respuesta completa del AJAX de datos
+let datosActuales = null;   // Respuesta completa del AJAX de datos
 let chartTendencia = null;   // Instancia Chart.js activa
-let modoGrafico    = 'barras'; // 'barras' | 'linea_total' | 'linea_suc'
+let modoGrafico = 'barras'; // 'barras' | 'linea_total' | 'linea_suc'
 
 /* ════════════════════════════════════════════════════════════
    INICIALIZACIÓN
@@ -34,17 +34,17 @@ $(document).ready(function () {
 /* ── SucursalPicker — Custom Pill Dropdown ───────────────── */
 const SucPicker = (() => {
     const MAX_PILLS = 3;   // max pills visibles en trigger (el resto → badge "+N")
-    let _opciones    = []; // { value, label }
+    let _opciones = []; // { value, label }
     let _seleccionados = new Set();
 
-    const $trigger   = $('#dcSucTrigger');
-    const $dropdown  = $('#dcSucDropdown');
-    const $list      = $('#dcSucList');
-    const $search    = $('#dcSucSearch');
-    const $pills     = $('#dcSucPills');
-    const $ph        = $('#dcSucPlaceholder');
-    const $badge     = $('#dcSucCountBadge');
-    const $clear     = $('#dcSucClear');
+    const $trigger = $('#dcSucTrigger');
+    const $dropdown = $('#dcSucDropdown');
+    const $list = $('#dcSucList');
+    const $search = $('#dcSucSearch');
+    const $pills = $('#dcSucPills');
+    const $ph = $('#dcSucPlaceholder');
+    const $badge = $('#dcSucCountBadge');
+    const $clear = $('#dcSucClear');
     const $hiddenSel = $('#filtroSucursales');  // select oculto para compatibilidad
 
     /* ── Abrir / Cerrar ── */
@@ -83,7 +83,7 @@ const SucPicker = (() => {
 
         const arr = [..._seleccionados];
         const visible = arr.slice(0, MAX_PILLS);
-        const extra   = arr.length - MAX_PILLS;
+        const extra = arr.length - MAX_PILLS;
 
         $pills.empty();
         visible.forEach(v => {
@@ -471,8 +471,8 @@ function mostrarEstado(estado) {
     $panelDatos.addClass('d-none');
 
     if (estado === 'inicial') $panelInicial.removeClass('d-none');
-    if (estado === 'loader')  $panelLoader.removeClass('d-none');
-    if (estado === 'datos')   $panelDatos.removeClass('d-none');
+    if (estado === 'loader') $panelLoader.removeClass('d-none');
+    if (estado === 'datos') $panelDatos.removeClass('d-none');
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -509,13 +509,13 @@ function renderKPIs(data, item) {
         }
 
         // Proyección 3 semanas con regresión lineal (misma lógica que el gráfico)
-        const semanasNrosKpi  = data.semanas.map(s => s.numero_semana);
+        const semanasNrosKpi = data.semanas.map(s => s.numero_semana);
         const semanaActualKpi = parseInt($('#semanaActualNum').text()) || 0;
-        const esSemActKpi     = semanaActualKpi > 0 && semanasNrosKpi.includes(semanaActualKpi);
-        const semanasCalcKpi  = esSemActKpi
+        const esSemActKpi = semanaActualKpi > 0 && semanasNrosKpi.includes(semanaActualKpi);
+        const semanasCalcKpi = esSemActKpi
             ? semanasNrosKpi.filter(n => n !== semanaActualKpi)
             : semanasNrosKpi;
-        const ultimaSemKpi    = semanasNrosKpi[semanasNrosKpi.length - 1];
+        const ultimaSemKpi = semanasNrosKpi[semanasNrosKpi.length - 1];
 
         // Promedio sobre semanas completas
         let promCalcKpi = item.prom_semana || 0;
@@ -528,13 +528,13 @@ function renderKPIs(data, item) {
         let kpiProy3 = 0;
         let kpiProm3 = promCalcKpi;
         if (semanasCalcKpi.length >= 2) {
-            const xV    = semanasCalcKpi;
-            const yV    = semanasCalcKpi.map(n => item.por_semana[n] || 0);
-            const nk    = xV.length;
-            const sumX  = xV.reduce((a, b) => a + b, 0);
-            const sumY  = yV.reduce((a, b) => a + b, 0);
+            const xV = semanasCalcKpi;
+            const yV = semanasCalcKpi.map(n => item.por_semana[n] || 0);
+            const nk = xV.length;
+            const sumX = xV.reduce((a, b) => a + b, 0);
+            const sumY = yV.reduce((a, b) => a + b, 0);
             const sumXY = xV.reduce((acc, x, i) => acc + x * yV[i], 0);
-            const sumX2 = xV.reduce((acc, x)    => acc + x * x, 0);
+            const sumX2 = xV.reduce((acc, x) => acc + x * x, 0);
             const denom = nk * sumX2 - sumX * sumX;
             if (Math.abs(denom) > 0.001) {
                 const sl = (nk * sumXY - sumX * sumY) / denom;
@@ -571,24 +571,24 @@ function renderKPIs(data, item) {
 
 /* ── Paleta de colores para sucursales (hasta 14) ─────────── */
 const SUCURSAL_COLORS = [
-    { border: '#0E544C', bg: 'rgba(14,84,76,.25)'    },
-    { border: '#2980b9', bg: 'rgba(41,128,185,.25)'  },
-    { border: '#8e44ad', bg: 'rgba(142,68,173,.25)'  },
-    { border: '#e67e22', bg: 'rgba(230,126,34,.25)'  },
-    { border: '#c0392b', bg: 'rgba(192,57,43,.25)'   },
-    { border: '#16a085', bg: 'rgba(22,160,133,.25)'  },
-    { border: '#d35400', bg: 'rgba(211,84,0,.25)'    },
-    { border: '#27ae60', bg: 'rgba(39,174,96,.25)'   },
-    { border: '#2c3e50', bg: 'rgba(44,62,80,.25)'    },
-    { border: '#f39c12', bg: 'rgba(243,156,18,.25)'  },
-    { border: '#1abc9c', bg: 'rgba(26,188,156,.25)'  },
-    { border: '#9b59b6', bg: 'rgba(155,89,182,.25)'  },
-    { border: '#e74c3c', bg: 'rgba(231,76,60,.25)'   },
-    { border: '#3498db', bg: 'rgba(52,152,219,.25)'  },
+    { border: '#0E544C', bg: 'rgba(14,84,76,.25)' },
+    { border: '#2980b9', bg: 'rgba(41,128,185,.25)' },
+    { border: '#8e44ad', bg: 'rgba(142,68,173,.25)' },
+    { border: '#e67e22', bg: 'rgba(230,126,34,.25)' },
+    { border: '#c0392b', bg: 'rgba(192,57,43,.25)' },
+    { border: '#16a085', bg: 'rgba(22,160,133,.25)' },
+    { border: '#d35400', bg: 'rgba(211,84,0,.25)' },
+    { border: '#27ae60', bg: 'rgba(39,174,96,.25)' },
+    { border: '#2c3e50', bg: 'rgba(44,62,80,.25)' },
+    { border: '#f39c12', bg: 'rgba(243,156,18,.25)' },
+    { border: '#1abc9c', bg: 'rgba(26,188,156,.25)' },
+    { border: '#9b59b6', bg: 'rgba(155,89,182,.25)' },
+    { border: '#e74c3c', bg: 'rgba(231,76,60,.25)' },
+    { border: '#3498db', bg: 'rgba(52,152,219,.25)' },
 ];
 
-let kSigmaActual  = 1.5;   // Factor σ activo para alertas de sobreconsumo
-let kSlopeActual  = 0.06;  // Umbral β/μ activo para alertas de crecimiento
+let kSigmaActual = 1.5;   // Factor σ activo para alertas de sobreconsumo
+let kSlopeActual = 0.06;  // Umbral β/μ activo para alertas de crecimiento
 let filtroSevCrec = 'critico'; // Filtro de severidad activo: 'critico' | 'notable' | 'todos'
 
 /* ── Gráfico de Tendencia ─────────────────────────────────── */
@@ -616,14 +616,14 @@ function renderGrafico(data) {
         `<span class="ms-2 text-muted" style="font-size:.72rem;font-weight:400">${escHtml(item.unidad)}</span>`
     );
 
-    const labels      = data.semanas.map(s => `Sem ${s.numero_semana}`);
+    const labels = data.semanas.map(s => `Sem ${s.numero_semana}`);
     const semanasNros = data.semanas.map(s => s.numero_semana);
-    const sucursales  = data.sucursales || [];
-    const nombres     = data.sucursales_nombres || {};
-    const prom        = item.prom_semana || 0;
+    const sucursales = data.sucursales || [];
+    const nombres = data.sucursales_nombres || {};
+    const prom = item.prom_semana || 0;
 
     // ── Excluir semana en curso del promedio y proyección ────────────────────
-    const semanaActual       = parseInt($('#semanaActualNum').text()) || 0;
+    const semanaActual = parseInt($('#semanaActualNum').text()) || 0;
     const esSemActualEnRango = semanaActual > 0 && semanasNros.includes(semanaActual);
     // Semanas completas: excluir la semana en curso si está dentro del rango
     const semanasCalc = esSemActualEnRango
@@ -634,7 +634,7 @@ function renderGrafico(data) {
     let promCalc = prom;
     if (semanasCalc.length > 0) {
         const valsCalc = semanasCalc.map(n => item.por_semana[n] || 0);
-        const valsPos  = valsCalc.filter(v => v > 0);
+        const valsPos = valsCalc.filter(v => v > 0);
         promCalc = valsPos.length > 0 ? valsPos.reduce((a, b) => a + b, 0) / valsPos.length : prom;
     }
 
@@ -643,16 +643,16 @@ function renderGrafico(data) {
     let proyW1 = round2(promCalc), proyW2 = round2(promCalc), proyW3 = round2(promCalc);
     let regSlope = 0, regIntercept = promCalc;  // fallback: línea plana en promCalc
     if (semanasCalc.length >= 2) {
-        const xV    = semanasCalc;
-        const yV    = semanasCalc.map(n => item.por_semana[n] || 0);
-        const n_    = xV.length;
-        const sumX  = xV.reduce((a, b) => a + b, 0);
-        const sumY  = yV.reduce((a, b) => a + b, 0);
+        const xV = semanasCalc;
+        const yV = semanasCalc.map(n => item.por_semana[n] || 0);
+        const n_ = xV.length;
+        const sumX = xV.reduce((a, b) => a + b, 0);
+        const sumY = yV.reduce((a, b) => a + b, 0);
         const sumXY = xV.reduce((acc, x, i) => acc + x * yV[i], 0);
-        const sumX2 = xV.reduce((acc, x)    => acc + x * x, 0);
+        const sumX2 = xV.reduce((acc, x) => acc + x * x, 0);
         const denom = n_ * sumX2 - sumX * sumX;
         if (Math.abs(denom) > 0.001) {
-            regSlope     = (n_ * sumXY - sumX * sumY) / denom;
+            regSlope = (n_ * sumXY - sumX * sumY) / denom;
             regIntercept = (sumY - regSlope * sumX) / n_;
             proyW1 = Math.max(0, round2(regSlope * (ultimaSem + 1) + regIntercept));
             proyW2 = Math.max(0, round2(regSlope * (ultimaSem + 2) + regIntercept));
@@ -672,8 +672,8 @@ function renderGrafico(data) {
     let datasets = [];
 
     // Modos derivados del selector unificado
-    const esBarraSuc  = hayDesglose && modoGrafico === 'barras';
-    const esLineaSuc  = hayDesglose && modoGrafico === 'linea_suc';
+    const esBarraSuc = hayDesglose && modoGrafico === 'barras';
+    const esLineaSuc = hayDesglose && modoGrafico === 'linea_suc';
     const esLineaTotal = modoGrafico === 'linea_total';
 
     // Ocultar botón "Línea x Suc." si no hay desglose
@@ -697,28 +697,28 @@ function renderGrafico(data) {
         }).sort((a, b) => b.totalSuc - a.totalSuc);
 
         sucConTotal.forEach(({ suc, nombre, idx }) => {
-            const color  = SUCURSAL_COLORS[idx % SUCURSAL_COLORS.length];
+            const color = SUCURSAL_COLORS[idx % SUCURSAL_COLORS.length];
             const valores = semanasNros.map(n => round2(item.desglose_semxsuc[n]?.[suc] || 0));
-            const label   = nombre.length > 22 ? nombre.substring(0, 20) + '…' : nombre;
+            const label = nombre.length > 22 ? nombre.substring(0, 20) + '…' : nombre;
 
             // En modo BARRA: color sólido (~75% opacidad) para cada segmento apilado
             const bgColor = esBarraSuc
                 ? color.border.replace('#', 'rgba(').replace(/([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i,
-                    (_, r, g, b) => `${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},0.75)`)
+                    (_, r, g, b) => `${parseInt(r, 16)},${parseInt(g, 16)},${parseInt(b, 16)},0.75)`)
                 : color.bg;
 
             datasets.push({
                 label,
                 data: valores,
                 backgroundColor: bgColor,
-                borderColor:     color.border,
-                borderWidth:     esBarraSuc ? 0.5 : 2,
-                tension:         0.3,
-                fill:            false,
-                pointRadius:     esLineaSuc ? 3 : undefined,
+                borderColor: color.border,
+                borderWidth: esBarraSuc ? 0.5 : 2,
+                tension: 0.3,
+                fill: false,
+                pointRadius: esLineaSuc ? 3 : undefined,
                 pointBackgroundColor: color.border,
                 // stack solo en modo barra — Chart.js apila datasets con el mismo stack id
-                stack:           esBarraSuc ? 'suc' : undefined,
+                stack: esBarraSuc ? 'suc' : undefined,
             });
         });
 
@@ -727,16 +727,16 @@ function renderGrafico(data) {
         if (!esLineaSuc) {
             // Promedio punteado — solo en modo barra por sucursal
             datasets.push({
-                label:       `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
-                data:        semanasNros.map(n => (esSemActualEnRango && n === semanaActual) ? null : round2(promCalc)),
+                label: `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
+                data: semanasNros.map(n => (esSemActualEnRango && n === semanaActual) ? null : round2(promCalc)),
                 borderColor: '#e67e22',
                 borderWidth: 1.5,
-                borderDash:  [5, 4],
+                borderDash: [5, 4],
                 pointRadius: 0,
-                fill:        false,
-                tension:     0,
-                type:        'line',
-                order:       1,
+                fill: false,
+                tension: 0,
+                type: 'line',
+                order: 1,
             });
         }
 
@@ -767,46 +767,45 @@ function renderGrafico(data) {
         const valores = semanasNros.map(n => round2(item.por_semana[n] || 0));
         datasets = [
             {
-                label:           item.nombre.length > 35 ? item.nombre.substring(0, 33) + '…' : item.nombre,
-                data:            valores,
+                label: item.nombre.length > 35 ? item.nombre.substring(0, 33) + '…' : item.nombre,
+                data: valores,
                 backgroundColor: 'rgba(81,184,172,.35)',
-                borderColor:     '#0E544C',
-                borderWidth:     2,
-                tension:         0.3,
-                fill:            esLineaTotal,
-                pointRadius:     4,
+                borderColor: '#0E544C',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: esLineaTotal,
+                pointRadius: 4,
                 pointBackgroundColor: '#0E544C',
             },
             {
-                label:       `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
-                data:        semanasNros.map(n => (esSemActualEnRango && n === semanaActual) ? null : round2(promCalc)),
+                label: `Prom./sem (sem. completas): ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
+                data: semanasNros.map(n => (esSemActualEnRango && n === semanaActual) ? null : round2(promCalc)),
                 borderColor: '#e67e22',
                 borderWidth: 1.5,
-                borderDash:  [5, 4],
+                borderDash: [5, 4],
                 pointRadius: 0,
-                fill:        false,
-                tension:     0,
-                type:        'line',
+                fill: false,
+                tension: 0,
+                type: 'line',
             },
         ];
 
         // ── LÍNEA DE STOCK MÍNIMO (Linea total / Barras cuando hay UNA sola tienda)
         if (!hayDesglose && (esLineaTotal || modoGrafico === 'barras') && item.stock_min > 0) {
             datasets.push({
-                label:       `Stock Mín: ${formatNum(item.stock_min)} ${escHtml(item.unidad)}`,
-                data:        labelsExtended.map(() => item.stock_min),
+                label: `Stock Mín: ${formatNum(item.stock_min)} ${escHtml(item.unidad)}`,
+                data: labelsExtended.map(() => item.stock_min),
                 borderColor: '#e74c3c', // Rojo suave
                 borderWidth: 2,
-                borderDash:  [8, 4],
+                borderDash: [8, 4],
                 pointRadius: 0,
-                fill:        false,
-                tension:     0,
-                type:        'line',
-                order:       5,
+                fill: false,
+                tension: 0,
+                type: 'line',
+                order: 5,
             });
         }
     }
-
 
 
     if (!esLineaSuc) {
@@ -828,22 +827,22 @@ function renderGrafico(data) {
             (esSemActualEnRango && n === semanaActual) ? 5 : 0
         ), 6, 6, 6];
         datasets.push({
-            label:               `↗ Proyección`,
-            data:                proyData,
-            borderColor:         '#f39c12',
-            backgroundColor:     'rgba(243,156,18,.12)',
-            borderWidth:         2.5,
-            borderDash:          [6, 4],
-            pointRadius:         proyPointR,
-            pointStyle:          'triangle',
+            label: `↗ Proyección`,
+            data: proyData,
+            borderColor: '#f39c12',
+            backgroundColor: 'rgba(243,156,18,.12)',
+            borderWidth: 2.5,
+            borderDash: [6, 4],
+            pointRadius: proyPointR,
+            pointStyle: 'triangle',
             pointBackgroundColor: '#f39c12',
-            pointBorderColor:    '#fff',
-            pointBorderWidth:    1.5,
-            fill:                false,
-            tension:             0,
-            type:                'line',
-            spanGaps:            true,   // conecta sem. actual con las semanas proyectadas
-            order:               0,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 1.5,
+            fill: false,
+            tension: 0,
+            type: 'line',
+            spanGaps: true,   // conecta sem. actual con las semanas proyectadas
+            order: 0,
         });
     }
 
@@ -891,7 +890,7 @@ function renderGrafico(data) {
                         filter: (item) => numSucursales > 6
                             ? (!item.text.startsWith('Prom.') && !item.text.startsWith('Stock Mín'))
                             : true,
-                        generateLabels: function(chart) {
+                        generateLabels: function (chart) {
                             // Usar el generador nativo y añadir el sufijo de hint solo en el primero
                             const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
                             return labels;
@@ -976,9 +975,9 @@ function renderTablaHistorial(data) {
                 <td class="text-end">${formatNum(item.prom_semana)}</td>
                 <td class="text-end">
                     ${item.semana_pico_num
-                        ? `<span class="dc-semana-badge">Sem ${item.semana_pico_num}</span>
+                    ? `<span class="dc-semana-badge">Sem ${item.semana_pico_num}</span>
                            <br><small class="text-muted">${formatNum(item.max_consumo_sem)}</small>`
-                        : '—'}
+                    : '—'}
                 </td>
                 <td class="text-center">${Object.keys(item.por_semana).length}</td>
                 <td class="text-center">${tipoBadge}</td>
@@ -1003,13 +1002,13 @@ function renderTablaProyeccion(data) {
     let html = '';
 
     // Pre-calcular semanas completas (misma lógica que gráfico y KPIs)
-    const semanasNrosTbl  = data.semanas.map(s => s.numero_semana);
+    const semanasNrosTbl = data.semanas.map(s => s.numero_semana);
     const semanaActualTbl = parseInt($('#semanaActualNum').text()) || 0;
-    const esSemActTbl     = semanaActualTbl > 0 && semanasNrosTbl.includes(semanaActualTbl);
-    const semanasCalcTbl  = esSemActTbl
+    const esSemActTbl = semanaActualTbl > 0 && semanasNrosTbl.includes(semanaActualTbl);
+    const semanasCalcTbl = esSemActTbl
         ? semanasNrosTbl.filter(n => n !== semanaActualTbl)
         : semanasNrosTbl;
-    const ultimaSemTbl    = semanasNrosTbl[semanasNrosTbl.length - 1];
+    const ultimaSemTbl = semanasNrosTbl[semanasNrosTbl.length - 1];
 
     if (data.consumo.length === 0) {
         html = `<tr><td colspan="9" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
@@ -1024,23 +1023,23 @@ function renderTablaProyeccion(data) {
             }
 
             let proy3Tbl = promCalcTbl * 3;
-            let slTbl    = 0;  // pendiente OLS — usada también para Tendencia
+            let slTbl = 0;  // pendiente OLS — usada también para Tendencia
             if (semanasCalcTbl.length >= 2) {
-                const xV    = semanasCalcTbl;
-                const yV    = semanasCalcTbl.map(n => item.por_semana[n] || 0);
-                const nk    = xV.length;
-                const sumX  = xV.reduce((a, b) => a + b, 0);
-                const sumY  = yV.reduce((a, b) => a + b, 0);
+                const xV = semanasCalcTbl;
+                const yV = semanasCalcTbl.map(n => item.por_semana[n] || 0);
+                const nk = xV.length;
+                const sumX = xV.reduce((a, b) => a + b, 0);
+                const sumY = yV.reduce((a, b) => a + b, 0);
                 const sumXY = xV.reduce((acc, x, i) => acc + x * yV[i], 0);
-                const sumX2 = xV.reduce((acc, x)    => acc + x * x, 0);
+                const sumX2 = xV.reduce((acc, x) => acc + x * x, 0);
                 const denom = nk * sumX2 - sumX * sumX;
                 if (Math.abs(denom) > 0.001) {
-                    slTbl        = (nk * sumXY - sumX * sumY) / denom;
-                    const ic     = (sumY - slTbl * sumX) / nk;
-                    const w1     = Math.max(0, slTbl * (ultimaSemTbl + 1) + ic);
-                    const w2     = Math.max(0, slTbl * (ultimaSemTbl + 2) + ic);
-                    const w3     = Math.max(0, slTbl * (ultimaSemTbl + 3) + ic);
-                    proy3Tbl     = w1 + w2 + w3;
+                    slTbl = (nk * sumXY - sumX * sumY) / denom;
+                    const ic = (sumY - slTbl * sumX) / nk;
+                    const w1 = Math.max(0, slTbl * (ultimaSemTbl + 1) + ic);
+                    const w2 = Math.max(0, slTbl * (ultimaSemTbl + 2) + ic);
+                    const w3 = Math.max(0, slTbl * (ultimaSemTbl + 3) + ic);
+                    proy3Tbl = w1 + w2 + w3;
                 }
             }
 
@@ -1112,7 +1111,7 @@ window.mostrarDesglose = function (idInsumo) {
     const item = datosActuales.consumo.find(c => c.id == idInsumo);
     if (!item) return;
 
-    const semanas    = datosActuales.semanas;
+    const semanas = datosActuales.semanas;
     const sucursales = datosActuales.sucursales;
 
     let theadHtml = '<tr><th style="min-width:100px">Semana</th>';
@@ -1204,7 +1203,7 @@ window.mostrarAuditoria = function (idInsumo) {
 
         const pp = resp.presentacion;
         const filas = resp.filas;
-        const nDec  = filas.filter(f => f.genera_decimal).length;
+        const nDec = filas.filter(f => f.genera_decimal).length;
 
         let thead = `<tr style="font-size:.72rem;position:sticky;top:0;background:#fff;z-index:1">
             <th>Sem</th><th>Sucursal</th><th>Fecha</th><th>Batido</th>
@@ -1318,16 +1317,16 @@ function exportarCSV() {
     const tabActivo = $('.dc-tab-btn.active').attr('id');
     let modo = 'historial';
     if (tabActivo === 'tabProyeccionBtn') modo = 'proyeccion';
-    if (tabActivo === 'tabSinMapeoBtn')   modo = 'sin_mapeo';
+    if (tabActivo === 'tabSinMapeoBtn') modo = 'sin_mapeo';
 
     const payload = {
-        consumo:           datosActuales.consumo,
-        semanas:           datosActuales.semanas,
-        sin_mapeo:         datosActuales.sin_mapeo,
-        sucursales:        datosActuales.sucursales        || [],
+        consumo: datosActuales.consumo,
+        semanas: datosActuales.semanas,
+        sin_mapeo: datosActuales.sin_mapeo,
+        sucursales: datosActuales.sucursales || [],
         sucursales_nombres: datosActuales.sucursales_nombres || {},
-        sem_desde:         datosActuales._semDesde,
-        sem_hasta:         datosActuales._semHasta,
+        sem_desde: datosActuales._semDesde,
+        sem_hasta: datosActuales._semHasta,
         modo,
     };
 
@@ -1338,8 +1337,8 @@ function exportarCSV() {
     form.style.display = 'none';
 
     const input = document.createElement('input');
-    input.type  = 'hidden';
-    input.name  = 'not_used'; // El endpoint lee php://input directamente
+    input.type = 'hidden';
+    input.name = 'not_used'; // El endpoint lee php://input directamente
     form.appendChild(input);
     document.body.appendChild(form);
 
@@ -1349,22 +1348,22 @@ function exportarCSV() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
     })
-    .then(res => res.blob())
-    .then(blob => {
-        const url  = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href     = url;
-        link.download = `consumo_insumos_sem${datosActuales._semDesde}_${datosActuales._semHasta}.xlsx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        document.body.removeChild(form);
-    })
-    .catch(err => {
-        console.error('Error exportando:', err);
-        Swal.fire({ icon: 'error', title: 'Error al exportar', text: 'No se pudo generar el CSV.', confirmButtonColor: '#0E544C' });
-    });
+        .then(res => res.blob())
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `consumo_insumos_sem${datosActuales._semDesde}_${datosActuales._semHasta}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            document.body.removeChild(form);
+        })
+        .catch(err => {
+            console.error('Error exportando:', err);
+            Swal.fire({ icon: 'error', title: 'Error al exportar', text: 'No se pudo generar el CSV.', confirmButtonColor: '#0E544C' });
+        });
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1377,8 +1376,8 @@ function exportarCSV() {
  * Cada local se compara contra SÍ MISMO (no contra otros locales).
  */
 function calcularAlertasSobreconsumo(data, kSigma) {
-    const alertas     = [];
-    const nombres     = data.sucursales_nombres || {};
+    const alertas = [];
+    const nombres = data.sucursales_nombres || {};
     const semanasNros = data.semanas.map(s => s.numero_semana);
 
     data.consumo.forEach(item => {
@@ -1403,15 +1402,15 @@ function calcularAlertasSobreconsumo(data, kSigma) {
                 const v = serieCompleta[idx];
                 if (v > umbral) {
                     alertas.push({
-                        insumo:    item.nombre,
-                        unidad:    item.unidad,
-                        local:     nombres[suc] || suc,
-                        semana:    n,
-                        consumo:   v,
+                        insumo: item.nombre,
+                        unidad: item.unidad,
+                        local: nombres[suc] || suc,
+                        semana: n,
+                        consumo: v,
                         mu, sigma, umbral,
-                        zScore:    (v - mu) / sigma,
+                        zScore: (v - mu) / sigma,
                         pctExceso: Math.round((v - mu) / mu * 100),
-                        idInsumo:  item.id,
+                        idInsumo: item.id,
                     });
                 }
             });
@@ -1606,14 +1605,14 @@ window.seleccionarInsumoDesdeAlerta = function (idInsumo, localName) {
      • Crítico   — 3 de 3 ó β_rel > 40%
    ════════════════════════════════════════════════════════════ */
 
-const CREC_MIN_SLOPE_REL  = 0.06;   // β/μ mínimo: 6 % de crecimiento semanal relativo
-const CREC_MIN_MK_TAU     = 0.45;   // τ Mann-Kendall mínimo (0 = sin tendencia, 1 = perfectamente monótono)
-const CREC_MIN_RUN_RATIO  = 0.65;   // ratio de semanas consecutivas en alza
-const CREC_MIN_SEMANAS    = 3;      // mínimo absoluto de semanas con dato para calcular
-const CREC_IDEAL_SEMANAS  = 6;      // mínimo para veredicto estadísticamente consistente
-                                    // (Mann-Kendall S_max=15, OLS con 3 DoF)
-                                    // Si el rango incluye la semana actual → seleccionar 7 sem
-                                    // Si el rango es 100% histórico → basta con 6 sem
+const CREC_MIN_SLOPE_REL = 0.06;   // β/μ mínimo: 6 % de crecimiento semanal relativo
+const CREC_MIN_MK_TAU = 0.45;   // τ Mann-Kendall mínimo (0 = sin tendencia, 1 = perfectamente monótono)
+const CREC_MIN_RUN_RATIO = 0.65;   // ratio de semanas consecutivas en alza
+const CREC_MIN_SEMANAS = 3;      // mínimo absoluto de semanas con dato para calcular
+const CREC_IDEAL_SEMANAS = 6;      // mínimo para veredicto estadísticamente consistente
+// (Mann-Kendall S_max=15, OLS con 3 DoF)
+// Si el rango incluye la semana actual → seleccionar 7 sem
+// Si el rango es 100% histórico → basta con 6 sem
 
 /**
  * Calcula alertas de crecimiento sostenido por SUCURSAL × INSUMO.
@@ -1622,9 +1621,9 @@ const CREC_IDEAL_SEMANAS  = 6;      // mínimo para veredicto estadísticamente 
  * Devuelve array ordenado por sucursal ASC → insumo ASC.
  */
 function calcularAlertasCrecimiento(data, kSlope) {
-    const minSlope    = (typeof kSlope === 'number') ? kSlope : CREC_MIN_SLOPE_REL;
-    const alertas     = [];
-    const nombres     = data.sucursales_nombres || {};
+    const minSlope = (typeof kSlope === 'number') ? kSlope : CREC_MIN_SLOPE_REL;
+    const alertas = [];
+    const nombres = data.sucursales_nombres || {};
     const semanasNros = data.semanas.map(s => s.numero_semana);
 
     data.consumo.forEach(item => {
@@ -1650,15 +1649,15 @@ function calcularAlertasCrecimiento(data, kSlope) {
 
             const ys = puntos.map(d => d.v);
             const xs = puntos.map(d => d.n);  // número de semana como eje X
-            const N  = ys.length;
+            const N = ys.length;
 
             // ── μ (sobre semanas con valor) ──────────────────────────
             const mu = ys.reduce((a, b) => a + b, 0) / N;
             if (mu < 0.001) return;
 
             // ── INDICADOR 1: Regresión lineal OLS ───────────────────
-            const sumX  = xs.reduce((a, b) => a + b, 0);
-            const sumY  = ys.reduce((a, b) => a + b, 0);
+            const sumX = xs.reduce((a, b) => a + b, 0);
+            const sumY = ys.reduce((a, b) => a + b, 0);
             const sumXY = xs.reduce((acc, x, i) => acc + x * ys[i], 0);
             const sumX2 = xs.reduce((acc, x) => acc + x * x, 0);
             const denom = N * sumX2 - sumX * sumX;
@@ -1667,20 +1666,20 @@ function calcularAlertasCrecimiento(data, kSlope) {
                 slope = (N * sumXY - sumX * sumY) / denom;
             }
             const beta_rel = slope / mu;
-            const ind1     = beta_rel > minSlope;   // usa el umbral dinámico
+            const ind1 = beta_rel > minSlope;   // usa el umbral dinámico
 
             // ── INDICADOR 2: Mann-Kendall τ ──────────────────────────
             let S = 0;
             for (let i = 0; i < N - 1; i++) {
                 for (let j = i + 1; j < N; j++) {
                     const diff = ys[j] - ys[i];
-                    if (diff > 0)      S++;
+                    if (diff > 0) S++;
                     else if (diff < 0) S--;
                 }
             }
             const S_max = N * (N - 1) / 2;
-            const tau   = S_max > 0 ? S / S_max : 0;
-            const ind2  = tau > CREC_MIN_MK_TAU;
+            const tau = S_max > 0 ? S / S_max : 0;
+            const ind2 = tau > CREC_MIN_MK_TAU;
 
             // ── INDICADOR 3: Ratio de incrementos consecutivos ───────
             let positivos = 0;
@@ -1688,7 +1687,7 @@ function calcularAlertasCrecimiento(data, kSlope) {
                 if (ys[i] > ys[i - 1]) positivos++;
             }
             const run_ratio = (N > 1) ? positivos / (N - 1) : 0;
-            const ind3      = run_ratio > CREC_MIN_RUN_RATIO;
+            const ind3 = run_ratio > CREC_MIN_RUN_RATIO;
 
             // ── Decisión: ≥ 2 de 3 ──────────────────────────────────
             const score = (ind1 ? 1 : 0) + (ind2 ? 1 : 0) + (ind3 ? 1 : 0);
@@ -1705,28 +1704,28 @@ function calcularAlertasCrecimiento(data, kSlope) {
             }
 
             // Crecimiento acumulado en el período (línea de regresión)
-            const intercept  = (sumY - slope * sumX) / N;
-            const y_inicio   = Math.max(0, slope * xs[0]      + intercept);
-            const y_fin      = Math.max(0, slope * xs[N - 1]  + intercept);
+            const intercept = (sumY - slope * sumX) / N;
+            const y_inicio = Math.max(0, slope * xs[0] + intercept);
+            const y_fin = Math.max(0, slope * xs[N - 1] + intercept);
             const pct_periodo = y_inicio > 0.001
                 ? Math.round((y_fin - y_inicio) / y_inicio * 100)
                 : 0;
 
             alertas.push({
-                insumo:      item.nombre,
-                unidad:      item.unidad,
-                idInsumo:    item.id,
-                local:       nombres[suc] || suc,
-                mu:          round2(mu),
+                insumo: item.nombre,
+                unidad: item.unidad,
+                idInsumo: item.id,
+                local: nombres[suc] || suc,
+                mu: round2(mu),
                 beta_rel,
-                tau:         round2(tau),
-                run_ratio:   round2(run_ratio),
+                tau: round2(tau),
+                run_ratio: round2(run_ratio),
                 score,
                 ind1, ind2, ind3,
                 severidad,
                 pct_semanal: Math.round(beta_rel * 100),
                 pct_periodo,
-                semanas_ok:  N,
+                semanas_ok: N,
             });
         });
     });
@@ -1754,14 +1753,14 @@ function renderPanelCrecimiento(data) {
     // Semanas reales analizadas:
     // Si el rango termina en la semana actual → se excluye (dato parcial)
     // Si el rango es histórico → todas las semanas del filtro están completas
-    const semActualN    = parseInt($('#semanaActualNum').text()) || 0;
-    const maxSemData    = data.semanas.length > 0
+    const semActualN = parseInt($('#semanaActualNum').text()) || 0;
+    const maxSemData = data.semanas.length > 0
         ? Math.max(...data.semanas.map(s => s.numero_semana)) : 0;
-    const excluirActual  = semActualN > 0 && maxSemData === semActualN;
+    const excluirActual = semActualN > 0 && maxSemData === semActualN;
     const semsAnalizadas = excluirActual
         ? data.semanas.filter(s => s.numero_semana !== semActualN).length
         : data.semanas.length;
-    const bajoideal      = semsAnalizadas < CREC_IDEAL_SEMANAS;
+    const bajoideal = semsAnalizadas < CREC_IDEAL_SEMANAS;
 
     const alertasTodas = calcularAlertasCrecimiento(data, kSlopeActual);
     $panel.show();
@@ -1770,14 +1769,14 @@ function renderPanelCrecimiento(data) {
 
     // Aplicar filtro de severidad
     const alertas = alertasTodas.filter(a => {
-        if (filtroSevCrec === 'critico')  return a.severidad === 'critico';
-        if (filtroSevCrec === 'notable')  return a.severidad === 'critico' || a.severidad === 'notable';
+        if (filtroSevCrec === 'critico') return a.severidad === 'critico';
+        if (filtroSevCrec === 'notable') return a.severidad === 'critico' || a.severidad === 'notable';
         return true; // 'todos'
     });
 
     const total = alertas.length;
     const $badge = $('#crecimientoBadge');
-    const $hint  = $('#crecimientoHint');
+    const $hint = $('#crecimientoHint');
 
     if (total === 0) {
         const sinMsg = totalDetectados > 0
@@ -1813,12 +1812,12 @@ function renderPanelCrecimiento(data) {
 
     let filas = '';
     alertas.forEach(a => {
-        const sevClass = a.severidad === 'critico'  ? 'crec-critico'
-                       : a.severidad === 'notable'  ? 'crec-notable'
-                       :                              'crec-moderado';
-        const sevLabel = a.severidad === 'critico'  ? '<i class="fas fa-fire"></i> Crítico'
-                       : a.severidad === 'notable'  ? '<i class="fas fa-arrow-up"></i> Notable'
-                       :                              '<i class="fas fa-chart-line"></i> Moderado';
+        const sevClass = a.severidad === 'critico' ? 'crec-critico'
+            : a.severidad === 'notable' ? 'crec-notable'
+                : 'crec-moderado';
+        const sevLabel = a.severidad === 'critico' ? '<i class="fas fa-fire"></i> Crítico'
+            : a.severidad === 'notable' ? '<i class="fas fa-arrow-up"></i> Notable'
+                : '<i class="fas fa-chart-line"></i> Moderado';
 
         // Indicadores activos como pills
         const pill = (activo, label, title) => activo
@@ -1826,14 +1825,14 @@ function renderPanelCrecimiento(data) {
             : `<span class="dc-crec-ind-pill"        title="${title}">${label}</span>`;
 
         const ind_html = [
-            pill(a.ind1, 'Regresión',    `β/μ = ${(a.beta_rel*100).toFixed(1)}%/sem · umbral ${CREC_MIN_SLOPE_REL*100}%`),
+            pill(a.ind1, 'Regresión', `β/μ = ${(a.beta_rel * 100).toFixed(1)}%/sem · umbral ${CREC_MIN_SLOPE_REL * 100}%`),
             pill(a.ind2, 'Mann-Kendall', `τ = ${a.tau} · umbral ${CREC_MIN_MK_TAU}`),
-            pill(a.ind3, 'Run-ratio',    `${Math.round(a.run_ratio*100)}% incrementos · umbral ${CREC_MIN_RUN_RATIO*100}%`),
+            pill(a.ind3, 'Run-ratio', `${Math.round(a.run_ratio * 100)}% incrementos · umbral ${CREC_MIN_RUN_RATIO * 100}%`),
         ].join(' ');
 
-        const insumoEsc   = escHtml(a.insumo);
+        const insumoEsc = escHtml(a.insumo);
         const localEscAttr = escHtml(a.local);
-        const localEscJS   = a.local.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const localEscJS = a.local.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
         filas += `
         <tr>
@@ -1913,13 +1912,13 @@ function formatNum(n) {
 function formatFecha(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr + 'T00:00:00');
-    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     return `${d.getDate()}/${meses[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
 }
 
 function escHtml(str) {
     if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function round2(n) {
