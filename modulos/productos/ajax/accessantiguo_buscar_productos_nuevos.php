@@ -44,7 +44,6 @@ try {
         LEFT JOIN unidad_producto u  ON u.id  = pp.id_unidad_producto
         LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
         WHERE pp.Activo = 'SI'
-          AND pp.presentacion_basica_inventario = 1
           AND (pp.SKU LIKE :q OR pp.Nombre LIKE :q2 OR pm.Nombre LIKE :q3)
         ORDER BY pp.Nombre ASC
         LIMIT 30
