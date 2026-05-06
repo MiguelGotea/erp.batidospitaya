@@ -1870,7 +1870,7 @@ function obtenerNombreOperario($codOperario)
             actionsDiv.innerHTML = '<div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i> Creando registro...</div>';
 
             // Enviar petición AJAX
-            fetch('crear_feriado_ajax.php', {
+            fetch('ajax/crear_feriado_ajax.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1963,7 +1963,7 @@ function obtenerNombreOperario($codOperario)
             }
 
             // Para registros existentes, actualizar observaciones
-            fetch('actualizar_feriado_ajax.php', {
+            fetch('ajax/actualizar_feriado_ajax.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -2137,7 +2137,7 @@ function obtenerNombreOperario($codOperario)
             actionsDiv.innerHTML = '<div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-spinner fa-spin"></i> Procesando...</div>';
 
             // Enviar petición AJAX
-            fetch('actualizar_feriado_ajax.php', {
+            fetch('ajax/actualizar_feriado_ajax.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

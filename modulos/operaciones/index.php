@@ -1613,7 +1613,7 @@ if (!empty($sucursales)) {
         
         // Cargar tardanzas pendientes
         function cargarTardanzasPendientes() {
-            fetch('obtener_tardanzas_pendientes.php')
+            fetch('ajax/obtener_tardanzas_pendientes.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -1679,7 +1679,7 @@ if (!empty($sucursales)) {
         
         // Cargar feriados pendientes
         function cargarFeriadosPendientes() {
-            fetch('obtener_feriados_pendientes.php')
+            fetch('ajax/obtener_feriados_pendientes.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -1745,7 +1745,7 @@ if (!empty($sucursales)) {
         
         // Cargar reclamos pendientes
         function cargarReclamosPendientes() {
-            fetch('obtener_reclamos_pendientes.php')
+            fetch('ajax/obtener_reclamos_pendientes.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -1804,7 +1804,7 @@ if (!empty($sucursales)) {
         
         // Cargar KPI pendientes
         function cargarKPIPendientes() {
-            fetch('obtener_kpi_pendientes.php')
+            fetch('ajax/obtener_kpi_pendientes.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

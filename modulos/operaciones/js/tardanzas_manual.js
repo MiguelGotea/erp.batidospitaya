@@ -238,18 +238,18 @@ function mostrarModalEditarTardanza(id, codOperario, nombre, sucursal, fecha, ti
     }
 
     Promise.all([
-        fetch('obtener_horario_programado.php?cod_operario=' + codOperario + '&fecha=' + fecha).then(r => r.json()),
-        fetch('obtener_marcaciones.php?cod_operario=' + codOperario + '&fecha=' + fecha).then(r => r.json())
-    ]).then(function(results) {
+        fetch('ajax/obtener_horario_programado.php?cod_operario=' + codOperario + '&fecha=' + fecha).then(r => r.json()),
+        fetch('ajax/obtener_marcaciones.php?cod_operario=' + codOperario + '&fecha=' + fecha).then(r => r.json())
+    ]).then(function (results) {
         var horario = results[0], marcaciones = results[1];
         document.getElementById('editar_entrada_programada').textContent = horario.hora_entrada ? formatoHoraAmPm(horario.hora_entrada) : 'No';
         document.getElementById('editar_salida_programada').textContent = horario.hora_salida ? formatoHoraAmPm(horario.hora_salida) : 'No';
         document.getElementById('editar_entrada_marcada').textContent = marcaciones.hora_ingreso ? formatoHoraAmPm(marcaciones.hora_ingreso) : 'No marco';
         document.getElementById('editar_salida_marcada').textContent = marcaciones.hora_salida ? formatoHoraAmPm(marcaciones.hora_salida) : 'No marco';
-    }).catch(function(error) {
+    }).catch(function (error) {
         console.error('Error al obtener datos:', error);
-        ['editar_entrada_programada','editar_salida_programada','editar_entrada_marcada','editar_salida_marcada']
-            .forEach(function(eid) { document.getElementById(eid).textContent = 'Error'; });
+        ['editar_entrada_programada', 'editar_salida_programada', 'editar_entrada_marcada', 'editar_salida_marcada']
+            .forEach(function (eid) { document.getElementById(eid).textContent = 'Error'; });
     });
 
     var urlParams = new URLSearchParams(window.location.search);
@@ -269,12 +269,12 @@ function cerrarModal() {
 // EVENTOS: botones, sucursal, fecha, submit
 // =============================================
 
-var _elNuevaOperario   = document.getElementById('nueva_operario');
-var _elNuevaFecha      = document.getElementById('nueva_fecha');
-var _elNuevaSucursal   = document.getElementById('nueva_sucursal');
+var _elNuevaOperario = document.getElementById('nueva_operario');
+var _elNuevaFecha = document.getElementById('nueva_fecha');
+var _elNuevaSucursal = document.getElementById('nueva_sucursal');
 var _elBtnConsultarNew = document.getElementById('btnConsultarMarcacionesNueva');
 var _elBtnConsultarEdt = document.getElementById('btnConsultarMarcacionesEditar');
-var _elFormNueva       = document.getElementById('formNuevaTardanza');
+var _elFormNueva = document.getElementById('formNuevaTardanza');
 
 if (_elNuevaOperario) {
     _elNuevaOperario.addEventListener('change', function () {
@@ -388,9 +388,9 @@ function mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fechaTa
     debugInfo += '- Fecha enviada al servidor: ' + fechaConsulta + '\n';
     document.getElementById('consulta_fecha_utilizada').textContent = formatoFechaCompleta(fechaConsulta);
 
-    fetch('obtener_marcaciones.php?cod_operario=' + codOperario + '&fecha=' + fechaConsulta + '&debug=1')
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
+    fetch('ajax/obtener_marcaciones.php?cod_operario=' + codOperario + '&fecha=' + fechaConsulta + '&debug=1')
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
             debugInfo += 'Respuesta del servidor:\n' + JSON.stringify(data, null, 2) + '\n';
 
             function mostrarHoraConFecha(hora, elementoHora, elementoFecha, tipo) {
@@ -410,7 +410,8 @@ function mostrarModalConsultarMarcaciones(codOperario, nombre, sucursal, fechaTa
             document.getElementById('consulta_debug_info').textContent = debugInfo;
             document.getElementById('modalConsultarMarcaciones').style.display = 'flex';
         })
-        .catch(function(error) {
+
+        .catch(function (error) {
             console.error('Error al obtener marcaciones:', error);
             debugInfo += 'Error en la consulta: ' + error.message + '\n';
             document.getElementById('consulta_debug_info').textContent = debugInfo;
@@ -518,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 window.addEventListener('click', function (event) {
-    ['modalNuevaTardanza', 'modalEditarTardanza'].forEach(function(modalId) {
+    ['modalNuevaTardanza', 'modalEditarTardanza'].forEach(function (modalId) {
         var modal = document.getElementById(modalId);
         if (event.target === modal) cerrarModal();
     });
@@ -556,13 +557,13 @@ function actualizarEstado(id, nuevoEstado) {
     var originalHTML = actionsDiv.innerHTML;
     actionsDiv.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><i class="fas fa-spinner fa-spin"></i> Procesando...</div>';
 
-    fetch('actualizar_estado_ajax.php', {
+    fetch('ajax/actualizar_estado_ajax.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ 'id': id, 'estado': nuevoEstado, 'observaciones': observaciones })
     })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
             if (data.success) {
                 var badge = document.getElementById('status-badge-' + id);
                 badge.textContent = nuevoEstado;
@@ -574,7 +575,7 @@ function actualizarEstado(id, nuevoEstado) {
                 mostrarNotificacion('error', data.message);
             }
         })
-        .catch(function(error) {
+        .catch(function (error) {
             console.error('Error:', error);
             actionsDiv.innerHTML = originalHTML;
             mostrarNotificacion('error', 'Error al actualizar el estado');
@@ -612,13 +613,13 @@ function guardarObservaciones(id) {
     var originalHTML = saveCancelDiv.innerHTML;
     saveCancelDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-    fetch('actualizar_estado_ajax.php', {
+    fetch('ajax/actualizar_estado_ajax.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ 'id': id, 'estado': estadoActual, 'observaciones': nuevasObservaciones })
     })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
             if (data.success) {
                 var displayDiv = document.getElementById('obs-display-' + id);
                 displayDiv.innerHTML = nuevasObservaciones
@@ -631,7 +632,7 @@ function guardarObservaciones(id) {
                 mostrarNotificacion('error', data.message);
             }
         })
-        .catch(function(error) {
+        .catch(function (error) {
             console.error('Error:', error);
             saveCancelDiv.innerHTML = originalHTML;
             mostrarNotificacion('error', 'Error al guardar las observaciones');
@@ -687,14 +688,14 @@ function mostrarNotificacion(tipo, mensaje) {
             ? 'linear-gradient(135deg,#28a745 0%,#20c997 100%)'
             : 'linear-gradient(135deg,#dc3545 0%,#e83e8c 100%)') + ';';
     document.body.appendChild(notification);
-    setTimeout(function() {
+    setTimeout(function () {
         notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(function() { notification.remove(); }, 300);
+        setTimeout(function () { notification.remove(); }, 300);
     }, 3000);
 }
 
 // Animaciones de notificación
-(function() {
+(function () {
     var style = document.createElement('style');
     style.textContent =
         '@keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}' +
@@ -760,19 +761,19 @@ function mostrarModalRegistroRapido(codOperario, fecha, codSucursal, minutos, su
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     document.getElementById('modalRegistroRapido').style.display = 'flex';
 
-    document.getElementById('rapido_foto').addEventListener('change', function(e) {
+    document.getElementById('rapido_foto').addEventListener('change', function (e) {
         var preview = document.getElementById('rapido_foto_preview');
         var file = e.target.files[0];
         if (file) {
             var reader = new FileReader();
-            reader.onload = function(e) { preview.src = e.target.result; preview.style.display = 'block'; };
+            reader.onload = function (e) { preview.src = e.target.result; preview.style.display = 'block'; };
             reader.readAsDataURL(file);
         } else {
             preview.style.display = 'none';
         }
     });
 
-    document.getElementById('formRegistroRapido').addEventListener('submit', function(e) {
+    document.getElementById('formRegistroRapido').addEventListener('submit', function (e) {
         if (!validarFormularioRapido()) { e.preventDefault(); return false; }
         return true;
     });
