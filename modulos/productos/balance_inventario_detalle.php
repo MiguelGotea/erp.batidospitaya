@@ -18,6 +18,15 @@ $idPP     = isset($_GET['id'])        ? (int)$_GET['id']        : 0;
 $semDesde = isset($_GET['sem_desde']) ? (int)$_GET['sem_desde'] : 0;
 $semHasta = isset($_GET['sem_hasta']) ? (int)$_GET['sem_hasta'] : 0;
 $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
+
+// Obtener semana actual del sistema
+$semActualSistema = 0;
+try {
+    require_once '../../core/database/conexion.php';
+    $stSem = $conn->query("SELECT numero_semana FROM SemanasSistema WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin LIMIT 1");
+    $rSem  = $stSem->fetch(PDO::FETCH_ASSOC);
+    if ($rSem) $semActualSistema = (int)$rSem['numero_semana'];
+} catch (Exception $e) { /* silencioso */ }
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -271,9 +280,15 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
                 <div class="bd-section-title" style="box-shadow:none; padding:0; margin-bottom:1.5rem;">
                     <i class="fas fa-chart-line" style="color:#51B8AC"></i>
                     Movimiento de Existencia (Kardex)
+                    <span id="bdChartStockBadge" style="display:none;margin-left:auto;font-size:.7rem;font-weight:600;color:#51B8AC"></span>
                 </div>
                 <div style="height:320px; position:relative;">
                     <canvas id="existenciaChart"></canvas>
+                </div>
+                <!-- Nota semanas retrocedidas -->
+                <div id="bdChartNota" style="display:none;margin-top:.8rem;padding:.55rem 1rem;border-radius:10px;background:#fffbf0;border-left:4px solid #f9a825;font-size:.74rem;color:#795548;">
+                    <i class="fas fa-info-circle me-1" style="color:#f9a825"></i>
+                    <span id="bdChartNotaText"></span>
                 </div>
             </div>
 
@@ -307,10 +322,11 @@ $sucsRaw  = isset($_GET['sucs'])      ? trim($_GET['sucs'])      : '';
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script>
 const AJAX = 'ajax/';
-const ID_PP     = <?php echo $idPP; ?>;
-const SEM_DESDE = <?php echo $semDesde; ?>;
-const SEM_HASTA = <?php echo $semHasta; ?>;
-const SUCS_RAW  = '<?php echo htmlspecialchars($sucsRaw); ?>';
+const ID_PP      = <?php echo $idPP; ?>;
+const SEM_DESDE  = <?php echo $semDesde; ?>;
+const SEM_HASTA  = <?php echo $semHasta; ?>;
+const SUCS_RAW   = '<?php echo htmlspecialchars($sucsRaw); ?>';
+const SEM_ACTUAL = <?php echo $semActualSistema; ?>;
 
 const TIPOS = {
     inv_inicial : { label:'Inventario Inicial',       icon:'fas fa-box-open',        cls:'inv_inicial'  },
@@ -351,7 +367,7 @@ function cargar() {
         });
 }
 
-function renderChart(res) {
+function renderChart(res, stockMinVal, stockMaxFinalVal) {
     const regs = res.registros || [];
     const t = res.totales_tipo;
     const invIni = t.inv_inicial || 0;
@@ -402,33 +418,62 @@ function renderChart(res) {
     const ctx = document.getElementById('existenciaChart').getContext('2d');
     if (window.myChart) window.myChart.destroy();
 
+    // Datasets base
+    const datasets = [
+        {
+            label: 'Stock Teórico (Ventas + Kardex)',
+            data: stockTeoData,
+            borderColor: '#51B8AC',
+            backgroundColor: 'rgba(81, 184, 172, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointBackgroundColor: '#fff',
+        },
+        {
+            label: 'Inventario Físico Real (Conteo)',
+            data: realFinalPoint,
+            borderColor: '#e74c3c',
+            backgroundColor: '#e74c3c',
+            pointRadius: 8,
+            pointStyle: 'rectRot',
+            showLine: false,
+        }
+    ];
+
+    // Líneas de Stock Mín y Stock Máx Final (horizontales)
+    const n = labels.length;
+    if (stockMinVal !== null && stockMinVal !== undefined) {
+        datasets.push({
+            label: 'Stock Mínimo *',
+            data: new Array(n).fill(stockMinVal),
+            borderColor: '#f9a825',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+        });
+    }
+    if (stockMaxFinalVal !== null && stockMaxFinalVal !== undefined) {
+        datasets.push({
+            label: 'Stock Máx Final *',
+            data: new Array(n).fill(stockMaxFinalVal),
+            borderColor: '#6d597a',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+        });
+    }
+
     window.myChart = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Stock Teórico (Ventas + Kardex)',
-                    data: stockTeoData,
-                    borderColor: '#51B8AC',
-                    backgroundColor: 'rgba(81, 184, 172, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#fff',
-                },
-                {
-                    label: 'Inventario Físico Real (Conteo)',
-                    data: realFinalPoint,
-                    borderColor: '#e74c3c',
-                    backgroundColor: '#e74c3c',
-                    pointRadius: 8,
-                    pointStyle: 'rectRot',
-                    showLine: false,
-                }
-            ]
-        },
+        data: { labels, datasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -468,6 +513,90 @@ function renderChart(res) {
     document.getElementById('bdChartWrap').classList.remove('d-none');
 }
 
+// ── Cargar Stock Mín y Stock Máx Final desde pedido sugerido ────────────
+function cargarStockMinMax() {
+    // Semana analizada: usamos SEM_HASTA (semana principal del balance)
+    const semAnalisis = SEM_HASTA;
+    // Primera sucursal del filtro (puede ser múltiple, tomamos la primera)
+    const primeraSuc = SUCS_RAW ? SUCS_RAW.split(',')[0].trim() : '';
+
+    const fd = new FormData();
+    fd.append('id_pp',        ID_PP);
+    fd.append('sem_analisis', semAnalisis);
+    fd.append('sem_actual',   SEM_ACTUAL);
+    if (primeraSuc) fd.append('cod_sucursal', primeraSuc);
+
+    fetch(AJAX + 'balance_inventario_get_stock_minmax.php', {method:'POST', body:fd})
+        .then(r => r.json())
+        .then(res => {
+            if (!res.ok || (res.stock_minimo === null && res.stock_max_final === null)) return;
+
+            // Actualizar el gráfico con las nuevas líneas
+            if (window.myChart) {
+                const n = window.myChart.data.labels.length;
+
+                // Eliminar datasets de stock min/max previos si existieran
+                window.myChart.data.datasets = window.myChart.data.datasets
+                    .filter(ds => !ds.label.includes('Stock Mín') && !ds.label.includes('Stock Máx Final'));
+
+                if (res.stock_minimo !== null) {
+                    window.myChart.data.datasets.push({
+                        label: 'Stock Mínimo *',
+                        data: new Array(n).fill(res.stock_minimo),
+                        borderColor: '#f9a825',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [6, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0,
+                    });
+                }
+                if (res.stock_max_final !== null) {
+                    window.myChart.data.datasets.push({
+                        label: 'Stock Máx Final *',
+                        data: new Array(n).fill(res.stock_max_final),
+                        borderColor: '#6d597a',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [6, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0,
+                    });
+                }
+                window.myChart.update();
+
+                // Badge en el título
+                const badge = document.getElementById('bdChartStockBadge');
+                if (badge) {
+                    let parts = [];
+                    if (res.stock_minimo    !== null) parts.push('Mín: ' + fmt(res.stock_minimo, 2));
+                    if (res.stock_max_final !== null) parts.push('Máx: ' + fmt(res.stock_max_final, 2));
+                    if (parts.length) {
+                        badge.textContent = '* ' + parts.join(' · ');
+                        badge.style.display = '';
+                    }
+                }
+            }
+
+            // Nota si se retrocedieron semanas
+            const notaEl = document.getElementById('bdChartNota');
+            const notaTxt= document.getElementById('bdChartNotaText');
+            if (notaEl && notaTxt && res.retrocedido) {
+                notaTxt.textContent =
+                    `* Las líneas de Stock Mín y Máx se calculan con las semanas ${res.sem_desde}–${res.sem_hasta} ` +
+                    `(se retrocedió 1 semana desde la semana actual ${res.sem_actual} para usar solo semanas con datos completos de 7 días).`;
+                notaEl.style.display = '';
+            } else if (notaEl && notaTxt) {
+                notaTxt.textContent =
+                    `* Stock Mín y Máx calculados con semanas ${res.sem_desde}–${res.sem_hasta} (últimas 5 semanas completas).`;
+                notaEl.style.display = '';
+            }
+        })
+        .catch(() => { /* silencioso */ });
+}
+
 function renderDetalle(res) {
     const prod    = res.producto;
     const regs    = res.registros || [];
@@ -487,6 +616,7 @@ function renderDetalle(res) {
 
     // Chart
     renderChart(res);
+    cargarStockMinMax();
 
     // Resumen de Totales
     const t = res.totales_tipo;
