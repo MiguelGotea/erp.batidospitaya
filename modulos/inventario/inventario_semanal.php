@@ -165,15 +165,15 @@ $version = mt_rand(1, 10000);
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="p-2 rounded-2 border h-100" style="background:#fefce8;">
-                                    <div class="fw-bold small mb-1" style="color:#854d0e;"><i class="bi bi-2-circle-fill me-1"></i>Paso C — Receta-Paquete por Maestro <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Nuevo</span></div>
-                                    <p class="small text-muted mb-0">Si la receta de despacho tiene como componente <b>otra presentación del mismo maestro</b> (no la básica exacta), igual se detecta. Ej: <b>Naranja Cajilla 100u</b> → receta contiene "Naranja Unidad" (mismo maestro, distinta presentación que "Naranja oz").</p>
+                                <div class="p-2 rounded-2 border h-100" style="background:#f0fdf4;">
+                                    <div class="fw-bold small mb-1" style="color:#166534;"><i class="bi bi-2-circle-fill me-1"></i>Paso A — Por Producto Maestro <span class="badge bg-secondary ms-1" style="font-size:9px;">Fallback</span></div>
+                                    <p class="small text-muted mb-0">Si no hay receta-paquete exacta, busca otra presentación del mismo <code>producto_maestro</code> con <code>presentacion_despacho=1</code>. Factor = <code>cantidad_despacho / (cantidad_básica × conversión_unidades)</code>. Ej: <em>Fresa 1oz → Bandeja 400gr</em>.</p>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="p-2 rounded-2 border h-100" style="background:#f0fdf4;">
-                                    <div class="fw-bold small mb-1" style="color:#166534;"><i class="bi bi-3-circle-fill me-1"></i>Paso A — Por Producto Maestro <span class="badge bg-secondary ms-1" style="font-size:9px;">Fallback</span></div>
-                                    <p class="small text-muted mb-0">Si no hay receta-paquete, busca otra presentación del mismo <code>producto_maestro</code> con <code>presentacion_despacho=1</code>. Factor = <code>cantidad_despacho / (cantidad_básica × conversión_unidades)</code>.</p>
+                                <div class="p-2 rounded-2 border h-100" style="background:#fefce8;">
+                                    <div class="fw-bold small mb-1" style="color:#854d0e;"><i class="bi bi-3-circle-fill me-1"></i>Paso C — Receta-Paquete por Maestro <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Último recurso</span></div>
+                                    <p class="small text-muted mb-0">Solo si B <b>y</b> A fallan: busca una receta de despacho cuyo componente comparta el mismo maestro. Ej: <b>Naranja oz → Cajilla 100u</b> (componente = "Naranja Unidad", mismo maestro; la cajilla no tiene maestro propio por ser receta).</p>
                                 </div>
                             </div>
                         </div>

@@ -407,13 +407,21 @@ try {
 
     /* ── 8.5 Calcular factor despacho por producto ────────── */
     foreach ($productos as &$p) {
-        // ── Prioridad: Caso B (receta componente exacto) > Caso C (receta mismo maestro) > Caso A (maestro).
-        // B y C tienen precedencia sobre A porque representan configuraciones explícitas de empaque.
-        $usarC = !empty($p['d_id_c']) && empty($p['d_id_b']);
+        // ── Prioridad: B (receta componente exacto) > A (presentación maestro) > C (receta mismo maestro).
+        //
+        // El orden B > A > C es equivalente al de pedido_sugerido_calcular.php:
+        //   B exacto tiene prioridad → si no, la presentación despacho directa por maestro (A)
+        //   → solo como último recurso, la receta-paquete cuyo componente comparte maestro (C).
+        //
+        // Esto evita que presentaciones como "Fresa 1oz" hereden incorrectamente el paquete de
+        // "Fresa 2oz" via maestro del componente, cuando existe la Bandeja 400gr resolvible por A.
+        // El caso Naranja sigue funcionando: la Cajilla no tiene id_producto_maestro propio,
+        // por lo que A falla y C la encuentra correctamente via el maestro del componente.
+        $usarC = !empty($p['d_id_c']) && empty($p['d_id_b']) && empty($p['d_id_a']);
 
-        $p['despacho_id']     = $p['d_id_b']   ?? ($usarC ? $p['d_id_c']   : null) ?? $p['d_id_a']   ?? null;
-        $p['despacho_nombre'] = $p['d_nom_b']  ?? ($usarC ? $p['d_nom_c']  : null) ?? $p['d_nom_a']  ?? null;
-        $p['despacho_unidad'] = $p['d_uni_b']  ?? ($usarC ? $p['d_uni_c']  : null) ?? $p['d_uni_a']  ?? null;
+        $p['despacho_id']     = $p['d_id_b']   ?? $p['d_id_a']   ?? ($usarC ? $p['d_id_c']   : null) ?? null;
+        $p['despacho_nombre'] = $p['d_nom_b']  ?? $p['d_nom_a']  ?? ($usarC ? $p['d_nom_c']  : null) ?? null;
+        $p['despacho_unidad'] = $p['d_uni_b']  ?? $p['d_uni_a']  ?? ($usarC ? $p['d_uni_c']  : null) ?? null;
         $p['despacho_cant']   = $p['d_cant_b'] ?? null;
 
         $despFactor = null;
@@ -421,10 +429,6 @@ try {
         // Caso B: componente exacto — usar cantidad del componente en la receta
         if (!empty($p['d_id_b']) && (float)$p['d_receta_cant_b'] > 0) {
             $despFactor = (float)$p['d_receta_cant_b'];
-        }
-        // Caso C: componente mismo maestro — usar cantidad del componente en la receta
-        elseif ($usarC && (float)$p['d_receta_cant_c'] > 0) {
-            $despFactor = (float)$p['d_receta_cant_c'];
         }
         // Caso A: por maestro — calcular factor con conversión de unidades si es necesario
         elseif (!empty($p['d_id_a']) && (float)$p['d_cant_a'] > 0 && (float)$p['cant_pres'] > 0) {
@@ -438,6 +442,10 @@ try {
                     $despFactor = (float)$p['d_cant_a'] / ((float)$p['cant_pres'] * $facConv);
                 }
             }
+        }
+        // Caso C: último recurso — receta-paquete cuyo componente comparte maestro (sin maestro propio en ppd)
+        elseif ($usarC && (float)$p['d_receta_cant_c'] > 0) {
+            $despFactor = (float)$p['d_receta_cant_c'];
         }
 
         $p['despacho_factor'] = $despFactor !== null ? round($despFactor, 6) : null;
