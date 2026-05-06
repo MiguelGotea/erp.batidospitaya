@@ -330,12 +330,14 @@ try {
                -- Caso A: Despacho por Maestro
                ppd_a.id          as d_id_a,
                ppd_a.Nombre      as d_nom_a,
+               ppd_a.presentacion as d_pres_a,
                ppd_a.cantidad    as d_cant_a,
                ppd_a.id_unidad_producto as d_uid_a,
                ud_a.abreviado    as d_uni_a,
                -- Caso B: Despacho por Receta (componente = esta presentación exacta)
                ppd_b.id          as d_id_b,
                ppd_b.Nombre      as d_nom_b,
+               ppd_b.presentacion as d_pres_b,
                ppd_b.cantidad    as d_cant_b,
                ppd_b.id_unidad_producto as d_uid_b,
                ud_b.abreviado    as d_uni_b,
@@ -343,6 +345,7 @@ try {
                -- Caso C: Despacho por Receta (componente = cualquier presentación del mismo maestro)
                ppd_c.id          as d_id_c,
                ppd_c.Nombre      as d_nom_c,
+               ppd_c.presentacion as d_pres_c,
                ud_c.abreviado    as d_uni_c,
                crp_c.cantidad    as d_receta_cant_c
         FROM producto_presentacion pp
@@ -420,7 +423,7 @@ try {
         $usarC = !empty($p['d_id_c']) && empty($p['d_id_b']) && empty($p['d_id_a']);
 
         $p['despacho_id']     = $p['d_id_b']   ?? $p['d_id_a']   ?? ($usarC ? $p['d_id_c']   : null) ?? null;
-        $p['despacho_nombre'] = $p['d_nom_b']  ?? $p['d_nom_a']  ?? ($usarC ? $p['d_nom_c']  : null) ?? null;
+        $p['despacho_nombre'] = $p['d_pres_b'] ?? $p['d_pres_a'] ?? ($usarC ? $p['d_pres_c'] : null) ?? null;
         $p['despacho_unidad'] = $p['d_uni_b']  ?? $p['d_uni_a']  ?? ($usarC ? $p['d_uni_c']  : null) ?? null;
         $p['despacho_cant']   = $p['d_cant_b'] ?? null;
 
@@ -455,17 +458,20 @@ try {
             $p['uid_uso'],
             $p['d_id_a'],
             $p['d_nom_a'],
+            $p['d_pres_a'],
             $p['d_cant_a'],
             $p['d_uid_a'],
             $p['d_uni_a'],
             $p['d_id_b'],
             $p['d_nom_b'],
+            $p['d_pres_b'],
             $p['d_cant_b'],
             $p['d_uid_b'],
             $p['d_uni_b'],
             $p['d_receta_cant_b'],
             $p['d_id_c'],
             $p['d_nom_c'],
+            $p['d_pres_c'],
             $p['d_uni_c'],
             $p['d_receta_cant_c']
         );

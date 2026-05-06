@@ -86,14 +86,16 @@ $version = mt_rand(1, 10000);
                             <thead>
                                 <tr>
                                     <th rowspan="2" style="width:20%;">Producto</th>
-                                    <th colspan="2">Inventario Semanal</th>
+                                    <th colspan="4">Inventario Semanal</th>
                                     <th colspan="3">Presentación de Envío</th>
                                     <th rowspan="2">Pedido Sugerido<br>(+B - A)</th>
                                     <th colspan="3">Pedido Sugerido en Cada Día de Despacho</th>
                                 </tr>
                                 <tr>
                                     <th>En Unidades</th>
+                                    <th>Presentación</th>
                                     <th>(A) En Presentación Envío</th>
+                                    <th>Presentación</th>
                                     <th class="th-despacho-col">En presentación Unidades de Control</th>
                                     <th>Stock Mínimo</th>
                                     <th>Stock Máximo (B)</th>
