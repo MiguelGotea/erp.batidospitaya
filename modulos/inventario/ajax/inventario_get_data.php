@@ -324,6 +324,7 @@ try {
     /* ── 8. Productos para inventario (con lógica de despacho mejorada) ──── */
     $stmtP = $conn->prepare("
         SELECT pp.id, pp.Nombre, pp.presentacion, pp.categoria_insumo,
+               pp.categoria_nombre,
                pp.presentacion_basica_inventario, pp.presentacion_despacho,
                u.abreviado as unidad, pp.cantidad as cant_pres,
                pp.id_unidad_producto as uid_uso,

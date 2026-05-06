@@ -89,20 +89,12 @@ function renderizarTabla(res, semInv) {
 
     const esSoloLectura = semInv < semanaActual;
 
-    // Mapeo de grupos para encabezados
-    const getGrupo = (cat) => {
-        if (['B', 'D', 'F'].includes(cat)) return 'CONGELADOS';
-        if (['A', 'C'].includes(cat)) return 'FRESCOS';
-        return 'OTROS / SECOS';
-    };
-
-    const ordenGrupos = ['CONGELADOS', 'FRESCOS', 'OTROS / SECOS'];
+    // Orden oficial de categorías
+    const CAT_ORDER = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
     res.productos.sort((a, b) => {
-        const gA = getGrupo(a.categoria_insumo);
-        const gB = getGrupo(b.categoria_insumo);
-        const iA = ordenGrupos.indexOf(gA);
-        const iB = ordenGrupos.indexOf(gB);
+        let iA = CAT_ORDER.indexOf(a.categoria_insumo); if (iA < 0) iA = 99;
+        let iB = CAT_ORDER.indexOf(b.categoria_insumo); if (iB < 0) iB = 99;
         if (iA !== iB) return iA - iB;
         return a.Nombre.localeCompare(b.Nombre);
     });
@@ -112,18 +104,20 @@ function renderizarTabla(res, semInv) {
     res.productos.forEach(p => {
         const idPP = p.id;
         const cat = p.categoria_insumo ?? '—';
-        const grupo = getGrupo(cat);
+        const nomCat = p.categoria_nombre ?? 'Sin Categoría';
+        const grupoId = cat;
 
         // Insertar fila de encabezado de grupo si cambia
-        if (grupo !== ultimoGrupo) {
+        if (grupoId !== ultimoGrupo) {
+            const labelGrupo = cat !== '—' ? `${cat} — ${nomCat}` : nomCat;
             tbody.append(`
                 <tr class="table-light">
                     <td colspan="12" class="fw-bold py-2 ps-3" style="background-color: #e9ecef; color: #495057; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
-                        ${grupo}
+                        ${labelGrupo}
                     </td>
                 </tr>
             `);
-            ultimoGrupo = grupo;
+            ultimoGrupo = grupoId;
         }
 
         // Inventario actual guardado en BD
