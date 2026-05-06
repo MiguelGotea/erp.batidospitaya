@@ -3,20 +3,20 @@ require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 
 // Verificar acceso
-verificarAccesoCargo([11, 16, 21]);
+verificarAccesoCargo([11, 16, 21, 49]);
 
 header('Content-Type: application/json');
 
 try {
     // Obtener reclamos pendientes con más de 7 días
     $reclamosPendientes = obtenerReclamosPendientes();
-    
+
     // Contar total de pendientes
     $totalPendientes = count($reclamosPendientes);
-    
+
     // Determinar color del indicador según la cantidad y días
     $colorIndicador = determinarColorIndicadorReclamos($reclamosPendientes);
-    
+
     echo json_encode([
         'success' => true,
         'total_pendientes' => $totalPendientes,
@@ -24,7 +24,7 @@ try {
         'reclamos_pendientes' => $reclamosPendientes,
         'dias_tolerancia' => 7
     ]);
-    
+
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
@@ -32,9 +32,10 @@ try {
 /**
  * Obtiene los reclamos pendientes de investigación
  */
-function obtenerReclamosPendientes() {
+function obtenerReclamosPendientes()
+{
     global $conn;
-    
+
     $sql = "
         SELECT 
             r.id,
@@ -52,30 +53,31 @@ function obtenerReclamosPendientes() {
         AND r.fecha_evento IS NOT NULL
         ORDER BY r.fecha_evento ASC, dias_pendiente DESC
     ";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute();
-    
+
     return $stmt->fetchAll();
 }
 
 /**
  * Determina el color del indicador según la cantidad de reclamos y días pendientes
  */
-function determinarColorIndicadorReclamos($reclamosPendientes) {
+function determinarColorIndicadorReclamos($reclamosPendientes)
+{
     if (empty($reclamosPendientes)) {
         return 'verde';
     }
-    
+
     // Verificar si hay reclamos con más de 7 días
-    $reclamosExcedidos = array_filter($reclamosPendientes, function($reclamo) {
+    $reclamosExcedidos = array_filter($reclamosPendientes, function ($reclamo) {
         return $reclamo['dias_pendiente'] > 7;
     });
-    
+
     if (count($reclamosExcedidos) > 0) {
         return 'rojo';
     }
-    
+
     // Si hay reclamos pero todos están dentro de los 7 días
     return 'amarillo';
 }

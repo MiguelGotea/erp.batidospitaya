@@ -3,7 +3,7 @@ require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 
 // Verificar acceso
-verificarAccesoCargo([8, 11, 16, 21]);
+verificarAccesoCargo([8, 11, 16, 21, 49]);
 
 header('Content-Type: application/json');
 
