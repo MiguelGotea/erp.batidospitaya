@@ -594,6 +594,7 @@ try {
         }
     }
 
+
     $sucIdsPresentes = [];
     foreach ($sucursalesPresentes as $suc) {
         $key = strtolower(trim($suc));
