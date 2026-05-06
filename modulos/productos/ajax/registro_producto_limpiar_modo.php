@@ -11,8 +11,8 @@ try {
         $input = $_POST;
     }
 
-    $id       = isset($input['id'])   ? (int) $input['id']   : 0;
-    $modo     = isset($input['modo']) ? trim($input['modo']) : ''; // 'a_receta' | 'a_producto'
+    $id = isset($input['id']) ? (int) $input['id'] : 0;
+    $modo = isset($input['modo']) ? trim($input['modo']) : ''; // 'a_receta' | 'a_producto'
 
     if ($id <= 0) {
         throw new Exception('ID de producto inválido');
@@ -52,7 +52,7 @@ try {
         echo json_encode([
             'success' => true,
             'message' => 'Campos de producto presentación limpiados para modo receta',
-            'modo'    => $modo
+            'modo' => $modo
         ]);
 
 
@@ -65,6 +65,7 @@ try {
         //   3. DELETE receta_producto_global       (padre — ya sin referencias)
         // -------------------------------------------------------
         $idReceta = $producto['Id_receta_producto'];
+
 
         // Respaldo: buscar por id_presentacion_producto si el FK no está puesto
         if (!$idReceta) {
@@ -103,10 +104,10 @@ try {
 
         $conn->commit();
         echo json_encode([
-            'success'                => true,
-            'message'                => 'Receta y componentes eliminados del producto',
-            'modo'                   => $modo,
-            'id_receta_eliminada'    => $idReceta,
+            'success' => true,
+            'message' => 'Receta y componentes eliminados del producto',
+            'modo' => $modo,
+            'id_receta_eliminada' => $idReceta,
             'componentes_eliminados' => $componentesEliminados
         ]);
     }
