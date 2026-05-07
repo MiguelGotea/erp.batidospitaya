@@ -2295,10 +2295,9 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                         <label for="nueva_sucursal" class="form-label">Sucursal:</label>
                         <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
                             <?php
-                            // Mostrar solo sucursales donde el usuario es líder
-                            $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
-                            foreach ($sucursalesLider as $sucursal): ?>
-                                <option value="<?= $sucursal['codigo'] ?>">
+                            // Usar las sucursales ya filtradas por permisos al inicio del archivo
+                            foreach ($sucursales as $sucursal): ?>
+                                <option value="<?= $sucursal['codigo'] ?>" <?= ($sucursalSeleccionada == $sucursal['codigo']) ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($sucursal['nombre']) ?>
                                 </option>
                             <?php endforeach; ?>

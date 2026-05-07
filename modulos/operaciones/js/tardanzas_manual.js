@@ -107,8 +107,10 @@ function actualizarFiltros() {
 function mostrarModalNuevaTardanza() {
     const ayer = new Date();
     ayer.setDate(ayer.getDate() - 1);
-    document.getElementById('nueva_fecha').valueAsDate = ayer;
-    document.getElementById('nueva_fecha').max = ayer.toISOString().split('T')[0];
+    const fechaAyerStr = ayer.toISOString().split('T')[0];
+    
+    document.getElementById('nueva_fecha').value = fechaAyerStr;
+    document.getElementById('nueva_fecha').max = fechaAyerStr;
 
     const selectOperario = document.getElementById('nueva_operario');
     selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
@@ -116,7 +118,7 @@ function mostrarModalNuevaTardanza() {
     const selectSucursal = document.getElementById('nueva_sucursal');
     const primeraSucursal = selectSucursal.value;
     if (primeraSucursal) {
-        cargarOperariosSucursal(primeraSucursal);
+        cargarOperariosSucursal(primeraSucursal, fechaAyerStr);
     }
     document.getElementById('modalNuevaTardanza').style.display = 'flex';
 }
