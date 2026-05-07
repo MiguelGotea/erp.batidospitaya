@@ -105,37 +105,45 @@ function actualizarFiltros() {
 // =============================================
 
 function mostrarModalNuevaTardanza() {
-    const ayer = new Date();
-    ayer.setDate(ayer.getDate() - 1);
-    const fechaAyerStr = ayer.toISOString().split('T')[0];
+    const hoy = new Date();
+    const ayer = new Date(hoy);
+    ayer.setDate(hoy.getDate() - 1);
     
-    const elFecha = document.getElementById('nueva_fecha');
-    const elSucursal = document.getElementById('nueva_sucursal');
-    const elOperario = document.getElementById('nueva_operario');
+    // Formato local YYYY-MM-DD para evitar desfases de zona horaria (UTC)
+    const yyyy = ayer.getFullYear();
+    const mm = String(ayer.getMonth() + 1).padStart(2, '0');
+    const dd = String(ayer.getDate()).padStart(2, '0');
+    const fechaAyerStr = `${yyyy}-${mm}-${dd}`;
+    
+    const inputFecha = document.getElementById('nueva_fecha');
+    const selectOperario = document.getElementById('nueva_operario');
+    const selectSucursal = document.getElementById('nueva_sucursal');
 
-    if (elFecha) {
-        elFecha.value = fechaAyerStr;
-        elFecha.max = fechaAyerStr;
+    // Establecer fecha y su límite máximo
+    inputFecha.value = fechaAyerStr;
+    inputFecha.max = fechaAyerStr;
+
+    // Resetear selector de operarios
+    selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
+
+    // Obtener sucursal seleccionada por defecto (la primera o la preseleccionada por PHP)
+    const sucursalActual = selectSucursal.value;
+
+    if (sucursalActual && fechaAyerStr) {
+        // Forzamos la carga inmediata de operarios para esa sucursal y fecha
+        cargarOperariosSucursal(sucursalActual, fechaAyerStr);
+    } else if (!sucursalActual) {
+        selectOperario.disabled = true;
+        selectOperario.innerHTML = '<option value="">Primero seleccione una sucursal</option>';
     }
 
-    if (elOperario) {
-        elOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
-        elOperario.disabled = false;
-    }
-
-    // Disparar carga inicial basada en la sucursal y fecha que ya tiene el modal
-    if (elSucursal && elFecha) {
-        cargarOperariosSucursal(elSucursal.value, elFecha.value);
-    }
-
+    // Mostrar el modal
     document.getElementById('modalNuevaTardanza').style.display = 'flex';
 }
 
 function cargarOperariosSucursal(codSucursal, fechaTardanza) {
     const selectOperario = document.getElementById('nueva_operario');
     const mensajeAdvertencia = document.getElementById('mensaje-advertencia-contrato-tardanza');
-
-    if (!selectOperario) return;
 
     if (!codSucursal) {
         selectOperario.innerHTML = '<option value="">Primero seleccione una sucursal</option>';
@@ -148,8 +156,8 @@ function cargarOperariosSucursal(codSucursal, fechaTardanza) {
         return;
     }
 
-    selectOperario.disabled = true;
     selectOperario.innerHTML = `<option value="">⏳ Cargando operarios para ${fechaTardanza}...</option>`;
+    selectOperario.disabled = true;
 
     let url = `ajax/tardanzas_manual_obtener_operarios.php?sucursal=${codSucursal}&fecha_tardanza=${fechaTardanza}`;
 
