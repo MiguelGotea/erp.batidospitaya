@@ -69,6 +69,7 @@ try {
     $countStmt->execute($params);
     $totalAvisos = $countStmt->fetchColumn();
     
+    
     // Luego obtener los datos paginados
     $sql = "SELECT a.id, a.title, a.content, a.created_at, CONCAT(o.Nombre, ' ', o.Apellido) as author 
             FROM announcements a 
