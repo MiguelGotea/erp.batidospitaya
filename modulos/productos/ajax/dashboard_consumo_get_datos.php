@@ -423,14 +423,20 @@ try {
     $sinMapeoSet = [];
     $sucursalesSet = [];
 
-    // Pre-cargar nombres de sucursales (codigo => nombre)
-    $stmtNombresSuc = $conn->prepare("
-        SELECT codigo, nombre FROM sucursales
-    ");
-    $stmtNombresSuc->execute();
-    $nombresSucursales = [];  // [codigo] => nombre
-    foreach ($stmtNombresSuc->fetchAll(PDO::FETCH_ASSOC) as $sRow) {
-        $nombresSucursales[$sRow['codigo']] = $sRow['nombre'];
+    // ── Mapeo de Sucursales ───────────────────────────────────────────
+    // VentasGlobalesAccessCSV.local puede contener el NOMBRE o el CÓDIGO de la sucursal.
+    // Construimos índices para asegurar encontrar el código y nombre.
+    $nombresSucursales = []; // [codigo] => nombre
+    $idsSucursales     = []; // [nombre_lower] => codigo  +  [codigo_lower] => codigo
+    
+    $stmtSuc = $conn->query("SELECT id, codigo, nombre FROM sucursales");
+    foreach ($stmtSuc->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $cod = $row['codigo'];
+        $nombresSucursales[$cod] = $row['nombre'];
+        $idsSucursales[strtolower(trim($row['nombre']))] = $cod;
+        if (!empty($cod)) {
+            $idsSucursales[strtolower(trim($cod))] = $cod;
+        }
     }
 
     foreach ($filas as $fila) {
@@ -581,20 +587,6 @@ try {
     $semanasNros = array_keys($semanasMap);
 
     // ── Mapeo de Sucursales para Configuración Logística ──
-    // VentasGlobalesAccessCSV.local puede contener el NOMBRE o el CÓDIGO de la sucursal.
-    // Construimos ambos índices para asegurar encontrar el id_sucursal.
-    $nombresSucursales = []; // [id] => nombre
-    $idsSucursales = [];     // [nombre_lower] => id  +  [codigo_lower] => id
-    $stmtSuc = $conn->query("SELECT id, codigo, nombre FROM sucursales");
-    foreach ($stmtSuc->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $nombresSucursales[$row['id']] = $row['nombre'];
-        $idsSucursales[strtolower(trim($row['nombre']))] = $row['id'];
-        if (!empty($row['codigo'])) {
-            $idsSucursales[strtolower(trim($row['codigo']))] = $row['id'];
-        }
-    }
-
-
     $sucIdsPresentes = [];
     foreach ($sucursalesPresentes as $suc) {
         $key = strtolower(trim($suc));
@@ -713,10 +705,10 @@ try {
             $desvActivo = calcularDesviacionEstandar($valsActivo);
             $semC = $promActivo + $desvActivo;
 
-            $sucId = $idsSucursales[strtolower(trim($suc))] ?? null;
-            $dSM = $sucId ? ($configSucursales[$sucId] ?? 0) : 0;
+            $sucCod = $idsSucursales[strtolower(trim($suc))] ?? null;
+            $dSM = $sucCod ? ($configSucursales[$sucCod] ?? 0) : 0;
             $cat = $meta['categoria_insumo'];
-            $cP = $sucId ? ($configProductos[$sucId][$cat] ?? null) : null;
+            $cP = $sucCod ? ($configProductos[$sucCod][$cat] ?? null) : null;
             $adj = $cP ? (float) $cP['ajuste'] : 0;
 
             $diaC = ($semC * (1 + $adj)) / 7;
