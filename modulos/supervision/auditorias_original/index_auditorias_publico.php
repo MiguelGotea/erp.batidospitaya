@@ -9,6 +9,12 @@ require_once '../../../core/permissions/permissions.php';
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+
+if (!$usuario) {
+    header('Location: /login.php');
+    exit();
+}
+
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 //$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';

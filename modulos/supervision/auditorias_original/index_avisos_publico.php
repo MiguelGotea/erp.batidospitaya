@@ -9,8 +9,14 @@ require_once '../../../core/permissions/permissions.php';
 //******************************Estándar para header******************************
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+
+if (!$usuario) {
+    header('Location: /login.php');
+    exit();
+}
+
 $cargoOperario = $usuario['CodNivelesCargos'];
-//$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo
 //if (!verificarAccesoCargo([42, 26, 2, 5, 43, 8, 11, 13, 16, 21, 22, 27, 28,43, 35]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
