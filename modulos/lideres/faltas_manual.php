@@ -21,7 +21,7 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([5, 43, 8, 13, 16, 39, 30, 37, 28]);
+verificarAccesoCargo([5, 43, 8, 13, 16, 39, 30, 37, 28, 49]);
 
 // Verificar acceso al módulo
 if (!verificarAccesoCargo([5, 43, 8, 13, 16, 39, 30, 37, 28]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
@@ -42,9 +42,10 @@ $siAcciones = verificarAccesoCargo([13, 16, 39, 30, 37, 28]);
 /**
  * Obtiene los tipos de falta con sus porcentajes
  */
-function obtenerTiposFaltaConPorcentajes() {
+function obtenerTiposFaltaConPorcentajes()
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT codigo, nombre, porcentaje_pago, descripcion 
         FROM tipos_falta 
@@ -58,9 +59,10 @@ function obtenerTiposFaltaConPorcentajes() {
 /**
  * Obtiene el porcentaje de pago para un tipo de falta específico
  */
-function obtenerPorcentajePagoTipoFalta($tipoFalta) {
+function obtenerPorcentajePagoTipoFalta($tipoFalta)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT porcentaje_pago 
         FROM tipos_falta 
@@ -69,16 +71,17 @@ function obtenerPorcentajePagoTipoFalta($tipoFalta) {
     ");
     $stmt->execute([$tipoFalta]);
     $result = $stmt->fetch();
-    
+
     return $result ? $result['porcentaje_pago'] : 0;
 }
 
 /**
  * Obtiene TODAS las faltas manuales (para mostrar en columnas adicionales) ORDENADAS POR FECHA_FALTA
  */
-function obtenerTodasFaltasManuales($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerTodasFaltasManuales($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $sql = "
         SELECT fm.cod_operario, fm.fecha_falta, fm.tipo_falta, fm.cod_contrato,
                fm.fecha_registro,
@@ -90,7 +93,7 @@ function obtenerTodasFaltasManuales($codSucursal, $fechaDesde, $fechaHasta) {
         JOIN sucursales s ON fm.cod_sucursal = s.codigo
         WHERE fm.fecha_falta BETWEEN ? AND ?
     ";
-    
+
     $params = [$fechaDesde, $fechaHasta];
 
     // CORRECCIÓN: Solo agregar condición de sucursal si se proporciona un código válido
@@ -98,12 +101,12 @@ function obtenerTodasFaltasManuales($codSucursal, $fechaDesde, $fechaHasta) {
         $sql .= " AND fm.cod_sucursal = ?";
         $params[] = $codSucursal;
     }
-    
+
     $sql .= " ORDER BY fm.fecha_falta ASC";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
-    
+
     return $stmt->fetchAll();
 }
 
@@ -113,27 +116,27 @@ if (isset($_GET['exportar_contabilidad'])) {
     $sucursalSeleccionada = $_GET['sucursal'] ?? null;
     $fechaDesde = $_GET['desde'] ?? date('Y-m-d', strtotime('-1 month'));
     $fechaHasta = $_GET['hasta'] ?? date('Y-m-d');
-    
+
     // Determinar modo de vista basado en la selección de sucursal
     $modoVista = ($sucursalSeleccionada === 'todas') ? 'todas' : 'sucursal';
-    
+
     // 1. Obtener todas las faltas automáticas (detectadas por el sistema)
     $faltasAutomaticas = obtenerFaltasAutomaticasParaContabilidad(
         $sucursalSeleccionada,
-        $fechaDesde, 
+        $fechaDesde,
         $fechaHasta
     );
-    
+
     // 2. Obtener TODAS las faltas manuales (para mostrar en columnas adicionales)
     $faltasReportadas = obtenerTodasFaltasManuales(
         $sucursalSeleccionada,
-        $fechaDesde, 
+        $fechaDesde,
         $fechaHasta
     );
-    
+
     // 3. Calcular faltas por operario según las nuevas definiciones
     $faltasPorOperario = [];
-    
+
     // Primero procesar todas las faltas automáticas
     foreach ($faltasAutomaticas as $fa) {
         $codOperario = $fa['cod_operario'];
@@ -143,7 +146,7 @@ if (isset($_GET['exportar_contabilidad'])) {
             'Apellido' => $fa['operario_apellido'] ?? '',
             'Apellido2' => $fa['operario_apellido2'] ?? ''
         ]);
-        
+
         if (!isset($faltasPorOperario[$codOperario])) {
             $faltasPorOperario[$codOperario] = [
                 'cod_operario' => $codOperario,
@@ -159,11 +162,11 @@ if (isset($_GET['exportar_contabilidad'])) {
             $faltasPorOperario[$codOperario]['total_faltas_automaticas']++;
         }
     }
-    
+
     // 4. Procesar faltas manuales para calcular reportadas y justificadas
     foreach ($faltasReportadas as $fr) {
         $codOperario = $fr['cod_operario'];
-        
+
         if (!isset($faltasPorOperario[$codOperario])) {
             $nombreCompleto = obtenerNombreCompletoOperario([
                 'Nombre' => $fr['operario_nombre'],
@@ -171,7 +174,7 @@ if (isset($_GET['exportar_contabilidad'])) {
                 'Apellido' => $fr['operario_apellido'] ?? '',
                 'Apellido2' => $fr['operario_apellido2'] ?? ''
             ]);
-            
+
             $faltasPorOperario[$codOperario] = [
                 'cod_operario' => $codOperario,
                 'nombre_completo' => $nombreCompleto,
@@ -185,36 +188,36 @@ if (isset($_GET['exportar_contabilidad'])) {
         } else {
             $faltasPorOperario[$codOperario]['total_faltas_reportadas']++;
         }
-        
+
         // CONTAR FALTAS JUSTIFICADAS (todo lo que NO es "Pendiente" ni "No_Pagado")
         if ($fr['tipo_falta'] !== 'Pendiente' && $fr['tipo_falta'] !== 'No_Pagado') {
             $faltasPorOperario[$codOperario]['total_faltas_justificadas']++;
         }
     }
-    
+
     // 5. Calcular faltas ejecutadas según la nueva fórmula
     foreach ($faltasPorOperario as $codOperario => $operarioData) {
         // NUEVA FÓRMULA: Faltas Ejecutadas = Faltas Automáticas - Faltas Justificadas
-        $faltasPorOperario[$codOperario]['faltas_ejecutadas'] = 
-            $faltasPorOperario[$codOperario]['total_faltas_automaticas'] - 
+        $faltasPorOperario[$codOperario]['faltas_ejecutadas'] =
+            $faltasPorOperario[$codOperario]['total_faltas_automaticas'] -
             $faltasPorOperario[$codOperario]['total_faltas_justificadas'];
-        
+
         // Asegurar que no sea negativo
         if ($faltasPorOperario[$codOperario]['faltas_ejecutadas'] < 0) {
             $faltasPorOperario[$codOperario]['faltas_ejecutadas'] = 0;
         }
     }
-    
+
     // Ordenar por nombre de operario
-    usort($faltasPorOperario, function($a, $b) {
+    usort($faltasPorOperario, function ($a, $b) {
         return strcmp($a['nombre_completo'], $b['nombre_completo']);
     });
-    
+
     // Configurar headers para descarga de archivo Excel con rango de fechas
     $nombreArchivo = "faltas_pendientes_contabilidad_{$fechaDesde}_a_{$fechaHasta}.xls";
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
-    
+
     // Iniciar salida - UNA SOLA FILA POR OPERARIO, SIN COLUMNAS DE DETALLE
     echo '<table border="1">';
     echo '<tr>';
@@ -228,7 +231,7 @@ if (isset($_GET['exportar_contabilidad'])) {
     echo '<th>Faltas Ejecutadas</th>'; // Calculada como Reportadas - Justificadas
     echo '<th>Fecha Registro</th>'; // NUEVA COLUMNA
     echo '</tr>';
-    
+
     foreach ($faltasPorOperario as $operario) {
         echo '<tr>';
         // echo '<td>' . $operario['cod_operario'] . '</td>';
@@ -249,10 +252,10 @@ if (isset($_GET['exportar_contabilidad'])) {
             $fechaRegistro = $fechaObj->format('Y-m-d');
         }
         echo '<td>' . $fechaRegistro . '</td>';
-        
+
         echo '</tr>';
     }
-    
+
     echo '</table>';
     exit;
 }
@@ -267,7 +270,7 @@ if (isset($_GET['exportar_faltas_auto_septimo'])) {
     $sucursalSeleccionada = $_GET['sucursal'] ?? null;
     $fechaDesde = $_GET['desde'] ?? date('Y-m-d', strtotime('-1 month'));
     $fechaHasta = $_GET['hasta'] ?? date('Y-m-d');
-    
+
     exportarFaltasAutoSeptimo($sucursalSeleccionada, $fechaDesde, $fechaHasta);
 }
 
@@ -276,7 +279,7 @@ if (isset($_GET['exportar_permisos'])) {
     $sucursalSeleccionada = $_GET['sucursal'] ?? null;
     $fechaDesde = $_GET['desde'] ?? date('Y-m-d', strtotime('-1 month'));
     $fechaHasta = $_GET['hasta'] ?? date('Y-m-d');
-    
+
     exportarPermisos($sucursalSeleccionada, $fechaDesde, $fechaHasta);
 }
 
@@ -285,7 +288,7 @@ if (isset($_GET['exportar_vacaciones'])) {
     $sucursalSeleccionada = $_GET['sucursal'] ?? null;
     $fechaDesde = $_GET['desde'] ?? date('Y-m-d', strtotime('-1 month'));
     $fechaHasta = $_GET['hasta'] ?? date('Y-m-d');
-    
+
     exportarVacaciones($sucursalSeleccionada, $fechaDesde, $fechaHasta);
 }
 
@@ -293,9 +296,10 @@ if (isset($_GET['exportar_vacaciones'])) {
  * Obtiene todas las faltas automáticas (detectadas por el sistema) para el reporte de contabilidad
  * MODIFICADA: Filtra por fecha de liquidación
  */
-function obtenerFaltasAutomaticasParaContabilidad($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerFaltasAutomaticasParaContabilidad($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $sqlOperarios = "
         SELECT DISTINCT o.CodOperario, 
                o.Nombre as operario_nombre, 
@@ -333,51 +337,53 @@ function obtenerFaltasAutomaticasParaContabilidad($codSucursal, $fechaDesde, $fe
             OR c.fecha_liquidacion > CURDATE()
         )
     ";
-    
+
     $params = [$fechaDesde, $fechaHasta, $fechaDesde];
-    
+
     if (!empty($codSucursal) && $codSucursal !== 'todas') {
         $sqlOperarios .= " AND anc.Sucursal = ?";
         $params[] = $codSucursal;
     }
-    
+
     $sqlOperarios .= " ORDER BY o.Nombre, o.Apellido";
-    
+
     $stmt = $conn->prepare($sqlOperarios);
     $stmt->execute($params);
     $operarios = $stmt->fetchAll();
-    
+
     $faltas = [];
-    
+
     foreach ($operarios as $operario) {
         // NUEVA LÓGICA: Determinar hasta qué fecha buscar faltas
         $fechaHastaOperario = $fechaHasta;
-        
-        if (!empty($operario['fecha_liquidacion']) && 
-            $operario['fecha_liquidacion'] != '0000-00-00') {
+
+        if (
+            !empty($operario['fecha_liquidacion']) &&
+            $operario['fecha_liquidacion'] != '0000-00-00'
+        ) {
             $fechaLiquidacion = new DateTime($operario['fecha_liquidacion']);
             $fechaHastaObj = new DateTime($fechaHasta);
-            
+
             if ($fechaLiquidacion < $fechaHastaObj) {
                 $fechaHastaOperario = $fechaLiquidacion->format('Y-m-d');
             }
-            
+
             $fechaDesdeObj = new DateTime($fechaDesde);
             if ($fechaLiquidacion < $fechaDesdeObj) {
                 continue;
             }
         }
-        
+
         $diasLaborables = obtenerDiasLaborablesOperario(
-            $operario['CodOperario'], 
+            $operario['CodOperario'],
             $operario['cod_sucursal'],
-            $fechaDesde, 
+            $fechaDesde,
             $fechaHastaOperario
         );
-        
+
         foreach ($diasLaborables as $dia) {
             $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha']);
-            
+
             if (!$marcacion) {
                 $faltas[] = [
                     'cod_operario' => $operario['CodOperario'],
@@ -394,16 +400,17 @@ function obtenerFaltasAutomaticasParaContabilidad($codSucursal, $fechaDesde, $fe
             }
         }
     }
-    
+
     return $faltas;
 }
 
 /**
  * Obtiene las faltas manuales reportadas como "No_Pagado" para restar de las automáticas
  */
-function obtenerFaltasManualesReportadas($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerFaltasManualesReportadas($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $sql = "
         SELECT fm.cod_operario, fm.fecha_falta,
                o.Nombre as operario_nombre, o.Apellido as operario_apellido,
@@ -415,29 +422,30 @@ function obtenerFaltasManualesReportadas($codSucursal, $fechaDesde, $fechaHasta)
         WHERE fm.tipo_falta = 'No_Pagado'
         AND fm.fecha_falta BETWEEN ? AND ?
     ";
-    
+
     $params = [$fechaDesde, $fechaHasta];
-    
+
     if (!empty($codSucursal)) {
         $sql .= " AND fm.cod_sucursal = ?";
         $params[] = $codSucursal;
     }
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
-    
+
     return $stmt->fetchAll();
 }
 
 /**
  * Exportar faltas automáticas + séptimo día (EXCLUYENDO LAS QUE YA TIENEN JUSTIFICACIÓN)
  */
-function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
+function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     // 1. Obtener todas las faltas automáticas (detectadas por el sistema)
     $faltasAutomaticas = obtenerFaltasAutomaticasParaContabilidad($codSucursal, $fechaDesde, $fechaHasta);
-    
+
     // 2. Obtener todas las faltas manuales que JUSTIFICAN faltas (excluyendo Pendiente y No_Pagado)
     $sqlFaltasJustificadas = "
         SELECT fm.cod_operario, fm.fecha_falta
@@ -445,25 +453,25 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
         WHERE fm.fecha_falta BETWEEN ? AND ?
         AND fm.tipo_falta NOT IN ('Pendiente', 'No_Pagado')
     ";
-    
+
     $paramsJustificadas = [$fechaDesde, $fechaHasta];
-    
+
     if (!empty($codSucursal) && $codSucursal !== 'todas') {
         $sqlFaltasJustificadas .= " AND fm.cod_sucursal = ?";
         $paramsJustificadas[] = $codSucursal;
     }
-    
+
     $stmt = $conn->prepare($sqlFaltasJustificadas);
     $stmt->execute($paramsJustificadas);
     $faltasJustificadas = $stmt->fetchAll();
-    
+
     // 3. Crear un array de claves únicas para faltas justificadas (operario + fecha)
     $justificadasMap = [];
     foreach ($faltasJustificadas as $fj) {
         $clave = $fj['cod_operario'] . '_' . $fj['fecha_falta'];
         $justificadasMap[$clave] = true;
     }
-    
+
     // 4. Filtrar las faltas automáticas: excluir las que ya están justificadas
     $faltasAutomaticasFiltradas = [];
     foreach ($faltasAutomaticas as $fa) {
@@ -472,7 +480,7 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
             $faltasAutomaticasFiltradas[] = $fa;
         }
     }
-    
+
     // 5. Obtener faltas manuales de tipo Dia_mas_septimo Y Pendiente
     $sql = "
         SELECT fm.*, 
@@ -485,25 +493,25 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
         WHERE (fm.tipo_falta = 'Dia_mas_septimo' OR fm.tipo_falta = 'Pendiente')
         AND fm.fecha_falta BETWEEN ? AND ?
     ";
-    
+
     $params = [$fechaDesde, $fechaHasta];
-    
+
     if (!empty($codSucursal) && $codSucursal !== 'todas') {
         $sql .= " AND fm.cod_sucursal = ?";
         $params[] = $codSucursal;
     }
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $faltasSeptimo = $stmt->fetchAll();
-    
+
     // Configurar headers para descarga de archivo Excel CON UTF-8 y rango de fechas
     $nombreArchivo = "faltas_auto_septimo_{$fechaDesde}_a_{$fechaHasta}.xls";
     header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
     header('Pragma: no-cache');
     header('Expires: 0');
-    
+
     // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
     echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
     echo '<!DOCTYPE html>';
@@ -512,7 +520,7 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
     echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
     echo '</head>';
     echo '<body>';
-    
+
     echo '<table border="1">';
     echo '<tr>';
     // echo '<th>Código</th>';
@@ -525,7 +533,7 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
     // echo '<th>Tipo</th>';
     // echo '<th>Origen</th>';
     echo '</tr>';
-    
+
     // Agregar faltas automáticas FILTRADAS (excluyendo justificadas)
     foreach ($faltasAutomaticasFiltradas as $falta) {
         echo '<tr>';
@@ -535,7 +543,7 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
             'Apellido' => $falta['operario_apellido'],
             'Apellido2' => $falta['operario_apellido2'] ?? ''
         ]);
-        
+
         // FECHA REGISTRO CON AJUSTE DE -6 HORAS
         $fechaRegistro = '';
         if (!empty($falta['fecha_registro'])) {
@@ -543,10 +551,10 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
             $fechaObj->modify('-0 hours');
             $fechaRegistro = $fechaObj->format('Y-m-d');
         }
-        
+
         // COLUMNA PERSONA MODIFICADA: código contrato + nombre completo
         $persona = ($falta['cod_contrato'] ?? '') . ' ' . htmlspecialchars($nombreCompleto, ENT_QUOTES, 'UTF-8');
-        
+
         // echo '<td>' . $falta['cod_operario'] . '</td>';
         echo '<td>' . ($falta['cod_contrato'] ?? '') . '</td>'; // NUEVA COLUMNA
         echo '<td>' . $persona . '</td>';
@@ -557,7 +565,7 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
         // echo '<td>Sistema</td>';
         echo '</tr>';
     }
-    
+
     // Agregar faltas de séptimo día
     foreach ($faltasSeptimo as $falta) {
         echo '<tr>';
@@ -567,10 +575,10 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
             'Apellido' => $falta['operario_apellido'],
             'Apellido2' => $falta['operario_apellido2'] ?? ''
         ]);
-        
+
         // COLUMNA PERSONA MODIFICADA: código contrato + nombre completo
         $persona = ($falta['cod_contrato'] ?? '') . ' ' . htmlspecialchars($nombreCompleto, ENT_QUOTES, 'UTF-8');
-        
+
         // FECHA REGISTRO CON AJUSTE DE -6 HORAS
         $fechaRegistro = '';
         if (!empty($falta['fecha_registro'])) {
@@ -578,14 +586,14 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
             $fechaObj->modify('-6 hours');
             $fechaRegistro = $fechaObj->format('Y-m-d');
         }
-        
+
         // Convertir el tipo de falta a texto legible
         $tipoFalta = str_replace(
             ['Dia_mas_septimo', 'Pendiente', 'No_Pagado'],
             ['Día + Séptimo', 'Líder subió reporte, pendiente por rrhh', 'No Pagado'],
             $falta['tipo_falta']
         );
-        
+
         // echo '<td>' . $falta['cod_operario'] . '</td>';
         echo '<td>' . ($falta['cod_contrato'] ?? '') . '</td>'; // NUEVA COLUMNA
         echo '<td>' . $persona . '</td>';
@@ -597,7 +605,7 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
         // echo '<td>Manual</td>';
         echo '</tr>';
     }
-    
+
     echo '</table>';
     echo '</body>';
     echo '</html>';
@@ -607,9 +615,10 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
 /**
  * Exportar permisos (todos los tipos excepto Vacaciones y Dia_mas_septimo)
  */
-function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
+function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $sql = "
         SELECT fm.*, 
                o.Nombre as operario_nombre, o.Nombre2 as operario_nombre2,
@@ -621,23 +630,23 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
         WHERE fm.tipo_falta NOT IN ('Vacaciones', 'Dia_mas_septimo', 'Pendiente')
         AND fm.fecha_falta BETWEEN ? AND ?
     ";
-    
+
     $params = [$fechaDesde, $fechaHasta];
-    
+
     if (!empty($codSucursal) && $codSucursal !== 'todas') {
         $sql .= " AND fm.cod_sucursal = ?";
         $params[] = $codSucursal;
     }
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $permisos = $stmt->fetchAll();
-    
+
     // Configurar headers para descarga con rango de fechas
     $nombreArchivo = "permisos_{$fechaDesde}_a_{$fechaHasta}.xls";
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
-    
+
     echo '<table border="1">';
     echo '<tr>';
     // echo '<th>Código</th>';
@@ -651,7 +660,7 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
     echo '<th>Observaciones</th>';
     echo '<th>Fecha Registro</th>'; // NUEVA COLUMNA
     echo '</tr>';
-    
+
     foreach ($permisos as $permiso) {
         echo '<tr>';
         $nombreCompleto = obtenerNombreCompletoOperario([
@@ -660,10 +669,10 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
             'Apellido' => $permiso['operario_apellido'],
             'Apellido2' => $permiso['operario_apellido2'] ?? ''
         ]);
-        
+
         // COLUMNA PERSONA MODIFICADA: código contrato + nombre completo
         $persona = ($permiso['cod_contrato'] ?? '') . ' ' . htmlspecialchars($nombreCompleto);
-        
+
         // FECHA REGISTRO CON AJUSTE DE -6 HORAS
         $fechaRegistro = '';
         if (!empty($permiso['fecha_registro'])) {
@@ -671,7 +680,7 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
             $fechaObj->modify('-6 hours');
             $fechaRegistro = $fechaObj->format('Y-m-d');
         }
-        
+
         // echo '<td>' . $permiso['cod_operario'] . '</td>';
         echo '<td>' . ($permiso['cod_contrato'] ?? '') . '</td>'; // NUEVA COLUMNA
         echo '<td>' . $persona . '</td>';
@@ -685,7 +694,7 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
         echo '<td>' . $fechaRegistro . '</td>'; // NUEVA COLUMNA
         echo '</tr>';
     }
-    
+
     echo '</table>';
     exit;
 }
@@ -693,9 +702,10 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
 /**
  * Exportar vacaciones
  */
-function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
+function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $sql = "
         SELECT fm.*, 
                o.Nombre as operario_nombre, o.Nombre2 as operario_nombre2,
@@ -707,23 +717,23 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
         WHERE fm.tipo_falta = 'Vacaciones'
         AND fm.fecha_falta BETWEEN ? AND ?
     ";
-    
+
     $params = [$fechaDesde, $fechaHasta];
-    
+
     if (!empty($codSucursal) && $codSucursal !== 'todas') {
         $sql .= " AND fm.cod_sucursal = ?";
         $params[] = $codSucursal;
     }
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $vacaciones = $stmt->fetchAll();
-    
+
     // Configurar headers para descarga con rango de fechas
     $nombreArchivo = "vacaciones_{$fechaDesde}_a_{$fechaHasta}.xls";
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
-    
+
     echo '<table border="1">';
     echo '<tr>';
     // echo '<th>Código</th>';
@@ -737,7 +747,7 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
     echo '<th>Tipo</th>';
     echo '<th>Fecha Registro</th>'; // NUEVA COLUMNA
     echo '</tr>';
-    
+
     foreach ($vacaciones as $vacacion) {
         echo '<tr>';
         $nombreCompleto = obtenerNombreCompletoOperario([
@@ -746,10 +756,10 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
             'Apellido' => $vacacion['operario_apellido'],
             'Apellido2' => $vacacion['operario_apellido2'] ?? ''
         ]);
-        
+
         // COLUMNA PERSONA MODIFICADA: código contrato + nombre completo
         $persona = ($vacacion['cod_contrato'] ?? '') . ' ' . htmlspecialchars($nombreCompleto);
-        
+
         // FECHA REGISTRO CON AJUSTE DE -6 HORAS
         $fechaRegistro = '';
         if (!empty($vacacion['fecha_registro'])) {
@@ -757,7 +767,7 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
             $fechaObj->modify('-6 hours');
             $fechaRegistro = $fechaObj->format('Y-m-d');
         }
-        
+
         // echo '<td>' . $vacacion['cod_operario'] . '</td>';
         echo '<td>' . ($vacacion['cod_contrato'] ?? '') . '</td>'; // NUEVA COLUMNA
         echo '<td>' . $persona . '</td>';
@@ -771,7 +781,7 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
         echo '<td>' . $fechaRegistro . '</td>'; // NUEVA COLUMNA
         echo '</tr>';
     }
-    
+
     echo '</table>';
     exit;
 }
@@ -782,40 +792,40 @@ if (isset($_GET['exportar_excel'])) {
     $sucursalSeleccionada = $_GET['sucursal'] ?? null;
     $fechaDesde = $_GET['desde'] ?? $primerDiaMes;
     $fechaHasta = $_GET['hasta'] ?? $ultimoDiaMes;
-    
+
     // Determinar modo de vista basado en la selección de sucursal
     $modoVista = ($sucursalSeleccionada === 'todas') ? 'todas' : 'sucursal';
-    
+
     // Obtener los datos con los mismos filtros, excluyendo las de tipo "Pendiente"
     $faltasManuales = obtenerFaltasManuales(
         $sucursalSeleccionada, // Pasar el valor directamente
-        $fechaDesde, 
-        $fechaHasta, 
-        $esRH, 
+        $fechaDesde,
+        $fechaHasta,
+        $esRH,
         $modoVista,
         true // Nuevo parámetro para excluir pendientes
     );
-    
+
     // Obtener datos para calcular "Faltas Ejecutadas" (necesitamos los mismos datos que usa contabilidad)
     $faltasAutomaticas = obtenerFaltasAutomaticasParaContabilidad(
         ($modoVista === 'todas') ? null : $sucursalSeleccionada,
-        $fechaDesde, 
+        $fechaDesde,
         $fechaHasta
     );
-    
+
     $faltasReportadas = obtenerTodasFaltasManuales(
         ($modoVista === 'todas') ? null : $sucursalSeleccionada,
-        $fechaDesde, 
+        $fechaDesde,
         $fechaHasta
     );
-    
+
     // Calcular faltas por operario para obtener "Faltas Ejecutadas" - CORRECCIÓN
     $faltasPorOperario = [];
-    
+
     // Procesar faltas automáticas (todas son no justificadas inicialmente)
     foreach ($faltasAutomaticas as $fa) {
         $codOperario = $fa['cod_operario'];
-        
+
         if (!isset($faltasPorOperario[$codOperario])) {
             $faltasPorOperario[$codOperario] = [
                 'total_faltas' => 1,
@@ -826,11 +836,11 @@ if (isset($_GET['exportar_excel'])) {
             $faltasPorOperario[$codOperario]['total_faltas']++;
         }
     }
-    
+
     // Procesar faltas reportadas - SOLO CONTAR LAS DE TIPO "No_Pagado" COMO NO PAGADAS
     foreach ($faltasReportadas as $fr) {
         $codOperario = $fr['cod_operario'];
-        
+
         if (!isset($faltasPorOperario[$codOperario])) {
             $faltasPorOperario[$codOperario] = [
                 'total_faltas' => 0,
@@ -838,7 +848,7 @@ if (isset($_GET['exportar_excel'])) {
                 'total_faltas_justificadas' => 0
             ];
         }
-        
+
         // SOLO LAS FALTAS "No_Pagado" CUENTAN COMO NO PAGADAS
         if ($fr['tipo_falta'] === 'No_Pagado') {
             $faltasPorOperario[$codOperario]['total_faltas_no_pagadas']++;
@@ -847,12 +857,12 @@ if (isset($_GET['exportar_excel'])) {
             $faltasPorOperario[$codOperario]['total_faltas_justificadas']++;
         }
     }
-    
+
     // Configurar headers para descarga de archivo Excel con rango de fechas
     $nombreArchivo = "faltas_manuales_{$fechaDesde}_a_{$fechaHasta}.xls";
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
-    
+
     // Iniciar salida
     echo '<table border="1">';
     echo '<tr>';
@@ -873,20 +883,20 @@ if (isset($_GET['exportar_excel'])) {
     echo '<th>Faltas Justificadas</th>'; // NUEVA COLUMNA
     echo '<th>Faltas Ejecutadas</th>'; // NUEVA COLUMNA - CALCULADA CORRECTAMENTE
     echo '</tr>';
-    
+
     foreach ($faltasManuales as $falta) {
         $codOperario = $falta['cod_operario'];
         $faltasEjecutadas = 0;
         $totalFaltasAuto = 0;
         $totalNoPagadas = 0;
         $totalJustificadas = 0;
-        
+
         // Obtener los totales para este operario
         if (isset($faltasPorOperario[$codOperario])) {
             $totalFaltasAuto = $faltasPorOperario[$codOperario]['total_faltas'];
             $totalNoPagadas = $faltasPorOperario[$codOperario]['total_faltas_no_pagadas'];
             $totalJustificadas = $faltasPorOperario[$codOperario]['total_faltas_justificadas'];
-            
+
             // CALCULAR FALTAS EJECUTADAS CON LA MISMA FÓRMULA QUE CONTABILIDAD
             // Faltas Ejecutadas = Total Faltas Automáticas - Faltas Justificadas
             $faltasEjecutadas = $totalFaltasAuto - $totalJustificadas;
@@ -894,7 +904,7 @@ if (isset($_GET['exportar_excel'])) {
                 $faltasEjecutadas = 0;
             }
         }
-        
+
         echo '<tr>';
         $nombreCompleto = obtenerNombreCompletoOperario([
             'Nombre' => $falta['operario_nombre'],
@@ -902,18 +912,18 @@ if (isset($_GET['exportar_excel'])) {
             'Apellido' => $falta['operario_apellido'],
             'Apellido2' => $falta['operario_apellido2'] ?? ''
         ]);
-        
+
         // echo '<td>' . $falta['cod_operario'] . '</td>';
         echo '<td>' . ($falta['cod_contrato'] ?? '') . '</td>';  // NUEVA COLUMNA
-        
+
         echo '<td>' . htmlspecialchars($nombreCompleto) . '</td>';
-        
+
         echo '<td>' . htmlspecialchars($falta['sucursal_nombre']) . '</td>';
         echo '<td>' . formatoFechaCorta($falta['fecha_falta']) . '</td>';
         echo '<td>1</td>'; // NUEVA COLUMNA - SIEMPRE 1
         echo '<td>' . str_replace(
-            ['_', 'No_Pagado', 'Pendiente', 'Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Compensacion_feria', 'Compensacion_dia_trabajado', 'Cuido_materno'], 
-            [' ', 'No Pagado', 'Pendiente', 'Subsidio (3 días)', 'Subsidio INSS', 'Subsidio maternidad', 'Reposo (3 días)', 'Compensación feria', 'Compensación día trabajado', 'Cuido materno'], 
+            ['_', 'No_Pagado', 'Pendiente', 'Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Compensacion_feria', 'Compensacion_dia_trabajado', 'Cuido_materno'],
+            [' ', 'No Pagado', 'Pendiente', 'Subsidio (3 días)', 'Subsidio INSS', 'Subsidio maternidad', 'Reposo (3 días)', 'Compensación feria', 'Compensación día trabajado', 'Cuido materno'],
             $falta['tipo_falta']
         ) . '</td>';
         // echo '<td></td>'; // % Salario a Pagar - VACÍO
@@ -929,7 +939,7 @@ if (isset($_GET['exportar_excel'])) {
         echo '<td>' . $faltasEjecutadas . '</td>'; // FALTAS EJECUTADAS CALCULADAS CORRECTAMENTE
         echo '</tr>';
     }
-    
+
     echo '</table>';
     exit;
 }
@@ -970,8 +980,10 @@ $fechaDesde = $_GET['desde'] ?? $primerDiaMes;
 $fechaHasta = $_GET['hasta'] ?? $ultimoDiaMes;
 
 // Validar que las fechas no estén vacías
-if (empty($fechaDesde)) $fechaDesde = $primerDiaMes;
-if (empty($fechaHasta)) $fechaHasta = $ultimoDiaMes;
+if (empty($fechaDesde))
+    $fechaDesde = $primerDiaMes;
+if (empty($fechaHasta))
+    $fechaHasta = $ultimoDiaMes;
 
 // Obtener operario seleccionado
 $operarioSeleccionado = isset($_GET['operario']) ? intval($_GET['operario']) : 0;
@@ -986,12 +998,12 @@ $modoVista = ($sucursalSeleccionada === 'todas') ? 'todas' : 'sucursal';
 $faltasManuales = [];
 if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHasta) {
     $faltasManuales = obtenerFaltasManuales(
-        ($modoVista === 'todas') ? null : $sucursalSeleccionada, 
-        $fechaDesde, 
-        $fechaHasta, 
-        $esRH, 
+        ($modoVista === 'todas') ? null : $sucursalSeleccionada,
+        $fechaDesde,
+        $fechaHasta,
+        $esRH,
         $modoVista,
-        false, 
+        false,
         $operarioSeleccionado
     );
 }
@@ -1000,9 +1012,10 @@ if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHa
  * Función para obtener operarios para el filtro
  * MODIFICADA: Filtra por fecha de liquidación en lugar de Operativo
  */
-function obtenerOperariosFiltro() {
+function obtenerOperariosFiltro()
+{
     global $conn;
-    
+
     $sql = "SELECT o.CodOperario, 
                    CONCAT(
                        IFNULL(o.Nombre, ''), ' ', 
@@ -1034,15 +1047,16 @@ function obtenerOperariosFiltro() {
             )
             GROUP BY o.CodOperario
             ORDER BY nombre_completo";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute();
-    
+
     return $stmt->fetchAll();
 }
 
 //Recortar texto
-function recortarTexto($texto, $longitud = 50) {
+function recortarTexto($texto, $longitud = 50)
+{
     if (strlen($texto) <= $longitud) {
         return $texto;
     }
@@ -1050,11 +1064,12 @@ function recortarTexto($texto, $longitud = 50) {
 }
 
 // Funciones específicas para faltas manuales
-function obtenerFaltasManuales($codSucursal, $fechaDesde, $fechaHasta, $esRH = false, $modoVista = 'sucursal', $excluirPendientes = false, $operarioId = 0) {
+function obtenerFaltasManuales($codSucursal, $fechaDesde, $fechaHasta, $esRH = false, $modoVista = 'sucursal', $excluirPendientes = false, $operarioId = 0)
+{
     global $conn;
-    
+
     error_log("Intentando obtener faltas manuales para sucursal: $codSucursal, desde: $fechaDesde, hasta: $fechaHasta, operario: $operarioId");
-    
+
     try {
         $sql = "
             SELECT fm.*, 
@@ -1088,46 +1103,46 @@ function obtenerFaltasManuales($codSucursal, $fechaDesde, $fechaHasta, $esRH = f
             ) c ON fm.cod_operario = c.cod_operario
             WHERE fm.fecha_falta BETWEEN ? AND ?
         ";
-        
+
         $params = [$fechaDesde, $fechaHasta];
-        
+
         if ($modoVista !== 'todas' && !empty($codSucursal) && $codSucursal !== 'todas') {
             $sql .= " AND fm.cod_sucursal = ?";
             $params[] = $codSucursal;
         }
-        
+
         if ($operarioId > 0) {
             $sql .= " AND fm.cod_operario = ?";
             $params[] = $operarioId;
         }
-        
+
         if ($excluirPendientes) {
             $sql .= " AND fm.tipo_falta != 'Pendiente'";
         }
-        
+
         // NUEVO FILTRO: Excluir faltas posteriores a fecha de liquidación
         $sql .= " AND (
             c.fecha_liquidacion IS NULL 
             OR c.fecha_liquidacion = '0000-00-00'
             OR fm.fecha_falta <= c.fecha_liquidacion
         )";
-        
+
         $sql .= " ORDER BY fm.fecha_falta DESC, o.Nombre, o.Apellido";
-        
+
         $stmt = $conn->prepare($sql);
-        
+
         if (!$stmt) {
             error_log("Error al preparar la consulta: " . implode(" ", $conn->errorInfo()));
             return [];
         }
-        
+
         if (!$stmt->execute($params)) {
             error_log("Error al ejecutar la consulta: " . implode(" ", $stmt->errorInfo()));
             return [];
         }
-        
+
         $resultados = $stmt->fetchAll();
-        
+
         foreach ($resultados as &$falta) {
             $horarios = obtenerHorarioProgramadoMarcado(
                 $falta['cod_operario'],
@@ -1136,7 +1151,7 @@ function obtenerFaltasManuales($codSucursal, $fechaDesde, $fechaHasta, $esRH = f
             );
             $falta['horarios'] = $horarios;
         }
-        
+
         error_log("Faltas manuales encontradas: " . count($resultados));
         return $resultados;
     } catch (PDOException $e) {
@@ -1145,22 +1160,23 @@ function obtenerFaltasManuales($codSucursal, $fechaDesde, $fechaHasta, $esRH = f
     }
 }
 
-function procesarRegistroFaltaManual() {
+function procesarRegistroFaltaManual()
+{
     global $conn, $esLider, $esRH;
-    
+
     // Permitir tanto a líderes como a RH registrar faltas
     if (!$esLider && !$esRH) {
         $_SESSION['error'] = 'Solo los líderes y RH pueden registrar nuevas faltas manuales';
         header('Location: faltas_manual.php');
         exit();
     }
-    
+
     try {
-        $codOperario = (int)$_POST['cod_operario'];
+        $codOperario = (int) $_POST['cod_operario'];
         $fechaFalta = $_POST['fecha_falta'];
         $codSucursal = $_POST['cod_sucursal'];
         $observaciones = $_POST['observaciones'] ?? '';
-        
+
         // OBTENER EL ÚLTIMO CÓDIGO DE CONTRATO - CONSULTA DIRECTA
         $codContrato = null;
         $stmt_contrato = $conn->prepare("
@@ -1175,27 +1191,27 @@ function procesarRegistroFaltaManual() {
         if ($contrato) {
             $codContrato = $contrato['CodContrato'];
         }
-        
+
         // VALIDACIÓN: No permitir fechas futuras ni la fecha actual
         $fechaActual = date('Y-m-d');
         $fechaMaximaPermitida = date('Y-m-d', strtotime('-1 day'));
-        
+
         if ($fechaFalta > $fechaMaximaPermitida) {
             throw new Exception('No se pueden registrar faltas para fechas futuras ni para el día actual. Solo se permiten fechas hasta: ' . formatoFechaCorta($fechaMaximaPermitida));
         }
-        
+
         // VALIDACIÓN MEJORADA: Verificar si realmente hubo falta (no hay NINGUNA marcación)
         // EXCEPCIÓN: Para sucursales 6 y 18, RRHH puede registrar sin validación de horario
         $esSucursalEspecial = in_array($codSucursal, ['6', '18']);
         $esRH = verificarAccesoCargo([13, 39, 30, 37, 28]); // Código 13 es RRHH
-        
+
         if (!$esSucursalEspecial || !$esRH) {
             // Solo validar horario si NO es sucursal especial O NO es RRHH
             if (!verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)) {
                 throw new Exception('No se puede registrar falta: El colaborador tiene marcaciones registradas para esta fecha (entrada o salida) o no tenía horario programado activo');
             }
         }
-        
+
         // VALIDACIÓN MEJORADA: Verificar si ya existe una falta para este operario en esta fecha
         $stmt = $conn->prepare("
             SELECT id, tipo_falta FROM faltas_manual 
@@ -1203,89 +1219,93 @@ function procesarRegistroFaltaManual() {
             LIMIT 1
         ");
         $stmt->execute([$codOperario, $fechaFalta]);
-        
+
         if ($faltaExistente = $stmt->fetch()) {
             $tipo = $faltaExistente['tipo_falta'];
             $tipoTexto = str_replace(
-                ['_', 'No_Pagado', 'Pendiente', 'Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Compensacion_feria', 'Compensacion_dia_trabajado', 'Cuido_materno'], 
-                [' ', 'No Pagado', 'Pendiente', 'Subsidio (3 días)', 'Subsidio INSS', 'Subsidio maternidad', 'Reposo (3 días)', 'Compensación feria', 'Compensación día trabajado', 'Cuido materno'], 
+                ['_', 'No_Pagado', 'Pendiente', 'Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Compensacion_feria', 'Compensacion_dia_trabajado', 'Cuido_materno'],
+                [' ', 'No Pagado', 'Pendiente', 'Subsidio (3 días)', 'Subsidio INSS', 'Subsidio maternidad', 'Reposo (3 días)', 'Compensación feria', 'Compensación día trabajado', 'Cuido materno'],
                 $tipo
             );
-            
+
             $_SESSION['error'] = "Ya existe un registro de falta para este colaborador en la fecha seleccionada (Tipo: $tipoTexto).";
-            
+
             // Conservar todos los filtros en la redirección
             $params = [];
-            if (isset($_GET['sucursal'])) $params['sucursal'] = $_GET['sucursal'];
-            if (isset($_GET['desde'])) $params['desde'] = $_GET['desde'];
-            if (isset($_GET['hasta'])) $params['hasta'] = $_GET['hasta'];
-            if (isset($_GET['operario']) && $_GET['operario'] != 0) $params['operario'] = $_GET['operario'];
-            
+            if (isset($_GET['sucursal']))
+                $params['sucursal'] = $_GET['sucursal'];
+            if (isset($_GET['desde']))
+                $params['desde'] = $_GET['desde'];
+            if (isset($_GET['hasta']))
+                $params['hasta'] = $_GET['hasta'];
+            if (isset($_GET['operario']) && $_GET['operario'] != 0)
+                $params['operario'] = $_GET['operario'];
+
             header('Location: faltas_manual.php?' . http_build_query($params));
             exit();
         }
-        
+
         // Validar que se haya subido una foto
         if (!isset($_FILES['foto_falta'])) {
             throw new Exception('Debe subir una foto como evidencia');
         }
-        
+
         $foto = $_FILES['foto_falta'];
-        
+
         // Validar el archivo subido
         if ($foto['error'] !== UPLOAD_ERR_OK) {
             throw new Exception('Error al subir la foto: ' . $foto['error']);
         }
-        
+
         // Validar tamaño (máximo 5MB)
         if ($foto['size'] > 5 * 1024 * 1024) {
             throw new Exception('La foto no debe exceder los 5MB');
         }
-        
+
         // Validar tipo de archivo
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
         if (!in_array($foto['type'], $allowedTypes)) {
             throw new Exception('Solo se permiten imágenes JPEG, PNG o GIF');
         }
-        
+
         // Determinar el tipo de falta según el cargo
         if ($esRH) {
             $tipoFalta = $_POST['tipo_falta'] ?? 'No_Pagado';
         } else {
             $tipoFalta = 'Pendiente'; // Líderes registran como Pendiente
         }
-        
+
         $porcentajePago = obtenerPorcentajePagoTipoFalta($tipoFalta);
-        
+
         // Crear nombre único para el archivo
         $extension = pathinfo($foto['name'], PATHINFO_EXTENSION);
         $nombreFoto = 'falta_' . $codOperario . '_' . date('YmdHis') . '.' . $extension;
-        
+
         // Ruta relativa para la base de datos
         $rutaRelativa = '/uploads/faltas_manual/' . $nombreFoto;
-        
+
         // Ruta absoluta para guardar el archivo
         $uploadDir = __DIR__ . '/../../uploads/faltas_manual/';
-        
+
         // Crear directorio si no existe
         if (!file_exists($uploadDir)) {
             if (!mkdir($uploadDir, 0755, true)) {
                 throw new Exception('No se pudo crear el directorio de uploads');
             }
         }
-        
+
         // Verificar que el directorio es escribible
         if (!is_writable($uploadDir)) {
             throw new Exception('El directorio de uploads no tiene permisos de escritura');
         }
-        
+
         $rutaCompleta = $uploadDir . $nombreFoto;
-        
+
         // Mover el archivo subido
         if (!move_uploaded_file($foto['tmp_name'], $rutaCompleta)) {
             throw new Exception('Error al guardar la foto en el servidor. Verifique permisos.');
         }
-        
+
         // Insertar nuevo registro con la ruta relativa
         $stmt = $conn->prepare("
             INSERT INTO faltas_manual (
@@ -1294,17 +1314,17 @@ function procesarRegistroFaltaManual() {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
-            $codOperario, 
-            $fechaFalta, 
-            $codSucursal, 
-            $tipoFalta, 
+            $codOperario,
+            $fechaFalta,
+            $codSucursal,
+            $tipoFalta,
             $observaciones,
             $rutaRelativa, // Usamos la ruta relativa para la BD
             $_SESSION['usuario_id'],
             $codContrato,
             $porcentajePago
         ]);
-        
+
         $_SESSION['exito'] = 'Falta manual registrada correctamente';
     } catch (Exception $e) {
         // Eliminar la foto si hubo un error después de subirla
@@ -1314,39 +1334,44 @@ function procesarRegistroFaltaManual() {
         $_SESSION['error'] = 'Error al registrar la falta manual: ' . $e->getMessage();
         error_log('Error en procesarRegistroFaltaManual: ' . $e->getMessage());
     }
-    
+
     $params = [];
-    if (isset($_GET['sucursal'])) $params['sucursal'] = $_GET['sucursal'];
-    if (isset($_GET['desde'])) $params['desde'] = $_GET['desde'];
-    if (isset($_GET['hasta'])) $params['hasta'] = $_GET['hasta'];
-    if (isset($_GET['operario']) && $_GET['operario'] != 0) $params['operario'] = $_GET['operario'];
-    
+    if (isset($_GET['sucursal']))
+        $params['sucursal'] = $_GET['sucursal'];
+    if (isset($_GET['desde']))
+        $params['desde'] = $_GET['desde'];
+    if (isset($_GET['hasta']))
+        $params['hasta'] = $_GET['hasta'];
+    if (isset($_GET['operario']) && $_GET['operario'] != 0)
+        $params['operario'] = $_GET['operario'];
+
     header('Location: faltas_manual.php?' . http_build_query($params));
     exit();
 }
 
 // Función para obtener el total de faltas automáticas
-function obtenerTotalFaltasAutomaticas($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerTotalFaltasAutomaticas($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     // 1. Obtener todos los operarios asignados a la sucursal en el rango de fechas
     $operarios = obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta);
     $totalFaltas = 0;
-    
+
     foreach ($operarios as $operario) {
         // 2. Para cada operario, verificar días laborables en el rango
         $diasLaborables = obtenerDiasLaborablesOperario($operario['CodOperario'], $codSucursal, $fechaDesde, $fechaHasta);
-        
+
         foreach ($diasLaborables as $dia) {
             // 3. Verificar si hay marcación de entrada para ese día
             $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha']);
-            
+
             if (!$marcacion) {
                 $totalFaltas++;
             }
         }
     }
-    
+
     return $totalFaltas;
 }
 
@@ -1354,9 +1379,10 @@ function obtenerTotalFaltasAutomaticas($codSucursal, $fechaDesde, $fechaHasta) {
  * Función auxiliar para obtener operarios de sucursal en rango de fechas
  * MODIFICADA: Filtra por fecha de liquidación
  */
-function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT DISTINCT o.CodOperario, o.Nombre, o.Apellido, o.Apellido2,
                s.nombre as sucursal_nombre,
@@ -1391,7 +1417,7 @@ function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta)
         )
         ORDER BY o.Nombre, o.Apellido
     ");
-    
+
     // CORRECCIÓN: Pasar todos los parámetros necesarios
     $stmt->execute([
         $codSucursal,    // Para anc.Sucursal = ?
@@ -1399,14 +1425,15 @@ function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta)
         $fechaHasta,     // Para anc.Fecha <= ?
         $fechaDesde      // Para cargo 27 anc.Fin >= ?
     ]);
-    
+
     return $stmt->fetchAll();
 }
 
 // Función auxiliar para obtener días laborables de un operario
-function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     // Obtener todas las semanas que cubren el rango de fechas
     $stmt = $conn->prepare("
         SELECT * FROM SemanasSistema 
@@ -1414,9 +1441,9 @@ function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, 
     ");
     $stmt->execute([$fechaHasta, $fechaDesde]);
     $semanas = $stmt->fetchAll();
-    
+
     $diasLaborables = [];
-    
+
     foreach ($semanas as $semana) {
         // Obtener horario programado para esta semana
         $stmt = $conn->prepare("
@@ -1428,23 +1455,28 @@ function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, 
         ");
         $stmt->execute([$codOperario, $codSucursal, $semana['id']]);
         $horario = $stmt->fetch();
-        
+
         if ($horario) {
             // Verificar cada día de la semana
             $dias = [
-                'lunes' => 1, 'martes' => 2, 'miercoles' => 3, 
-                'jueves' => 4, 'viernes' => 5, 'sabado' => 6, 'domingo' => 7
+                'lunes' => 1,
+                'martes' => 2,
+                'miercoles' => 3,
+                'jueves' => 4,
+                'viernes' => 5,
+                'sabado' => 6,
+                'domingo' => 7
             ];
-            
+
             foreach ($dias as $dia => $diaNumero) {
                 $columnaEstado = $dia . '_estado';
                 $columnaEntrada = $dia . '_entrada';
                 $columnaSalida = $dia . '_salida';
-                
+
                 if ($horario[$columnaEstado] === 'Activo' && $horario[$columnaEntrada] !== null) {
                     // Calcular fecha del día específico
                     $fechaDia = date('Y-m-d', strtotime($semana['fecha_inicio'] . ' + ' . ($diaNumero - 1) . ' days'));
-                    
+
                     // Verificar si la fecha está dentro del rango solicitado
                     if ($fechaDia >= $fechaDesde && $fechaDia <= $fechaHasta) {
                         $diasLaborables[] = [
@@ -1458,14 +1490,15 @@ function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, 
             }
         }
     }
-    
+
     return $diasLaborables;
 }
 
 // Función auxiliar para verificar marcación de entrada
-function obtenerMarcacionEntrada($codOperario, $fecha) {
+function obtenerMarcacionEntrada($codOperario, $fecha)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT * FROM marcaciones 
         WHERE CodOperario = ? 
@@ -1478,9 +1511,10 @@ function obtenerMarcacionEntrada($codOperario, $fecha) {
 }
 
 // Función para obtener el total de faltas manuales registradas
-function obtenerTotalFaltasManuales($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerTotalFaltasManuales($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT COUNT(*) as total 
         FROM faltas_manual 
@@ -1489,7 +1523,7 @@ function obtenerTotalFaltasManuales($codSucursal, $fechaDesde, $fechaHasta) {
     ");
     $stmt->execute([$codSucursal, $fechaDesde, $fechaHasta]);
     $result = $stmt->fetch();
-    
+
     return $result['total'] ?? 0;
 }
 
@@ -1503,7 +1537,7 @@ if ($sucursalSeleccionada || ($esRH && ($modoVista ?? 'sucursal') === 'todas')) 
         // Modo "todas" - sumar todas las sucursales
         $totalFaltasAuto = 0;
         $totalFaltasManualesRegistradas = 0;
-        
+
         foreach ($sucursales as $suc) {
             $totalFaltasAuto += obtenerTotalFaltasAutomaticas($suc['codigo'], $fechaDesde, $fechaHasta);
             $totalFaltasManualesRegistradas += obtenerTotalFaltasManuales($suc['codigo'], $fechaDesde, $fechaHasta);
@@ -1513,18 +1547,20 @@ if ($sucursalSeleccionada || ($esRH && ($modoVista ?? 'sucursal') === 'todas')) 
         $totalFaltasAuto = obtenerTotalFaltasAutomaticas($sucursalSeleccionada, $fechaDesde, $fechaHasta);
         $totalFaltasManualesRegistradas = obtenerTotalFaltasManuales($sucursalSeleccionada, $fechaDesde, $fechaHasta);
     }
-    
+
     $faltasPendientes = $totalFaltasAuto - $totalFaltasManualesRegistradas;
-    if ($faltasPendientes < 0) $faltasPendientes = 0; // Por si hay más manuales que automáticas
+    if ($faltasPendientes < 0)
+        $faltasPendientes = 0; // Por si hay más manuales que automáticas
 }
 
 /**
  * Verifica si realmente hubo una falta (no hay NINGUNA marcación - ni entrada ni salida)
  * y el día tenía un estado de horario permitido
  */
-function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
+function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
+{
     global $conn;
-    
+
     // 1. Verificar si hay CUALQUIER marcación (entrada O salida) para ese día
     $stmt = $conn->prepare("
         SELECT COUNT(*) as total_marcaciones,
@@ -1538,20 +1574,20 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
     ");
     $stmt->execute([$codOperario, $codSucursal, $fechaFalta]);
     $result = $stmt->fetch();
-    
+
     // Si hay ALGUNA marcación (entrada O salida), NO es una falta real
     if ($result && $result['total_marcaciones'] > 0) {
         error_log("No se puede registrar falta: Operario $codOperario tiene marcaciones en $fechaFalta - Entrada: " . ($result['tiene_entrada'] ? 'SÍ' : 'NO') . ", Salida: " . ($result['tiene_salida'] ? 'SÍ' : 'NO'));
         return false;
     }
-    
+
     // 2. Verificar si el operario tenía horario programado para ese día
     $diaSemana = date('N', strtotime($fechaFalta)); // 1=lunes, 7=domingo
-    
+
     // Mapear a los nombres de columna
     $dias = [
         1 => 'lunes',
-        2 => 'martes', 
+        2 => 'martes',
         3 => 'miercoles',
         4 => 'jueves',
         5 => 'viernes',
@@ -1559,7 +1595,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
         7 => 'domingo'
     ];
     $diaColumna = $dias[$diaSemana];
-    
+
     // Obtener el horario programado para ese día
     $stmt = $conn->prepare("
         SELECT 
@@ -1575,16 +1611,16 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
     ");
     $stmt->execute([$codOperario, $codSucursal, $fechaFalta]);
     $horario = $stmt->fetch();
-    
+
     // MODIFICADO: Definir estados permitidos para registro de faltas
     $estadosPermitidos = ['Activo', 'Otra.Tienda', 'Subsidio', 'Vacaciones'];
-    
+
     // Si no hay horario programado o el día no estaba en estados permitidos, no es una falta real
     if (!$horario || !in_array($horario['estado'], $estadosPermitidos)) {
         error_log("No se puede registrar falta: Operario $codOperario no tenía horario programado con estado permitido para $fechaFalta. Estado actual: " . ($horario['estado'] ?? 'No hay horario'));
         return false;
     }
-    
+
     // 3. Si no hay NINGUNA marcación Y tenía horario programado con estado permitido, entonces es una falta real
     error_log("FALTA REAL CONFIRMADA: Operario $codOperario - Fecha: $fechaFalta - Sin marcaciones y con horario en estado permitido: " . $horario['estado']);
     return true;
@@ -1592,6 +1628,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -1609,52 +1646,54 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(11px, 2vw, 16px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             padding: 0;
             margin: 0;
         }
-        
+
         .container {
             max-width: 100%;
             margin: 0 auto;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 10px;
         }
-        
+
         .title {
             color: #0E544C;
             font-size: 1.5rem !important;
         }
-        
+
         .filters {
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
-        
+
         .filter-group {
             display: flex;
             flex-direction: column;
             min-width: 200px;
         }
-        
+
         label {
             margin-bottom: 5px;
             font-weight: bold;
             color: #0E544C;
         }
-        
-        select, input, button {
+
+        select,
+        input,
+        button {
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
+
         .btn {
             padding: 8px 15px;
             background-color: #51B8AC;
@@ -1664,85 +1703,86 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        
+
         .btn:hover {
             background-color: #0E544C;
         }
-        
+
         .btn-secondary {
             background-color: #6c757d;
         }
-        
+
         .btn-secondary:hover {
             background-color: #5a6268;
         }
-        
+
         .btn-success {
             background-color: #28a745;
         }
-        
+
         .btn-success:hover {
             background-color: #218838;
         }
-        
+
         .btn-danger {
             background-color: #dc3545;
         }
-        
+
         .btn-danger:hover {
             background-color: #c82333;
         }
-        
+
         .btn-primary {
             background-color: #007bff;
         }
-        
+
         .btn-primary:hover {
             background-color: #0069d9;
         }
-        
+
         .btn-info {
             background-color: #17a2b8;
         }
-        
+
         .btn-info:hover {
             background-color: #138496;
         }
-        
+
         /* Estilos para el botón de foto en la tabla */
-.btn-foto {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 4px;
-    transition: background-color 0.3s;
-}
+        .btn-foto {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
 
-.btn-foto:hover {
-    background-color: #f0f0f0;
-}
+        .btn-foto:hover {
+            background-color: #f0f0f0;
+        }
 
-.btn-foto i {
-    transition: color 0.3s;
-}
+        .btn-foto i {
+            transition: color 0.3s;
+        }
 
-.btn-foto:hover i {
-    color: #0E544C !important;
-}
-        
+        .btn-foto:hover i {
+            color: #0E544C !important;
+        }
+
         .table-container {
             overflow-x: auto;
             margin-top: 20px;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
         }
 
-        th, td {
+        th,
+        td {
             padding: 8px;
             text-align: left;
             border: 1px solid #ddd;
@@ -1754,11 +1794,11 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
             color: white;
             text-align: center;
         }
-        
+
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-        
+
         .status-dias_mas_septimo {
             color: #155724;
             background-color: #d4edda;
@@ -1767,7 +1807,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
             text-align: center;
             font-weight: bold;
         }
-        
+
         .status-no_pagado {
             color: #721c24;
             background-color: #f8d7da;
@@ -1776,28 +1816,28 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
             text-align: center;
             font-weight: bold;
         }
-        
+
         .alert {
             padding: 10px;
             margin-bottom: 15px;
             border-radius: 4px;
         }
-        
+
         .alert-success {
             background-color: #d4edda;
             color: #155724;
         }
-        
+
         .alert-danger {
             background-color: #f8d7da;
             color: #721c24;
         }
-        
+
         .alert-info {
             background-color: #d1ecf1;
             color: #0c5460;
         }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -1805,28 +1845,35 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             justify-content: center;
-            align-items: flex-start; /* Cambiado de center a flex-start */
+            align-items: flex-start;
+            /* Cambiado de center a flex-start */
             padding: 20px;
-            overflow-y: auto; /* Permitir scroll en el contenedor modal */
+            overflow-y: auto;
+            /* Permitir scroll en el contenedor modal */
         }
-        
+
         .modal-content {
             background: white;
             padding: 20px;
             border-radius: 8px;
-            max-width: 90%; /* Ancho máximo responsive */
+            max-width: 90%;
+            /* Ancho máximo responsive */
             width: 100%;
-            max-width: 600px; /* Máximo ancho para pantallas grandes */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            margin: 20px auto; /* Centrado con margen */
-            max-height: 90vh; /* Altura máxima del 90% del viewport */
-            overflow-y: auto; /* Scroll interno si es necesario */
+            max-width: 600px;
+            /* Máximo ancho para pantallas grandes */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+            /* Centrado con margen */
+            max-height: 90vh;
+            /* Altura máxima del 90% del viewport */
+            overflow-y: auto;
+            /* Scroll interno si es necesario */
             position: relative;
         }
-        
+
         /* Header del modal fijo */
         .modal-header {
             display: flex;
@@ -1841,13 +1888,13 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
             z-index: 10;
             border-radius: 8px 8px 0 0;
         }
-        
+
         .modal-title {
             color: #0E544C;
             font-size: 1.2rem !important;
             font-weight: bold;
         }
-        
+
         .modal-close {
             background: none;
             border: none;
@@ -1855,40 +1902,44 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
             cursor: pointer;
             color: #666;
         }
-        
+
         .modal-body {
             margin-bottom: 15px;
-            max-height: calc(90vh - 150px); /* Altura máxima calculada */
-            overflow-y: auto; /* Scroll interno */
+            max-height: calc(90vh - 150px);
+            /* Altura máxima calculada */
+            overflow-y: auto;
+            /* Scroll interno */
         }
-        
+
         /* Mejorar la visualización de los formularios dentro del modal */
         .modal-body .form-group {
             margin-bottom: 15px;
         }
-        
+
         .modal-body .form-label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
             color: #0E544C;
         }
-        
-        .modal-body .form-select, 
-        .modal-body .form-textarea, 
+
+        .modal-body .form-select,
+        .modal-body .form-textarea,
         .modal-body .form-input {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            box-sizing: border-box; /* Incluir padding en el ancho */
+            box-sizing: border-box;
+            /* Incluir padding en el ancho */
         }
-        
+
         .modal-body .form-textarea {
             min-height: 80px;
-            resize: vertical; /* Permitir redimensionamiento vertical */
+            resize: vertical;
+            /* Permitir redimensionamiento vertical */
         }
-        
+
         /* Footer del modal */
         .modal-footer {
             display: flex;
@@ -1902,296 +1953,313 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
             z-index: 10;
             border-radius: 0 0 8px 8px;
         }
-        
+
         /* Mejorar el scroll */
         .modal-content::-webkit-scrollbar {
             width: 8px;
         }
-        
+
         .modal-content::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 4px;
         }
-        
+
         .modal-content::-webkit-scrollbar-thumb {
             background: #c1c1c1;
             border-radius: 4px;
         }
-        
+
         .modal-content::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
-        
+
         .info-group {
             margin-bottom: 10px;
         }
-        
+
         .info-label {
             font-weight: bold;
             color: #0E544C;
         }
-        
+
         .info-value {
             margin-left: 10px;
         }
-        
+
         .form-group {
             margin-bottom: 15px;
         }
-        
+
         .form-label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
             color: #0E544C;
         }
-        
-        .form-select, .form-textarea, .form-input {
+
+        .form-select,
+        .form-textarea,
+        .form-input {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
+
         .form-textarea {
             min-height: 80px;
         }
-        
+
         .no-results {
             text-align: center;
             padding: 20px;
             color: #666;
         }
-        
+
         .action-buttons {
             display: flex;
             justify-content: space-between;
             margin-bottom: 15px;
         }
-        
-/* Mejorar visibilidad de DataTables en móvil */
-@media (max-width: 768px) {
-    .dataTables_wrapper .dataTables_length,
-    .dataTables_wrapper .dataTables_filter,
-    .dataTables_wrapper .dataTables_info,
-    .dataTables_wrapper .dataTables_paginate {
-        font-size: 11px !important;
-        padding: 5px !important;
-    }
-    
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-        padding: 3px 6px !important;
-        margin: 0 1px !important;
-        font-size: 11px !important;
-    }
-    
-    .dataTables_wrapper .dataTables_length select {
-        padding: 3px !important;
-        font-size: 11px !important;
-    }
-}
 
-/* Mejorar los horarios en móvil */
-@media (max-width: 768px) {
-    .horario-programado,
-    .horario-marcado {
-        margin-bottom: 5px;
-        padding-bottom: 3px;
-        border-bottom: 1px dashed #eee;
-    }
-    
-    small.horario-label {
-        font-weight: bold;
-        color: #666;
-        display: inline-block;
-        min-width: 50px;
-        font-size: 9px !important;
-    }
-    
-    .diferencia-entrada,
-    .diferencia-salida,
-    .diferencia-exacta {
-        font-size: 9px !important;
-        display: block;
-        margin-top: 2px;
-    }
-}
+        /* Mejorar visibilidad de DataTables en móvil */
+        @media (max-width: 768px) {
 
-/* Asegurar que los badges no se monten */
-.status-badge {
-    display: inline-block;
-    margin: 2px 0;
-    line-height: 1.3;
-    vertical-align: middle;
-}
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_info,
+            .dataTables_wrapper .dataTables_paginate {
+                font-size: 11px !important;
+                padding: 5px !important;
+            }
 
-/* Forzar línea para observaciones largas */
-td:nth-child(6) { /* Columna observaciones */
-    word-break: break-word;
-    max-width: 150px;
-    min-width: 100px;
-}
-        
+            .dataTables_wrapper .dataTables_paginate .paginate_button {
+                padding: 3px 6px !important;
+                margin: 0 1px !important;
+                font-size: 11px !important;
+            }
+
+            .dataTables_wrapper .dataTables_length select {
+                padding: 3px !important;
+                font-size: 11px !important;
+            }
+        }
+
+        /* Mejorar los horarios en móvil */
+        @media (max-width: 768px) {
+
+            .horario-programado,
+            .horario-marcado {
+                margin-bottom: 5px;
+                padding-bottom: 3px;
+                border-bottom: 1px dashed #eee;
+            }
+
+            small.horario-label {
+                font-weight: bold;
+                color: #666;
+                display: inline-block;
+                min-width: 50px;
+                font-size: 9px !important;
+            }
+
+            .diferencia-entrada,
+            .diferencia-salida,
+            .diferencia-exacta {
+                font-size: 9px !important;
+                display: block;
+                margin-top: 2px;
+            }
+        }
+
+        /* Asegurar que los badges no se monten */
+        .status-badge {
+            display: inline-block;
+            margin: 2px 0;
+            line-height: 1.3;
+            vertical-align: middle;
+        }
+
+        /* Forzar línea para observaciones largas */
+        td:nth-child(6) {
+            /* Columna observaciones */
+            word-break: break-word;
+            max-width: 150px;
+            min-width: 100px;
+        }
+
         /* RESPONSIVE PARA MÓVIL */
-@media (max-width: 768px) {
-    /* Filtros responsive */
-    .filtros-container {
-        padding: 10px;
-        margin-bottom: 15px;
-    }
-    
-    .filtros-form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .filtro-group {
-        width: 100%;
-    }
-    
-    .filtro-buttons {
-        flex-direction: column;
-        gap: 8px;
-        margin-top: 10px;
-    }
-    
-    .filtro-buttons .btn-agregar {
-        width: 100%;
-        text-align: center;
-        justify-content: center;
-    }
-    
-    /* Tabla responsive */
-    .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        margin-top: 15px;
-    }
-    
-    table {
-        min-width: 800px; /* Forza el scroll horizontal */
-        font-size: 12px !important;
-    }
-    
-    th, td {
-        padding: 6px 4px !important;
-        font-size: 11px !important;
-    }
-    
-    /* Ajustar badges en móvil */
-    .status-badge {
-        padding: 3px 6px;
-        font-size: 10px !important;
-        min-width: 70px;
-        max-width: 100px;
-        word-break: break-word;
-        line-height: 1.2;
-    }
-    
-    /* Ajustar horarios en móvil */
-    .horario-container small.horario-label {
-        display: block;
-        min-width: auto;
-        font-size: 10px;
-        margin-bottom: 2px;
-    }
-    
-    .horario-container span {
-        display: block;
-        font-size: 10px;
-        margin-bottom: 3px;
-    }
-    
-    /* Botones de acción en tabla */
-    td:last-child {
-        min-width: 60px;
-    }
-    
-    .btn-sm {
-        padding: 3px 6px;
-        font-size: 12px;
-    }
-    
-    /* Modal responsive */
-    .modal {
-        padding: 10px;
-        align-items: flex-start;
-        overflow-y: auto;
-    }
-    
-    .modal-content {
-        max-width: 95%;
-        margin: 10px auto;
-        padding: 15px;
-    }
-    
-    .modal-title {
-        font-size: 1.1rem !important;
-    }
-    
-    /* Textos en tarjetas de resumen */
-    .tarjeta h3 {
-        font-size: 0.9rem !important;
-    }
-    
-    .tarjeta p {
-        font-size: 1.2rem !important;
-    }
-    
-    /* Ajustar columnas específicas */
-    td:nth-child(1), /* Colaborador */
-    td:nth-child(2), /* Sucursal */
-    th:nth-child(1),
-    th:nth-child(2) {
-        min-width: 120px;
-        max-width: 150px;
-        word-wrap: break-word;
-    }
-    
-    td:nth-child(3), /* Fecha Falta */
-    th:nth-child(3) {
-        min-width: 90px;
-    }
-    
-    td:nth-child(4), /* Horarios */
-    th:nth-child(4) {
-        min-width: 140px;
-        max-width: 160px;
-    }
-    
-    td:nth-child(5), /* Tipo Falta */
-    th:nth-child(5) {
-        min-width: 100px;
-        max-width: 120px;
-    }
-    
-    td:nth-child(6), /* Observaciones */
-    th:nth-child(6) {
-        min-width: 100px;
-        max-width: 150px;
-    }
-    
-    td:nth-child(7), /* Registrado por */
-    th:nth-child(7) {
-        min-width: 100px;
-        max-width: 130px;
-    }
-    
-    td:nth-child(8), /* Fecha Registro */
-    th:nth-child(8) {
-        min-width: 90px;
-    }
-    
-    td:nth-child(9), /* Foto */
-    th:nth-child(9) {
-        min-width: 50px;
-        text-align: center;
-    }
-}
-        
+        @media (max-width: 768px) {
+
+            /* Filtros responsive */
+            .filtros-container {
+                padding: 10px;
+                margin-bottom: 15px;
+            }
+
+            .filtros-form {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .filtro-group {
+                width: 100%;
+            }
+
+            .filtro-buttons {
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 10px;
+            }
+
+            .filtro-buttons .btn-agregar {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+
+            /* Tabla responsive */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                margin-top: 15px;
+            }
+
+            table {
+                min-width: 800px;
+                /* Forza el scroll horizontal */
+                font-size: 12px !important;
+            }
+
+            th,
+            td {
+                padding: 6px 4px !important;
+                font-size: 11px !important;
+            }
+
+            /* Ajustar badges en móvil */
+            .status-badge {
+                padding: 3px 6px;
+                font-size: 10px !important;
+                min-width: 70px;
+                max-width: 100px;
+                word-break: break-word;
+                line-height: 1.2;
+            }
+
+            /* Ajustar horarios en móvil */
+            .horario-container small.horario-label {
+                display: block;
+                min-width: auto;
+                font-size: 10px;
+                margin-bottom: 2px;
+            }
+
+            .horario-container span {
+                display: block;
+                font-size: 10px;
+                margin-bottom: 3px;
+            }
+
+            /* Botones de acción en tabla */
+            td:last-child {
+                min-width: 60px;
+            }
+
+            .btn-sm {
+                padding: 3px 6px;
+                font-size: 12px;
+            }
+
+            /* Modal responsive */
+            .modal {
+                padding: 10px;
+                align-items: flex-start;
+                overflow-y: auto;
+            }
+
+            .modal-content {
+                max-width: 95%;
+                margin: 10px auto;
+                padding: 15px;
+            }
+
+            .modal-title {
+                font-size: 1.1rem !important;
+            }
+
+            /* Textos en tarjetas de resumen */
+            .tarjeta h3 {
+                font-size: 0.9rem !important;
+            }
+
+            .tarjeta p {
+                font-size: 1.2rem !important;
+            }
+
+            /* Ajustar columnas específicas */
+            td:nth-child(1),
+            /* Colaborador */
+            td:nth-child(2),
+            /* Sucursal */
+            th:nth-child(1),
+            th:nth-child(2) {
+                min-width: 120px;
+                max-width: 150px;
+                word-wrap: break-word;
+            }
+
+            td:nth-child(3),
+            /* Fecha Falta */
+            th:nth-child(3) {
+                min-width: 90px;
+            }
+
+            td:nth-child(4),
+            /* Horarios */
+            th:nth-child(4) {
+                min-width: 140px;
+                max-width: 160px;
+            }
+
+            td:nth-child(5),
+            /* Tipo Falta */
+            th:nth-child(5) {
+                min-width: 100px;
+                max-width: 120px;
+            }
+
+            td:nth-child(6),
+            /* Observaciones */
+            th:nth-child(6) {
+                min-width: 100px;
+                max-width: 150px;
+            }
+
+            td:nth-child(7),
+            /* Registrado por */
+            th:nth-child(7) {
+                min-width: 100px;
+                max-width: 130px;
+            }
+
+            td:nth-child(8),
+            /* Fecha Registro */
+            th:nth-child(8) {
+                min-width: 90px;
+            }
+
+            td:nth-child(9),
+            /* Foto */
+            th:nth-child(9) {
+                min-width: 50px;
+                text-align: center;
+            }
+        }
+
         /* Estilos mejorados para los badges de estado */
         .status-badge {
             padding: 5px 10px;
@@ -2202,299 +2270,309 @@ td:nth-child(6) { /* Columna observaciones */
             display: inline-block;
             min-width: 100px;
             text-transform: capitalize;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-    
+
         .status-pendiente {
             color: #084298;
             background-color: #cfe2ff;
             border: 1px solid #9ec5fe;
         }
-    
+
         .status-no-pagado {
             color: #58151c;
             background-color: #f8d7da;
             border: 1px solid #f1aeb5;
         }
-    
+
         .status-vacaciones {
             color: #055160;
             background-color: #cff4fc;
             border: 1px solid #9eeaf9;
         }
-    
+
         .status-subsidio {
             color: #664d03;
             background-color: #fff3cd;
             border: 1px solid #ffecb5;
         }
-    
+
         .status-dia-mas-septimo {
             color: #0a3622;
             background-color: #d1e7dd;
             border: 1px solid #a3cfbb;
         }
-        
+
         .status-subsidio-3dias {
             color: #664d03;
             background-color: #fff3cd;
             border: 1px solid #ffecb5;
         }
-        
+
         .status-subsidio-inss {
             color: #084298;
             background-color: #cfe2ff;
             border: 1px solid #9ec5fe;
         }
-        
+
         .status-subsidio-maternidad {
             color: #58151c;
             background-color: #f8d7da;
             border: 1px solid #f1aeb5;
         }
-        
+
         .status-reposo-hasta-3dias {
             color: #0a3622;
             background-color: #d1e7dd;
             border: 1px solid #a3cfbb;
         }
-        
+
         .status-compensacion-feria {
             color: #055160;
             background-color: #cff4fc;
             border: 1px solid #9eeaf9;
         }
-        
+
         .status-compensacion-dia-trabajado {
             color: #412f04;
             background-color: #e7f1ff;
             border: 1px solid #c6d8f0;
         }
-        
+
         .status-cuido-materno {
             color: #3d0a3d;
             background-color: #e8d6e8;
             border: 1px solid #d0a2d0;
         }
-        
+
         .diferencia-tarde {
             color: #dc3545;
             font-weight: bold;
         }
-        
+
         .diferencia-temprano {
             color: #28a745;
             font-weight: bold;
         }
 
-    @media (max-width: 480px) {
-        .modal {
-            padding: 10px;
+        @media (max-width: 480px) {
+            .modal {
+                padding: 10px;
+            }
         }
-    }
-    
-@media (max-width: 480px) {
-    .btn-agregar {
-        padding: 6px 8px;
-        font-size: 11px;
-    }
-    
-    .btn-agregar i {
-        margin-right: 3px;
-    }
-    
-    .btn-text {
-        display: none; /* Ocultar texto, solo mostrar ícono */
-    }
-    
-    table {
-        min-width: 900px; /* Más ancho para más contenido */
-    }
-    
-    th, td {
-        padding: 4px 3px !important;
-        font-size: 10px !important;
-    }
-    
-    /* Ajustar nombres en columnas */
-    td:first-child {
-        max-width: 100px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    /* Modal más compacto */
-    .modal-content {
-        padding: 12px;
-    }
-    
-    .form-group {
-        margin-bottom: 10px;
-    }
-    
-    .modal-footer {
-        padding-top: 10px;
-    }
-}
 
-a.btn{
-    text-decoration: none;
-}
+        @media (max-width: 480px) {
+            .btn-agregar {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
 
-/* Estilos para el filtro de colaboradores */
-#operarios-sugerencias {
-    width: calc(100% - 2px); /* Mismo ancho que el input */
-    border: 1px solid #ddd;
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-top: -1px; /* Para que se pegue al input */
-    position: absolute;
-    top: 100%; /* Posiciona el dropdown justo debajo del input */
-    left: 0;
-    z-index: 1000;
-    background-color: white;
-    max-height: 200px;
-    overflow-y: auto;
-}
+            .btn-agregar i {
+                margin-right: 3px;
+            }
 
-#operarios-sugerencias div:hover {
-    background-color: #f5f5f5 !important;
-}
+            .btn-text {
+                display: none;
+                /* Ocultar texto, solo mostrar ícono */
+            }
 
-/* Asegurar que el input tenga un z-index menor */
-.filtro-group input[type="text"] {
-    position: relative;
-    z-index: 1;
-}
+            table {
+                min-width: 900px;
+                /* Más ancho para más contenido */
+            }
 
-/* Estilos para los filtros */
-.filtros-container {
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
+            th,
+            td {
+                padding: 4px 3px !important;
+                font-size: 10px !important;
+            }
 
-.filtros-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    align-items: end;
-}
+            /* Ajustar nombres en columnas */
+            td:first-child {
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
 
-.filtro-group {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
+            /* Modal más compacto */
+            .modal-content {
+                padding: 12px;
+            }
 
-.filtro-group label {
-    margin-bottom: 5px;
-    text-align: left;
-    font-weight: bold;
-}
+            .form-group {
+                margin-bottom: 10px;
+            }
 
-.filtro-group select,
-.filtro-group input {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    width: 100%;
-}
+            .modal-footer {
+                padding-top: 10px;
+            }
+        }
 
-.filtro-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-}
+        a.btn {
+            text-decoration: none;
+        }
 
-.filtro-buttons button {
-    padding: 8px 15px;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
+        /* Estilos para el filtro de colaboradores */
+        #operarios-sugerencias {
+            width: calc(100% - 2px);
+            /* Mismo ancho que el input */
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-top: -1px;
+            /* Para que se pegue al input */
+            position: absolute;
+            top: 100%;
+            /* Posiciona el dropdown justo debajo del input */
+            left: 0;
+            z-index: 1000;
+            background-color: white;
+            max-height: 200px;
+            overflow-y: auto;
+        }
 
-.btn-aplicar {
-    background-color: #51B8AC;
-    color: white;
-}
+        #operarios-sugerencias div:hover {
+            background-color: #f5f5f5 !important;
+        }
 
-.btn-aplicar:hover {
-    background-color: #0E544C;
-}
+        /* Asegurar que el input tenga un z-index menor */
+        .filtro-group input[type="text"] {
+            position: relative;
+            z-index: 1;
+        }
 
-.btn-limpiar {
-    background-color: #f1f1f1;
-    color: #333;
-}
+        /* Estilos para los filtros */
+        .filtros-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
 
-.btn-limpiar:hover {
-    background-color: #ddd;
-}
+        .filtros-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
 
-.btn-agregar.excel {
-    background-color: transparent;
-    color: #1d6f42;
-    border: 1px solid #1d6f42;
-}
+        .filtro-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-.btn-agregar.excel:hover {
-    background-color: #1d6f42;
-    color: white;
-}
+        .filtro-group label {
+            margin-bottom: 5px;
+            text-align: left;
+            font-weight: bold;
+        }
 
-.btn-agregar.excel-contabilidad {
-    background-color: #6f42c1;
-    border-color: #6f42c1;
-    color: white;
-}
+        .filtro-group select,
+        .filtro-group input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 100%;
+        }
 
-.btn-agregar.excel-contabilidad:hover {
-    background-color: #5a2d9e;
-    border-color: #5a2d9e;
-}
+        .filtro-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
 
-@media (max-width: 768px) {
-    .filtros-form {
-        grid-template-columns: 1fr;
-    }
-    
-    .modal-content {
-        max-width: 90%;
-    }
-}
+        .filtro-buttons button {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
 
-/* Estilos para la previsualización de imagen */
-#preview-image:hover {
-    opacity: 0.8;
-    transform: scale(1.02);
-    transition: all 0.2s ease;
-}
+        .btn-aplicar {
+            background-color: #51B8AC;
+            color: white;
+        }
 
-/* Estilos para el modal de ampliación */
-#modalAmpliarImagen img {
-    border-radius: 8px;
-    transition: transform 0.3s ease;
-}
+        .btn-aplicar:hover {
+            background-color: #0E544C;
+        }
 
-#modalAmpliarImagen button:hover {
-    color: #51B8AC;
-}
+        .btn-limpiar {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+
+        .btn-limpiar:hover {
+            background-color: #ddd;
+        }
+
+        .btn-agregar.excel {
+            background-color: transparent;
+            color: #1d6f42;
+            border: 1px solid #1d6f42;
+        }
+
+        .btn-agregar.excel:hover {
+            background-color: #1d6f42;
+            color: white;
+        }
+
+        .btn-agregar.excel-contabilidad {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+        }
+
+        .btn-agregar.excel-contabilidad:hover {
+            background-color: #5a2d9e;
+            border-color: #5a2d9e;
+        }
+
+        @media (max-width: 768px) {
+            .filtros-form {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                max-width: 90%;
+            }
+        }
+
+        /* Estilos para la previsualización de imagen */
+        #preview-image:hover {
+            opacity: 0.8;
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+
+        /* Estilos para el modal de ampliación */
+        #modalAmpliarImagen img {
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        #modalAmpliarImagen button:hover {
+            color: #51B8AC;
+        }
 
         /* Estilos para indicadores de ordenamiento en tablas con 3 estados */
-        th.sorting_asc, th.sorting_desc, th.sorting {
-            background-color: #0E544C  !important;
+        th.sorting_asc,
+        th.sorting_desc,
+        th.sorting {
+            background-color: #0E544C !important;
             position: relative;
             cursor: pointer;
         }
-        
-        th.sorting_asc:after, th.sorting_desc:after, th.sorting:after {
+
+        th.sorting_asc:after,
+        th.sorting_desc:after,
+        th.sorting:after {
             content: '';
             position: absolute;
             right: 10px;
@@ -2503,31 +2581,31 @@ a.btn{
             font-family: 'Font Awesome 5 Free';
             font-weight: 900;
         }
-        
+
         /* Estado ASC (primer click - flecha arriba) */
         th.sorting_asc {
             background-color: #0E544C !important;
         }
-        
+
         th.sorting_asc:after {
             color: white;
         }
-        
+
         /* Estado DESC (segundo click - flecha abajo) */
         th.sorting_desc {
             background-color: #0E544C !important;
         }
-        
+
         th.sorting_desc:after {
             color: white;
         }
-        
+
         /* Efecto hover para mejor usabilidad */
         th.sorting:hover {
             background-color: #0E544C !important;
             transition: background-color 0.3s;
         }
-        
+
         /* Forzar herencia de estilos para DataTables paginación */
         .dataTables_wrapper .dataTables_paginate .paginate_button {
             color: inherit !important;
@@ -2535,110 +2613,116 @@ a.btn{
             border: 1px solid #ddd !important;
             margin-left: 2px;
         }
-        
+
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
             background-color: #51B8AC !important;
             color: white !important;
         }
-        
+
         .dataTables_wrapper .dataTables_paginate .paginate_button.current {
             background-color: #0E544C !important;
             color: white !important;
             border-color: #0E544C !important;
         }
-        
+
         .dataTables_wrapper .dataTables_length select {
             border: 1px solid #ddd;
             border-radius: 4px;
             padding: 5px;
         }
-        
+
         .dataTables_wrapper .dataTables_info {
             color: inherit;
             padding-top: 10px;
         }
-        
+
         /* Estilos para la columna de horarios */
-    .horario-container {
-        font-size: 0.85em;
-        line-height: 1.4;
-    }
-    
-    .horario-programado {
-        border-bottom: 1px solid #eee;
-        padding-bottom: 5px;
-        margin-bottom: 5px;
-    }
-    
-    .horario-marcado {
-        padding-top: 5px;
-    }
-    
-    .diferencia-entrada {
-        color: #dc3545;
-        font-weight: bold;
-    }
-    
-    .diferencia-salida {
-        color: #28a745;
-        font-weight: bold;
-    }
-    
-    .diferencia-exacta {
-        color: #17a2b8;
-        font-weight: bold;
-    }
-    
-    /* Estilos para los textos pequeños */
-    small.horario-label {
-        display: inline-block;
-        min-width: 80px;
-        color: #666;
-        font-weight: bold;
-    }
+        .horario-container {
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .horario-programado {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .horario-marcado {
+            padding-top: 5px;
+        }
+
+        .diferencia-entrada {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .diferencia-salida {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .diferencia-exacta {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+
+        /* Estilos para los textos pequeños */
+        small.horario-label {
+            display: inline-block;
+            min-width: 80px;
+            color: #666;
+            font-weight: bold;
+        }
     </style>
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
             <?php echo renderHeader($usuario, $esAdmin, 'Registro de Faltas/Ausencias'); ?>
-            
+
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success">
                     <?= $_SESSION['exito'] ?>
                     <?php unset($_SESSION['exito']); ?>
                 </div>
             <?php endif; ?>
-            
+
             <?php if (isset($_SESSION['error'])): ?>
                 <div class="alert alert-danger">
                     <?= $_SESSION['error'] ?>
                     <?php unset($_SESSION['error']); ?>
                 </div>
             <?php endif; ?>
-            
+
             <!-- Tarjeta de resumen de faltas -->
-            <div class="resumen-faltas" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; display:none;">
-                <div style="display:none;" class="tarjeta" style="flex: 1; min-width: 200px; background: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <div class="resumen-faltas"
+                style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; display:none;">
+                <div style="display:none;" class="tarjeta"
+                    style="flex: 1; min-width: 200px; background: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     <h3 style="color: #0E544C; margin-bottom: 10px; font-size: 1rem;">Total Faltas Automáticas</h3>
                     <p style="font-size: 1.5rem; font-weight: bold; color: #343a40;"><?= $totalFaltasAuto ?></p>
                     <small style="color: #6c757d;">Faltas detectadas por el sistema</small>
                 </div>
-                
-                <div style="display:none;" class="tarjeta" style="flex: 1; min-width: 200px; background: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+
+                <div style="display:none;" class="tarjeta"
+                    style="flex: 1; min-width: 200px; background: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     <h3 style="color: #0E544C; margin-bottom: 10px; font-size: 1rem;">Faltas Registradas</h3>
-                    <p style="font-size: 1.5rem; font-weight: bold; color: #28a745;"><?= $totalFaltasManualesRegistradas ?></p>
+                    <p style="font-size: 1.5rem; font-weight: bold; color: #28a745;">
+                        <?= $totalFaltasManualesRegistradas ?></p>
                     <small style="color: #6c757d;">Faltas registradas manualmente</small>
                 </div>
-                
-                <div class="tarjeta" style="flex: 1; min-width: 200px; background: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+
+                <div class="tarjeta"
+                    style="flex: 1; min-width: 200px; background: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     <h3 style="color: #0E544C; margin-bottom: 10px; font-size: 1rem;">Faltas Pendientes</h3>
                     <p style="font-size: 1.5rem; font-weight: bold; color: #dc3545;"><?= $faltasPendientes ?></p>
                     <small style="color: #6c757d;">Faltas por registrar</small>
                 </div>
             </div>
-            
+
             <!-- Filtros -->
             <div class="filtros-container">
                 <form method="get" action="faltas_manual.php" class="filtros-form">
@@ -2654,37 +2738,36 @@ a.btn{
                             </select>
                         </div>
                     <?php endif; ?>
-                    
+
                     <div class="filtro-group">
                         <label for="operario">Colaborador</label>
-                        <input type="text" id="operario" name="operario" 
-                               placeholder="Escriba para buscar..." 
-                               value="<?php 
-                                   if ($operarioSeleccionado > 0) {
-                                       foreach ($operarios as $op) {
-                                           if ($op['CodOperario'] == $operarioSeleccionado) {
-                                               echo htmlspecialchars($op['nombre_completo']);
-                                               break;
-                                           }
-                                       }
-                                   } else {
-                                       echo 'Todos los colaboradores';
-                                   }
-                               ?>">
-                        <input type="hidden" id="operario_id" name="operario" value="<?php echo $operarioSeleccionado; ?>">
+                        <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..." value="<?php
+                        if ($operarioSeleccionado > 0) {
+                            foreach ($operarios as $op) {
+                                if ($op['CodOperario'] == $operarioSeleccionado) {
+                                    echo htmlspecialchars($op['nombre_completo']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo 'Todos los colaboradores';
+                        }
+                        ?>">
+                        <input type="hidden" id="operario_id" name="operario"
+                            value="<?php echo $operarioSeleccionado; ?>">
                         <div id="operarios-sugerencias" style="display: none;"></div>
                     </div>
-                    
+
                     <div class="filtro-group">
                         <label for="desde">Desde</label>
                         <input type="date" id="desde" name="desde" value="<?= htmlspecialchars($fechaDesde) ?>">
                     </div>
-                    
+
                     <div class="filtro-group">
                         <label for="hasta">Hasta</label>
                         <input type="date" id="hasta" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>">
                     </div>
-                    
+
                     <div class="filtro-buttons">
                         <button type="submit" class="btn-aplicar">
                             <i class="fas fa-search"></i> Buscar
@@ -2692,14 +2775,14 @@ a.btn{
                         <a style="display:none;" href="faltas_manual.php" class="btn-limpiar">
                             <i class="fas fa-times"></i> Limpiar
                         </a>
-                        
+
                         <!-- Botones de acción en la misma línea de filtros -->
                         <?php if ($esAdmin || verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28])): ?>
                             <button type="button" onclick="mostrarModalNuevaFalta()" class="btn btn-success">
                                 <i class="fas fa-plus"></i> Nuevo
                             </button>
                         <?php endif; ?>
-                        
+
                         <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
                             <a style="display:none;" href="faltas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
@@ -2710,7 +2793,7 @@ a.btn{
                             ]) ?>" class="btn-agregar excel">
                                 <i class="fas fa-file-excel"></i> Exportar
                             </a>
-                            
+
                             <!-- Nuevo botón para exportar a Excel para contabilidad -->
                             <a style="display:none;" href="faltas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
@@ -2721,7 +2804,7 @@ a.btn{
                             ]) ?>" class="btn-agregar excel-contabilidad">
                                 <i class="fas fa-file-excel"></i> Contabilidad
                             </a>
-                            
+
                             <!-- Botones de exportación específicos -->
                             <a href="faltas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
@@ -2729,34 +2812,37 @@ a.btn{
                                 'hasta' => $fechaHasta,
                                 'operario' => $operarioSeleccionado,
                                 'exportar_faltas_auto_septimo' => 1
-                            ]) ?>" class="btn-agregar" style="background-color: #ffc107; border-color: #ffc107; color: #000;">
+                            ]) ?>" class="btn-agregar"
+                                style="background-color: #ffc107; border-color: #ffc107; color: #000;">
                                 <i class="fas fa-file-excel"></i> No Reportadas + 7mo
                             </a>
-                            
+
                             <a href="faltas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
                                 'desde' => $fechaDesde,
                                 'hasta' => $fechaHasta,
                                 'operario' => $operarioSeleccionado,
                                 'exportar_permisos' => 1
-                            ]) ?>" class="btn-agregar" style="background-color: #17a2b8; border-color: #17a2b8; color: white;">
+                            ]) ?>" class="btn-agregar"
+                                style="background-color: #17a2b8; border-color: #17a2b8; color: white;">
                                 <i class="fas fa-file-excel"></i> Permisos
                             </a>
-                            
+
                             <a href="faltas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
                                 'desde' => $fechaDesde,
                                 'hasta' => $fechaHasta,
                                 'operario' => $operarioSeleccionado,
                                 'exportar_vacaciones' => 1
-                            ]) ?>" class="btn-agregar" style="background-color: #28a745; border-color: #28a745; color: white;">
+                            ]) ?>" class="btn-agregar"
+                                style="background-color: #28a745; border-color: #28a745; color: white;">
                                 <i class="fas fa-file-excel"></i> Vacaciones
                             </a>
                         <?php endif; ?>
                     </div>
                 </form>
             </div>
-            
+
             <div class="table-container">
                 <?php if (!empty($faltasManuales)): ?>
                     <table id="listaFaltas">
@@ -2779,24 +2865,25 @@ a.btn{
                         <tbody>
                             <?php foreach ($faltasManuales as $falta): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($falta['operario_nombre'] . ' ' . $falta['operario_apellido'] . ' ' . $falta['operario_apellido2']) ?></td>
+                                    <td><?= htmlspecialchars($falta['operario_nombre'] . ' ' . $falta['operario_apellido'] . ' ' . $falta['operario_apellido2']) ?>
+                                    </td>
                                     <td><?= htmlspecialchars($falta['sucursal_nombre']) ?></td>
                                     <td><?= formatoFechaCorta($falta['fecha_falta']) ?></td>
                                     <td style="min-width: 200px;">
-                                        <?php 
+                                        <?php
                                         $horarios = $falta['horarios'];
-                                        if ($horarios): 
-                                        ?>
+                                        if ($horarios):
+                                            ?>
                                             <!-- Horario Programado -->
                                             <div style="margin-bottom: 5px;">
                                                 <small style="color: #666; font-weight: bold;">Programado:</small>
                                                 <?php if ($horarios['programado']): ?>
-                                                    <?php 
+                                                    <?php
                                                     // Verificamos si entrada o salida están vacías
                                                     $entrada = $horarios['programado']['entrada'] ? formatoHoraCorta($horarios['programado']['entrada']) : '';
                                                     $salida = $horarios['programado']['salida'] ? formatoHoraCorta($horarios['programado']['salida']) : '';
                                                     ?>
-                                                    
+
                                                     <?php if ($entrada || $salida): ?>
                                                         <span style="font-size: 0.9em;">
                                                             <?= $entrada ?> - <?= $salida ?>
@@ -2806,17 +2893,18 @@ a.btn{
                                                             <?= $horarios['programado']['estado'] ?>
                                                         </span>
                                                     <?php endif; ?>
-                                            
+
                                                     <?php if ($horarios['programado']['estado']): ?>
-                                                        <br><small style="color: <?= $horarios['programado']['estado'] == 'Activo' ? '#28a745' : '#dc3545' ?>;">
-                                                            <?//= $horarios['programado']['estado'] ?> 
+                                                        <br><small
+                                                            style="color: <?= $horarios['programado']['estado'] == 'Activo' ? '#28a745' : '#dc3545' ?>;">
+                                                            <?//= $horarios['programado']['estado'] ?>
                                                         </small>
                                                     <?php endif; ?>
                                                 <?php else: ?>
                                                     <span style="color: #999; font-size: 0.9em;">Sin horario programado</span>
                                                 <?php endif; ?>
                                             </div>
-                                            
+
                                             <!-- Horario Marcado -->
                                             <div>
                                                 <small style="color: #666; font-weight: bold;">Marcado:</small>
@@ -2826,19 +2914,25 @@ a.btn{
                                                         -
                                                         <?= $horarios['marcado']['salida'] ? formatoHoraCorta($horarios['marcado']['salida']) : '--:--' ?>
                                                     </span>
-                                                    
+
                                                     <!-- Mostrar diferencias si existen -->
                                                     <?php if ($horarios['diferencia_entrada'] !== null || $horarios['diferencia_salida'] !== null): ?>
                                                         <br>
                                                         <?php if ($horarios['diferencia_entrada'] !== null): ?>
-                                                            <small style="color: <?= $horarios['diferencia_entrada'] > 0 ? '#dc3545' : ($horarios['diferencia_entrada'] < 0 ? '#28a745' : '#17a2b8') ?>;">
-                                                                Entrada: <?= $horarios['diferencia_entrada'] > 0 ? '+' : '' ?><?= $horarios['diferencia_entrada'] ?> min
+                                                            <small
+                                                                style="color: <?= $horarios['diferencia_entrada'] > 0 ? '#dc3545' : ($horarios['diferencia_entrada'] < 0 ? '#28a745' : '#17a2b8') ?>;">
+                                                                Entrada:
+                                                                <?= $horarios['diferencia_entrada'] > 0 ? '+' : '' ?>                        <?= $horarios['diferencia_entrada'] ?>
+                                                                min
                                                             </small>
                                                         <?php endif; ?>
                                                         <?php if ($horarios['diferencia_salida'] !== null): ?>
                                                             <br>
-                                                            <small style="color: <?= $horarios['diferencia_salida'] > 0 ? '#28a745' : ($horarios['diferencia_salida'] < 0 ? '#dc3545' : '#17a2b8') ?>;">
-                                                                Salida: <?= $horarios['diferencia_salida'] > 0 ? '+' : '' ?><?= $horarios['diferencia_salida'] ?> min
+                                                            <small
+                                                                style="color: <?= $horarios['diferencia_salida'] > 0 ? '#28a745' : ($horarios['diferencia_salida'] < 0 ? '#dc3545' : '#17a2b8') ?>;">
+                                                                Salida:
+                                                                <?= $horarios['diferencia_salida'] > 0 ? '+' : '' ?>                        <?= $horarios['diferencia_salida'] ?>
+                                                                min
                                                             </small>
                                                         <?php endif; ?>
                                                     <?php endif; ?>
@@ -2851,10 +2945,11 @@ a.btn{
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <span class="status-badge status-<?= strtolower(str_replace(['_', ' '], '-', $falta['tipo_falta'])) ?>">
+                                        <span
+                                            class="status-badge status-<?= strtolower(str_replace(['_', ' '], '-', $falta['tipo_falta'])) ?>">
                                             <?= str_replace(
-                                                ['_', 'No_Pagado', 'Pendiente', 'Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Compensacion_feria', 'Compensacion_dia_trabajado', 'Cuido_materno'], 
-                                                [' ', 'No Pagado', 'Pendiente', 'Subsidio (3 días)', 'Subsidio INSS', 'Subsidio maternidad', 'Reposo (3 días)', 'Compensación feria', 'Compensación día trabajado', 'Cuido materno'], 
+                                                ['_', 'No_Pagado', 'Pendiente', 'Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Compensacion_feria', 'Compensacion_dia_trabajado', 'Cuido_materno'],
+                                                [' ', 'No Pagado', 'Pendiente', 'Subsidio (3 días)', 'Subsidio INSS', 'Subsidio maternidad', 'Reposo (3 días)', 'Compensación feria', 'Compensación día trabajado', 'Cuido materno'],
                                                 $falta['tipo_falta']
                                             ) ?>
                                         </span>
@@ -2862,27 +2957,28 @@ a.btn{
                                     <td title="<?= htmlspecialchars($falta['observaciones'] ?: '-') ?>">
                                         <?= $falta['observaciones'] ? htmlspecialchars(recortarTexto($falta['observaciones'], 20)) : '-' ?>
                                     </td>
-                                    <td><?= htmlspecialchars($falta['registrador_nombre'] . ' ' . $falta['registrador_apellido']) ?></td>
+                                    <td><?= htmlspecialchars($falta['registrador_nombre'] . ' ' . $falta['registrador_apellido']) ?>
+                                    </td>
                                     <td><?= formatoFechaCorta($falta['fecha_registro']) ?></td>
                                     <td style="text-align:center;">
                                         <?php if ($falta['foto_path']): ?>
-                                            <button type="button" onclick="mostrarFoto('<?= htmlspecialchars($falta['foto_path']) ?>')" class="btn btn-sm btn-foto">
+                                            <button type="button"
+                                                onclick="mostrarFoto('<?= htmlspecialchars($falta['foto_path']) ?>')"
+                                                class="btn btn-sm btn-foto">
                                                 <i class="fas fa-camera" style="color: #51B8AC; font-size: 18px;"></i>
                                             </button>
                                         <?php endif; ?>
                                     </td>
                                     <?php if ($esAdmin || $siAcciones): ?>
                                         <td style="text-align: center;">
-                                            <button type="button" 
-                                                    class="btn btn-info btn-editar-falta"
-                                                    data-id="<?= $falta['id'] ?>"
-                                                    data-nombre="<?= htmlspecialchars($falta['operario_nombre'] . ' ' . $falta['operario_apellido'], ENT_QUOTES) ?>"
-                                                    data-sucursal="<?= htmlspecialchars($falta['sucursal_nombre'], ENT_QUOTES) ?>"
-                                                    data-fecha="<?= $falta['fecha_falta'] ?>"
-                                                    data-tipo="<?= $falta['tipo_falta'] ?>"
-                                                    data-observaciones="<?= htmlspecialchars($falta['observaciones'] ?? '', ENT_QUOTES) ?>"
-                                                    data-observaciones-rrhh="<?= htmlspecialchars($falta['observaciones_rrhh'] ?? '', ENT_QUOTES) ?>"
-                                                    data-foto="<?= htmlspecialchars($falta['foto_path'], ENT_QUOTES) ?>">
+                                            <button type="button" class="btn btn-info btn-editar-falta"
+                                                data-id="<?= $falta['id'] ?>"
+                                                data-nombre="<?= htmlspecialchars($falta['operario_nombre'] . ' ' . $falta['operario_apellido'], ENT_QUOTES) ?>"
+                                                data-sucursal="<?= htmlspecialchars($falta['sucursal_nombre'], ENT_QUOTES) ?>"
+                                                data-fecha="<?= $falta['fecha_falta'] ?>" data-tipo="<?= $falta['tipo_falta'] ?>"
+                                                data-observaciones="<?= htmlspecialchars($falta['observaciones'] ?? '', ENT_QUOTES) ?>"
+                                                data-observaciones-rrhh="<?= htmlspecialchars($falta['observaciones_rrhh'] ?? '', ENT_QUOTES) ?>"
+                                                data-foto="<?= htmlspecialchars($falta['foto_path'], ENT_QUOTES) ?>">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button style="display:none;" type="button" onclick="consultarMarcacion(
@@ -2901,24 +2997,24 @@ a.btn{
                         </tbody>
                     </table>
                 <?php else: ?>
-                        <div class="alert alert-info">
-                            <?php if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHasta): ?>
-                                No se encontraron faltas manuales 
-                                <?php if ($modoVista === 'todas'): ?>
-                                    en todas las sucursales
-                                <?php else: ?>
-                                    para <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
-                                <?php endif; ?>
-                                entre <?= formatoFechaCorta($fechaDesde) ?> y <?= formatoFechaCorta($fechaHasta) ?>.
+                    <div class="alert alert-info">
+                        <?php if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHasta): ?>
+                            No se encontraron faltas manuales
+                            <?php if ($modoVista === 'todas'): ?>
+                                en todas las sucursales
                             <?php else: ?>
-                                Seleccione una sucursal y rango de fechas para buscar faltas manuales.
+                                para <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
                             <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
+                            entre <?= formatoFechaCorta($fechaDesde) ?> y <?= formatoFechaCorta($fechaHasta) ?>.
+                        <?php else: ?>
+                            Seleccione una sucursal y rango de fechas para buscar faltas manuales.
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
-    
+
     <!-- Modal para nueva falta manual -->
     <div class="modal" id="modalNuevaFalta">
         <div class="modal-content">
@@ -2928,11 +3024,10 @@ a.btn{
             </div>
             <form id="formNuevaFalta" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="registrar_falta" value="1">
-                
+
                 <div class="modal-body">
                     <!-- NUEVO: Mensaje de advertencia para operarios sin contrato -->
-                    <div id="mensaje-advertencia-contrato" 
-                         style="display: none; 
+                    <div id="mensaje-advertencia-contrato" style="display: none; 
                                 background-color: #fff3cd; 
                                 border: 1px solid #ffc107; 
                                 color: #856404; 
@@ -2941,7 +3036,7 @@ a.btn{
                                 margin-bottom: 15px;">
                         <!-- El mensaje se llenará dinámicamente con JavaScript -->
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="nueva_sucursal" class="form-label">Sucursal:</label>
                         <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
@@ -2962,13 +3057,13 @@ a.btn{
                             <?php endif; ?>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="nueva_fecha" class="form-label">Fecha de Falta:</label>
-                        <input type="date" id="nueva_fecha" name="fecha_falta" class="form-input" required 
-                               max="<?= date('Y-m-d', strtotime('-1 day')) ?>">
+                        <input type="date" id="nueva_fecha" name="fecha_falta" class="form-input" required
+                            max="<?= date('Y-m-d', strtotime('-1 day')) ?>">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="nueva_operario" class="form-label">Operario:</label>
                         <select id="nueva_operario" name="cod_operario" class="form-select" required>
@@ -2976,42 +3071,45 @@ a.btn{
                             <!-- Se llenará dinámicamente con JavaScript -->
                         </select>
                     </div>
-                    
+
                     <?php if (in_array($_SESSION['cargo_cod'], [13, 39, 30, 37, 28])): // RH y otros cargos ?>
-                    <div class="form-group">
-                        <label for="nueva_tipo" class="form-label">Tipo de Falta:</label>
-                        <select id="nueva_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentaje(this.value)">
-                            <option value="">Seleccione un tipo</option>
-                            <?php 
-                            $tiposFalta = obtenerTiposFaltaConPorcentajes();
-                            foreach ($tiposFalta as $tipo): 
-                                $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ? 
-                                    'Deducción 100%' : 
-                                    'Paga ' . $tipo['porcentaje_pago'] . '%';
-                            ?>
-                                <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>">
-                                    <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <small id="info-porcentaje" class="form-text text-muted" style="display: none;"></small>
-                    </div>
+                        <div class="form-group">
+                            <label for="nueva_tipo" class="form-label">Tipo de Falta:</label>
+                            <select id="nueva_tipo" name="tipo_falta" class="form-select" required
+                                onchange="actualizarPorcentaje(this.value)">
+                                <option value="">Seleccione un tipo</option>
+                                <?php
+                                $tiposFalta = obtenerTiposFaltaConPorcentajes();
+                                foreach ($tiposFalta as $tipo):
+                                    $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ?
+                                        'Deducción 100%' :
+                                        'Paga ' . $tipo['porcentaje_pago'] . '%';
+                                    ?>
+                                    <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>">
+                                        <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small id="info-porcentaje" class="form-text text-muted" style="display: none;"></small>
+                        </div>
                     <?php else: // Para líderes, tipo fijo ?>
                         <input type="hidden" name="tipo_falta" value="Pendiente">
                     <?php endif; ?>
-                    
+
                     <div class="form-group">
                         <label for="nueva_observaciones" class="form-label">Observaciones:</label>
                         <textarea id="nueva_observaciones" name="observaciones" class="form-textarea"></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="nueva_foto" class="form-label">Foto de Evidencia (Obligatoria):</label>
-                        <input type="file" id="nueva_foto" name="foto_falta" class="form-input" accept="image/*" required>
-                        <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx. 5MB)</small>
+                        <input type="file" id="nueva_foto" name="foto_falta" class="form-input" accept="image/*"
+                            required>
+                        <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx.
+                            5MB)</small>
                     </div>
                 </div>
-                
+
                 <div class="modal-footer">
                     <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar</button>
@@ -3019,7 +3117,7 @@ a.btn{
             </form>
         </div>
     </div>
-    
+
     <!-- Modal para editar falta manual -->
     <div class="modal" id="modalEditarFalta">
         <div class="modal-content">
@@ -3031,55 +3129,58 @@ a.btn{
                 <input type="hidden" name="editar_falta" value="1">
                 <input type="hidden" id="editar_id" name="id">
                 <input type="hidden" id="editar_foto_path" name="foto_path_actual">
-                
+
                 <div class="modal-body">
                     <!-- Información básica -->
                     <div class="info-group">
                         <span class="info-label">Colaborador:</span>
                         <span class="info-value" id="editar_nombre"></span>
                     </div>
-                    
+
                     <div class="info-group">
                         <span class="info-label">Sucursal:</span>
                         <span class="info-value" id="editar_sucursal"></span>
                     </div>
-                    
+
                     <div class="info-group">
                         <span class="info-label">Fecha de Falta:</span>
                         <span class="info-value" id="editar_fecha"></span>
                     </div>
-                    
+
                     <!-- Observaciones del líder -->
                     <div class="form-group">
                         <label class="form-label">Observaciones del Líder:</label>
-                        <div id="editar_observaciones_lider" class="info-value" style="background-color: #f8f9fa; padding: 8px; border-radius: 4px; border: 1px solid #ddd; min-height: 40px;"></div>
+                        <div id="editar_observaciones_lider" class="info-value"
+                            style="background-color: #f8f9fa; padding: 8px; border-radius: 4px; border: 1px solid #ddd; min-height: 40px;">
+                        </div>
                     </div>
-                    
+
                     <!-- PREVISUALIZACIÓN DE IMAGEN - ESTA ES LA SECCIÓN CORRECTA -->
                     <div class="form-group" id="preview-container" style="display: none;">
                         <label class="form-label">Foto Evidencia:</label>
                         <div style="text-align: center;">
-                            <img id="preview-image" src="" alt="Previsualización" 
-                                 style="max-width: 150px; max-height: 150px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;"
-                                 onclick="ampliarImagen(this.src)">
+                            <img id="preview-image" src="" alt="Previsualización"
+                                style="max-width: 150px; max-height: 150px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;"
+                                onclick="ampliarImagen(this.src)">
                             <div style="margin-top: 5px; font-size: 12px; color: #666;">
                                 <i class="fas fa-search-plus"></i> Click para ampliar
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Tipo de falta -->
                     <div class="form-group">
                         <label for="editar_tipo" class="form-label">Tipo de Falta:</label>
-                        <select id="editar_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeEdicion(this.value)">
+                        <select id="editar_tipo" name="tipo_falta" class="form-select" required
+                            onchange="actualizarPorcentajeEdicion(this.value)">
                             <option value="">Seleccione un tipo</option>
-                            <?php 
+                            <?php
                             $tiposFalta = obtenerTiposFaltaConPorcentajes();
-                            foreach ($tiposFalta as $tipo): 
-                                $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ? 
-                                    'Deducción 100%' : 
+                            foreach ($tiposFalta as $tipo):
+                                $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ?
+                                    'Deducción 100%' :
                                     'Paga ' . $tipo['porcentaje_pago'] . '%';
-                            ?>
+                                ?>
                                 <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>">
                                     <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
                                 </option>
@@ -3087,35 +3188,38 @@ a.btn{
                         </select>
                         <small id="info-porcentaje-edicion" class="form-text text-muted" style="display: none;"></small>
                     </div>
-                    
+
                     <!-- Observaciones RRHH (solo para RH) -->
                     <?php if ($esRH): ?>
-                    <div class="form-group">
-                        <label for="editar_observaciones_rrhh" class="form-label">Observaciones RRHH: *</label>
-                        <textarea id="editar_observaciones_rrhh" name="observaciones_rrhh" class="form-textarea" required></textarea>
-                    </div>
+                        <div class="form-group">
+                            <label for="editar_observaciones_rrhh" class="form-label">Observaciones RRHH: *</label>
+                            <textarea id="editar_observaciones_rrhh" name="observaciones_rrhh" class="form-textarea"
+                                required></textarea>
+                        </div>
                     <?php else: ?>
-                    <!-- Para no-RRHH, mostrar solo lectura -->
-                    <div class="form-group">
-                        <label class="form-label">Observaciones RRHH:</label>
-                        <div id="editar_observaciones_rrhh_view" class="info-value" style="background-color: #f8f9fa; padding: 8px; border-radius: 4px; border: 1px solid #ddd; min-height: 40px;"></div>
-                        <input type="hidden" id="editar_observaciones_rrhh" name="observaciones_rrhh">
-                    </div>
+                        <!-- Para no-RRHH, mostrar solo lectura -->
+                        <div class="form-group">
+                            <label class="form-label">Observaciones RRHH:</label>
+                            <div id="editar_observaciones_rrhh_view" class="info-value"
+                                style="background-color: #f8f9fa; padding: 8px; border-radius: 4px; border: 1px solid #ddd; min-height: 40px;">
+                            </div>
+                            <input type="hidden" id="editar_observaciones_rrhh" name="observaciones_rrhh">
+                        </div>
                     <?php endif; ?>
                 </div>
-                
+
                 <div class="modal-footer">
                     <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
                     <?php if ($esRH): ?>
-                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                     <?php else: ?>
-                    <button type="button" class="btn btn-secondary" disabled>Sin permisos para editar</button>
+                        <button type="button" class="btn btn-secondary" disabled>Sin permisos para editar</button>
                     <?php endif; ?>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <!-- Modal para consultar marcaciones relacionadas con la falta -->
     <div class="modal" id="modalConsultarMarcacion">
         <div class="modal-content" style="max-width: 600px;">
@@ -3128,44 +3232,44 @@ a.btn{
                     <span class="info-label">Colaborador:</span>
                     <span class="info-value" id="consulta_nombre"></span>
                 </div>
-                
+
                 <div class="info-group">
                     <span class="info-label">Sucursal:</span>
                     <span class="info-value" id="consulta_sucursal"></span>
                 </div>
-                
+
                 <div class="info-group">
                     <span class="info-label">Fecha de Falta:</span>
                     <span class="info-value" id="consulta_fecha"></span>
                 </div>
-                
+
                 <h3 style="margin: 15px 0 10px; color: #0E544C;">Horario Programado</h3>
                 <div class="info-group">
                     <span class="info-label">Hora de Entrada:</span>
                     <span class="info-value" id="consulta_hora_entrada_programada">-</span>
                 </div>
-                
+
                 <div class="info-group">
                     <span class="info-label">Hora de Salida:</span>
                     <span class="info-value" id="consulta_hora_salida_programada">-</span>
                 </div>
-                
+
                 <h3 style="margin: 15px 0 10px; color: #0E544C;">Marcaciones Registradas</h3>
                 <div class="info-group">
                     <span class="info-label">Hora de Entrada:</span>
                     <span class="info-value" id="consulta_hora_entrada">-</span>
                 </div>
-                
+
                 <div class="info-group">
                     <span class="info-label">Hora de Salida:</span>
                     <span class="info-value" id="consulta_hora_salida">-</span>
                 </div>
-                
+
                 <div class="info-group">
                     <span class="info-label">Diferencia Entrada:</span>
                     <span class="info-value" id="consulta_diferencia_entrada">-</span>
                 </div>
-                
+
                 <div class="info-group">
                     <span class="info-label">Diferencia Salida:</span>
                     <span class="info-value" id="consulta_diferencia_salida">-</span>
@@ -3176,61 +3280,61 @@ a.btn{
             </div>
         </div>
     </div>
-    
+
     <script>
         // Datos de operarios para el autocompletado
         const operariosData = [
-            {id: 0, nombre: 'Todos los colaboradores'},
+            { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-            {id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>'},
+                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
-        
+
         // Función para buscar operarios
         function buscarOperarios(texto) {
             if (!texto) {
                 return operariosData;
             }
-            return operariosData.filter(op => 
+            return operariosData.filter(op =>
                 op.nombre.toLowerCase().includes(texto.toLowerCase())
             );
         }
-        
+
         // Manejar el input de operario
         const operarioInput = document.getElementById('operario');
         const operarioIdInput = document.getElementById('operario_id');
         const sugerenciasDiv = document.getElementById('operarios-sugerencias');
-        
+
         // Modificar el evento input del campo operario
-        operarioInput.addEventListener('input', function() {
+        operarioInput.addEventListener('input', function () {
             const texto = this.value.trim();
-            
+
             // Si el campo está vacío, resetear a "todos"
             if (texto === '') {
                 operarioIdInput.value = '0';
                 sugerenciasDiv.style.display = 'none';
                 return;
             }
-            
+
             const resultados = buscarOperarios(texto);
-            
+
             sugerenciasDiv.innerHTML = '';
-            
+
             if (resultados.length > 0) {
                 resultados.forEach(op => {
                     const div = document.createElement('div');
                     div.textContent = op.nombre;
                     div.style.padding = '8px';
                     div.style.cursor = 'pointer';
-                    div.addEventListener('click', function() {
+                    div.addEventListener('click', function () {
                         operarioInput.value = op.nombre;
                         operarioIdInput.value = op.id;
                         sugerenciasDiv.style.display = 'none';
                     });
-                    div.addEventListener('mouseover', function() {
+                    div.addEventListener('mouseover', function () {
                         this.style.backgroundColor = '#f5f5f5';
                     });
-                    div.addEventListener('mouseout', function() {
+                    div.addEventListener('mouseout', function () {
                         this.style.backgroundColor = 'white';
                     });
                     sugerenciasDiv.appendChild(div);
@@ -3240,16 +3344,16 @@ a.btn{
                 sugerenciasDiv.style.display = 'none';
             }
         });
-        
+
         // Ocultar sugerencias al hacer clic fuera
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (e.target !== operarioInput) {
                 sugerenciasDiv.style.display = 'none';
             }
         });
-        
+
         // Manejar tecla Enter en el input
-        operarioInput.addEventListener('keydown', function(e) {
+        operarioInput.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const texto = this.value.trim();
@@ -3261,50 +3365,50 @@ a.btn{
                 sugerenciasDiv.style.display = 'none';
             }
         });
-        
+
         // Función para mostrar foto en un modal
         function mostrarFoto(rutaFoto) {
             ampliarImagen(rutaFoto);
         }
-        
+
         // Actualizar filtros y recargar la página
         function actualizarFiltros() {
             const desde = document.getElementById('desde').value;
             const hasta = document.getElementById('hasta').value;
-            
+
             // Validar fechas
             if (!desde || !hasta) {
                 alert('Por favor seleccione ambas fechas');
                 return;
             }
-            
+
             if (new Date(desde) > new Date(hasta)) {
                 alert('La fecha "Desde" no puede ser mayor que la fecha "Hasta"');
                 return;
             }
-            
+
             // Construir URL con parámetros
             const params = new URLSearchParams();
-            
+
             <?php if ($esRH): ?>
-            const modo = document.getElementById('modo')?.value || 'sucursal';
-            params.append('modo', modo);
-            
-            if (modo === 'sucursal') {
+                const modo = document.getElementById('modo')?.value || 'sucursal';
+                params.append('modo', modo);
+
+                if (modo === 'sucursal') {
+                    const sucursal = document.getElementById('sucursal').value;
+                    if (sucursal) params.append('sucursal', sucursal);
+                }
+            <?php else: ?>
                 const sucursal = document.getElementById('sucursal').value;
                 if (sucursal) params.append('sucursal', sucursal);
-            }
-            <?php else: ?>
-            const sucursal = document.getElementById('sucursal').value;
-            if (sucursal) params.append('sucursal', sucursal);
             <?php endif; ?>
-            
+
             params.append('desde', desde);
             params.append('hasta', hasta);
-            
+
             window.location.href = 'faltas_manual.php?' + params.toString();
         }
-        
+
         // Mostrar modal para nueva falta
         function mostrarModalNuevaFalta() {
             // Establecer fecha predeterminada como ayer
@@ -3313,12 +3417,12 @@ a.btn{
             const fechaInput = document.getElementById('nueva_fecha');
             fechaInput.valueAsDate = ayer;
             fechaInput.max = ayer.toISOString().split('T')[0];
-            
+
             // Limpiar y resetear el select de operarios
             // NUEVA VALIDACIÓN: Verificar si el operario seleccionado tiene contrato
             const selectOperario = document.getElementById('nueva_operario');
             const optionSeleccionada = selectOperario.options[selectOperario.selectedIndex];
-            
+
             if (optionSeleccionada && optionSeleccionada.dataset.sinContrato === 'true') {
                 e.preventDefault();
                 alert('Este colaborador no tiene registro de contrato. Por favor contactar con el área de RH antes de registrar una falta.');
@@ -3327,13 +3431,13 @@ a.btn{
 
             selectOperario.innerHTML = '<option value="">Cargando...</option>';
             selectOperario.disabled = true;
-            
+
             // Obtener sucursal seleccionada
             const selectSucursal = document.getElementById('nueva_sucursal');
-            
+
             // Mostrar el modal PRIMERO
             document.getElementById('modalNuevaFalta').style.display = 'flex';
-            
+
             // Pequeño delay para asegurar que el DOM está listo
             setTimeout(() => {
                 // Cargar operarios con la fecha
@@ -3345,31 +3449,31 @@ a.btn{
                 }
             }, 100);
         }
-        
+
         // FUNCIÓN MODIFICADA: Cargar operarios considerando fecha de liquidación
         function cargarOperariosSucursal(codSucursal, fechaFalta) {
             const selectOperario = document.getElementById('nueva_operario');
             const mensajeAdvertencia = document.getElementById('mensaje-advertencia-contrato');
-            
+
             if (!codSucursal) {
                 selectOperario.innerHTML = '<option value="">Primero seleccione una sucursal</option>';
                 selectOperario.disabled = true;
                 return;
             }
-            
+
             if (!fechaFalta) {
                 selectOperario.innerHTML = '<option value="">Primero seleccione una fecha</option>';
                 selectOperario.disabled = true;
                 return;
             }
-            
+
             // Indicar estado de carga
             selectOperario.innerHTML = '<option value="">⏳ Cargando operarios para ' + fechaFalta + '...</option>';
             selectOperario.disabled = true;
-            
+
             // NUEVA URL: Incluye fecha_falta para filtrar por liquidación
             let url = `ajax.php?action=obtener_operarios_sucursal&sucursal=${codSucursal}&fecha_falta=${fechaFalta}`;
-            
+
             fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -3379,24 +3483,24 @@ a.btn{
                 })
                 .then(data => {
                     console.log('Operarios recibidos:', data);
-                    
+
                     selectOperario.disabled = false;
-                    
+
                     if (!data || data.length === 0) {
                         selectOperario.innerHTML = '<option value="">No hay operarios activos para esta fecha</option>';
                         return;
                     }
-                    
+
                     let options = '<option value="">Seleccione un operario</option>';
                     let hayOperariosSinContrato = false;
-                    
+
                     data.forEach(operario => {
                         const nombre = operario.Nombre || '';
                         const nombre2 = operario.Nombre2 || '';
                         const apellido = operario.Apellido || '';
                         const apellido2 = operario.Apellido2 || '';
                         const nombreCompleto = `${nombre} ${nombre2} ${apellido} ${apellido2}`.trim();
-                        
+
                         // NUEVA VALIDACIÓN: Verificar si tiene contrato
                         if (!operario.tiene_contrato) {
                             hayOperariosSinContrato = true;
@@ -3405,9 +3509,9 @@ a.btn{
                             options += `<option value="${operario.CodOperario}">${nombreCompleto}</option>`;
                         }
                     });
-                    
+
                     selectOperario.innerHTML = options;
-                    
+
                     // MOSTRAR ADVERTENCIA si hay operarios sin contrato
                     if (hayOperariosSinContrato && mensajeAdvertencia) {
                         mensajeAdvertencia.style.display = 'block';
@@ -3422,39 +3526,39 @@ a.btn{
                     selectOperario.innerHTML = '<option value="">❌ Error al cargar. Intente de nuevo</option>';
                 });
         }
-        
+
         // Validar formulario antes de enviar
-        document.getElementById('formNuevaFalta').addEventListener('submit', function(e) {
+        document.getElementById('formNuevaFalta').addEventListener('submit', function (e) {
             const fechaInput = document.getElementById('nueva_fecha');
             const fechaSeleccionada = new Date(fechaInput.value);
             const fechaActual = new Date();
             fechaActual.setHours(0, 0, 0, 0); // Resetear hora para comparar solo fechas
-            
+
             // Validar que no sea fecha futura
             if (fechaSeleccionada > fechaActual) {
                 e.preventDefault();
                 alert('No se pueden registrar faltas con fechas futuras');
                 return false;
             }
-            
+
             // Nueva validación: Verificar con AJAX si realmente hubo falta
             e.preventDefault();
-            
+
             const codOperario = document.getElementById('nueva_operario').value;
             const codSucursal = document.getElementById('nueva_sucursal').value;
             const fechaFalta = fechaInput.value;
-            
+
             if (!codOperario || !codSucursal || !fechaFalta) {
                 alert('Complete todos los campos obligatorios');
                 return false;
             }
-            
+
             // Mostrar loading
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
             submitBtn.disabled = true;
-            
+
             // Hacer petición AJAX para verificar si realmente hubo falta
             fetch('ajax.php?action=verificar_falta_real', {
                 method: 'POST',
@@ -3467,33 +3571,33 @@ a.btn{
                     fecha_falta: fechaFalta
                 })
             })
-            .then(response => response.json())
-            .then(data => {
-                // MODIFICADO: Verificar si hay error específico
-                if (data.error) {
-                    alert(data.error);
+                .then(response => response.json())
+                .then(data => {
+                    // MODIFICADO: Verificar si hay error específico
+                    if (data.error) {
+                        alert(data.error);
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    } else if (data.existe_falta) {
+                        document.getElementById('formNuevaFalta').submit();
+                    } else {
+                        alert('No se puede registrar falta: El colaborador tiene marcaciones registradas para esta fecha o no tenía horario programado con estado Activo, Otra.Tienda, Subsidio o Vacaciones.');
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al verificar la falta. Intente nuevamente.');
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
-                } else if (data.existe_falta) {
-                    document.getElementById('formNuevaFalta').submit();
-                } else {
-                    alert('No se puede registrar falta: El colaborador tiene marcaciones registradas para esta fecha o no tenía horario programado con estado Activo, Otra.Tienda, Subsidio o Vacaciones.');
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al verificar la falta. Intente nuevamente.');
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            });
-            
+                });
+
             return false;
         });
-        
+
         // Cargar operarios cuando cambia la sucursal en el modal de nueva falta
-        document.getElementById('nueva_sucursal').addEventListener('change', function() {
+        document.getElementById('nueva_sucursal').addEventListener('change', function () {
             const fechaInput = document.getElementById('nueva_fecha');
             if (fechaInput.value) {
                 cargarOperariosSucursal(this.value, fechaInput.value);
@@ -3501,43 +3605,43 @@ a.btn{
                 cargarOperariosSucursal(this.value, null);
             }
         });
-        
+
         // EVENTO MODIFICADO: Cargar operarios cuando cambia la fecha
-        document.getElementById('nueva_fecha').addEventListener('change', function() {
+        document.getElementById('nueva_fecha').addEventListener('change', function () {
             const sucursalSelect = document.getElementById('nueva_sucursal');
             if (sucursalSelect.value && this.value) {
                 console.log('Fecha cambiada a:', this.value);
                 cargarOperariosSucursal(sucursalSelect.value, this.value);
             }
         });
-        
+
         // Función auxiliar al script
         function formatearFechaLocal(fechaStr) {
             const fecha = new Date(fechaStr + 'T00:00:00');
             const opciones = { day: '2-digit', month: 'short', year: '2-digit' };
             return fecha.toLocaleDateString('es-ES', opciones);
         }
-        
+
         // Función para mostrar el tipo de falta correcto en el modal de edición
         function mostrarModalEditarFalta(id, nombre, sucursal, fecha, tipo, observaciones, observaciones_rrhh, fotoPath) {
-            console.log('Datos recibidos:', {id, nombre, sucursal, fecha, tipo, observaciones, observaciones_rrhh, fotoPath});
-            
+            console.log('Datos recibidos:', { id, nombre, sucursal, fecha, tipo, observaciones, observaciones_rrhh, fotoPath });
+
             document.getElementById('editar_id').value = id;
             document.getElementById('editar_nombre').textContent = nombre;
             document.getElementById('editar_sucursal').textContent = sucursal;
-            
+
             document.getElementById('editar_fecha').textContent = formatearFechaLocal(fecha);
-            
+
             document.getElementById('editar_foto_path').value = fotoPath;
-            
+
             // Mostrar observaciones del líder (solo lectura)
             document.getElementById('editar_observaciones_lider').textContent = observaciones || '(Sin observaciones)';
-            
+
             // Convertir "Pendiente" de nuevo a "No_Pagado" para el formulario
             const tipoParaForm = tipo;
             const selectTipo = document.getElementById('editar_tipo');
             selectTipo.value = tipoParaForm;
-            
+
             // Asegurarse de que el tipo actual esté seleccionado, incluso si no existe en las opciones
             if (!selectTipo.querySelector(`option[value="${tipoParaForm}"]`)) {
                 // Si el tipo no existe en las opciones, agregarlo temporalmente
@@ -3545,35 +3649,35 @@ a.btn{
                 selectTipo.add(nuevaOpcion);
                 selectTipo.value = tipoParaForm;
             }
-            
+
             // Actualizar la información del porcentaje basado en el tipo actual
             actualizarPorcentajeEdicion(tipo);
-            
+
             // Manejar observaciones RRHH según el tipo de usuario
             <?php if ($esRH): ?>
-            document.getElementById('editar_observaciones_rrhh').value = observaciones_rrhh || '';
+                document.getElementById('editar_observaciones_rrhh').value = observaciones_rrhh || '';
             <?php else: ?>
-            // Para no-RRHH, mostrar solo lectura
-            document.getElementById('editar_observaciones_rrhh_view').textContent = observaciones_rrhh || '(Sin observaciones RRHH)';
-            document.getElementById('editar_observaciones_rrhh').value = observaciones_rrhh || '';
+                // Para no-RRHH, mostrar solo lectura
+                document.getElementById('editar_observaciones_rrhh_view').textContent = observaciones_rrhh || '(Sin observaciones RRHH)';
+                document.getElementById('editar_observaciones_rrhh').value = observaciones_rrhh || '';
             <?php endif; ?>
-            
+
             // Mostrar u ocultar la previsualización de imagen
             const previewContainer = document.getElementById('preview-container');
             const previewImage = document.getElementById('preview-image');
-            
+
             if (fotoPath && fotoPath !== '') {
                 // Usar ruta absoluta para la imagen
                 const rutaCompleta = '../..' + fotoPath;
                 console.log('Cargando imagen:', rutaCompleta);
                 previewImage.src = rutaCompleta;
                 previewContainer.style.display = 'block';
-                
+
                 // Verificar si la imagen se carga correctamente
-                previewImage.onload = function() {
+                previewImage.onload = function () {
                     console.log('Imagen cargada correctamente');
                 };
-                previewImage.onerror = function() {
+                previewImage.onerror = function () {
                     console.error('Error al cargar la imagen:', rutaCompleta);
                     previewContainer.style.display = 'none';
                 };
@@ -3581,31 +3685,31 @@ a.btn{
                 console.log('No hay imagen para mostrar');
                 previewContainer.style.display = 'none';
             }
-            
+
             document.getElementById('modalEditarFalta').style.display = 'flex';
         }
-        
+
         // Validar formulario de edición
-        document.getElementById('formEditarFalta').addEventListener('submit', function(e) {
+        document.getElementById('formEditarFalta').addEventListener('submit', function (e) {
             const observacionesRRHH = document.getElementById('editar_observaciones_rrhh').value.trim();
-            
+
             if (!observacionesRRHH) {
                 e.preventDefault();
                 alert('El campo Observaciones RRHH es obligatorio');
                 return false;
             }
-            
+
             return true;
         });
-        
+
         // Función para consultar marcaciones relacionadas con una falta
         function consultarMarcacion(codOperario, nombre, sucursalNombre, codSucursal, fechaFalta) {
             // Mostrar información básica
             document.getElementById('consulta_nombre').textContent = nombre;
             document.getElementById('consulta_sucursal').textContent = sucursalNombre;
-            
+
             document.getElementById('consulta_fecha').textContent = formatearFechaLocal(fechaFalta);
-            
+
             // Resetear valores mientras se carga
             document.getElementById('consulta_hora_entrada_programada').textContent = '-';
             document.getElementById('consulta_hora_salida_programada').textContent = '-';
@@ -3613,10 +3717,10 @@ a.btn{
             document.getElementById('consulta_hora_salida').textContent = '-';
             document.getElementById('consulta_diferencia_entrada').textContent = '-';
             document.getElementById('consulta_diferencia_salida').textContent = '-';
-            
+
             // Mostrar el modal
             document.getElementById('modalConsultarMarcacion').style.display = 'flex';
-            
+
             // Hacer petición AJAX para obtener los datos
             fetch(`ajax.php?action=consultar_marcacion_falta&cod_operario=${codOperario}&cod_sucursal=${codSucursal}&fecha=${fechaFalta}`)
                 .then(response => response.json())
@@ -3624,38 +3728,38 @@ a.btn{
                     // Mostrar horario programado
                     if (data.horario_programado) {
                         const hp = data.horario_programado;
-                        document.getElementById('consulta_hora_entrada_programada').textContent = 
+                        document.getElementById('consulta_hora_entrada_programada').textContent =
                             hp.hora_entrada_programada ? formatoHoraAmPm(hp.hora_entrada_programada) : '-';
-                        document.getElementById('consulta_hora_salida_programada').textContent = 
+                        document.getElementById('consulta_hora_salida_programada').textContent =
                             hp.hora_salida_programada ? formatoHoraAmPm(hp.hora_salida_programada) : '-';
                     }
-                    
+
                     // Mostrar marcaciones
                     if (data.marcaciones) {
                         const m = data.marcaciones;
-                        document.getElementById('consulta_hora_entrada').textContent = 
+                        document.getElementById('consulta_hora_entrada').textContent =
                             m.hora_ingreso ? formatoHoraAmPm(m.hora_ingreso) : '-';
-                        document.getElementById('consulta_hora_salida').textContent = 
+                        document.getElementById('consulta_hora_salida').textContent =
                             m.hora_salida ? formatoHoraAmPm(m.hora_salida) : '-';
-                        
+
                         // Calcular y mostrar diferencias si hay datos
                         if (data.horario_programado && data.marcaciones) {
                             const hp = data.horario_programado;
                             const m = data.marcaciones;
-                            
+
                             // Diferencia entrada
                             if (hp.hora_entrada_programada && m.hora_ingreso) {
                                 const difEntrada = calcularDiferenciaMinutos(
-                                    hp.hora_entrada_programada, 
+                                    hp.hora_entrada_programada,
                                     m.hora_ingreso
                                 );
                                 mostrarDiferencia('consulta_diferencia_entrada', difEntrada);
                             }
-                            
+
                             // Diferencia salida
                             if (hp.hora_salida_programada && m.hora_salida) {
                                 const difSalida = calcularDiferenciaMinutos(
-                                    hp.hora_salida_programada, 
+                                    hp.hora_salida_programada,
                                     m.hora_salida
                                 );
                                 mostrarDiferencia('consulta_diferencia_salida', difSalida);
@@ -3683,7 +3787,7 @@ a.btn{
         function calcularDiferenciaMinutos(horaProgramada, horaReal) {
             const hp = new Date(`2000-01-01T${horaProgramada}`);
             const hr = new Date(`2000-01-01T${horaReal}`);
-            
+
             const diffMs = hr - hp;
             return Math.round(diffMs / 60000); // Convertir a minutos
         }
@@ -3691,7 +3795,7 @@ a.btn{
         // Función para mostrar diferencia con colores
         function mostrarDiferencia(elementId, minutos) {
             const element = document.getElementById(elementId);
-            
+
             if (minutos > 0) {
                 element.innerHTML = `<span class="diferencia-tarde">+${minutos} min (Tarde)</span>`;
             } else if (minutos < 0) {
@@ -3700,7 +3804,7 @@ a.btn{
                 element.innerHTML = `<span>${minutos} min (Exacto)</span>`;
             }
         }
-        
+
         // Función para ampliar imagen (funciona sobre modales existentes)
         function ampliarImagen(src) {
             const modalAmpliar = document.createElement('div');
@@ -3715,14 +3819,14 @@ a.btn{
             modalAmpliar.style.justifyContent = 'center';
             modalAmpliar.style.alignItems = 'center';
             modalAmpliar.style.zIndex = '3000'; // Mayor z-index para que esté sobre el modal de edición
-            
+
             const img = document.createElement('img');
             img.src = src;
             img.style.maxWidth = '90%';
             img.style.maxHeight = '90%';
             img.style.objectFit = 'contain';
             img.style.boxShadow = '0 0 20px rgba(255,255,255,0.2)';
-            
+
             const closeBtn = document.createElement('button');
             closeBtn.innerHTML = '&times;';
             closeBtn.style.position = 'absolute';
@@ -3734,60 +3838,60 @@ a.btn{
             closeBtn.style.border = 'none';
             closeBtn.style.cursor = 'pointer';
             closeBtn.style.zIndex = '3001';
-            
-            closeBtn.onclick = function() {
+
+            closeBtn.onclick = function () {
                 document.body.removeChild(modalAmpliar);
             };
-            
+
             modalAmpliar.appendChild(img);
             modalAmpliar.appendChild(closeBtn);
             document.body.appendChild(modalAmpliar);
-            
+
             // Cerrar al hacer clic fuera de la imagen
-            modalAmpliar.onclick = function(e) {
+            modalAmpliar.onclick = function (e) {
                 if (e.target === modalAmpliar) {
                     document.body.removeChild(modalAmpliar);
                 }
             };
-            
+
             // Cerrar con tecla ESC
-            const closeOnEsc = function(e) {
+            const closeOnEsc = function (e) {
                 if (e.key === 'Escape') {
                     document.body.removeChild(modalAmpliar);
                     document.removeEventListener('keydown', closeOnEsc);
                 }
             };
-            
+
             document.addEventListener('keydown', closeOnEsc);
         }
-        
+
         // Cerrar modal
         function cerrarModal() {
             document.getElementById('modalNuevaFalta').style.display = 'none';
             document.getElementById('modalEditarFalta').style.display = 'none';
             document.getElementById('modalConsultarMarcacion').style.display = 'none';
         }
-        
+
         // Cargar operarios cuando se selecciona una sucursal en el modal de nueva falta
-        document.getElementById('nueva_sucursal').addEventListener('change', function() {
+        document.getElementById('nueva_sucursal').addEventListener('change', function () {
             const codSucursal = this.value;
             const selectOperario = document.getElementById('nueva_operario');
-            
+
             if (!codSucursal) {
                 selectOperario.innerHTML = '<option value="">Seleccione un operario</option>';
                 return;
             }
-            
+
             // Hacer petición AJAX para obtener operarios de la sucursal
             fetch('ajax.php?action=obtener_operarios_sucursal&sucursal=' + codSucursal)
                 .then(response => response.json())
                 .then(data => {
                     let options = '<option value="">Seleccione un operario</option>';
-                    
+
                     data.forEach(operario => {
                         options += `<option value="${operario.CodOperario}">${operario.Nombre} ${operario.Apellido}</option>`;
                     });
-                    
+
                     selectOperario.innerHTML = options;
                 })
                 .catch(error => {
@@ -3795,20 +3899,20 @@ a.btn{
                     selectOperario.innerHTML = '<option value="">Error al cargar operarios</option>';
                 });
         });
-        
+
         // Cerrar modal al hacer clic fuera del contenido
         //window.addEventListener('click', function(event) {
         //    const modals = ['modalNuevaFalta', 'modalEditarFalta'];
-          //  
-            //modals.forEach(modalId => {
-              //  const modal = document.getElementById(modalId);
-                //if (event.target === modal) {
+        //  
+        //modals.forEach(modalId => {
+        //  const modal = document.getElementById(modalId);
+        //if (event.target === modal) {
         //            cerrarModal();
-          //      }
+        //      }
         //    });
         //});
-        
-        $(document).ready(function() {
+
+        $(document).ready(function () {
             $('#listaFaltas').DataTable({
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
@@ -3816,12 +3920,12 @@ a.btn{
                 dom: '<"top"l>rt<"bottom"ip>', // Quitamos la "f" en "top"lf (filter/search)
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
                 pageLength: 25,
-                
+
                 // CONFIGURACIÓN PARA 3 CLICKS
                 order: [], // Sin orden inicial - respeta el orden de la consulta SQL
                 ordering: true, // Habilitar ordenamiento
                 orderMulti: true, // Permitir ordenamiento múltiple con Ctrl+click
-                
+
                 // Configuración específica para el ciclo de 3 clicks
                 columnDefs: [{
                     orderable: true, // Todas las columnas son ordenables
@@ -3829,13 +3933,13 @@ a.btn{
                 }]
             });
         });
-        
+
         // En el formulario de nueva falta, después de seleccionar sucursal
-        document.getElementById('nueva_sucursal').addEventListener('change', function() {
+        document.getElementById('nueva_sucursal').addEventListener('change', function () {
             const sucursalEspecial = ['6', '18'].includes(this.value);
             const esRH = <?= $esRH ? 'true' : 'false'; ?>;
             const mensaje = document.getElementById('mensaje-especial');
-            
+
             if (!mensaje) {
                 const nuevoMensaje = document.createElement('div');
                 nuevoMensaje.id = 'mensaje-especial';
@@ -3844,40 +3948,40 @@ a.btn{
                 nuevoMensaje.style.borderRadius = '4px';
                 document.querySelector('#formNuevaFalta .modal-body').prepend(nuevoMensaje);
             }
-            
+
             // Para RH: mostrar mensaje específico
             if (esRH) {
-                document.getElementById('mensaje-especial').innerHTML = 
+                document.getElementById('mensaje-especial').innerHTML =
                     '<div style="background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px;">' +
                     '<i class="fas fa-info-circle"></i> Modo RH: Se mostrarán todos los operarios que tuvieron horario programado en esta sucursal' +
                     '</div>';
-            } 
+            }
             // Para sucursales especiales
             else if (sucursalEspecial) {
-                document.getElementById('mensaje-especial').innerHTML = 
+                document.getElementById('mensaje-especial').innerHTML =
                     '<div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px;">' +
                     '<i class="fas fa-info-circle"></i> Sucursal especial: No se requiere validación de horario programado' +
                     '</div>';
-            } 
+            }
             // Para líderes en sucursales normales
             else {
-                document.getElementById('mensaje-especial').innerHTML = 
+                document.getElementById('mensaje-especial').innerHTML =
                     '<div style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 4px; font-size: 12px;">' +
                     '<i class="fas fa-info-circle"></i> Se mostrarán operarios asignados a esta sucursal' +
                     '</div>';
             }
         });
-        
+
         // Función para actualizar la información del porcentaje
         function actualizarPorcentaje(tipoFalta) {
             const select = document.getElementById('nueva_tipo');
             const option = select.querySelector(`option[value="${tipoFalta}"]`);
             const infoElement = document.getElementById('info-porcentaje');
-            
+
             if (option && option.dataset.porcentaje) {
                 const porcentaje = parseFloat(option.dataset.porcentaje);
                 let texto = '';
-                
+
                 if (porcentaje === -100) {
                     texto = '⚠️ La empresa NO paga este día - se DEDUCE del salario';
                     infoElement.style.color = '#dc3545';
@@ -3891,24 +3995,24 @@ a.btn{
                     texto = `📊 La empresa paga el ${porcentaje}% de este día`;
                     infoElement.style.color = '#17a2b8';
                 }
-                
+
                 infoElement.textContent = texto;
                 infoElement.style.display = 'block';
             } else {
                 infoElement.style.display = 'none';
             }
         }
-        
+
         // También para el modal de edición
         function actualizarPorcentajeEdicion(tipoFalta) {
             const select = document.getElementById('editar_tipo');
             const option = select.querySelector(`option[value="${tipoFalta}"]`);
             const infoElement = document.getElementById('info-porcentaje-edicion');
-            
+
             if (option && option.dataset.porcentaje && infoElement) {
                 const porcentaje = parseFloat(option.dataset.porcentaje);
                 let texto = '';
-                
+
                 if (porcentaje === -100) {
                     texto = '⚠️ La empresa NO paga este día - se DEDUCE del salario';
                     infoElement.style.color = '#dc3545';
@@ -3922,19 +4026,19 @@ a.btn{
                     texto = `📊 La empresa paga el ${porcentaje}% de este día`;
                     infoElement.style.color = '#17a2b8';
                 }
-                
+
                 infoElement.textContent = texto;
                 infoElement.style.display = 'block';
             } else if (infoElement) {
                 infoElement.style.display = 'none';
             }
         }
-        
+
         // Manejar clicks en botones de editar con data attributes (más seguro)
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const btn = e.target.closest('.btn-editar-falta');
             if (!btn) return;
-            
+
             const data = {
                 id: btn.dataset.id,
                 nombre: btn.dataset.nombre,
@@ -3945,9 +4049,9 @@ a.btn{
                 observacionesRrhh: btn.dataset.observacionesRrhh,
                 foto: btn.dataset.foto
             };
-            
+
             console.log('Abriendo modal con datos:', data); // DEBUG
-            
+
             mostrarModalEditarFalta(
                 data.id,
                 data.nombre,
@@ -3961,4 +4065,5 @@ a.btn{
         });
     </script>
 </body>
+
 </html>
