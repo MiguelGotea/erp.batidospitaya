@@ -392,12 +392,19 @@
     opacity: 0.5;
 }
 .inline-edit-input {
-    width: 100%;
-    padding: 4px;
-    border: 1px solid #0E544C;
-    border-radius: 4px;
-    font-size: inherit;
-    font-family: inherit;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 4px !important;
+    border: 1px solid #0E544C !important;
+    border-radius: 4px !important;
+    font-size: inherit !important;
+    font-family: inherit !important;
+    display: block !important;
+}
+.editable-cell.editing {
+    padding: 5px !important; /* Slightly reduced to compensate for input border/padding */
 }
 .cell-loading {
     opacity: 0.5;
@@ -420,6 +427,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const displaySpan = this.querySelector('.cell-display');
             
             this.classList.add('editing');
+            const currentWidth = this.getBoundingClientRect().width;
+            this.style.width = currentWidth + 'px';
+            
             const originalContent = displaySpan.innerHTML;
             
             let input;
@@ -492,6 +502,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const cleanup = () => {
                 this.classList.remove('editing');
+                this.style.width = '';
                 if (input.parentNode === this) this.removeChild(input);
                 displaySpan.style.display = 'inline';
             };
