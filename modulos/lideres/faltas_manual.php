@@ -18,13 +18,11 @@ verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$esAdmin = false;
 
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([5, 43, 8, 13, 16, 39, 30, 37, 28, 49]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([5, 43, 8, 13, 16, 39, 30, 37, 28]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([5, 43, 8, 13, 16, 39, 30, 37, 28, 49])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -2711,7 +2709,8 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                     style="flex: 1; min-width: 200px; background: #f8f9fa; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     <h3 style="color: #0E544C; margin-bottom: 10px; font-size: 1rem;">Faltas Registradas</h3>
                     <p style="font-size: 1.5rem; font-weight: bold; color: #28a745;">
-                        <?= $totalFaltasManualesRegistradas ?></p>
+                        <?= $totalFaltasManualesRegistradas ?>
+                    </p>
                     <small style="color: #6c757d;">Faltas registradas manualmente</small>
                 </div>
 
@@ -2922,7 +2921,8 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                                                             <small
                                                                 style="color: <?= $horarios['diferencia_entrada'] > 0 ? '#dc3545' : ($horarios['diferencia_entrada'] < 0 ? '#28a745' : '#17a2b8') ?>;">
                                                                 Entrada:
-                                                                <?= $horarios['diferencia_entrada'] > 0 ? '+' : '' ?>                        <?= $horarios['diferencia_entrada'] ?>
+                                                                <?= $horarios['diferencia_entrada'] > 0 ? '+' : '' ?>
+                                                                <?= $horarios['diferencia_entrada'] ?>
                                                                 min
                                                             </small>
                                                         <?php endif; ?>
@@ -2931,7 +2931,8 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                                                             <small
                                                                 style="color: <?= $horarios['diferencia_salida'] > 0 ? '#28a745' : ($horarios['diferencia_salida'] < 0 ? '#dc3545' : '#17a2b8') ?>;">
                                                                 Salida:
-                                                                <?= $horarios['diferencia_salida'] > 0 ? '+' : '' ?>                        <?= $horarios['diferencia_salida'] ?>
+                                                                <?= $horarios['diferencia_salida'] > 0 ? '+' : '' ?>
+                                                                <?= $horarios['diferencia_salida'] ?>
                                                                 min
                                                             </small>
                                                         <?php endif; ?>
@@ -3286,7 +3287,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
 
