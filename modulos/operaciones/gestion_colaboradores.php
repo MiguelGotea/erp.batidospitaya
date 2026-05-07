@@ -945,6 +945,7 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                 </div>
             </div>
 
+            <?php /* Oculto temporalmente
             <?php if ($semanaSiguiente): ?>
                 <a href="gestion_colaboradores.php?semana=siguiente"
                     class="week-btn siguiente <?= $tipoSemana === 'siguiente' ? 'active' : '' ?>">
@@ -955,6 +956,7 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                     <i class="fas fa-calendar-alt"></i> No hay semana siguiente
                 </button>
             <?php endif; ?>
+            */ ?>
         </div>
 
         <!-- Información de ayuda -->
