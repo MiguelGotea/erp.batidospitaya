@@ -1,4 +1,4 @@
-﻿<!-- Pestaña de Salario -->
+<!-- Pestaña de Salario -->
 <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
     <div id="salario" class="tab-pane <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -31,7 +31,7 @@
                                     <?= !empty($salario['inicio']) ? date('d/m/Y', strtotime($salario['inicio'])) : '' ?>
                                 </td>
                                 <td style="padding: 10px;">
-                                    <?= !empty($salario['fin']) ? date('d/m/Y', strtotime($salario['fin'])) : 'Actual' ?>
+                                    <?= (!empty($salario['fin']) && $salario['fin'] != '0000-00-00' && $salario['fin'] != '0000-00-00 00:00:00') ? date('d/m/Y', strtotime($salario['fin'])) : 'Actual' ?>
                                 </td>
                                 <td style="padding: 10px;"><?= ucfirst($salario['frecuencia_pago']) ?>
                                 </td>

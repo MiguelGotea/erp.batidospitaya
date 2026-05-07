@@ -1,4 +1,4 @@
-﻿<!-- Pestaña de Movimientos -->
+<!-- Pestaña de Movimientos -->
 <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
     <div id="movimientos" class="tab-pane <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">
         <?php
@@ -96,7 +96,7 @@
                                         <?= !empty($cargo['Fecha']) ? date('d/m/Y', strtotime($cargo['Fecha'])) : 'No definida' ?>
                                     </td>
                                     <td style="padding: 10px;">
-                                        <?= !empty($cargo['Fin']) ? date('d/m/Y', strtotime($cargo['Fin'])) : 'Activo' ?>
+                                        <?= (!empty($cargo['Fin']) && $cargo['Fin'] != '0000-00-00' && $cargo['Fin'] != '0000-00-00 00:00:00') ? date('d/m/Y', strtotime($cargo['Fin'])) : 'Activo' ?>
                                     </td>
                                     <td style="padding: 10px;">
                                         <?= htmlspecialchars($cargo['nombre_tipo_contrato'] ?? 'No definido') ?>

@@ -125,7 +125,8 @@
                                 </thead>
                                 <tbody>
                                     <?php foreach ($adendumsColaborador as $adendum):
-                                        $estado = empty($adendum['Fin']) ?
+                                        $esActivo = (empty($adendum['Fin']) || $adendum['Fin'] == '0000-00-00' || $adendum['Fin'] == '0000-00-00 00:00:00');
+                                        $estado = $esActivo ?
                                             '<span style="color: green; font-weight: bold;">ACTIVO</span>' :
                                             '<span style="color: #6c757d;">INACTIVO</span>';
 
@@ -154,7 +155,7 @@
                                                 <?= date('d/m/Y', strtotime($adendum['Fecha'])) ?>
                                             </td>
                                             <td style="padding: 10px;">
-                                                <?= !empty($adendum['Fin']) ? date('d/m/Y', strtotime($adendum['Fin'])) : 'No definida' ?>
+                                                <?= !$esActivo ? date('d/m/Y', strtotime($adendum['Fin'])) : '-' ?>
                                             </td>
                                             <td style="padding: 10px;"><?= $estado ?></td>
                                             <td style="padding: 10px; text-align: center;">
@@ -162,7 +163,7 @@
                                                     onclick="editarAdendum(<?= $adendum['CodAsignacionNivelesCargos'] ?>)">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <?php if (empty($adendum['Fin'])): ?>
+                                                <?php if ($esActivo): ?>
                                                     <button type="button" class="btn-accion"
                                                         onclick="abrirModalFinalizarAdenda(<?= $adendum['CodAsignacionNivelesCargos'] ?>)"
                                                         style="color: #dc3545; display:none;" title="Finalizar Adenda">

@@ -1,4 +1,4 @@
-﻿<!-- Pestaña de Categoría -->
+<!-- Pestaña de Categoría -->
 <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
     <div id="categoria" class="tab-pane <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">
         <form method="POST" action="">
@@ -65,7 +65,7 @@
                                         <?= date('d/m/Y', strtotime($categoria['FechaInicio'])) ?>
                                     </td>
                                     <td style="padding: 10px;">
-                                        <?= !empty($categoria['FechaFin']) ? date('d/m/Y', strtotime($categoria['FechaFin'])) : 'No definida' ?>
+                                        <?= (!empty($categoria['FechaFin']) && $categoria['FechaFin'] != '0000-00-00' && $categoria['FechaFin'] != '0000-00-00 00:00:00') ? date('d/m/Y', strtotime($categoria['FechaFin'])) : '-' ?>
                                     </td>
                                     <td style="padding: 10px; display:none;"><?= $estado ?></td>
                                     <td style="padding: 10px; text-align: center;">
