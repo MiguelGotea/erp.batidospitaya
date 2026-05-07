@@ -7,15 +7,12 @@
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
-//******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21, 36, 11]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([16, 21, 36, 11, 49])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -1865,11 +1862,11 @@ function obtenerCategoriasDesdeBD()
                 foreach ($todasCategorias as $categoria):
                     if (in_array($categoria['idCategoria'], $categoriasMostradas)):
                         $colorFondo = obtenerColorCategoria($categoria['idCategoria']);
-                ?>
+                        ?>
                         <span class="leyenda-item" style="background-color: <?= $colorFondo ?>;">
                             <?= htmlspecialchars($categoria['NombreCategoria']) ?> (<?= $categoria['Peso'] ?>)
                         </span>
-                <?php
+                        <?php
                     endif;
                 endforeach;
                 ?>
@@ -1975,11 +1972,11 @@ function obtenerCategoriasDesdeBD()
                             }
 
                             if (!$yaEnLista):
-                        ?>
+                                ?>
                                 <option value="<?= $op['CodOperario'] ?>">
                                     <?= htmlspecialchars($op['Nombre'] . ' ' . $op['Apellido'] . ' ' . $op['Apellido2']) ?>
                                 </option>
-                        <?php
+                                <?php
                             endif;
                         endforeach;
                         ?>
@@ -2070,7 +2067,7 @@ function obtenerCategoriasDesdeBD()
                                     $horarioOperaciones = obtenerHorarioOperaciones($operario['CodOperario'], $semana['id'], $sucursalSeleccionada);
 
                                     $horarioExistente = obtenerHorarioOperaciones($operario['CodOperario'], $semana['id'], $sucursalSeleccionada) !== false;
-                                ?>
+                                    ?>
                                     <tr class="<?= obtenerClaseCategoria($operario['categoria']['NombreCategoria']) ?>"
                                         data-existente="<?= $horarioExistente ? 'true' : 'false' ?>"
                                         data-operario="<?= $operario['CodOperario'] ?>" <?= !$horarioLider ? 'data-sin-lider="true"' : '' ?>
@@ -2080,7 +2077,7 @@ function obtenerCategoriasDesdeBD()
                                             <div style="margin-bottom: 5px; font-weight: bold;">
                                                 <?= htmlspecialchars($operario['Nombre'] . ' ' . $operario['Apellido'] . ' ' . $operario['Apellido2']) ?>
                                                 <? //= htmlspecialchars($operario['CodOperario']) 
-                                                ?>
+                                                            ?>
                                                 <?php if (!$horarioLider): ?>
                                                     <span style="color: #ffc107; font-size: 0.8rem; display: block;">
                                                         <i class="fas fa-exclamation-triangle"></i> Sin horario del líder
@@ -2139,12 +2136,15 @@ function obtenerCategoriasDesdeBD()
                                             } elseif ($horarioLider && isset($horarioLider["{$dia}_sucursal_externa"])) {
                                                 $sucursalExterna = $horarioLider["{$dia}_sucursal_externa"];
                                             }
-                                            
+
                                             // Asegurar valores mínimos si vienen vacíos
-                                            if (!$estado) $estado = 'Activo';
-                                            if (!$entrada) $entrada = '08:00';
-                                            if (!$salida) $salida = '17:00';
-                                            
+                                            if (!$estado)
+                                                $estado = 'Activo';
+                                            if (!$entrada)
+                                                $entrada = '08:00';
+                                            if (!$salida)
+                                                $salida = '17:00';
+
                                             $totalHoras += $horasDia;
 
                                             // Valores originales del líder (para mostrar como referencia)
@@ -2153,7 +2153,7 @@ function obtenerCategoriasDesdeBD()
                                             $entradaLider = $horarioLider["{$dia}_entrada"] ?? '';
                                             $salidaLider = $horarioLider["{$dia}_salida"] ?? '';
                                             $horasDiaLider = $horarioLider["{$dia}_horas"] ?? 0;
-                                        ?>
+                                            ?>
                                             <td>
                                                 <div class="compact-cell">
                                                     <div class="status-comment-group">
@@ -2204,7 +2204,8 @@ function obtenerCategoriasDesdeBD()
                                                             <?= !$puedeEditar ? 'disabled' : '' ?>>
                                                             <option value="">Seleccione sucursal...</option>
                                                             <?php foreach ($todasSucursales as $sucursalOption): ?>
-                                                                <option value="<?= $sucursalOption['codigo'] ?>" <?= ((string)$sucursalExterna === (string)$sucursalOption['codigo']) ? 'selected' : '' ?>>
+                                                                <option value="<?= $sucursalOption['codigo'] ?>"
+                                                                    <?= ((string) $sucursalExterna === (string) $sucursalOption['codigo']) ? 'selected' : '' ?>>
                                                                     <?= htmlspecialchars($sucursalOption['nombre']) ?>
                                                                 </option>
                                                             <?php endforeach; ?>
@@ -2230,58 +2231,81 @@ function obtenerCategoriasDesdeBD()
                                                             <!-- Selector Entrada -->
                                                             <div class="ts-premium-container" title="Hora de Entrada">
                                                                 <div class="ts-unit">
-                                                                    <i class="fas fa-chevron-up ts-arrow" onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada', 1)"></i>
-                                                                    <?php 
-                                                                        $valEntrada = $entrada ?: '08:00';
-                                                                        $h24e = (int)substr($valEntrada, 0, 2);
-                                                                        $h12e = ($h24e % 12) ?: 12;
-                                                                        $ampme = ($h24e < 12) ? 'AM' : 'PM';
+                                                                    <i class="fas fa-chevron-up ts-arrow"
+                                                                        onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada', 1)"></i>
+                                                                    <?php
+                                                                    $valEntrada = $entrada ?: '08:00';
+                                                                    $h24e = (int) substr($valEntrada, 0, 2);
+                                                                    $h12e = ($h24e % 12) ?: 12;
+                                                                    $ampme = ($h24e < 12) ? 'AM' : 'PM';
                                                                     ?>
-                                                                    <input type="text" class="ts-input" id="ts-h-entrada-<?= $dia ?>_<?= $operario['CodOperario'] ?>" maxlength="2" value="<?= str_pad($h12e, 2, '0', STR_PAD_LEFT) ?>" 
-                                                                        onfocus="this.select()" 
+                                                                    <input type="text" class="ts-input"
+                                                                        id="ts-h-entrada-<?= $dia ?>_<?= $operario['CodOperario'] ?>"
+                                                                        maxlength="2"
+                                                                        value="<?= str_pad($h12e, 2, '0', STR_PAD_LEFT) ?>"
+                                                                        onfocus="this.select()"
                                                                         oninput="validarHoraManual(this, '<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada')"
                                                                         onblur="formatearHoraBlur(this)">
-                                                                    <i class="fas fa-chevron-down ts-arrow" onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada', -1)"></i>
+                                                                    <i class="fas fa-chevron-down ts-arrow"
+                                                                        onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada', -1)"></i>
                                                                 </div>
                                                                 <span class="ts-sep">:</span>
                                                                 <div class="ts-unit">
-                                                                    <span class="ts-min-toggle" id="ts-m-entrada-<?= $dia ?>_<?= $operario['CodOperario'] ?>" onclick="toggleMinutosPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada')"><?= substr($valEntrada, 3, 2) ?></span>
+                                                                    <span class="ts-min-toggle"
+                                                                        id="ts-m-entrada-<?= $dia ?>_<?= $operario['CodOperario'] ?>"
+                                                                        onclick="toggleMinutosPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada')"><?= substr($valEntrada, 3, 2) ?></span>
                                                                 </div>
                                                                 <div class="ts-unit">
-                                                                    <span class="ts-ampm-toggle" id="ts-ap-entrada-<?= $dia ?>_<?= $operario['CodOperario'] ?>" onclick="toggleAMPM('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada')"><?= $ampme ?></span>
+                                                                    <span class="ts-ampm-toggle"
+                                                                        id="ts-ap-entrada-<?= $dia ?>_<?= $operario['CodOperario'] ?>"
+                                                                        onclick="toggleAMPM('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada')"><?= $ampme ?></span>
                                                                 </div>
                                                             </div>
 
                                                             <!-- Selector Salida -->
                                                             <div class="ts-premium-container" title="Hora de Salida">
                                                                 <div class="ts-unit">
-                                                                    <i class="fas fa-chevron-up ts-arrow" onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida', 1)"></i>
-                                                                    <?php 
-                                                                        $valSalida = $salida ?: '17:00';
-                                                                        $h24s = (int)substr($valSalida, 0, 2);
-                                                                        $h12s = ($h24s % 12) ?: 12;
-                                                                        $ampms = ($h24s < 12) ? 'AM' : 'PM';
+                                                                    <i class="fas fa-chevron-up ts-arrow"
+                                                                        onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida', 1)"></i>
+                                                                    <?php
+                                                                    $valSalida = $salida ?: '17:00';
+                                                                    $h24s = (int) substr($valSalida, 0, 2);
+                                                                    $h12s = ($h24s % 12) ?: 12;
+                                                                    $ampms = ($h24s < 12) ? 'AM' : 'PM';
                                                                     ?>
-                                                                    <input type="text" class="ts-input" id="ts-h-salida-<?= $dia ?>_<?= $operario['CodOperario'] ?>" maxlength="2" value="<?= str_pad($h12s, 2, '0', STR_PAD_LEFT) ?>" 
-                                                                        onfocus="this.select()" 
+                                                                    <input type="text" class="ts-input"
+                                                                        id="ts-h-salida-<?= $dia ?>_<?= $operario['CodOperario'] ?>"
+                                                                        maxlength="2"
+                                                                        value="<?= str_pad($h12s, 2, '0', STR_PAD_LEFT) ?>"
+                                                                        onfocus="this.select()"
                                                                         oninput="validarHoraManual(this, '<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida')"
                                                                         onblur="formatearHoraBlur(this)">
-                                                                    <i class="fas fa-chevron-down ts-arrow" onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida', -1)"></i>
+                                                                    <i class="fas fa-chevron-down ts-arrow"
+                                                                        onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida', -1)"></i>
                                                                 </div>
                                                                 <span class="ts-sep">:</span>
                                                                 <div class="ts-unit">
-                                                                    <span class="ts-min-toggle" id="ts-m-salida-<?= $dia ?>_<?= $operario['CodOperario'] ?>" onclick="toggleMinutosPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida')"><?= substr($valSalida, 3, 2) ?></span>
+                                                                    <span class="ts-min-toggle"
+                                                                        id="ts-m-salida-<?= $dia ?>_<?= $operario['CodOperario'] ?>"
+                                                                        onclick="toggleMinutosPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida')"><?= substr($valSalida, 3, 2) ?></span>
                                                                 </div>
                                                                 <div class="ts-unit">
-                                                                    <span class="ts-ampm-toggle" id="ts-ap-salida-<?= $dia ?>_<?= $operario['CodOperario'] ?>" onclick="toggleAMPM('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida')"><?= $ampms ?></span>
+                                                                    <span class="ts-ampm-toggle"
+                                                                        id="ts-ap-salida-<?= $dia ?>_<?= $operario['CodOperario'] ?>"
+                                                                        onclick="toggleAMPM('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida')"><?= $ampms ?></span>
                                                                 </div>
                                                             </div>
                                                         </div>
 
                                                         <div class="duration-stepper-premium">
-                                                            <button type="button" class="btn-dur-adj" onclick="ajustarDuracionPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', -30)" title="-30 min"><i class="fas fa-minus"></i></button>
-                                                            <span class="hours-display-compact" id="hours_compact_<?= $dia ?>_<?= $operario['CodOperario'] ?>"><?= number_format($horasDia, 2) ?></span>
-                                                            <button type="button" class="btn-dur-adj" onclick="ajustarDuracionPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 30)" title="+30 min"><i class="fas fa-plus"></i></button>
+                                                            <button type="button" class="btn-dur-adj"
+                                                                onclick="ajustarDuracionPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', -30)"
+                                                                title="-30 min"><i class="fas fa-minus"></i></button>
+                                                            <span class="hours-display-compact"
+                                                                id="hours_compact_<?= $dia ?>_<?= $operario['CodOperario'] ?>"><?= number_format($horasDia, 2) ?></span>
+                                                            <button type="button" class="btn-dur-adj"
+                                                                onclick="ajustarDuracionPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 30)"
+                                                                title="+30 min"><i class="fas fa-plus"></i></button>
                                                         </div>
                                                     </div>
 
@@ -2893,7 +2917,8 @@ function obtenerCategoriasDesdeBD()
                                 transition: background 0.2s;
                             }
 
-                            .ts-min-toggle:hover, .ts-ampm-toggle:hover {
+                            .ts-min-toggle:hover,
+                            .ts-ampm-toggle:hover {
                                 background: #e0eae8;
                             }
 
@@ -2953,1114 +2978,1114 @@ function obtenerCategoriasDesdeBD()
                                 background: #f5f5f5;
                             }
                         </style>
-    </div>
-<?php endif; ?>
+                </div>
+            <?php endif; ?>
 
-<?php if ($puedeEditar): ?>
-    <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-        <button style="display:none;" type="button" onclick="guardarHorarios()" class="btn btn-primary">
-            <i class="fas fa-save"></i> Guardar Cambios
-        </button>
-        <button type="button" onclick="confirmarHorarios()" class="btn btn-success">
-            <i class="fas fa-check-circle"></i> Confirmar Horarios
-        </button>
+            <?php if ($puedeEditar): ?>
+                <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button style="display:none;" type="button" onclick="guardarHorarios()" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <button type="button" onclick="confirmarHorarios()" class="btn btn-success">
+                        <i class="fas fa-check-circle"></i> Confirmar Horarios
+                    </button>
+                </div>
+            <?php endif; ?>
+            </form>
+        <?php endif; ?>
+    <?php elseif ($sucursalSeleccionada && !$semanaSeleccionada): ?>
+        <div style="text-align: center; padding: 20px; color: #666;">
+            Ingrese un número de semana para confirmar horarios
+        </div>
+    <?php elseif ($semanaSeleccionada && !$semana): ?>
+        <div style="text-align: center; padding: 20px; color: #dc3545;">
+            La semana ingresada no existe en el sistema
+        </div>
+    <?php endif; ?>
     </div>
-<?php endif; ?>
-</form>
-<?php endif; ?>
-<?php elseif ($sucursalSeleccionada && !$semanaSeleccionada): ?>
-    <div style="text-align: center; padding: 20px; color: #666;">
-        Ingrese un número de semana para confirmar horarios
-    </div>
-<?php elseif ($semanaSeleccionada && !$semana): ?>
-    <div style="text-align: center; padding: 20px; color: #dc3545;">
-        La semana ingresada no existe en el sistema
-    </div>
-<?php endif; ?>
-</div>
 
-<!-- Modal para comentarios -->
-<div id="commentModal" class="comment-modal">
-    <div class="comment-modal-content">
-        <h3>Editar Comentario</h3>
-        <textarea id="commentTextarea" class="comment-input" rows="3" style="width: 100%;"></textarea>
-        <div class="comment-modal-actions">
-            <button type="button" onclick="closeCommentModal()" class="btn btn-secondary">Cancelar</button>
-            <button type="button" onclick="saveComment()" class="btn btn-primary">Guardar</button>
+    <!-- Modal para comentarios -->
+    <div id="commentModal" class="comment-modal">
+        <div class="comment-modal-content">
+            <h3>Editar Comentario</h3>
+            <textarea id="commentTextarea" class="comment-input" rows="3" style="width: 100%;"></textarea>
+            <div class="comment-modal-actions">
+                <button type="button" onclick="closeCommentModal()" class="btn btn-secondary">Cancelar</button>
+                <button type="button" onclick="saveComment()" class="btn btn-primary">Guardar</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Modal para detalles de cambios -->
-<div id="cambiosModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="cerrarModal('cambiosModal')">&times;</span>
-        <h3>Detalles de cambios detectados</h3>
-        <div id="detallesCambios" class="modal-body">
-            <!-- Aquí se cargarán los detalles de los cambios -->
+    <!-- Modal para detalles de cambios -->
+    <div id="cambiosModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal('cambiosModal')">&times;</span>
+            <h3>Detalles de cambios detectados</h3>
+            <div id="detallesCambios" class="modal-body">
+                <!-- Aquí se cargarán los detalles de los cambios -->
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Modal para confirmar actualización -->
-<div id="confirmarActualizacionModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="cerrarModal('confirmarActualizacionModal')">&times;</span>
-        <h3>Confirmar actualización</h3>
-        <p>¿Está seguro que desea actualizar todos los horarios con los valores programados por los líderes?
-            Esta acción sobrescribirá las confirmaciones existentes.</p>
-        <div class="modal-actions">
-            <button type="button" onclick="cerrarModal('confirmarActualizacionModal')"
-                class="btn btn-secondary">Cancelar</button>
-            <button type="button" onclick="procesarActualizacionLideres()"
-                class="btn btn-primary">Confirmar</button>
+    <!-- Modal para confirmar actualización -->
+    <div id="confirmarActualizacionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal('confirmarActualizacionModal')">&times;</span>
+            <h3>Confirmar actualización</h3>
+            <p>¿Está seguro que desea actualizar todos los horarios con los valores programados por los líderes?
+                Esta acción sobrescribirá las confirmaciones existentes.</p>
+            <div class="modal-actions">
+                <button type="button" onclick="cerrarModal('confirmarActualizacionModal')"
+                    class="btn btn-secondary">Cancelar</button>
+                <button type="button" onclick="procesarActualizacionLideres()"
+                    class="btn btn-primary">Confirmar</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Variables para el modal de comentarios
-    let currentCommentPrefix = null;
-    let currentCommentBtn = null;
+    <script>
+        // Variables para el modal de comentarios
+        let currentCommentPrefix = null;
+        let currentCommentBtn = null;
 
-    function openCommentModal(prefix, currentComment, btn) {
-        currentCommentPrefix = prefix;
-        currentCommentBtn = btn;
+        function openCommentModal(prefix, currentComment, btn) {
+            currentCommentPrefix = prefix;
+            currentCommentBtn = btn;
 
-        // Decodificar el comentario (por si tiene caracteres especiales)
-        try {
-            currentComment = decodeURIComponent(currentComment);
-        } catch (e) {
-            // Si hay error al decodificar, mantener el valor original
-            console.log('Error al decodificar comentario:', e);
+            // Decodificar el comentario (por si tiene caracteres especiales)
+            try {
+                currentComment = decodeURIComponent(currentComment);
+            } catch (e) {
+                // Si hay error al decodificar, mantener el valor original
+                console.log('Error al decodificar comentario:', e);
+            }
+
+            document.getElementById('commentTextarea').value = currentComment || '';
+            document.getElementById('commentModal').style.display = 'flex';
         }
 
-        document.getElementById('commentTextarea').value = currentComment || '';
-        document.getElementById('commentModal').style.display = 'flex';
-    }
+        function closeCommentModal() {
+            document.getElementById('commentModal').style.display = 'none';
+            currentCommentPrefix = null;
+            currentCommentBtn = null;
+        }
 
-    function closeCommentModal() {
-        document.getElementById('commentModal').style.display = 'none';
-        currentCommentPrefix = null;
-        currentCommentBtn = null;
-    }
+        function saveComment() {
+            if (!currentCommentPrefix) return;
 
-    function saveComment() {
-        if (!currentCommentPrefix) return;
+            const comment = document.getElementById('commentTextarea').value;
+            const commentInput = document.getElementById(`comment_${currentCommentPrefix}`);
 
-        const comment = document.getElementById('commentTextarea').value;
-        const commentInput = document.getElementById(`comment_${currentCommentPrefix}`);
+            if (commentInput) {
+                commentInput.value = comment;
 
-        if (commentInput) {
-            commentInput.value = comment;
-
-            // Actualizar el botón de comentario
-            if (currentCommentBtn) {
-                if (comment.trim()) {
-                    currentCommentBtn.classList.add('has-comment');
-                    currentCommentBtn.title = 'Editar comentario: ' + comment;
-                    currentCommentBtn.innerHTML = '<i class="fas fa-comment"></i>';
-                } else {
-                    currentCommentBtn.classList.remove('has-comment');
-                    currentCommentBtn.title = 'Agregar comentario';
-                    currentCommentBtn.innerHTML = '<i class="fas fa-comment-alt"></i>';
+                // Actualizar el botón de comentario
+                if (currentCommentBtn) {
+                    if (comment.trim()) {
+                        currentCommentBtn.classList.add('has-comment');
+                        currentCommentBtn.title = 'Editar comentario: ' + comment;
+                        currentCommentBtn.innerHTML = '<i class="fas fa-comment"></i>';
+                    } else {
+                        currentCommentBtn.classList.remove('has-comment');
+                        currentCommentBtn.title = 'Agregar comentario';
+                        currentCommentBtn.innerHTML = '<i class="fas fa-comment-alt"></i>';
+                    }
                 }
+            }
+
+            closeCommentModal();
+        }
+
+        // Cambiar semana en la URL
+        function cambiarSemana() {
+            var semana = document.getElementById('semana').value;
+            var sucursal = document.getElementById('sucursal').value;
+
+            if (semana) {
+                window.location.href = 'programar_horarios_operaciones.php?semana=' + semana + '&sucursal=' + sucursal;
+            } else {
+                alert('Por favor ingrese un número de semana');
             }
         }
 
-        closeCommentModal();
-    }
+        // Cambiar sucursal en la URL
+        function cambiarSucursal() {
+            var semana = document.getElementById('semana').value;
+            var sucursal = document.getElementById('sucursal').value;
 
-    // Cambiar semana en la URL
-    function cambiarSemana() {
-        var semana = document.getElementById('semana').value;
-        var sucursal = document.getElementById('sucursal').value;
-
-        if (semana) {
-            window.location.href = 'programar_horarios_operaciones.php?semana=' + semana + '&sucursal=' + sucursal;
-        } else {
-            alert('Por favor ingrese un número de semana');
-        }
-    }
-
-    // Cambiar sucursal en la URL
-    function cambiarSucursal() {
-        var semana = document.getElementById('semana').value;
-        var sucursal = document.getElementById('sucursal').value;
-
-        if (semana && sucursal) {
-            window.location.href = 'programar_horarios_operaciones.php?semana=' + semana + '&sucursal=' + sucursal;
-        }
-    }
-
-    // Actualizar estado (Activo/Inactivo) y habilitar/deshabilitar campos de hora
-    function actualizarEstado(selectElement, prefix) {
-        var estado = selectElement.value;
-        var entrada = document.querySelector('.entrada_' + prefix);
-        var salida = document.querySelector('.salida_' + prefix);
-        var compactCell = (entrada || salida) ? (entrada || salida).closest('.compact-cell') : null;
-        var horasDisplay = compactCell ? compactCell.querySelector('.hours-display') : null;
-        var sucursalExternaGroup = document.getElementById('sucursal_externa_' + prefix);
-        var sucursalExternaSelect = document.querySelector(`select[name="horarios[${prefix.split('_')[1]}][${prefix.split('_')[0]}_sucursal_externa]"]`);
-
-        // Mostrar/ocultar selector de sucursal externa
-        if (sucursalExternaGroup) {
-            sucursalExternaGroup.style.display = estado === 'Otra.Tienda' ? 'flex' : 'none';
+            if (semana && sucursal) {
+                window.location.href = 'programar_horarios_operaciones.php?semana=' + semana + '&sucursal=' + sucursal;
+            }
         }
 
-        // Limpiar valor de sucursal externa si no es Otra.Tienda
-        if (sucursalExternaSelect && estado !== 'Otra.Tienda') {
-            sucursalExternaSelect.value = '';
+        // Actualizar estado (Activo/Inactivo) y habilitar/deshabilitar campos de hora
+        function actualizarEstado(selectElement, prefix) {
+            var estado = selectElement.value;
+            var entrada = document.querySelector('.entrada_' + prefix);
+            var salida = document.querySelector('.salida_' + prefix);
+            var compactCell = (entrada || salida) ? (entrada || salida).closest('.compact-cell') : null;
+            var horasDisplay = compactCell ? compactCell.querySelector('.hours-display') : null;
+            var sucursalExternaGroup = document.getElementById('sucursal_externa_' + prefix);
+            var sucursalExternaSelect = document.querySelector(`select[name="horarios[${prefix.split('_')[1]}][${prefix.split('_')[0]}_sucursal_externa]"]`);
+
+            // Mostrar/ocultar selector de sucursal externa
+            if (sucursalExternaGroup) {
+                sucursalExternaGroup.style.display = estado === 'Otra.Tienda' ? 'flex' : 'none';
+            }
+
+            // Limpiar valor de sucursal externa si no es Otra.Tienda
+            if (sucursalExternaSelect && estado !== 'Otra.Tienda') {
+                sucursalExternaSelect.value = '';
+            }
+
+            if (estado === 'Activo' || estado === 'Otra.Tienda') {
+                entrada.disabled = false;
+                salida.disabled = false;
+                // Habilitar selector premium
+                document.getElementById('wrapper_' + prefix)?.classList.remove('disabled-premium');
+
+                // Remover clase inactiva y aplicar clase normal o extendida según hora
+                horasDisplay.classList.remove('inactive-hours');
+                if (salida.value && salida.value >= '19:00') {
+                    horasDisplay.classList.remove('normal-hours');
+                    horasDisplay.classList.add('extended-hours');
+                } else {
+                    horasDisplay.classList.remove('extended-hours');
+                    horasDisplay.classList.add('normal-hours');
+                }
+            } else {
+                entrada.disabled = true;
+                salida.disabled = true;
+                entrada.value = '';
+                salida.value = '';
+                // Deshabilitar selector premium y resetear UI
+                const wrapper = document.getElementById('wrapper_' + prefix);
+                if (wrapper) {
+                    wrapper.classList.add('disabled-premium');
+                    document.getElementById('ts-h-entrada-' + prefix).value = '08';
+                    document.getElementById('ts-m-entrada-' + prefix).textContent = '00';
+                    document.getElementById('ts-ap-entrada-' + prefix).textContent = 'AM';
+                    document.getElementById('ts-h-salida-' + prefix).value = '05';
+                    document.getElementById('ts-m-salida-' + prefix).textContent = '00';
+                    document.getElementById('ts-ap-salida-' + prefix).textContent = 'PM';
+                }
+
+                horasDisplay.textContent = '0.00';
+                const compactDisplay = document.getElementById('hours_compact_' + prefix);
+                if (compactDisplay) compactDisplay.textContent = '0.00';
+                // Aplicar estilo para estado inactivo
+                horasDisplay.classList.remove('normal-hours', 'extended-hours');
+                horasDisplay.classList.add('inactive-hours');
+            }
+
+            // Recalcular totales cuando cambia el estado
+            var operarioId = prefix.split('_')[1];
+            calcularTotalHoras(operarioId);
         }
 
-        if (estado === 'Activo' || estado === 'Otra.Tienda') {
-            entrada.disabled = false;
-            salida.disabled = false;
-            // Habilitar selector premium
-            document.getElementById('wrapper_' + prefix)?.classList.remove('disabled-premium');
+        // Calcular horas trabajadas en un día
+        function calcularHoras(prefix) {
+            var entrada = document.querySelector('.entrada_' + prefix);
+            var salida = document.querySelector('.salida_' + prefix);
 
-            // Remover clase inactiva y aplicar clase normal o extendida según hora
-            horasDisplay.classList.remove('inactive-hours');
-            if (salida.value && salida.value >= '19:00') {
+            // Selector más robusto para el display de horas
+            var compactCell = entrada.closest('.compact-cell');
+            var horasDisplay = compactCell ? compactCell.querySelector('.hours-display') : null;
+
+            if (!entrada || !salida || !horasDisplay) {
+                console.error("No se encontraron los elementos necesarios para calcularHoras:", prefix);
+                return;
+            }
+
+            if (!entrada.value || !salida.value) {
+                horasDisplay.textContent = '0.00';
+                const compactDisplay = document.getElementById('hours_compact_' + prefix);
+                if (compactDisplay) compactDisplay.textContent = '0.00';
+                calcularTotalHoras(prefix.split('_')[1]);
+                return;
+            }
+
+            // Ajustar minutos a 00 o 30
+            ajustarMinutos(entrada);
+            ajustarMinutos(salida);
+
+            // Calcular diferencia de horas
+            var horaEntrada = new Date('2000-01-01T' + entrada.value + ':00');
+            var horaSalida = new Date('2000-01-01T' + salida.value + ':00');
+
+            // Validar que la hora de salida sea posterior a la de entrada
+            if (horaSalida <= horaEntrada) {
+                // Prevenir bucles de alertas si el evento se dispara múltiples veces
+                if (window.isValidatingTime) return;
+                window.isValidatingTime = true;
+
+                alert('La hora de salida debe ser posterior a la de entrada');
+
+                // Limpiar salida para forzar corrección
+                salida.value = '';
+
+                // Actualizar displays
+                horasDisplay.textContent = '0.00';
+                const compactDisplay = document.getElementById('hours_compact_' + prefix);
+                if (compactDisplay) compactDisplay.textContent = '0.00';
+
+                calcularTotalHoras(prefix.split('_')[1]);
+
+                // Resetear flag con un pequeño delay
+                setTimeout(() => { window.isValidatingTime = false; }, 300);
+                return;
+            }
+
+            var diffMs = horaSalida - horaEntrada;
+            var diffHrs = diffMs / (1000 * 60 * 60);
+
+            // Actualizar display de horas
+            horasDisplay.textContent = diffHrs.toFixed(2);
+
+            // Actualizar display compacto del selector premium
+            const compactDisplay = document.getElementById('hours_compact_' + prefix);
+            if (compactDisplay) {
+                compactDisplay.textContent = diffHrs.toFixed(2);
+            }
+
+            // Cambiar color según hora de salida
+            if (salida.value >= '19:30') {
                 horasDisplay.classList.remove('normal-hours');
                 horasDisplay.classList.add('extended-hours');
             } else {
                 horasDisplay.classList.remove('extended-hours');
                 horasDisplay.classList.add('normal-hours');
             }
-        } else {
-            entrada.disabled = true;
-            salida.disabled = true;
-            entrada.value = '';
-            salida.value = '';
-            // Deshabilitar selector premium y resetear UI
-            const wrapper = document.getElementById('wrapper_' + prefix);
-            if (wrapper) {
-                wrapper.classList.add('disabled-premium');
-                document.getElementById('ts-h-entrada-' + prefix).value = '08';
-                document.getElementById('ts-m-entrada-' + prefix).textContent = '00';
-                document.getElementById('ts-ap-entrada-' + prefix).textContent = 'AM';
-                document.getElementById('ts-h-salida-' + prefix).value = '05';
-                document.getElementById('ts-m-salida-' + prefix).textContent = '00';
-                document.getElementById('ts-ap-salida-' + prefix).textContent = 'PM';
+
+            // Calcular total de horas por operario
+            calcularTotalHoras(prefix.split('_')[1]);
+        }
+
+        // Función para ajustar minutos a 00 o 30
+        function ajustarMinutos(inputTime) {
+            if (!inputTime.value) return;
+
+            var timeParts = inputTime.value.split(':');
+            var hours = parseInt(timeParts[0]);
+            var minutes = parseInt(timeParts[1]);
+
+            // Redondear minutos a 00 o 30
+            if (minutes < 15) {
+                minutes = 0;
+            } else if (minutes < 45) {
+                minutes = 30;
+            } else {
+                minutes = 0;
+                hours += 1;
             }
 
-            horasDisplay.textContent = '0.00';
-            const compactDisplay = document.getElementById('hours_compact_' + prefix);
-            if (compactDisplay) compactDisplay.textContent = '0.00';
-            // Aplicar estilo para estado inactivo
-            horasDisplay.classList.remove('normal-hours', 'extended-hours');
-            horasDisplay.classList.add('inactive-hours');
-        }
+            // Asegurar que no pase de 23:59
+            if (hours >= 24) {
+                hours = 23;
+                minutes = 59;
+            }
 
-        // Recalcular totales cuando cambia el estado
-        var operarioId = prefix.split('_')[1];
-        calcularTotalHoras(operarioId);
-    }
+            // Formatear con dos dígitos
+            var formattedHours = hours.toString().padStart(2, '0');
+            var formattedMinutes = minutes.toString().padStart(2, '0');
 
-    // Calcular horas trabajadas en un día
-    function calcularHoras(prefix) {
-        var entrada = document.querySelector('.entrada_' + prefix);
-        var salida = document.querySelector('.salida_' + prefix);
-
-        // Selector más robusto para el display de horas
-        var compactCell = entrada.closest('.compact-cell');
-        var horasDisplay = compactCell ? compactCell.querySelector('.hours-display') : null;
-
-        if (!entrada || !salida || !horasDisplay) {
-            console.error("No se encontraron los elementos necesarios para calcularHoras:", prefix);
-            return;
-        }
-
-        if (!entrada.value || !salida.value) {
-            horasDisplay.textContent = '0.00';
-            const compactDisplay = document.getElementById('hours_compact_' + prefix);
-            if (compactDisplay) compactDisplay.textContent = '0.00';
-            calcularTotalHoras(prefix.split('_')[1]);
-            return;
-        }
-
-        // Ajustar minutos a 00 o 30
-        ajustarMinutos(entrada);
-        ajustarMinutos(salida);
-
-        // Calcular diferencia de horas
-        var horaEntrada = new Date('2000-01-01T' + entrada.value + ':00');
-        var horaSalida = new Date('2000-01-01T' + salida.value + ':00');
-
-        // Validar que la hora de salida sea posterior a la de entrada
-        if (horaSalida <= horaEntrada) {
-            // Prevenir bucles de alertas si el evento se dispara múltiples veces
-            if (window.isValidatingTime) return;
-            window.isValidatingTime = true;
-
-            alert('La hora de salida debe ser posterior a la de entrada');
-            
-            // Limpiar salida para forzar corrección
-            salida.value = '';
-            
-            // Actualizar displays
-            horasDisplay.textContent = '0.00';
-            const compactDisplay = document.getElementById('hours_compact_' + prefix);
-            if (compactDisplay) compactDisplay.textContent = '0.00';
-            
-            calcularTotalHoras(prefix.split('_')[1]);
-            
-            // Resetear flag con un pequeño delay
-            setTimeout(() => { window.isValidatingTime = false; }, 300);
-            return;
-        }
-
-        var diffMs = horaSalida - horaEntrada;
-        var diffHrs = diffMs / (1000 * 60 * 60);
-
-        // Actualizar display de horas
-        horasDisplay.textContent = diffHrs.toFixed(2);
-
-        // Actualizar display compacto del selector premium
-        const compactDisplay = document.getElementById('hours_compact_' + prefix);
-        if (compactDisplay) {
-            compactDisplay.textContent = diffHrs.toFixed(2);
-        }
-
-        // Cambiar color según hora de salida
-        if (salida.value >= '19:30') {
-            horasDisplay.classList.remove('normal-hours');
-            horasDisplay.classList.add('extended-hours');
-        } else {
-            horasDisplay.classList.remove('extended-hours');
-            horasDisplay.classList.add('normal-hours');
+            inputTime.value = formattedHours + ':' + formattedMinutes;
         }
 
         // Calcular total de horas por operario
-        calcularTotalHoras(prefix.split('_')[1]);
-    }
+        function calcularTotalHoras(operarioId) {
+            let total = 0;
+            let diasActivos = 0;
+            let diasExtendidos = 0;
+            const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
 
-    // Función para ajustar minutos a 00 o 30
-    function ajustarMinutos(inputTime) {
-        if (!inputTime.value) return;
+            dias.forEach(function (dia) {
+                const selectEstado = document.querySelector(`select[name="horarios[${operarioId}][${dia}_estado]"]`);
+                if (!selectEstado) return;
 
-        var timeParts = inputTime.value.split(':');
-        var hours = parseInt(timeParts[0]);
-        var minutes = parseInt(timeParts[1]);
+                const estado = selectEstado.value;
+                const salida = document.querySelector(`.salida_${dia}_${operarioId}`)?.value;
 
-        // Redondear minutos a 00 o 30
-        if (minutes < 15) {
-            minutes = 0;
-        } else if (minutes < 45) {
-            minutes = 30;
-        } else {
-            minutes = 0;
-            hours += 1;
-        }
+                if (estado === 'Activo') {
+                    diasActivos++;
 
-        // Asegurar que no pase de 23:59
-        if (hours >= 24) {
-            hours = 23;
-            minutes = 59;
-        }
-
-        // Formatear con dos dígitos
-        var formattedHours = hours.toString().padStart(2, '0');
-        var formattedMinutes = minutes.toString().padStart(2, '0');
-
-        inputTime.value = formattedHours + ':' + formattedMinutes;
-    }
-
-    // Calcular total de horas por operario
-    function calcularTotalHoras(operarioId) {
-        let total = 0;
-        let diasActivos = 0;
-        let diasExtendidos = 0;
-        const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-
-        dias.forEach(function(dia) {
-            const selectEstado = document.querySelector(`select[name="horarios[${operarioId}][${dia}_estado]"]`);
-            if (!selectEstado) return;
-
-            const estado = selectEstado.value;
-            const salida = document.querySelector(`.salida_${dia}_${operarioId}`)?.value;
-
-            if (estado === 'Activo') {
-                diasActivos++;
-
-                // Verificar si es día extendido (salida después de 20:00)
-                if (salida && salida >= '20:00') {
-                    diasExtendidos++;
+                    // Verificar si es día extendido (salida después de 20:00)
+                    if (salida && salida >= '20:00') {
+                        diasExtendidos++;
+                    }
                 }
+
+                const inputSalida = document.querySelector(`.salida_${dia}_${operarioId}`);
+                const compactCell = inputSalida ? inputSalida.closest('.compact-cell') : null;
+                const horasDisplay = compactCell ? compactCell.querySelector('.hours-display') : null;
+
+                if (horasDisplay) {
+                    total += parseFloat(horasDisplay.textContent) || 0;
+                }
+            });
+
+            // Calcular horas teóricas:
+            // Días normales (8 horas) + días extendidos (7.5 horas)
+            const diasNormales = diasActivos - diasExtendidos;
+            const horasTeoricas = (diasNormales * 8) + (diasExtendidos * 7.5);
+
+            // Actualizar el total en la celda correspondiente
+            const celdaTotal = document.getElementById('total_horas_' + operarioId);
+            if (celdaTotal) {
+                celdaTotal.textContent = total.toFixed(2) + ' / ' + horasTeoricas.toFixed(2);
             }
 
-            const inputSalida = document.querySelector(`.salida_${dia}_${operarioId}`);
-            const compactCell = inputSalida ? inputSalida.closest('.compact-cell') : null;
-            const horasDisplay = compactCell ? compactCell.querySelector('.hours-display') : null;
+            // Actualizar el gráfico después de un breve delay
+            setTimeout(actualizarGraficoHoras, 50);
+        }
 
-            if (horasDisplay) {
-                total += parseFloat(horasDisplay.textContent) || 0;
+        // Modificar los event listeners para los inputs de tiempo
+        document.querySelectorAll('input[type="time"]').forEach(function (input) {
+            input.addEventListener('change', function () {
+                ajustarMinutos(this);
+
+                // Obtener el prefijo (día_operario) del nombre del input
+                var nameParts = this.name.match(/horarios\[(\d+)\]\[(\w+)_(entrada|salida)\]/);
+                if (nameParts) {
+                    var operarioId = nameParts[1];
+                    var dia = nameParts[2];
+                    calcularHoras(dia + '_' + operarioId);
+                }
+            });
+        });
+
+        // Prevenir envío del formulario al presionar Enter
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                return false;
             }
         });
 
-        // Calcular horas teóricas:
-        // Días normales (8 horas) + días extendidos (7.5 horas)
-        const diasNormales = diasActivos - diasExtendidos;
-        const horasTeoricas = (diasNormales * 8) + (diasExtendidos * 7.5);
+        function validarHorarioOperario(operarioId) {
+            const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+            let valido = true;
 
-        // Actualizar el total en la celda correspondiente
-        const celdaTotal = document.getElementById('total_horas_' + operarioId);
-        if (celdaTotal) {
-            celdaTotal.textContent = total.toFixed(2) + ' / ' + horasTeoricas.toFixed(2);
-        }
+            dias.forEach(dia => {
+                const estado = document.querySelector(`select[name="horarios[${operarioId}][${dia}_estado]"]`).value;
+                const entrada = document.querySelector(`input[name="horarios[${operarioId}][${dia}_entrada]"]`);
+                const salida = document.querySelector(`input[name="horarios[${operarioId}][${dia}_salida]"]`);
 
-        // Actualizar el gráfico después de un breve delay
-        setTimeout(actualizarGraficoHoras, 50);
-    }
+                if (estado === 'Activo' && (!entrada.value || !salida.value)) {
+                    entrada.style.borderColor = '#dc3545';
+                    salida.style.borderColor = '#dc3545';
+                    valido = false;
 
-    // Modificar los event listeners para los inputs de tiempo
-    document.querySelectorAll('input[type="time"]').forEach(function(input) {
-        input.addEventListener('change', function() {
-            ajustarMinutos(this);
-
-            // Obtener el prefijo (día_operario) del nombre del input
-            var nameParts = this.name.match(/horarios\[(\d+)\]\[(\w+)_(entrada|salida)\]/);
-            if (nameParts) {
-                var operarioId = nameParts[1];
-                var dia = nameParts[2];
-                calcularHoras(dia + '_' + operarioId);
-            }
-        });
-    });
-
-    // Prevenir envío del formulario al presionar Enter
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            return false;
-        }
-    });
-
-    function validarHorarioOperario(operarioId) {
-        const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-        let valido = true;
-
-        dias.forEach(dia => {
-            const estado = document.querySelector(`select[name="horarios[${operarioId}][${dia}_estado]"]`).value;
-            const entrada = document.querySelector(`input[name="horarios[${operarioId}][${dia}_entrada]"]`);
-            const salida = document.querySelector(`input[name="horarios[${operarioId}][${dia}_salida]"]`);
-
-            if (estado === 'Activo' && (!entrada.value || !salida.value)) {
-                entrada.style.borderColor = '#dc3545';
-                salida.style.borderColor = '#dc3545';
-                valido = false;
-
-                // Mostrar notificación y desplazarse al campo
-                if (!entrada.value) {
-                    mostrarNotificacion(`Falta hora de entrada para ${dia}`, 'error');
-                    entrada.focus();
+                    // Mostrar notificación y desplazarse al campo
+                    if (!entrada.value) {
+                        mostrarNotificacion(`Falta hora de entrada para ${dia}`, 'error');
+                        entrada.focus();
+                    } else {
+                        mostrarNotificacion(`Falta hora de salida para ${dia}`, 'error');
+                        salida.focus();
+                    }
                 } else {
-                    mostrarNotificacion(`Falta hora de salida para ${dia}`, 'error');
-                    salida.focus();
+                    entrada.style.borderColor = '';
+                    salida.style.borderColor = '';
                 }
-            } else {
-                entrada.style.borderColor = '';
-                salida.style.borderColor = '';
-            }
-        });
+            });
 
-        return valido;
-    }
-
-
-    // Fin de utilidades de estado
-
-    function validarTodosHorarios() {
-        const operarios = Array.from(document.querySelectorAll('tr[data-operario]')).map(tr =>
-            tr.getAttribute('data-operario')
-        );
-
-        let todosValidos = true;
-
-        operarios.forEach(operarioId => {
-            if (!validarHorarioOperario(operarioId)) {
-                todosValidos = false;
-            }
-        });
-
-        return todosValidos;
-    }
-
-    // Modificar las funciones de guardar y confirmar para usar la validación
-    function guardarHorarios() {
-        if (validarTodosHorarios()) {
-            document.getElementById('horariosForm').submit();
+            return valido;
         }
-    }
 
-    function confirmarHorarios() {
-        if (validarTodosHorarios() && confirm('¿Está seguro que desea confirmar estos horarios? Esta acción no se puede deshacer.')) {
-            document.querySelector('input[name="guardar_horarios"]').name = 'confirmar_horarios';
-            document.getElementById('horariosForm').submit();
+
+        // Fin de utilidades de estado
+
+        function validarTodosHorarios() {
+            const operarios = Array.from(document.querySelectorAll('tr[data-operario]')).map(tr =>
+                tr.getAttribute('data-operario')
+            );
+
+            let todosValidos = true;
+
+            operarios.forEach(operarioId => {
+                if (!validarHorarioOperario(operarioId)) {
+                    todosValidos = false;
+                }
+            });
+
+            return todosValidos;
         }
-    }
 
-    // Función para guardar un solo operario via AJAX
-    function guardarOperario(codOperario) {
-        // Recolectar todos los datos del operario
-        const formData = new FormData();
-        formData.append('semana', document.querySelector('input[name="semana"]').value);
-        formData.append('sucursal', document.querySelector('input[name="sucursal"]').value);
-        formData.append('guardar_operario', '1');
-        formData.append('cod_operario', codOperario);
-
-        const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-
-        dias.forEach(dia => {
-            // Estado
-            const selectEstado = document.querySelector(`select[name="horarios[${codOperario}][${dia}_estado]"]`);
-            const estado = selectEstado.value;
-            formData.append(`horarios[${codOperario}][${dia}_estado]`, estado);
-
-            // Comentario
-            const comentario = document.querySelector(`input[name="horarios[${codOperario}][${dia}_comentario]"]`).value;
-            formData.append(`horarios[${codOperario}][${dia}_comentario]`, comentario);
-
-            // Entrada y salida
-            const entrada = document.querySelector(`input[name="horarios[${codOperario}][${dia}_entrada]"]`).value;
-            const salida = document.querySelector(`input[name="horarios[${codOperario}][${dia}_salida]"]`).value;
-            formData.append(`horarios[${codOperario}][${dia}_entrada]`, entrada);
-            formData.append(`horarios[${codOperario}][${dia}_salida]`, salida);
-
-            // Sucursal Externa (NUEVO)
-            const sucursalExterna = document.querySelector(`select[name="horarios[${codOperario}][${dia}_sucursal_externa]"]`);
-            if (sucursalExterna) {
-                formData.append(`horarios[${codOperario}][${dia}_sucursal_externa]`, sucursalExterna.value);
+        // Modificar las funciones de guardar y confirmar para usar la validación
+        function guardarHorarios() {
+            if (validarTodosHorarios()) {
+                document.getElementById('horariosForm').submit();
             }
-        });
+        }
 
-        // Mostrar carga
-        const btnGuardar = document.querySelector(`button[onclick="guardarOperario(${codOperario})"]`);
-        const originalHTML = btnGuardar.innerHTML;
-        btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        btnGuardar.disabled = true;
+        function confirmarHorarios() {
+            if (validarTodosHorarios() && confirm('¿Está seguro que desea confirmar estos horarios? Esta acción no se puede deshacer.')) {
+                document.querySelector('input[name="guardar_horarios"]').name = 'confirmar_horarios';
+                document.getElementById('horariosForm').submit();
+            }
+        }
 
-        // Enviar por AJAX
-        fetch('guardar_horario_operario.php', {
+        // Función para guardar un solo operario via AJAX
+        function guardarOperario(codOperario) {
+            // Recolectar todos los datos del operario
+            const formData = new FormData();
+            formData.append('semana', document.querySelector('input[name="semana"]').value);
+            formData.append('sucursal', document.querySelector('input[name="sucursal"]').value);
+            formData.append('guardar_operario', '1');
+            formData.append('cod_operario', codOperario);
+
+            const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+
+            dias.forEach(dia => {
+                // Estado
+                const selectEstado = document.querySelector(`select[name="horarios[${codOperario}][${dia}_estado]"]`);
+                const estado = selectEstado.value;
+                formData.append(`horarios[${codOperario}][${dia}_estado]`, estado);
+
+                // Comentario
+                const comentario = document.querySelector(`input[name="horarios[${codOperario}][${dia}_comentario]"]`).value;
+                formData.append(`horarios[${codOperario}][${dia}_comentario]`, comentario);
+
+                // Entrada y salida
+                const entrada = document.querySelector(`input[name="horarios[${codOperario}][${dia}_entrada]"]`).value;
+                const salida = document.querySelector(`input[name="horarios[${codOperario}][${dia}_salida]"]`).value;
+                formData.append(`horarios[${codOperario}][${dia}_entrada]`, entrada);
+                formData.append(`horarios[${codOperario}][${dia}_salida]`, salida);
+
+                // Sucursal Externa (NUEVO)
+                const sucursalExterna = document.querySelector(`select[name="horarios[${codOperario}][${dia}_sucursal_externa]"]`);
+                if (sucursalExterna) {
+                    formData.append(`horarios[${codOperario}][${dia}_sucursal_externa]`, sucursalExterna.value);
+                }
+            });
+
+            // Mostrar carga
+            const btnGuardar = document.querySelector(`button[onclick="guardarOperario(${codOperario})"]`);
+            const originalHTML = btnGuardar.innerHTML;
+            btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btnGuardar.disabled = true;
+
+            // Enviar por AJAX
+            fetch('guardar_horario_operario.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const mensaje = data.message || 'Horario guardado correctamente';
-                    const tipo = data.no_lider ? 'info' : 'success';
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const mensaje = data.message || 'Horario guardado correctamente';
+                        const tipo = data.no_lider ? 'info' : 'success';
 
-                    mostrarNotificacion(mensaje, tipo);
+                        mostrarNotificacion(mensaje, tipo);
 
-                    // Actualizar visualmente la fila
-                    const fila = document.querySelector(`tr[data-operario="${codOperario}"]`);
-                    fila.setAttribute('data-existente', 'true');
+                        // Actualizar visualmente la fila
+                        const fila = document.querySelector(`tr[data-operario="${codOperario}"]`);
+                        fila.setAttribute('data-existente', 'true');
 
-                    // Color diferente si no hay horario del líder
-                    if (data.no_lider) {
-                        fila.style.borderLeft = '4px solid #ffc107'; // Amarillo para advertencia
+                        // Color diferente si no hay horario del líder
+                        if (data.no_lider) {
+                            fila.style.borderLeft = '4px solid #ffc107'; // Amarillo para advertencia
+                        } else {
+                            fila.style.borderLeft = '4px solid #28a745'; // Verde para éxito
+                        }
                     } else {
-                        fila.style.borderLeft = '4px solid #28a745'; // Verde para éxito
+                        mostrarNotificacion(data.message || 'Error al guardar', 'error');
                     }
-                } else {
-                    mostrarNotificacion(data.message || 'Error al guardar', 'error');
-                }
-            })
-            .catch(error => {
-                mostrarNotificacion('Error de conexión', 'error');
-                console.error('Error:', error);
-            })
-            .finally(() => {
-                btnGuardar.innerHTML = originalHTML;
-                btnGuardar.disabled = false;
-            });
-    }
-
-    // Función para revertir un día a los valores del líder
-    function revertirDia(dia, codOperario, estadoLider, comentarioLider, entradaLider, salidaLider) {
-        if (confirm(`¿Revertir ${dia} a los valores programados por el líder?`)) {
-            // Actualizar los campos en la interfaz
-            const selectEstado = document.querySelector(`select[name="horarios[${codOperario}][${dia}_estado]"]`);
-            const inputComentario = document.querySelector(`input[name="horarios[${codOperario}][${dia}_comentario]"]`);
-            const inputEntrada = document.querySelector(`input[name="horarios[${codOperario}][${dia}_entrada]"]`);
-            const inputSalida = document.querySelector(`input[name="horarios[${codOperario}][${dia}_salida]"]`);
-            const horasDisplay = document.querySelector(`.salida_${dia}_${codOperario}`).parentElement.nextElementSibling;
-
-            // Actualizar valores
-            selectEstado.value = estadoLider;
-            inputComentario.value = comentarioLider || '';
-            inputEntrada.value = entradaLider || '';
-            inputSalida.value = salidaLider || '';
-
-            // Calcular horas correctamente
-            let horasDia = 0;
-            if (entradaLider && salidaLider) {
-                const entradaParts = entradaLider.split(':');
-                const salidaParts = salidaLider.split(':');
-
-                const entradaDate = new Date(2000, 0, 1, entradaParts[0], entradaParts[1]);
-                const salidaDate = new Date(2000, 0, 1, salidaParts[0], salidaParts[1]);
-
-                // Asegurarse que la salida sea después de la entrada
-                if (salidaDate > entradaDate) {
-                    const diffMs = salidaDate - entradaDate;
-                    horasDia = (diffMs / (1000 * 60 * 60)).toFixed(2);
-                }
-            }
-
-            horasDisplay.textContent = horasDia;
-
-            // Actualizar clases según el estado y hora de salida
-            horasDisplay.classList.remove('normal-hours', 'extended-hours', 'inactive-hours');
-
-            if (estadoLider !== 'Activo') {
-                horasDisplay.classList.add('inactive-hours');
-                inputEntrada.disabled = true;
-                inputSalida.disabled = true;
-            } else {
-                inputEntrada.disabled = false;
-                inputSalida.disabled = false;
-
-                if (salidaLider && parseInt(salidaLider.split(':')[0]) >= 19) {
-                    horasDisplay.classList.add('extended-hours');
-                } else {
-                    horasDisplay.classList.add('normal-hours');
-                }
-            }
-
-            // Recalcular total para el operario
-            calcularTotalHoras(codOperario);
-
-            mostrarNotificacion(`Día ${dia} revertido a valores del líder`, 'success');
-        }
-    }
-
-    // Función para eliminar un operario con efectos visuales
-    function eliminarOperario(boton, codOperario, idSemana, codSucursal) {
-        const fila = boton.closest('tr');
-        const existeEnBD = fila.getAttribute('data-existente') === 'true';
-
-        if (!confirm(`¿Está seguro que desea ${existeEnBD ? 'eliminar permanentemente' : 'remover'} este operario?`)) {
-            return;
+                })
+                .catch(error => {
+                    mostrarNotificacion('Error de conexión', 'error');
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    btnGuardar.innerHTML = originalHTML;
+                    btnGuardar.disabled = false;
+                });
         }
 
-        // Efecto visual inmediato
-        fila.style.transition = 'all 0.5s ease';
-        fila.style.opacity = '0.5';
-        fila.style.backgroundColor = '#ffebee';
+        // Función para revertir un día a los valores del líder
+        function revertirDia(dia, codOperario, estadoLider, comentarioLider, entradaLider, salidaLider) {
+            if (confirm(`¿Revertir ${dia} a los valores programados por el líder?`)) {
+                // Actualizar los campos en la interfaz
+                const selectEstado = document.querySelector(`select[name="horarios[${codOperario}][${dia}_estado]"]`);
+                const inputComentario = document.querySelector(`input[name="horarios[${codOperario}][${dia}_comentario]"]`);
+                const inputEntrada = document.querySelector(`input[name="horarios[${codOperario}][${dia}_entrada]"]`);
+                const inputSalida = document.querySelector(`input[name="horarios[${codOperario}][${dia}_salida]"]`);
+                const horasDisplay = document.querySelector(`.salida_${dia}_${codOperario}`).parentElement.nextElementSibling;
 
-        // Enviar solicitud al servidor si existe en BD
-        if (existeEnBD && idSemana) {
-            fetch('eliminar_horario_operario.php', {
+                // Actualizar valores
+                selectEstado.value = estadoLider;
+                inputComentario.value = comentarioLider || '';
+                inputEntrada.value = entradaLider || '';
+                inputSalida.value = salidaLider || '';
+
+                // Calcular horas correctamente
+                let horasDia = 0;
+                if (entradaLider && salidaLider) {
+                    const entradaParts = entradaLider.split(':');
+                    const salidaParts = salidaLider.split(':');
+
+                    const entradaDate = new Date(2000, 0, 1, entradaParts[0], entradaParts[1]);
+                    const salidaDate = new Date(2000, 0, 1, salidaParts[0], salidaParts[1]);
+
+                    // Asegurarse que la salida sea después de la entrada
+                    if (salidaDate > entradaDate) {
+                        const diffMs = salidaDate - entradaDate;
+                        horasDia = (diffMs / (1000 * 60 * 60)).toFixed(2);
+                    }
+                }
+
+                horasDisplay.textContent = horasDia;
+
+                // Actualizar clases según el estado y hora de salida
+                horasDisplay.classList.remove('normal-hours', 'extended-hours', 'inactive-hours');
+
+                if (estadoLider !== 'Activo') {
+                    horasDisplay.classList.add('inactive-hours');
+                    inputEntrada.disabled = true;
+                    inputSalida.disabled = true;
+                } else {
+                    inputEntrada.disabled = false;
+                    inputSalida.disabled = false;
+
+                    if (salidaLider && parseInt(salidaLider.split(':')[0]) >= 19) {
+                        horasDisplay.classList.add('extended-hours');
+                    } else {
+                        horasDisplay.classList.add('normal-hours');
+                    }
+                }
+
+                // Recalcular total para el operario
+                calcularTotalHoras(codOperario);
+
+                mostrarNotificacion(`Día ${dia} revertido a valores del líder`, 'success');
+            }
+        }
+
+        // Función para eliminar un operario con efectos visuales
+        function eliminarOperario(boton, codOperario, idSemana, codSucursal) {
+            const fila = boton.closest('tr');
+            const existeEnBD = fila.getAttribute('data-existente') === 'true';
+
+            if (!confirm(`¿Está seguro que desea ${existeEnBD ? 'eliminar permanentemente' : 'remover'} este operario?`)) {
+                return;
+            }
+
+            // Efecto visual inmediato
+            fila.style.transition = 'all 0.5s ease';
+            fila.style.opacity = '0.5';
+            fila.style.backgroundColor = '#ffebee';
+
+            // Enviar solicitud al servidor si existe en BD
+            if (existeEnBD && idSemana) {
+                fetch('eliminar_horario_operario.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: `cod_operario=${codOperario}&id_semana=${idSemana}&cod_sucursal=${codSucursal}`
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Efecto de eliminación completa
-                        fila.style.transform = 'translateX(-100%)';
-                        setTimeout(() => {
-                            fila.remove();
-                            mostrarNotificacion('Operario eliminado permanentemente de la base de datos', 'success');
-                        }, 500);
-                    } else {
-                        // Revertir efectos si falla
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Efecto de eliminación completa
+                            fila.style.transform = 'translateX(-100%)';
+                            setTimeout(() => {
+                                fila.remove();
+                                mostrarNotificacion('Operario eliminado permanentemente de la base de datos', 'success');
+                            }, 500);
+                        } else {
+                            // Revertir efectos si falla
+                            fila.style.opacity = '1';
+                            fila.style.backgroundColor = '';
+                            mostrarNotificacion('Error al eliminar: ' + (data.message || 'Error desconocido'), 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
                         fila.style.opacity = '1';
                         fila.style.backgroundColor = '';
-                        mostrarNotificacion('Error al eliminar: ' + (data.message || 'Error desconocido'), 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    fila.style.opacity = '1';
-                    fila.style.backgroundColor = '';
-                    mostrarNotificacion('Error al conectar con el servidor', 'error');
-                });
-        } else {
-            // Efecto de eliminación visual (para operarios no guardados)
-            fila.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                fila.remove();
-                mostrarNotificacion('Operario removido de la vista (no estaba en la base de datos)', 'info');
-            }, 500);
+                        mostrarNotificacion('Error al conectar con el servidor', 'error');
+                    });
+            } else {
+                // Efecto de eliminación visual (para operarios no guardados)
+                fila.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    fila.remove();
+                    mostrarNotificacion('Operario removido de la vista (no estaba en la base de datos)', 'info');
+                }, 500);
+            }
+
+            // Al final de la eliminación exitosa, agregar:
+            setTimeout(actualizarGraficoHoras, 600);
         }
 
-        // Al final de la eliminación exitosa, agregar:
-        setTimeout(actualizarGraficoHoras, 600);
-    }
+        // Función para mostrar notificaciones bonitas
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const estilos = {
+                success: {
+                    background: '#d4edda',
+                    color: '#155724',
+                    icon: 'check-circle'
+                },
+                error: {
+                    background: '#f8d7da',
+                    color: '#721c24',
+                    icon: 'exclamation-circle'
+                },
+                info: {
+                    background: '#e2e3e5',
+                    color: '#383d41',
+                    icon: 'info-circle'
+                }
+            };
 
-    // Función para mostrar notificaciones bonitas
-    function mostrarNotificacion(mensaje, tipo = 'info') {
-        const estilos = {
-            success: {
-                background: '#d4edda',
-                color: '#155724',
-                icon: 'check-circle'
-            },
-            error: {
-                background: '#f8d7da',
-                color: '#721c24',
-                icon: 'exclamation-circle'
-            },
-            info: {
-                background: '#e2e3e5',
-                color: '#383d41',
-                icon: 'info-circle'
-            }
-        };
+            const estilo = estilos[tipo] || estilos.info;
 
-        const estilo = estilos[tipo] || estilos.info;
-
-        const notificacion = document.createElement('div');
-        notificacion.style.position = 'fixed';
-        notificacion.style.top = '20px';
-        notificacion.style.right = '20px';
-        notificacion.style.padding = '15px';
-        notificacion.style.borderRadius = '4px';
-        notificacion.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-        notificacion.style.backgroundColor = estilo.background;
-        notificacion.style.color = estilo.color;
-        notificacion.style.zIndex = '1000';
-        notificacion.style.display = 'flex';
-        notificacion.style.alignItems = 'center';
-        notificacion.style.gap = '10px';
-        notificacion.style.maxWidth = '300px';
-        notificacion.innerHTML = `
+            const notificacion = document.createElement('div');
+            notificacion.style.position = 'fixed';
+            notificacion.style.top = '20px';
+            notificacion.style.right = '20px';
+            notificacion.style.padding = '15px';
+            notificacion.style.borderRadius = '4px';
+            notificacion.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            notificacion.style.backgroundColor = estilo.background;
+            notificacion.style.color = estilo.color;
+            notificacion.style.zIndex = '1000';
+            notificacion.style.display = 'flex';
+            notificacion.style.alignItems = 'center';
+            notificacion.style.gap = '10px';
+            notificacion.style.maxWidth = '300px';
+            notificacion.innerHTML = `
                 <i class="fas fa-${estilo.icon}" style="font-size: 1.2rem;"></i>
                 <span>${mensaje}</span>
             `;
 
-        document.body.appendChild(notificacion);
+            document.body.appendChild(notificacion);
 
-        setTimeout(() => {
-            notificacion.style.opacity = '0';
-            notificacion.style.transition = 'opacity 0.5s ease';
-            setTimeout(() => notificacion.remove(), 500);
-        }, 3000);
-    }
-
-    // Eliminar fila visualmente
-    function eliminarFilaVisual(codOperario) {
-        const fila = document.querySelector(`input[name^="horarios[${codOperario}]"]`)?.closest('tr');
-        if (fila) {
-            fila.remove();
-            // Opcional: mostrar mensaje de éxito
-            alert('Operario eliminado correctamente');
-        }
-    }
-
-    function aprobarEdicionLider() {
-        const semana = document.querySelector('input[name="semana"]').value;
-        const sucursal = document.querySelector('input[name="sucursal"]').value;
-        const accion = <?= $horarioAutorizado ? '0' : '1' ?>;
-        const accionTexto = <?= $horarioAutorizado ? "'DESAPROBAR'" : "'APROBAR'"; ?>;
-        const icono = <?= $horarioAutorizado ? "'🔒'" : "'✅'"; ?>;
-
-        if (!confirm(`${icono} ¿Está seguro que desea ${accionTexto} la edición para:\n\nSemana: ${semana}\nSucursal: ${sucursal}\n?`)) {
-            return;
+            setTimeout(() => {
+                notificacion.style.opacity = '0';
+                notificacion.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => notificacion.remove(), 500);
+            }, 3000);
         }
 
-        // Mostrar mensaje de carga
-        const btn = document.querySelector('button[onclick="aprobarEdicionLider()"]');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-        btn.disabled = true;
+        // Eliminar fila visualmente
+        function eliminarFilaVisual(codOperario) {
+            const fila = document.querySelector(`input[name^="horarios[${codOperario}]"]`)?.closest('tr');
+            if (fila) {
+                fila.remove();
+                // Opcional: mostrar mensaje de éxito
+                alert('Operario eliminado correctamente');
+            }
+        }
 
-        fetch('aprobar_edicion_lider.php', {
+        function aprobarEdicionLider() {
+            const semana = document.querySelector('input[name="semana"]').value;
+            const sucursal = document.querySelector('input[name="sucursal"]').value;
+            const accion = <?= $horarioAutorizado ? '0' : '1' ?>;
+            const accionTexto = <?= $horarioAutorizado ? "'DESAPROBAR'" : "'APROBAR'"; ?>;
+            const icono = <?= $horarioAutorizado ? "'🔒'" : "'✅'"; ?>;
+
+            if (!confirm(`${icono} ¿Está seguro que desea ${accionTexto} la edición para:\n\nSemana: ${semana}\nSucursal: ${sucursal}\n?`)) {
+                return;
+            }
+
+            // Mostrar mensaje de carga
+            const btn = document.querySelector('button[onclick="aprobarEdicionLider()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+            btn.disabled = true;
+
+            fetch('aprobar_edicion_lider.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: `semana=${semana}&sucursal=${sucursal}&aprobar=${accion}`
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Error en la red');
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    mostrarNotificacion(data.message, 'success');
-                    // Recargar después de 1.5 segundos para ver cambios
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    mostrarNotificacion(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarNotificacion('Error de conexión: ' + error.message, 'error');
-            })
-            .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-    }
-
-    function agregarOperario() {
-        const select = document.querySelector('.operario-agregar-container select');
-        const codOperario = select.value;
-        const semana = document.getElementById('semana').value;
-        const sucursal = document.getElementById('sucursal').value;
-
-        if (!codOperario) {
-            alert('Por favor seleccione un colaborador');
-            return;
-        }
-
-        // Crear formulario y enviar
-        const form = document.createElement('form');
-        form.method = 'post';
-        form.style.display = 'none';
-
-        const inputSemana = document.createElement('input');
-        inputSemana.type = 'hidden';
-        inputSemana.name = 'semana';
-        inputSemana.value = semana;
-
-        const inputSucursal = document.createElement('input');
-        inputSucursal.type = 'hidden';
-        inputSucursal.name = 'sucursal';
-        inputSucursal.value = sucursal;
-
-        const inputCodOperario = document.createElement('input');
-        inputCodOperario.type = 'hidden';
-        inputCodOperario.name = 'cod_operario';
-        inputCodOperario.value = codOperario;
-
-        const inputAgregar = document.createElement('input');
-        inputAgregar.type = 'hidden';
-        inputAgregar.name = 'agregar_operario';
-        inputAgregar.value = '1';
-
-        form.appendChild(inputSemana);
-        form.appendChild(inputSucursal);
-        form.appendChild(inputCodOperario);
-        form.appendChild(inputAgregar);
-
-        document.body.appendChild(form);
-        form.submit();
-    }
-
-    // Calcular todos los totales al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        // Obtener todos los operarios que tienen filas en la tabla
-        const filasOperarios = document.querySelectorAll('tr[data-operario]');
-
-        // Calcular totales para cada operario
-        filasOperarios.forEach(fila => {
-            const operarioId = fila.getAttribute('data-operario');
-            calcularTotalHoras(operarioId);
-        });
-    });
-
-    // Función para mostrar detalles de cambios
-    function mostrarDetallesCambios() {
-        fetch('obtener_detalles_cambios.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const detalles = document.getElementById('detallesCambios');
-                    detalles.innerHTML = data.html;
-                    document.getElementById('cambiosModal').style.display = 'block';
-                } else {
-                    mostrarNotificacion('Error al obtener detalles: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarNotificacion('Error de conexión', 'error');
-            });
-    }
-
-    // Función para actualizar desde líderes
-    function actualizarDesdeLideres() {
-        document.getElementById('confirmarActualizacionModal').style.display = 'block';
-    }
-
-    // Función para procesar la actualización
-    function procesarActualizacionLideres() {
-        cerrarModal('confirmarActualizacionModal');
-
-        // Mostrar indicador de carga
-        const btn = document.querySelector('button[onclick="actualizarDesdeLideres()"]');
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
-        btn.disabled = true;
-
-        fetch('actualizar_desde_lideres.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    mostrarNotificacion(data.message, 'success');
-                    // Recargar la página después de 2 segundos
-                    setTimeout(() => window.location.reload(), 2000);
-                } else {
-                    mostrarNotificacion('Error: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarNotificacion('Error de conexión', 'error');
-            })
-            .finally(() => {
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-            });
-    }
-
-    // Función para cerrar modales
-    function cerrarModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    // Variables globales para el modo del gráfico
-    let modoGraficoActual = 'horarios'; // Cambiado de 'semanal' a 'horarios'
-    let diaSeleccionado = 'lunes';
-    let diaSeleccionadoHorarios = 'lunes';
-
-    // Función para cambiar entre modos
-    function cambiarModoGrafico(modo) {
-        modoGraficoActual = modo;
-
-        // Actualizar botones
-        document.getElementById('btnModoSemanal').classList.toggle('activo', modo === 'semanal');
-        document.getElementById('btnModoDiario').classList.toggle('activo', modo === 'diario');
-        document.getElementById('btnModoHorarios').classList.toggle('activo', modo === 'horarios');
-
-        // Mostrar/ocultar selectores
-        document.getElementById('selectorDia').style.display = modo === 'diario' ? 'block' : 'none';
-        document.getElementById('selectorDiaHorarios').style.display = modo === 'horarios' ? 'block' : 'none';
-
-        // Actualizar título e icono
-        const titulo = document.getElementById('tituloModoGrafico');
-        const icono = document.getElementById('iconoModoGrafico');
-        const leyenda = document.getElementById('textoLeyendaLimite');
-        const leyendaInactivo = document.getElementById('leyendaInactivo');
-
-        if (modo === 'semanal') {
-            titulo.textContent = 'Distribución Semanal de Horas';
-            icono.className = 'fas fa-chart-bar';
-            leyenda.textContent = 'Máximo Recomendado (48h)';
-            leyendaInactivo.style.display = 'none';
-        } else if (modo === 'diario') {
-            titulo.textContent = `Distribución de Horas - ${capitalizeFirst(diaSeleccionado)}`;
-            icono.className = 'fas fa-calendar-day';
-            leyenda.textContent = 'Jornada Completa (8h)';
-            leyendaInactivo.style.display = 'flex';
-        } else {
-            titulo.textContent = `Línea de Tiempo - ${capitalizeFirst(diaSeleccionadoHorarios)}`;
-            icono.className = 'fas fa-timeline';
-            leyenda.textContent = 'Distribución horaria por colaborador';
-            leyendaInactivo.style.display = 'none';
-        }
-
-        // Actualizar el gráfico
-        actualizarGraficoHoras();
-    }
-
-    // Función para capitalizar la primera letra
-    function capitalizeFirst(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-
-    // Función para actualizar el gráfico según el modo
-    function actualizarGraficoHoras() {
-        if (modoGraficoActual === 'diario') {
-            diaSeleccionado = document.getElementById('selectDia').value;
-            actualizarGraficoDiario();
-        } else if (modoGraficoActual === 'horarios') {
-            diaSeleccionadoHorarios = document.getElementById('selectDiaHorarios').value;
-            actualizarGraficoDistribucionHorarios();
-        } else {
-            actualizarGraficoSemanal();
-        }
-    }
-
-    // Función para el gráfico semanal
-    function actualizarGraficoSemanal() {
-        const operarios = Array.from(document.querySelectorAll('tr[data-operario]'));
-        const datosGrafico = [];
-
-        // Recolectar datos de cada operario
-        operarios.forEach(fila => {
-            const operarioId = fila.getAttribute('data-operario');
-            const nombreElement = fila.querySelector('.operario-cell');
-            const nombre = nombreElement ? nombreElement.textContent.trim().split('\n')[0] : `Operario ${operarioId}`;
-            const totalHorasElement = document.getElementById(`total_horas_${operarioId}`);
-
-            if (totalHorasElement) {
-                const textoTotal = totalHorasElement.textContent;
-                // Extraer solo el primer número (horas actuales)
-                const horasMatch = textoTotal.match(/(\d+\.?\d*)/);
-                const horas = horasMatch ? parseFloat(horasMatch[1]) : 0;
-
-                datosGrafico.push({
-                    id: operarioId,
-                    nombre: nombre,
-                    horas: horas,
-                    encimaLimite: horas > 48 // Límite de 48 horas semanales
-                });
-            }
-        });
-
-        // Ordenar por horas (descendente)
-        datosGrafico.sort((a, b) => b.horas - a.horas);
-
-        // Generar HTML del gráfico semanal
-        generarHTMLGraficoSemanal(datosGrafico);
-    }
-
-    // Función para el gráfico diario
-    function actualizarGraficoDiario() {
-        const operarios = Array.from(document.querySelectorAll('tr[data-operario]'));
-        const datosGrafico = [];
-        const dia = diaSeleccionado;
-
-        // Recolectar datos de cada operario para el día seleccionado
-        operarios.forEach(fila => {
-            const operarioId = fila.getAttribute('data-operario');
-            const nombreElement = fila.querySelector('.operario-cell');
-            const nombre = nombreElement ? nombreElement.textContent.trim().split('\n')[0] : `Operario ${operarioId}`;
-
-            // Obtener estado y horas del día
-            const selectEstado = document.querySelector(`select[name="horarios[${operarioId}][${dia}_estado]"]`);
-            const inputEntrada = document.querySelector(`input[name="horarios[${operarioId}][${dia}_entrada]"]`);
-            const inputSalida = document.querySelector(`input[name="horarios[${operarioId}][${dia}_salida]"]`);
-            const horasDisplay = document.querySelector(`.salida_${dia}_${operarioId}`)?.parentElement?.nextElementSibling;
-
-            if (selectEstado && horasDisplay) {
-                const estado = selectEstado.value;
-                const horasTexto = horasDisplay.textContent;
-                const horas = estado === 'Activo' ? parseFloat(horasTexto) || 0 : 0;
-                const esActivo = estado === 'Activo';
-                const encimaLimite = horas > 8; // Límite de 8 horas diarias
-
-                datosGrafico.push({
-                    id: operarioId,
-                    nombre: nombre,
-                    horas: horas,
-                    encimaLimite: encimaLimite,
-                    esActivo: esActivo,
-                    estado: estado
-                });
-            }
-        });
-
-        // Ordenar por horas (descendente)
-        datosGrafico.sort((a, b) => b.horas - a.horas);
-
-        // Generar HTML del gráfico diario
-        generarHTMLGraficoDiario(datosGrafico, dia);
-    }
-
-    // ========== NUEVA FUNCIÓN: Línea de Tiempo ==========
-    function actualizarGraficoDistribucionHorarios() {
-        const operarios = Array.from(document.querySelectorAll('tr[data-operario]'));
-        const dia = diaSeleccionadoHorarios;
-
-        // Configuración de la línea de tiempo
-        const horaInicio = 5; // 5:00 AM
-        const horaFin = 22; // 10:00 PM
-        const totalHoras = horaFin - horaInicio;
-        const minutosPorPixel = 60 / (totalHoras * 2); // Cada media hora
-
-        const operariosConHorarios = [];
-
-        // Recolectar datos de operarios
-        operarios.forEach(fila => {
-            const operarioId = fila.getAttribute('data-operario');
-            const nombreElement = fila.querySelector('.operario-cell');
-            const nombre = nombreElement ? nombreElement.textContent.trim().split('\n')[0] : `Operario ${operarioId}`;
-
-            const selectEstado = document.querySelector(`select[name="horarios[${operarioId}][${dia}_estado]"]`);
-            const inputEntrada = document.querySelector(`input[name="horarios[${operarioId}][${dia}_entrada]"]`);
-            const inputSalida = document.querySelector(`input[name="horarios[${operarioId}][${dia}_salida]"]`);
-            const horasDisplay = document.querySelector(`.salida_${dia}_${operarioId}`)?.parentElement?.nextElementSibling;
-
-            if (selectEstado && inputEntrada && inputSalida) {
-                const estado = selectEstado.value;
-                const entrada = inputEntrada.value;
-                const salida = inputSalida.value;
-                const horas = horasDisplay ? parseFloat(horasDisplay.textContent) || 0 : 0;
-
-                // Calcular posición y ancho para la barra
-                let left = 0;
-                let width = 0;
-                let claseTurno = 'inactivo';
-
-                if (estado === 'Activo' && entrada && salida) {
-                    const [horaEnt, minEnt] = entrada.split(':').map(Number);
-                    const [horaSal, minSal] = salida.split(':').map(Number);
-
-                    // Convertir a minutos desde las 6:00 AM
-                    const minutosEntrada = (horaEnt - horaInicio) * 60 + minEnt;
-                    const minutosSalida = (horaSal - horaInicio) * 60 + minSal;
-
-                    left = (minutosEntrada / 60) * 100 / totalHoras;
-                    width = ((minutosSalida - minutosEntrada) / 60) * 100 / totalHoras;
-
-                    // Determinar turno por color
-                    if (horaEnt >= 6 && horaSal <= 12) {
-                        claseTurno = 'manana';
-                    } else if (horaEnt >= 12 && horaSal <= 18) {
-                        claseTurno = 'tarde';
-                    } else if (horaEnt >= 18) {
-                        claseTurno = 'noche';
+                .then(response => {
+                    if (!response.ok) throw new Error('Error en la red');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        mostrarNotificacion(data.message, 'success');
+                        // Recargar después de 1.5 segundos para ver cambios
+                        setTimeout(() => window.location.reload(), 1500);
                     } else {
-                        claseTurno = 'mixto';
+                        mostrarNotificacion(data.message, 'error');
                     }
-                }
-
-                operariosConHorarios.push({
-                    id: operarioId,
-                    nombre: nombre,
-                    entrada: entrada,
-                    salida: salida,
-                    horas: horas,
-                    estado: estado,
-                    left: left,
-                    width: width,
-                    claseTurno: claseTurno,
-                    activo: estado === 'Activo' && entrada && salida
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarNotificacion('Error de conexión: ' + error.message, 'error');
+                })
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 });
+        }
+
+        function agregarOperario() {
+            const select = document.querySelector('.operario-agregar-container select');
+            const codOperario = select.value;
+            const semana = document.getElementById('semana').value;
+            const sucursal = document.getElementById('sucursal').value;
+
+            if (!codOperario) {
+                alert('Por favor seleccione un colaborador');
+                return;
             }
+
+            // Crear formulario y enviar
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.style.display = 'none';
+
+            const inputSemana = document.createElement('input');
+            inputSemana.type = 'hidden';
+            inputSemana.name = 'semana';
+            inputSemana.value = semana;
+
+            const inputSucursal = document.createElement('input');
+            inputSucursal.type = 'hidden';
+            inputSucursal.name = 'sucursal';
+            inputSucursal.value = sucursal;
+
+            const inputCodOperario = document.createElement('input');
+            inputCodOperario.type = 'hidden';
+            inputCodOperario.name = 'cod_operario';
+            inputCodOperario.value = codOperario;
+
+            const inputAgregar = document.createElement('input');
+            inputAgregar.type = 'hidden';
+            inputAgregar.name = 'agregar_operario';
+            inputAgregar.value = '1';
+
+            form.appendChild(inputSemana);
+            form.appendChild(inputSucursal);
+            form.appendChild(inputCodOperario);
+            form.appendChild(inputAgregar);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Calcular todos los totales al cargar la página
+        document.addEventListener('DOMContentLoaded', function () {
+            // Obtener todos los operarios que tienen filas en la tabla
+            const filasOperarios = document.querySelectorAll('tr[data-operario]');
+
+            // Calcular totales para cada operario
+            filasOperarios.forEach(fila => {
+                const operarioId = fila.getAttribute('data-operario');
+                calcularTotalHoras(operarioId);
+            });
         });
 
-        // Ordenar operarios por hora de entrada
-        operariosConHorarios.sort((a, b) => {
-            if (!a.activo && !b.activo) return 0;
-            if (!a.activo) return 1;
-            if (!b.activo) return -1;
-            return a.entrada.localeCompare(b.entrada);
-        });
+        // Función para mostrar detalles de cambios
+        function mostrarDetallesCambios() {
+            fetch('obtener_detalles_cambios.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const detalles = document.getElementById('detallesCambios');
+                        detalles.innerHTML = data.html;
+                        document.getElementById('cambiosModal').style.display = 'block';
+                    } else {
+                        mostrarNotificacion('Error al obtener detalles: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarNotificacion('Error de conexión', 'error');
+                });
+        }
 
-        // Generar HTML de la línea de tiempo
-        generarHTMLTimeline(operariosConHorarios, horaInicio, horaFin, totalHoras);
-    }
+        // Función para actualizar desde líderes
+        function actualizarDesdeLideres() {
+            document.getElementById('confirmarActualizacionModal').style.display = 'block';
+        }
 
-    // Función para generar el HTML de la línea de tiempo
-    function generarHTMLTimeline(operarios, horaInicio, horaFin, totalHoras) {
-        const contenedorGrafico = document.getElementById('graficoHoras');
+        // Función para procesar la actualización
+        function procesarActualizacionLideres() {
+            cerrarModal('confirmarActualizacionModal');
 
-        let html = `
+            // Mostrar indicador de carga
+            const btn = document.querySelector('button[onclick="actualizarDesdeLideres()"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+            btn.disabled = true;
+
+            fetch('actualizar_desde_lideres.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarNotificacion(data.message, 'success');
+                        // Recargar la página después de 2 segundos
+                        setTimeout(() => window.location.reload(), 2000);
+                    } else {
+                        mostrarNotificacion('Error: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarNotificacion('Error de conexión', 'error');
+                })
+                .finally(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                });
+        }
+
+        // Función para cerrar modales
+        function cerrarModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Variables globales para el modo del gráfico
+        let modoGraficoActual = 'horarios'; // Cambiado de 'semanal' a 'horarios'
+        let diaSeleccionado = 'lunes';
+        let diaSeleccionadoHorarios = 'lunes';
+
+        // Función para cambiar entre modos
+        function cambiarModoGrafico(modo) {
+            modoGraficoActual = modo;
+
+            // Actualizar botones
+            document.getElementById('btnModoSemanal').classList.toggle('activo', modo === 'semanal');
+            document.getElementById('btnModoDiario').classList.toggle('activo', modo === 'diario');
+            document.getElementById('btnModoHorarios').classList.toggle('activo', modo === 'horarios');
+
+            // Mostrar/ocultar selectores
+            document.getElementById('selectorDia').style.display = modo === 'diario' ? 'block' : 'none';
+            document.getElementById('selectorDiaHorarios').style.display = modo === 'horarios' ? 'block' : 'none';
+
+            // Actualizar título e icono
+            const titulo = document.getElementById('tituloModoGrafico');
+            const icono = document.getElementById('iconoModoGrafico');
+            const leyenda = document.getElementById('textoLeyendaLimite');
+            const leyendaInactivo = document.getElementById('leyendaInactivo');
+
+            if (modo === 'semanal') {
+                titulo.textContent = 'Distribución Semanal de Horas';
+                icono.className = 'fas fa-chart-bar';
+                leyenda.textContent = 'Máximo Recomendado (48h)';
+                leyendaInactivo.style.display = 'none';
+            } else if (modo === 'diario') {
+                titulo.textContent = `Distribución de Horas - ${capitalizeFirst(diaSeleccionado)}`;
+                icono.className = 'fas fa-calendar-day';
+                leyenda.textContent = 'Jornada Completa (8h)';
+                leyendaInactivo.style.display = 'flex';
+            } else {
+                titulo.textContent = `Línea de Tiempo - ${capitalizeFirst(diaSeleccionadoHorarios)}`;
+                icono.className = 'fas fa-timeline';
+                leyenda.textContent = 'Distribución horaria por colaborador';
+                leyendaInactivo.style.display = 'none';
+            }
+
+            // Actualizar el gráfico
+            actualizarGraficoHoras();
+        }
+
+        // Función para capitalizar la primera letra
+        function capitalizeFirst(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        // Función para actualizar el gráfico según el modo
+        function actualizarGraficoHoras() {
+            if (modoGraficoActual === 'diario') {
+                diaSeleccionado = document.getElementById('selectDia').value;
+                actualizarGraficoDiario();
+            } else if (modoGraficoActual === 'horarios') {
+                diaSeleccionadoHorarios = document.getElementById('selectDiaHorarios').value;
+                actualizarGraficoDistribucionHorarios();
+            } else {
+                actualizarGraficoSemanal();
+            }
+        }
+
+        // Función para el gráfico semanal
+        function actualizarGraficoSemanal() {
+            const operarios = Array.from(document.querySelectorAll('tr[data-operario]'));
+            const datosGrafico = [];
+
+            // Recolectar datos de cada operario
+            operarios.forEach(fila => {
+                const operarioId = fila.getAttribute('data-operario');
+                const nombreElement = fila.querySelector('.operario-cell');
+                const nombre = nombreElement ? nombreElement.textContent.trim().split('\n')[0] : `Operario ${operarioId}`;
+                const totalHorasElement = document.getElementById(`total_horas_${operarioId}`);
+
+                if (totalHorasElement) {
+                    const textoTotal = totalHorasElement.textContent;
+                    // Extraer solo el primer número (horas actuales)
+                    const horasMatch = textoTotal.match(/(\d+\.?\d*)/);
+                    const horas = horasMatch ? parseFloat(horasMatch[1]) : 0;
+
+                    datosGrafico.push({
+                        id: operarioId,
+                        nombre: nombre,
+                        horas: horas,
+                        encimaLimite: horas > 48 // Límite de 48 horas semanales
+                    });
+                }
+            });
+
+            // Ordenar por horas (descendente)
+            datosGrafico.sort((a, b) => b.horas - a.horas);
+
+            // Generar HTML del gráfico semanal
+            generarHTMLGraficoSemanal(datosGrafico);
+        }
+
+        // Función para el gráfico diario
+        function actualizarGraficoDiario() {
+            const operarios = Array.from(document.querySelectorAll('tr[data-operario]'));
+            const datosGrafico = [];
+            const dia = diaSeleccionado;
+
+            // Recolectar datos de cada operario para el día seleccionado
+            operarios.forEach(fila => {
+                const operarioId = fila.getAttribute('data-operario');
+                const nombreElement = fila.querySelector('.operario-cell');
+                const nombre = nombreElement ? nombreElement.textContent.trim().split('\n')[0] : `Operario ${operarioId}`;
+
+                // Obtener estado y horas del día
+                const selectEstado = document.querySelector(`select[name="horarios[${operarioId}][${dia}_estado]"]`);
+                const inputEntrada = document.querySelector(`input[name="horarios[${operarioId}][${dia}_entrada]"]`);
+                const inputSalida = document.querySelector(`input[name="horarios[${operarioId}][${dia}_salida]"]`);
+                const horasDisplay = document.querySelector(`.salida_${dia}_${operarioId}`)?.parentElement?.nextElementSibling;
+
+                if (selectEstado && horasDisplay) {
+                    const estado = selectEstado.value;
+                    const horasTexto = horasDisplay.textContent;
+                    const horas = estado === 'Activo' ? parseFloat(horasTexto) || 0 : 0;
+                    const esActivo = estado === 'Activo';
+                    const encimaLimite = horas > 8; // Límite de 8 horas diarias
+
+                    datosGrafico.push({
+                        id: operarioId,
+                        nombre: nombre,
+                        horas: horas,
+                        encimaLimite: encimaLimite,
+                        esActivo: esActivo,
+                        estado: estado
+                    });
+                }
+            });
+
+            // Ordenar por horas (descendente)
+            datosGrafico.sort((a, b) => b.horas - a.horas);
+
+            // Generar HTML del gráfico diario
+            generarHTMLGraficoDiario(datosGrafico, dia);
+        }
+
+        // ========== NUEVA FUNCIÓN: Línea de Tiempo ==========
+        function actualizarGraficoDistribucionHorarios() {
+            const operarios = Array.from(document.querySelectorAll('tr[data-operario]'));
+            const dia = diaSeleccionadoHorarios;
+
+            // Configuración de la línea de tiempo
+            const horaInicio = 5; // 5:00 AM
+            const horaFin = 22; // 10:00 PM
+            const totalHoras = horaFin - horaInicio;
+            const minutosPorPixel = 60 / (totalHoras * 2); // Cada media hora
+
+            const operariosConHorarios = [];
+
+            // Recolectar datos de operarios
+            operarios.forEach(fila => {
+                const operarioId = fila.getAttribute('data-operario');
+                const nombreElement = fila.querySelector('.operario-cell');
+                const nombre = nombreElement ? nombreElement.textContent.trim().split('\n')[0] : `Operario ${operarioId}`;
+
+                const selectEstado = document.querySelector(`select[name="horarios[${operarioId}][${dia}_estado]"]`);
+                const inputEntrada = document.querySelector(`input[name="horarios[${operarioId}][${dia}_entrada]"]`);
+                const inputSalida = document.querySelector(`input[name="horarios[${operarioId}][${dia}_salida]"]`);
+                const horasDisplay = document.querySelector(`.salida_${dia}_${operarioId}`)?.parentElement?.nextElementSibling;
+
+                if (selectEstado && inputEntrada && inputSalida) {
+                    const estado = selectEstado.value;
+                    const entrada = inputEntrada.value;
+                    const salida = inputSalida.value;
+                    const horas = horasDisplay ? parseFloat(horasDisplay.textContent) || 0 : 0;
+
+                    // Calcular posición y ancho para la barra
+                    let left = 0;
+                    let width = 0;
+                    let claseTurno = 'inactivo';
+
+                    if (estado === 'Activo' && entrada && salida) {
+                        const [horaEnt, minEnt] = entrada.split(':').map(Number);
+                        const [horaSal, minSal] = salida.split(':').map(Number);
+
+                        // Convertir a minutos desde las 6:00 AM
+                        const minutosEntrada = (horaEnt - horaInicio) * 60 + minEnt;
+                        const minutosSalida = (horaSal - horaInicio) * 60 + minSal;
+
+                        left = (minutosEntrada / 60) * 100 / totalHoras;
+                        width = ((minutosSalida - minutosEntrada) / 60) * 100 / totalHoras;
+
+                        // Determinar turno por color
+                        if (horaEnt >= 6 && horaSal <= 12) {
+                            claseTurno = 'manana';
+                        } else if (horaEnt >= 12 && horaSal <= 18) {
+                            claseTurno = 'tarde';
+                        } else if (horaEnt >= 18) {
+                            claseTurno = 'noche';
+                        } else {
+                            claseTurno = 'mixto';
+                        }
+                    }
+
+                    operariosConHorarios.push({
+                        id: operarioId,
+                        nombre: nombre,
+                        entrada: entrada,
+                        salida: salida,
+                        horas: horas,
+                        estado: estado,
+                        left: left,
+                        width: width,
+                        claseTurno: claseTurno,
+                        activo: estado === 'Activo' && entrada && salida
+                    });
+                }
+            });
+
+            // Ordenar operarios por hora de entrada
+            operariosConHorarios.sort((a, b) => {
+                if (!a.activo && !b.activo) return 0;
+                if (!a.activo) return 1;
+                if (!b.activo) return -1;
+                return a.entrada.localeCompare(b.entrada);
+            });
+
+            // Generar HTML de la línea de tiempo
+            generarHTMLTimeline(operariosConHorarios, horaInicio, horaFin, totalHoras);
+        }
+
+        // Función para generar el HTML de la línea de tiempo
+        function generarHTMLTimeline(operarios, horaInicio, horaFin, totalHoras) {
+            const contenedorGrafico = document.getElementById('graficoHoras');
+
+            let html = `
         <div class="grafico-timeline">
             <h4 style="text-align: center; color: #0E544C; margin-bottom: 20px;">
                 Línea de Tiempo - ${capitalizeFirst(diaSeleccionadoHorarios)}
@@ -4073,62 +4098,62 @@ function obtenerCategoriasDesdeBD()
                 <div class="timeline-horas">
     `;
 
-        // Generar marcas de horas
-        for (let hora = horaInicio; hora <= horaFin; hora++) {
-            for (let minuto = 0; minuto < 60; minuto += 30) {
-                const horaActual = hora + minuto / 60;
-                const porcentaje = ((horaActual - horaInicio) / totalHoras) * 100;
+            // Generar marcas de horas
+            for (let hora = horaInicio; hora <= horaFin; hora++) {
+                for (let minuto = 0; minuto < 60; minuto += 30) {
+                    const horaActual = hora + minuto / 60;
+                    const porcentaje = ((horaActual - horaInicio) / totalHoras) * 100;
 
-                if (minuto === 0) {
-                    // Hora completa
-                    html += `
+                    if (minuto === 0) {
+                        // Hora completa
+                        html += `
                     <div class="timeline-hora" style="left: ${porcentaje}%">
                         ${hora.toString().padStart(2, '0')}:00
                     </div>
                 `;
-                } else {
-                    // Media hora
-                    html += `
+                    } else {
+                        // Media hora
+                        html += `
                     <div class="timeline-hora media-hora" style="left: ${porcentaje}%">
                         ${hora.toString().padStart(2, '0')}:30
                     </div>
                 `;
+                    }
                 }
             }
-        }
 
-        html += `
+            html += `
                 </div>
                 
                 <!-- Marcadores de fondo -->
                 <div class="timeline-marcadores">
     `;
 
-        // Generar marcadores de fondo
-        for (let hora = horaInicio; hora <= horaFin; hora++) {
-            for (let minuto = 0; minuto < 60; minuto += 30) {
-                const horaActual = hora + minuto / 60;
-                const porcentaje = ((horaActual - horaInicio) / totalHoras) * 100;
-                const clase = minuto === 0 ? 'hora-completa' : '';
+            // Generar marcadores de fondo
+            for (let hora = horaInicio; hora <= horaFin; hora++) {
+                for (let minuto = 0; minuto < 60; minuto += 30) {
+                    const horaActual = hora + minuto / 60;
+                    const porcentaje = ((horaActual - horaInicio) / totalHoras) * 100;
+                    const clase = minuto === 0 ? 'hora-completa' : '';
 
-                html += `<div class="timeline-marcador ${clase}" style="left: ${porcentaje}%"></div>`;
+                    html += `<div class="timeline-marcador ${clase}" style="left: ${porcentaje}%"></div>`;
+                }
             }
-        }
 
-        html += `
+            html += `
                 </div>
                 
                 <!-- Filas de operarios -->
                 <div class="timeline-filas">
     `;
 
-        // Generar filas de operarios
-        operarios.forEach(operario => {
-            const textoHorario = operario.activo ?
-                `${operario.entrada} - ${operario.salida} (${operario.horas.toFixed(1)}h)` :
-                operario.estado;
+            // Generar filas de operarios
+            operarios.forEach(operario => {
+                const textoHorario = operario.activo ?
+                    `${operario.entrada} - ${operario.salida} (${operario.horas.toFixed(1)}h)` :
+                    operario.estado;
 
-            html += `
+                html += `
             <div class="timeline-fila" data-operario="${operario.id}">
                 <div class="timeline-nombre" title="${operario.nombre}">
                     ${operario.nombre.length > 20 ? operario.nombre.substring(0, 20) + '...' : operario.nombre}
@@ -4136,8 +4161,8 @@ function obtenerCategoriasDesdeBD()
                 <div class="timeline-barra-container">
         `;
 
-            if (operario.activo) {
-                html += `
+                if (operario.activo) {
+                    html += `
                 <div class="timeline-barra ${operario.claseTurno}" 
                      style="left: ${operario.left}%; width: ${operario.width}%;"
                      onclick="resaltarOperarioEnTabla(${operario.id})"
@@ -4145,8 +4170,8 @@ function obtenerCategoriasDesdeBD()
                     ${operario.entrada} - ${operario.salida}
                 </div>
             `;
-            } else {
-                html += `
+                } else {
+                    html += `
                 <div class="timeline-barra inactivo" 
                      style="left: 0; width: 100%;"
                      onclick="resaltarOperarioEnTabla(${operario.id})"
@@ -4154,15 +4179,15 @@ function obtenerCategoriasDesdeBD()
                     ${operario.estado}
                 </div>
             `;
-            }
+                }
 
-            html += `
+                html += `
                 </div>
             </div>
         `;
-        });
+            });
 
-        html += `
+            html += `
                 </div>
             </div>
             
@@ -4207,60 +4232,60 @@ function obtenerCategoriasDesdeBD()
         </div>
     `;
 
-        contenedorGrafico.innerHTML = html;
-    }
+            contenedorGrafico.innerHTML = html;
+        }
 
-    // Función para resaltar operario en la tabla cuando se hace clic en el gráfico
-    function resaltarOperarioEnTabla(operarioId) {
-        // Quitar resaltado anterior
-        document.querySelectorAll('tr[data-operario]').forEach(fila => {
-            fila.style.background = '';
-            fila.style.boxShadow = '';
-        });
-
-        // Resaltar la fila del operario
-        const filaOperario = document.querySelector(`tr[data-operario="${operarioId}"]`);
-        if (filaOperario) {
-            filaOperario.style.background = '#fff3cd';
-            filaOperario.style.boxShadow = '0 0 0 2px #ffc107';
-
-            // Hacer scroll a la fila
-            filaOperario.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
+        // Función para resaltar operario en la tabla cuando se hace clic en el gráfico
+        function resaltarOperarioEnTabla(operarioId) {
+            // Quitar resaltado anterior
+            document.querySelectorAll('tr[data-operario]').forEach(fila => {
+                fila.style.background = '';
+                fila.style.boxShadow = '';
             });
 
-            // Quitar el resaltado después de 3 segundos
-            setTimeout(() => {
-                filaOperario.style.background = '';
-                filaOperario.style.boxShadow = '';
-            }, 3000);
+            // Resaltar la fila del operario
+            const filaOperario = document.querySelector(`tr[data-operario="${operarioId}"]`);
+            if (filaOperario) {
+                filaOperario.style.background = '#fff3cd';
+                filaOperario.style.boxShadow = '0 0 0 2px #ffc107';
+
+                // Hacer scroll a la fila
+                filaOperario.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+
+                // Quitar el resaltado después de 3 segundos
+                setTimeout(() => {
+                    filaOperario.style.background = '';
+                    filaOperario.style.boxShadow = '';
+                }, 3000);
+            }
         }
-    }
 
-    // Función para generar el HTML del gráfico semanal
-    function generarHTMLGraficoSemanal(datos) {
-        const contenedorGrafico = document.getElementById('graficoHoras');
-        const maxHoras = Math.max(...datos.map(d => d.horas), 48); // Mínimo 48 para que se vea el marcador
+        // Función para generar el HTML del gráfico semanal
+        function generarHTMLGraficoSemanal(datos) {
+            const contenedorGrafico = document.getElementById('graficoHoras');
+            const maxHoras = Math.max(...datos.map(d => d.horas), 48); // Mínimo 48 para que se vea el marcador
 
-        if (datos.length === 0) {
-            contenedorGrafico.innerHTML = `
+            if (datos.length === 0) {
+                contenedorGrafico.innerHTML = `
             <div style="text-align: center; padding: 50px; color: #666;">
                 <i class="fas fa-chart-bar" style="font-size: 48px; margin-bottom: 15px;"></i>
                 <p>No hay datos para mostrar</p>
             </div>
         `;
-            return;
-        }
+                return;
+            }
 
-        let html = '';
+            let html = '';
 
-        datos.forEach(dato => {
-            const porcentaje = (dato.horas / maxHoras) * 100;
-            const porcentajeLimite = (48 / maxHoras) * 100;
-            const claseExtra = dato.encimaLimite ? 'encima-limite' : '';
+            datos.forEach(dato => {
+                const porcentaje = (dato.horas / maxHoras) * 100;
+                const porcentajeLimite = (48 / maxHoras) * 100;
+                const claseExtra = dato.encimaLimite ? 'encima-limite' : '';
 
-            html += `
+                html += `
             <div class="grafico-barra ${claseExtra}">
                 <div class="nombre-operario">
                     ${dato.nombre}
@@ -4279,15 +4304,15 @@ function obtenerCategoriasDesdeBD()
                 </div>
             </div>
         `;
-        });
+            });
 
-        // Agregar estadísticas generales
-        const totalHoras = datos.reduce((sum, d) => sum + d.horas, 0);
-        const promedioHoras = totalHoras / datos.length;
-        const operariosEncimaLimite = datos.filter(d => d.encimaLimite).length;
-        const operariosActivos = datos.filter(d => d.horas > 0).length;
+            // Agregar estadísticas generales
+            const totalHoras = datos.reduce((sum, d) => sum + d.horas, 0);
+            const promedioHoras = totalHoras / datos.length;
+            const operariosEncimaLimite = datos.filter(d => d.encimaLimite).length;
+            const operariosActivos = datos.filter(d => d.horas > 0).length;
 
-        html += `
+            html += `
         <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border: 1px solid #dee2e6;">
             <div style="display: flex; justify-content: space-around; text-align: center; flex-wrap: wrap; gap: 15px;">
                 <div>
@@ -4310,32 +4335,32 @@ function obtenerCategoriasDesdeBD()
         </div>
     `;
 
-        contenedorGrafico.innerHTML = html;
-    }
+            contenedorGrafico.innerHTML = html;
+        }
 
-    // Función para generar el HTML del gráfico diario
-    function generarHTMLGraficoDiario(datos, dia) {
-        const contenedorGrafico = document.getElementById('graficoHoras');
-        const maxHoras = Math.max(...datos.map(d => d.horas), 8); // Mínimo 8 para que se vea el marcador
+        // Función para generar el HTML del gráfico diario
+        function generarHTMLGraficoDiario(datos, dia) {
+            const contenedorGrafico = document.getElementById('graficoHoras');
+            const maxHoras = Math.max(...datos.map(d => d.horas), 8); // Mínimo 8 para que se vea el marcador
 
-        if (datos.length === 0) {
-            contenedorGrafico.innerHTML = `
+            if (datos.length === 0) {
+                contenedorGrafico.innerHTML = `
             <div style="text-align: center; padding: 50px; color: #666;">
                 <i class="fas fa-calendar-day" style="font-size: 48px; margin-bottom: 15px;"></i>
                 <p>No hay datos para mostrar</p>
             </div>
         `;
-            return;
-        }
+                return;
+            }
 
-        let html = '';
+            let html = '';
 
-        datos.forEach(dato => {
-            const porcentaje = dato.esActivo ? (dato.horas / maxHoras) * 100 : 0;
-            const porcentajeLimite = (8 / maxHoras) * 100;
-            const claseExtra = dato.encimaLimite ? 'encima-limite' : (!dato.esActivo ? 'dia-inactivo' : '');
+            datos.forEach(dato => {
+                const porcentaje = dato.esActivo ? (dato.horas / maxHoras) * 100 : 0;
+                const porcentajeLimite = (8 / maxHoras) * 100;
+                const claseExtra = dato.encimaLimite ? 'encima-limite' : (!dato.esActivo ? 'dia-inactivo' : '');
 
-            html += `
+                html += `
             <div class="grafico-barra ${claseExtra}">
                 <div class="nombre-operario">
                     ${dato.nombre}
@@ -4355,16 +4380,16 @@ function obtenerCategoriasDesdeBD()
                 </div>
             </div>
         `;
-        });
+            });
 
-        // Agregar estadísticas generales para el día
-        const operariosActivos = datos.filter(d => d.esActivo);
-        const totalHoras = operariosActivos.reduce((sum, d) => sum + d.horas, 0);
-        const promedioHoras = operariosActivos.length > 0 ? totalHoras / operariosActivos.length : 0;
-        const operariosEncimaLimite = datos.filter(d => d.encimaLimite).length;
-        const operariosInactivos = datos.filter(d => !d.esActivo).length;
+            // Agregar estadísticas generales para el día
+            const operariosActivos = datos.filter(d => d.esActivo);
+            const totalHoras = operariosActivos.reduce((sum, d) => sum + d.horas, 0);
+            const promedioHoras = operariosActivos.length > 0 ? totalHoras / operariosActivos.length : 0;
+            const operariosEncimaLimite = datos.filter(d => d.encimaLimite).length;
+            const operariosInactivos = datos.filter(d => !d.esActivo).length;
 
-        html += `
+            html += `
         <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border: 1px solid #dee2e6;">
             <div style="display: flex; justify-content: space-around; text-align: center; flex-wrap: wrap; gap: 15px;">
                 <div>
@@ -4387,234 +4412,234 @@ function obtenerCategoriasDesdeBD()
         </div>
     `;
 
-        contenedorGrafico.innerHTML = html;
-    }
+            contenedorGrafico.innerHTML = html;
+        }
 
-    // Función para inicializar el gráfico
-    function inicializarGrafico() {
-        // Establecer modo horarios por defecto y actualizar botones
-        cambiarModoGrafico('horarios');
+        // Función para inicializar el gráfico
+        function inicializarGrafico() {
+            // Establecer modo horarios por defecto y actualizar botones
+            cambiarModoGrafico('horarios');
 
-        // Actualizar gráfico al cargar la página
-        actualizarGraficoHoras();
+            // Actualizar gráfico al cargar la página
+            actualizarGraficoHoras();
 
-        // Observar cambios en los totales de horas y en los campos diarios
-        const observer = new MutationObserver(function(mutations) {
-            let debeActualizar = false;
+            // Observar cambios en los totales de horas y en los campos diarios
+            const observer = new MutationObserver(function (mutations) {
+                let debeActualizar = false;
 
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'characterData' || mutation.type === 'childList') {
-                    if (mutation.target.textContent.match(/\d+\.?\d*/)) {
-                        debeActualizar = true;
+                mutations.forEach(function (mutation) {
+                    if (mutation.type === 'characterData' || mutation.type === 'childList') {
+                        if (mutation.target.textContent.match(/\d+\.?\d*/)) {
+                            debeActualizar = true;
+                        }
                     }
+                });
+
+                if (debeActualizar) {
+                    setTimeout(actualizarGraficoHoras, 100);
                 }
             });
 
-            if (debeActualizar) {
-                setTimeout(actualizarGraficoHoras, 100);
-            }
-        });
-
-        // Observar todas las celdas de total horas y displays de horas diarias
-        document.querySelectorAll('.total-hours, .hours-display').forEach(elemento => {
-            observer.observe(elemento, {
-                characterData: true,
-                childList: true,
-                subtree: true
+            // Observar todas las celdas de total horas y displays de horas diarias
+            document.querySelectorAll('.total-hours, .hours-display').forEach(elemento => {
+                observer.observe(elemento, {
+                    characterData: true,
+                    childList: true,
+                    subtree: true
+                });
             });
-        });
 
-        // Observar cambios en selects de estado
-        document.querySelectorAll('select[name*="_estado"]').forEach(select => {
-            select.addEventListener('change', function() {
-                setTimeout(actualizarGraficoHoras, 200);
-            });
-        });
-    }
-
-    // Llamar a inicializarGrafico cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', function() {
-        // Esperar un poco para que se calculen los totales iniciales
-        setTimeout(() => {
-            inicializarGrafico();
-
-            // También actualizar el gráfico cuando se modifiquen los horarios
-            document.querySelectorAll('input[type="time"]').forEach(elemento => {
-                elemento.addEventListener('change', function() {
+            // Observar cambios en selects de estado
+            document.querySelectorAll('select[name*="_estado"]').forEach(select => {
+                select.addEventListener('change', function () {
                     setTimeout(actualizarGraficoHoras, 200);
                 });
             });
-        }, 500);
-    });
-
-    // También actualizar el gráfico cuando se eliminen operarios
-    const observerEliminacion = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.removedNodes) {
-                mutation.removedNodes.forEach(function(node) {
-                    if (node.nodeType === 1 && node.matches('tr[data-operario]')) {
-                        setTimeout(actualizarGraficoHoras, 100);
-                    }
-                });
-            }
-        });
-    });
-
-    observerEliminacion.observe(document.querySelector('tbody'), {
-        childList: true,
-        subtree: true
-    });
-
-    // Función para manejar cambios en el selector de sucursal externa
-    function manejarCambioSucursalExterna(selectElement, prefix) {
-        const estadoSelect = document.querySelector(`select[name="horarios[${prefix.split('_')[1]}][${prefix.split('_')[0]}_estado]"]`);
-
-        // Si el estado no es Otra.Tienda, limpiar el valor
-        if (estadoSelect && estadoSelect.value !== 'Otra.Tienda') {
-            selectElement.value = '';
         }
-    }
 
-    // Función para limpiar sucursales externas en estados que no son Otra.Tienda al cargar la página
-    function limpiarSucursalesExternasInvalidas() {
-        document.querySelectorAll('.sucursal-externa-group').forEach(group => {
-            const prefix = group.id.replace('sucursal_externa_', '');
-            const estadoSelect = document.querySelector(`select[name="horarios[${prefix.split('_')[1]}][${prefix.split('_')[0]}_estado]"]`);
-            const sucursalSelect = group.querySelector('select');
+        // Llamar a inicializarGrafico cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function () {
+            // Esperar un poco para que se calculen los totales iniciales
+            setTimeout(() => {
+                inicializarGrafico();
 
-            if (estadoSelect && sucursalSelect && estadoSelect.value !== 'Otra.Tienda') {
-                sucursalSelect.value = '';
-            }
+                // También actualizar el gráfico cuando se modifiquen los horarios
+                document.querySelectorAll('input[type="time"]').forEach(elemento => {
+                    elemento.addEventListener('change', function () {
+                        setTimeout(actualizarGraficoHoras, 200);
+                    });
+                });
+            }, 500);
         });
-    }
 
-    // Ejecutar al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(() => {
-            limpiarSucursalesExternasInvalidas();
-        }, 100);
-    });
-    // Premium Time Selector Logic
-    function ajustarHoraPremium(prefix, type, delta) {
-        const inputH = document.getElementById(`ts-h-${type}-${prefix}`);
-        let h = parseInt(inputH.value) || 12;
-        h = h + delta;
-        if (h > 12) h = 1;
-        if (h < 1) h = 12;
-        inputH.value = h.toString().padStart(2, '0');
-        actualizarHiddenInput(prefix, type);
-    }
+        // También actualizar el gráfico cuando se eliminen operarios
+        const observerEliminacion = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.removedNodes) {
+                    mutation.removedNodes.forEach(function (node) {
+                        if (node.nodeType === 1 && node.matches('tr[data-operario]')) {
+                            setTimeout(actualizarGraficoHoras, 100);
+                        }
+                    });
+                }
+            });
+        });
 
-    function toggleMinutosPremium(prefix, type) {
-        const spanM = document.getElementById(`ts-m-${type}-${prefix}`);
-        let m = spanM.textContent === '00' ? '30' : '00';
-        spanM.textContent = m;
-        actualizarHiddenInput(prefix, type);
-    }
+        observerEliminacion.observe(document.querySelector('tbody'), {
+            childList: true,
+            subtree: true
+        });
 
-    function toggleAMPM(prefix, type) {
-        const spanAP = document.getElementById(`ts-ap-${type}-${prefix}`);
-        spanAP.textContent = spanAP.textContent === 'AM' ? 'PM' : 'AM';
-        actualizarHiddenInput(prefix, type);
-    }
+        // Función para manejar cambios en el selector de sucursal externa
+        function manejarCambioSucursalExterna(selectElement, prefix) {
+            const estadoSelect = document.querySelector(`select[name="horarios[${prefix.split('_')[1]}][${prefix.split('_')[0]}_estado]"]`);
 
-    function validarHoraManual(input, prefix, type) {
-        let val = input.value.replace(/\D/g, '');
-        let h = parseInt(val);
-        
-        // Si hay algo escrito, actualizamos. Si está vacío, esperamos.
-        if (val.length > 0) {
-            if (h > 12) h = 12;
-            if (h < 0) h = 0; // Permitir 0 mientras escribe
+            // Si el estado no es Otra.Tienda, limpiar el valor
+            if (estadoSelect && estadoSelect.value !== 'Otra.Tienda') {
+                selectElement.value = '';
+            }
+        }
+
+        // Función para limpiar sucursales externas en estados que no son Otra.Tienda al cargar la página
+        function limpiarSucursalesExternasInvalidas() {
+            document.querySelectorAll('.sucursal-externa-group').forEach(group => {
+                const prefix = group.id.replace('sucursal_externa_', '');
+                const estadoSelect = document.querySelector(`select[name="horarios[${prefix.split('_')[1]}][${prefix.split('_')[0]}_estado]"]`);
+                const sucursalSelect = group.querySelector('select');
+
+                if (estadoSelect && sucursalSelect && estadoSelect.value !== 'Otra.Tienda') {
+                    sucursalSelect.value = '';
+                }
+            });
+        }
+
+        // Ejecutar al cargar la página
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(() => {
+                limpiarSucursalesExternasInvalidas();
+            }, 100);
+        });
+        // Premium Time Selector Logic
+        function ajustarHoraPremium(prefix, type, delta) {
+            const inputH = document.getElementById(`ts-h-${type}-${prefix}`);
+            let h = parseInt(inputH.value) || 12;
+            h = h + delta;
+            if (h > 12) h = 1;
+            if (h < 1) h = 12;
+            inputH.value = h.toString().padStart(2, '0');
             actualizarHiddenInput(prefix, type);
         }
-    }
 
-    function formatearHoraBlur(input) {
-        let val = input.value.replace(/\D/g, '');
-        let h = parseInt(val) || 12;
-        if (h > 12) h = 12;
-        if (h < 1) h = 12;
-        input.value = h.toString().padStart(2, '0');
-        // Asegurar que el hidden esté al día con el valor final formateado
-        const prefix = input.id.split('-').slice(3).join('-');
-        const type = input.id.split('-')[2];
-        actualizarHiddenInput(prefix, type);
-    }
-
-    function actualizarHiddenInput(prefix, type) {
-        const hValue = document.getElementById(`ts-h-${type}-${prefix}`).value;
-        let h = parseInt(hValue) || 12;
-        const m = document.getElementById(`ts-m-${type}-${prefix}`).textContent;
-        const ap = document.getElementById(`ts-ap-${type}-${prefix}`).textContent;
-        const hiddenInput = document.querySelector(`.${type}_${prefix}`);
-        
-        // Convert to 24h format for DB
-        let h24 = h;
-        if (ap === 'PM' && h < 12) h24 = h + 12;
-        if (ap === 'AM' && h === 12) h24 = 0;
-        
-        if (hiddenInput) {
-            hiddenInput.value = `${h24.toString().padStart(2, '0')}:${m}`;
-            // Trigger the original calculation
-            calcularHoras(prefix);
-        }
-    }
-
-    function ajustarDuracionPremium(prefix, deltaMin) {
-        console.log("Ajustando duración para:", prefix, deltaMin);
-        const hiddenSalida = document.querySelector(`.salida_${prefix}`);
-        const hiddenEntrada = document.querySelector(`.entrada_${prefix}`);
-
-        if (!hiddenEntrada || !hiddenSalida) {
-            console.error("Inputs ocultos no encontrados para:", prefix);
-            return;
+        function toggleMinutosPremium(prefix, type) {
+            const spanM = document.getElementById(`ts-m-${type}-${prefix}`);
+            let m = spanM.textContent === '00' ? '30' : '00';
+            spanM.textContent = m;
+            actualizarHiddenInput(prefix, type);
         }
 
-        if (!hiddenEntrada.value || hiddenEntrada.value === "") {
-            hiddenEntrada.value = "08:00";
-            document.getElementById(`ts-h-entrada-${prefix}`).value = "08";
-            document.getElementById(`ts-m-entrada-${prefix}`).textContent = "00";
-            document.getElementById(`ts-ap-entrada-${prefix}`).textContent = "AM";
+        function toggleAMPM(prefix, type) {
+            const spanAP = document.getElementById(`ts-ap-${type}-${prefix}`);
+            spanAP.textContent = spanAP.textContent === 'AM' ? 'PM' : 'AM';
+            actualizarHiddenInput(prefix, type);
         }
 
-        if (!hiddenSalida.value || hiddenSalida.value === "") {
-            hiddenSalida.value = "17:00";
-            document.getElementById(`ts-h-salida-${prefix}`).value = "05";
-            document.getElementById(`ts-m-salida-${prefix}`).textContent = "00";
-            document.getElementById(`ts-ap-salida-${prefix}`).textContent = "PM";
+        function validarHoraManual(input, prefix, type) {
+            let val = input.value.replace(/\D/g, '');
+            let h = parseInt(val);
+
+            // Si hay algo escrito, actualizamos. Si está vacío, esperamos.
+            if (val.length > 0) {
+                if (h > 12) h = 12;
+                if (h < 0) h = 0; // Permitir 0 mientras escribe
+                actualizarHiddenInput(prefix, type);
+            }
         }
 
-        let [hE, mE] = hiddenEntrada.value.split(':').map(Number);
-        let [hS, mS] = hiddenSalida.value.split(':').map(Number);
-
-        let totalMinSalida = hS * 60 + mS;
-        totalMinSalida += deltaMin;
-
-        // Validar que no sea menor que la entrada
-        let totalMinEntrada = hE * 60 + mE;
-        if (totalMinSalida <= totalMinEntrada) {
-            totalMinSalida = totalMinEntrada + 30; // Mínimo 30 min
+        function formatearHoraBlur(input) {
+            let val = input.value.replace(/\D/g, '');
+            let h = parseInt(val) || 12;
+            if (h > 12) h = 12;
+            if (h < 1) h = 12;
+            input.value = h.toString().padStart(2, '0');
+            // Asegurar que el hidden esté al día con el valor final formateado
+            const prefix = input.id.split('-').slice(3).join('-');
+            const type = input.id.split('-')[2];
+            actualizarHiddenInput(prefix, type);
         }
 
-        // Validar tope 23:30
-        if (totalMinSalida > 1410) totalMinSalida = 1410;
+        function actualizarHiddenInput(prefix, type) {
+            const hValue = document.getElementById(`ts-h-${type}-${prefix}`).value;
+            let h = parseInt(hValue) || 12;
+            const m = document.getElementById(`ts-m-${type}-${prefix}`).textContent;
+            const ap = document.getElementById(`ts-ap-${type}-${prefix}`).textContent;
+            const hiddenInput = document.querySelector(`.${type}_${prefix}`);
 
-        let newHS = Math.floor(totalMinSalida / 60);
-        let newMS = totalMinSalida % 60;
+            // Convert to 24h format for DB
+            let h24 = h;
+            if (ap === 'PM' && h < 12) h24 = h + 12;
+            if (ap === 'AM' && h === 12) h24 = 0;
 
-        // Convertir a 12h para la UI
-        let h12 = newHS % 12 || 12;
-        let ampm = newHS < 12 ? 'AM' : 'PM';
+            if (hiddenInput) {
+                hiddenInput.value = `${h24.toString().padStart(2, '0')}:${m}`;
+                // Trigger the original calculation
+                calcularHoras(prefix);
+            }
+        }
 
-        // Actualizar UI
-        document.getElementById(`ts-h-salida-${prefix}`).value = h12.toString().padStart(2, '0');
-        document.getElementById(`ts-m-salida-${prefix}`).textContent = newMS.toString().padStart(2, '0');
-        document.getElementById(`ts-ap-salida-${prefix}`).textContent = ampm;
+        function ajustarDuracionPremium(prefix, deltaMin) {
+            console.log("Ajustando duración para:", prefix, deltaMin);
+            const hiddenSalida = document.querySelector(`.salida_${prefix}`);
+            const hiddenEntrada = document.querySelector(`.entrada_${prefix}`);
 
-        actualizarHiddenInput(prefix, 'salida');
-    }
-</script>
+            if (!hiddenEntrada || !hiddenSalida) {
+                console.error("Inputs ocultos no encontrados para:", prefix);
+                return;
+            }
+
+            if (!hiddenEntrada.value || hiddenEntrada.value === "") {
+                hiddenEntrada.value = "08:00";
+                document.getElementById(`ts-h-entrada-${prefix}`).value = "08";
+                document.getElementById(`ts-m-entrada-${prefix}`).textContent = "00";
+                document.getElementById(`ts-ap-entrada-${prefix}`).textContent = "AM";
+            }
+
+            if (!hiddenSalida.value || hiddenSalida.value === "") {
+                hiddenSalida.value = "17:00";
+                document.getElementById(`ts-h-salida-${prefix}`).value = "05";
+                document.getElementById(`ts-m-salida-${prefix}`).textContent = "00";
+                document.getElementById(`ts-ap-salida-${prefix}`).textContent = "PM";
+            }
+
+            let [hE, mE] = hiddenEntrada.value.split(':').map(Number);
+            let [hS, mS] = hiddenSalida.value.split(':').map(Number);
+
+            let totalMinSalida = hS * 60 + mS;
+            totalMinSalida += deltaMin;
+
+            // Validar que no sea menor que la entrada
+            let totalMinEntrada = hE * 60 + mE;
+            if (totalMinSalida <= totalMinEntrada) {
+                totalMinSalida = totalMinEntrada + 30; // Mínimo 30 min
+            }
+
+            // Validar tope 23:30
+            if (totalMinSalida > 1410) totalMinSalida = 1410;
+
+            let newHS = Math.floor(totalMinSalida / 60);
+            let newMS = totalMinSalida % 60;
+
+            // Convertir a 12h para la UI
+            let h12 = newHS % 12 || 12;
+            let ampm = newHS < 12 ? 'AM' : 'PM';
+
+            // Actualizar UI
+            document.getElementById(`ts-h-salida-${prefix}`).value = h12.toString().padStart(2, '0');
+            document.getElementById(`ts-m-salida-${prefix}`).textContent = newMS.toString().padStart(2, '0');
+            document.getElementById(`ts-ap-salida-${prefix}`).textContent = ampm;
+
+            actualizarHiddenInput(prefix, 'salida');
+        }
+    </script>
 </body>
 
 </html>
