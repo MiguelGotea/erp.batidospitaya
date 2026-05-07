@@ -6,6 +6,7 @@ require_once '../../../core/layout/menu_lateral.php';
 require_once '../../../core/permissions/permissions.php';
 
 //******************************Estándar para header******************************
+verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
