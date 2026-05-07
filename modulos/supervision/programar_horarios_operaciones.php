@@ -13,7 +13,7 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = false;
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21, 36, 11])) {
+if (!verificarAccesoCargo([16, 21, 36, 11, 49])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -2205,8 +2205,7 @@ function obtenerCategoriasDesdeBD()
                                                             <?= !$puedeEditar ? 'disabled' : '' ?>>
                                                             <option value="">Seleccione sucursal...</option>
                                                             <?php foreach ($todasSucursales as $sucursalOption): ?>
-                                                                <option value="<?= $sucursalOption['codigo'] ?>"
-                                                                    <?= ((string) $sucursalExterna === (string) $sucursalOption['codigo']) ? 'selected' : '' ?>>
+                                                                <option value="<?= $sucursalOption['codigo'] ?>" <?= ((string) $sucursalExterna === (string) $sucursalOption['codigo']) ? 'selected' : '' ?>>
                                                                     <?= htmlspecialchars($sucursalOption['nombre']) ?>
                                                                 </option>
                                                             <?php endforeach; ?>
