@@ -4,7 +4,7 @@ require_once '../../core/auth/auth.php';
 verificarAutenticacion();
 
 // Verificar acceso al módulo (RH y admin)
-verificarAccesoCargo([13, 16, 39, 30, 37, 49, 8, 42]);
+verificarAccesoCargo([13, 16, 39, 30, 37, 49, 8, 42, 39]);
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
