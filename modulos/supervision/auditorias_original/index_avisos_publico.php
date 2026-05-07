@@ -7,6 +7,7 @@ require_once '../../../core/permissions/permissions.php';
 
 
 //******************************Estándar para header******************************
+verificarAutenticacion();
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
