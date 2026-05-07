@@ -33,13 +33,13 @@ if (!tienePermiso('tardanzas_manual', 'vista', $cargoOperario)) {
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
 // Permisos via sistema de permisos
-$verVistaCompleta  = tienePermiso('tardanzas_manual', 'vista_completa',  $cargoOperario);
+$verVistaCompleta = tienePermiso('tardanzas_manual', 'vista_completa', $cargoOperario);
 $puedeNuevoRegistro = tienePermiso('tardanzas_manual', 'nuevo_registro', $cargoOperario);
-$puedeExportar      = tienePermiso('tardanzas_manual', 'exportar',        $cargoOperario);
-$puedeAprobar       = tienePermiso('tardanzas_manual', 'aprobar',         $cargoOperario);
+$puedeExportar = tienePermiso('tardanzas_manual', 'exportar', $cargoOperario);
+$puedeAprobar = tienePermiso('tardanzas_manual', 'aprobar', $cargoOperario);
 
 // Variables legacy para compatibilidad con funciones internas
-$esLider       = $puedeNuevoRegistro;
+$esLider = $puedeNuevoRegistro;
 $esOperaciones = $verVistaCompleta;
 
 // Agrega al inicio del archivo (antes de cualquier output)
@@ -284,7 +284,7 @@ function obtenerConteoTardanzasPorOperario($codSucursal, $fechaDesde, $fechaHast
 }
 
 // $esLider y $esOperaciones ya definidos arriba via tienePermiso
-$esSucursales = verificarAccesoCargo([27]);
+//$esSucursales = verificarAccesoCargo([27]);
 
 // Handler AJAX para obtener operarios → movido a ajax/tardanzas_manual_obtener_operarios.php
 
@@ -518,7 +518,8 @@ if ($esOperaciones) {
     $todasSucursales = obtenerTodasSucursales();
     $sucursales = $todasSucursales;
     $mostrarTodas = true;
-} elseif ($esSucursales || $esLider) {
+    //} elseif ($esSucursales || $esLider) {
+} elseif ($esLider) {
     // Líder o usuario con cargo 27 solo ve sus sucursales
     $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
     $mostrarTodas = false;
@@ -2221,7 +2222,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                                 <th>Registrado por</th>
                                 <th>Foto</th>
                                 <?php if ($puedeAprobar): ?>
-                                <th style="text-align: center;">Acciones</th>
+                                    <th style="text-align: center;">Acciones</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
@@ -2535,7 +2536,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
     </script>
