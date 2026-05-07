@@ -20,30 +20,6 @@ if (!tienePermiso('avisos_internos', 'vista', $cargoOperario)) {
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
-// Función para formatear fecha en español con corrección horaria (UTC-6)
-function formatFechaEspanol($fecha)
-{
-    $meses = [
-        1 => 'ene',
-        2 => 'feb',
-        3 => 'mar',
-        4 => 'abr',
-        5 => 'may',
-        6 => 'jun',
-        7 => 'jul',
-        8 => 'ago',
-        9 => 'sep',
-        10 => 'oct',
-        11 => 'nov',
-        12 => 'dic'
-    ];
-
-    $date = new DateTime($fecha, new DateTimeZone('UTC'));
-    $date->modify('-6 hours'); // Compensar las 6 horas adicionales
-
-    return $date->format('d') . '-' . $meses[$date->format('n')] . '-' . $date->format('y') . ' ' . $date->format('h:i a');
-}
-
 // Al inicio del archivo, detecta si esta es la página de auditorías
 $pagina_actual = basename($_SERVER['PHP_SELF']);
 $es_pagina_auditorias = $pagina_actual == 'index_auditorias_publico.php';

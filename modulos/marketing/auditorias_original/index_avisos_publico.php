@@ -26,22 +26,6 @@ if (!tienePermiso('avisos_sucursales', 'vista', $cargoOperario)) {
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
-// Función para formatear fecha en español con corrección horaria (UTC-6)
-function formatFechaEspanol($fecha) {
-    $meses = [
-        1 => 'ene', 2 => 'feb', 3 => 'mar', 4 => 'abr',
-        5 => 'may', 6 => 'jun', 7 => 'jul', 8 => 'ago',
-        9 => 'sep', 10 => 'oct', 11 => 'nov', 12 => 'dic'
-    ];
-    
-    // Convertir de UTC a UTC-6 (restar 6 horas)
-    $date = new DateTime($fecha, new DateTimeZone('UTC'));
-    $date->sub(new DateInterval('PT6H'));
-    
-    // Formatear fecha: 30-abr-25 12:47 pm
-    return $date->format('d').'-'.$meses[$date->format('n')].'-'.$date->format('y').' '.$date->format('h:i a');
-}
-
 // Configuración de paginación
 $itemsPerPage = 15;
 $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -85,9 +69,9 @@ try {
     $totalAvisos = $countStmt->fetchColumn();
     
     // Luego obtener los datos paginados
-    $sql = "SELECT a.id, a.title, a.content, a.created_at, u.username as author 
+    $sql = "SELECT a.id, a.title, a.content, a.created_at, CONCAT(o.Nombre, ' ', o.Apellido) as author 
             FROM announcements a 
-            LEFT JOIN users u ON a.created_by = u.id
+            LEFT JOIN Operarios o ON a.created_by = o.CodOperario
             $joinCondition
             $whereClause
             GROUP BY a.id
