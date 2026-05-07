@@ -4,25 +4,23 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
-verificarAutenticacion();
 
-$usuario      = obtenerUsuarioActual();
+$usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin       = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] == 'admin';
 
 // Verificar acceso
-if (!tienePermiso('horas_extras_manual', 'vista', $cargoOperario) && !$esAdmin) {
+if (!tienePermiso('horas_extras_manual', 'vista', $cargoOperario)) {
     header('Location: /index.php');
     exit();
 }
 
 // Permisos específicos
-$puedeAprobar  = tienePermiso('horas_extras_manual', 'aprobar', $cargoOperario) || $esAdmin;
-$puedeSolicitar = tienePermiso('horas_extras_manual', 'solicitar', $cargoOperario) || $esAdmin;
-$puedeExportar  = tienePermiso('horas_extras_manual', 'exportar', $cargoOperario) || $esAdmin;
+$puedeAprobar = tienePermiso('horas_extras_manual', 'aprobar', $cargoOperario);
+$puedeSolicitar = tienePermiso('horas_extras_manual', 'solicitar', $cargoOperario);
+$puedeExportar = tienePermiso('horas_extras_manual', 'exportar', $cargoOperario);
 
 // Puede ver observaciones si aprueba o es cargo 11
-$puedeVerObs = $puedeAprobar || $cargoOperario == 11;
+$puedeVerObs = tienePermiso('horas_extras_manual', 'vista', $cargoOperario);
 
 // MIGRACIÓN AUTOMÁTICA (Si falla el CLI)
 try {
@@ -36,10 +34,10 @@ try {
 // EXPORTACIÓN EXCEL (Aprobados)
 if (isset($_GET['exportar_excel']) && $puedeExportar) {
     $sucursal = $_GET['sucursal'] ?? '';
-    $desde    = $_GET['desde']   ?? date('Y-m-01');
-    $hasta    = $_GET['hasta']   ?? date('Y-m-t');
+    $desde = $_GET['desde'] ?? date('Y-m-01');
+    $hasta = $_GET['hasta'] ?? date('Y-m-t');
     $operario = $_GET['operario'] ?? '';
-    $estado   = $_GET['estado']   ?? '';
+    $estado = $_GET['estado'] ?? '';
 
     $sql = "
         SELECT 
@@ -102,16 +100,16 @@ if (isset($_GET['exportar_excel']) && $puedeExportar) {
     foreach ($data as $r) {
         // Nombre completo sin espacios dobles por campos vacíos/nulos
         $partes = array_filter([
-            $r['Nombre']   ?? '',
-            $r['Nombre2']  ?? '',
+            $r['Nombre'] ?? '',
+            $r['Nombre2'] ?? '',
             $r['Apellido'] ?? '',
             $r['Apellido2'] ?? '',
         ], fn($p) => trim($p) !== '');
         $nombreCompleto = htmlspecialchars(implode(' ', $partes));
 
         $sucursalNombre = htmlspecialchars($r['sucursal_nombre'] ?? '');
-        $motivo         = htmlspecialchars($r['motivo_solicitud'] ?? '');
-        $obs            = htmlspecialchars($r['observaciones'] ?? '');
+        $motivo = htmlspecialchars($r['motivo_solicitud'] ?? '');
+        $obs = htmlspecialchars($r['observaciones'] ?? '');
 
         echo "<tr>
             <td>{$r['CodContrato']}</td>
@@ -166,21 +164,25 @@ if ($esLider) {
                                 <option value="">Todas</option>
                             <?php endif; ?>
                             <?php foreach ($sucursales as $s): ?>
-                                <option value="<?= $s['codigo'] ?>" <?= $esLider ? 'selected' : '' ?>><?= $s['nombre'] ?></option>
+                                <option value="<?= $s['codigo'] ?>" <?= $esLider ? 'selected' : '' ?>><?= $s['nombre'] ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-semibold text-muted small">Colaborador</label>
                         <div class="position-relative">
-                            <input type="text" id="operario_search" class="form-control form-control-sm" placeholder="Buscar colaborador...">
+                            <input type="text" id="operario_search" class="form-control form-control-sm"
+                                placeholder="Buscar colaborador...">
                             <input type="hidden" id="operario_id">
-                            <div id="operarios-sugerencias" class="list-group position-absolute w-100 shadow-sm" style="display:none;z-index:1000;"></div>
+                            <div id="operarios-sugerencias" class="list-group position-absolute w-100 shadow-sm"
+                                style="display:none;z-index:1000;"></div>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold text-muted small">Desde</label>
-                        <input type="date" id="desde" class="form-control form-control-sm" value="<?= date('Y-m-01') ?>">
+                        <input type="date" id="desde" class="form-control form-control-sm"
+                            value="<?= date('Y-m-01') ?>">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold text-muted small">Hasta</label>
@@ -196,12 +198,15 @@ if ($esLider) {
                         </select>
                     </div>
                     <div class="col-md-2 d-flex gap-2">
-                        <button type="button" onclick="cargarDatos()" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+                        <button type="button" onclick="cargarDatos()" class="btn btn-sm btn-primary"><i
+                                class="fas fa-search"></i></button>
                         <?php if ($puedeSolicitar): ?>
-                            <button type="button" onclick="abrirNuevaSolicitud()" class="btn btn-sm btn-warning"><i class="fas fa-plus"></i> Solicitar</button>
+                            <button type="button" onclick="abrirNuevaSolicitud()" class="btn btn-sm btn-warning"><i
+                                    class="fas fa-plus"></i> Solicitar</button>
                         <?php endif; ?>
                         <?php if ($puedeExportar): ?>
-                            <a href="?exportar_excel=1" id="linkExport" class="btn btn-sm btn-success"><i class="fas fa-file-excel"></i></a>
+                            <a href="?exportar_excel=1" id="linkExport" class="btn btn-sm btn-success"><i
+                                    class="fas fa-file-excel"></i></a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -222,7 +227,7 @@ if ($esLider) {
                             <th>Estado</th>
                             <th>Motivo Solicitud</th>
                             <?php if ($puedeVerObs): ?>
-                            <th>Observaciones</th>
+                                <th>Observaciones</th>
                             <?php endif; ?>
                             <th>Acciones</th>
                         </tr>
@@ -241,7 +246,8 @@ if ($esLider) {
             <div class="d-flex justify-content-between align-items-center mt-3 px-1">
                 <div class="d-flex align-items-center gap-2">
                     <label class="mb-0 small text-muted">Mostrar:</label>
-                    <select class="form-select form-select-sm" id="registrosPorPagina" style="width:auto;" onchange="cambiarPagina(1)">
+                    <select class="form-select form-select-sm" id="registrosPorPagina" style="width:auto;"
+                        onchange="cambiarPagina(1)">
                         <option value="25" selected>25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
@@ -259,11 +265,12 @@ if ($esLider) {
         <div class="modal-dialog">
             <form id="formSolicitud" class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-clock me-2 text-warning"></i><span id="modalSolicitudTitulo">Solicitar Horas Extras</span></h5>
+                    <h5 class="modal-title"><i class="fas fa-clock me-2 text-warning"></i><span
+                            id="modalSolicitudTitulo">Solicitar Horas Extras</span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" name="id"           id="sol_id">
+                    <input type="hidden" name="id" id="sol_id">
                     <input type="hidden" name="cod_operario" id="sol_cod_operario">
                     <input type="hidden" name="cod_sucursal" id="sol_cod_sucursal">
 
@@ -271,12 +278,15 @@ if ($esLider) {
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Colaborador <span class="text-danger">*</span></label>
                         <div class="position-relative">
-                            <input type="text" id="sol_operario_search" class="form-control" placeholder="Buscar colaborador..." autocomplete="off">
-                            <div id="sol-sugerencias" class="list-group position-absolute w-100 shadow-sm" style="display:none;z-index:2000;max-height:200px;overflow-y:auto;"></div>
+                            <input type="text" id="sol_operario_search" class="form-control"
+                                placeholder="Buscar colaborador..." autocomplete="off">
+                            <div id="sol-sugerencias" class="list-group position-absolute w-100 shadow-sm"
+                                style="display:none;z-index:2000;max-height:200px;overflow-y:auto;"></div>
                         </div>
                         <div id="sol_operario_seleccionado" class="mt-1" style="display:none;">
                             <span class="badge bg-success fs-6" id="sol_operario_badge"></span>
-                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-1" onclick="limpiarOperarioModal()">
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-1"
+                                onclick="limpiarOperarioModal()">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -285,32 +295,39 @@ if ($esLider) {
                     <!-- Fecha -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Fecha <span class="text-danger">*</span></label>
-                        <input type="date" name="fecha" id="sol_fecha" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                        <input type="date" name="fecha" id="sol_fecha" class="form-control" value="<?= date('Y-m-d') ?>"
+                            required>
                     </div>
 
                     <!-- Horas Extras -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Horas Extras <span class="text-danger">*</span></label>
-                        <input type="number" step="0.5" min="0.5" name="horas" id="sol_horas" class="form-control" required>
+                        <input type="number" step="0.5" min="0.5" name="horas" id="sol_horas" class="form-control"
+                            required>
                     </div>
 
                     <!-- Motivo -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Motivo de la Solicitud <span class="text-danger">*</span></label>
-                        <textarea name="motivo_solicitud" id="sol_motivo" class="form-control" rows="3" required placeholder="Explique por qué se realizaron las horas extras..."></textarea>
+                        <label class="form-label fw-semibold">Motivo de la Solicitud <span
+                                class="text-danger">*</span></label>
+                        <textarea name="motivo_solicitud" id="sol_motivo" class="form-control" rows="3" required
+                            placeholder="Explique por qué se realizaron las horas extras..."></textarea>
                     </div>
 
                     <!-- Observaciones (solo cargo 11 / aprobadores) -->
                     <?php if ($puedeVerObs): ?>
-                    <div class="mb-3" id="campoObservaciones">
-                        <label class="form-label fw-semibold">Observaciones <small class="text-muted fw-normal">(opcional — visión del superior)</small></label>
-                        <textarea name="observaciones" id="sol_observaciones" class="form-control" rows="2" placeholder="Observaciones del líder / RRHH..."></textarea>
-                    </div>
+                        <div class="mb-3" id="campoObservaciones">
+                            <label class="form-label fw-semibold">Observaciones <small
+                                    class="text-muted fw-normal">(opcional — visión del superior)</small></label>
+                            <textarea name="observaciones" id="sol_observaciones" class="form-control" rows="2"
+                                placeholder="Observaciones del líder / RRHH..."></textarea>
+                        </div>
                     <?php endif; ?>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i>Enviar Solicitud</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i>Enviar
+                        Solicitud</button>
                 </div>
             </form>
         </div>
@@ -325,12 +342,13 @@ if ($esLider) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" name="id"     id="proc_id">
-                    <input type="hidden" name="estado"  id="proc_estado">
-                    <input type="hidden" name="action"  value="cambiar_estado">
+                    <input type="hidden" name="id" id="proc_id">
+                    <input type="hidden" name="estado" id="proc_estado">
+                    <input type="hidden" name="action" value="cambiar_estado">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Observaciones</label>
-                        <textarea name="observaciones" id="proc_obs" class="form-control" rows="3" placeholder="Ingrese observaciones..."></textarea>
+                        <textarea name="observaciones" id="proc_obs" class="form-control" rows="3"
+                            placeholder="Ingrese observaciones..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -342,11 +360,11 @@ if ($esLider) {
     </div>
 
     <script>
-        window.canApprove   = <?= $puedeAprobar  ? 'true' : 'false' ?>;
+        window.canApprove = <?= $puedeAprobar ? 'true' : 'false' ?>;
         window.canSolicitar = <?= $puedeSolicitar ? 'true' : 'false' ?>;
         window.cargoOperario = <?= intval($cargoOperario) ?>;
-        window.puedeVerObs  = <?= $puedeVerObs   ? 'true' : 'false' ?>;
-        window.usuarioId    = <?= $_SESSION['usuario_id'] ?? 0 ?>;
+        window.puedeVerObs = <?= $puedeVerObs ? 'true' : 'false' ?>;
+        window.usuarioId = <?= $_SESSION['usuario_id'] ?? 0 ?>;
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
