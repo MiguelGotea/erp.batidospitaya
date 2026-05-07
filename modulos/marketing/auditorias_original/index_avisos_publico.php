@@ -61,6 +61,7 @@ if ($monthFilter) {
 
 $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
+
 try {
     // Primero contar el total
     $countSql = "SELECT COUNT(DISTINCT a.id) FROM announcements a $joinCondition $whereClause";
