@@ -323,6 +323,9 @@ try {
             foreach ($stmtFallback->fetchAll(PDO::FETCH_ASSOC) as $cf) {
                 $cc = (int)$cf['CodCotizacion'];
                 if (!isset($codMapConsumo[$cc])) {
+                    // Si ya está en el diccionario, pertenece a otra presentación y no debe ser absorbido por fallback
+                    if (isset($diccionario[$cc])) continue;
+
                     $codMapConsumo[$cc] = [
                         'pp_id'   => $idPP,
                         'pp_cant' => $baseCant,
