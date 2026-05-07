@@ -5,20 +5,13 @@ require_once '../../../core/layout/header_universal.php';
 require_once '../../../core/layout/menu_lateral.php';
 require_once '../../../core/permissions/permissions.php';
 
-//******************************Estándar para header******************************
-verificarAutenticacion();
-
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 //$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-// Verificar acceso al módulo
-//if (!verificarAccesoCargo([5, 43, 8, 11, 13, 16, 21, 22, 27, 42]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
-//    header('Location: ../../../index.php');
-//    exit();
-//}
+
 if (!tienePermiso('auditorias', 'vista', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
