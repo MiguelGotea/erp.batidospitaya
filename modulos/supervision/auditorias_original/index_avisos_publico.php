@@ -704,7 +704,7 @@ try {
                                                     elseif (strpos($doc['file_type'], 'powerpoint') !== false) $icon = 'fa-file-powerpoint';
                                                     elseif (strpos($doc['file_type'], 'zip') !== false || strpos($doc['file_type'], 'rar') !== false) $icon = 'fa-file-archive';
                                                 ?>
-                                                <a href="<?= htmlspecialchars($prefixedDocPath) ?>" target="_blank">
+                                                <a href="<?= htmlspecialchars($prefixedDocPath) ?>" target="_blank" rel="noopener noreferrer">
                                                     <i class="fas <?= $icon ?>"></i>
                                                     <?= htmlspecialchars($doc['file_name']) ?>
                                                 </a>
