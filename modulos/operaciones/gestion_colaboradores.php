@@ -4,7 +4,7 @@ require_once '../../core/auth/auth.php';
 verificarAutenticacion();
 
 // Verificar acceso al módulo (RH y admin)
-verificarAccesoCargo([13, 16, 39, 30, 37, 49]);
+verificarAccesoCargo([13, 16, 39, 30, 37, 49, 8, 42]);
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
@@ -1056,7 +1056,8 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                         <div class="item-info">
                                                             <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?></div>
                                                             <div class="item-cargo">
-                                                                <?= htmlspecialchars($colaborador['cargo_nombre']) ?></div>
+                                                                <?= htmlspecialchars($colaborador['cargo_nombre']) ?>
+                                                            </div>
                                                         </div>
                                                         <span class="item-badge"><?= $colaborador['codigo'] ?></span>
                                                     </div>
