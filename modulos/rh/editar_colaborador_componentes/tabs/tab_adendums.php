@@ -112,13 +112,13 @@
                                 <thead>
                                     <tr style="background-color: #0E544C; color: white;">
                                         <th style="padding: 10px; text-align: left;">Tipo</th>
-                                        <th style="padding: 10px; text-align: left;">Cargo</th>
+                                        <th style="padding: 10px; text-align: left;">Cargo <small>(clic para editar)</small></th>
                                         <th style="padding: 10px; text-align: left; display:none;">Categoría
                                         </th>
                                         <th style="padding: 10px; text-align: left;">Salario</th>
                                         <th style="padding: 10px; text-align: left;">Sucursal</th>
-                                        <th style="padding: 10px; text-align: left;">Fecha Inicio</th>
-                                        <th style="padding: 10px; text-align: left;">Fecha Fin</th>
+                                        <th style="padding: 10px; text-align: left;">Fecha Inicio <small>(clic para editar)</small></th>
+                                        <th style="padding: 10px; text-align: left;">Fecha Fin <small>(clic para editar)</small></th>
                                         <th style="padding: 10px; text-align: left;">Estado</th>
                                         <th style="padding: 10px; text-align: center;"></th>
                                     </tr>
@@ -141,8 +141,8 @@
                                             <td style="padding: 10px;">
                                                 <?= $tipoTexto[$adendum['TipoAdendum']] ?? 'No definido' ?>
                                             </td>
-                                            <td style="padding: 10px;">
-                                                <?= htmlspecialchars($adendum['nombre_cargo'] ?? 'No definido') ?>
+                                            <td style="padding: 10px;" class="editable-cell" data-field="CodNivelesCargos" data-id="<?= $adendum['CodAsignacionNivelesCargos'] ?>" data-type="select" data-current="<?= $adendum['CodNivelesCargos'] ?>">
+                                                <span class="cell-display"><?= htmlspecialchars($adendum['nombre_cargo'] ?? 'No definido') ?></span>
                                             </td>
 
                                             <td style="padding: 10px;">
@@ -151,11 +151,11 @@
                                             <td style="padding: 10px;">
                                                 <?= htmlspecialchars($adendum['nombre_sucursal'] ?? 'No definida') ?>
                                             </td>
-                                            <td style="padding: 10px;">
-                                                <?= date('d/m/Y', strtotime($adendum['Fecha'])) ?>
+                                            <td style="padding: 10px;" class="editable-cell" data-field="Fecha" data-id="<?= $adendum['CodAsignacionNivelesCargos'] ?>" data-type="date" data-current="<?= $adendum['Fecha'] ?>">
+                                                <span class="cell-display"><?= date('d/m/Y', strtotime($adendum['Fecha'])) ?></span>
                                             </td>
-                                            <td style="padding: 10px;">
-                                                <?= !$esActivo ? date('d/m/Y', strtotime($adendum['Fin'])) : '-' ?>
+                                            <td style="padding: 10px;" class="editable-cell" data-field="Fin" data-id="<?= $adendum['CodAsignacionNivelesCargos'] ?>" data-type="date" data-current="<?= $adendum['Fin'] ?>">
+                                                <span class="cell-display"><?= !$esActivo ? date('d/m/Y', strtotime($adendum['Fin'])) : '-' ?></span>
                                             </td>
                                             <td style="padding: 10px;"><?= $estado ?></td>
                                             <td style="padding: 10px; text-align: center;">
@@ -365,3 +365,146 @@
 <?php endif; ?>
 
 <!-- Pestaña de Expediente Digital -->
+
+<style>
+.editable-cell {
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s;
+}
+.editable-cell:hover {
+    background-color: #f0f7f6 !important;
+}
+.editable-cell::after {
+    content: '\f303';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: #0E544C;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.editable-cell:hover::after {
+    opacity: 0.5;
+}
+.inline-edit-input {
+    width: 100%;
+    padding: 4px;
+    border: 1px solid #0E544C;
+    border-radius: 4px;
+    font-size: inherit;
+    font-family: inherit;
+}
+.cell-loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cargosDisponibles = <?= json_encode($cargosDisponibles ?? []) ?>;
+    
+    document.querySelectorAll('.editable-cell').forEach(cell => {
+        cell.addEventListener('click', function(e) {
+            if (this.classList.contains('editing')) return;
+            
+            const field = this.dataset.field;
+            const id = this.dataset.id;
+            const type = this.dataset.type;
+            const currentValue = this.dataset.current;
+            const displaySpan = this.querySelector('.cell-display');
+            
+            this.classList.add('editing');
+            const originalContent = displaySpan.innerHTML;
+            
+            let input;
+            if (type === 'date') {
+                input = document.createElement('input');
+                input.type = 'date';
+                input.value = currentValue || '';
+                input.className = 'inline-edit-input';
+            } else if (type === 'select') {
+                input = document.createElement('select');
+                input.className = 'inline-edit-input';
+                
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = '';
+                defaultOpt.text = 'Seleccionar...';
+                input.appendChild(defaultOpt);
+                
+                cargosDisponibles.forEach(cargo => {
+                    const opt = document.createElement('option');
+                    opt.value = cargo.CodNivelesCargos;
+                    opt.text = cargo.Nombre;
+                    if (cargo.CodNivelesCargos == currentValue) opt.selected = true;
+                    input.appendChild(opt);
+                });
+            }
+            
+            displaySpan.style.display = 'none';
+            this.appendChild(input);
+            input.focus();
+            
+            const saveEdit = () => {
+                const newValue = input.value;
+                if (newValue == currentValue) {
+                    cleanup();
+                    return;
+                }
+                
+                this.classList.add('cell-loading');
+                
+                const formData = new FormData();
+                formData.append('id', id);
+                formData.append('field', field);
+                formData.append('value', newValue);
+                
+                fetch('ajax/actualizar_adendum_inline.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.classList.remove('cell-loading');
+                    if (data.exito) {
+                        displaySpan.innerHTML = data.displayValue;
+                        this.dataset.current = newValue;
+                        
+                        // Si actualizamos Fecha o Fin, recargar para ver cambios en estado/orden? 
+                        // Por ahora solo actualizamos el texto para no perder el contexto.
+                    } else {
+                        alert(data.mensaje || 'Error al actualizar');
+                    }
+                    cleanup();
+                })
+                .catch(error => {
+                    this.classList.remove('cell-loading');
+                    console.error('Error:', error);
+                    alert('Error de conexión');
+                    cleanup();
+                });
+            };
+            
+            const cleanup = () => {
+                this.classList.remove('editing');
+                if (input.parentNode === this) this.removeChild(input);
+                displaySpan.style.display = 'inline';
+            };
+            
+            input.addEventListener('blur', saveEdit);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    cleanup();
+                }
+            });
+        });
+    });
+});
+</script>
