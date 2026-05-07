@@ -109,23 +109,33 @@ function mostrarModalNuevaTardanza() {
     ayer.setDate(ayer.getDate() - 1);
     const fechaAyerStr = ayer.toISOString().split('T')[0];
     
-    document.getElementById('nueva_fecha').value = fechaAyerStr;
-    document.getElementById('nueva_fecha').max = fechaAyerStr;
+    const elFecha = document.getElementById('nueva_fecha');
+    const elSucursal = document.getElementById('nueva_sucursal');
+    const elOperario = document.getElementById('nueva_operario');
 
-    const selectOperario = document.getElementById('nueva_operario');
-    selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
-
-    const selectSucursal = document.getElementById('nueva_sucursal');
-    const primeraSucursal = selectSucursal.value;
-    if (primeraSucursal) {
-        cargarOperariosSucursal(primeraSucursal, fechaAyerStr);
+    if (elFecha) {
+        elFecha.value = fechaAyerStr;
+        elFecha.max = fechaAyerStr;
     }
+
+    if (elOperario) {
+        elOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
+        elOperario.disabled = false;
+    }
+
+    // Disparar carga inicial basada en la sucursal y fecha que ya tiene el modal
+    if (elSucursal && elFecha) {
+        cargarOperariosSucursal(elSucursal.value, elFecha.value);
+    }
+
     document.getElementById('modalNuevaTardanza').style.display = 'flex';
 }
 
 function cargarOperariosSucursal(codSucursal, fechaTardanza) {
     const selectOperario = document.getElementById('nueva_operario');
     const mensajeAdvertencia = document.getElementById('mensaje-advertencia-contrato-tardanza');
+
+    if (!selectOperario) return;
 
     if (!codSucursal) {
         selectOperario.innerHTML = '<option value="">Primero seleccione una sucursal</option>';
@@ -138,8 +148,8 @@ function cargarOperariosSucursal(codSucursal, fechaTardanza) {
         return;
     }
 
-    selectOperario.innerHTML = `<option value="">⏳ Cargando operarios para ${fechaTardanza}...</option>`;
     selectOperario.disabled = true;
+    selectOperario.innerHTML = `<option value="">⏳ Cargando operarios para ${fechaTardanza}...</option>`;
 
     let url = `ajax/tardanzas_manual_obtener_operarios.php?sucursal=${codSucursal}&fecha_tardanza=${fechaTardanza}`;
 
