@@ -109,6 +109,7 @@ function mostrarModalNuevaTardanza() {
     const ayer = new Date(hoy);
     ayer.setDate(hoy.getDate() - 1);
     
+    // Formato local YYYY-MM-DD para evitar desfases de zona horaria (UTC)
     const yyyy = ayer.getFullYear();
     const mm = String(ayer.getMonth() + 1).padStart(2, '0');
     const dd = String(ayer.getDate()).padStart(2, '0');
@@ -118,37 +119,26 @@ function mostrarModalNuevaTardanza() {
     const selectOperario = document.getElementById('nueva_operario');
     const selectSucursal = document.getElementById('nueva_sucursal');
 
-    // 1. Establecer fecha inicial y límite
-    if (inputFecha) {
-        inputFecha.value = fechaAyerStr;
-        inputFecha.max = fechaAyerStr;
-    }
+    // Establecer fecha y su límite máximo
+    inputFecha.value = fechaAyerStr;
+    inputFecha.max = fechaAyerStr;
 
-    // 2. Estado inicial del selector de colaboradores
-    if (selectOperario) {
+    // Resetear selector de operarios
+    selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
+
+    // Obtener sucursal seleccionada por defecto (la primera o la preseleccionada por PHP)
+    const sucursalActual = selectSucursal.value;
+
+    if (sucursalActual && fechaAyerStr) {
+        // Forzamos la carga inmediata de operarios para esa sucursal y fecha
+        cargarOperariosSucursal(sucursalActual, fechaAyerStr);
+    } else if (!sucursalActual) {
         selectOperario.disabled = true;
-        selectOperario.innerHTML = '<option value="">⏳ Cargando colaboradores...</option>';
+        selectOperario.innerHTML = '<option value="">Primero seleccione una sucursal</option>';
     }
 
-    // 3. Mostrar el modal primero
-    const modal = document.getElementById('modalNuevaTardanza');
-    if (modal) modal.style.display = 'flex';
-
-    // 4. Cargar operarios con un pequeño retardo para asegurar estabilidad del DOM
-    setTimeout(() => {
-        const sucursalActual = selectSucursal ? selectSucursal.value : null;
-        const fechaActual = inputFecha ? inputFecha.value : fechaAyerStr;
-
-        if (sucursalActual && fechaActual) {
-            cargarOperariosSucursal(sucursalActual, fechaActual);
-        } else if (!sucursalActual) {
-            selectOperario.disabled = true;
-            selectOperario.innerHTML = '<option value="">Primero seleccione una sucursal</option>';
-        } else {
-            selectOperario.disabled = true;
-            selectOperario.innerHTML = '<option value="">Primero seleccione una fecha</option>';
-        }
-    }, 150);
+    // Mostrar el modal
+    document.getElementById('modalNuevaTardanza').style.display = 'flex';
 }
 
 function cargarOperariosSucursal(codSucursal, fechaTardanza) {
