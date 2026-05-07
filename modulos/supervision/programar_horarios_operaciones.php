@@ -1806,11 +1806,7 @@ function obtenerCategoriasDesdeBD()
                 </div>
 
                 <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ?
-                            strtoupper(substr($usuario['nombre'], 0, 1)) :
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
+
                     <div>
                         <div>
                             <?= $esAdmin ?
@@ -2204,8 +2200,7 @@ function obtenerCategoriasDesdeBD()
                                                             <?= !$puedeEditar ? 'disabled' : '' ?>>
                                                             <option value="">Seleccione sucursal...</option>
                                                             <?php foreach ($todasSucursales as $sucursalOption): ?>
-                                                                <option value="<?= $sucursalOption['codigo'] ?>"
-                                                                    <?= ((string) $sucursalExterna === (string) $sucursalOption['codigo']) ? 'selected' : '' ?>>
+                                                                <option value="<?= $sucursalOption['codigo'] ?>" <?= ((string) $sucursalExterna === (string) $sucursalOption['codigo']) ? 'selected' : '' ?>>
                                                                     <?= htmlspecialchars($sucursalOption['nombre']) ?>
                                                                 </option>
                                                             <?php endforeach; ?>
