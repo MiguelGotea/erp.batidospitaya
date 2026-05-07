@@ -125,6 +125,7 @@ $meses = [
     12 => 'Diciembre'
 ];
 
+
 $anios = range(2020, date('Y') + 1); // Desde 2020 hasta el próximo año
 
 // Construir URL base para los filtros
