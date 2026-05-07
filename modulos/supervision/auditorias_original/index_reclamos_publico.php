@@ -171,7 +171,7 @@ function getBadgeResolucion($resolucion) {
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>"> <!-- contiene main, sub container * y body -->
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo $version; ?>"> <!-- contiene main, sub container * y body -->
     <style>
 
         .buttons-container {
