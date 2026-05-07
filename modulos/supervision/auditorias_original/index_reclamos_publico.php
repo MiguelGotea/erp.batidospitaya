@@ -5,9 +5,6 @@ require_once '../../../core/layout/header_universal.php';
 require_once '../../../core/layout/menu_lateral.php';
 require_once '../../../core/permissions/permissions.php';
 
-//******************************Estándar para header******************************
-verificarAutenticacion();
-
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
@@ -72,33 +69,42 @@ try {
         WHERE MONTH(r.fecha_hora) = :mes 
         AND YEAR(r.fecha_hora) = :anio
     ";
-    
+
     if ($sucursal_codigo_seleccionada != 'todas') {
         $sql .= " AND r.sucursal_codigo = :sucursal_codigo";
     }
-    
+
     $sql .= " GROUP BY r.id ORDER BY r.fecha_hora DESC";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->bindValue(':mes', $mes_seleccionado, PDO::PARAM_INT);
     $stmt->bindValue(':anio', $anio_seleccionado, PDO::PARAM_INT);
-    
+
     if ($sucursal_codigo_seleccionada != 'todas') {
         $stmt->bindValue(':sucursal_codigo', $sucursal_codigo_seleccionada, PDO::PARAM_STR);
     }
-    
+
     $stmt->execute();
     $reclamos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
 } catch (PDOException $e) {
     die("Error en la consulta: " . $e->getMessage());
 }
 
 // Generar opciones de meses y años
 $meses = [
-    1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
-    5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
-    9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+    1 => 'Enero',
+    2 => 'Febrero',
+    3 => 'Marzo',
+    4 => 'Abril',
+    5 => 'Mayo',
+    6 => 'Junio',
+    7 => 'Julio',
+    8 => 'Agosto',
+    9 => 'Septiembre',
+    10 => 'Octubre',
+    11 => 'Noviembre',
+    12 => 'Diciembre'
 ];
 
 $anios = range(2020, date('Y') + 1);
@@ -112,38 +118,49 @@ $params[] = 'mes=' . urlencode($mes_seleccionado);
 $params[] = 'anio=' . urlencode($anio_seleccionado);
 
 // Si hay filtro de sucursal, agregarlo
-if(isset($_GET['sucursal']) && $_GET['sucursal'] != 'todas') {
+if (isset($_GET['sucursal']) && $_GET['sucursal'] != 'todas') {
     $params[] = 'sucursal=' . urlencode($_GET['sucursal']);
 }
 
 $url_filtros = $url_base . implode('&', $params);
 
 // Función para formatear fecha y hora
-function formatearFechaHora($fecha_hora) {
+function formatearFechaHora($fecha_hora)
+{
     $fecha = new DateTime($fecha_hora);
     // Restar 6 horas
     $fecha->modify('-6 hours');
-    
+
     // Obtener el número del mes (1-12)
-    $mes_numero = (int)$fecha->format('n');
-    
+    $mes_numero = (int) $fecha->format('n');
+
     // Array de meses abreviados en español
     $meses_abreviados = [
-        1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
-        5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
-        9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic'
+        1 => 'Ene',
+        2 => 'Feb',
+        3 => 'Mar',
+        4 => 'Abr',
+        5 => 'May',
+        6 => 'Jun',
+        7 => 'Jul',
+        8 => 'Ago',
+        9 => 'Sep',
+        10 => 'Oct',
+        11 => 'Nov',
+        12 => 'Dic'
     ];
-    
+
     // Formatear fecha (ejemplo: 30-Abr-25)
     $fecha_formateada = $fecha->format('d') . '-' . $meses_abreviados[$mes_numero] . '-' . $fecha->format('y');
-    
+
     return $fecha_formateada;
 }
 
 // Función para determinar el badge de resolución
-function getBadgeResolucion($resolucion) {
+function getBadgeResolucion($resolucion)
+{
     $resolucion = strtolower(trim($resolucion));
-    
+
     if ($resolucion == 'abierto') {
         return [
             'texto' => 'Abierto',
@@ -165,6 +182,7 @@ function getBadgeResolucion($resolucion) {
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -172,9 +190,9 @@ function getBadgeResolucion($resolucion) {
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo $version; ?>"> <!-- contiene main, sub container * y body -->
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo $version; ?>">
+    <!-- contiene main, sub container * y body -->
     <style>
-
         .buttons-container {
             display: flex;
             gap: 10px;
@@ -185,14 +203,14 @@ function getBadgeResolucion($resolucion) {
             left: 50%;
             transform: translateX(-50%);
         }
-        
+
         .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-left: auto;
         }
-        
+
         .btn-agregar {
             background-color: transparent;
             color: #51B8AC;
@@ -208,19 +226,19 @@ function getBadgeResolucion($resolucion) {
             font-size: 14px;
             flex-shrink: 0;
         }
-        
+
         .btn-agregar.activo {
             background-color: #51B8AC;
             color: white;
             font-weight: normal;
         }
-        
+
         .btn-agregar:hover {
             background-color: #0E544C;
             color: white;
             border-color: #0E544C;
         }
-        
+
 
         .btn-agregar:hover {
             background-color: #51B8AC;
@@ -239,7 +257,8 @@ function getBadgeResolucion($resolucion) {
             background-color: white;
         }
 
-        th, td {
+        th,
+        td {
             padding: 10px;
             border: 1px solid #ddd;
         }
@@ -271,50 +290,50 @@ function getBadgeResolucion($resolucion) {
             min-width: 120px;
             width: auto;
         }
-        
+
         .filtro-opciones.sucursal {
             width: 220px;
             padding: 8px;
         }
-        
+
         .filtro-opciones.sucursal .sucursales-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 3px;
         }
-        
+
         .filtro-opciones.sucursal a {
             text-align: left;
             padding: 4px 6px;
             white-space: nowrap;
         }
-        
+
         /* Estilos para el filtro de mes/año como popup */
         .filtro-opciones.mes-anio {
             width: 200px;
             padding: 15px;
             right: 0;
         }
-        
+
         .filtro-opciones.mes-anio form {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-        
+
         .filtro-opciones.mes-anio select {
             padding: 8px;
             border-radius: 5px;
             border: 1px solid #ddd;
             width: 100%;
         }
-        
+
         .filtro-opciones.mes-anio .botones-filtro {
             display: flex;
             justify-content: space-between;
             gap: 5px;
         }
-        
+
         .filtro-opciones.mes-anio button {
             padding: 8px;
             background-color: #51B8AC;
@@ -325,16 +344,16 @@ function getBadgeResolucion($resolucion) {
             transition: background-color 0.3s;
             flex: 1;
         }
-        
+
         .filtro-opciones.mes-anio button.cancelar {
             background-color: #f1f1f1;
             color: #333;
         }
-        
+
         .filtro-opciones.mes-anio button:hover {
             background-color: #0E544C;
         }
-        
+
         .filtro-opciones.mes-anio button.cancelar:hover {
             background-color: #ddd;
         }
@@ -375,35 +394,35 @@ function getBadgeResolucion($resolucion) {
             text-align: center;
             white-space: nowrap;
         }
-        
+
         .badge-abierto {
             background-color: #FF5252;
             color: white;
             border: 1px solid #FF1744;
         }
-        
+
         .badge-equipo-tienda {
             background-color: #4CAF50;
             color: white;
             border: 1px solid #2E7D32;
         }
-        
+
         .badge-cerrado {
             background-color: #2196F3;
             color: white;
             border: 1px solid #1565C0;
         }
-        
+
         .accion-ver {
             color: #51B8AC;
             margin-left: 8px;
             transition: color 0.3s;
         }
-        
+
         .accion-ver:hover {
             color: #0E544C;
         }
-        
+
         /* Estilos para el encabezado del historial */
         .encabezado-historial {
             display: flex;
@@ -413,7 +432,7 @@ function getBadgeResolucion($resolucion) {
             margin-bottom: 10px;
             width: 100%;
         }
-        
+
         .titulo-historial {
             margin: 0;
             font-weight: bold;
@@ -421,48 +440,48 @@ function getBadgeResolucion($resolucion) {
             align-items: center;
             gap: 5px;
         }
-        
+
         @media (max-width: 768px) {
-    .header-container {
-        flex-direction: row;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .buttons-container {
-        position: static;
-        transform: none;
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        margin-top: 10px;
-    }
-    
-    .logo-container {
-        order: 1;
-        margin-right: 0;
-    }
-    
-    .user-info {
-        order: 2;
-        margin-left: auto;
-    }
-    
-    .btn-agregar {
-        padding: 6px 10px;
-        font-size: 13px;
-    }
-            
+            .header-container {
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .buttons-container {
+                position: static;
+                transform: none;
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px;
+            }
+
+            .logo-container {
+                order: 1;
+                margin-right: 0;
+            }
+
+            .user-info {
+                order: 2;
+                margin-left: auto;
+            }
+
+            .btn-agregar {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+
             .filtro-opciones.sucursal {
                 width: 160px;
                 left: 0;
                 transform: translateX(0);
             }
-            
+
             .filtro-opciones.sucursal .sucursales-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .filtro-opciones.mes-anio {
                 width: 160px;
                 right: auto;
@@ -470,65 +489,70 @@ function getBadgeResolucion($resolucion) {
                 transform: translateX(0);
             }
         }
-        
+
         @media (max-width: 480px) {
-    .btn-agregar {
-        flex-grow: 1;
-        justify-content: center;
-        white-space: normal;
-        text-align: center;
-        padding: 8px 5px;
-    }
-    
-    .user-info {
-        flex-direction: column;
-        align-items: flex-end;
-    }
-    
-    .btn-agregar i {
-        margin-right: 4px;
-    }
-            
+            .btn-agregar {
+                flex-grow: 1;
+                justify-content: center;
+                white-space: normal;
+                text-align: center;
+                padding: 8px 5px;
+            }
+
+            .user-info {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+
+            .btn-agregar i {
+                margin-right: 4px;
+            }
+
             .filtro-opciones.sucursal {
                 width: 130px;
             }
-            
+
             .filtro-opciones.sucursal .sucursales-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .filtro-opciones.mes-anio {
                 width: 160px;
                 right: auto;
                 left: 0;
             }
-            
+
             /* Ajustar tabla para móviles */
             table {
                 font-size: 12px;
             }
-            
-            th, td {
+
+            th,
+            td {
                 padding: 6px 3px;
             }
         }
     </style>
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
-    <div class="main-container">   <!-- ya existe en el css de menu lateral -->
+    <div class="main-container"> <!-- ya existe en el css de menu lateral -->
         <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
-            <?php echo renderHeader($usuario, $esAdmin, 'Historial de Reclamos'); ?> <!-- Dejar vacio si Bienvenido.. -->
+            <?php echo renderHeader($usuario, $esAdmin, 'Historial de Reclamos'); ?>
+            <!-- Dejar vacio si Bienvenido.. -->
             <div class="contenedor-principal">
                 <!-- Mostrar registros de reclamos -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%; display:none;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%; display:none;">
                     <div class="encabezado-historial">
                         <h3 class="titulo-historial">
-                            <i class="fas fa-history"></i> Historial de Reclamos - <?php echo $meses[$mes_seleccionado] . ' ' . $anio_seleccionado; ?>
+                            <i class="fas fa-history"></i> Historial de Reclamos -
+                            <?php echo $meses[$mes_seleccionado] . ' ' . $anio_seleccionado; ?>
                         </h3>
                     </div>
                 </div>
-                
+
                 <table>
                     <thead>
                         <tr>
@@ -537,34 +561,37 @@ function getBadgeResolucion($resolucion) {
                                 <!-- Filtro de mes/año como popup -->
                                 <div class="filtro-contenedor" id="filtro-mes-anio">
                                     <span class="filtro-encabezado" onclick="toggleFiltroMesAnio()">
-                                        <i class="fas fa-calendar-alt" style="display:none;"></i> <i class="fas fa-caret-down"></i>
+                                        <i class="fas fa-calendar-alt" style="display:none;"></i> <i
+                                            class="fas fa-caret-down"></i>
                                     </span>
                                     <div class="filtro-opciones mes-anio">
                                         <form method="get" action="index_reclamos_publico.php">
                                             <!-- Mantener el filtro de sucursal si existe -->
-                                            <?php if(isset($_GET['sucursal']) && $_GET['sucursal'] != 'todas'): ?>
-                                                <input type="hidden" name="sucursal" value="<?php echo htmlspecialchars($_GET['sucursal']); ?>">
+                                            <?php if (isset($_GET['sucursal']) && $_GET['sucursal'] != 'todas'): ?>
+                                                <input type="hidden" name="sucursal"
+                                                    value="<?php echo htmlspecialchars($_GET['sucursal']); ?>">
                                             <?php endif; ?>
-                                            
+
                                             <select name="mes" id="mes">
-                                                <?php foreach($meses as $num => $nombre): ?>
+                                                <?php foreach ($meses as $num => $nombre): ?>
                                                     <option value="<?php echo $num; ?>" <?php echo $num == $mes_seleccionado ? 'selected' : ''; ?>>
                                                         <?php echo $nombre; ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
-                                            
+
                                             <select name="anio" id="anio">
-                                                <?php foreach($anios as $anio): ?>
+                                                <?php foreach ($anios as $anio): ?>
                                                     <option value="<?php echo $anio; ?>" <?php echo $anio == $anio_seleccionado ? 'selected' : ''; ?>>
                                                         <?php echo $anio; ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
-                                            
+
                                             <div class="botones-filtro">
                                                 <button type="submit">Aplicar</button>
-                                                <button type="button" class="cancelar" onclick="cerrarFiltroMesAnio()">Cancelar</button>
+                                                <button type="button" class="cancelar"
+                                                    onclick="cerrarFiltroMesAnio()">Cancelar</button>
                                             </div>
                                         </form>
                                     </div>
@@ -577,9 +604,11 @@ function getBadgeResolucion($resolucion) {
                                     </span>
                                     <div class="filtro-opciones sucursal">
                                         <div class="sucursales-grid">
-                                            <a href="<?php echo $url_base; ?>mes=<?php echo $mes_seleccionado; ?>&anio=<?php echo $anio_seleccionado; ?>&sucursal_codigo=todas">Todas</a>
+                                            <a
+                                                href="<?php echo $url_base; ?>mes=<?php echo $mes_seleccionado; ?>&anio=<?php echo $anio_seleccionado; ?>&sucursal_codigo=todas">Todas</a>
                                             <?php foreach ($sucursales_fisicas as $sucursal): ?>
-                                                <a href="<?php echo $url_base; ?>mes=<?php echo $mes_seleccionado; ?>&anio=<?php echo $anio_seleccionado; ?>&sucursal_codigo=<?php echo urlencode($sucursal['codigo']); ?>">
+                                                <a
+                                                    href="<?php echo $url_base; ?>mes=<?php echo $mes_seleccionado; ?>&anio=<?php echo $anio_seleccionado; ?>&sucursal_codigo=<?php echo urlencode($sucursal['codigo']); ?>">
                                                     <?php echo htmlspecialchars($sucursal['nombre']); ?>
                                                 </a>
                                             <?php endforeach; ?>
@@ -595,27 +624,30 @@ function getBadgeResolucion($resolucion) {
                     <tbody>
                         <?php if (empty($reclamos)): ?>
                             <tr>
-                                <td colspan="6" style="text-align:center; background-color:#fff;">Sin reclamos actualmente.</td>
+                                <td colspan="6" style="text-align:center; background-color:#fff;">Sin reclamos actualmente.
+                                </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($reclamos as $reclamo): ?>
-                            <?php $badge = getBadgeResolucion($reclamo['resolucion']); ?>
-                            <tr>
-                                <td class="columna-numero"><?php echo $reclamo['id']; ?></td>
-                                <td style="text-align:center;"><?php echo formatearFechaHora($reclamo['fecha_hora']); ?></td>
-                                <td style="text-align:center;"><?php echo $reclamo['sucursal']; ?></td>
-                                <td style="text-align:center;"><?php echo $reclamo['tipo_reclamo']; ?></td>
-                                <td style="text-align:center;">
-                                    <span class="badge-resolucion <?php echo $badge['clase']; ?>">
-                                        <?php echo $badge['texto']; ?>
-                                    </span>
-                                </td>
-                                <td style="text-align:center;">
-                                    <a href="ver_reclamo.php?id=<?php echo $reclamo['id']; ?>" class="accion-ver" title="Ver detalles">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </td>
-                            </tr>
+                                <?php $badge = getBadgeResolucion($reclamo['resolucion']); ?>
+                                <tr>
+                                    <td class="columna-numero"><?php echo $reclamo['id']; ?></td>
+                                    <td style="text-align:center;"><?php echo formatearFechaHora($reclamo['fecha_hora']); ?>
+                                    </td>
+                                    <td style="text-align:center;"><?php echo $reclamo['sucursal']; ?></td>
+                                    <td style="text-align:center;"><?php echo $reclamo['tipo_reclamo']; ?></td>
+                                    <td style="text-align:center;">
+                                        <span class="badge-resolucion <?php echo $badge['clase']; ?>">
+                                            <?php echo $badge['texto']; ?>
+                                        </span>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <a href="ver_reclamo.php?id=<?php echo $reclamo['id']; ?>" class="accion-ver"
+                                            title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
@@ -630,18 +662,18 @@ function getBadgeResolucion($resolucion) {
             const filtro = document.getElementById('filtro-mes-anio');
             filtro.classList.toggle('activo');
         }
-        
+
         // Función para cerrar el filtro de mes/año
         function cerrarFiltroMesAnio() {
             const filtro = document.getElementById('filtro-mes-anio');
             filtro.classList.remove('activo');
         }
-        
+
         // Cerrar el filtro si se hace clic fuera de él
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const filtro = document.getElementById('filtro-mes-anio');
             const target = event.target;
-            
+
             // Si el clic no fue dentro del filtro ni en el botón que lo activa
             if (!filtro.contains(target) && !target.closest('.filtro-encabezado')) {
                 filtro.classList.remove('activo');
@@ -649,4 +681,5 @@ function getBadgeResolucion($resolucion) {
         });
     </script>
 </body>
+
 </html>
