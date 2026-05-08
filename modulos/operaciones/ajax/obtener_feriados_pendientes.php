@@ -2,8 +2,18 @@
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 
+require_once '../../../core/permissions/permissions.php';
+
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'] ?? null;
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 // Verificar acceso
-verificarAccesoCargo([8, 11, 16, 21, 49]);
+if (!tienePermiso('gestion_feriados', 'vista', $cargoOperario) && !$esAdmin) {
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
+    exit;
+}
 
 header('Content-Type: application/json');
 

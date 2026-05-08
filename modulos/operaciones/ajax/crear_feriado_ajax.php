@@ -2,6 +2,8 @@
 require_once '../../includes/auth.php';
 require_once '../../includes/funciones.php';
 
+require_once '../../../core/permissions/permissions.php';
+
 header('Content-Type: application/json');
 
 // Verificar que sea petición POST
@@ -10,8 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Verificar permisos
-if (!verificarAccesoCargo([8, 11, 16]) && !$esAdmin) {
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'] ?? null;
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
+// Verificar permisos (Creación/Aprobación de feriados)
+if (!tienePermiso('gestion_feriados', 'aprobar', $cargoOperario) && !$esAdmin) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para realizar esta acción']);
     exit;
 }

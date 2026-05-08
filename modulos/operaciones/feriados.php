@@ -734,7 +734,7 @@ function obtenerNombreOperario($codOperario)
                             </button>
                         </div>
 
-                        <?php if ($esAdmin || verificarAccesoCargo([11, 8, 13])): ?>
+                        <?php if ($esAdmin || tienePermiso('gestion_feriados', 'exportar', $cargoOperario)): ?>
                             <div class="action-buttons">
                                 <!-- Botón de exportación normal (existente) -->
                                 <a href="feriados.php?<?= http_build_query([
@@ -747,8 +747,8 @@ function obtenerNombreOperario($codOperario)
                                     <i class="fas fa-file-excel"></i> Exportar
                                 </a>
 
-                                <!-- Nuevo botón de exportación para contabilidad -->
-                                <a style="display:none;" href="feriados.php?<?= http_build_query([
+                                <!-- Nuevo botón de exportación para contabilidad (comparten permiso de exportar) -->
+                                <a href="feriados.php?<?= http_build_query([
                                     'sucursal' => $sucursalSeleccionada ?? '',
                                     'operario' => $operarioSeleccionado ?? '',
                                     'desde' => $fechaDesde,
@@ -775,7 +775,7 @@ function obtenerNombreOperario($codOperario)
                                     <th style="display:none;">Horas Trabajadas</th>
                                     <th>Status</th>
                                     <th>Observaciones</th>
-                                    <?php if ($esAdmin || verificarAccesoCargo([11, 16, 8, 21])): ?>
+                                    <?php if ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
                                         <th style="text-align: center; min-width: 180px;">Acciones</th>
                                     <?php endif; ?>
                                 </tr>
@@ -826,7 +826,7 @@ function obtenerNombreOperario($codOperario)
                                                 rows="3"><?= htmlspecialchars($ft['observaciones'] ?? '') ?></textarea>
                                         </td>
 
-                                        <?php if ($esAdmin || verificarAccesoCargo([11, 16, 8, 21])): ?>
+                                        <?php if ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
                                             <td style="text-align: center;">
                                                 <div class="action-buttons-inline"
                                                     id="actions-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
