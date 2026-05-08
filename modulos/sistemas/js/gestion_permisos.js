@@ -284,24 +284,7 @@ function renderizarPanelPermisos(data) {
  * Renderizar contenido de una acción (áreas y cargos)
  */
 function renderizarContenidoAccion(accion, areas, permisos) {
-    const stats = calcularEstadisticas(accion.id, permisos);
-
-    let html = `
-        <div class="permisos-stats">
-            <div class="stat-item">
-                <div class="stat-number">${stats.total}</div>
-                <div class="stat-label">Total Cargos</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number text-success">${stats.permitidos}</div>
-                <div class="stat-label">Con Permiso</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number text-danger">${stats.denegados}</div>
-                <div class="stat-label">Sin Permiso</div>
-            </div>
-        </div>
-    `;
+    let html = '';
 
     // Agrupar áreas
     const areasAgrupadas = {};
@@ -388,9 +371,6 @@ function togglePermiso(accionId, cargoId, tienePermiso) {
     cambiosPendientes = true;
     $('#btnGuardarFlotante').fadeIn();
 
-    // Actualizar estadísticas
-    actualizarEstadisticas();
-
     // Verificar si afecta al switch del área
     actualizarSwitchArea(accionId, cargoId);
 }
@@ -421,9 +401,6 @@ function toggleAreaCompleta(accionId, nombreArea, permitir) {
     // Marcar como cambios pendientes
     cambiosPendientes = true;
     $('#btnGuardarFlotante').fadeIn();
-
-    // Actualizar estadísticas
-    actualizarEstadisticas();
 }
 
 /**
@@ -448,34 +425,7 @@ function actualizarSwitchArea(accionId, cargoId) {
     $switchArea.prop('checked', cargosPermitidos === totalCargos);
 }
 
-/**
- * Calcular estadísticas de permisos
- */
-function calcularEstadisticas(accionId, permisos) {
-    const permisosAccion = permisos[accionId] || {};
-    const valores = Object.values(permisosAccion);
 
-    return {
-        total: valores.length,
-        permitidos: valores.filter(p => p === 'allow').length,
-        denegados: valores.filter(p => p === 'deny').length
-    };
-}
-
-/**
- * Actualizar estadísticas en tiempo real
- */
-function actualizarEstadisticas() {
-    // Actualizar stats generales del tab activo
-    const $activeTab = $('.tab-pane.active');
-    const totalCargos = $activeTab.find('.cargo-item').length;
-    const permitidos = $activeTab.find('input[type="checkbox"]:checked').length;
-    const denegados = totalCargos - permitidos;
-
-    $activeTab.find('.stat-number').eq(0).text(totalCargos);
-    $activeTab.find('.stat-number').eq(1).text(permitidos);
-    $activeTab.find('.stat-number').eq(2).text(denegados);
-}
 
 /**
  * Guardar cambios de permisos
