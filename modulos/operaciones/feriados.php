@@ -789,7 +789,6 @@ function obtenerNombreOperario($codOperario)
                                     $yaTieneDecision = !empty($ft['id_aprobacion']);
                                     $puedeEditarObservacion = $puedeAprobar && $yaTieneDecision;
                                     ?>
-                                    
                                     <tr id="feriado-row-<?= $id_fila ?>">
                                         <td><?= htmlspecialchars($ft['nombre_operario']) ?></td>
                                         <td><?= htmlspecialchars($ft['sucursal_nombre']) ?></td>
