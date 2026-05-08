@@ -216,38 +216,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pestaña']) && (empty
         exit();
     }
 
-    // MANEJO ESPECIAL PARA LA PESTAÑA DE CATEGORÍA
-    if ($pestaña == 'categoria' && isset($_POST['accion_categoria'])) {
-        if ($_POST['accion_categoria'] == 'agregar') {
-            $resultado = agregarCategoriaColaborador([
-                'cod_operario' => $codOperario,
-                'id_categoria' => $_POST['id_categoria'],
-                'fecha_inicio' => $_POST['fecha_inicio']
-            ]);
-
-            if ($resultado['exito']) {
-                $_SESSION['exito'] = $resultado['mensaje'];
-            } else {
-                $_SESSION['error'] = $resultado['mensaje'];
-            }
-        } elseif ($_POST['accion_categoria'] == 'editar' && isset($_POST['id_categoria_edit'])) {
-            $resultado = actualizarCategoriaColaborador($_POST['id_categoria_edit'], [
-                'id_categoria' => $_POST['id_categoria'],
-                'fecha_inicio' => $_POST['fecha_inicio'],
-                'fecha_fin' => $_POST['fecha_fin'] ?? null
-            ]);
-
-            if ($resultado['exito']) {
-                $_SESSION['exito'] = $resultado['mensaje'];
-            } else {
-                $_SESSION['error'] = $resultado['mensaje'];
-            }
-        }
-
-        // Redirigir para evitar reenvío del formulario
-        header("Location: editar_colaborador.php?id=$codOperario&pestaña=categoria");
-        exit();
-    }
 
     // MANEJO ESPECIAL PARA LA PESTAÑA DE MOVIMIENTOS
     if ($pestaña == 'movimientos' && isset($_POST['accion_movimiento'])) {
@@ -1094,7 +1062,15 @@ function obtenerTodasCategorias()
 {
     global $conn;
 
-    $stmt = $conn->prepare("SELECT * FROM CategoriasOperarios ORDER BY idCategoria");
+    // Se cambió a NivelesCargos ya que CategoriasOperarios es obsoleta
+    $stmt = $conn->prepare("
+        SELECT 
+            CodNivelesCargos as idCategoria, 
+            Nombre as NombreCategoria, 
+            Peso 
+        FROM NivelesCargos 
+        ORDER BY CodNivelesCargos
+    ");
     $stmt->execute();
     return $stmt->fetchAll();
 }
@@ -1137,108 +1113,34 @@ if (isset($codOperario)) {
 /**
  * Obtiene el historial de categorías de un colaborador
  */
+/**
+ * Obtiene las categorías del colaborador (OBSOLETO - Usar obtenerHistorialCargos)
+ */
 function obtenerCategoriasColaborador($codOperario)
 {
-    global $conn;
-
-    $stmt = $conn->prepare("
-SELECT oc.*, co.NombreCategoria, co.Peso
-FROM OperariosCategorias oc
-JOIN CategoriasOperarios co ON oc.idCategoria = co.idCategoria
-WHERE oc.CodOperario = ?
-ORDER BY oc.FechaInicio DESC, oc.fecha_hora_regsys DESC
-");
-    $stmt->execute([$codOperario]);
-    return $stmt->fetchAll();
+    return []; // Retorna vacío ya que la tabla OperariosCategorias está obsoleta
 }
 
 /**
  * Agrega una nueva categoría a un colaborador
  */
+/**
+ * Agrega una nueva categoría (OBSOLETO - Usar agregarAdendum o agregarMovimientoCargo)
+ */
 function agregarCategoriaColaborador($datos)
 {
-    global $conn;
-
-    try {
-        $conn->beginTransaction();
-
-        // 1. Finalizar la categoría actual si existe
-        $stmtFinalizar = $conn->prepare("
-UPDATE OperariosCategorias
-SET FechaFin = ?
-WHERE CodOperario = ?
-AND FechaFin IS NULL
-");
-
-        // Calcular fecha fin (día anterior al nuevo inicio)
-        $nuevaFecha = new DateTime($datos['fecha_inicio']);
-        $nuevaFecha->modify('-1 day');
-        $fechaFinAnterior = $nuevaFecha->format('Y-m-d');
-
-        $stmtFinalizar->execute([$fechaFinAnterior, $datos['cod_operario']]);
-
-        // 2. Obtener fecha fin de contrato para la nueva categoría
-        $fechaFinContrato = null;
-        $stmtContrato = $conn->prepare("
-SELECT fin_contrato FROM Contratos
-WHERE cod_operario = ?
-AND (fin_contrato IS NULL OR fin_contrato >= CURDATE())
-ORDER BY inicio_contrato DESC
-LIMIT 1
-");
-        $stmtContrato->execute([$datos['cod_operario']]);
-        $contrato = $stmtContrato->fetch();
-
-        if ($contrato && !empty($contrato['fin_contrato'])) {
-            $fechaFinContrato = $contrato['fin_contrato'];
-        }
-
-        // 3. Insertar nueva categoría
-        $stmt = $conn->prepare("
-INSERT INTO OperariosCategorias (CodOperario, idCategoria, FechaInicio, FechaFin)
-VALUES (?, ?, ?, ?)
-");
-
-        $stmt->execute([
-            $datos['cod_operario'],
-            $datos['id_categoria'],
-            $datos['fecha_inicio'],
-            $fechaFinContrato
-        ]);
-
-        $conn->commit();
-        return ['exito' => true, 'mensaje' => 'Categoría agregada correctamente'];
-    } catch (Exception $e) {
-        $conn->rollBack();
-        return ['exito' => false, 'mensaje' => 'Error al agregar categoría: ' . $e->getMessage()];
-    }
+    return ['exito' => false, 'mensaje' => 'Esta función es obsoleta. Por favor use Adendas o Movimientos de Cargo.'];
 }
 
 /**
  * Actualiza una categoría existente
  */
+/**
+ * Actualiza una categoría existente (OBSOLETO)
+ */
 function actualizarCategoriaColaborador($idCategoria, $datos)
 {
-    global $conn;
-
-    try {
-        $stmt = $conn->prepare("
-UPDATE OperariosCategorias
-SET idCategoria = ?, FechaInicio = ?, FechaFin = ?
-WHERE id = ?
-");
-
-        $stmt->execute([
-            $datos['id_categoria'],
-            $datos['fecha_inicio'],
-            $datos['fecha_fin'],
-            $idCategoria
-        ]);
-
-        return ['exito' => true, 'mensaje' => 'Categoría actualizada correctamente'];
-    } catch (Exception $e) {
-        return ['exito' => false, 'mensaje' => 'Error al actualizar categoría: ' . $e->getMessage()];
-    }
+    return ['exito' => false, 'mensaje' => 'Esta función es obsoleta.'];
 }
 
 /**
@@ -1989,18 +1891,20 @@ WHERE id = ?
 }
 
 /**
- * Obtiene una categoría específica por ID
+ * Obtiene un cargo específico por ID (Sustituye obtenerCategoriaPorId)
  */
 function obtenerCategoriaPorId($idCategoria)
 {
     global $conn;
 
     $stmt = $conn->prepare("
-SELECT oc.*, co.NombreCategoria, co.Peso
-FROM OperariosCategorias oc
-JOIN CategoriasOperarios co ON oc.idCategoria = co.idCategoria
-WHERE oc.id = ?
-");
+        SELECT 
+            CodNivelesCargos as id,
+            Nombre as NombreCategoria, 
+            Peso 
+        FROM NivelesCargos 
+        WHERE CodNivelesCargos = ?
+    ");
     $stmt->execute([$idCategoria]);
     return $stmt->fetch();
 }
@@ -2066,7 +1970,7 @@ function obtenerArchivosAdjuntos($codOperario, $pestaña)
     anc.TipoAdendum,
     anc.Salario as salario_adendum,
     nc.Nombre as nombre_cargo_adendum,
-    co.NombreCategoria as nombre_categoria_adendum
+    nc.Nombre as nombre_categoria_adendum
     FROM ArchivosAdjuntos a
     LEFT JOIN contratos_tiposDocumentos t ON a.id_tipo_documento = t.id
     JOIN Operarios o ON a.cod_usuario_subio = o.CodOperario
@@ -2074,7 +1978,6 @@ function obtenerArchivosAdjuntos($codOperario, $pestaña)
     LEFT JOIN TipoContrato tc ON c.cod_tipo_contrato = tc.CodTipoContrato
     LEFT JOIN AsignacionNivelesCargos anc ON a.cod_adendum_asociado = anc.CodAsignacionNivelesCargos
     LEFT JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
-    LEFT JOIN CategoriasOperarios co ON anc.CodNivelesCargos = co.idCategoria
     WHERE a.cod_operario = ? AND COALESCE(t.pestaña, a.pestaña) = ?
     ORDER BY
     a.cod_adendum_asociado DESC,
@@ -2718,15 +2621,14 @@ function obtenerAdendumsColaborador($codOperario)
     $stmt = $conn->prepare("
     SELECT
     anc.*,
-    co.NombreCategoria,
-    co.Peso,
+    nc.Nombre as NombreCategoria,
+    nc.Peso,
     nc.Nombre as nombre_cargo,
     s.nombre as nombre_sucursal,
     c.codigo_manual_contrato,
     c.inicio_contrato,
     tc.nombre as tipo_contrato
     FROM AsignacionNivelesCargos anc
-    LEFT JOIN CategoriasOperarios co ON anc.CodNivelesCargos = co.idCategoria
     LEFT JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
     LEFT JOIN sucursales s ON anc.Sucursal = s.codigo
     LEFT JOIN Contratos c ON anc.CodContrato = c.CodContrato
@@ -3027,14 +2929,14 @@ function obtenerExpedienteDigitalCompleto($codOperario)
     c.inicio_contrato,
     c.fin_contrato,
     tc.nombre as tipo_contrato,
-    oc.TipoAdendum,
-    oc.Salario as salario_adendum,
-    nc.Nombre as nombre_cargo_adendum,
-    co.NombreCategoria as nombre_categoria_adendum,
-    oc.FechaInicio as fecha_adendum,
+    COALESCE(anc.TipoAdendum, oc.TipoAdendum) as TipoAdendum,
+    COALESCE(anc.Salario, oc.Salario) as salario_adendum,
+    COALESCE(nc_anc.Nombre, nc_oc.Nombre) as nombre_cargo_adendum,
+    COALESCE(nc_anc.Nombre, nc_oc.Nombre) as nombre_categoria_adendum,
+    COALESCE(anc.Fecha, oc.FechaInicio) as fecha_adendum,
     -- Determinar categoría principal mejorada
     CASE
-    WHEN a.cod_adendum_asociado IS NOT NULL THEN CONCAT('Adendum - ', oc.TipoAdendum, ' (', DATE_FORMAT(oc.FechaInicio,
+    WHEN a.cod_adendum_asociado IS NOT NULL THEN CONCAT('Adendum - ', COALESCE(anc.TipoAdendum, oc.TipoAdendum), ' (', DATE_FORMAT(COALESCE(anc.Fecha, oc.FechaInicio),
     '%d/%m/%Y'), ')')
     WHEN a.cod_contrato_asociado IS NULL THEN 'Archivos de Colaborador'
     ELSE CONCAT('Contrato ', COALESCE(c.codigo_manual_contrato, 'Sin código'))
@@ -3049,9 +2951,10 @@ function obtenerExpedienteDigitalCompleto($codOperario)
     JOIN Operarios o ON a.cod_usuario_subio = o.CodOperario
     LEFT JOIN Contratos c ON a.cod_contrato_asociado = c.CodContrato
     LEFT JOIN TipoContrato tc ON c.cod_tipo_contrato = tc.CodTipoContrato
+    LEFT JOIN AsignacionNivelesCargos anc ON a.cod_adendum_asociado = anc.CodAsignacionNivelesCargos
+    LEFT JOIN NivelesCargos nc_anc ON anc.CodNivelesCargos = nc_anc.CodNivelesCargos
     LEFT JOIN OperariosCategorias oc ON a.cod_adendum_asociado = oc.id
-    LEFT JOIN NivelesCargos nc ON oc.CodNivelesCargos = nc.CodNivelesCargos
-    LEFT JOIN CategoriasOperarios co ON oc.idCategoria = co.idCategoria
+    LEFT JOIN NivelesCargos nc_oc ON oc.CodNivelesCargos = nc_oc.CodNivelesCargos
     WHERE a.cod_operario = ?
     ORDER BY
     -- Primero: Archivos de Colaborador, luego Contratos, luego Adendums
@@ -3061,7 +2964,7 @@ function obtenerExpedienteDigitalCompleto($codOperario)
     ELSE 2
     END,
     -- Segundo: Por fecha de adendum (más reciente primero)
-    oc.FechaInicio DESC,
+    COALESCE(anc.Fecha, oc.FechaInicio) DESC,
     -- Tercero: Por código manual de contrato
     COALESCE(c.codigo_manual_contrato, ''),
     -- Cuarto: Obligatorios primero
@@ -3350,18 +3253,18 @@ function obtenerUltimoAdendumActivo($codOperario)
 
 
 /**
- * Obtiene la categoría asociada a un contrato desde CategoriasOperarios
+ * Obtiene el nombre del cargo asociado a un contrato (Sustituye obtenerCategoriaPorContrato)
  */
 function obtenerCategoriaPorContrato($codContrato)
 {
     global $conn;
 
     $stmt = $conn->prepare("
-    SELECT co.NombreCategoria
-    FROM OperariosCategorias oc
-    JOIN CategoriasOperarios co ON oc.idCategoria = co.idCategoria
-    WHERE oc.CodContrato = ?
-    ORDER BY oc.FechaInicio DESC
+    SELECT nc.Nombre as NombreCategoria
+    FROM AsignacionNivelesCargos anc
+    JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
+    WHERE anc.CodContrato = ?
+    ORDER BY anc.Fecha DESC
     LIMIT 1
     ");
     $stmt->execute([$codContrato]);
@@ -3371,7 +3274,7 @@ function obtenerCategoriaPorContrato($codContrato)
 }
 
 /**
- * Obtiene el nombre de una categoría por su ID
+ * Obtiene el nombre de un cargo por su ID (Sustituye obtenerNombreCategoriaPorId)
  */
 function obtenerNombreCategoriaPorId($idCategoria)
 {
@@ -3380,7 +3283,7 @@ function obtenerNombreCategoriaPorId($idCategoria)
     if (!$idCategoria)
         return null;
 
-    $stmt = $conn->prepare("SELECT NombreCategoria FROM CategoriasOperarios WHERE idCategoria = ?");
+    $stmt = $conn->prepare("SELECT Nombre as NombreCategoria FROM NivelesCargos WHERE CodNivelesCargos = ?");
     $stmt->execute([$idCategoria]);
     $result = $stmt->fetch();
 
@@ -3388,13 +3291,13 @@ function obtenerNombreCategoriaPorId($idCategoria)
 }
 
 /**
- * Obtiene todas las categorías disponibles con información completa
+ * Obtiene todos los cargos disponibles (Sustituye obtenerTodasCategoriasCompletas)
  */
 function obtenerTodasCategoriasCompletas()
 {
     global $conn;
 
-    $stmt = $conn->prepare("SELECT * FROM CategoriasOperarios ORDER BY idCategoria");
+    $stmt = $conn->prepare("SELECT CodNivelesCargos as idCategoria, Nombre as NombreCategoria, Peso FROM NivelesCargos ORDER BY CodNivelesCargos");
     $stmt->execute();
     return $stmt->fetchAll();
 }
