@@ -130,29 +130,11 @@
     color: var(--color-btn-primary);
 }
 
-.tree-item-container {
-    transition: background-color 0.2s;
-}
-
-.tree-item-container:hover {
+.tree-item:hover {
     background-color: #f1f3f5;
 }
 
-.tree-item-container .btn-delete-tool {
-    opacity: 0;
-    transition: opacity 0.2s;
-    padding: 2px 8px;
-}
-
-.tree-item-container:hover .btn-delete-tool {
-    opacity: 1;
-}
-
-.tree-item-container .tree-item {
-    border-left: 3px solid transparent;
-}
-
-.tree-item-container .tree-item.active {
+.tree-item.active {
     background-color: #e7f5ff;
     border-left-color: var(--color-btn-primary);
     font-weight: 500;

@@ -132,16 +132,9 @@ function renderizarArbolHerramientas(grupos, containerId, tipo) {
                 </div>
                 <div class="tree-group-items">
                     ${herramientas.map(h => `
-                        <div class="tree-item-container d-flex align-items-center">
-                            <div class="tree-item flex-grow-1" data-id="${h.id}" data-nombre="${h.nombre}" data-titulo="${h.titulo || h.nombre}" data-descripcion="${h.descripcion || ''}" data-url-real="${h.url_real || ''}" data-icono="${h.icono || 'bi bi-file-earmark-code'}" onclick="seleccionarHerramienta(${h.id}, '${h.nombre}', '${(h.titulo || h.nombre).replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.descripcion || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.url_real || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${h.icono || 'bi bi-file-earmark-code'}')">
-                                <i class="${h.icono || 'bi bi-file-earmark-code'}"></i>
-                                ${h.titulo || h.nombre}
-                            </div>
-                            ${PUEDE_BORRAR ? `
-                                <button class="btn btn-sm text-danger btn-delete-tool" onclick="eliminarHerramienta(${h.id}, '${(h.titulo || h.nombre).replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${tipo}')" title="Borrar en cascada">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            ` : ''}
+                        <div class="tree-item" data-id="${h.id}" data-nombre="${h.nombre}" data-titulo="${h.titulo || h.nombre}" data-descripcion="${h.descripcion || ''}" data-url-real="${h.url_real || ''}" data-icono="${h.icono || 'bi bi-file-earmark-code'}" onclick="seleccionarHerramienta(${h.id}, '${h.nombre}', '${(h.titulo || h.nombre).replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.descripcion || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.url_real || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${h.icono || 'bi bi-file-earmark-code'}', '${tipo}')">
+                            <i class="${h.icono || 'bi bi-file-earmark-code'}"></i>
+                            ${h.titulo || h.nombre}
                         </div>
                     `).join('')}
                 </div>
@@ -166,7 +159,10 @@ function toggleGrupo(element) {
 /**
  * Seleccionar herramienta
  */
-function seleccionarHerramienta(id, nombre, titulo, descripcion, urlReal, icono) {
+/**
+ * Seleccionar herramienta
+ */
+function seleccionarHerramienta(id, nombre, titulo, descripcion, urlReal, icono, tipo) {
     // Verificar cambios pendientes
     if (cambiosPendientes) {
         if (!confirm('Hay cambios sin guardar. ¿Desea continuar sin guardar?')) {
@@ -203,7 +199,7 @@ function seleccionarHerramienta(id, nombre, titulo, descripcion, urlReal, icono)
     }
 
     // Guardar datos actuales
-    herramientaActual = { id, nombre, titulo, descripcion, urlReal, icono };
+    herramientaActual = { id, nombre, titulo, descripcion, urlReal, icono, tipo };
     cambiosPendientes = false;
     $('#btnGuardarFlotante').hide();
 
@@ -573,6 +569,18 @@ function filtrarHerramientas(texto, tipo) {
             $grupo.hide();
         }
     });
+}
+
+/**
+ * Confirmar eliminación de la herramienta seleccionada actualmente
+ */
+function confirmarEliminarActual() {
+    if (!herramientaActual) {
+        mostrarError('No hay ninguna herramienta seleccionada');
+        return;
+    }
+
+    eliminarHerramienta(herramientaActual.id, herramientaActual.titulo, herramientaActual.tipo);
 }
 
 /**

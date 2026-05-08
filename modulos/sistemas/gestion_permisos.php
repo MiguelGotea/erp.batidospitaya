@@ -130,6 +130,12 @@ $puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
                                     <i id="herramientaSeleccionadaIcono" class="bi bi-gear-fill"></i> <span id="herramientaSeleccionadaNombre">Seleccione una herramienta</span>
                                 </div>
                                 <div id="headerActions" style="display: none;">
+                                    <?php if ($puedeBorrar): ?>
+                                    <button class="btn btn-sm btn-danger me-2" onclick="confirmarEliminarActual()">
+                                        <i class="bi bi-trash"></i> Eliminar Permiso
+                                    </button>
+                                    <?php endif; ?>
+                                    
                                     <?php if ($puedeCrearAcciones): ?>
                                     <button class="btn btn-sm btn-light" onclick="abrirModalNuevaAccion()">
                                         <i class="bi bi-plus-circle"></i> Nueva Acción
