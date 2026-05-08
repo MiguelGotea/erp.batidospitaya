@@ -661,7 +661,7 @@ function obtenerNombreOperario($codOperario)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feriados Trabajados - Operaciones</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
@@ -1308,240 +1308,241 @@ function obtenerNombreOperario($codOperario)
 
             <div class="container-feriados">
 
-        <?php if (isset($_SESSION['exito'])): ?>
-            <div class="alert alert-success">
-                <?= $_SESSION['exito'] ?>
-                <?php unset($_SESSION['exito']); ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger">
-                <?= $_SESSION['error'] ?>
-                <?php unset($_SESSION['error']); ?>
-            </div>
-        <?php endif; ?>
-
-        <div class="filters-container">
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="sucursal">Sucursal</label>
-                    <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
-                        <option value="">Todas las sucursales</option>
-                        <?php foreach ($sucursales as $sucursal): ?>
-                            <option value="<?= $sucursal['codigo'] ?>" <?= $sucursalSeleccionada == $sucursal['codigo'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($sucursal['nombre']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="operario">Colaborador</label>
-                    <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..." value="<?php
-                    if ($operarioSeleccionado) {
-                        echo htmlspecialchars(obtenerNombreOperario($operarioSeleccionado));
-                    } else {
-                        echo 'Todos los colaboradores';
-                    }
-                    ?>">
-                    <input type="hidden" id="operario_id" name="operario" value="<?= $operarioSeleccionado ?>">
-                    <div id="operarios-sugerencias" style="display: none;"></div>
-                </div>
-
-                <div class="filter-group">
-                    <label for="desde">Desde</label>
-                    <input type="date" id="desde" name="desde" value="<?= $fechaDesde ?>"
-                        onchange="actualizarFiltros()">
-                </div>
-
-                <div class="filter-group">
-                    <label for="hasta">Hasta</label>
-                    <input type="date" id="hasta" name="hasta" value="<?= $fechaHasta ?>"
-                        onchange="actualizarFiltros()">
-                </div>
-
-                <div class="filter-group" style="align-self: flex-end;">
-                    <button type="button" onclick="actualizarFiltros()" class="btn">
-                        <i class="fas fa-search"></i> Buscar
-                    </button>
-                </div>
-
-                <?php if ($esAdmin || verificarAccesoCargo([11, 8, 13])): ?>
-                    <div class="action-buttons">
-                        <!-- Botón de exportación normal (existente) -->
-                        <a href="feriados.php?<?= http_build_query([
-                            'sucursal' => $sucursalSeleccionada ?? '',
-                            'operario' => $operarioSeleccionado ?? '',
-                            'desde' => $fechaDesde,
-                            'hasta' => $fechaHasta,
-                            'exportar_excel' => 1
-                        ]) ?>" class="btn btn-primary">
-                            <i class="fas fa-file-excel"></i> Exportar
-                        </a>
-
-                        <!-- Nuevo botón de exportación para contabilidad -->
-                        <a style="display:none;" href="feriados.php?<?= http_build_query([
-                            'sucursal' => $sucursalSeleccionada ?? '',
-                            'operario' => $operarioSeleccionado ?? '',
-                            'desde' => $fechaDesde,
-                            'hasta' => $fechaHasta,
-                            'exportar_excel_contabilidad' => 1
-                        ]) ?>" class="btn btn-contabilidad" style="margin-left: 10px;">
-                            <i class="fas fa-file-excel"></i> Exportar para Contabilidad
-                        </a>
+                <?php if (isset($_SESSION['exito'])): ?>
+                    <div class="alert alert-success">
+                        <?= $_SESSION['exito'] ?>
+                        <?php unset($_SESSION['exito']); ?>
                     </div>
                 <?php endif; ?>
-            </div>
-        </div>
 
-        <div class="table-container">
-            <?php if (!empty($feriadosTrabajados)): ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Colaborador</th>
-                            <th>Inicio Contrato</th>
-                            <th>Fecha Feriado</th>
-                            <th>Feriado</th>
-                            <th>Tipo (Departamento)</th>
-                            <th style="display:none;">Horas Trabajadas</th>
-                            <th>Status</th>
-                            <th>Observaciones</th>
-                            <?php if ($esAdmin || verificarAccesoCargo([11, 16, 8, 21])): ?>
-                                <th style="text-align: center; min-width: 180px;">Acciones</th>
-                            <?php endif; ?>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($feriadosTrabajados as $ft): ?>
-                            <tr
-                                id="feriado-row-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
-                                <td><?= htmlspecialchars($ft['nombre_operario']) ?></td>
-                                <td class="text-nowrap"><?= formatoFecha($ft['inicio_contrato']) ?></td>
-                                <td><?= formatoFecha($ft['fecha']) ?></td>
-                                <td><?= htmlspecialchars($ft['feriado_nombre']) ?></td>
-                                <td>
-                                    <?= htmlspecialchars($ft['feriado_tipo']) ?>
-                                    <?php if ($ft['feriado_tipo'] === 'Departamental'): ?>
-                                        (<?= htmlspecialchars($ft['departamento_nombre']) ?>)
-                                    <?php endif; ?>
-                                </td>
-                                <td style="display:none;"><?= number_format($ft['horas_trabajadas'], 2) ?></td>
-                                <td>
-                                    <?php if ($ft['estado'] === 'Con Marcación'): ?>
-                                        <span class="status-badge status-con-marcacion"
-                                            id="status-badge-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
-                                            <i class="fas fa-clock"></i>
-                                            <?= date('H:i', strtotime($ft['hora_entrada'])) ?> -
-                                            <?= date('H:i', strtotime($ft['hora_salida'])) ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="status-badge status-<?= strtolower(str_replace(' ', '-', $ft['estado'])) ?>"
-                                            id="status-badge-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
-                                            <?= $ft['estado'] ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="observaciones-cell"
-                                        id="obs-display-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
-                                        <?php if ($ft['observaciones']): ?>
-                                            <?= nl2br(htmlspecialchars($ft['observaciones'])) ?>
-                                        <?php else: ?>
-                                            <span class="text-muted">Sin observaciones</span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <textarea
-                                        id="obs-edit-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>"
-                                        class="observaciones-edit" style="display: none;"
-                                        rows="3"><?= htmlspecialchars($ft['observaciones'] ?? '') ?></textarea>
-                                </td>
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger">
+                        <?= $_SESSION['error'] ?>
+                        <?php unset($_SESSION['error']); ?>
+                    </div>
+                <?php endif; ?>
 
-                                <?php if ($esAdmin || verificarAccesoCargo([11, 16, 8, 21])): ?>
-                                    <td style="text-align: center;">
-                                        <div class="action-buttons-inline"
-                                            id="actions-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
-                                            <?php if ($ft['estado'] === 'Pendiente' || $ft['estado'] === 'Sin marcación' || $ft['estado'] === 'Con Marcación'): ?>
-                                                <!-- Botones para estado Pendiente/Sin marcación -->
-                                                <button type="button" class="btn-action btn-approve"
-                                                    onclick="actualizarEstadoFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', 'Pagado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
-                                                    title="Marcar como Pagado">
-                                                    <i class="fas fa-dollar-sign"></i>
-                                                </button>
-                                                <button type="button" class="btn-action btn-compensado"
-                                                    onclick="actualizarEstadoFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', 'Descansado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
-                                                    title="Marcar como Compensado/Descansado">
-                                                    <i class="fas fa-bed"></i>
-                                                </button>
-                                                <button type="button" class="btn-action btn-edit"
-                                                    onclick="toggleEditObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>')"
-                                                    title="Editar observaciones">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            <?php else: ?>
-                                                <!-- Botones para estados Pagado/Descansado -->
-                                                <button type="button" class="btn-action btn-change"
-                                                    onclick="cambiarEstadoFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', '<?= $ft['estado'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
-                                                    title="Cambiar estado">
-                                                    <i class="fas fa-exchange-alt"></i>
-                                                </button>
-                                                <button type="button" class="btn-action btn-edit"
-                                                    onclick="toggleEditObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>')"
-                                                    title="Editar observaciones">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                        </div>
+                <div class="filters-container">
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label for="sucursal">Sucursal</label>
+                            <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
+                                <option value="">Todas las sucursales</option>
+                                <?php foreach ($sucursales as $sucursal): ?>
+                                    <option value="<?= $sucursal['codigo'] ?>" <?= $sucursalSeleccionada == $sucursal['codigo'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
 
-                                        <!-- Botones de guardar/cancelar (ocultos por defecto) -->
-                                        <div class="save-cancel-buttons"
-                                            id="save-cancel-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>"
-                                            style="display: none;">
-                                            <button type="button" class="btn-action btn-save"
-                                                onclick="guardarObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
-                                                title="Guardar">
-                                                <i class="fas fa-save"></i>
-                                            </button>
-                                            <button type="button" class="btn-action btn-cancel"
-                                                onclick="cancelarEditObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>')"
-                                                title="Cancelar">
-                                                <i class="fas fa-ban"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                <?php endif; ?>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <div class="alert alert-info">
-                    <?php if ($fechaDesde && $fechaHasta): ?>
-                        <?php if (empty($sucursalSeleccionada) && empty($operarioSeleccionado)): ?>
-                            No se encontraron feriados trabajados entre <?= formatoFecha($fechaDesde) ?> y
-                            <?= formatoFecha($fechaHasta) ?>.
-                        <?php elseif (!empty($operarioSeleccionado)): ?>
-                            No se encontraron feriados trabajados para
-                            <?= htmlspecialchars(obtenerNombreOperario($operarioSeleccionado)) ?>
-                            <?php if (!empty($sucursalSeleccionada)): ?>
-                                en <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
-                            <?php endif; ?>
-                            entre <?= formatoFecha($fechaDesde) ?> y <?= formatoFecha($fechaHasta) ?>.
-                        <?php else: ?>
-                            No se encontraron feriados trabajados para
-                            <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
-                            entre <?= formatoFecha($fechaDesde) ?> y <?= formatoFecha($fechaHasta) ?>.
+                        <div class="filter-group">
+                            <label for="operario">Colaborador</label>
+                            <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..." value="<?php
+                            if ($operarioSeleccionado) {
+                                echo htmlspecialchars(obtenerNombreOperario($operarioSeleccionado));
+                            } else {
+                                echo 'Todos los colaboradores';
+                            }
+                            ?>">
+                            <input type="hidden" id="operario_id" name="operario" value="<?= $operarioSeleccionado ?>">
+                            <div id="operarios-sugerencias" style="display: none;"></div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="desde">Desde</label>
+                            <input type="date" id="desde" name="desde" value="<?= $fechaDesde ?>"
+                                onchange="actualizarFiltros()">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="hasta">Hasta</label>
+                            <input type="date" id="hasta" name="hasta" value="<?= $fechaHasta ?>"
+                                onchange="actualizarFiltros()">
+                        </div>
+
+                        <div class="filter-group" style="align-self: flex-end;">
+                            <button type="button" onclick="actualizarFiltros()" class="btn">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+
+                        <?php if ($esAdmin || verificarAccesoCargo([11, 8, 13])): ?>
+                            <div class="action-buttons">
+                                <!-- Botón de exportación normal (existente) -->
+                                <a href="feriados.php?<?= http_build_query([
+                                    'sucursal' => $sucursalSeleccionada ?? '',
+                                    'operario' => $operarioSeleccionado ?? '',
+                                    'desde' => $fechaDesde,
+                                    'hasta' => $fechaHasta,
+                                    'exportar_excel' => 1
+                                ]) ?>" class="btn btn-primary">
+                                    <i class="fas fa-file-excel"></i> Exportar
+                                </a>
+
+                                <!-- Nuevo botón de exportación para contabilidad -->
+                                <a style="display:none;" href="feriados.php?<?= http_build_query([
+                                    'sucursal' => $sucursalSeleccionada ?? '',
+                                    'operario' => $operarioSeleccionado ?? '',
+                                    'desde' => $fechaDesde,
+                                    'hasta' => $fechaHasta,
+                                    'exportar_excel_contabilidad' => 1
+                                ]) ?>" class="btn btn-contabilidad" style="margin-left: 10px;">
+                                    <i class="fas fa-file-excel"></i> Exportar para Contabilidad
+                                </a>
+                            </div>
                         <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <?php if (!empty($feriadosTrabajados)): ?>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Colaborador</th>
+                                    <th>Inicio Contrato</th>
+                                    <th>Fecha Feriado</th>
+                                    <th>Feriado</th>
+                                    <th>Tipo (Departamento)</th>
+                                    <th style="display:none;">Horas Trabajadas</th>
+                                    <th>Status</th>
+                                    <th>Observaciones</th>
+                                    <?php if ($esAdmin || verificarAccesoCargo([11, 16, 8, 21])): ?>
+                                        <th style="text-align: center; min-width: 180px;">Acciones</th>
+                                    <?php endif; ?>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($feriadosTrabajados as $ft): ?>
+                                    <tr
+                                        id="feriado-row-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                        <td><?= htmlspecialchars($ft['nombre_operario']) ?></td>
+                                        <td class="text-nowrap"><?= formatoFecha($ft['inicio_contrato']) ?></td>
+                                        <td><?= formatoFecha($ft['fecha']) ?></td>
+                                        <td><?= htmlspecialchars($ft['feriado_nombre']) ?></td>
+                                        <td>
+                                            <?= htmlspecialchars($ft['feriado_tipo']) ?>
+                                            <?php if ($ft['feriado_tipo'] === 'Departamental'): ?>
+                                                (<?= htmlspecialchars($ft['departamento_nombre']) ?>)
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="display:none;"><?= number_format($ft['horas_trabajadas'], 2) ?></td>
+                                        <td>
+                                            <?php if ($ft['estado'] === 'Con Marcación'): ?>
+                                                <span class="status-badge status-con-marcacion"
+                                                    id="status-badge-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                                    <i class="fas fa-clock"></i>
+                                                    <?= date('H:i', strtotime($ft['hora_entrada'])) ?> -
+                                                    <?= date('H:i', strtotime($ft['hora_salida'])) ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span
+                                                    class="status-badge status-<?= strtolower(str_replace(' ', '-', $ft['estado'])) ?>"
+                                                    id="status-badge-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                                    <?= $ft['estado'] ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div class="observaciones-cell"
+                                                id="obs-display-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                                <?php if ($ft['observaciones']): ?>
+                                                    <?= nl2br(htmlspecialchars($ft['observaciones'])) ?>
+                                                <?php else: ?>
+                                                    <span class="text-muted">Sin observaciones</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <textarea
+                                                id="obs-edit-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>"
+                                                class="observaciones-edit" style="display: none;"
+                                                rows="3"><?= htmlspecialchars($ft['observaciones'] ?? '') ?></textarea>
+                                        </td>
+
+                                        <?php if ($esAdmin || verificarAccesoCargo([11, 16, 8, 21])): ?>
+                                            <td style="text-align: center;">
+                                                <div class="action-buttons-inline"
+                                                    id="actions-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                                    <?php if ($ft['estado'] === 'Pendiente' || $ft['estado'] === 'Sin marcación' || $ft['estado'] === 'Con Marcación'): ?>
+                                                        <!-- Botones para estado Pendiente/Sin marcación -->
+                                                        <button type="button" class="btn-action btn-approve"
+                                                            onclick="actualizarEstadoFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', 'Pagado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                            title="Marcar como Pagado">
+                                                            <i class="fas fa-dollar-sign"></i>
+                                                        </button>
+                                                        <button type="button" class="btn-action btn-compensado"
+                                                            onclick="actualizarEstadoFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', 'Descansado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                            title="Marcar como Compensado/Descansado">
+                                                            <i class="fas fa-bed"></i>
+                                                        </button>
+                                                        <button type="button" class="btn-action btn-edit"
+                                                            onclick="toggleEditObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>')"
+                                                            title="Editar observaciones">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <!-- Botones para estados Pagado/Descansado -->
+                                                        <button type="button" class="btn-action btn-change"
+                                                            onclick="cambiarEstadoFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', '<?= $ft['estado'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                            title="Cambiar estado">
+                                                            <i class="fas fa-exchange-alt"></i>
+                                                        </button>
+                                                        <button type="button" class="btn-action btn-edit"
+                                                            onclick="toggleEditObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>')"
+                                                            title="Editar observaciones">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <!-- Botones de guardar/cancelar (ocultos por defecto) -->
+                                                <div class="save-cancel-buttons"
+                                                    id="save-cancel-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>"
+                                                    style="display: none;">
+                                                    <button type="button" class="btn-action btn-save"
+                                                        onclick="guardarObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                        title="Guardar">
+                                                        <i class="fas fa-save"></i>
+                                                    </button>
+                                                    <button type="button" class="btn-action btn-cancel"
+                                                        onclick="cancelarEditObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>')"
+                                                        title="Cancelar">
+                                                        <i class="fas fa-ban"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        <?php endif; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     <?php else: ?>
-                        Seleccione un rango de fechas para buscar feriados trabajados.
+                        <div class="alert alert-info">
+                            <?php if ($fechaDesde && $fechaHasta): ?>
+                                <?php if (empty($sucursalSeleccionada) && empty($operarioSeleccionado)): ?>
+                                    No se encontraron feriados trabajados entre <?= formatoFecha($fechaDesde) ?> y
+                                    <?= formatoFecha($fechaHasta) ?>.
+                                <?php elseif (!empty($operarioSeleccionado)): ?>
+                                    No se encontraron feriados trabajados para
+                                    <?= htmlspecialchars(obtenerNombreOperario($operarioSeleccionado)) ?>
+                                    <?php if (!empty($sucursalSeleccionada)): ?>
+                                        en <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
+                                    <?php endif; ?>
+                                    entre <?= formatoFecha($fechaDesde) ?> y <?= formatoFecha($fechaHasta) ?>.
+                                <?php else: ?>
+                                    No se encontraron feriados trabajados para
+                                    <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
+                                    entre <?= formatoFecha($fechaDesde) ?> y <?= formatoFecha($fechaHasta) ?>.
+                                <?php endif; ?>
+                            <?php else: ?>
+                                Seleccione un rango de fechas para buscar feriados trabajados.
+                            <?php endif; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
-            <?php endif; ?>
+            </div>
         </div>
     </div>
-</div>
-</div>
 
     <!-- Modal para aprobación de feriados trabajados -->
     <div class="modal" id="modalAprobacion">
@@ -1975,7 +1976,7 @@ function obtenerNombreOperario($codOperario)
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                                    { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
+                                        { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
             <?php endforeach; ?>
         ];
 
