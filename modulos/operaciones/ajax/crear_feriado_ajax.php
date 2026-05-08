@@ -33,7 +33,7 @@ try {
     }
     
     // Validar estado
-    $estadosPermitidos = ['Pagado', 'Descansado', 'Compensado'];
+    $estadosPermitidos = ['Pagado', 'Descansado', 'Compensado', 'Pendiente'];
     if (!in_array($estado, $estadosPermitidos)) {
         throw new Exception('Estado no válido');
     }

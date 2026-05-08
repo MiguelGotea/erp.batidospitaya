@@ -140,7 +140,12 @@ function guardarObservacionesFeriado(id, codOperario, fecha) {
 
     // Obtener estado actual
     const badge = document.getElementById(`status-badge-${id}`);
-    const estadoActual = badge ? badge.textContent.trim() : 'Pendiente';
+    let estadoActual = badge ? badge.textContent.trim() : 'Pendiente';
+
+    // Normalizar estado (si es "Sin marcación", "Con Marcación" o una hora, se trata como Pendiente al guardar solo notas)
+    if (estadoActual !== 'Pagado' && estadoActual !== 'Descansado' && estadoActual !== 'Compensado') {
+        estadoActual = 'Pendiente';
+    }
 
     // Mostrar visualmente que se está guardando
     const displayDiv = document.getElementById(`obs-display-${id}`);
