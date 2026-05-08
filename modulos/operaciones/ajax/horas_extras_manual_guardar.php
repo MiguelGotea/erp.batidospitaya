@@ -23,8 +23,9 @@ try {
         $observaciones = $_POST['observaciones'] ?? '';
         $estado      = $_POST['estado'] ?? 'Pendiente';
 
-        // Restricción de fecha para líderes (CodNivelesCargos 5 y 43)
-        if (in_array($cargoUsuario, [5, 43])) {
+        // Restricción de fecha según permiso de ver todo (si no puede ver todo, se asume que es líder/restringido)
+        $puedeVerTodo = tienePermiso('horas_extras_manual', 'ver_todo', $cargoUsuario);
+        if (!$puedeVerTodo && !$esAdmin) {
             $today = new DateTime();
             $d = (int)$today->format('j');
             $y = (int)$today->format('Y');
@@ -78,8 +79,19 @@ try {
             exit();
         }
         
-        // Lógica de auto-aprobación para quienes tienen permiso de aprobar o son cargo 11 (RRHH/Superior)
-        if (tienePermiso('horas_extras_manual', 'aprobar', $cargoUsuario) || $esAdmin || $cargoUsuario == 11) {
+        // Permisos de creación/edición
+        if ($id) {
+            if (!tienePermiso('horas_extras_manual', 'modificar', $cargoUsuario) && !$esAdmin) {
+                throw new Exception("No tiene permisos para modificar este registro.");
+            }
+        } else {
+            if (!tienePermiso('horas_extras_manual', 'crear_nuevo', $cargoUsuario) && !$esAdmin) {
+                throw new Exception("No tiene permisos para crear una nueva solicitud.");
+            }
+        }
+
+        // Lógica de auto-aprobación
+        if (tienePermiso('horas_extras_manual', 'aprobar', $cargoUsuario) || $esAdmin) {
             $estado = 'Aprobado';
         }
 
@@ -136,9 +148,15 @@ try {
         $estado = $_POST['estado'];
         $observaciones = $_POST['observaciones'] ?? '';
 
-        // Solo quienes tienen permiso de aprobar pueden cambiar el estado
-        if (!tienePermiso('horas_extras_manual', 'aprobar', $cargoUsuario) && !$esAdmin) {
-            throw new Exception("No tiene permisos para realizar esta acción.");
+        // Validar permisos según el estado que se desea poner
+        $puedeAprobar = tienePermiso('horas_extras_manual', 'aprobar', $cargoUsuario);
+        $puedeRechazar = tienePermiso('horas_extras_manual', 'rechazar', $cargoUsuario);
+
+        if ($estado === 'Aprobado' && !$puedeAprobar && !$esAdmin) {
+            throw new Exception("No tiene permisos para aprobar esta solicitud.");
+        }
+        if ($estado === 'Denegado' && !$puedeRechazar && !$esAdmin) {
+            throw new Exception("No tiene permisos para rechazar esta solicitud.");
         }
 
         $sql = "
