@@ -164,8 +164,8 @@ window.abrirNuevaSolicitud = function () {
     const dateString = localNow.getFullYear() + '-' + String(localNow.getMonth() + 1).padStart(2, '0') + '-' + String(localNow.getDate()).padStart(2, '0');
     $('#sol_fecha').val(dateString);
 
-    // Aplicar restricciones para líderes (cargo 5 y 43)
-    if ([5, 43].includes(window.cargoOperario)) {
+    // Aplicar restricciones para usuarios restringidos (antes líderes)
+    if (window.esRestringido) {
         const range = getRestrictedDateRange();
         $('#sol_fecha').attr('min', range.min).attr('max', range.max);
         
@@ -221,6 +221,8 @@ function renderTabla() {
     const pagina = todosLosRegistros.slice(inicio, fin);
 
     const canApprove = window.canApprove;
+    const canReject = window.canReject;
+    const canEdit = window.canEdit;
     const puedeVerObs = window.puedeVerObs;
 
     let html = '';
@@ -252,14 +254,18 @@ function renderTabla() {
 
             // Acciones
             let acciones = '';
-            if (canApprove) {
-                if ((row.estado || 'Pendiente') === 'Pendiente') {
+            if ((row.estado || 'Pendiente') === 'Pendiente') {
+                if (canApprove) {
                     acciones += `<button class="btn-action btn-approve" onclick="procesarSolicitud(${row.id},'Aprobado')" title="Aprobar"><i class="fas fa-check"></i></button>`;
+                }
+                if (canReject) {
                     acciones += `<button class="btn-action btn-deny"    onclick="procesarSolicitud(${row.id},'Denegado')" title="Denegar"><i class="fas fa-times"></i></button>`;
                 }
+            }
+            
+            if (canEdit) {
                 const dataStr = encodeURIComponent(JSON.stringify(row));
                 acciones += `<button class="btn-action btn-edit"   onclick="editarRegistro('${dataStr}')" title="Editar"><i class="fas fa-edit"></i></button>`;
-                // acciones += `<button class="btn-action btn-delete" onclick="eliminarRegistro(${row.id})" title="Eliminar"><i class="fas fa-trash"></i></button>`;
             }
 
             const obsCell = puedeVerObs
@@ -337,8 +343,8 @@ window.editarRegistro = function (dataStr) {
     $('#sol_operario_seleccionado').show();
     $('#sol_fecha').val(data.fecha);
 
-    // Aplicar restricciones para líderes (cargo 5 y 43) en edición también
-    if ([5, 43].includes(window.cargoOperario)) {
+    // Aplicar restricciones si es necesario
+    if (window.esRestringido) {
         const range = getRestrictedDateRange();
         $('#sol_fecha').attr('min', range.min).attr('max', range.max);
     } else {

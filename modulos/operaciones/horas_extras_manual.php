@@ -15,12 +15,14 @@ if (!tienePermiso('horas_extras_manual', 'vista', $cargoOperario)) {
 }
 
 // Permisos específicos
-$puedeAprobar = tienePermiso('horas_extras_manual', 'aprobar', $cargoOperario);
-$puedeSolicitar = tienePermiso('horas_extras_manual', 'solicitar', $cargoOperario);
-$puedeExportar = tienePermiso('horas_extras_manual', 'exportar', $cargoOperario);
-
-// Puede ver observaciones si aprueba o es cargo 11
-$puedeVerObs = tienePermiso('horas_extras_manual', 'vista', $cargoOperario);
+$puedeAprobar    = tienePermiso('horas_extras_manual', 'aprobar', $cargoOperario);
+$puedeRechazar   = tienePermiso('horas_extras_manual', 'rechazar', $cargoOperario);
+$puedeCrear      = tienePermiso('horas_extras_manual', 'crear_nuevo', $cargoOperario);
+$puedeModificar  = tienePermiso('horas_extras_manual', 'modificar', $cargoOperario);
+$puedeExportar   = tienePermiso('horas_extras_manual', 'exportar', $cargoOperario);
+$puedeVerTodo    = tienePermiso('horas_extras_manual', 'ver_todo', $cargoOperario);
+$puedeFiltroAll  = tienePermiso('horas_extras_manual', 'filtro_todas_tiendas', $cargoOperario);
+$puedeVerObs     = tienePermiso('horas_extras_manual', 'vista', $cargoOperario); // O según se defina
 
 // MIGRACIÓN AUTOMÁTICA (Si falla el CLI)
 try {
@@ -56,8 +58,8 @@ if (isset($_GET['exportar_excel']) && $puedeExportar) {
     ";
     $params = [$desde, $hasta];
 
-    // Líderes: forzar su sucursal
-    if (in_array($cargoOperario, [5, 43])) {
+    // Restricción de sucursal si no tiene permiso de ver todo
+    if (!$puedeVerTodo) {
         $misSucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
         $sucursal = $misSucursales[0]['codigo'] ?? 'NINGUNA';
     }
@@ -126,13 +128,15 @@ if (isset($_GET['exportar_excel']) && $puedeExportar) {
     exit();
 }
 
-// Obtener sucursales según cargo
-$esLider = in_array($cargoOperario, [5, 43]);
-if ($esLider) {
-    $sucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
-} else {
+// Obtener sucursales según permiso
+if ($puedeVerTodo || $puedeFiltroAll) {
     $sucursales = obtenerTodasSucursales();
+} else {
+    $sucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
 }
+
+// Determinar si se comporta como líder (restringido a su tienda)
+$esRestringido = !$puedeVerTodo && !$puedeFiltroAll;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -159,12 +163,12 @@ if ($esLider) {
                 <div class="row g-3 align-items-end">
                     <div class="col-md-2">
                         <label class="form-label fw-semibold text-muted small">Sucursal</label>
-                        <select id="sucursal" class="form-select form-select-sm" <?= $esLider ? 'disabled' : '' ?>>
-                            <?php if (!$esLider): ?>
+                        <select id="sucursal" class="form-select form-select-sm" <?= $esRestringido ? 'disabled' : '' ?>>
+                            <?php if (!$esRestringido): ?>
                                 <option value="">Todas</option>
                             <?php endif; ?>
                             <?php foreach ($sucursales as $s): ?>
-                                <option value="<?= $s['codigo'] ?>" <?= $esLider ? 'selected' : '' ?>><?= $s['nombre'] ?>
+                                <option value="<?= $s['codigo'] ?>" <?= ($esRestringido && count($sucursales) > 0) ? 'selected' : '' ?>><?= $s['nombre'] ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -200,7 +204,7 @@ if ($esLider) {
                     <div class="col-md-2 d-flex gap-2">
                         <button type="button" onclick="cargarDatos()" class="btn btn-sm btn-primary"><i
                                 class="fas fa-search"></i></button>
-                        <?php if ($puedeSolicitar): ?>
+                        <?php if ($puedeCrear): ?>
                             <button type="button" onclick="abrirNuevaSolicitud()" class="btn btn-sm btn-warning"><i
                                     class="fas fa-plus"></i> Solicitar</button>
                         <?php endif; ?>
@@ -361,10 +365,13 @@ if ($esLider) {
 
     <script>
         window.canApprove = <?= $puedeAprobar ? 'true' : 'false' ?>;
-        window.canSolicitar = <?= $puedeSolicitar ? 'true' : 'false' ?>;
+        window.canReject = <?= $puedeRechazar ? 'true' : 'false' ?>;
+        window.canEdit = <?= $puedeModificar ? 'true' : 'false' ?>;
+        window.canSolicit = <?= $puedeCrear ? 'true' : 'false' ?>;
         window.cargoOperario = <?= intval($cargoOperario) ?>;
         window.puedeVerObs = <?= $puedeVerObs ? 'true' : 'false' ?>;
         window.usuarioId = <?= $_SESSION['usuario_id'] ?? 0 ?>;
+        window.esRestringido = <?= $esRestringido ? 'true' : 'false' ?>;
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

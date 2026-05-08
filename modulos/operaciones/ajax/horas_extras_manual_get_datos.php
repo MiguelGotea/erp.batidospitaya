@@ -22,10 +22,19 @@ if (!tienePermiso('horas_extras_manual', 'vista', $cargoUsuario) && !$esAdmin) {
     exit;
 }
 
-// Regla especial para Líderes (5 o 43)
-if (in_array($cargoUsuario, [5, 43])) {
+// Regla de permisos para filtrar sucursales
+$puedeVerTodo   = tienePermiso('horas_extras_manual', 'ver_todo', $cargoUsuario);
+$puedeFiltroAll = tienePermiso('horas_extras_manual', 'filtro_todas_tiendas', $cargoUsuario);
+
+if (!$puedeVerTodo && !$puedeFiltroAll && !$esAdmin) {
+    // Si no tiene permiso de ver todo ni de filtrar todas, forzar su sucursal
     $misSucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
-    $sucursal = $misSucursales[0]['codigo'] ?? 'NINGUNA';
+    $sucursalPropia = $misSucursales[0]['codigo'] ?? 'NINGUNA';
+    
+    // Si intentó filtrar algo distinto a su sucursal, lo forzamos a la suya
+    if (empty($sucursal) || $sucursal != $sucursalPropia) {
+        $sucursal = $sucursalPropia;
+    }
 }
 
 // Si no hay fechas, usar el mes actual por defecto
