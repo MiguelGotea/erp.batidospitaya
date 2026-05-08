@@ -18,7 +18,7 @@ $urlArmada = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['test_dvr'])) {
     $resultado = capturarFotoDVR($sucursalUsuario);
     $urlArmada = $resultado['url_intentada'] ?? '';
-    
+
     if ($resultado['success']) {
         $mensaje = "Foto capturada con éxito!";
         $fotoUrl = $resultado['path'];
@@ -43,7 +43,7 @@ function capturarFotoDVR($codSucursal)
     $ip = $dvr['portal_ip_local'];
     $usuario = $dvr['portal_usuario'];
     $clave = $dvr['portal_clave'];
-    $canal = !empty($dvr['canal_caja']) ? $dvr['canal_caja'] : 301;
+    $canal = !empty($dvr['canal_caja']) ? $dvr['canal_caja'] : 101;
 
     if (!$ip || !$usuario || !$clave) {
         return ['success' => false, 'message' => 'Configuración de DVR incompleta (IP, usuario o clave faltante).'];
@@ -51,7 +51,7 @@ function capturarFotoDVR($codSucursal)
 
     // URL formato Hikvision ISAPI con credenciales en la URL para debug
     $url_con_credenciales = "http://{$usuario}:{$clave}@{$ip}/ISAPI/Streaming/channels/{$canal}/picture";
-    
+
     // URL formato limpio para cURL (las credenciales van por CURLOPT_USERPWD)
     $url = "http://{$ip}/ISAPI/Streaming/channels/{$canal}/picture";
 
@@ -83,14 +83,14 @@ function capturarFotoDVR($codSucursal)
         file_put_contents($filepath, $result);
 
         return [
-            'success' => true, 
+            'success' => true,
             'path' => '/uploads/sucursales/' . $filename,
             'url_intentada' => $url_con_credenciales
         ];
     } else {
         // Ocultar credenciales en el mensaje de error por seguridad
         return [
-            'success' => false, 
+            'success' => false,
             'message' => "HTTP Code: $httpCode. Error: $error",
             'url_intentada' => $url_con_credenciales
         ];
@@ -196,13 +196,14 @@ function capturarFotoDVR($codSucursal)
         <?php if ($urlArmada): ?>
             <div class="info">
                 <strong>URL Armada (para verificar):</strong> <br>
-                <a href="<?= htmlspecialchars($urlArmada) ?>" target="_blank"><code><?= htmlspecialchars($urlArmada) ?></code></a>
+                <a href="<?= htmlspecialchars($urlArmada) ?>"
+                    target="_blank"><code><?= htmlspecialchars($urlArmada) ?></code></a>
             </div>
         <?php endif; ?>
-        
+
         <?php if ($mensaje): ?>
             <div class="msg <?= $fotoUrl ? 'success' : 'error' ?>">
-                <i class="fas <?= $fotoUrl ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i> 
+                <i class="fas <?= $fotoUrl ? 'fa-check-circle' : 'fa-exclamation-circle' ?>"></i>
                 <?= htmlspecialchars($mensaje) ?>
             </div>
         <?php endif; ?>
