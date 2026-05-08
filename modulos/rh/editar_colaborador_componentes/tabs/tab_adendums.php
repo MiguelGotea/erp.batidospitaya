@@ -62,13 +62,11 @@
 
                                 <div class="form-group" id="grupo_salario">
                                     <label for="salario_adendum">Salario (C$) *</label>
+                                    <?php $salarioReferencia = obtenerSalarioReferencia($codOperario); ?>
                                     <input type="number" id="salario_adendum" name="salario" class="form-control" step="0.01"
-                                        min="0" placeholder="0.00">
+                                        min="0" value="<?= $salarioReferencia ?>" placeholder="0.00">
                                     <small style="color: #6c757d;">Salario de referencia:
-                                        <?php
-                                        $salarioReferencia = obtenerSalarioReferencia($codOperario);
-                                        echo 'C$ ' . number_format($salarioReferencia, 2);
-                                        ?>
+                                        <?= 'C$ ' . number_format($salarioReferencia, 2) ?>
                                     </small>
                                 </div>
 

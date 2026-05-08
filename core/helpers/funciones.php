@@ -1700,8 +1700,6 @@ function obtenerSalarioReferencia($codOperario)
         SELECT Salario 
         FROM AsignacionNivelesCargos 
         WHERE CodOperario = ? 
-        AND Salario IS NOT NULL 
-        AND Salario > 0
         ORDER BY Fecha DESC, CodAsignacionNivelesCargos DESC 
         LIMIT 1
     ");
