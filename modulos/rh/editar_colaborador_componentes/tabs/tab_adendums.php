@@ -1,4 +1,5 @@
 <!-- Pestaña de Adendums -->
+
 <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
     <div id="adendums" class="tab-pane <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">
         <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
@@ -134,7 +135,7 @@
                                             'ambos' => 'Cargo y Salario',
                                             'movimiento' => 'Movimiento de Tienda'
                                         ];
-                                        ?>
+                                    ?>
                                         <tr style="border-bottom: 1px solid #ddd;">
                                             <td style="padding: 10px;">
                                                 <?= $tipoTexto[$adendum['TipoAdendum']] ?? 'No definido' ?>
@@ -281,7 +282,7 @@
                                             } else {
                                                 $tamañoFormateado = round($tamaño / 1048576, 2) . ' MB';
                                             }
-                                            ?>
+                                        ?>
                                             <tr style="border-bottom: 1px solid #ddd;">
                                                 <td style="padding: 10px;">
                                                     <?= htmlspecialchars($archivo['nombre_archivo']) ?>
@@ -317,7 +318,7 @@
                                                     // Mostrar información del contrato usando codigo_manual_contrato
                                                     $pestañasConContrato = ['contrato', 'adendums', 'inss', 'salario', 'movimientos', 'categoria'];
                                                     if (in_array($pestaña_activa, $pestañasConContrato) && !empty($archivo['codigo_manual_contrato'])):
-                                                        ?>
+                                                    ?>
                                                         <span
                                                             style="font-weight: 500;"><?= htmlspecialchars($archivo['codigo_manual_contrato']) ?></span>
                                                         <br>
@@ -426,11 +427,11 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const cargosDisponibles = <?= json_encode($cargosDisponibles ?? []) ?>;
 
         document.querySelectorAll('.editable-cell').forEach(cell => {
-            cell.addEventListener('click', function (e) {
+            cell.addEventListener('click', function(e) {
                 if (this.classList.contains('editing')) return;
 
                 const field = this.dataset.field;
@@ -488,9 +489,9 @@
                     formData.append('value', newValue);
 
                     fetch('ajax/actualizar_adendum_inline.php', {
-                        method: 'POST',
-                        body: formData
-                    })
+                            method: 'POST',
+                            body: formData
+                        })
                         .then(response => response.json())
                         .then(data => {
                             this.classList.remove('cell-loading');
