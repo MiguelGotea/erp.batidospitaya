@@ -1,6 +1,6 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
+require_once '../../../core/auth/auth.php';
+// require_once '../../../core/helpers/funciones.php'; // Ya se incluye en auth.php
 
 require_once '../../../core/permissions/permissions.php';
 
