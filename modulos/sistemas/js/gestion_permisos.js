@@ -132,7 +132,7 @@ function renderizarArbolHerramientas(grupos, containerId, tipo) {
                 </div>
                 <div class="tree-group-items">
                     ${herramientas.map(h => `
-                        <div class="tree-item" data-id="${h.id}" data-nombre="${h.nombre}" data-titulo="${h.titulo || h.nombre}" data-descripcion="${h.descripcion || ''}" data-url-real="${h.url_real || ''}" onclick="seleccionarHerramienta(${h.id}, '${h.nombre}', '${(h.titulo || h.nombre).replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.descripcion || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.url_real || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">
+                        <div class="tree-item" data-id="${h.id}" data-nombre="${h.nombre}" data-titulo="${h.titulo || h.nombre}" data-descripcion="${h.descripcion || ''}" data-url-real="${h.url_real || ''}" data-icono="${h.icono || 'bi bi-file-earmark-code'}" onclick="seleccionarHerramienta(${h.id}, '${h.nombre}', '${(h.titulo || h.nombre).replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.descripcion || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.url_real || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${h.icono || 'bi bi-file-earmark-code'}')">
                             <i class="${h.icono || 'bi bi-file-earmark-code'}"></i>
                             ${h.titulo || h.nombre}
                         </div>
@@ -159,7 +159,7 @@ function toggleGrupo(element) {
 /**
  * Seleccionar herramienta
  */
-function seleccionarHerramienta(id, nombre, titulo, descripcion, urlReal) {
+function seleccionarHerramienta(id, nombre, titulo, descripcion, urlReal, icono) {
     // Verificar cambios pendientes
     if (cambiosPendientes) {
         if (!confirm('Hay cambios sin guardar. ¿Desea continuar sin guardar?')) {
@@ -171,35 +171,37 @@ function seleccionarHerramienta(id, nombre, titulo, descripcion, urlReal) {
     $('.tree-item').removeClass('active');
     $(`.tree-item[data-id="${id}"]`).addClass('active');
 
-    // Actualizar header con título
+    // Actualizar header con título e icono
     $('#herramientaSeleccionadaNombre').text(titulo || nombre);
+    $('#herramientaSeleccionadaIcono').attr('class', icono || 'bi bi-gear-fill');
     $('#headerActions').show();
 
+    // Actualizar Nombre de Permiso
+    $('#nombrePermisoTexto').text(nombre);
+
     // Mostrar descripción y URL si existen
-    if ((descripcion && descripcion.trim() !== '') || (urlReal && urlReal.trim() !== '')) {
-        if (descripcion && descripcion.trim() !== '') {
-            $('#descripcionTexto').text(descripcion);
-            $('#descripcionTexto').parent().show();
-        } else {
-            $('#descripcionTexto').parent().hide();
-        }
-
-        if (urlReal && urlReal.trim() !== '') {
-            $('#urlRealTexto').text(urlReal);
-            $('#urlRealTexto').parent().show();
-        } else {
-            $('#urlRealTexto').parent().hide();
-        }
-
-        $('#herramientaDescripcion').show();
+    if (descripcion && descripcion.trim() !== '') {
+        $('#descripcionTexto').text(descripcion);
+        $('#descripcionTexto').closest('.mb-2').show();
     } else {
-        $('#herramientaDescripcion').hide();
+        $('#descripcionTexto').closest('.mb-2').hide();
+    }
+
+    if (urlReal && urlReal.trim() !== '') {
+        $('#urlRealTexto').text(urlReal);
+        $('#urlRealLink').attr('href', urlReal);
+        $('#urlRealTexto').closest('div').show();
+    } else {
+        $('#urlRealTexto').closest('div').hide();
     }
 
     // Guardar datos actuales
-    herramientaActual = { id, nombre, titulo, descripcion, urlReal };
+    herramientaActual = { id, nombre, titulo, descripcion, urlReal, icono };
     cambiosPendientes = false;
     $('#btnGuardarFlotante').hide();
+
+    // Mostrar el panel de descripción (ahora siempre que haya una herramienta seleccionada)
+    $('#herramientaDescripcion').show();
 
     // Cargar permisos
     cargarPermisosHerramienta(id);

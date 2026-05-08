@@ -126,7 +126,7 @@ $puedeCrearAcciones = tienePermiso('gestion_permisos', 'crear_accion', $cargoOpe
                         <div class="card">
                             <div class="card-header bg-primary-custom text-white d-flex justify-content-between align-items-center">
                                 <div>
-                                    <i class="bi bi-gear-fill"></i> <span id="herramientaSeleccionadaNombre">Seleccione una herramienta</span>
+                                    <i id="herramientaSeleccionadaIcono" class="bi bi-gear-fill"></i> <span id="herramientaSeleccionadaNombre">Seleccione una herramienta</span>
                                 </div>
                                 <div id="headerActions" style="display: none;">
                                     <?php if ($puedeCrearAcciones): ?>
@@ -141,12 +141,17 @@ $puedeCrearAcciones = tienePermiso('gestion_permisos', 'crear_accion', $cargoOpe
                             <div id="herramientaDescripcion" class="p-3 border-bottom bg-light">
                                 <div class="mb-2">
                                     <small class="text-muted">
+                                        <i class="bi bi-tag"></i> <strong>Nombre de Permiso:</strong> <span id="nombrePermisoTexto"></span>
+                                    </small>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">
                                         <i class="bi bi-info-circle"></i> <strong>Descripción:</strong> <span id="descripcionTexto"></span>
                                     </small>
                                 </div>
                                 <div>
                                     <small class="text-muted">
-                                        <i class="bi bi-link-45deg"></i> <strong>URL:</strong> <code id="urlRealTexto" class="text-muted"></code>
+                                        <i class="bi bi-link-45deg"></i> <strong>URL:</strong> <a id="urlRealLink" href="#" target="_blank" style="text-decoration: none;"><code id="urlRealTexto" class="text-muted"></code></a>
                                     </small>
                                 </div>
                             </div>
