@@ -2626,10 +2626,27 @@ function agregarMovimientoCargo($datos)
         $contratoActual = obtenerContratoActual($datos['cod_operario']);
         $codigoContratoAsociado = $contratoActual ? $contratoActual['codigo_manual_contrato'] : null;
 
+        // Determinar salario inicial para el movimiento (Nueva lógica jerárquica)
+        // 1. Buscar en AsignacionNivelesCargos
+        $stmtUltimaAsignacion = $conn->prepare("
+            SELECT Salario FROM AsignacionNivelesCargos 
+            WHERE CodOperario = ? AND Salario IS NOT NULL AND Salario > 0
+            ORDER BY Fecha DESC, CodAsignacionNivelesCargos DESC LIMIT 1
+        ");
+        $stmtUltimaAsignacion->execute([$datos['cod_operario']]);
+        $ultimaAsignacion = $stmtUltimaAsignacion->fetch();
+
+        $salario = null;
+        if ($ultimaAsignacion && !empty($ultimaAsignacion['Salario'])) {
+            $salario = $ultimaAsignacion['Salario'];
+        } elseif ($contratoActual && !empty($contratoActual['salario_inicial'])) {
+            $salario = $contratoActual['salario_inicial'];
+        }
+
         $stmt = $conn->prepare("
     INSERT INTO AsignacionNivelesCargos
-    (CodOperario, CodNivelesCargos, Fecha, Sucursal, CodTipoContrato, codigo_contrato_asociado)
-    VALUES (?, ?, ?, ?, 3, ?) -- CodTipoContrato 3 por defecto para movimientos
+    (CodOperario, CodNivelesCargos, Fecha, Sucursal, CodTipoContrato, codigo_contrato_asociado, Salario, es_activo, cod_usuario_creador)
+    VALUES (?, ?, ?, ?, 3, ?, ?, 1, ?) -- CodTipoContrato 3 por defecto para movimientos
     ");
 
         $stmt->execute([
@@ -2637,8 +2654,9 @@ function agregarMovimientoCargo($datos)
             $datos['cod_cargo'],
             $datos['fecha_inicio'],
             $datos['sucursal'],
-            $codigoContratoAsociado // Asociar al código del contrato activo
-            // CodTipoContrato 3 se establece directamente en la consulta
+            $codigoContratoAsociado, // Asociar al código del contrato activo
+            $salario,
+            $_SESSION['usuario_id']
         ]);
 
         $idMovimiento = $conn->lastInsertId();
@@ -2789,7 +2807,19 @@ function agregarAdendum($datos)
         // 5. Clonar campos si no vienen en los datos (para Ajuste Salarial o Movimiento de Tienda)
         $codCargo = !empty($datos['cod_cargo']) ? $datos['cod_cargo'] : ($ultimaAsignacion['CodNivelesCargos'] ?? $contratoActual['CodNivelesCargos'] ?? null);
         $sucursal = !empty($datos['sucursal']) ? $datos['sucursal'] : ($ultimaAsignacion['Sucursal'] ?? $contratoActual['cod_sucursal_contrato'] ?? null);
-        $salario = isset($datos['salario']) && $datos['salario'] !== '' ? $datos['salario'] : ($ultimaAsignacion['Salario'] ?? $contratoActual['salario_inicial'] ?? 0.00);
+
+        // DETERMINAR SALARIO SEGÚN NUEVA JERARQUÍA (AsignacionNivelesCargos > Contratos > NULL)
+        $salario = null;
+        if (isset($datos['salario']) && $datos['salario'] !== '') {
+            $salario = $datos['salario'];
+        } else {
+            if (!empty($ultimaAsignacion['Salario'])) {
+                $salario = $ultimaAsignacion['Salario'];
+            } elseif (!empty($contratoActual['salario_inicial'])) {
+                $salario = $contratoActual['salario_inicial'];
+            }
+        }
+
         $codTipoContrato = !empty($datos['cod_tipo_contrato']) ? $datos['cod_tipo_contrato'] : ($ultimaAsignacion['CodTipoContrato'] ?? $contratoActual['cod_tipo_contrato'] ?? null);
 
         // 6. Determinar fecha fin para el nuevo adendum
