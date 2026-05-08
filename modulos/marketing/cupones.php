@@ -17,25 +17,27 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Cupones</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="css/cupones.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
+
     <div class="main-container">
         <div class="sub-container">
             <?php echo renderHeader($usuario, false, 'Gestión de Cupones'); ?>
-            
+
             <div class="container-fluid p-3">
                 <!-- Botón para agregar nuevo cupón - MOVIDO A FAB -->
 
@@ -87,7 +89,8 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <div class="d-flex align-items-center gap-2">
                         <label class="mb-0">Mostrar:</label>
-                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;" onchange="cambiarRegistrosPorPagina()">
+                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                            onchange="cambiarRegistrosPorPagina()">
                             <option value="25" selected>25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
@@ -111,7 +114,7 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
                 <div class="modal-body">
                     <form id="formCupon">
                         <input type="hidden" id="cuponId" name="id">
-                        
+
                         <div class="mb-3">
                             <label for="numeroCupon" class="form-label">Número de Cupón *</label>
                             <input type="text" class="form-control" id="numeroCupon" name="numero_cupon" readonly>
@@ -130,7 +133,8 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
 
                         <div class="mb-3">
                             <label for="observaciones" class="form-label">Observaciones</label>
-                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3" placeholder="Notas adicionales sobre el cupón"></textarea>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3"
+                                placeholder="Notas adicionales sobre el cupón"></textarea>
                         </div>
                     </form>
                 </div>
@@ -161,4 +165,5 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
         </div>
     <?php endif; ?>
 </body>
+
 </html>
