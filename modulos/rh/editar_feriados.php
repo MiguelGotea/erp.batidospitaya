@@ -150,136 +150,139 @@ if (isset($_GET['editar'])) {
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
-        <?php echo renderHeader($usuario, $esAdmin, 'Gestión de Feriados'); ?>
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, $esAdmin, 'Gestión de Feriados'); ?>
 
-        <div class="container">
-            <!-- Cabecera eliminada por redundancia con el header universal -->
+            <div class="container">
+                <!-- Cabecera eliminada por redundancia con el header universal -->
 
-            <?php if (isset($_SESSION['exito'])): ?>
-                <div class="alert alert-success">
-                    <?= $_SESSION['exito'] ?>
-                    <?php unset($_SESSION['exito']); ?>
-                </div>
-            <?php endif; ?>
+                <?php if (isset($_SESSION['exito'])): ?>
+                    <div class="alert alert-success">
+                        <?= $_SESSION['exito'] ?>
+                        <?php unset($_SESSION['exito']); ?>
+                    </div>
+                <?php endif; ?>
 
-            <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert alert-danger">
-                    <?= $_SESSION['error'] ?>
-                    <?php unset($_SESSION['error']); ?>
-                </div>
-            <?php endif; ?>
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger">
+                        <?= $_SESSION['error'] ?>
+                        <?php unset($_SESSION['error']); ?>
+                    </div>
+                <?php endif; ?>
 
-            <!-- Botón para abrir modal de agregar feriado -->
-            <div class="actions" style="margin-bottom: 20px;">
-                <button class="btn" onclick="abrirModal()">
-                    <i class="fas fa-plus"></i> Agregar Feriado
-                </button>
-            </div>
-
-            <!-- Filtros -->
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="anio">Año</label>
-                    <select id="anio" name="anio" onchange="aplicarFiltros()">
-                        <?php foreach ($aniosDisponibles as $anio): ?>
-                            <option value="<?= $anio ?>" <?= $filtroAnio == $anio ? 'selected' : '' ?>><?= $anio ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="tipo-filtro">Tipo de Feriado</label>
-                    <select id="tipo-filtro" name="tipo" onchange="aplicarFiltros()">
-                        <option value="todos" <?= $filtroTipo === 'todos' ? 'selected' : '' ?>>Todos</option>
-                        <option value="nacional" <?= $filtroTipo === 'nacional' ? 'selected' : '' ?>>Nacionales</option>
-                        <option value="departamental" <?= $filtroTipo === 'departamental' ? 'selected' : '' ?>>
-                            Departamentales
-                        </option>
-                    </select>
-                </div>
-
-                <div class="filter-group" id="departamento-filtro-group"
-                    style="<?= $filtroTipo !== 'departamental' ? 'display: none;' : '' ?>">
-                    <label for="departamento-filtro">Departamento</label>
-                    <select id="departamento-filtro" name="departamento" onchange="aplicarFiltros()">
-                        <option value="">Todos</option>
-                        <?php foreach ($departamentos as $dep): ?>
-                            <option value="<?= $dep['codigo'] ?>" <?= $filtroDepartamento == $dep['codigo'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($dep['nombre']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="filter-group search-box">
-                    <label for="busqueda">Buscar Feriado</label>
-                    <input type="text" id="busqueda" name="busqueda" value="<?= htmlspecialchars($busqueda) ?>"
-                        placeholder="Nombre del feriado..." oninput="buscarFeriado()">
-                    <i class="fas fa-search"></i>
-                </div>
-
-                <div class="filter-group" style="align-self: flex-end;">
-                    <button class="btn" onclick="aplicarFiltros()">
-                        <i class="fas fa-filter"></i> Aplicar Filtros
+                <!-- Botón para abrir modal de agregar feriado -->
+                <div class="actions" style="margin-bottom: 20px;">
+                    <button class="btn" onclick="abrirModal()">
+                        <i class="fas fa-plus"></i> Agregar Feriado
                     </button>
                 </div>
-            </div>
 
-            <!-- Tabla de feriados -->
-            <div class="table-container">
-                <?php if (empty($feriados)): ?>
-                    <div class="no-results">
-                        No se encontraron feriados para los filtros seleccionados.
-                    </div>
-                <?php else: ?>
-                    <table id="tabla-feriados">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Nombre</th>
-                                <th>Tipo</th>
-                                <th>Departamento</th>
-                                <th>Recurrente</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($feriados as $feriado): ?>
-                                <tr>
-                                    <td><?= formatoFecha($feriado['fecha']) ?></td>
-                                    <td><?= htmlspecialchars($feriado['nombre']) ?></td>
-                                    <td>
-                                        <span class="badge badge-<?= strtolower($feriado['tipo']) ?>">
-                                            <?= $feriado['tipo'] ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <?php if ($feriado['tipo'] === 'Departamental'): ?>
-                                            <?= htmlspecialchars($feriado['nombre_departamento'] ?? 'Desconocido') ?>
-                                        <?php else: ?>
-                                            -
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="text-center">
-                                        <?= $feriado['recurrente'] ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>' ?>
-                                    </td>
-                                    <td class="text-center">
-                                        <button class="btn btn-secondary btn-sm" onclick="editarFeriado(<?= $feriado['id'] ?>)">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <a href="editar_feriados.php?eliminar=<?= $feriado['id'] ?>"
-                                            class="btn btn-danger btn-sm"
-                                            onclick="return confirm('¿Está seguro que desea eliminar este feriado?');">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </td>
-                                </tr>
+                <!-- Filtros -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="anio">Año</label>
+                        <select id="anio" name="anio" onchange="aplicarFiltros()">
+                            <?php foreach ($aniosDisponibles as $anio): ?>
+                                <option value="<?= $anio ?>" <?= $filtroAnio == $anio ? 'selected' : '' ?>><?= $anio ?></option>
                             <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="tipo-filtro">Tipo de Feriado</label>
+                        <select id="tipo-filtro" name="tipo" onchange="aplicarFiltros()">
+                            <option value="todos" <?= $filtroTipo === 'todos' ? 'selected' : '' ?>>Todos</option>
+                            <option value="nacional" <?= $filtroTipo === 'nacional' ? 'selected' : '' ?>>Nacionales</option>
+                            <option value="departamental" <?= $filtroTipo === 'departamental' ? 'selected' : '' ?>>
+                                Departamentales
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group" id="departamento-filtro-group"
+                        style="<?= $filtroTipo !== 'departamental' ? 'display: none;' : '' ?>">
+                        <label for="departamento-filtro">Departamento</label>
+                        <select id="departamento-filtro" name="departamento" onchange="aplicarFiltros()">
+                            <option value="">Todos</option>
+                            <?php foreach ($departamentos as $dep): ?>
+                                <option value="<?= $dep['codigo'] ?>" <?= $filtroDepartamento == $dep['codigo'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($dep['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="filter-group search-box">
+                        <label for="busqueda">Buscar Feriado</label>
+                        <input type="text" id="busqueda" name="busqueda" value="<?= htmlspecialchars($busqueda) ?>"
+                            placeholder="Nombre del feriado..." oninput="buscarFeriado()">
+                        <i class="fas fa-search"></i>
+                    </div>
+
+                    <div class="filter-group" style="align-self: flex-end;">
+                        <button class="btn" onclick="aplicarFiltros()">
+                            <i class="fas fa-filter"></i> Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla de feriados -->
+                <div class="table-container">
+                    <?php if (empty($feriados)): ?>
+                        <div class="no-results">
+                            No se encontraron feriados para los filtros seleccionados.
+                        </div>
+                    <?php else: ?>
+                        <table id="tabla-feriados">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Departamento</th>
+                                    <th>Recurrente</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($feriados as $feriado): ?>
+                                    <tr>
+                                        <td><?= formatoFecha($feriado['fecha']) ?></td>
+                                        <td><?= htmlspecialchars($feriado['nombre']) ?></td>
+                                        <td>
+                                            <span class="badge badge-<?= strtolower($feriado['tipo']) ?>">
+                                                <?= $feriado['tipo'] ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?php if ($feriado['tipo'] === 'Departamental'): ?>
+                                                <?= htmlspecialchars($feriado['nombre_departamento'] ?? 'Desconocido') ?>
+                                            <?php else: ?>
+                                                -
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-center">
+                                            <?= $feriado['recurrente'] ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>' ?>
+                                        </td>
+                                        <td class="text-center">
+                                            <button class="btn btn-secondary btn-sm" onclick="editarFeriado(<?= $feriado['id'] ?>)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <a href="editar_feriados.php?eliminar=<?= $feriado['id'] ?>"
+                                                class="btn btn-danger btn-sm"
+                                                onclick="return confirm('¿Está seguro que desea eliminar este feriado?');">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
+    </div>
 
         <!-- Modal para Agregar/Editar Feriado -->
         <div id="feriadoModal" class="modal-backdrop">
