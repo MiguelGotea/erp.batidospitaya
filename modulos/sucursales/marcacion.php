@@ -3,7 +3,7 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
-require_once 'core/auth/auth.php';
+require_once '../../core/auth/auth.php';
 
 /**
  * Obtiene los colaboradores que están actualmente en turno (marcaron entrada hoy pero no salida)
@@ -672,7 +672,7 @@ if ($faltasPendientes < 0)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Batidos Pitaya - Marcación</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <meta name="autocomplete" content="off">
     <meta name="safari-auto-fill" content="off">
     <style>
@@ -961,7 +961,7 @@ if ($faltasPendientes < 0)
 </head>
 <body onload="verificarPantalla()">
     <div class="container">
-        <img src="assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+        <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
         <h1>Registro de Asistencia</h1>
         
         <?php if (isset($_SESSION['error'])): ?>
@@ -1276,18 +1276,18 @@ if ($faltasPendientes < 0)
                                                             // Cerrar modal al hacer clic en el botón aceptar o en la X
                                                             document.getElementById('btnAceptar').addEventListener('click', function() {
                                                                 modal.style.display = 'none';
-                                                                window.location.href = '../index.php';
+                                                                window.location.href = 'index.php';
                                                             });
                 
                                                             document.getElementById('btnCerrarModal').addEventListener('click', function() {
                                                                 modal.style.display = 'none';
-                                                                window.location.href = '../index.php';
+                                                                window.location.href = 'index.php';
                                                             });
                 
                                                             modal.addEventListener('click', function(e) {
                                                                 if (e.target === modal) {
                                                                     modal.style.display = 'none';
-                                                                    window.location.href = '../index.php';
+                                                                    window.location.href = 'index.php';
                                                                 }
                                                             });
                                                         });

@@ -642,7 +642,7 @@ foreach ($sucursalesUsuario as $sucursal) {
             </h2>
 
             <div class="quick-access-grid">
-                <a href="../../marcacion.php" class="quick-access-card">
+                <a href="marcacion.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-fingerprint"></i>
                     </div>
