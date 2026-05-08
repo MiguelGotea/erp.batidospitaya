@@ -6,10 +6,9 @@ require_once '../../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso
-if (!tienePermiso('gestion_feriados', 'vista', $cargoOperario) && !$esAdmin) {
+if (!tienePermiso('gestion_feriados', 'vista', $cargoOperario)) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'Acceso denegado']);
     exit;
@@ -21,22 +20,22 @@ try {
     // Calcular fechas límite y periodo según quincenas
     $fechasCalculadas = calcularFechasFeriados();
     $hoy = new DateTime();
-    
+
     // Obtener feriados pendientes
     $feriadosPendientes = obtenerFeriadosPendientes($fechasCalculadas['inicio_periodo'], $fechasCalculadas['fin_periodo']);
-    
+
     // Calcular días restantes para la fecha límite
     $diasRestantes = $hoy->diff($fechasCalculadas['fecha_limite'])->days;
     if ($hoy > $fechasCalculadas['fecha_limite']) {
         $diasRestantes = -$diasRestantes; // Negativo si ya pasó la fecha límite
     }
-    
+
     // Determinar color del indicador
     $colorIndicador = determinarColorIndicador($diasRestantes);
-    
+
     // Contar total de pendientes
     $totalPendientes = count($feriadosPendientes);
-    
+
     echo json_encode([
         'success' => true,
         'total_pendientes' => $totalPendientes,
@@ -51,7 +50,7 @@ try {
             'quincena' => $fechasCalculadas['quincena']
         ]
     ]);
-    
+
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
@@ -59,10 +58,11 @@ try {
 /**
  * Calcula las fechas para feriados según lógica de quincenas
  */
-function calcularFechasFeriados() {
+function calcularFechasFeriados()
+{
     $hoy = new DateTime();
-    $dia = (int)$hoy->format('d');
-    
+    $dia = (int) $hoy->format('d');
+
     if ($dia <= 15) {
         // Primera quincena: del día 1 al 15
         $inicioPeriodo = $hoy->format('Y-m-01');
@@ -73,13 +73,13 @@ function calcularFechasFeriados() {
         // Segunda quincena: del día 16 al último día
         $inicioPeriodo = $hoy->format('Y-m-16');
         $finPeriodo = $hoy->format('Y-m-t');
-        
+
         // Fecha límite: 3 días antes del fin de mes
         $fechaLimite = new DateTime($finPeriodo);
         $fechaLimite->modify('-3 days');
         $quincena = 'segunda';
     }
-    
+
     return [
         'fecha_limite' => $fechaLimite,
         'inicio_periodo' => new DateTime($inicioPeriodo),
@@ -91,9 +91,10 @@ function calcularFechasFeriados() {
 /**
  * Obtiene los feriados pendientes del periodo calculado
  */
-function obtenerFeriadosPendientes($inicioPeriodo, $finPeriodo) {
+function obtenerFeriadosPendientes($inicioPeriodo, $finPeriodo)
+{
     global $conn;
-    
+
     $sql = "
         SELECT 
             m.id as id_marcacion,
@@ -129,17 +130,18 @@ function obtenerFeriadosPendientes($inicioPeriodo, $finPeriodo) {
         AND s.activa = 1
         ORDER BY m.fecha DESC, o.Nombre, o.Apellido
     ";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute([$inicioPeriodo->format('Y-m-d'), $finPeriodo->format('Y-m-d')]);
-    
+
     return $stmt->fetchAll();
 }
 
 /**
  * Determina el color del indicador según los días restantes
  */
-function determinarColorIndicador($diasRestantes) {
+function determinarColorIndicador($diasRestantes)
+{
     if ($diasRestantes < 0) {
         return 'rojo'; // Pasó la fecha límite
     } elseif ($diasRestantes <= 1) {
