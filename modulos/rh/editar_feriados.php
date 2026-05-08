@@ -143,7 +143,7 @@ if (isset($_GET['editar'])) {
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/editar_feriados.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
@@ -185,7 +185,8 @@ if (isset($_GET['editar'])) {
                         <label for="anio">Año</label>
                         <select id="anio" name="anio" onchange="aplicarFiltros()">
                             <?php foreach ($aniosDisponibles as $anio): ?>
-                                <option value="<?= $anio ?>" <?= $filtroAnio == $anio ? 'selected' : '' ?>><?= $anio ?></option>
+                                <option value="<?= $anio ?>" <?= $filtroAnio == $anio ? 'selected' : '' ?>><?= $anio ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -194,7 +195,8 @@ if (isset($_GET['editar'])) {
                         <label for="tipo-filtro">Tipo de Feriado</label>
                         <select id="tipo-filtro" name="tipo" onchange="aplicarFiltros()">
                             <option value="todos" <?= $filtroTipo === 'todos' ? 'selected' : '' ?>>Todos</option>
-                            <option value="nacional" <?= $filtroTipo === 'nacional' ? 'selected' : '' ?>>Nacionales</option>
+                            <option value="nacional" <?= $filtroTipo === 'nacional' ? 'selected' : '' ?>>Nacionales
+                            </option>
                             <option value="departamental" <?= $filtroTipo === 'departamental' ? 'selected' : '' ?>>
                                 Departamentales
                             </option>
@@ -267,7 +269,8 @@ if (isset($_GET['editar'])) {
                                             <?= $feriado['recurrente'] ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>' ?>
                                         </td>
                                         <td class="text-center">
-                                            <button class="btn btn-secondary btn-sm" onclick="editarFeriado(<?= $feriado['id'] ?>)">
+                                            <button class="btn btn-secondary btn-sm"
+                                                onclick="editarFeriado(<?= $feriado['id'] ?>)">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <a href="editar_feriados.php?eliminar=<?= $feriado['id'] ?>"
@@ -286,242 +289,242 @@ if (isset($_GET['editar'])) {
         </div>
     </div>
 
-        <!-- Modal para Agregar/Editar Feriado -->
-        <div id="feriadoModal" class="modal-backdrop">
-            <div class="modal-content">
-                <h3 id="modalTitulo">Agregar Nuevo Feriado</h3>
-                <form method="POST" id="feriadoForm">
-                    <input type="hidden" name="id" id="feriadoId" value="">
+    <!-- Modal para Agregar/Editar Feriado -->
+    <div id="feriadoModal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3 id="modalTitulo">Agregar Nuevo Feriado</h3>
+            <form method="POST" id="feriadoForm">
+                <input type="hidden" name="id" id="feriadoId" value="">
 
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label for="modalFecha" class="required">Fecha</label>
-                            <input type="date" id="modalFecha" name="fecha" required>
-                        </div>
-
-                        <div class="form-col">
-                            <label for="modalNombre" class="required">Nombre del Feriado</label>
-                            <input type="text" id="modalNombre" name="nombre" required>
-                        </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="modalFecha" class="required">Fecha</label>
+                        <input type="date" id="modalFecha" name="fecha" required>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label for="modalTipo" class="required">Tipo</label>
-                            <select id="modalTipo" name="tipo" required onchange="actualizarDepartamentoField()">
-                                <option value="Nacional">Nacional</option>
-                                <option value="Departamental">Departamental</option>
-                            </select>
-                        </div>
+                    <div class="form-col">
+                        <label for="modalNombre" class="required">Nombre del Feriado</label>
+                        <input type="text" id="modalNombre" name="nombre" required>
+                    </div>
+                </div>
 
-                        <div class="form-col" id="modalDepartamentoCol" style="display: none;">
-                            <label for="modalDepartamento" class="required">Departamento</label>
-                            <select id="modalDepartamento" name="departamento_codigo">
-                                <option value="">Seleccione un departamento</option>
-                                <?php foreach ($departamentos as $dep): ?>
-                                    <option value="<?= $dep['codigo'] ?>">
-                                        <?= htmlspecialchars($dep['nombre']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="modalTipo" class="required">Tipo</label>
+                        <select id="modalTipo" name="tipo" required onchange="actualizarDepartamentoField()">
+                            <option value="Nacional">Nacional</option>
+                            <option value="Departamental">Departamental</option>
+                        </select>
                     </div>
 
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="modalRecurrente" name="recurrente" value="1" checked>
-                            Feriado recurrente (se repite cada año)
-                        </label>
+                    <div class="form-col" id="modalDepartamentoCol" style="display: none;">
+                        <label for="modalDepartamento" class="required">Departamento</label>
+                        <select id="modalDepartamento" name="departamento_codigo">
+                            <option value="">Seleccione un departamento</option>
+                            <?php foreach ($departamentos as $dep): ?>
+                                <option value="<?= $dep['codigo'] ?>">
+                                    <?= htmlspecialchars($dep['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
+                </div>
 
-                    <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
-                        <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModal()">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                        <button type="submit" class="btn-modern btn-modern-primary">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="modalRecurrente" name="recurrente" value="1" checked>
+                        Feriado recurrente (se repite cada año)
+                    </label>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 25px;">
+                    <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModal()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+            </form>
         </div>
+    </div>
 
-        <script>
-            // Variables para controlar el tiempo de búsqueda
-            let timeoutBusqueda = null;
+    <script>
+        // Variables para controlar el tiempo de búsqueda
+        let timeoutBusqueda = null;
 
-            // Mostrar/ocultar campo departamento según tipo de feriado
-            function actualizarDepartamentoField() {
-                const tipo = document.getElementById('modalTipo').value;
-                const departamentoCol = document.getElementById('modalDepartamentoCol');
+        // Mostrar/ocultar campo departamento según tipo de feriado
+        function actualizarDepartamentoField() {
+            const tipo = document.getElementById('modalTipo').value;
+            const departamentoCol = document.getElementById('modalDepartamentoCol');
 
-                if (tipo === 'Departamental') {
-                    departamentoCol.style.display = 'flex';
-                    document.getElementById('modalDepartamento').required = true;
-                } else {
-                    departamentoCol.style.display = 'none';
-                    document.getElementById('modalDepartamento').required = false;
-                }
+            if (tipo === 'Departamental') {
+                departamentoCol.style.display = 'flex';
+                document.getElementById('modalDepartamento').required = true;
+            } else {
+                departamentoCol.style.display = 'none';
+                document.getElementById('modalDepartamento').required = false;
+            }
+        }
+
+        // Mostrar/ocultar filtro departamento según tipo de feriado
+        function actualizarFiltroDepartamento() {
+            const tipoFiltro = document.getElementById('tipo-filtro').value;
+            const departamentoFiltroGroup = document.getElementById('departamento-filtro-group');
+
+            if (tipoFiltro === 'departamental') {
+                departamentoFiltroGroup.style.display = 'flex';
+            } else {
+                departamentoFiltroGroup.style.display = 'none';
+            }
+        }
+
+        // Aplicar filtros
+        function aplicarFiltros() {
+            const anio = document.getElementById('anio').value;
+            const tipoFiltro = document.getElementById('tipo-filtro').value;
+            const departamentoFiltro = tipoFiltro === 'departamental' ? document.getElementById('departamento-filtro').value : '';
+            const busqueda = document.getElementById('busqueda').value;
+
+            let url = `editar_feriados.php?anio=${anio}&tipo=${tipoFiltro}`;
+
+            if (departamentoFiltro) {
+                url += `&departamento=${departamentoFiltro}`;
             }
 
-            // Mostrar/ocultar filtro departamento según tipo de feriado
-            function actualizarFiltroDepartamento() {
-                const tipoFiltro = document.getElementById('tipo-filtro').value;
-                const departamentoFiltroGroup = document.getElementById('departamento-filtro-group');
-
-                if (tipoFiltro === 'departamental') {
-                    departamentoFiltroGroup.style.display = 'flex';
-                } else {
-                    departamentoFiltroGroup.style.display = 'none';
-                }
+            if (busqueda) {
+                url += `&busqueda=${encodeURIComponent(busqueda)}`;
             }
 
-            // Aplicar filtros
-            function aplicarFiltros() {
-                const anio = document.getElementById('anio').value;
-                const tipoFiltro = document.getElementById('tipo-filtro').value;
-                const departamentoFiltro = tipoFiltro === 'departamental' ? document.getElementById('departamento-filtro').value : '';
-                const busqueda = document.getElementById('busqueda').value;
+            window.location.href = url;
+        }
 
-                let url = `editar_feriados.php?anio=${anio}&tipo=${tipoFiltro}`;
+        // Buscar feriado con delay
+        function buscarFeriado() {
+            clearTimeout(timeoutBusqueda);
 
-                if (departamentoFiltro) {
-                    url += `&departamento=${departamentoFiltro}`;
-                }
+            timeoutBusqueda = setTimeout(() => {
+                aplicarFiltros();
+            }, 500);
+        }
 
-                if (busqueda) {
-                    url += `&busqueda=${encodeURIComponent(busqueda)}`;
-                }
+        // Funciones para manejar el modal
+        function abrirModal() {
+            // Limpiar formulario
+            document.getElementById('feriadoForm').reset();
+            document.getElementById('modalTitulo').textContent = 'Agregar Nuevo Feriado';
+            document.getElementById('feriadoId').value = '';
+            document.getElementById('modalDepartamentoCol').style.display = 'none';
 
-                window.location.href = url;
-            }
+            // Mostrar modal
+            document.getElementById('feriadoModal').style.display = 'block';
+        }
 
-            // Buscar feriado con delay
-            function buscarFeriado() {
-                clearTimeout(timeoutBusqueda);
+        function cerrarModal() {
+            document.getElementById('feriadoModal').style.display = 'none';
+        }
 
-                timeoutBusqueda = setTimeout(() => {
-                    aplicarFiltros();
-                }, 500);
-            }
+        function editarFeriado(id) {
+            // Hacer una petición AJAX para obtener los datos del feriado
+            fetch(`ajax/obtener_feriado.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        // Llenar el formulario con los datos
+                        document.getElementById('modalTitulo').textContent = 'Editar Feriado';
+                        document.getElementById('feriadoId').value = data.id;
+                        document.getElementById('modalFecha').value = data.fecha;
+                        document.getElementById('modalNombre').value = data.nombre;
+                        document.getElementById('modalTipo').value = data.tipo;
+                        document.getElementById('modalRecurrente').checked = data.recurrente == 1;
 
-            // Funciones para manejar el modal
-            function abrirModal() {
-                // Limpiar formulario
-                document.getElementById('feriadoForm').reset();
-                document.getElementById('modalTitulo').textContent = 'Agregar Nuevo Feriado';
-                document.getElementById('feriadoId').value = '';
-                document.getElementById('modalDepartamentoCol').style.display = 'none';
-
-                // Mostrar modal
-                document.getElementById('feriadoModal').style.display = 'block';
-            }
-
-            function cerrarModal() {
-                document.getElementById('feriadoModal').style.display = 'none';
-            }
-
-            function editarFeriado(id) {
-                // Hacer una petición AJAX para obtener los datos del feriado
-                fetch(`ajax/obtener_feriado.php?id=${id}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data) {
-                            // Llenar el formulario con los datos
-                            document.getElementById('modalTitulo').textContent = 'Editar Feriado';
-                            document.getElementById('feriadoId').value = data.id;
-                            document.getElementById('modalFecha').value = data.fecha;
-                            document.getElementById('modalNombre').value = data.nombre;
-                            document.getElementById('modalTipo').value = data.tipo;
-                            document.getElementById('modalRecurrente').checked = data.recurrente == 1;
-
-                            // Manejar el campo departamento
-                            if (data.tipo === 'Departamental') {
-                                document.getElementById('modalDepartamentoCol').style.display = 'flex';
-                                document.getElementById('modalDepartamento').value = data.departamento_codigo;
-                            } else {
-                                document.getElementById('modalDepartamentoCol').style.display = 'none';
-                            }
-
-                            // Mostrar modal
-                            document.getElementById('feriadoModal').style.display = 'block';
+                        // Manejar el campo departamento
+                        if (data.tipo === 'Departamental') {
+                            document.getElementById('modalDepartamentoCol').style.display = 'flex';
+                            document.getElementById('modalDepartamento').value = data.departamento_codigo;
+                        } else {
+                            document.getElementById('modalDepartamentoCol').style.display = 'none';
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error al obtener feriado:', error);
-                        mostrarNotificacion('Error al cargar los datos del feriado', 'error');
-                    });
+
+                        // Mostrar modal
+                        document.getElementById('feriadoModal').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener feriado:', error);
+                    mostrarNotificacion('Error al cargar los datos del feriado', 'error');
+                });
+        }
+
+        // Cerrar modal al hacer clic fuera del contenido
+        window.onclick = function (event) {
+            const modal = document.getElementById('feriadoModal');
+            if (event.target === modal) {
+                cerrarModal();
             }
+        }
 
-            // Cerrar modal al hacer clic fuera del contenido
-            window.onclick = function (event) {
-                const modal = document.getElementById('feriadoModal');
-                if (event.target === modal) {
-                    cerrarModal();
-                }
-            }
+        // Función para mostrar notificaciones
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const estilos = {
+                success: { background: '#d4edda', color: '#155724', icon: 'check-circle' },
+                error: { background: '#f8d7da', color: '#721c24', icon: 'exclamation-circle' },
+                info: { background: '#e2e3e5', color: '#383d41', icon: 'info-circle' }
+            };
 
-            // Función para mostrar notificaciones
-            function mostrarNotificacion(mensaje, tipo = 'info') {
-                const estilos = {
-                    success: { background: '#d4edda', color: '#155724', icon: 'check-circle' },
-                    error: { background: '#f8d7da', color: '#721c24', icon: 'exclamation-circle' },
-                    info: { background: '#e2e3e5', color: '#383d41', icon: 'info-circle' }
-                };
+            const estilo = estilos[tipo] || estilos.info;
 
-                const estilo = estilos[tipo] || estilos.info;
-
-                const notificacion = document.createElement('div');
-                notificacion.style.position = 'fixed';
-                notificacion.style.top = '20px';
-                notificacion.style.right = '20px';
-                notificacion.style.padding = '15px';
-                notificacion.style.borderRadius = '4px';
-                notificacion.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-                notificacion.style.backgroundColor = estilo.background;
-                notificacion.style.color = estilo.color;
-                notificacion.style.zIndex = '1000';
-                notificacion.style.display = 'flex';
-                notificacion.style.alignItems = 'center';
-                notificacion.style.gap = '10px';
-                notificacion.style.maxWidth = '300px';
-                notificacion.innerHTML = `
+            const notificacion = document.createElement('div');
+            notificacion.style.position = 'fixed';
+            notificacion.style.top = '20px';
+            notificacion.style.right = '20px';
+            notificacion.style.padding = '15px';
+            notificacion.style.borderRadius = '4px';
+            notificacion.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            notificacion.style.backgroundColor = estilo.background;
+            notificacion.style.color = estilo.color;
+            notificacion.style.zIndex = '1000';
+            notificacion.style.display = 'flex';
+            notificacion.style.alignItems = 'center';
+            notificacion.style.gap = '10px';
+            notificacion.style.maxWidth = '300px';
+            notificacion.innerHTML = `
                 <i class="fas fa-${estilo.icon}" style="font-size: 1.2rem;"></i>
                 <span>${mensaje}</span>
             `;
 
-                document.body.appendChild(notificacion);
+            document.body.appendChild(notificacion);
 
-                setTimeout(() => {
-                    notificacion.style.opacity = '0';
-                    notificacion.style.transition = 'opacity 0.5s ease';
-                    setTimeout(() => notificacion.remove(), 500);
-                }, 3000);
-            }
+            setTimeout(() => {
+                notificacion.style.opacity = '0';
+                notificacion.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => notificacion.remove(), 500);
+            }, 3000);
+        }
 
-            // Inicializar eventos
-            document.addEventListener('DOMContentLoaded', function () {
-                // Escuchar cambios en el filtro de tipo
-                document.getElementById('tipo-filtro').addEventListener('change', actualizarFiltroDepartamento);
+        // Inicializar eventos
+        document.addEventListener('DOMContentLoaded', function () {
+            // Escuchar cambios en el filtro de tipo
+            document.getElementById('tipo-filtro').addEventListener('change', actualizarFiltroDepartamento);
 
-                // Si hay un feriado para editar en la URL, abrir el modal
-                <?php if (isset($_GET['editar'])): ?>
-                    editarFeriado(<?= $_GET['editar'] ?>);
-                <?php endif; ?>
-            });
-
-            // Mostrar notificaciones si hay en sesión
-            <?php if (isset($_SESSION['exito'])): ?>
-                mostrarNotificacion('<?= $_SESSION['exito'] ?>', 'success');
-                <?php unset($_SESSION['exito']); ?>
+            // Si hay un feriado para editar en la URL, abrir el modal
+            <?php if (isset($_GET['editar'])): ?>
+                editarFeriado(<?= $_GET['editar'] ?>);
             <?php endif; ?>
+        });
 
-            <?php if (isset($_SESSION['error'])): ?>
-                mostrarNotificacion('<?= $_SESSION['error'] ?>', 'error');
-                <?php unset($_SESSION['error']); ?>
-            <?php endif; ?>
-        </script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        // Mostrar notificaciones si hay en sesión
+        <?php if (isset($_SESSION['exito'])): ?>
+            mostrarNotificacion('<?= $_SESSION['exito'] ?>', 'success');
+            <?php unset($_SESSION['exito']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error'])): ?>
+            mostrarNotificacion('<?= $_SESSION['error'] ?>', 'error');
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
