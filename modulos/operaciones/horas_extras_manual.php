@@ -14,11 +14,9 @@ if (!tienePermiso('horas_extras_manual', 'vista', $cargoOperario)) {
     exit();
 }
 
-// Permisos específicos
-$puedeAprobar    = tienePermiso('horas_extras_manual', 'aprobar', $cargoOperario);
-$puedeRechazar   = tienePermiso('horas_extras_manual', 'rechazar', $cargoOperario);
-$puedeCrear      = tienePermiso('horas_extras_manual', 'crear_nuevo', $cargoOperario);
-$puedeModificar  = tienePermiso('horas_extras_manual', 'modificar', $cargoOperario);
+// Permisos específicos consolidados
+$puedeGestionar  = tienePermiso('horas_extras_manual', 'gestionar', $cargoOperario);
+$puedeSolicitar  = tienePermiso('horas_extras_manual', 'solicitar', $cargoOperario);
 $puedeExportar   = tienePermiso('horas_extras_manual', 'exportar', $cargoOperario);
 $puedeVerTodo    = tienePermiso('horas_extras_manual', 'ver_todo', $cargoOperario);
 $puedeFiltroAll  = tienePermiso('horas_extras_manual', 'filtro_todas_tiendas', $cargoOperario);
@@ -204,7 +202,7 @@ $esRestringido = !$puedeVerTodo && !$puedeFiltroAll;
                     <div class="col-md-2 d-flex gap-2">
                         <button type="button" onclick="cargarDatos()" class="btn btn-sm btn-primary"><i
                                 class="fas fa-search"></i></button>
-                        <?php if ($puedeCrear): ?>
+                        <?php if ($puedeSolicitar || $puedeGestionar): ?>
                             <button type="button" onclick="abrirNuevaSolicitud()" class="btn btn-sm btn-warning"><i
                                     class="fas fa-plus"></i> Solicitar</button>
                         <?php endif; ?>
@@ -364,10 +362,10 @@ $esRestringido = !$puedeVerTodo && !$puedeFiltroAll;
     </div>
 
     <script>
-        window.canApprove = <?= $puedeAprobar ? 'true' : 'false' ?>;
-        window.canReject = <?= $puedeRechazar ? 'true' : 'false' ?>;
-        window.canEdit = <?= $puedeModificar ? 'true' : 'false' ?>;
-        window.canSolicit = <?= $puedeCrear ? 'true' : 'false' ?>;
+        window.canApprove = <?= $puedeGestionar ? 'true' : 'false' ?>;
+        window.canReject = <?= $puedeGestionar ? 'true' : 'false' ?>;
+        window.canEdit = <?= $puedeGestionar ? 'true' : 'false' ?>;
+        window.canSolicit = <?= ($puedeSolicitar || $puedeGestionar) ? 'true' : 'false' ?>;
         window.cargoOperario = <?= intval($cargoOperario) ?>;
         window.puedeVerObs = <?= $puedeVerObs ? 'true' : 'false' ?>;
         window.usuarioId = <?= $_SESSION['usuario_id'] ?? 0 ?>;
