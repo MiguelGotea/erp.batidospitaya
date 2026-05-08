@@ -150,12 +150,6 @@ function guardarObservacionesFeriado(id, codOperario, fecha) {
     }
     if (editTextarea) editTextarea.style.display = 'none';
 
-    // Para registros sin ID (nuevos), crear uno
-    if (id.startsWith('temp_')) {
-        crearRegistroFeriado(id, estadoActual, codOperario, fecha);
-        return;
-    }
-
     // Para registros existentes, actualizar observaciones
     fetch('ajax/actualizar_feriado_ajax.php', {
         method: 'POST',
@@ -189,7 +183,15 @@ function guardarObservacionesFeriado(id, codOperario, fecha) {
             } else {
                 // Si hubo error, restaurar estado de edición para permitir reintento o cancelación
                 editandoObservacionesFeriado[id] = true;
-                if (displayDiv) displayDiv.style.display = 'none';
+                if (displayDiv) {
+                    displayDiv.style.display = 'none';
+                    // Restaurar HTML original para cuando se cancele la edición
+                    if (observacionesOriginalesFeriado[id]) {
+                        displayDiv.innerHTML = observacionesOriginalesFeriado[id].replace(/\n/g, '<br>');
+                    } else {
+                        displayDiv.innerHTML = '<span class="text-muted">Sin observaciones</span>';
+                    }
+                }
                 if (editTextarea) {
                     editTextarea.style.display = 'block';
                     editTextarea.focus();
@@ -200,7 +202,14 @@ function guardarObservacionesFeriado(id, codOperario, fecha) {
         .catch(error => {
             console.error('Error:', error);
             editandoObservacionesFeriado[id] = true;
-            if (displayDiv) displayDiv.style.display = 'none';
+            if (displayDiv) {
+                displayDiv.style.display = 'none';
+                if (observacionesOriginalesFeriado[id]) {
+                    displayDiv.innerHTML = observacionesOriginalesFeriado[id].replace(/\n/g, '<br>');
+                } else {
+                    displayDiv.innerHTML = '<span class="text-muted">Sin observaciones</span>';
+                }
+            }
             if (editTextarea) {
                 editTextarea.style.display = 'block';
                 editTextarea.focus();

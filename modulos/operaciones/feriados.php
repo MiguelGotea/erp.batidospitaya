@@ -785,6 +785,8 @@ function obtenerNombreOperario($codOperario)
                                     <?php 
                                     $id_fila = $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'];
                                     $puedeAprobar = ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario));
+                                    $yaTieneDecision = !empty($ft['id_aprobacion']);
+                                    $puedeEditarObservacion = $puedeAprobar && $yaTieneDecision;
                                     ?>
                                     <tr id="feriado-row-<?= $id_fila ?>">
                                         <td><?= htmlspecialchars($ft['nombre_operario']) ?></td>
@@ -815,10 +817,10 @@ function obtenerNombreOperario($codOperario)
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <div class="observaciones-cell <?= $puedeAprobar ? 'editable' : '' ?>"
+                                            <div class="observaciones-cell <?= $puedeEditarObservacion ? 'editable' : '' ?>"
                                                 id="obs-display-<?= $id_fila ?>"
-                                                <?= $puedeAprobar ? "onclick=\"toggleEditObservacionesFeriado('$id_fila')\"" : "" ?>
-                                                title="<?= $puedeAprobar ? 'Click para editar' : '' ?>">
+                                                <?= $puedeEditarObservacion ? "onclick=\"toggleEditObservacionesFeriado('$id_fila')\"" : "" ?>
+                                                title="<?= $puedeEditarObservacion ? 'Click para editar' : ($puedeAprobar ? 'Debe cambiar el estado (Pagado/Descansado) para poder editar' : '') ?>">
                                                 <?php if ($ft['observaciones']): ?>
                                                     <?= nl2br(htmlspecialchars($ft['observaciones'])) ?>
                                                 <?php else: ?>
