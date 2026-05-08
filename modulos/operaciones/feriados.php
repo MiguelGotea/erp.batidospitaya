@@ -768,6 +768,7 @@ function obtenerNombreOperario($codOperario)
                             <thead>
                                 <tr>
                                     <th>Colaborador</th>
+                                    <th>Sucursal</th>
                                     <th>Inicio Contrato</th>
                                     <th>Fecha Feriado</th>
                                     <th>Feriado</th>
@@ -790,6 +791,7 @@ function obtenerNombreOperario($codOperario)
                                     ?>
                                     <tr id="feriado-row-<?= $id_fila ?>">
                                         <td><?= htmlspecialchars($ft['nombre_operario']) ?></td>
+                                        <td><?= htmlspecialchars($ft['sucursal_nombre']) ?></td>
                                         <td class="text-nowrap"><?= formatoFecha($ft['inicio_contrato']) ?></td>
                                         <td><?= formatoFecha($ft['fecha']) ?></td>
                                         <td><?= htmlspecialchars($ft['feriado_nombre']) ?></td>
