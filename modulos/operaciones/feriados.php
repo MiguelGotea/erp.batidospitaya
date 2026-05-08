@@ -65,8 +65,7 @@ if (isset($_GET['exportar_excel_contabilidad'])) {
             'fecha' => $ft['fecha'],
             'nombre' => $ft['feriado_nombre'],
             'tipo' => $ft['feriado_tipo'],
-            'departamento' => $ft['departamento_nombre'], // Agregar departamento al detalle
-            'sucursal_marcacion' => $ft['sucursal_marcacion_nombre']
+            'departamento' => $ft['departamento_nombre'] // Agregar departamento al detalle
         ];
 
         if ($ft['feriado_tipo'] === 'Nacional') {
@@ -134,7 +133,6 @@ if (isset($_GET['exportar_excel_contabilidad'])) {
     echo '<th>Código</th>';
     echo '<th>Código Contrato</th>'; // NUEVA COLUMNA
     echo '<th>Sucursal</th>';
-    echo '<th>Sucursal Marcación</th>';
     echo '<th>Departamento Sucursal</th>';
     echo '<th>Fecha Feriado</th>';
     echo '<th>Nombre Feriado</th>';
@@ -148,7 +146,6 @@ if (isset($_GET['exportar_excel_contabilidad'])) {
             echo '<td>' . $codOperario . '</td>';
             echo '<td>' . ($datos['cod_contrato'] ?? '') . '</td>'; // NUEVA COLUMNA
             echo '<td>' . htmlspecialchars($datos['sucursal'], ENT_QUOTES, 'UTF-8') . '</td>';
-            echo '<td>' . htmlspecialchars($detalle['sucursal_marcacion'] ?? '-', ENT_QUOTES, 'UTF-8') . '</td>';
             echo '<td>' . htmlspecialchars($datos['departamento'], ENT_QUOTES, 'UTF-8') . '</td>';
             echo '<td>' . formatoFecha($detalle['fecha']) . '</td>';
             echo '<td>' . htmlspecialchars($detalle['nombre'], ENT_QUOTES, 'UTF-8') . '</td>';
@@ -207,7 +204,6 @@ if (isset($_GET['exportar_excel'])) {
     echo '<th>Persona</th>';
     // echo '<th>CODIGO</th>'; // Código de operario de la tabla Operarios
     echo '<th>SUCURSAL</th>';
-    echo '<th>SUCURSAL MARCACIÓN</th>';
     // echo '<th>DEPARTAMENTO SUCURSAL</th>';
     echo '<th>FECHA</th>';
     //echo '<th>NOMBRE FERIADO</th>'; // NUEVA COLUMNA
@@ -240,7 +236,6 @@ if (isset($_GET['exportar_excel'])) {
         echo '</td>';
         // echo '<td>' . htmlspecialchars($ft['cod_operario'], ENT_QUOTES, 'UTF-8') . '</td>';
         echo '<td>' . htmlspecialchars($ft['sucursal_nombre'], ENT_QUOTES, 'UTF-8') . '</td>';
-        echo '<td>' . htmlspecialchars($ft['sucursal_marcacion_nombre'] ?? '-', ENT_QUOTES, 'UTF-8') . '</td>';
         // echo '<td>' . htmlspecialchars($ft['sucursal_departamento'], ENT_QUOTES, 'UTF-8') . '</td>';
         echo '<td>' . formatoFecha($ft['fecha']) . '</td>';
         // echo '<td>' . htmlspecialchars($ft['feriado_nombre']) . '</td>'; // NUEVO DATO
@@ -402,18 +397,19 @@ function obtenerFeriadosTrabajados($codSucursal, $fechaDesde, $fechaHasta, $codO
 
                     // Buscar marcación si existe
                     $sqlMarcacion = "
-                        SELECT m.id, m.hora_ingreso, m.hora_salida, s.nombre as sucursal_marcacion
+                        SELECT m.id, m.hora_ingreso, m.hora_salida
                         FROM marcaciones m
-                        LEFT JOIN sucursales s ON m.sucursal_codigo = s.codigo
                         WHERE m.CodOperario = ? 
                         AND m.fecha = ?
+                        AND m.sucursal_codigo = ?
                         LIMIT 1
                     ";
 
                     $stmtMarcacion = $conn->prepare($sqlMarcacion);
                     $stmtMarcacion->execute([
                         $operario['CodOperario'],
-                        $feriado['fecha']
+                        $feriado['fecha'],
+                        $operario['sucursal_codigo']
                     ]);
                     $marcacion = $stmtMarcacion->fetch();
 
@@ -456,7 +452,6 @@ function obtenerFeriadosTrabajados($codSucursal, $fechaDesde, $fechaHasta, $codO
                         'sucursal_nombre' => $operario['sucursal_nombre'],
                         'sucursal_departamento' => $operario['nombre_departamento'],
                         'sucursal_cod_departamento' => $operario['cod_departamento'],
-                        'sucursal_marcacion_nombre' => $marcacion ? ($marcacion['sucursal_marcacion'] ?? null) : null,
                         'hora_entrada' => $horaEntrada,
                         'hora_salida' => $horaSalida,
                         'horas_trabajadas' => $horasTrabajadas,
@@ -777,7 +772,6 @@ function obtenerNombreOperario($codOperario)
                                     <th>Fecha Feriado</th>
                                     <th>Feriado</th>
                                     <th>Tipo (Departamento)</th>
-                                    <th>Sucursal Marcación</th>
                                     <th style="display:none;">Horas Trabajadas</th>
                                     <th>Status</th>
                                     <th>Observaciones</th>
@@ -805,7 +799,6 @@ function obtenerNombreOperario($codOperario)
                                                 (<?= htmlspecialchars($ft['departamento_nombre']) ?>)
                                             <?php endif; ?>
                                         </td>
-                                        <td><?= htmlspecialchars($ft['sucursal_marcacion_nombre'] ?? '-') ?></td>
                                         <td style="display:none;"><?= number_format($ft['horas_trabajadas'], 2) ?></td>
                                         <td>
                                             <?php if ($ft['estado'] === 'Con Marcación'): ?>
