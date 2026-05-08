@@ -4,7 +4,6 @@ header('Content-Type: application/json');
 
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
-require_once '../../../core/database/db_connection.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
@@ -24,7 +23,12 @@ if ($tool_id <= 0) {
 }
 
 try {
-    $conn = obtenerConexion();
+    // $conn ya está disponible por el include de auth.php -> conexion.php
+    global $conn;
+    
+    if (!$conn) {
+        throw new Exception("No se pudo establecer la conexión con la base de datos.");
+    }
     
     // Al tener ON DELETE CASCADE en las llaves foráneas:
     // 1. Borrar de tools_erp borrará automáticamente de acciones_tools_erp
