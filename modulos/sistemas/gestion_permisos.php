@@ -16,8 +16,9 @@ if (!tienePermiso('gestion_permisos', 'vista', $cargoOperario)) {
     exit();
 }
 
-// Verificar si puede crear nuevas acciones
+// Verificar permisos adicionales
 $puedeCrearAcciones = tienePermiso('gestion_permisos', 'crear_accion', $cargoOperario);
+$puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -215,6 +216,7 @@ $puedeCrearAcciones = tienePermiso('gestion_permisos', 'crear_accion', $cargoOpe
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const PUEDE_CREAR_ACCIONES = <?php echo $puedeCrearAcciones ? 'true' : 'false'; ?>;
+        const PUEDE_BORRAR = <?php echo $puedeBorrar ? 'true' : 'false'; ?>;
     </script>
     <script src="js/gestion_permisos.js?v=<?php echo $version; ?>"></script>
 </body>

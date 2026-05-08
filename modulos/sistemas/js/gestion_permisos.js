@@ -132,9 +132,16 @@ function renderizarArbolHerramientas(grupos, containerId, tipo) {
                 </div>
                 <div class="tree-group-items">
                     ${herramientas.map(h => `
-                        <div class="tree-item" data-id="${h.id}" data-nombre="${h.nombre}" data-titulo="${h.titulo || h.nombre}" data-descripcion="${h.descripcion || ''}" data-url-real="${h.url_real || ''}" data-icono="${h.icono || 'bi bi-file-earmark-code'}" onclick="seleccionarHerramienta(${h.id}, '${h.nombre}', '${(h.titulo || h.nombre).replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.descripcion || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.url_real || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${h.icono || 'bi bi-file-earmark-code'}')">
-                            <i class="${h.icono || 'bi bi-file-earmark-code'}"></i>
-                            ${h.titulo || h.nombre}
+                        <div class="tree-item-container d-flex align-items-center">
+                            <div class="tree-item flex-grow-1" data-id="${h.id}" data-nombre="${h.nombre}" data-titulo="${h.titulo || h.nombre}" data-descripcion="${h.descripcion || ''}" data-url-real="${h.url_real || ''}" data-icono="${h.icono || 'bi bi-file-earmark-code'}" onclick="seleccionarHerramienta(${h.id}, '${h.nombre}', '${(h.titulo || h.nombre).replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.descripcion || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(h.url_real || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${h.icono || 'bi bi-file-earmark-code'}')">
+                                <i class="${h.icono || 'bi bi-file-earmark-code'}"></i>
+                                ${h.titulo || h.nombre}
+                            </div>
+                            ${PUEDE_BORRAR ? `
+                                <button class="btn btn-sm text-danger btn-delete-tool" onclick="eliminarHerramienta(${h.id}, '${(h.titulo || h.nombre).replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${tipo}')" title="Borrar en cascada">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            ` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -564,6 +571,56 @@ function filtrarHerramientas(texto, tipo) {
             $grupo.find('.tree-group-items').addClass('show');
         } else {
             $grupo.hide();
+        }
+    });
+}
+
+/**
+ * Eliminar herramienta en cascada
+ */
+function eliminarHerramienta(id, titulo, tipo) {
+    if (!confirm(`¿Está seguro que desea eliminar la herramienta "${titulo}"?\n\nEsta acción es IRREVERSIBLE y borrará en cascada:\n- La herramienta\n- Todas sus acciones asociadas\n- Todos los permisos otorgados a los cargos`)) {
+        return;
+    }
+
+    // Doble confirmación por seguridad
+    if (!confirm('¿REALMENTE desea proceder con la eliminación completa?')) {
+        return;
+    }
+
+    $.ajax({
+        url: 'ajax/eliminar_herramienta_cascada.php',
+        method: 'POST',
+        data: { tool_id: id },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                mostrarExito(response.message);
+                
+                // Si la herramienta eliminada era la actual, limpiar panel
+                if (herramientaActual && herramientaActual.id === id) {
+                    herramientaActual = null;
+                    $('#herramientaSeleccionadaNombre').text('Seleccione una herramienta');
+                    $('#herramientaSeleccionadaIcono').attr('class', 'bi bi-gear-fill');
+                    $('#headerActions').hide();
+                    $('#herramientaDescripcion').hide();
+                    $('#panelPermisos').html(`
+                        <div class="empty-state">
+                            <i class="bi bi-arrow-left-circle display-1 text-muted"></i>
+                            <p class="lead text-muted mt-3">Seleccione una herramienta del menú lateral</p>
+                        </div>
+                    `);
+                    $('#btnGuardarFlotante').hide();
+                }
+
+                // Recargar el árbol del tipo correspondiente
+                cargarHerramientasPorTipo(tipo);
+            } else {
+                mostrarError('Error: ' + response.message);
+            }
+        },
+        error: function () {
+            mostrarError('Error de conexión al intentar eliminar');
         }
     });
 }
