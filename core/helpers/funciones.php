@@ -1755,7 +1755,15 @@ function obtenerCategoriaCompleta($idCategoria)
 {
     global $conn;
 
-    $stmt = $conn->prepare("SELECT * FROM CategoriasOperarios WHERE idCategoria = ?");
+    // Migrado a NivelesCargos
+    $stmt = $conn->prepare("
+        SELECT 
+            CodNivelesCargos as idCategoria, 
+            Nombre as NombreCategoria, 
+            Peso 
+        FROM NivelesCargos 
+        WHERE CodNivelesCargos = ?
+    ");
     $stmt->execute([$idCategoria]);
     return $stmt->fetch();
 }

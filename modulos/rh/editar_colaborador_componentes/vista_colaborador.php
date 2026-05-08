@@ -191,10 +191,6 @@ $imagenesParaCarrusel = [];
                             <a href="?id=<?= $codOperario ?>&pestaña=movimientos"
                                 class="tab-button <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">Movimientos</a>
                         <?php endif; ?>
-                        <?php if (verificarAccesoCargo([0])): ?>
-                            <a href="?id=<?= $codOperario ?>&pestaña=categoria"
-                                class="tab-button <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">Categoría</a>
-                        <?php endif; ?>
                         <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=adendums"
                                 class="tab-button <?= $pestaña_activa == 'adendums' ? 'active' : '' ?>">Adenda de Contrato y
@@ -220,7 +216,6 @@ $imagenesParaCarrusel = [];
                         <?php require_once 'editar_colaborador_componentes/tabs/tab_salario.php'; ?>
                         <?php require_once 'editar_colaborador_componentes/tabs/tab_inss.php'; ?>
                         <?php require_once 'editar_colaborador_componentes/tabs/tab_movimientos.php'; ?>
-                        <?php require_once 'editar_colaborador_componentes/tabs/tab_categoria.php'; ?>
                         <?php require_once 'editar_colaborador_componentes/tabs/tab_adendums.php'; ?>
                         <?php require_once 'editar_colaborador_componentes/tabs/tab_expediente_digital.php'; ?>
                         <?php require_once 'editar_colaborador_componentes/tabs/tab_bitacora.php'; ?>
