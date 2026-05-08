@@ -1,30 +1,23 @@
 <?php
-//error_reporting(E_ALL);
-//ini_set('display_errors', 1);
-
 require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
-
-
-//******************************Estándar para header******************************
 verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-// Verificar acceso al módulo Operaciones (Código 11 para Jefe de Operaciones)
-//verificarAccesoCargo([8, 11, 21, 16, 13]);
-
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 11, 21, 16, 13, 21, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
-    header('Location: ../index.php');
+// Verificar acceso
+if (!tienePermiso('gestion_feriados', 'vista', $cargoOperario)) {
+    header('Location: /login.php');
     exit();
 }
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-
-//******************************Estándar para header, termina******************************
 
 // Verificar si se solicitó la exportación a Excel para contabilidad
 if (isset($_GET['exportar_excel_contabilidad'])) {
@@ -667,145 +660,15 @@ function obtenerNombreOperario($codOperario)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feriados Trabajados - Operaciones</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <?php echo renderHead(); ?>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Calibri', sans-serif;
-            font-size: clamp(11px, 2vw, 16px) !important;
-        }
-
-        body {
-            background-color: #F6F6F6;
-            color: #333;
-            padding: 5px;
-        }
-
-        .container {
+        .container-feriados {
             max-width: 100%;
             margin: 0 auto;
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 10px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            /* Esta es la línea horizontal */
-            margin-bottom: 30px;
-            /* Espacio después del header */
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        /* Header styles - Estilo modificado para logo izquierda, botones centro, usuario derecha */
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 5px;
-            box-sizing: border-box;
-            margin: 1px auto;
-            flex-wrap: wrap;
-        }
-
-        .logo {
-            height: 50px;
-        }
-
-        .logo-container {
-            flex-shrink: 0;
-            margin-right: auto;
-            /* Empuja los demás elementos hacia la derecha */
-        }
-
-        .buttons-container {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            /* Centra los botones */
-            flex-grow: 1;
-            position: absolute;
-            /* Posicionamiento absoluto para centrado real */
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-            /* Empuja este contenedor a la derecha */
-        }
-
-        .btn-agregar {
-            background-color: transparent;
-            color: #51B8AC;
-            border: 1px solid #51B8AC;
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            white-space: nowrap;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .btn-agregar.activo {
-            background-color: #51B8AC;
-            color: white;
-            font-weight: normal;
-        }
-
-        .btn-agregar:hover {
-            background-color: #0E544C;
-            color: white;
-            border-color: #0E544C;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-logout {
-            background: #51B8AC;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn-logout:hover {
-            background: #0E544C;
-        }
-
-        .title {
-            color: #0E544C;
-            font-size: 1.5rem !important;
         }
 
         .filters-container {
@@ -1433,86 +1296,13 @@ function obtenerNombreOperario($codOperario)
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-                <div class="buttons-container">
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 5, 13, 16])): ?>
-                        <a href="../lideres/faltas_manual.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltas_manual.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-user-times"></i> <span class="btn-text">Faltas/Ausencias</span>
-                        </a>
-                    <?php endif; ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, $esAdmin, 'Feriados Trabajados'); ?>
 
-                    <?php if ($esAdmin): ?>
-                        <a href="../rh/tf_operarios.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'tf_operarios.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-user-clock"></i> <span class="btn-text">Totales</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 11, 16, 8])): ?>
-                        <a href="tardanzas_manual.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'tardanzas_manual.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-clock"></i> <span class="btn-text">Tardanzas</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if ($esAdmin || verificarAccesoCargo([11, 8, 16])): ?>
-                        <a href="horas_extras_manual.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'horas_extras_manual.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-user-clock"></i> <span class="btn-text">Horas Extras</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 11, 13, 16])): ?>
-                        <a href="feriados.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'feriados.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-calendar-day"></i> <span class="btn-text">Feriados</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 13, 16])): ?>
-                        <a href="viaticos.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'viaticos.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-check-alt"></i> <span class="btn-text">Viáticos</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 16])): ?>
-                        <a href="../lideres/programar_horarios_lider.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'programar_horarios_lider.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-user-clock"></i> <span class="btn-text">Generar Horarios</span>
-                        </a>
-                    <?php endif; ?>
-                </div>
-
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ?
-                            strtoupper(substr($usuario['nombre'], 0, 1)) :
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= $esAdmin ?
-                                htmlspecialchars($usuario['nombre']) :
-                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+            <div class="container-feriados">
 
         <?php if (isset($_SESSION['exito'])): ?>
             <div class="alert alert-success">
