@@ -782,8 +782,11 @@ function obtenerNombreOperario($codOperario)
                             </thead>
                             <tbody>
                                 <?php foreach ($feriadosTrabajados as $ft): ?>
-                                    <tr
-                                        id="feriado-row-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                    <?php 
+                                    $id_fila = $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'];
+                                    $puedeAprobar = ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario));
+                                    ?>
+                                    <tr id="feriado-row-<?= $id_fila ?>">
                                         <td><?= htmlspecialchars($ft['nombre_operario']) ?></td>
                                         <td class="text-nowrap"><?= formatoFecha($ft['inicio_contrato']) ?></td>
                                         <td><?= formatoFecha($ft['fecha']) ?></td>
@@ -812,8 +815,10 @@ function obtenerNombreOperario($codOperario)
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <div class="observaciones-cell"
-                                                id="obs-display-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                            <div class="observaciones-cell <?= $puedeAprobar ? 'editable' : '' ?>"
+                                                id="obs-display-<?= $id_fila ?>"
+                                                <?= $puedeAprobar ? "onclick=\"toggleEditObservacionesFeriado('$id_fila')\"" : "" ?>
+                                                title="<?= $puedeAprobar ? 'Click para editar' : '' ?>">
                                                 <?php if ($ft['observaciones']): ?>
                                                     <?= nl2br(htmlspecialchars($ft['observaciones'])) ?>
                                                 <?php else: ?>
@@ -821,61 +826,37 @@ function obtenerNombreOperario($codOperario)
                                                 <?php endif; ?>
                                             </div>
                                             <textarea
-                                                id="obs-edit-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>"
+                                                id="obs-edit-<?= $id_fila ?>"
                                                 class="observaciones-edit" style="display: none;"
+                                                onblur="guardarObservacionesFeriado('<?= $id_fila ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                onkeyup="manejarTeclasObservaciones(event, '<?= $id_fila ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
                                                 rows="3"><?= htmlspecialchars($ft['observaciones'] ?? '') ?></textarea>
                                         </td>
 
                                         <?php if ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
                                             <td style="text-align: center;">
                                                 <div class="action-buttons-inline"
-                                                    id="actions-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                                    id="actions-<?= $id_fila ?>">
                                                     <?php if ($ft['estado'] === 'Pendiente' || $ft['estado'] === 'Sin marcación' || $ft['estado'] === 'Con Marcación'): ?>
                                                         <!-- Botones para estado Pendiente/Sin marcación -->
                                                         <button type="button" class="btn-action btn-approve"
-                                                            onclick="actualizarEstadoFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', 'Pagado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                            onclick="actualizarEstadoFeriado('<?= $id_fila ?>', 'Pagado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
                                                             title="Marcar como Pagado">
                                                             <i class="fas fa-dollar-sign"></i>
                                                         </button>
                                                         <button type="button" class="btn-action btn-compensado"
-                                                            onclick="actualizarEstadoFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', 'Descansado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                            onclick="actualizarEstadoFeriado('<?= $id_fila ?>', 'Descansado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
                                                             title="Marcar como Compensado/Descansado">
                                                             <i class="fas fa-bed"></i>
-                                                        </button>
-                                                        <button type="button" class="btn-action btn-edit"
-                                                            onclick="toggleEditObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>')"
-                                                            title="Editar observaciones">
-                                                            <i class="fas fa-edit"></i>
                                                         </button>
                                                     <?php else: ?>
                                                         <!-- Botones para estados Pagado/Descansado -->
                                                         <button type="button" class="btn-action btn-change"
-                                                            onclick="cambiarEstadoFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', '<?= $ft['estado'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                            onclick="cambiarEstadoFeriado('<?= $id_fila ?>', '<?= $ft['estado'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
                                                             title="Cambiar estado">
                                                             <i class="fas fa-exchange-alt"></i>
                                                         </button>
-                                                        <button type="button" class="btn-action btn-edit"
-                                                            onclick="toggleEditObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>')"
-                                                            title="Editar observaciones">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
                                                     <?php endif; ?>
-                                                </div>
-
-                                                <!-- Botones de guardar/cancelar (ocultos por defecto) -->
-                                                <div class="save-cancel-buttons"
-                                                    id="save-cancel-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>"
-                                                    style="display: none;">
-                                                    <button type="button" class="btn-action btn-save"
-                                                        onclick="guardarObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
-                                                        title="Guardar">
-                                                        <i class="fas fa-save"></i>
-                                                    </button>
-                                                    <button type="button" class="btn-action btn-cancel"
-                                                        onclick="cancelarEditObservacionesFeriado('<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>')"
-                                                        title="Cancelar">
-                                                        <i class="fas fa-ban"></i>
-                                                    </button>
                                                 </div>
                                             </td>
                                         <?php endif; ?>

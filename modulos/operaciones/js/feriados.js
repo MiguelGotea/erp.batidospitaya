@@ -85,26 +85,37 @@ function cambiarEstadoFeriado(id, estadoActual, codOperario, fecha) {
 function toggleEditObservacionesFeriado(id) {
     const displayDiv = document.getElementById(`obs-display-${id}`);
     const editTextarea = document.getElementById(`obs-edit-${id}`);
-    const actionsDiv = document.getElementById(`actions-${id}`);
-    const saveCancelDiv = document.getElementById(`save-cancel-${id}`);
+
+    // Si ya estamos editando, no hacer nada
+    if (editandoObservacionesFeriado[id]) return;
 
     // Guardar valor original
-    if (!editandoObservacionesFeriado[id]) {
-        observacionesOriginalesFeriado[id] = editTextarea ? editTextarea.value : '';
-    }
+    observacionesOriginalesFeriado[id] = editTextarea ? editTextarea.value : '';
 
     // Alternar visibilidad
     if (displayDiv) displayDiv.style.display = 'none';
-    if (editTextarea) editTextarea.style.display = 'block';
-    if (actionsDiv) actionsDiv.style.display = 'none';
-    if (saveCancelDiv) saveCancelDiv.style.display = 'flex';
+    if (editTextarea) {
+        editTextarea.style.display = 'block';
+        editTextarea.focus();
+        
+        // Mover cursor al final del texto
+        const length = editTextarea.value.length;
+        editTextarea.setSelectionRange(length, length);
+    }
 
     // Marcar como editando
     editandoObservacionesFeriado[id] = true;
+}
 
-    // Focus en el textarea si existe
-    if (editTextarea) {
-        editTextarea.focus();
+/**
+ * Maneja las teclas presionadas en el textarea de observaciones
+ */
+function manejarTeclasObservaciones(event, id, codOperario, fecha) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        event.target.blur(); // Esto disparará el onblur y por lo tanto el guardar
+    } else if (event.key === 'Escape') {
+        cancelarEditObservacionesFeriado(id);
     }
 }
 
@@ -112,17 +123,32 @@ function toggleEditObservacionesFeriado(id) {
  * Guarda las observaciones editadas para feriados
  */
 function guardarObservacionesFeriado(id, codOperario, fecha) {
+    // Si no estamos editando o ya se está guardando, salir
+    if (!editandoObservacionesFeriado[id] || editandoObservacionesFeriado[id] === 'guardando') return;
+
     const editTextarea = document.getElementById(`obs-edit-${id}`);
     const nuevasObservaciones = editTextarea ? editTextarea.value.trim() : '';
+
+    // Si el valor no ha cambiado, simplemente finalizar edición
+    if (nuevasObservaciones === observacionesOriginalesFeriado[id]) {
+        finalizarEdicionObservacionesFeriado(id);
+        return;
+    }
+
+    // Marcar como guardando para evitar peticiones duplicadas (blur + enter)
+    editandoObservacionesFeriado[id] = 'guardando';
 
     // Obtener estado actual
     const badge = document.getElementById(`status-badge-${id}`);
     const estadoActual = badge ? badge.textContent.trim() : 'Pendiente';
 
-    // Mostrar loading
-    const saveCancelDiv = document.getElementById(`save-cancel-${id}`);
-    const originalHTML = saveCancelDiv ? saveCancelDiv.innerHTML : '';
-    if (saveCancelDiv) saveCancelDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    // Mostrar visualmente que se está guardando
+    const displayDiv = document.getElementById(`obs-display-${id}`);
+    if (displayDiv) {
+        displayDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        displayDiv.style.display = 'block';
+    }
+    if (editTextarea) editTextarea.style.display = 'none';
 
     // Para registros sin ID (nuevos), crear uno
     if (id.startsWith('temp_')) {
@@ -145,8 +171,10 @@ function guardarObservacionesFeriado(id, codOperario, fecha) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Actualizar valor en el textarea (por si hubo limpieza en el server)
+                if (editTextarea) editTextarea.value = nuevasObservaciones;
+
                 // Actualizar display de observaciones
-                const displayDiv = document.getElementById(`obs-display-${id}`);
                 if (displayDiv) {
                     if (nuevasObservaciones) {
                         displayDiv.innerHTML = nuevasObservaciones.replace(/\n/g, '<br>');
@@ -157,17 +185,27 @@ function guardarObservacionesFeriado(id, codOperario, fecha) {
 
                 // Salir del modo edición
                 finalizarEdicionObservacionesFeriado(id);
-
-                mostrarNotificacion('success', 'Observaciones actualizadas correctamente');
+                mostrarNotificacion('success', 'Observaciones actualizadas');
             } else {
-                if (saveCancelDiv) saveCancelDiv.innerHTML = originalHTML;
+                // Si hubo error, restaurar estado de edición para permitir reintento o cancelación
+                editandoObservacionesFeriado[id] = true;
+                if (displayDiv) displayDiv.style.display = 'none';
+                if (editTextarea) {
+                    editTextarea.style.display = 'block';
+                    editTextarea.focus();
+                }
                 mostrarNotificacion('error', data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            if (saveCancelDiv) saveCancelDiv.innerHTML = originalHTML;
-            mostrarNotificacion('error', 'Error al guardar las observaciones');
+            editandoObservacionesFeriado[id] = true;
+            if (displayDiv) displayDiv.style.display = 'none';
+            if (editTextarea) {
+                editTextarea.style.display = 'block';
+                editTextarea.focus();
+            }
+            mostrarNotificacion('error', 'Error al guardar');
         });
 }
 
@@ -191,14 +229,10 @@ function cancelarEditObservacionesFeriado(id) {
 function finalizarEdicionObservacionesFeriado(id) {
     const displayDiv = document.getElementById(`obs-display-${id}`);
     const editTextarea = document.getElementById(`obs-edit-${id}`);
-    const actionsDiv = document.getElementById(`actions-${id}`);
-    const saveCancelDiv = document.getElementById(`save-cancel-${id}`);
 
     // Alternar visibilidad
     if (displayDiv) displayDiv.style.display = 'block';
     if (editTextarea) editTextarea.style.display = 'none';
-    if (actionsDiv) actionsDiv.style.display = 'flex';
-    if (saveCancelDiv) saveCancelDiv.style.display = 'none';
 
     // Limpiar estado
     delete editandoObservacionesFeriado[id];
@@ -235,20 +269,12 @@ function actualizarBotonesAccionFeriado(id, nuevoEstado) {
                     onclick="actualizarEstadoFeriado('${id}', 'Descansado', '${codOperario}', '${fecha}')" title="Marcar como Compensado/Descansado">
                 <i class="fas fa-bed"></i>
             </button>
-            <button type="button" class="btn-action btn-edit" 
-                    onclick="toggleEditObservacionesFeriado('${id}')" title="Editar observaciones">
-                <i class="fas fa-edit"></i>
-            </button>
         `;
     } else {
         actionsDiv.innerHTML = `
             <button type="button" class="btn-action btn-change" 
                     onclick="cambiarEstadoFeriado('${id}', '${nuevoEstado}', '${codOperario}', '${fecha}')" title="Cambiar estado">
                 <i class="fas fa-exchange-alt"></i>
-            </button>
-            <button type="button" class="btn-action btn-edit" 
-                    onclick="toggleEditObservacionesFeriado('${id}')" title="Editar observaciones">
-                <i class="fas fa-edit"></i>
             </button>
         `;
     }

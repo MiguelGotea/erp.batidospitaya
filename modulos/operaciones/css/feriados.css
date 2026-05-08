@@ -551,6 +551,23 @@ a.btn {
     max-width: 300px;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    min-height: 2.5em;
+    display: flex;
+    align-items: center;
+}
+
+.observaciones-cell.editable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.observaciones-cell.editable:hover {
+    background-color: rgba(81, 184, 172, 0.1);
+    border-color: #51B8AC;
+    box-shadow: 0 0 5px rgba(81, 184, 172, 0.3);
 }
 
 .observaciones-edit {
