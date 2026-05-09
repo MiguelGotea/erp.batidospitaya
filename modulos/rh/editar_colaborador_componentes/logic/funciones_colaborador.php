@@ -2345,7 +2345,6 @@ function darDeBajaCompleta($codOperario, $fechaSalida, $motivo = '')
     UPDATE OperariosCategorias
     SET FechaFin = ?
     WHERE CodOperario = ?
-    AND TipoAdendum IS NOT NULL
     AND (FechaFin IS NULL OR FechaFin > ?)
     ");
         $stmtAdendums->execute([$fechaSalida, $codOperario, $fechaSalida]);
@@ -2634,9 +2633,8 @@ function obtenerAdendumsColaborador($codOperario)
     LEFT JOIN Contratos c ON anc.CodContrato = c.CodContrato
     LEFT JOIN TipoContrato tc ON c.cod_tipo_contrato = tc.CodTipoContrato
     WHERE anc.CodOperario = ?
-    AND anc.TipoAdendum IS NOT NULL
     ORDER BY anc.Fecha DESC, anc.Fin DESC
-    ");
+    " );
     $stmt->execute([$codOperario]);
     return $stmt->fetchAll();
 }
@@ -2652,7 +2650,6 @@ function obtenerAdendumActual($codOperario)
     SELECT anc.*
     FROM AsignacionNivelesCargos anc
     WHERE anc.CodOperario = ?
-    AND anc.TipoAdendum IS NOT NULL
     AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
     ORDER BY anc.Fecha DESC
     LIMIT 1
@@ -2783,7 +2780,6 @@ function finalizarAdenda($idAdendum, $fechaFin)
     UPDATE AsignacionNivelesCargos
     SET Fin = ?, fecha_ultima_modificacion = NOW(), usuario_ultima_modificacion = ?
     WHERE CodAsignacionNivelesCargos = ?
-    AND TipoAdendum IS NOT NULL
     ");
 
         $stmt->execute([$fechaFin, $_SESSION['usuario_id'], $idAdendum]);
@@ -2804,7 +2800,6 @@ function obtenerUltimoAdendum($codOperario)
     $stmt = $conn->prepare("
     SELECT * FROM AsignacionNivelesCargos
     WHERE CodOperario = ?
-    AND TipoAdendum IS NOT NULL
     ORDER BY Fecha DESC
     LIMIT 1
     ");
@@ -3242,7 +3237,6 @@ function obtenerUltimoAdendumActivo($codOperario)
     SELECT anc.*
     FROM AsignacionNivelesCargos anc
     WHERE anc.CodOperario = ?
-    AND anc.TipoAdendum IS NOT NULL
     AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
     ORDER BY anc.Fecha DESC
     LIMIT 1

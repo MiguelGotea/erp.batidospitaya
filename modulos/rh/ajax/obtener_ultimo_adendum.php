@@ -23,7 +23,6 @@ function obtenerUltimoAdendumActivo($codOperario)
 SELECT anc.*
 FROM AsignacionNivelesCargos anc
 WHERE anc.CodOperario = ?
-AND anc.TipoAdendum IS NOT NULL
 AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
 ORDER BY anc.Fecha DESC
 LIMIT 1
