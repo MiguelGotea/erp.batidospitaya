@@ -1,5 +1,7 @@
 <?php
 require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
 
 verificarAutenticacion();
 
@@ -11,6 +13,7 @@ $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admi
 
 // Obtener cargo principal
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
+$cargoOperario = $usuario['CodNivelesCargos'] ?? 0;
 
 // Determinar la semana a mostrar (actual o siguiente)
 $tipoSemana = isset($_GET['semana']) && $_GET['semana'] === 'siguiente' ? 'siguiente' : 'actual';
@@ -315,50 +318,31 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Colaboradores por Sucursal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-    <link rel="stylesheet" href="css/gestion_colaboradores.css">
+    <link rel="stylesheet" href="css/gestion_colaboradores.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
 <body data-tipo-semana="<?= htmlspecialchars($tipoSemana) ?>">
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ?
-                            strtoupper(substr($usuario['nombre'], 0, 1)) :
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= $esAdmin ?
-                                htmlspecialchars($usuario['nombre']) :
-                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, false, 'Gestión de Colaboradores'); ?>
 
-        <h1 class="title">
-            Gestión de Colaboradores por Sucursal
-            <span class="global-counter"
-                style="font-size: 0.8em; background: #0E544C; color: white; padding: 4px 12px; border-radius: 20px; margin-left: 10px;">
-                Total: <?= $totalColaboradoresGlobal ?> colaboradores
-            </span>
-        </h1>
+            <div class="container-fluid p-3">
+                <div class="gestion-container">
+                    <h1 class="title" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        Gestión de Colaboradores por Sucursal
+                        <span class="global-counter"
+                            style="font-size: 0.6em !important; background: #0E544C; color: white; padding: 4px 12px; border-radius: 20px; vertical-align: middle;">
+                            Total: <?= $totalColaboradoresGlobal ?> colaboradores
+                        </span>
+                    </h1>
 
         <!-- Controles de semana -->
         <div class="week-controls">
@@ -547,8 +531,14 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                 </div>
             <?php endif; ?>
         </form>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- Scripts requeridos para el header y menú -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/gestion_colaboradores.js"></script>
 </body>
 
