@@ -788,9 +788,8 @@ function obtenerNombreOperario($codOperario)
                                     $id_fila = $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'];
                                     
                                     // Lógica de permiso de aprobar: debe tener el permiso Y ser el supervisor asignado o admin
-                                    $esAdmin = (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin');
                                     $esSupervisorAsignado = ($ft['supervisor_asignado'] == $_SESSION['usuario_id']);
-                                    $puedeAprobar = (tienePermiso('gestion_feriados', 'aprobar', $cargoOperario) && ($esAdmin || $esSupervisorAsignado));
+                                    $puedeAprobar = (tienePermiso('gestion_feriados', 'aprobar', $cargoOperario) && ($esSupervisorAsignado));
                                     
                                     $yaTieneDecision = !empty($ft['id_aprobacion']);
                                     $puedeEditarObservacion = $puedeAprobar && $yaTieneDecision;
