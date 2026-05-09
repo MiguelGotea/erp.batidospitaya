@@ -74,13 +74,13 @@
                                 <div class="form-group">
                                     <label for="fecha_inicio_adendum">Fecha de Inicio *</label>
                                     <input type="date" id="fecha_inicio_adendum" name="fecha_inicio" class="form-control"
-                                        value="<?= date('Y-m-d') ?>" required>
+                                        value="<?= date('Y-m-d') ?>" required onkeydown="return false">
                                 </div>
 
 
                                 <div class="form-group">
                                     <label for="fecha_fin_adendum">Fecha de Fin (opcional)</label>
-                                    <input type="date" id="fecha_fin_adendum" name="fecha_fin" class="form-control">
+                                    <input type="date" id="fecha_fin_adendum" name="fecha_fin" class="form-control" onkeydown="return false">
                                     <small style="color: #6c757d;">
                                         Dejar vacío si es un adendum indefinido. Solo se aplica si es el
                                         primer
@@ -156,13 +156,13 @@
                                             <td style="padding: 10px;" class="editable-cell" data-field="Fecha"
                                                 data-id="<?= $adendum['CodAsignacionNivelesCargos'] ?>" data-type="date"
                                                 data-current="<?= $adendum['Fecha'] ?>">
-                                                <span class="cell-display"><?= date('d/m/Y', strtotime($adendum['Fecha'])) ?></span>
+                                                <span class="cell-display"><?= traducirMes(date('d - M - Y', strtotime($adendum['Fecha']))) ?></span>
                                             </td>
                                             <td style="padding: 10px;" class="editable-cell" data-field="Fin"
                                                 data-id="<?= $adendum['CodAsignacionNivelesCargos'] ?>" data-type="date"
                                                 data-current="<?= $adendum['Fin'] ?>">
                                                 <span
-                                                    class="cell-display"><?= !$esActivo ? date('d/m/Y', strtotime($adendum['Fin'])) : '-' ?></span>
+                                                    class="cell-display"><?= !$esActivo ? traducirMes(date('d - M - Y', strtotime($adendum['Fin']))) : '-' ?></span>
                                             </td>
                                             <td style="padding: 10px;"><?= $estado ?></td>
                                             <td style="padding: 10px; text-align: center;">
@@ -249,7 +249,7 @@
                                         <strong>Salario: </strong>C$
                                         <?= number_format($grupo['info']['salario_adendum'] ?? 0, 2) ?> |
                                         <strong>Fecha:
-                                        </strong><?= !empty($grupo['info']['FechaInicio']) ? date('d/m/Y', strtotime($grupo['info']['FechaInicio'])) : 'N/A' ?>
+                                        </strong><?= !empty($grupo['info']['FechaInicio']) ? traducirMes(date('d - M - Y', strtotime($grupo['info']['FechaInicio']))) : 'N/A' ?>
                                     </div>
                                 <?php else: ?>
                                     <div style="background: #fff3cd; padding: 10px; margin: 15px 0; border-left: 4px solid #ffc107;">
@@ -452,6 +452,7 @@
                     input.type = 'date';
                     input.value = currentValue || '';
                     input.className = 'inline-edit-input';
+                    input.onkeydown = (e) => e.preventDefault();
                 } else if (type === 'select') {
                     input = document.createElement('select');
                     input.className = 'inline-edit-input';
