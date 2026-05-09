@@ -6,7 +6,6 @@ require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso
 if (!tienePermiso('gestion_feriados', 'vista', $cargoOperario)) {
@@ -671,7 +670,7 @@ function obtenerNombreOperario($codOperario)
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, $esAdmin, 'Feriados Trabajados'); ?>
+            <?php echo renderHeader($usuario, false, 'Feriados Trabajados'); ?>
 
             <div class="container-feriados">
 
@@ -734,7 +733,7 @@ function obtenerNombreOperario($codOperario)
                             </button>
                         </div>
 
-                        <?php if ($esAdmin || tienePermiso('gestion_feriados', 'exportar', $cargoOperario)): ?>
+                        <?php if (tienePermiso('gestion_feriados', 'exportar', $cargoOperario)): ?>
                             <div class="action-buttons">
                                 <!-- Botón de exportación normal (existente) -->
                                 <a href="feriados.php?<?= http_build_query([
@@ -776,7 +775,7 @@ function obtenerNombreOperario($codOperario)
                                     <th style="display:none;">Horas Trabajadas</th>
                                     <th>Status</th>
                                     <th>Observaciones</th>
-                                    <?php if ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
+                                    <?php if (tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
                                         <th style="text-align: center; min-width: 180px;">Acciones</th>
                                     <?php endif; ?>
                                 </tr>
@@ -785,7 +784,7 @@ function obtenerNombreOperario($codOperario)
                                 <?php foreach ($feriadosTrabajados as $ft): ?>
                                     <?php 
                                     $id_fila = $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'];
-                                    $puedeAprobar = ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario));
+                                    $puedeAprobar = (tienePermiso('gestion_feriados', 'aprobar', $cargoOperario));
                                     $yaTieneDecision = !empty($ft['id_aprobacion']);
                                     $puedeEditarObservacion = $puedeAprobar && $yaTieneDecision;
                                     ?>
@@ -837,7 +836,7 @@ function obtenerNombreOperario($codOperario)
                                                 rows="3"><?= htmlspecialchars($ft['observaciones'] ?? '') ?></textarea>
                                         </td>
 
-                                        <?php if ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
+                                        <?php if (tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
                                             <td style="text-align: center;">
                                                 <div class="action-buttons-inline"
                                                     id="actions-<?= $id_fila ?>">
