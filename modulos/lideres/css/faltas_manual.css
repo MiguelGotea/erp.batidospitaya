@@ -1,0 +1,1035 @@
+﻿        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Calibri', sans-serif;
+            font-size: clamp(11px, 2vw, 16px) !important;
+        }
+
+        body {
+            background-color: #F6F6F6;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+        }
+
+        .title {
+            color: #0E544C;
+            font-size: 1.5rem !important;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #0E544C;
+        }
+
+        select,
+        input,
+        button {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            background-color: #51B8AC;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0E544C;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0069d9;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        /* Estilos para el botón de foto en la tabla */
+        .btn-foto {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-foto:hover {
+            background-color: #f0f0f0;
+        }
+
+        .btn-foto i {
+            transition: color 0.3s;
+        }
+
+        .btn-foto:hover i {
+            color: #0E544C !important;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #0E544C !important;
+            color: white;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .status-dias_mas_septimo {
+            color: #155724;
+            background-color: #d4edda;
+            padding: 5px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .status-no_pagado {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 5px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .alert {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-start;
+            /* Cambiado de center a flex-start */
+            padding: 20px;
+            overflow-y: auto;
+            /* Permitir scroll en el contenedor modal */
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 90%;
+            /* Ancho máximo responsive */
+            width: 100%;
+            max-width: 600px;
+            /* Máximo ancho para pantallas grandes */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+            /* Centrado con margen */
+            max-height: 90vh;
+            /* Altura máxima del 90% del viewport */
+            overflow-y: auto;
+            /* Scroll interno si es necesario */
+            position: relative;
+        }
+
+        /* Header del modal fijo */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .modal-title {
+            color: #0E544C;
+            font-size: 1.2rem !important;
+            font-weight: bold;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            margin-bottom: 15px;
+            max-height: calc(90vh - 150px);
+            /* Altura máxima calculada */
+            overflow-y: auto;
+            /* Scroll interno */
+        }
+
+        /* Mejorar la visualización de los formularios dentro del modal */
+        .modal-body .form-group {
+            margin-bottom: 15px;
+        }
+
+        .modal-body .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #0E544C;
+        }
+
+        .modal-body .form-select,
+        .modal-body .form-textarea,
+        .modal-body .form-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            /* Incluir padding en el ancho */
+        }
+
+        .modal-body .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+            /* Permitir redimensionamiento vertical */
+        }
+
+        /* Footer del modal */
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            position: sticky;
+            bottom: 0;
+            background: white;
+            z-index: 10;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* Mejorar el scroll */
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .info-group {
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #0E544C;
+        }
+
+        .info-value {
+            margin-left: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #0E544C;
+        }
+
+        .form-select,
+        .form-textarea,
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-textarea {
+            min-height: 80px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        /* Mejorar visibilidad de DataTables en móvil */
+        @media (max-width: 768px) {
+
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_info,
+            .dataTables_wrapper .dataTables_paginate {
+                font-size: 11px !important;
+                padding: 5px !important;
+            }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button {
+                padding: 3px 6px !important;
+                margin: 0 1px !important;
+                font-size: 11px !important;
+            }
+
+            .dataTables_wrapper .dataTables_length select {
+                padding: 3px !important;
+                font-size: 11px !important;
+            }
+        }
+
+        /* Mejorar los horarios en móvil */
+        @media (max-width: 768px) {
+
+            .horario-programado,
+            .horario-marcado {
+                margin-bottom: 5px;
+                padding-bottom: 3px;
+                border-bottom: 1px dashed #eee;
+            }
+
+            small.horario-label {
+                font-weight: bold;
+                color: #666;
+                display: inline-block;
+                min-width: 50px;
+                font-size: 9px !important;
+            }
+
+            .diferencia-entrada,
+            .diferencia-salida,
+            .diferencia-exacta {
+                font-size: 9px !important;
+                display: block;
+                margin-top: 2px;
+            }
+        }
+
+        /* Asegurar que los badges no se monten */
+        .status-badge {
+            display: inline-block;
+            margin: 2px 0;
+            line-height: 1.3;
+            vertical-align: middle;
+        }
+
+        /* Forzar línea para observaciones largas */
+        td:nth-child(6) {
+            /* Columna observaciones */
+            word-break: break-word;
+            max-width: 150px;
+            min-width: 100px;
+        }
+
+        /* RESPONSIVE PARA MÓVIL */
+        @media (max-width: 768px) {
+
+            /* Filtros responsive */
+            .filtros-container {
+                padding: 10px;
+                margin-bottom: 15px;
+            }
+
+            .filtros-form {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .filtro-group {
+                width: 100%;
+            }
+
+            .filtro-buttons {
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 10px;
+            }
+
+            .filtro-buttons .btn-agregar {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+
+            /* Tabla responsive */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                margin-top: 15px;
+            }
+
+            table {
+                min-width: 800px;
+                /* Forza el scroll horizontal */
+                font-size: 12px !important;
+            }
+
+            th,
+            td {
+                padding: 6px 4px !important;
+                font-size: 11px !important;
+            }
+
+            /* Ajustar badges en móvil */
+            .status-badge {
+                padding: 3px 6px;
+                font-size: 10px !important;
+                min-width: 70px;
+                max-width: 100px;
+                word-break: break-word;
+                line-height: 1.2;
+            }
+
+            /* Ajustar horarios en móvil */
+            .horario-container small.horario-label {
+                display: block;
+                min-width: auto;
+                font-size: 10px;
+                margin-bottom: 2px;
+            }
+
+            .horario-container span {
+                display: block;
+                font-size: 10px;
+                margin-bottom: 3px;
+            }
+
+            /* Botones de acción en tabla */
+            td:last-child {
+                min-width: 60px;
+            }
+
+            .btn-sm {
+                padding: 3px 6px;
+                font-size: 12px;
+            }
+
+            /* Modal responsive */
+            .modal {
+                padding: 10px;
+                align-items: flex-start;
+                overflow-y: auto;
+            }
+
+            .modal-content {
+                max-width: 95%;
+                margin: 10px auto;
+                padding: 15px;
+            }
+
+            .modal-title {
+                font-size: 1.1rem !important;
+            }
+
+            /* Textos en tarjetas de resumen */
+            .tarjeta h3 {
+                font-size: 0.9rem !important;
+            }
+
+            .tarjeta p {
+                font-size: 1.2rem !important;
+            }
+
+            /* Ajustar columnas específicas */
+            td:nth-child(1),
+            /* Colaborador */
+            td:nth-child(2),
+            /* Sucursal */
+            th:nth-child(1),
+            th:nth-child(2) {
+                min-width: 120px;
+                max-width: 150px;
+                word-wrap: break-word;
+            }
+
+            td:nth-child(3),
+            /* Fecha Falta */
+            th:nth-child(3) {
+                min-width: 90px;
+            }
+
+            td:nth-child(4),
+            /* Horarios */
+            th:nth-child(4) {
+                min-width: 140px;
+                max-width: 160px;
+            }
+
+            td:nth-child(5),
+            /* Tipo Falta */
+            th:nth-child(5) {
+                min-width: 100px;
+                max-width: 120px;
+            }
+
+            td:nth-child(6),
+            /* Observaciones */
+            th:nth-child(6) {
+                min-width: 100px;
+                max-width: 150px;
+            }
+
+            td:nth-child(7),
+            /* Registrado por */
+            th:nth-child(7) {
+                min-width: 100px;
+                max-width: 130px;
+            }
+
+            td:nth-child(8),
+            /* Fecha Registro */
+            th:nth-child(8) {
+                min-width: 90px;
+            }
+
+            td:nth-child(9),
+            /* Foto */
+            th:nth-child(9) {
+                min-width: 50px;
+                text-align: center;
+            }
+        }
+
+        /* Estilos mejorados para los badges de estado */
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: inline-block;
+            min-width: 100px;
+            text-transform: capitalize;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-pendiente {
+            color: #084298;
+            background-color: #cfe2ff;
+            border: 1px solid #9ec5fe;
+        }
+
+        .status-no-pagado {
+            color: #58151c;
+            background-color: #f8d7da;
+            border: 1px solid #f1aeb5;
+        }
+
+        .status-vacaciones {
+            color: #055160;
+            background-color: #cff4fc;
+            border: 1px solid #9eeaf9;
+        }
+
+        .status-subsidio {
+            color: #664d03;
+            background-color: #fff3cd;
+            border: 1px solid #ffecb5;
+        }
+
+        .status-dia-mas-septimo {
+            color: #0a3622;
+            background-color: #d1e7dd;
+            border: 1px solid #a3cfbb;
+        }
+
+        .status-subsidio-3dias {
+            color: #664d03;
+            background-color: #fff3cd;
+            border: 1px solid #ffecb5;
+        }
+
+        .status-subsidio-inss {
+            color: #084298;
+            background-color: #cfe2ff;
+            border: 1px solid #9ec5fe;
+        }
+
+        .status-subsidio-maternidad {
+            color: #58151c;
+            background-color: #f8d7da;
+            border: 1px solid #f1aeb5;
+        }
+
+        .status-reposo-hasta-3dias {
+            color: #0a3622;
+            background-color: #d1e7dd;
+            border: 1px solid #a3cfbb;
+        }
+
+        .status-compensacion-feria {
+            color: #055160;
+            background-color: #cff4fc;
+            border: 1px solid #9eeaf9;
+        }
+
+        .status-compensacion-dia-trabajado {
+            color: #412f04;
+            background-color: #e7f1ff;
+            border: 1px solid #c6d8f0;
+        }
+
+        .status-cuido-materno {
+            color: #3d0a3d;
+            background-color: #e8d6e8;
+            border: 1px solid #d0a2d0;
+        }
+
+        .diferencia-tarde {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .diferencia-temprano {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .modal {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn-agregar {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+
+            .btn-agregar i {
+                margin-right: 3px;
+            }
+
+            .btn-text {
+                display: none;
+                /* Ocultar texto, solo mostrar ícono */
+            }
+
+            table {
+                min-width: 900px;
+                /* Más ancho para más contenido */
+            }
+
+            th,
+            td {
+                padding: 4px 3px !important;
+                font-size: 10px !important;
+            }
+
+            /* Ajustar nombres en columnas */
+            td:first-child {
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            /* Modal más compacto */
+            .modal-content {
+                padding: 12px;
+            }
+
+            .form-group {
+                margin-bottom: 10px;
+            }
+
+            .modal-footer {
+                padding-top: 10px;
+            }
+        }
+
+        a.btn {
+            text-decoration: none;
+        }
+
+        /* Estilos para el filtro de colaboradores */
+        #operarios-sugerencias {
+            width: calc(100% - 2px);
+            /* Mismo ancho que el input */
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-top: -1px;
+            /* Para que se pegue al input */
+            position: absolute;
+            top: 100%;
+            /* Posiciona el dropdown justo debajo del input */
+            left: 0;
+            z-index: 1000;
+            background-color: white;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        #operarios-sugerencias div:hover {
+            background-color: #f5f5f5 !important;
+        }
+
+        /* Asegurar que el input tenga un z-index menor */
+        .filtro-group input[type="text"] {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Estilos para los filtros */
+        .filtros-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .filtros-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filtro-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .filtro-group label {
+            margin-bottom: 5px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .filtro-group select,
+        .filtro-group input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 100%;
+        }
+
+        .filtro-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filtro-buttons button {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-aplicar {
+            background-color: #51B8AC;
+            color: white;
+        }
+
+        .btn-aplicar:hover {
+            background-color: #0E544C;
+        }
+
+        .btn-limpiar {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+
+        .btn-limpiar:hover {
+            background-color: #ddd;
+        }
+
+        .btn-agregar.excel {
+            background-color: transparent;
+            color: #1d6f42;
+            border: 1px solid #1d6f42;
+        }
+
+        .btn-agregar.excel:hover {
+            background-color: #1d6f42;
+            color: white;
+        }
+
+        .btn-agregar.excel-contabilidad {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+            color: white;
+        }
+
+        .btn-agregar.excel-contabilidad:hover {
+            background-color: #5a2d9e;
+            border-color: #5a2d9e;
+        }
+
+        @media (max-width: 768px) {
+            .filtros-form {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                max-width: 90%;
+            }
+        }
+
+        /* Estilos para la previsualización de imagen */
+        #preview-image:hover {
+            opacity: 0.8;
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+
+        /* Estilos para el modal de ampliación */
+        #modalAmpliarImagen img {
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        #modalAmpliarImagen button:hover {
+            color: #51B8AC;
+        }
+
+        /* Estilos para indicadores de ordenamiento en tablas con 3 estados */
+        th.sorting_asc,
+        th.sorting_desc,
+        th.sorting {
+            background-color: #0E544C !important;
+            position: relative;
+            cursor: pointer;
+        }
+
+        th.sorting_asc:after,
+        th.sorting_desc:after,
+        th.sorting:after {
+            content: '';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+        }
+
+        /* Estado ASC (primer click - flecha arriba) */
+        th.sorting_asc {
+            background-color: #0E544C !important;
+        }
+
+        th.sorting_asc:after {
+            color: white;
+        }
+
+        /* Estado DESC (segundo click - flecha abajo) */
+        th.sorting_desc {
+            background-color: #0E544C !important;
+        }
+
+        th.sorting_desc:after {
+            color: white;
+        }
+
+        /* Efecto hover para mejor usabilidad */
+        th.sorting:hover {
+            background-color: #0E544C !important;
+            transition: background-color 0.3s;
+        }
+
+        /* Forzar herencia de estilos para DataTables paginación */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: inherit !important;
+            background: transparent !important;
+            border: 1px solid #ddd !important;
+            margin-left: 2px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background-color: #51B8AC !important;
+            color: white !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background-color: #0E544C !important;
+            color: white !important;
+            border-color: #0E544C !important;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        .dataTables_wrapper .dataTables_info {
+            color: inherit;
+            padding-top: 10px;
+        }
+
+        /* Estilos para la columna de horarios */
+        .horario-container {
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .horario-programado {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .horario-marcado {
+            padding-top: 5px;
+        }
+
+        .diferencia-entrada {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .diferencia-salida {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .diferencia-exacta {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+
+        /* Estilos para los textos pequeños */
+        small.horario-label {
+            display: inline-block;
+            min-width: 80px;
+            color: #666;
+            font-weight: bold;
+        }
