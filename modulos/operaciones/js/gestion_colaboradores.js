@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // 10 pixeles de tolerancia y 500ms
                 if (diffX < 10 && diffY < 10 && diffTime < 500) {
                     const codOperario = this.dataset.id;
-                    window.location.href = `https://erp.batidospitaya.com/modulos/rh/editar_colaborador.php?id=${codOperario}&pestaña=adendums`;
+                    window.open(`https://erp.batidospitaya.com/modulos/rh/editar_colaborador.php?id=${codOperario}&pestaña=adendums`, '_blank');
                 } else {
                     e.preventDefault();
                 }
