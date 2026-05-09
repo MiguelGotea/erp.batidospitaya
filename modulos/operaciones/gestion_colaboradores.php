@@ -343,15 +343,13 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
 
             <div class="container-fluid p-3">
                 <div class="gestion-container">
-                    <h1 class="title" style="text-align: center;">
-                        Gestión de Colaboradores por Sucursal
-                    </h1>
 
                     <!-- Navegación de Semana -->
                     <div class="semana-nav">
                         <div class="nav-left">
                             <?php if ($tipoSemana === 'siguiente'): ?>
-                                <a href="gestion_colaboradores.php?semana=actual" class="btn-semana prev" title="Semana anterior">
+                                <a href="gestion_colaboradores.php?semana=actual" class="btn-semana prev"
+                                    title="Semana anterior">
                                     <i class="bi bi-chevron-left"></i>
                                 </a>
                             <?php else: ?>
@@ -362,14 +360,16 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
 
                             <div class="semana-info">
                                 <span class="semana-label">Semana <?= $semanaMostrar['numero_semana'] ?? 'N/A' ?></span>
-                                <span class="semana-rango"><?= formatoFecha($semanaMostrar['fecha_inicio'] ?? '') ?> - <?= formatoFecha($semanaMostrar['fecha_fin'] ?? '') ?></span>
+                                <span class="semana-rango"><?= formatoFecha($semanaMostrar['fecha_inicio'] ?? '') ?> -
+                                    <?= formatoFecha($semanaMostrar['fecha_fin'] ?? '') ?></span>
                                 <?php if ($tipoSemana === 'actual'): ?>
                                     <span class="badge-actual">Actual</span>
                                 <?php endif; ?>
                             </div>
 
                             <?php if ($tipoSemana === 'actual' && $semanaSiguiente): ?>
-                                <a href="gestion_colaboradores.php?semana=siguiente" class="btn-semana next" title="Semana siguiente">
+                                <a href="gestion_colaboradores.php?semana=siguiente" class="btn-semana next"
+                                    title="Semana siguiente">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>
                             <?php else: ?>
@@ -380,7 +380,8 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                         </div>
 
                         <div class="nav-right">
-                            <span class="global-counter" style="background: #0E544C; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+                            <span class="global-counter"
+                                style="background: #0E544C; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px;">
                                 Total: <?= $totalColaboradoresGlobal ?> colaboradores
                             </span>
                         </div>
