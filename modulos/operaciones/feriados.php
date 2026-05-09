@@ -345,6 +345,7 @@ function obtenerFeriadosTrabajados($codSucursal, $fechaDesde, $fechaHasta, $codO
                    ) AS nombre_completo,
                    s.codigo as sucursal_codigo,
                    s.nombre as sucursal_nombre,
+                   s.supervisor_asignado,
                    s.cod_departamento,
                    d.nombre as nombre_departamento
             FROM Operarios o
@@ -449,6 +450,7 @@ function obtenerFeriadosTrabajados($codSucursal, $fechaDesde, $fechaHasta, $codO
                         'fecha' => $feriado['fecha'],
                         'sucursal_codigo' => $operario['sucursal_codigo'],
                         'sucursal_nombre' => $operario['sucursal_nombre'],
+                        'supervisor_asignado' => $operario['supervisor_asignado'],
                         'sucursal_departamento' => $operario['nombre_departamento'],
                         'sucursal_cod_departamento' => $operario['cod_departamento'],
                         'hora_entrada' => $horaEntrada,
@@ -784,7 +786,12 @@ function obtenerNombreOperario($codOperario)
                                 <?php foreach ($feriadosTrabajados as $ft): ?>
                                     <?php 
                                     $id_fila = $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'];
-                                    $puedeAprobar = (tienePermiso('gestion_feriados', 'aprobar', $cargoOperario));
+                                    
+                                    // Lógica de permiso de aprobar: debe tener el permiso Y ser el supervisor asignado o admin
+                                    $esAdmin = (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin');
+                                    $esSupervisorAsignado = ($ft['supervisor_asignado'] == $_SESSION['usuario_id']);
+                                    $puedeAprobar = (tienePermiso('gestion_feriados', 'aprobar', $cargoOperario) && ($esAdmin || $esSupervisorAsignado));
+                                    
                                     $yaTieneDecision = !empty($ft['id_aprobacion']);
                                     $puedeEditarObservacion = $puedeAprobar && $yaTieneDecision;
                                     ?>
@@ -838,29 +845,31 @@ function obtenerNombreOperario($codOperario)
 
                                         <?php if (tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
                                             <td style="text-align: center;">
-                                                <div class="action-buttons-inline"
-                                                    id="actions-<?= $id_fila ?>">
-                                                    <?php if ($ft['estado'] === 'Pendiente' || $ft['estado'] === 'Sin marcación' || $ft['estado'] === 'Con Marcación'): ?>
-                                                        <!-- Botones para estado Pendiente/Sin marcación -->
-                                                        <button type="button" class="btn-action btn-approve"
-                                                            onclick="actualizarEstadoFeriado('<?= $id_fila ?>', 'Pagado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
-                                                            title="Marcar como Pagado">
-                                                            <i class="fas fa-dollar-sign"></i>
-                                                        </button>
-                                                        <button type="button" class="btn-action btn-compensado"
-                                                            onclick="actualizarEstadoFeriado('<?= $id_fila ?>', 'Descansado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
-                                                            title="Marcar como Compensado/Descansado">
-                                                            <i class="fas fa-bed"></i>
-                                                        </button>
-                                                    <?php else: ?>
-                                                        <!-- Botones para estados Pagado/Descansado -->
-                                                        <button type="button" class="btn-action btn-change"
-                                                            onclick="cambiarEstadoFeriado('<?= $id_fila ?>', '<?= $ft['estado'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
-                                                            title="Cambiar estado">
-                                                            <i class="fas fa-exchange-alt"></i>
-                                                        </button>
-                                                    <?php endif; ?>
-                                                </div>
+                                                <?php if ($puedeAprobar): ?>
+                                                    <div class="action-buttons-inline"
+                                                        id="actions-<?= $id_fila ?>">
+                                                        <?php if ($ft['estado'] === 'Pendiente' || $ft['estado'] === 'Sin marcación' || $ft['estado'] === 'Con Marcación'): ?>
+                                                            <!-- Botones para estado Pendiente/Sin marcación -->
+                                                            <button type="button" class="btn-action btn-approve"
+                                                                onclick="actualizarEstadoFeriado('<?= $id_fila ?>', 'Pagado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                                title="Marcar como Pagado">
+                                                                <i class="fas fa-dollar-sign"></i>
+                                                            </button>
+                                                            <button type="button" class="btn-action btn-compensado"
+                                                                onclick="actualizarEstadoFeriado('<?= $id_fila ?>', 'Descansado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                                title="Marcar como Compensado/Descansado">
+                                                                <i class="fas fa-bed"></i>
+                                                            </button>
+                                                        <?php else: ?>
+                                                            <!-- Botones para estados Pagado/Descansado -->
+                                                            <button type="button" class="btn-action btn-change"
+                                                                onclick="cambiarEstadoFeriado('<?= $id_fila ?>', '<?= $ft['estado'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                                title="Cambiar estado">
+                                                                <i class="fas fa-exchange-alt"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php endif; ?>
                                             </td>
                                         <?php endif; ?>
                                     </tr>
