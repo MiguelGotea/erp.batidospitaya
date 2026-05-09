@@ -25,11 +25,6 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 // Determinar la semana a mostrar (actual o siguiente)
 $tipoSemana = isset($_GET['semana']) && $_GET['semana'] === 'siguiente' ? 'siguiente' : 'actual';
 
-// Si intenta acceder a la semana siguiente sin permiso, redirigir a la actual
-if ($tipoSemana === 'siguiente' && !$tienePermisoPlanificacion) {
-    $tipoSemana = 'actual';
-}
-
 // Obtener las semanas del sistema
 $semanaActual = obtenerSemanaActual();
 $semanasDisponibles = obtenerSemanasDisponibles();
@@ -339,7 +334,7 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
     <link rel="stylesheet" href="css/gestion_colaboradores.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
-<body data-tipo-semana="<?= htmlspecialchars($tipoSemana) ?>" data-tiene-permiso-editar="<?= $tienePermisoEditar ? '1' : '0' ?>">
+<body data-tipo-semana="<?= htmlspecialchars($tipoSemana) ?>" data-tiene-permiso-editar="<?= $tienePermisoEditar ? '1' : '0' ?>" data-tiene-permiso-planificacion="<?= $tienePermisoPlanificacion ? '1' : '0' ?>">
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
@@ -371,7 +366,6 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                             </div>
                         </div>
 
-                        <?php if ($tienePermisoPlanificacion): ?>
                             <?php if ($semanaSiguiente): ?>
                                 <a href="gestion_colaboradores.php?semana=siguiente"
                                     class="week-btn siguiente <?= $tipoSemana === 'siguiente' ? 'active' : '' ?>">
@@ -382,7 +376,6 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                     <i class="fas fa-calendar-alt"></i> No hay semana siguiente
                                 </button>
                             <?php endif; ?>
-                        <?php endif; ?>
                     </div>
 
                     <!-- Información de ayuda -->
@@ -540,7 +533,7 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                         <?php endif; ?>
 
                         <!-- Botones de acción (solo para semana siguiente) -->
-                        <?php if ($tipoSemana === 'siguiente'): ?>
+                        <?php if ($tipoSemana === 'siguiente' && $tienePermisoPlanificacion): ?>
                             <div class="actions-bar">
                                 <button type="button" id="btnReset" class="btn-reset">
                                     <i class="fas fa-undo"></i> Restaurar Original

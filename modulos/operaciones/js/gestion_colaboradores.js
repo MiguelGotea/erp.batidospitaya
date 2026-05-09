@@ -42,10 +42,13 @@ let estadoInicial = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     const tipoSemana = document.body.dataset.tipoSemana;
+    const tienePermisoPlanificacion = document.body.dataset.tienePermisoPlanificacion === '1';
 
     if (tipoSemana === 'siguiente') {
-        guardarEstadoInicial();
         actualizarContadores();
+        
+        if (tienePermisoPlanificacion) {
+            guardarEstadoInicial();
 
         document.querySelectorAll('.sortable-lideres').forEach(function (el) {
             new Sortable(el, {
@@ -148,6 +151,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
         });
+        } else {
+            document.body.classList.add('read-only');
+        }
     } else {
         document.body.classList.add('read-only');
     }
