@@ -36,6 +36,7 @@ if ($semanaId === 'actual') {
     $semanaMostrar = obtenerSemanaPorId($semanaId) ?: $semanaActualRef;
 }
 
+
 // Determinar tipo de semana para la interfaz (siguiente = editable)
 $tipoSemana = ($semanaMostrar['fecha_inicio'] > $semanaActualRef['fecha_inicio']) ? 'siguiente' : 'actual';
 if ($semanaMostrar['fecha_inicio'] < $semanaActualRef['fecha_inicio']) {
@@ -358,8 +359,8 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                     <div class="semana-nav">
                         <div class="nav-left">
                             <?php if ($semanaAnteriorObj): ?>
-                                <a href="gestion_colaboradores.php?semana=<?= $semanaAnteriorObj['numero_semana'] ?>" class="btn-semana prev"
-                                    title="Semana anterior">
+                                <a href="gestion_colaboradores.php?semana=<?= $semanaAnteriorObj['numero_semana'] ?>"
+                                    class="btn-semana prev" title="Semana anterior">
                                     <i class="bi bi-chevron-left"></i>
                                 </a>
                             <?php else: ?>
@@ -378,8 +379,8 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                             </div>
 
                             <?php if ($semanaSiguienteObj): ?>
-                                <a href="gestion_colaboradores.php?semana=<?= $semanaSiguienteObj['numero_semana'] ?>" class="btn-semana next"
-                                    title="Semana siguiente">
+                                <a href="gestion_colaboradores.php?semana=<?= $semanaSiguienteObj['numero_semana'] ?>"
+                                    class="btn-semana next" title="Semana siguiente">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>
                             <?php else: ?>
