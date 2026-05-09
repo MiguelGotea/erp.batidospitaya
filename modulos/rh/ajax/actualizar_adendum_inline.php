@@ -47,7 +47,7 @@ try {
         // Devolver el nuevo valor formateado si es fecha
         $displayValue = $value;
         if (($field === 'Fecha' || $field === 'Fin') && !empty($value)) {
-            $displayValue = traducirMes(date('d - M - Y', strtotime($value)));
+            $displayValue = traducirMes(date('d-M-y', strtotime($value)));
         } elseif ($field === 'Fin' && empty($value)) {
             $displayValue = '-';
         } elseif ($field === 'CodNivelesCargos') {
