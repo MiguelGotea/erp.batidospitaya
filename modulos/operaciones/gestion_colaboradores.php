@@ -9,15 +9,15 @@ $cargoOperario = $usuario['CodNivelesCargos'] ?? 0;
 
 // Verificar acceso al módulo (RH y admin)
 $cargosVista = [13, 16, 39, 30, 37, 49, 8, 42, 39];
-$tienePermisoVista = in_array($cargoOperario, $cargosVista) || tienePermiso('gestion_colaboradores', 'vista', $cargoOperario);
+$tienePermisoVista = in_array($cargoOperario, $cargosVista) || tienePermiso('administracion_colaboradores_lideres', 'vista', $cargoOperario);
 
 if (!$tienePermisoVista) {
     header('Location: /login.php');
     exit();
 }
 
-$tienePermisoPlanificacion = tienePermiso('gestion_colaboradores', 'planificacion', $cargoOperario);
-$tienePermisoEditar = tienePermiso('gestion_colaboradores', 'editar_colaborador', $cargoOperario);
+$tienePermisoPlanificacion = tienePermiso('administracion_colaboradores_lideres', 'planificacion', $cargoOperario);
+$tienePermisoEditar = tienePermiso('administracion_colaboradores_lideres', 'editar_colaborador', $cargoOperario);
 
 // Obtener cargo principal
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
