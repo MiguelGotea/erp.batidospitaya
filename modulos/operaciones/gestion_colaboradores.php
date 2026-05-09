@@ -75,7 +75,6 @@ function obtenerTotalColaboradoresSucursal($codSucursal, $semana)
         AND anc.CodNivelesCargos IN (2, 5, 43, 44, 45, 46, 47)
         AND anc.Fecha <= ? 
         AND (anc.Fin IS NULL OR anc.Fin >= ?)
-        AND o.Operativo = 1
     ");
 
     $stmt->execute([$codSucursal, $fechaFinSemana, $fechaInicioSemana]);
@@ -102,7 +101,6 @@ function obtenerTotalColaboradoresGlobal($semana)
         WHERE anc.CodNivelesCargos IN (2, 5, 43, 44, 45, 46, 47)
         AND anc.Fecha <= ? 
         AND (anc.Fin IS NULL OR anc.Fin >= ?)
-        AND o.Operativo = 1
         AND s.activa = 1
         AND s.sucursal = 1
     ");
@@ -182,7 +180,6 @@ function obtenerColaboradoresPorSucursal($codSucursal, $semana)
         -- Verificar que la asignación esté activa durante la semana
         AND anc.Fecha <= ? 
         AND (anc.Fin IS NULL OR anc.Fin >= ?)
-        AND o.Operativo = 1
         ORDER BY 
             CASE 
                 WHEN anc.CodNivelesCargos IN (5, 43) THEN 1  -- Líderes primero
@@ -258,8 +255,7 @@ function obtenerColaboradoresNoAsignados($semana)
              ORDER BY c.inicio_contrato DESC, c.CodContrato DESC 
              LIMIT 1) as ultimo_codigo_manual
         FROM Operarios o
-        WHERE o.Operativo = 1
-        AND o.CodOperario NOT IN (
+        WHERE o.CodOperario NOT IN (
             -- Excluir operarios que ya tienen asignación activa durante esta semana
             SELECT DISTINCT anc.CodOperario
             FROM AsignacionNivelesCargos anc
