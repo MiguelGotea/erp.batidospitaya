@@ -210,7 +210,7 @@
         }
 
         .sucursal-header {
-            background: linear-gradient(135deg, #0E544C, #51B8AC);
+            background: #0E544C;
             color: white;
             padding: 12px 15px;
             font-weight: bold;
@@ -290,7 +290,7 @@
         }
 
         .drag-item.lider {
-            background: linear-gradient(135deg, rgba(81, 184, 172, 0.1), rgba(14, 84, 76, 0.05));
+            background: rgba(81, 184, 172, 0.1);
             border-left: 4px solid #0E544C;
         }
 
@@ -479,7 +479,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(135deg, #0E544C, #51B8AC);
+            background: #0E544C;
             color: white;
             padding: 12px 15px;
             font-weight: bold;

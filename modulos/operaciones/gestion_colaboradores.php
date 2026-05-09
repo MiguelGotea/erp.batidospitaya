@@ -20,31 +20,41 @@ $tienePermisoEditar = tienePermiso('administracion_colaboradores_lideres', 'edit
 // Obtener cargo principal
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
-// Determinar la semana a mostrar (actual o siguiente)
-$tipoSemana = isset($_GET['semana']) && $_GET['semana'] === 'siguiente' ? 'siguiente' : 'actual';
+// Determinar la semana a mostrar
+$semanaActualRef = obtenerSemanaActual();
+$semanaId = $_GET['semana'] ?? 'actual';
 
-// Obtener las semanas del sistema
-$semanaActual = obtenerSemanaActual();
-$semanasDisponibles = obtenerSemanasDisponibles();
-
-// Encontrar la semana siguiente
-$semanaSiguiente = null;
-$hoy = date('Y-m-d');
-foreach ($semanasDisponibles as $semana) {
-    if ($semana['fecha_inicio'] > $hoy) {
-        $semanaSiguiente = $semana;
-        break;
-    }
+if ($semanaId === 'actual') {
+    $semanaMostrar = $semanaActualRef;
+} elseif ($semanaId === 'siguiente') {
+    global $conn;
+    $stmtNext = $conn->prepare("SELECT * FROM SemanasSistema WHERE fecha_inicio > ? ORDER BY fecha_inicio ASC LIMIT 1");
+    $stmtNext->execute([$semanaActualRef['fecha_inicio']]);
+    $semanaMostrar = $stmtNext->fetch() ?: $semanaActualRef;
+} else {
+    // Es un ID de semana específico (numero_semana)
+    $semanaMostrar = obtenerSemanaPorId($semanaId) ?: $semanaActualRef;
 }
 
-// Determinar qué semana mostrar
-$semanaMostrar = ($tipoSemana === 'siguiente' && $semanaSiguiente) ? $semanaSiguiente : $semanaActual;
-
-// Si es la semana siguiente, verificar que existe
-if ($tipoSemana === 'siguiente' && !$semanaSiguiente) {
-    $tipoSemana = 'actual';
-    $semanaMostrar = $semanaActual;
+// Determinar tipo de semana para la interfaz (siguiente = editable)
+$tipoSemana = ($semanaMostrar['fecha_inicio'] > $semanaActualRef['fecha_inicio']) ? 'siguiente' : 'actual';
+if ($semanaMostrar['fecha_inicio'] < $semanaActualRef['fecha_inicio']) {
+    $tipoSemana = 'pasada'; // semanas anteriores no editables
 }
+
+// Obtener semana anterior y siguiente relativas a la que se muestra
+global $conn;
+$stmtPrev = $conn->prepare("SELECT * FROM SemanasSistema WHERE fecha_inicio < ? ORDER BY fecha_inicio DESC LIMIT 1");
+$stmtPrev->execute([$semanaMostrar['fecha_inicio']]);
+$semanaAnteriorObj = $stmtPrev->fetch();
+
+$stmtNext2 = $conn->prepare("SELECT * FROM SemanasSistema WHERE fecha_inicio > ? ORDER BY fecha_inicio ASC LIMIT 1");
+$stmtNext2->execute([$semanaMostrar['fecha_inicio']]);
+$semanaSiguienteObj = $stmtNext2->fetch();
+
+// Mantener variables por compatibilidad
+$semanaActual = $semanaActualRef;
+$semanaSiguiente = $semanaSiguienteObj;
 
 /**
  * Obtiene el total de colaboradores por sucursal para una semana específica
@@ -347,8 +357,8 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                     <!-- Navegación de Semana -->
                     <div class="semana-nav">
                         <div class="nav-left">
-                            <?php if ($tipoSemana === 'siguiente'): ?>
-                                <a href="gestion_colaboradores.php?semana=actual" class="btn-semana prev"
+                            <?php if ($semanaAnteriorObj): ?>
+                                <a href="gestion_colaboradores.php?semana=<?= $semanaAnteriorObj['numero_semana'] ?>" class="btn-semana prev"
                                     title="Semana anterior">
                                     <i class="bi bi-chevron-left"></i>
                                 </a>
@@ -362,13 +372,13 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                 <span class="semana-label">Semana <?= $semanaMostrar['numero_semana'] ?? 'N/A' ?></span>
                                 <span class="semana-rango"><?= formatoFecha($semanaMostrar['fecha_inicio'] ?? '') ?> -
                                     <?= formatoFecha($semanaMostrar['fecha_fin'] ?? '') ?></span>
-                                <?php if ($tipoSemana === 'actual'): ?>
+                                <?php if ($semanaMostrar['id'] == $semanaActualRef['id']): ?>
                                     <span class="badge-actual">Actual</span>
                                 <?php endif; ?>
                             </div>
 
-                            <?php if ($tipoSemana === 'actual' && $semanaSiguiente): ?>
-                                <a href="gestion_colaboradores.php?semana=siguiente" class="btn-semana next"
+                            <?php if ($semanaSiguienteObj): ?>
+                                <a href="gestion_colaboradores.php?semana=<?= $semanaSiguienteObj['numero_semana'] ?>" class="btn-semana next"
                                     title="Semana siguiente">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>
