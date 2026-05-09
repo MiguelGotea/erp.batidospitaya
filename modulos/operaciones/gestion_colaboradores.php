@@ -62,6 +62,7 @@ if ($maxSemanaPermitida && $semanaMostrar['fecha_inicio'] >= $maxSemanaPermitida
     $semanaSiguienteObj = null;
 }
 
+
 // Mantener variables por compatibilidad
 $semanaActual = $semanaActualRef;
 $semanaSiguiente = $semanaSiguienteObj;
