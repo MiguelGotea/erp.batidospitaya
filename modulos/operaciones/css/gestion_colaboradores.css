@@ -92,62 +92,87 @@
             text-align: center;
         }
 
-        /* Controles de semana */
-        .week-controls {
+        /* Navegación de Semana */
+        .semana-nav {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 24px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            border: 1px solid rgba(14, 84, 76, 0.1);
+            flex-wrap: wrap;
+        }
+
+        .nav-left, .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .semana-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
             justify-content: center;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 30px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .week-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
+        .semana-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .semana-rango {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0E544C;
+        }
+
+        .badge-actual {
+            background-color: #0E544C;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .btn-semana {
             display: flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .week-btn.actual { background-color: #51B8AC; color: white; }
-        .week-btn.actual.active { background-color: #0E544C; }
-
-        .week-btn.siguiente { background-color: #51B8AC; color: white; }
-        .week-btn.siguiente.active { background-color: #0E544C; }
-
-        .week-btn:hover:not(.disabled) {
-            background-color: #0E544C;
-            transform: translateY(-2px);
-        }
-
-        .week-btn.disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .week-info {
-            text-align: center;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .week-info .week-number {
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #0E544C;
+            background: white;
             color: #0E544C;
-            font-size: 1.2em;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            text-decoration: none;
         }
 
-        .week-info .week-dates {
-            font-size: 0.9em;
-            color: #666;
+        .btn-semana:hover:not(.disabled) {
+            background-color: #0E544C;
+            color: white;
+        }
+
+        .btn-semana.disabled {
+            border-color: #ccc;
+            color: #ccc;
+            cursor: not-allowed;
+            opacity: 0.5;
         }
 
         /* Grid de sucursales */

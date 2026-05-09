@@ -343,39 +343,47 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
 
             <div class="container-fluid p-3">
                 <div class="gestion-container">
-                    <h1 class="title" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <h1 class="title" style="text-align: center;">
                         Gestión de Colaboradores por Sucursal
-                        <span class="global-counter"
-                            style="font-size: 0.6em !important; background: #0E544C; color: white; padding: 4px 12px; border-radius: 20px; vertical-align: middle;">
-                            Total: <?= $totalColaboradoresGlobal ?> colaboradores
-                        </span>
                     </h1>
 
-                    <!-- Controles de semana -->
-                    <div class="week-controls">
-                        <a href="gestion_colaboradores.php?semana=actual"
-                            class="week-btn actual <?= $tipoSemana === 'actual' ? 'active' : '' ?>">
-                            <i class="fas fa-calendar-week"></i> Semana Actual
-                        </a>
+                    <!-- Navegación de Semana -->
+                    <div class="semana-nav">
+                        <div class="nav-left">
+                            <?php if ($tipoSemana === 'siguiente'): ?>
+                                <a href="gestion_colaboradores.php?semana=actual" class="btn-semana prev" title="Semana anterior">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            <?php else: ?>
+                                <button class="btn-semana prev disabled" disabled>
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                            <?php endif; ?>
 
-                        <div class="week-info">
-                            <div class="week-number">Semana <?= $semanaMostrar['numero_semana'] ?? 'N/A' ?></div>
-                            <div class="week-dates">
-                                <?= formatoFecha($semanaMostrar['fecha_inicio'] ?? '') ?> -
-                                <?= formatoFecha($semanaMostrar['fecha_fin'] ?? '') ?>
+                            <div class="semana-info">
+                                <span class="semana-label">Semana <?= $semanaMostrar['numero_semana'] ?? 'N/A' ?></span>
+                                <span class="semana-rango"><?= formatoFecha($semanaMostrar['fecha_inicio'] ?? '') ?> - <?= formatoFecha($semanaMostrar['fecha_fin'] ?? '') ?></span>
+                                <?php if ($tipoSemana === 'actual'): ?>
+                                    <span class="badge-actual">Actual</span>
+                                <?php endif; ?>
                             </div>
+
+                            <?php if ($tipoSemana === 'actual' && $semanaSiguiente): ?>
+                                <a href="gestion_colaboradores.php?semana=siguiente" class="btn-semana next" title="Semana siguiente">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            <?php else: ?>
+                                <button class="btn-semana next disabled" disabled>
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            <?php endif; ?>
                         </div>
 
-                        <?php if ($semanaSiguiente): ?>
-                            <a href="gestion_colaboradores.php?semana=siguiente"
-                                class="week-btn siguiente <?= $tipoSemana === 'siguiente' ? 'active' : '' ?>">
-                                <i class="fas fa-calendar-alt"></i> Semana Siguiente
-                            </a>
-                        <?php else: ?>
-                            <button class="week-btn siguiente disabled" disabled>
-                                <i class="fas fa-calendar-alt"></i> No hay semana siguiente
-                            </button>
-                        <?php endif; ?>
+                        <div class="nav-right">
+                            <span class="global-counter" style="background: #0E544C; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+                                Total: <?= $totalColaboradoresGlobal ?> colaboradores
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Información de ayuda -->
