@@ -343,11 +343,10 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
 
             <div class="container-fluid p-3">
                 <div class="gestion-container">
-                    <h1 class="title" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                        Gestión de Colaboradores por Sucursal
-                        <span class="global-counter"
-                            style="font-size: 0.6em !important; background: #0E544C; color: white; padding: 4px 12px; border-radius: 20px; vertical-align: middle;">
-                            Total: <?= $totalColaboradoresGlobal ?> colaboradores
+                    <h1 class="title">
+                        Gestión de Colaboradores
+                        <span class="global-counter">
+                            Total: <?= $totalColaboradoresGlobal ?>
                         </span>
                     </h1>
 
@@ -426,15 +425,12 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                             ?>
                                             <div class="sucursal-card" data-sucursal-id="<?= $sucursal['codigo'] ?>">
                                                 <div class="sucursal-header">
-                                                    <?= htmlspecialchars($sucursal['nombre']) ?>
-                                                    <div style="float: right; display: flex; align-items: center; gap: 8px;">
-                                                        <span class="sucursal-counter"
-                                                            style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.85em;">
-                                                            <?= $totalesPorSucursal[$sucursal['codigo']] ?? 0 ?>
-                                                        </span>
-                                                        <small
-                                                            style="opacity: 0.8; display:none;">#<?= $sucursal['codigo'] ?></small>
-                                                    </div>
+                                                     <?= htmlspecialchars($sucursal['nombre']) ?>
+                                                     <div class="header-right">
+                                                         <span class="sucursal-counter">
+                                                             <?= $totalesPorSucursal[$sucursal['codigo']] ?? 0 ?>
+                                                         </span>
+                                                     </div>
                                                 </div>
 
                                                 <div class="sucursal-body">
@@ -461,7 +457,7 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                                 </div>
                                                             <?php endforeach; ?>
                                                             <?php if (empty($colaboradores['lideres'])): ?>
-                                                                <div style="text-align: center; color: #999; padding: 10px;">
+                                                                <div class="empty-state">
                                                                     Sin líderes asignados
                                                                 </div>
                                                             <?php endif; ?>
@@ -492,7 +488,7 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                                 </div>
                                                             <?php endforeach; ?>
                                                             <?php if (empty($colaboradores['colaboradores'])): ?>
-                                                                <div style="text-align: center; color: #999; padding: 10px;">
+                                                                <div class="empty-state">
                                                                     Sin colaboradores asignados
                                                                 </div>
                                                             <?php endif; ?>
