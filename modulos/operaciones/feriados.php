@@ -664,198 +664,6 @@ function obtenerNombreOperario($codOperario)
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/feriados.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <style>
-        /* Estilos para los filtros de encabezado */
-        .filter-icon {
-            cursor: pointer;
-            margin-left: 5px;
-            color: #ccc;
-            transition: color 0.2s;
-        }
-
-        .filter-icon:hover,
-        .filter-icon.active {
-            color: #0E544C;
-        }
-
-        .filter-icon.has-filter {
-            color: #ffc107;
-        }
-
-        .filter-panel {
-            position: absolute;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            padding: 12px;
-            z-index: 1050;
-            width: 250px;
-            display: none;
-        }
-
-        .filter-panel.show {
-            display: block;
-        }
-
-        .filter-section {
-            margin-bottom: 12px;
-        }
-
-        .filter-section-title {
-            display: block;
-            font-weight: bold;
-            font-size: 0.85rem;
-            margin-bottom: 8px;
-            color: #555;
-        }
-
-        .filter-sort-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .filter-sort-btn {
-            flex: 1;
-            padding: 6px;
-            border: 1px solid #ddd;
-            background: #f9f9f9;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .filter-sort-btn:hover {
-            background: #eee;
-        }
-
-        .filter-sort-btn.active {
-            background: #0E544C !important;
-            color: white !important;
-            border-color: #0E544C !important;
-        }
-
-        .filter-search {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.85rem;
-        }
-
-        .filter-options {
-            max-height: 200px;
-            overflow-y: auto;
-            margin-top: 8px;
-        }
-
-        .filter-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 0;
-            font-size: 0.85rem;
-        }
-
-        .filter-actions {
-            display: flex;
-            justify-content: flex-end;
-            padding-top: 8px;
-            border-top: 1px solid #eee;
-        }
-
-        .filter-action-btn {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-
-        .filter-action-btn.clear {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        /* Paginación */
-        .pagination-btn {
-            padding: 5px 10px;
-            margin: 0 2px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        .pagination-btn.active {
-            background: #0E544C;
-            color: white;
-            border-color: #0E544C;
-        }
-
-        .pagination-btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-        
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .status-pagado { background-color: #d1e7dd; color: #0f5132; }
-        .status-descansado { background-color: #cfe2ff; color: #084298; }
-        .status-pendiente { background-color: #fff3cd; color: #856404; }
-        .status-con-marcacion { background-color: #e2e3e5; color: #41464b; }
-        .status-sin-marcacion { background-color: #f8d7da; color: #842029; }
-
-        /* Adaptar calendario de cupones */
-        .daterange-calendar-container {
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .daterange-month-selector {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
-        }
-        .daterange-month-selector select {
-            flex: 1;
-            padding: 3px;
-            font-size: 0.8rem;
-        }
-        .daterange-calendar-header {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.75rem;
-            margin-bottom: 5px;
-        }
-        .daterange-calendar-days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-        }
-        .daterange-calendar-day {
-            padding: 5px;
-            text-align: center;
-            font-size: 0.8rem;
-            cursor: pointer;
-            border-radius: 2px;
-        }
-        .daterange-calendar-day:hover { background: #f0f0f0; }
-        .daterange-calendar-day.selected { background: #0E544C; color: white; }
-        .daterange-calendar-day.in-range { background: #e9ecef; }
-        .daterange-calendar-day.empty { cursor: default; }
-    </style>
 </head>
 
 <body>
@@ -955,61 +763,134 @@ function obtenerNombreOperario($codOperario)
                 </div>
 
                 <div class="table-container">
-                    <table class="table table-hover" id="tablaFeriados">
-                        <thead>
-                            <tr>
-                                <th data-column="nombre_operario" data-type="text">
-                                    Colaborador
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="sucursal_nombre" data-type="list">
-                                    Sucursal
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="inicio_contrato" data-type="daterange">
-                                    Inicio Contrato
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="fecha" data-type="daterange">
-                                    Fecha Feriado
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="feriado_nombre" data-type="text">
-                                    Feriado
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="feriado_tipo" data-type="list">
-                                    Tipo (Departamento)
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="estado" data-type="list">
-                                    Status
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th>Observaciones</th>
-                                <?php if ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
-                                    <th style="text-align: center; min-width: 180px;">Acciones</th>
-                                <?php endif; ?>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaFeriadosBody">
-                            <!-- Datos cargados vía AJAX -->
-                        </tbody>
-                    </table>
-                </div>
+                    <?php if (!empty($feriadosTrabajados)): ?>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Colaborador</th>
+                                    <th>Sucursal</th>
+                                    <th>Inicio Contrato</th>
+                                    <th>Fecha Feriado</th>
+                                    <th>Feriado</th>
+                                    <th>Tipo (Departamento)</th>
+                                    <th style="display:none;">Horas Trabajadas</th>
+                                    <th>Status</th>
+                                    <th>Observaciones</th>
+                                    <?php if ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
+                                        <th style="text-align: center; min-width: 180px;">Acciones</th>
+                                    <?php endif; ?>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($feriadosTrabajados as $ft): ?>
+                                    <?php 
+                                    $id_fila = $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'];
+                                    $puedeAprobar = ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario));
+                                    $yaTieneDecision = !empty($ft['id_aprobacion']);
+                                    $puedeEditarObservacion = $puedeAprobar && $yaTieneDecision;
+                                    ?>
+                                    <tr id="feriado-row-<?= $id_fila ?>">
+                                        <td><?= htmlspecialchars($ft['nombre_operario']) ?></td>
+                                        <td><?= htmlspecialchars($ft['sucursal_nombre']) ?></td>
+                                        <td class="text-nowrap"><?= formatoFecha($ft['inicio_contrato']) ?></td>
+                                        <td><?= formatoFecha($ft['fecha']) ?></td>
+                                        <td><?= htmlspecialchars($ft['feriado_nombre']) ?></td>
+                                        <td>
+                                            <?= htmlspecialchars($ft['feriado_tipo']) ?>
+                                            <?php if ($ft['feriado_tipo'] === 'Departamental'): ?>
+                                                (<?= htmlspecialchars($ft['departamento_nombre']) ?>)
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="display:none;"><?= number_format($ft['horas_trabajadas'], 2) ?></td>
+                                        <td>
+                                            <?php if ($ft['estado'] === 'Con Marcación'): ?>
+                                                <span class="status-badge status-con-marcacion"
+                                                    id="status-badge-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                                    <i class="fas fa-clock"></i>
+                                                    <?= date('H:i', strtotime($ft['hora_entrada'])) ?> -
+                                                    <?= date('H:i', strtotime($ft['hora_salida'])) ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span
+                                                    class="status-badge status-<?= strtolower(str_replace(' ', '-', $ft['estado'])) ?>"
+                                                    id="status-badge-<?= $ft['id_aprobacion'] ?? 'temp_' . $ft['cod_operario'] . '_' . $ft['fecha'] ?>">
+                                                    <?= $ft['estado'] ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div class="observaciones-cell <?= $puedeEditarObservacion ? 'editable' : '' ?>"
+                                                id="obs-display-<?= $id_fila ?>"
+                                                <?= $puedeEditarObservacion ? "onclick=\"toggleEditObservacionesFeriado('$id_fila')\"" : "" ?>
+                                                title="<?= $puedeEditarObservacion ? 'Click para editar' : ($puedeAprobar ? 'Debe cambiar el estado (Pagado/Descansado) para poder editar' : '') ?>">
+                                                <?php if ($ft['observaciones']): ?>
+                                                    <?= nl2br(htmlspecialchars($ft['observaciones'])) ?>
+                                                <?php else: ?>
+                                                    <span class="text-muted">Sin observaciones</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <textarea
+                                                id="obs-edit-<?= $id_fila ?>"
+                                                class="observaciones-edit" style="display: none;"
+                                                onblur="guardarObservacionesFeriado('<?= $id_fila ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                onkeyup="manejarTeclasObservaciones(event, '<?= $id_fila ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                rows="3"><?= htmlspecialchars($ft['observaciones'] ?? '') ?></textarea>
+                                        </td>
 
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <label class="mb-0">Mostrar:</label>
-                        <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
-                            onchange="cambiarRegistrosPorPagina()">
-                            <option value="25" selected>25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                        <span class="mb-0">registros</span>
-                    </div>
-                    <div id="paginacion"></div>
+                                        <?php if ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)): ?>
+                                            <td style="text-align: center;">
+                                                <div class="action-buttons-inline"
+                                                    id="actions-<?= $id_fila ?>">
+                                                    <?php if ($ft['estado'] === 'Pendiente' || $ft['estado'] === 'Sin marcación' || $ft['estado'] === 'Con Marcación'): ?>
+                                                        <!-- Botones para estado Pendiente/Sin marcación -->
+                                                        <button type="button" class="btn-action btn-approve"
+                                                            onclick="actualizarEstadoFeriado('<?= $id_fila ?>', 'Pagado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                            title="Marcar como Pagado">
+                                                            <i class="fas fa-dollar-sign"></i>
+                                                        </button>
+                                                        <button type="button" class="btn-action btn-compensado"
+                                                            onclick="actualizarEstadoFeriado('<?= $id_fila ?>', 'Descansado', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                            title="Marcar como Compensado/Descansado">
+                                                            <i class="fas fa-bed"></i>
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <!-- Botones para estados Pagado/Descansado -->
+                                                        <button type="button" class="btn-action btn-change"
+                                                            onclick="cambiarEstadoFeriado('<?= $id_fila ?>', '<?= $ft['estado'] ?>', '<?= $ft['cod_operario'] ?>', '<?= $ft['fecha'] ?>')"
+                                                            title="Cambiar estado">
+                                                            <i class="fas fa-exchange-alt"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        <?php endif; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <div class="alert alert-info">
+                            <?php if ($fechaDesde && $fechaHasta): ?>
+                                <?php if (empty($sucursalSeleccionada) && empty($operarioSeleccionado)): ?>
+                                    No se encontraron feriados trabajados entre <?= formatoFecha($fechaDesde) ?> y
+                                    <?= formatoFecha($fechaHasta) ?>.
+                                <?php elseif (!empty($operarioSeleccionado)): ?>
+                                    No se encontraron feriados trabajados para
+                                    <?= htmlspecialchars(obtenerNombreOperario($operarioSeleccionado)) ?>
+                                    <?php if (!empty($sucursalSeleccionada)): ?>
+                                        en <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
+                                    <?php endif; ?>
+                                    entre <?= formatoFecha($fechaDesde) ?> y <?= formatoFecha($fechaHasta) ?>.
+                                <?php else: ?>
+                                    No se encontraron feriados trabajados para
+                                    <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
+                                    entre <?= formatoFecha($fechaDesde) ?> y <?= formatoFecha($fechaHasta) ?>.
+                                <?php endif; ?>
+                            <?php else: ?>
+                                Seleccione un rango de fechas para buscar feriados trabajados.
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1101,9 +982,6 @@ function obtenerNombreOperario($codOperario)
     </div>
 
     <script>
-        // Variables de permiso para JS
-        window.puedeAprobarPermiso = <?= ($esAdmin || tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)) ? 'true' : 'false' ?>;
-
         // Datos de operarios para el autocompletado (generados dinámicamente)
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
@@ -1112,8 +990,6 @@ function obtenerNombreOperario($codOperario)
             <?php endforeach; ?>
         ];
     </script>
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/feriados.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 
 </body>
