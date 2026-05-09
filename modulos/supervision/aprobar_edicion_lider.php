@@ -1,7 +1,6 @@
 <?php
 // require_once '../../includes/auth.php';
-// require_once '../../includes/funciones.php';
-require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
+// require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
 // Verificar permisos (solo supervisores o admin)
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';

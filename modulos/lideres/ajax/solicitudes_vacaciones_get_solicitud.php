@@ -3,7 +3,6 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 // ajax/solicitudes_vacaciones_get_solicitud.php
-require_once '../../../includes/conexion.php';
 require_once '../../../includes/auth.php';
 
 header('Content-Type: application/json');

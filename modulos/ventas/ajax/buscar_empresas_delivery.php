@@ -1,7 +1,5 @@
 ﻿<?php
 require_once '../../../includes/auth.php';
-require_once '../../../includes/conexion.php';
-
 header('Content-Type: application/json');
 
 if (!isset($_POST['sucursal_id'])) {

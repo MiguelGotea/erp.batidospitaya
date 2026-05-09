@@ -1,7 +1,5 @@
 <?php
 require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
 /**
  * Script para actualizar automáticamente el estado de tardanzas pendientes a "No Válido"
  * después de 3 días de la fecha límite

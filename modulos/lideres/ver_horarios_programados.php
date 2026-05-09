@@ -4,8 +4,6 @@
 //error_reporting(E_ALL);
 
 require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
 if (!function_exists('obtenerHorariosLiderPorSemanaYSucursal')) {
     function obtenerHorariosLiderPorSemanaYSucursal($numeroSemana, $codSucursal) {
         global $conn;

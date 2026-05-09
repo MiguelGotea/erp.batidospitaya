@@ -1,7 +1,5 @@
 <?php
 require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
 if (!$conn) {
     die("Error de conexión a la base de datos");
 }

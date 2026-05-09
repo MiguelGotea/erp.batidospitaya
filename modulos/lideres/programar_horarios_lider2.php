@@ -5,8 +5,6 @@
 //error_reporting(E_ALL);
 
 require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
 if (!isset($_SESSION['operarios_seleccionados'])) {
     $_SESSION['operarios_seleccionados'] = [];
 }

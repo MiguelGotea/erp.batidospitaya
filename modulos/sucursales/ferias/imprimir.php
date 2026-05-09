@@ -1,7 +1,5 @@
 <?php
 require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
 // Verificar acceso
 verificarAccesoModulo('sucursales');
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';

@@ -1,7 +1,5 @@
 <?php
 require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
 verificarAutenticacion();
 
 // Verificar que solo RH pueda acceder
