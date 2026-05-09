@@ -1,5 +1,7 @@
 <?php
 require_once '../../includes/auth.php';
+require_once '../../includes/funciones.php';
+
 // Verificar acceso
 verificarAccesoCargo([11, 16, 21, 49]);
 

@@ -1,5 +1,7 @@
 <?php
 require_once '../../includes/auth.php';
+require_once '../../includes/funciones.php';
+
 // Verificar acceso al módulo
 verificarAccesoCargo([27]);
 

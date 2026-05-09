@@ -1,5 +1,7 @@
 ﻿<?php
 require_once '../../../includes/auth.php';
+require_once '../../../includes/conexion.php';
+
 header('Content-Type: application/json');
 
 $promocion_id = intval($_POST['promocion_id']);

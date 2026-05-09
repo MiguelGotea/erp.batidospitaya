@@ -1,5 +1,8 @@
 ﻿<?php
 require_once '../../../includes/auth.php';
+require_once '../../../includes/conexion.php';
+require_once '../../../includes/funciones.php';
+
 header('Content-Type: application/json');
 
 // Verificar que sea una solicitud POST
