@@ -151,6 +151,62 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
         document.body.classList.add('read-only');
     }
+
+    // Configurar clic para editar colaborador
+    const tienePermisoEditar = document.body.dataset.tienePermisoEditar === '1';
+    if (tienePermisoEditar) {
+        let startPos = {x: 0, y: 0, time: 0};
+        
+        document.addEventListener('mousedown', function(e) {
+            startPos = {x: e.clientX, y: e.clientY, time: Date.now()};
+        });
+        
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 0) {
+                startPos = {x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now()};
+            }
+        }, {passive: true});
+        
+        document.querySelectorAll('.drag-item').forEach(function(item) {
+            item.style.cursor = 'pointer';
+            
+            // Efecto visual sutil al hacer hover si tiene permiso
+            item.addEventListener('mouseenter', function() {
+                if (!item.classList.contains('sortable-drag')) {
+                    item.style.outline = '2px solid rgba(14, 84, 76, 0.5)';
+                    item.style.outlineOffset = '-2px';
+                    item.style.borderRadius = '6px';
+                }
+            });
+            item.addEventListener('mouseleave', function() {
+                item.style.outline = 'none';
+            });
+            
+            item.addEventListener('click', function(e) {
+                let clientX = e.clientX;
+                let clientY = e.clientY;
+                
+                // Algunas veces el evento click en touch no tiene clientX/Y
+                if (clientX === undefined && e.changedTouches) {
+                    clientX = e.changedTouches[0].clientX;
+                    clientY = e.changedTouches[0].clientY;
+                }
+                
+                const diffX = Math.abs(clientX - startPos.x);
+                const diffY = Math.abs(clientY - startPos.y);
+                const diffTime = Date.now() - startPos.time;
+                
+                // Si el movimiento es muy pequeño y fue rápido, lo consideramos un click real
+                // 10 pixeles de tolerancia y 500ms
+                if (diffX < 10 && diffY < 10 && diffTime < 500) {
+                    const codOperario = this.dataset.id;
+                    window.location.href = `https://erp.batidospitaya.com/modulos/rh/editar_colaborador.php?id=${codOperario}&pestaña=adendums`;
+                } else {
+                    e.preventDefault();
+                }
+            });
+        });
+    }
 });
 
 function guardarEstadoInicial() {
