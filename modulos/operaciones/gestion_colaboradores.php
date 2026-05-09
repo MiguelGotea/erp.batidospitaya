@@ -345,7 +345,8 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                 <div class="gestion-container">
                     <h1 class="title" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                         Gestión de Colaboradores por Sucursal
-                        <span class="global-counter">
+                        <span class="global-counter"
+                            style="font-size: 0.6em !important; background: #0E544C; color: white; padding: 4px 12px; border-radius: 20px; vertical-align: middle;">
                             Total: <?= $totalColaboradoresGlobal ?> colaboradores
                         </span>
                     </h1>
