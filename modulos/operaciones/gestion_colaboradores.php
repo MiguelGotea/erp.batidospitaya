@@ -73,12 +73,11 @@ function obtenerTotalColaboradoresSucursal($codSucursal, $semana)
         JOIN Operarios o ON anc.CodOperario = o.CodOperario
         WHERE anc.Sucursal = ?
         AND anc.CodNivelesCargos IN (2, 5, 43, 44, 45, 46, 47)
+        AND anc.Fecha <= ? 
         AND (anc.Fin IS NULL OR anc.Fin >= ?)
-        AND anc.Fecha <= ?
-        AND o.Operativo = 1
     ");
 
-    $stmt->execute([$codSucursal, $fechaInicioSemana, $fechaFinSemana]);
+    $stmt->execute([$codSucursal, $fechaFinSemana, $fechaInicioSemana]);
     $result = $stmt->fetch();
 
     return $result['total'] ?? 0;
@@ -100,14 +99,13 @@ function obtenerTotalColaboradoresGlobal($semana)
         JOIN Operarios o ON anc.CodOperario = o.CodOperario
         JOIN sucursales s ON anc.Sucursal = s.codigo
         WHERE anc.CodNivelesCargos IN (2, 5, 43, 44, 45, 46, 47)
+        AND anc.Fecha <= ? 
         AND (anc.Fin IS NULL OR anc.Fin >= ?)
-        AND anc.Fecha <= ?
-        AND o.Operativo = 1
         AND s.activa = 1
         AND s.sucursal = 1
     ");
 
-    $stmt->execute([$fechaInicioSemana, $fechaFinSemana]);
+    $stmt->execute([$fechaFinSemana, $fechaInicioSemana]);
     $result = $stmt->fetch();
 
     return $result['total'] ?? 0;
@@ -180,9 +178,8 @@ function obtenerColaboradoresPorSucursal($codSucursal, $semana)
         WHERE anc.Sucursal = ?
         AND anc.CodNivelesCargos IN (2, 5, 43, 44, 45, 46, 47)  -- Solo cargos permitidos
         -- Verificar que la asignación esté activa durante la semana
+        AND anc.Fecha <= ? 
         AND (anc.Fin IS NULL OR anc.Fin >= ?)
-        AND anc.Fecha <= ?
-        AND o.Operativo = 1
         ORDER BY 
             CASE 
                 WHEN anc.CodNivelesCargos IN (5, 43) THEN 1  -- Líderes primero
@@ -191,7 +188,7 @@ function obtenerColaboradoresPorSucursal($codSucursal, $semana)
             o.Nombre, o.Apellido
     ");
 
-    $stmt->execute([$codSucursal, $fechaInicioSemana, $fechaFinSemana]);
+    $stmt->execute([$codSucursal, $fechaFinSemana, $fechaInicioSemana]);
     $colaboradores = $stmt->fetchAll();
 
     // Separar en líderes y colaboradores generales
@@ -264,13 +261,13 @@ function obtenerColaboradoresNoAsignados($semana)
             SELECT DISTINCT anc.CodOperario
             FROM AsignacionNivelesCargos anc
             WHERE anc.CodNivelesCargos IN (2, 5, 43, 44, 45, 46, 47)
+            AND anc.Fecha <= ? 
             AND (anc.Fin IS NULL OR anc.Fin >= ?)
-            AND anc.Fecha <= ?
         )
         ORDER BY o.Nombre, o.Apellido
     ");
 
-    $stmt->execute([$fechaInicioSemana, $fechaFinSemana]);
+    $stmt->execute([$fechaFinSemana, $fechaInicioSemana]);
     $noAsignados = $stmt->fetchAll();
 
     // Filtrar para incluir solo los que tienen un cargo permitido
