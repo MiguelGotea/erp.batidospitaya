@@ -3,8 +3,6 @@ require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 
-verificarAutenticacion();
-
 // Verificar acceso al módulo (RH y admin)
 verificarAccesoCargo([13, 16, 39, 30, 37, 49, 8, 42, 39]);
 
@@ -343,193 +341,201 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                         </span>
                     </h1>
 
-        <!-- Controles de semana -->
-        <div class="week-controls">
-            <a href="gestion_colaboradores.php?semana=actual"
-                class="week-btn actual <?= $tipoSemana === 'actual' ? 'active' : '' ?>">
-                <i class="fas fa-calendar-week"></i> Semana Actual
-            </a>
+                    <!-- Controles de semana -->
+                    <div class="week-controls">
+                        <a href="gestion_colaboradores.php?semana=actual"
+                            class="week-btn actual <?= $tipoSemana === 'actual' ? 'active' : '' ?>">
+                            <i class="fas fa-calendar-week"></i> Semana Actual
+                        </a>
 
-            <div class="week-info">
-                <div class="week-number">Semana <?= $semanaMostrar['numero_semana'] ?? 'N/A' ?></div>
-                <div class="week-dates">
-                    <?= formatoFecha($semanaMostrar['fecha_inicio'] ?? '') ?> -
-                    <?= formatoFecha($semanaMostrar['fecha_fin'] ?? '') ?>
-                </div>
-            </div>
+                        <div class="week-info">
+                            <div class="week-number">Semana <?= $semanaMostrar['numero_semana'] ?? 'N/A' ?></div>
+                            <div class="week-dates">
+                                <?= formatoFecha($semanaMostrar['fecha_inicio'] ?? '') ?> -
+                                <?= formatoFecha($semanaMostrar['fecha_fin'] ?? '') ?>
+                            </div>
+                        </div>
 
-            <?php /* Oculto temporalmente
-            <?php if ($semanaSiguiente): ?>
-                <a href="gestion_colaboradores.php?semana=siguiente"
-                    class="week-btn siguiente <?= $tipoSemana === 'siguiente' ? 'active' : '' ?>">
-                    <i class="fas fa-calendar-alt"></i> Semana Siguiente
-                </a>
-            <?php else: ?>
-                <button class="week-btn siguiente disabled" disabled>
-                    <i class="fas fa-calendar-alt"></i> No hay semana siguiente
-                </button>
-            <?php endif; ?>
-            */ ?>
-        </div>
+                        <?php /* Oculto temporalmente
+       <?php if ($semanaSiguiente): ?>
+           <a href="gestion_colaboradores.php?semana=siguiente"
+               class="week-btn siguiente <?= $tipoSemana === 'siguiente' ? 'active' : '' ?>">
+               <i class="fas fa-calendar-alt"></i> Semana Siguiente
+           </a>
+       <?php else: ?>
+           <button class="week-btn siguiente disabled" disabled>
+               <i class="fas fa-calendar-alt"></i> No hay semana siguiente
+           </button>
+       <?php endif; ?>
+       */ ?>
+                    </div>
 
-        <!-- Información de ayuda -->
-        <div class="help-info" style="display:none;">
-            <h4><i class="fas fa-info-circle"></i> Instrucciones:</h4>
-            <p>
-                <strong>Semana Actual:</strong> Solo visualización de asignaciones actuales.<br>
-                <strong>Semana Siguiente:</strong> Arrastra y suelta colaboradores entre sucursales.
-                Los cambios se aplicarán a partir de la semana siguiente.
-            </p>
-            <p style="margin-top: 8px;">
-                <i class="fas fa-user-shield"></i> <strong>Líderes:</strong> Máximo 2 por sucursal (cargos 5 o 43)<br>
-                <i class="fas fa-users"></i> <strong>Colaboradores:</strong> Cargos 2, 44, 45, 46, 47
-            </p>
-        </div>
+                    <!-- Información de ayuda -->
+                    <div class="help-info" style="display:none;">
+                        <h4><i class="fas fa-info-circle"></i> Instrucciones:</h4>
+                        <p>
+                            <strong>Semana Actual:</strong> Solo visualización de asignaciones actuales.<br>
+                            <strong>Semana Siguiente:</strong> Arrastra y suelta colaboradores entre sucursales.
+                            Los cambios se aplicarán a partir de la semana siguiente.
+                        </p>
+                        <p style="margin-top: 8px;">
+                            <i class="fas fa-user-shield"></i> <strong>Líderes:</strong> Máximo 2 por sucursal (cargos 5
+                            o 43)<br>
+                            <i class="fas fa-users"></i> <strong>Colaboradores:</strong> Cargos 2, 44, 45, 46, 47
+                        </p>
+                    </div>
 
-        <?php if (isset($_SESSION['exito'])): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?= $_SESSION['exito'] ?>
-                <?php unset($_SESSION['exito']); ?>
-            </div>
-        <?php endif; ?>
+                    <?php if (isset($_SESSION['exito'])): ?>
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            <?= $_SESSION['exito'] ?>
+                            <?php unset($_SESSION['exito']); ?>
+                        </div>
+                    <?php endif; ?>
 
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-triangle"></i>
-                <?= $_SESSION['error'] ?>
-                <?php unset($_SESSION['error']); ?>
-            </div>
-        <?php endif; ?>
+                    <?php if (isset($_SESSION['error'])): ?>
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <?= $_SESSION['error'] ?>
+                            <?php unset($_SESSION['error']); ?>
+                        </div>
+                    <?php endif; ?>
 
-        <!-- Formulario para guardar movimientos -->
-        <form id="movimientosForm">
-            <input type="hidden" name="semana" value="siguiente">
-            <div id="movimientosData"></div>
+                    <!-- Formulario para guardar movimientos -->
+                    <form id="movimientosForm">
+                        <input type="hidden" name="semana" value="siguiente">
+                        <div id="movimientosData"></div>
 
-            <!-- Secciones por departamento -->
-            <?php foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales): ?>
-                <?php if (!empty($sucursales)): ?>
-                    <div class="departamento-section">
-                        <h2 class="departamento-title"><?= htmlspecialchars($departamentoNombre) ?></h2>
+                        <!-- Secciones por departamento -->
+                        <?php foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales): ?>
+                            <?php if (!empty($sucursales)): ?>
+                                <div class="departamento-section">
+                                    <h2 class="departamento-title"><?= htmlspecialchars($departamentoNombre) ?></h2>
 
-                        <div class="sucursales-grid">
-                            <?php foreach ($sucursales as $sucursal):
-                                $colaboradores = $colaboradoresPorSucursal[$sucursal['codigo']] ?? ['lideres' => [], 'colaboradores' => []];
-                                ?>
-                                <div class="sucursal-card" data-sucursal-id="<?= $sucursal['codigo'] ?>">
-                                    <div class="sucursal-header">
-                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                        <div style="float: right; display: flex; align-items: center; gap: 8px;">
-                                            <span class="sucursal-counter"
-                                                style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.85em;">
-                                                <?= $totalesPorSucursal[$sucursal['codigo']] ?? 0 ?>
-                                            </span>
-                                            <small style="opacity: 0.8; display:none;">#<?= $sucursal['codigo'] ?></small>
-                                        </div>
-                                    </div>
+                                    <div class="sucursales-grid">
+                                        <?php foreach ($sucursales as $sucursal):
+                                            $colaboradores = $colaboradoresPorSucursal[$sucursal['codigo']] ?? ['lideres' => [], 'colaboradores' => []];
+                                            ?>
+                                            <div class="sucursal-card" data-sucursal-id="<?= $sucursal['codigo'] ?>">
+                                                <div class="sucursal-header">
+                                                    <?= htmlspecialchars($sucursal['nombre']) ?>
+                                                    <div style="float: right; display: flex; align-items: center; gap: 8px;">
+                                                        <span class="sucursal-counter"
+                                                            style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.85em;">
+                                                            <?= $totalesPorSucursal[$sucursal['codigo']] ?? 0 ?>
+                                                        </span>
+                                                        <small
+                                                            style="opacity: 0.8; display:none;">#<?= $sucursal['codigo'] ?></small>
+                                                    </div>
+                                                </div>
 
-                                    <div class="sucursal-body">
-                                        <!-- Líderes -->
-                                        <div class="lideres-section">
-                                            <div class="section-title">
-                                                <i class="fas fa-user-shield"></i> Líderes
-                                            </div>
-                                            <div class="drag-area lideres 
+                                                <div class="sucursal-body">
+                                                    <!-- Líderes -->
+                                                    <div class="lideres-section">
+                                                        <div class="section-title">
+                                                            <i class="fas fa-user-shield"></i> Líderes
+                                                        </div>
+                                                        <div class="drag-area lideres 
                                                 <?= $tipoSemana === 'siguiente' ? 'sortable-lideres' : '' ?>"
-                                                data-sucursal="<?= $sucursal['codigo'] ?>" data-tipo="lideres" data-max="2">
-                                                <?php foreach ($colaboradores['lideres'] as $lider): ?>
-                                                    <div class="drag-item lider" data-id="<?= $lider['codigo'] ?>"
-                                                        data-cargo="<?= $lider['cod_cargo'] ?>">
-                                                        <div class="item-info">
-                                                            <div class="item-name"><?= htmlspecialchars($lider['nombre']) ?></div>
-                                                            <div class="item-cargo"><?= htmlspecialchars($lider['cargo_nombre']) ?>
-                                                            </div>
+                                                            data-sucursal="<?= $sucursal['codigo'] ?>" data-tipo="lideres"
+                                                            data-max="2">
+                                                            <?php foreach ($colaboradores['lideres'] as $lider): ?>
+                                                                <div class="drag-item lider" data-id="<?= $lider['codigo'] ?>"
+                                                                    data-cargo="<?= $lider['cod_cargo'] ?>">
+                                                                    <div class="item-info">
+                                                                        <div class="item-name"><?= htmlspecialchars($lider['nombre']) ?>
+                                                                        </div>
+                                                                        <div class="item-cargo">
+                                                                            <?= htmlspecialchars($lider['cargo_nombre']) ?>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span class="item-badge"><?= $lider['codigo'] ?></span>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                            <?php if (empty($colaboradores['lideres'])): ?>
+                                                                <div style="text-align: center; color: #999; padding: 10px;">
+                                                                    Sin líderes asignados
+                                                                </div>
+                                                            <?php endif; ?>
                                                         </div>
-                                                        <span class="item-badge"><?= $lider['codigo'] ?></span>
                                                     </div>
-                                                <?php endforeach; ?>
-                                                <?php if (empty($colaboradores['lideres'])): ?>
-                                                    <div style="text-align: center; color: #999; padding: 10px;">
-                                                        Sin líderes asignados
-                                                    </div>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
 
-                                        <!-- Colaboradores generales -->
-                                        <div class="colaboradores-section">
-                                            <div class="section-title">
-                                                <i class="fas fa-users"></i> Colaboradores
-                                            </div>
-                                            <div class="drag-area colaboradores 
+                                                    <!-- Colaboradores generales -->
+                                                    <div class="colaboradores-section">
+                                                        <div class="section-title">
+                                                            <i class="fas fa-users"></i> Colaboradores
+                                                        </div>
+                                                        <div class="drag-area colaboradores 
                                                 <?= $tipoSemana === 'siguiente' ? 'sortable-colaboradores' : '' ?>"
-                                                data-sucursal="<?= $sucursal['codigo'] ?>" data-tipo="colaboradores">
-                                                <?php foreach ($colaboradores['colaboradores'] as $colaborador): ?>
-                                                    <div class="drag-item colaborador" data-id="<?= $colaborador['codigo'] ?>"
-                                                        data-cargo="<?= $colaborador['cod_cargo'] ?>">
-                                                        <div class="item-info">
-                                                            <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?></div>
-                                                            <div class="item-cargo">
-                                                                <?= htmlspecialchars($colaborador['cargo_nombre']) ?>
-                                                            </div>
+                                                            data-sucursal="<?= $sucursal['codigo'] ?>" data-tipo="colaboradores">
+                                                            <?php foreach ($colaboradores['colaboradores'] as $colaborador): ?>
+                                                                <div class="drag-item colaborador"
+                                                                    data-id="<?= $colaborador['codigo'] ?>"
+                                                                    data-cargo="<?= $colaborador['cod_cargo'] ?>">
+                                                                    <div class="item-info">
+                                                                        <div class="item-name">
+                                                                            <?= htmlspecialchars($colaborador['nombre']) ?></div>
+                                                                        <div class="item-cargo">
+                                                                            <?= htmlspecialchars($colaborador['cargo_nombre']) ?>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span class="item-badge"><?= $colaborador['codigo'] ?></span>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                            <?php if (empty($colaboradores['colaboradores'])): ?>
+                                                                <div style="text-align: center; color: #999; padding: 10px;">
+                                                                    Sin colaboradores asignados
+                                                                </div>
+                                                            <?php endif; ?>
                                                         </div>
-                                                        <span class="item-badge"><?= $colaborador['codigo'] ?></span>
                                                     </div>
-                                                <?php endforeach; ?>
-                                                <?php if (empty($colaboradores['colaboradores'])): ?>
-                                                    <div style="text-align: center; color: #999; padding: 10px;">
-                                                        Sin colaboradores asignados
-                                                    </div>
-                                                <?php endif; ?>
+                                                </div>
                                             </div>
-                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            <?php endforeach; ?>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
 
-            <!-- Pool de no asignados (solo para semana siguiente) -->
-            <?php if ($tipoSemana === 'siguiente' && !empty($colaboradoresNoAsignados)): ?>
-                <div class="departamento-section">
-                    <h2 class="departamento-title">Colaboradores No Asignados</h2>
+                        <!-- Pool de no asignados (solo para semana siguiente) -->
+                        <?php if ($tipoSemana === 'siguiente' && !empty($colaboradoresNoAsignados)): ?>
+                            <div class="departamento-section">
+                                <h2 class="departamento-title">Colaboradores No Asignados</h2>
 
-                    <div class="no-asignados-section">
-                        <div class="section-title">
-                            <i class="fas fa-user-clock"></i> Disponibles para asignar
-                        </div>
-                        <div class="drag-area no-asignados sortable-no-asignados" data-sucursal="0"
-                            data-tipo="no-asignados">
-                            <?php foreach ($colaboradoresNoAsignados as $colaborador): ?>
-                                <div class="drag-item no-asignado" data-id="<?= $colaborador['codigo'] ?>"
-                                    data-cargo="<?= $colaborador['cod_cargo'] ?>">
-                                    <div class="item-info">
-                                        <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?></div>
-                                        <div class="item-cargo"><?= htmlspecialchars($colaborador['cargo_nombre']) ?></div>
+                                <div class="no-asignados-section">
+                                    <div class="section-title">
+                                        <i class="fas fa-user-clock"></i> Disponibles para asignar
                                     </div>
-                                    <span class="item-badge">#<?= $colaborador['codigo'] ?></span>
+                                    <div class="drag-area no-asignados sortable-no-asignados" data-sucursal="0"
+                                        data-tipo="no-asignados">
+                                        <?php foreach ($colaboradoresNoAsignados as $colaborador): ?>
+                                            <div class="drag-item no-asignado" data-id="<?= $colaborador['codigo'] ?>"
+                                                data-cargo="<?= $colaborador['cod_cargo'] ?>">
+                                                <div class="item-info">
+                                                    <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?></div>
+                                                    <div class="item-cargo">
+                                                        <?= htmlspecialchars($colaborador['cargo_nombre']) ?></div>
+                                                </div>
+                                                <span class="item-badge">#<?= $colaborador['codigo'] ?></span>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
 
-            <!-- Botones de acción (solo para semana siguiente) -->
-            <?php if ($tipoSemana === 'siguiente'): ?>
-                <div class="actions-bar">
-                    <button type="button" id="btnReset" class="btn-reset">
-                        <i class="fas fa-undo"></i> Restaurar Original
-                    </button>
-                    <button type="button" id="btnGuardar" class="btn-guardar">
-                        <i class="fas fa-save"></i> Guardar Cambios
-                    </button>
-                </div>
-            <?php endif; ?>
-        </form>
+                        <!-- Botones de acción (solo para semana siguiente) -->
+                        <?php if ($tipoSemana === 'siguiente'): ?>
+                            <div class="actions-bar">
+                                <button type="button" id="btnReset" class="btn-reset">
+                                    <i class="fas fa-undo"></i> Restaurar Original
+                                </button>
+                                <button type="button" id="btnGuardar" class="btn-guardar">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        <?php endif; ?>
+                    </form>
                 </div>
             </div>
         </div>
