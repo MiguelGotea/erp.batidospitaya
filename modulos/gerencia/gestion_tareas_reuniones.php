@@ -3,7 +3,7 @@
 // Panel principal de gestión de tareas y reuniones del equipo de liderazgo
 
 require_once '../../core/auth/auth.php';
-require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/menu_lateral_v2.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
@@ -16,10 +16,10 @@ if (!tienePermiso('gestion_tareas_reuniones', 'vista', $cargoOperario)) {
     exit();
 }
 
-$permisoCrearTarea      = tienePermiso('gestion_tareas_reuniones', 'crear_tarea',           $cargoOperario);
-$permisoSolicitarTarea  = tienePermiso('gestion_tareas_reuniones', 'solicitar_tarea',        $cargoOperario);
-$permisoSolicitarReunion= tienePermiso('gestion_tareas_reuniones', 'solicitar_reunion',      $cargoOperario);
-$permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tarea_reunion', $cargoOperario);
+$permisoCrearTarea = tienePermiso('gestion_tareas_reuniones', 'crear_tarea', $cargoOperario);
+$permisoSolicitarTarea = tienePermiso('gestion_tareas_reuniones', 'solicitar_tarea', $cargoOperario);
+$permisoSolicitarReunion = tienePermiso('gestion_tareas_reuniones', 'solicitar_reunion', $cargoOperario);
+$permisoCancelar = tienePermiso('gestion_tareas_reuniones', 'cancelar_tarea_reunion', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -130,11 +130,13 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                     <form id="formNuevaTarea">
                         <div class="mb-3">
                             <label for="tituloTarea" class="form-label">Título *</label>
-                            <input type="text" class="form-control" id="tituloTarea" name="titulo" required maxlength="255" placeholder="Ej: Revisar informe de ventas">
+                            <input type="text" class="form-control" id="tituloTarea" name="titulo" required
+                                maxlength="255" placeholder="Ej: Revisar informe de ventas">
                         </div>
                         <div class="mb-3">
                             <label for="descripcionTarea" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionTarea" name="descripcion" rows="4" placeholder="Detalla el objetivo de la tarea..."></textarea>
+                            <textarea class="form-control" id="descripcionTarea" name="descripcion" rows="4"
+                                placeholder="Detalla el objetivo de la tarea..."></textarea>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
@@ -163,12 +165,14 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                             </div>
                             <div class="col-md-6">
                                 <label for="duracionTarea" class="form-label">Duración (min)</label>
-                                <input type="number" class="form-control" id="duracionTarea" name="duracion_min" value="60" min="1">
+                                <input type="number" class="form-control" id="duracionTarea" name="duracion_min"
+                                    value="60" min="1">
                             </div>
                         </div>
                         <div class="mb-3 mt-3">
                             <label for="archivosTarea" class="form-label">Archivos Adjuntos</label>
-                            <input type="file" class="form-control" id="archivosTarea" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
+                            <input type="file" class="form-control" id="archivosTarea" name="archivos[]" multiple
+                                accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Máximo 10MB por archivo. Formatos: PDF, JPG, PNG</small>
                         </div>
                     </form>
@@ -199,22 +203,26 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                     <form id="formSolicitarTarea">
                         <div class="mb-3">
                             <label for="tituloTareaSolicitud" class="form-label">Título *</label>
-                            <input type="text" class="form-control" id="tituloTareaSolicitud" name="titulo" required maxlength="255" placeholder="Ej: Entrega de reporte semanal">
+                            <input type="text" class="form-control" id="tituloTareaSolicitud" name="titulo" required
+                                maxlength="255" placeholder="Ej: Entrega de reporte semanal">
                         </div>
                         <div class="mb-3">
                             <label for="descripcionTareaSolicitud" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionTareaSolicitud" name="descripcion" rows="4" placeholder="Detalla lo que se requiere..."></textarea>
+                            <textarea class="form-control" id="descripcionTareaSolicitud" name="descripcion" rows="4"
+                                placeholder="Detalla lo que se requiere..."></textarea>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label for="cargoAsignadoTareaSolicitud" class="form-label">Solicitar a *</label>
-                                <select class="form-select" id="cargoAsignadoTareaSolicitud" name="cod_cargo_asignado" required>
+                                <select class="form-select" id="cargoAsignadoTareaSolicitud" name="cod_cargo_asignado"
+                                    required>
                                     <option value="">Seleccione un cargo...</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label for="fechaMetaTareaSolicitud" class="form-label">Fecha Límite *</label>
-                                <input type="date" class="form-control" id="fechaMetaTareaSolicitud" name="fecha_meta" required>
+                                <input type="date" class="form-control" id="fechaMetaTareaSolicitud" name="fecha_meta"
+                                    required>
                             </div>
                             <div class="col-md-4">
                                 <label for="prioridadTareaSolicitud" class="form-label">Prioridad *</label>
@@ -232,12 +240,14 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                             </div>
                             <div class="col-md-6">
                                 <label for="duracionTareaSolicitud" class="form-label">Duración (min)</label>
-                                <input type="number" class="form-control" id="duracionTareaSolicitud" name="duracion_min" value="60" min="1">
+                                <input type="number" class="form-control" id="duracionTareaSolicitud"
+                                    name="duracion_min" value="60" min="1">
                             </div>
                         </div>
                         <div class="mb-3 mt-3">
                             <label for="archivosTareaSolicitud" class="form-label">Archivos Adjuntos</label>
-                            <input type="file" class="form-control" id="archivosTareaSolicitud" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
+                            <input type="file" class="form-control" id="archivosTareaSolicitud" name="archivos[]"
+                                multiple accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Máximo 10MB por archivo. Formatos: PDF, JPG, PNG</small>
                         </div>
                     </form>
@@ -268,15 +278,18 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                     <form id="formNuevaReunion">
                         <div class="mb-3">
                             <label for="tituloReunion" class="form-label">Título *</label>
-                            <input type="text" class="form-control" id="tituloReunion" name="titulo" required maxlength="255" placeholder="Ej: Revisión de métricas Q1">
+                            <input type="text" class="form-control" id="tituloReunion" name="titulo" required
+                                maxlength="255" placeholder="Ej: Revisión de métricas Q1">
                         </div>
                         <div class="mb-3">
                             <label for="descripcionReunion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionReunion" name="descripcion" rows="3" placeholder="Agenda de la reunión..."></textarea>
+                            <textarea class="form-control" id="descripcionReunion" name="descripcion" rows="3"
+                                placeholder="Agenda de la reunión..."></textarea>
                         </div>
                         <div class="mb-3">
                             <label for="fechaReunion" class="form-label">Fecha y Hora *</label>
-                            <input type="datetime-local" class="form-control" id="fechaReunion" name="fecha_reunion" required>
+                            <input type="datetime-local" class="form-control" id="fechaReunion" name="fecha_reunion"
+                                required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Invitados *</label>
@@ -285,7 +298,8 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                         </div>
                         <div class="mb-3">
                             <label for="archivosReunion" class="form-label">Archivos Adjuntos</label>
-                            <input type="file" class="form-control" id="archivosReunion" name="archivos[]" multiple accept=".pdf,.jpg,.jpeg,.png">
+                            <input type="file" class="form-control" id="archivosReunion" name="archivos[]" multiple
+                                accept=".pdf,.jpg,.jpeg,.png">
                             <small class="text-muted">Máximo 10MB por archivo. Formatos: PDF, JPG, PNG</small>
                         </div>
                     </form>
@@ -322,8 +336,10 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Evidencias / Archivos</label>
-                            <input type="file" class="form-control" id="archivosFinalizacionTarea" multiple accept=".pdf,.jpg,.jpeg,.png">
-                            <small class="text-muted">Adjunta capturas de pantalla, documentos u otro tipo de evidencia</small>
+                            <input type="file" class="form-control" id="archivosFinalizacionTarea" multiple
+                                accept=".pdf,.jpg,.jpeg,.png">
+                            <small class="text-muted">Adjunta capturas de pantalla, documentos u otro tipo de
+                                evidencia</small>
                         </div>
                     </form>
                 </div>
@@ -343,7 +359,7 @@ $permisoCancelar        = tienePermiso('gestion_tareas_reuniones', 'cancelar_tar
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const cargoActual     = <?php echo $cargoOperario; ?>;
+        const cargoActual = <?php echo $cargoOperario; ?>;
         const permisoCancelar = <?php echo $permisoCancelar ? 'true' : 'false'; ?>;
     </script>
     <script src="js/gestion_tareas_reuniones.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
