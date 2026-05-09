@@ -9,7 +9,6 @@ verificarAutenticacion();
 verificarAccesoCargo([13, 16, 39, 30, 37, 49, 8, 42, 39]);
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Obtener cargo principal
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
