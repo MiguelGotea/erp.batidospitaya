@@ -53,6 +53,15 @@ $stmtNext2 = $conn->prepare("SELECT * FROM SemanasSistema WHERE fecha_inicio > ?
 $stmtNext2->execute([$semanaMostrar['fecha_inicio']]);
 $semanaSiguienteObj = $stmtNext2->fetch();
 
+// Bloquear avanzar más allá de la semana siguiente a la actual
+$stmtMaxSemana = $conn->prepare("SELECT * FROM SemanasSistema WHERE fecha_inicio > ? ORDER BY fecha_inicio ASC LIMIT 1");
+$stmtMaxSemana->execute([$semanaActualRef['fecha_inicio']]);
+$maxSemanaPermitida = $stmtMaxSemana->fetch();
+
+if ($maxSemanaPermitida && $semanaMostrar['fecha_inicio'] >= $maxSemanaPermitida['fecha_inicio']) {
+    $semanaSiguienteObj = null;
+}
+
 // Mantener variables por compatibilidad
 $semanaActual = $semanaActualRef;
 $semanaSiguiente = $semanaSiguienteObj;
