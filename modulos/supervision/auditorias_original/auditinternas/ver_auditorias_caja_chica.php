@@ -5,7 +5,6 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: ant
 // require_once 'config.php'; // Comentado por migración al core
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

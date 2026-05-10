@@ -8,7 +8,6 @@
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

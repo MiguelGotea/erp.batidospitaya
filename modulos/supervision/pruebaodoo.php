@@ -8,7 +8,6 @@
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';

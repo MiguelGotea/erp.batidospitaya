@@ -6,7 +6,6 @@ require_once '../../core/layout/header_universal.php';
 require_once 'includes/funciones_compras.php';
 require_once '../../core/helpers/config.php';
 
-verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];

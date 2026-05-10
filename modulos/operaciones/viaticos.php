@@ -4,7 +4,6 @@
 
 require_once '../../core/auth/auth.php';
 
-verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';

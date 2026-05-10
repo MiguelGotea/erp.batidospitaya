@@ -8,7 +8,6 @@ $conn = $conn ?? null; // Asegurar que $conn esté disponible si se usa más aba
 $db = $conn; // En este archivo se usa $db para la conexión
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

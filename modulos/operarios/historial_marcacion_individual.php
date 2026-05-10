@@ -12,7 +12,6 @@ $base_path = $_SERVER['DOCUMENT_ROOT'] . '/';
 $assets_url = '/assets/';
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';

@@ -16,7 +16,6 @@ if (!$conn) {
 $todasSucursales = [];
 $sucursales = [];
 
-verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';

@@ -8,7 +8,6 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: ant
 // $conn = conectarDB(); // Comentado por migración al core (ya viene de conexion.php a través de auth.php)
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

@@ -4,7 +4,6 @@ require_once '../../../core/auth/auth.php';
 header('Content-Type: application/json');
 
 try {
-    verificarAutenticacion();
 
     $pagina = isset($_POST['pagina']) ? (int) $_POST['pagina'] : 1;
     $registros_por_pagina = isset($_POST['registros_por_pagina']) ? (int) $_POST['registros_por_pagina'] : 25;

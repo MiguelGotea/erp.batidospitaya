@@ -1,7 +1,6 @@
 <?php
 require_once '../../../core/auth/auth.php';
 
-verificarAutenticacion();
 
 // Solo líderes pueden registrar tardanzas desde marcaciones
 if (!verificarAccesoCargo([5])) {

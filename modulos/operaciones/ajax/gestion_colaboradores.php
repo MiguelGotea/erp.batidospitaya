@@ -1,7 +1,6 @@
 <?php
 require_once '../../../core/auth/auth.php';
 
-verificarAutenticacion();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 header('Content-Type: application/json');

@@ -4,7 +4,6 @@ require_once '../../../core/permissions/permissions.php';
 
 header('Content-Type: application/json');
 
-verificarAutenticacion();
 
 $sucursal = $_GET['sucursal'] ?? '';
 $desde    = $_GET['desde']    ?? '';

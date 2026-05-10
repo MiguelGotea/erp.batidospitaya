@@ -3,7 +3,6 @@
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
-verificarAutenticacion();
 
 // Verificar acceso al módulo y cargos específicos (8, 16, 41) o admin
 if (!verificarAccesoCargo([8, 16, 41]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {

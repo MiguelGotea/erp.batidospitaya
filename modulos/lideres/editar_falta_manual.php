@@ -1,6 +1,5 @@
 <?php
 require_once '../../core/auth/auth.php';
-verificarAutenticacion();
 
 // Verificar que solo RH pueda acceder
 if (!verificarAccesoCargo([13, 39, 30, 37, 28])) {

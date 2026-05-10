@@ -2,7 +2,6 @@
 require_once '../../../core/auth/auth.php';
 
 // Verificar autenticación
-verificarAutenticacion();
 
 if (!isset($_GET['cod_operario'])) {
     header('HTTP/1.1 400 Bad Request');

@@ -8,7 +8,6 @@ require_once '../../../core/auth/auth.php';
 header('Content-Type: application/json');
 
 try {
-    verificarAutenticacion();
     
     $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
     

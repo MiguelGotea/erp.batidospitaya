@@ -3,7 +3,6 @@ require_once '../../core/auth/auth.php';
 header('Content-Type: application/json');
 
 // Verificar autenticación
-verificarAutenticacion();
 
 if (!isset($_GET['term']) || strlen($_GET['term']) < 2) {
     echo json_encode([]);

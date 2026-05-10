@@ -4,7 +4,6 @@ if (!$conn) {
     die("Error de conexión a la base de datos");
 }
 
-verificarAutenticacion();
 
 $codOperario = $_GET['cod_operario'] ?? null;
 $fecha = $_GET['fecha'] ?? null;

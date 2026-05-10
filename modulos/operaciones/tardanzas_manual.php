@@ -17,7 +17,6 @@ if (!$conn) {
 $todasSucursales = [];
 $sucursales = [];
 
-verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];

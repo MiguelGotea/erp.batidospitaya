@@ -5,7 +5,6 @@ require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 require_once 'editar_colaborador_componentes/logic/funciones_colaborador.php';
 
-verificarAutenticacion();
 $usuarioActual = obtenerUsuarioActual();
 $cargoId = $usuarioActual['CodNivelesCargos'] ?? 0;
 

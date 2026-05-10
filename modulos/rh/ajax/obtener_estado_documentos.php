@@ -12,7 +12,6 @@ $codOperario = intval($_GET['cod_operario']);
 $pestaña = $_GET['pestaña'];
 
 // Verificar que el usuario tenga acceso
-verificarAutenticacion();
 
 // Definir variables globales necesarias para funciones_colaborador.php
 $usuario = obtenerUsuarioActual();

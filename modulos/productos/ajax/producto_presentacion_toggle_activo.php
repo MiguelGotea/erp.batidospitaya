@@ -6,7 +6,6 @@ header('Content-Type: application/json');
 
 try {
     // Verificar sesión
-    verificarAutenticacion();
     $usuario = obtenerUsuarioActual();
     $cargoOperario = $usuario['CodNivelesCargos'];
     

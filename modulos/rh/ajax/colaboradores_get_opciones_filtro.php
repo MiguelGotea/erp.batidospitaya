@@ -4,7 +4,6 @@ require_once '../../../core/auth/auth.php';
 header('Content-Type: application/json');
 
 try {
-    verificarAutenticacion();
 
     $columna = isset($_POST['columna']) ? $_POST['columna'] : '';
 

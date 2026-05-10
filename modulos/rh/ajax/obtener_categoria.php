@@ -2,7 +2,6 @@
 require_once '../../../core/auth/auth.php';
 
 // Verificar autenticación
-verificarAutenticacion();
 
 /**
  * Obtiene una categoría específica por ID

@@ -5,7 +5,7 @@
 //session_start();
 require_once '../../core/auth/auth.php';
 
-verificarAutenticacion(); // Redirige automáticamente si no está logueado
+ // Redirige automáticamente si no está logueado
 
 // Verificar autenticación
 if (!isset($_SESSION['usuario_id'])) {

@@ -6,7 +6,6 @@
 
 require_once '../../core/auth/auth.php';
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

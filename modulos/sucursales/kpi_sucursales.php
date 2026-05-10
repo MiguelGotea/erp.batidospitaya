@@ -9,7 +9,6 @@ require_once '../../core/layout/header_universal.php';
 
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 
 $usuario = obtenerUsuarioActual();

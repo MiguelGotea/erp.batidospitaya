@@ -8,7 +8,6 @@ require_once '../../core/helpers/funciones.php';
 require_once '../../core/database/conexion.php';
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

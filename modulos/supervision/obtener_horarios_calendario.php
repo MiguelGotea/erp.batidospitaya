@@ -6,7 +6,6 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 header('Content-Type: application/json');
 
 // Verificar autenticación
-verificarAutenticacion();
 
 $semanaNumero = $_GET['semana'] ?? null;
 $sucursalCodigo = $_GET['sucursal'] ?? null;

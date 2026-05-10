@@ -8,7 +8,6 @@ ob_start();
 
 require_once '../../core/auth/auth.php';
 
-verificarAutenticacion();
 
 // Verificar acceso (mismos permisos que ver_marcaciones_todas.php)
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';

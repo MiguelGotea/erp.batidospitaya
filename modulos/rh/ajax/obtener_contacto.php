@@ -1,7 +1,6 @@
 <?php
 require_once '../../../core/auth/auth.php';
 
-verificarAutenticacion();
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     header('HTTP/1.1 400 Bad Request');

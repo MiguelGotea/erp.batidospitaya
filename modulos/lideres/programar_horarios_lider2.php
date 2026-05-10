@@ -10,7 +10,6 @@ if (!isset($_SESSION['operarios_seleccionados'])) {
 }
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

@@ -13,7 +13,6 @@ if (!$conn) {
 }
 
 // Verificar autenticación
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

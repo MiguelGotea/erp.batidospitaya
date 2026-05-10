@@ -12,7 +12,6 @@ if (!$conn) {
 }
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

@@ -5,7 +5,6 @@ require_once '../../../core/permissions/permissions.php';
 require_once '../includes/funciones_compras.php';
 require_once '../../../core/helpers/config.php';
 
-verificarAutenticacion();
 
 header('Content-Type: application/json');
 

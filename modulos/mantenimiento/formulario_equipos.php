@@ -8,7 +8,6 @@ require_once __DIR__ . '/../../core/layout/menu_lateral.php';
 require_once __DIR__ . '/../../core/permissions/permissions.php';
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'] ?? null;

@@ -10,7 +10,6 @@ require_once '../../../../core/layout/header_universal.php';
 $db = $conn;
 
 //******************************Estándar para header******************************
-verificarAutenticacion();
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();

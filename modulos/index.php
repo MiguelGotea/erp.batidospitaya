@@ -4,7 +4,6 @@
 require_once '../core/auth/auth.php';
 
 // Verificar que el usuario esté autenticado
-verificarAutenticacion();
 
 // Registro de permiso de vista para el sistema de "tools" si no existe (opcional si se hace manual)
 // Esto asegura que al entrar al index del módulo se registre en el sistema de permisos de herramientas

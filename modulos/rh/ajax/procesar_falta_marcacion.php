@@ -2,7 +2,6 @@
 require_once '../../../core/auth/auth.php';
 
 // Verificar autenticación
-verificarAutenticacion();
 
 // Verificar que sea líder (cargo 5)
 if (!verificarAccesoCargo([5])) {

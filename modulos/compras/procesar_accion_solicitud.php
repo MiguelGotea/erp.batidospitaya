@@ -6,7 +6,6 @@ require_once '../../core/auth/auth.php';
 require_once 'includes/funciones_compras.php';
 require_once '../../core/helpers/config.php';
 
-verificarAutenticacion();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: historial_solicitudes_cotizacion.php');

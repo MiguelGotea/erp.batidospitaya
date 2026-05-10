@@ -4,7 +4,6 @@
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
-verificarAutenticacion();
 
 // Función para obtener operario por código (debe estar definida o incluirse)
 function obtenerOperarioPorCodigo($codOperario) {

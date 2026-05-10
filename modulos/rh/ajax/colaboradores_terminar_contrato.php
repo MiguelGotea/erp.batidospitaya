@@ -8,7 +8,6 @@ require_once '../editar_colaborador_componentes/logic/funciones_colaborador.php'
 header('Content-Type: application/json');
 
 try {
-    verificarAutenticacion();
 
     $usuario = obtenerUsuarioActual();
     $cargoId = $usuario['CodNivelesCargos'] ?? 0;

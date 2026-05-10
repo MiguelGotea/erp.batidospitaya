@@ -1,7 +1,6 @@
 <?php
 require_once '../../../core/auth/auth.php';
 
-verificarAutenticacion();
 
 header('Content-Type: application/json');
 

@@ -2,7 +2,6 @@
 require_once '../../core/auth/auth.php';
 header('Content-Type: application/json');
 
-verificarAutenticacion();
 
 $sucursal = $_GET['sucursal'] ?? null;
 $semanaNumero = $_GET['semana'] ?? null;

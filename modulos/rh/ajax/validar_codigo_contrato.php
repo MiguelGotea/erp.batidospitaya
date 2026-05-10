@@ -2,7 +2,6 @@
 require_once '../../../core/auth/auth.php';
 
 // Verificar autenticación
-verificarAutenticacion();
 
 header('Content-Type: application/json');
 

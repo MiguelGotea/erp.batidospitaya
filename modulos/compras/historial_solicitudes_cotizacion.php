@@ -8,7 +8,6 @@ require_once 'includes/funciones_compras.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 
-verificarAutenticacion();
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];

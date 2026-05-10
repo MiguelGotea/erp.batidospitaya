@@ -7,7 +7,6 @@ require_once '../../../core/auth/auth.php';
 header('Content-Type: application/json');
 
 try {
-    verificarAutenticacion();
     
     // Obtener la primera sucursal del usuario actual
     $sucursalesUsuario = obtenerSucursalesUsuario($_SESSION['usuario_id']);
