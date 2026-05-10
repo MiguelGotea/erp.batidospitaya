@@ -491,14 +491,11 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                             <?php foreach ($colaboradores['lideres'] as $lider): ?>
                                                                 <div class="drag-item lider" data-id="<?= $lider['codigo'] ?>"
                                                                     data-cargo="<?= $lider['cod_cargo'] ?>">
+                                                                    <?php $cargo_lider_simplificado = preg_replace('/^Vendedor\s+/i', '', $lider['cargo_nombre']); ?>
                                                                     <div class="item-info">
-                                                                        <div class="item-name"><?= htmlspecialchars($lider['nombre']) ?>
-                                                                        </div>
-                                                                        <div class="item-cargo">
-                                                                            <?= htmlspecialchars($lider['cargo_nombre']) ?>
-                                                                        </div>
+                                                                        <div class="item-name"><?= htmlspecialchars($lider['nombre']) ?> (<?= $lider['codigo'] ?>)</div>
                                                                     </div>
-                                                                    <span class="item-badge"><?= $lider['codigo'] ?></span>
+                                                                    <span class="item-badge" title="<?= htmlspecialchars($lider['cargo_nombre']) ?>"><?= htmlspecialchars($cargo_lider_simplificado) ?></span>
                                                                 </div>
                                                             <?php endforeach; ?>
                                                             <?php if (empty($colaboradores['lideres'])): ?>
@@ -521,15 +518,11 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                                 <div class="drag-item colaborador"
                                                                     data-id="<?= $colaborador['codigo'] ?>"
                                                                     data-cargo="<?= $colaborador['cod_cargo'] ?>">
+                                                                    <?php $cargo_colaborador_simplificado = preg_replace('/^Vendedor\s+/i', '', $colaborador['cargo_nombre']); ?>
                                                                     <div class="item-info">
-                                                                        <div class="item-name">
-                                                                            <?= htmlspecialchars($colaborador['nombre']) ?>
-                                                                        </div>
-                                                                        <div class="item-cargo">
-                                                                            <?= htmlspecialchars($colaborador['cargo_nombre']) ?>
-                                                                        </div>
+                                                                        <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?> (<?= $colaborador['codigo'] ?>)</div>
                                                                     </div>
-                                                                    <span class="item-badge"><?= $colaborador['codigo'] ?></span>
+                                                                    <span class="item-badge" title="<?= htmlspecialchars($colaborador['cargo_nombre']) ?>"><?= htmlspecialchars($cargo_colaborador_simplificado) ?></span>
                                                                 </div>
                                                             <?php endforeach; ?>
                                                             <?php if (empty($colaboradores['colaboradores'])): ?>
@@ -561,13 +554,11 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                         <?php foreach ($colaboradoresNoAsignados as $colaborador): ?>
                                             <div class="drag-item no-asignado" data-id="<?= $colaborador['codigo'] ?>"
                                                 data-cargo="<?= $colaborador['cod_cargo'] ?>">
+                                                <?php $cargo_no_asignado_simplificado = preg_replace('/^Vendedor\s+/i', '', $colaborador['cargo_nombre']); ?>
                                                 <div class="item-info">
-                                                    <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?></div>
-                                                    <div class="item-cargo">
-                                                        <?= htmlspecialchars($colaborador['cargo_nombre']) ?>
-                                                    </div>
+                                                    <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?> (<?= $colaborador['codigo'] ?>)</div>
                                                 </div>
-                                                <span class="item-badge">#<?= $colaborador['codigo'] ?></span>
+                                                <span class="item-badge" title="<?= htmlspecialchars($colaborador['cargo_nombre']) ?>"><?= htmlspecialchars($cargo_no_asignado_simplificado) ?></span>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
