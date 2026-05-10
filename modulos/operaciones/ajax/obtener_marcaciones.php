@@ -1,7 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
+require_once '../../../core/auth/auth.php';
 // Verificar que la petición sea GET y tenga los parámetros necesarios
 if ($_SERVER['REQUEST_METHOD'] !== 'GET' || !isset($_GET['cod_operario']) || !isset($_GET['fecha'])) {
     header('HTTP/1.1 400 Bad Request');

@@ -1,7 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
+require_once '../../../core/auth/auth.php';
 if (!$conn) {
     die("Error de conexión a la base de datos");
 }

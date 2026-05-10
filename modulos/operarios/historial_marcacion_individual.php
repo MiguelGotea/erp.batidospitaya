@@ -6,9 +6,7 @@ error_reporting(E_ALL);
 if (ob_get_length()) ob_clean();
 ob_start();
 
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
+require_once '../../core/auth/auth.php';
 // Después de los requires, se agrega para corregir el redireccionamiento de imágenes
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/';
 $assets_url = '/assets/';

@@ -1,7 +1,5 @@
 <?php
-require_once '../../../../includes/auth.php';
-require_once '../../../../includes/funciones.php';
-
+require_once '../../../../core/auth/auth.php';
 require_once '../db_ferias.php';
 
 $cierreId = $_GET['id'] ?? 0;
