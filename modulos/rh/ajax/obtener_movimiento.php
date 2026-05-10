@@ -34,9 +34,7 @@ if (!$movimiento) {
 
 // Verificar permisos
 //$usuarioId = $_SESSION['usuario_id'];
-//$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-//if (!$esAdmin && !verificarAccesoCargo([11, 13, 16])) {
+//if (!verificarAccesoCargo([11, 13, 16])) {
 //    header('HTTP/1.1 403 Forbidden');
 //    echo json_encode(['error' => 'No tiene permisos para acceder a este recurso']);
 //    exit();

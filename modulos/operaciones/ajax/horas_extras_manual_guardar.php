@@ -7,7 +7,7 @@ header('Content-Type: application/json');
 
 $usuario = obtenerUsuarioActual();
 $cargoUsuario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] == 'admin';
+false = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] == 'admin';
 
 $action = $_POST['action'] ?? '';
 
@@ -23,7 +23,7 @@ try {
 
         // Restricción de fecha según permiso de ver todo (si no puede ver todo, se asume que es líder/restringido)
         $puedeVerTodo = tienePermiso('horas_extras_manual', 'ver_todo', $cargoUsuario);
-        if (!$puedeVerTodo && !$esAdmin) {
+        if (!$puedeVerTodo) {
             $today = new DateTime();
             $d = (int)$today->format('j');
             $y = (int)$today->format('Y');
@@ -79,19 +79,19 @@ try {
         
         // Permisos de creación/edición unificados
         if ($id) {
-            if (!tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario) && !$esAdmin) {
+            if (!tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario)) {
                 throw new Exception("No tiene permisos para modificar este registro.");
             }
         } else {
             $puedeSolicitar = tienePermiso('horas_extras_manual', 'solicitar', $cargoUsuario);
             $puedeGestionar = tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario);
-            if (!$puedeSolicitar && !$puedeGestionar && !$esAdmin) {
+            if (!$puedeSolicitar && !$puedeGestionar) {
                 throw new Exception("No tiene permisos para crear una nueva solicitud.");
             }
         }
 
         // Lógica de auto-aprobación
-        if (tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario) || $esAdmin) {
+        if (tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario)) {
             $estado = 'Aprobado';
         }
 
@@ -151,7 +151,7 @@ try {
         // Validar permisos según el estado que se desea poner unificado en "gestionar"
         $puedeGestionar = tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario);
 
-        if (!$puedeGestionar && !$esAdmin) {
+        if (!$puedeGestionar) {
             throw new Exception("No tiene permisos para aprobar o rechazar esta solicitud.");
         }
 

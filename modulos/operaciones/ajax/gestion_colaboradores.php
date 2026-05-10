@@ -1,13 +1,11 @@
 <?php
 require_once '../../../core/auth/auth.php';
 
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['semana']) && $_POST['semana'] === 'siguiente') {
     // Verificar permisos para editar
-    if (!verificarAccesoCargo([13, 16]) && !$esAdmin) {
+    if (!verificarAccesoCargo([13, 16])) {
         echo json_encode(['success' => false, 'error' => 'No tiene permisos suficientes.']);
         exit();
     }

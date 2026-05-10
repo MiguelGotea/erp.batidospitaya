@@ -7,8 +7,6 @@ require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
 if (!verificarAccesoCargo([27])) {
     header('Location: ../index.php');
@@ -561,7 +559,7 @@ foreach ($sucursalesUsuario as $sucursal) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin,'Bienvenidos al equipo pitaya!'); ?>
+            <?php echo renderHeader($usuario, false,'Bienvenidos al equipo pitaya!'); ?>
             
             <h2 class="section-title" style="Display:None">
                 <i class="fas fa-chart-line"></i> Indicadores de Control
@@ -668,7 +666,7 @@ foreach ($sucursalesUsuario as $sucursal) {
                     </div>
                     <div class="quick-access-title">Gestión de Ferias</div>
                 </a>
-                <?php if ($esAdmin || verificarAccesoCargo([16])): ?>
+                <?php if (verificarAccesoCargo([16])): ?>
                 <a href="cierres.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-lock"></i>

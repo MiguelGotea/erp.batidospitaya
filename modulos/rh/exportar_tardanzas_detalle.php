@@ -10,10 +10,9 @@ require_once '../../core/auth/auth.php';
 
 
 // Verificar acceso (mismos permisos que ver_marcaciones_todas.php)
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $esLider = verificarAccesoCargo([5, 43]);
 
-if (!$esAdmin && !verificarAccesoCargo([12, 13, 5, 43, 8, 11, 17, 19, 21, 22, 28, 39, 30, 37])) {
+if (!verificarAccesoCargo([12, 13, 5, 43, 8, 11, 17, 19, 21, 22, 28, 39, 30, 37])) {
     header('Location: /index.php');
     exit();
 }

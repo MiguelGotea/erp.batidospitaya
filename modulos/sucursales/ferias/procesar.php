@@ -2,9 +2,7 @@
 require_once '../../../core/auth/auth.php';
 // Verificar acceso
 verificarAccesoModulo('sucursales');
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-if (!$esAdmin && !verificarAccesoSucursalCargo([27], [14])) {
+if (!verificarAccesoSucursalCargo([27], [14])) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'Acceso no autorizado']);
     exit;

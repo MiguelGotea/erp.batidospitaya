@@ -226,8 +226,7 @@ try {
     // Verificar permisos
     if (
         !isset($_SESSION['usuario_id']) ||
-        (!verificarAccesoCargo([13, 16, 39, 30, 37]) &&
-            !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin'))
+        (!verificarAccesoCargo([13, 16, 39, 30, 37]))
     ) {
         $response['message'] = 'Acceso no autorizado';
         echo json_encode($response);

@@ -16,9 +16,6 @@ if (!$conn) {
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = false;
-
-
 // Verificar acceso al módulo
 if (!verificarAccesoCargo([5, 43, 8, 13, 16, 39, 30, 37, 28, 49])) {
     header('Location: ../../../index.php');
@@ -1641,7 +1638,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin, 'Registro de Faltas/Ausencias'); ?>
+            <?php echo renderHeader($usuario, false, 'Registro de Faltas/Ausencias'); ?>
 
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success">
@@ -1687,7 +1684,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
             <!-- Filtros -->
             <div class="filtros-container">
                 <form method="get" action="faltas_manual.php" class="filtros-form">
-                    <?php if ($esAdmin || !verificarAccesoCargo([2, 5])): ?>
+                    <?php if (!verificarAccesoCargo([2, 5])): ?>
                         <div class="filtro-group">
                             <label for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal">
@@ -1738,13 +1735,13 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                         </a>
 
                         <!-- Botones de acción en la misma línea de filtros -->
-                        <?php if ($esAdmin || verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28])): ?>
+                        <?php if (verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28])): ?>
                             <button type="button" onclick="mostrarModalNuevaFalta()" class="btn btn-success">
                                 <i class="fas fa-plus"></i> Nuevo
                             </button>
                         <?php endif; ?>
 
-                        <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                        <?php if (verificarAccesoCargo([8, 16])): ?>
                             <a style="display:none;" href="faltas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
                                 'desde' => $fechaDesde,
@@ -1818,7 +1815,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                                 <th>Registrado por</th>
                                 <th>Fecha Registro</th>
                                 <th>Foto</th>
-                                <?php if ($esAdmin || $siAcciones): ?>
+                                <?php if ($siAcciones): ?>
                                     <th></th>
                                 <?php endif; ?>
                             </tr>
@@ -1932,7 +1929,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                                             </button>
                                         <?php endif; ?>
                                     </td>
-                                    <?php if ($esAdmin || $siAcciones): ?>
+                                    <?php if ($siAcciones): ?>
                                         <td style="text-align: center;">
                                             <button type="button" class="btn btn-info btn-editar-falta"
                                                 data-id="<?= $falta['id'] ?>"

@@ -16,13 +16,12 @@ if (!$conn) {
 
 // Verificar sesión y obtener usuario
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 $sucursalOperario = obtenerSucursalesLider($usuario['CodOperario']);
 
 // Verificar acceso al módulo de líderes (Código 5 para Líder de Sucursal)
-if (!$esAdmin && !verificarAccesoCargo([5, 43, 16])) {
+if (!verificarAccesoCargo([5, 43, 16])) {
     header('Location: ../index.php');
     exit();
 }
@@ -62,7 +61,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
             <!-- Renderizar header universal -->
             <?php
             $cantidadAnunciosNoLeidos = obtenerCantidadAnunciosNoLeidos($_SESSION['usuario_id']);
-            echo renderHeader($usuario, $esAdmin, '');
+            echo renderHeader($usuario, false, '');
             ?>
 
             <!-- Sección: Indicadores de Control -->

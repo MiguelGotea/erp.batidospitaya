@@ -6,13 +6,11 @@ require_once '../../core/layout/menu_lateral.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];  
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 //verificarAccesoModulo('operaciones');
 verificarAccesoCargo([11, 16, 36, 55]);
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([11, 16, 36, 55]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([11, 16, 36, 55])) {
     header('Location: ../index.php');
     exit();
 }
@@ -991,7 +989,7 @@ if (!empty($sucursales)) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+            <?php echo renderHeader($usuario, false, ''); ?>
             <!-- Obtener cantidad de anuncios no leídos -->
             <?php
             $cantidadAnunciosNoLeidos = 0;

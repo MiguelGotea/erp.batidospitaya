@@ -13,13 +13,11 @@ if (!isset($_SESSION['operarios_seleccionados'])) {
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo 'supervision'
 verificarAccesoCargo([5, 43, 16]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([5, 43, 16]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([5, 43, 16])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -2488,13 +2486,13 @@ function obtenerCategoriaPorDefecto()
 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ?
+                        <?= false ?
                             strtoupper(substr($usuario['nombre'], 0, 1)) :
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div style="display: flex; flex-direction: column; line-height: 1.2;">
                         <div style="font-weight: bold;">
-                            <?= $esAdmin ?
+                            <?= false ?
                                 htmlspecialchars($usuario['nombre']) :
                                 htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                         </div>

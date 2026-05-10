@@ -6,13 +6,11 @@ require_once '../../core/auth/auth.php';
 
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo Operaciones (Codigo 11 para Jefe de Operaciones)
 verificarAccesoCargo([8, 16]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 16]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([8, 16])) {
     header('Location: ../index.php');
     exit();
 }
@@ -1975,43 +1973,43 @@ header {
                 </div>
                 
                 <div class="buttons-container">
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 5, 13, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 5, 13, 16])): ?>
                         <a href="../lideres/faltas_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltas_manual.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-times"></i> <span class="btn-text">Faltas/Ausencias</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin): ?>
+                    <?php if (false): ?>
                         <a href="../rh/tf_operarios.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'tf_operarios.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Totales</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 11, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 11, 16])): ?>
                         <a href="tardanzas_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'tardanzas_manual.php' ? 'activo' : '' ?>">
                             <i class="fas fa-clock"></i> <span class="btn-text">Tardanzas</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 11, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 11, 16])): ?>
                         <a href="horas_extras_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'horas_extras_manual.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Horas Extras</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 11, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 11, 16])): ?>
                         <a href="feriados.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'feriados.php' ? 'activo' : '' ?>">
                             <i class="fas fa-calendar-day"></i> <span class="btn-text">Feriados</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 16])): ?>
                         <a href="viaticos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'viaticos.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-check-alt"></i> <span class="btn-text">Viáticos</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 16])): ?>
+                    <?php if (verificarAccesoCargo([5, 16])): ?>
                         <a href="../lideres/programar_horarios_lider.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'programar_horarios_lider.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Generar Horarios</span>
                         </a>
@@ -2020,13 +2018,13 @@ header {
                 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
+                        <?= false ? 
                             strtoupper(substr($usuario['nombre'], 0, 1)) : 
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
+                            <?= false ? 
                                 htmlspecialchars($usuario['nombre']) : 
                                 htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                         </div>
@@ -2060,7 +2058,7 @@ header {
                 <div class="filter-group">
                     <label for="sucursal">Sucursal</label>
                     <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
-                        <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                        <?php if (verificarAccesoCargo([8, 16])): ?>
                             <option value="" <?= empty($sucursalSeleccionada) ? 'selected' : '' ?>>Todas las sucursales</option>
                         <?php endif; ?>
                         <?php foreach ($sucursales as $sucursal): ?>
@@ -2108,14 +2106,14 @@ header {
                 </div>
                 
                 <div class="action-buttons">
-                    <?php if ($esAdmin || verificarAccesoCargo([16])): ?>
+                    <?php if (verificarAccesoCargo([16])): ?>
                         <button type="button" onclick="mostrarModalNuevoViatico()" class="btn btn-success">
                             <i class="fas fa-plus"></i> Nuevo
                         </button>
                     <?php endif; ?>
                     
                     <?php if (!empty($viaticos)): ?>
-                        <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                        <?php if (verificarAccesoCargo([8, 16])): ?>
                             <button style="display:none;" type="button" onclick="exportarNocturnosExcel()" class="btn btn-primary">
                                 <i class="fas fa-file-excel"></i> Exportar Nocturnos
                             </button>
@@ -2156,7 +2154,7 @@ header {
                             <th>Cantidad (C$)</th>
                             <th style="display:none;">Origen</th>
                             <th>Observaciones</th>
-                            <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                            <?php if (verificarAccesoCargo([8, 16])): ?>
                                 <th>Fecha Pago Viático</th>
                             <?php endif; ?>
                             <th style="display:none;"></th>
@@ -2201,7 +2199,7 @@ header {
                                     ?>
                                 </td>
                                 
-                                <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                                <?php if (verificarAccesoCargo([8, 16])): ?>
                                     <td><?= $viatico['fecha_pago'] ? formatoFechaCorta($viatico['fecha_pago']) : 'Pendiente' ?></td>
                                 <?php endif; ?>
                                 
@@ -2213,7 +2211,7 @@ header {
                                 </td>
                                 
                                 <td style="text-align: center; display:none;">
-                                    <?php if ($viatico['origen'] === 'Automático' && ($esAdmin || verificarAccesoCargo([8]))): ?>
+                                    <?php if ($viatico['origen'] === 'Automático' && (verificarAccesoCargo([8]))): ?>
                                         <button type="button" onclick="mostrarModalGuardarNocturno(
                                                 <?= $viatico['cod_operario'] ?>, 
                                                 '<?= htmlspecialchars($viatico['Nombre']) ?>', 
@@ -2229,7 +2227,7 @@ header {
                                             <i class="fas fa-save"></i>
                                         </button>
                                     <?php elseif ($viatico['origen'] === 'Manual'): ?>
-                                        <?php if ($esAdmin || verificarAccesoCargo([11])): ?>
+                                        <?php if (verificarAccesoCargo([11])): ?>
                                             <button type="button" onclick="mostrarModalEditarViatico(
                                                     <?= (int)$viatico['id'] ?>, 
                                                     '<?= htmlspecialchars($viatico['Nombre'], ENT_QUOTES) ?>', 
@@ -2255,7 +2253,7 @@ header {
                                         <span class="badge badge-auto">Automático</span>
                                     <?php endif; ?>
                                     
-                                    <?php if (($esAdmin || verificarAccesoCargo([8])) && $viatico['tipo'] !== 'Nocturno'): ?>
+                                    <?php if ((verificarAccesoCargo([8])) && $viatico['tipo'] !== 'Nocturno'): ?>
                                         <button type="button" onclick="mostrarModalFechaPago(
                                             <?= (int)$viatico['id'] ?>,
                                             '<?= htmlspecialchars($viatico['Nombre'] . ' ' . $viatico['Apellido'], ENT_QUOTES) ?>',

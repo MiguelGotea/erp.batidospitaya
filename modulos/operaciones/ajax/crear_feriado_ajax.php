@@ -14,10 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar permisos (Creación/Aprobación de feriados)
-if (!tienePermiso('gestion_feriados', 'aprobar', $cargoOperario) && !$esAdmin) {
+if (!tienePermiso('gestion_feriados', 'aprobar', $cargoOperario)) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para realizar esta acción']);
     exit;
 }

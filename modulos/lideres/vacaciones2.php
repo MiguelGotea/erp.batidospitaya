@@ -13,9 +13,7 @@ if (!$conn) {
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -949,43 +947,43 @@ function obtenerTiposFaltaConPorcentajes() {
                 </div>
                 
                 <div class="buttons-container">
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 5, 43, 13, 16, 39, 30, 37, 28])): ?>
+                    <?php if (verificarAccesoCargo([8, 5, 43, 13, 16, 39, 30, 37, 28])): ?>
                         <a href="faltas_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltas_manual.php' ? '' : '' ?>">
                             <i class="fas fa-user-times"></i> <span class="btn-text">Faltas/Ausencias</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin): ?>
+                    <?php if (false): ?>
                         <a href="../rh/tf_operarios.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'tf_operarios.php' ? '' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Totales</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 43, 11, 16, 27, 8, 28, 39, 30, 37, 28, 13])): ?>
+                    <?php if (verificarAccesoCargo([5, 43, 11, 16, 27, 8, 28, 39, 30, 37, 28, 13])): ?>
                         <a href="../operaciones/tardanzas_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == '../operaciones/tardanzas_manual.php' ? '' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Tardanzas</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([11, 8, 16])): ?>
+                    <?php if (verificarAccesoCargo([11, 8, 16])): ?>
                         <a href="../operaciones/horas_extras_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'horas_extras_manual.php' ? '' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Horas Extras</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 11, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 11, 16])): ?>
                         <a href="../operaciones/feriados.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'feriados.php' ? '' : '' ?>">
                             <i class="fas fa-calendar-day"></i> <span class="btn-text">Feriados</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 16])): ?>
                         <a href="../operaciones/viaticos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'viaticos.php' ? '' : '' ?>">
                             <i class="fas fa-money-check-alt"></i> <span class="btn-text">Viáticos</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 43, 16])): ?>
+                    <?php if (verificarAccesoCargo([5, 43, 16])): ?>
                         <a href="programar_horarios_lider2.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'programar_horarios_lider2.php' ? '' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Generar Horarios</span>
                         </a>
@@ -998,13 +996,13 @@ function obtenerTiposFaltaConPorcentajes() {
                 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
+                        <?= false ? 
                             strtoupper(substr($usuario['nombre'], 0, 1)) : 
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
+                            <?= false ? 
                                 htmlspecialchars($usuario['nombre']) : 
                                 htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                         </div>
@@ -1038,7 +1036,7 @@ function obtenerTiposFaltaConPorcentajes() {
         <!-- Filtros -->
         <div class="filtros-container">
             <form method="get" action="vacaciones.php" class="filtros-form">
-                <?php if ($esAdmin || !verificarAccesoCargo([2, 5])): ?>
+                <?php if (!verificarAccesoCargo([2, 5])): ?>
                     <div class="filtro-group">
                         <label for="sucursal">Sucursal</label>
                         <select id="sucursal" name="sucursal">
@@ -1086,13 +1084,13 @@ function obtenerTiposFaltaConPorcentajes() {
                         <i class="fas fa-search"></i> Buscar
                     </button>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28])): ?>
+                    <?php if (verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28])): ?>
                         <button type="button" onclick="mostrarModalNuevaVacacion()" class="btn btn-success">
                             <i class="fas fa-plus"></i> Nueva
                         </button>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 16])): ?>
                         <a href="vacaciones.php?<?= http_build_query([
                             'sucursal' => $sucursalSeleccionada ?? '',
                             'desde' => $fechaDesde,

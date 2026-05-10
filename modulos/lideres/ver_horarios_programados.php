@@ -36,10 +36,8 @@ if (!function_exists('obtenerHorariosLiderPorSemanaYSucursal')) {
 }
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Redireccionar según el cargo (5 es de líder de sucursal)
-if (!$esAdmin && !verificarAccesoCargo([5])) {
+if (!verificarAccesoCargo([5])) {
     header('Location: /index.php');
     exit();
 }
@@ -48,7 +46,7 @@ if (!$esAdmin && !verificarAccesoCargo([5])) {
 $sucursales = obtenerTodasSucursales();
 
 // Obtener sucursales según el rol del usuario
-if ($esAdmin) {
+if (false) {
     // Admin ve todas las sucursales
     $sucursales = obtenerTodasSucursales();
 } else {

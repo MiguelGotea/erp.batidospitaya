@@ -5,8 +5,6 @@ require_once '../../core/auth/auth.php';
 //verificarAccesoCargo([11]);
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Obtener todas las sucursales (el jefe de operaciones puede ver todas)
 $sucursales = obtenerTodasSucursales();
 

@@ -13,9 +13,9 @@ $estado   = $_GET['estado']   ?? ''; // '', 'Pendiente', 'Aprobado', 'Denegado'
 
 $usuarioInfo  = obtenerUsuarioActual();
 $cargoUsuario = $usuarioInfo['CodNivelesCargos'] ?? 0;
-$esAdmin      = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] == 'admin';
+false      = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] == 'admin';
 
-if (!tienePermiso('horas_extras_manual', 'vista', $cargoUsuario) && !$esAdmin) {
+if (!tienePermiso('horas_extras_manual', 'vista', $cargoUsuario)) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para ver estos datos.']);
     exit;
 }
@@ -24,7 +24,7 @@ if (!tienePermiso('horas_extras_manual', 'vista', $cargoUsuario) && !$esAdmin) {
 $puedeVerTodo   = tienePermiso('horas_extras_manual', 'ver_todo', $cargoUsuario);
 $puedeFiltroAll = tienePermiso('horas_extras_manual', 'filtro_todas_tiendas', $cargoUsuario);
 
-if (!$puedeVerTodo && !$puedeFiltroAll && !$esAdmin) {
+if (!$puedeVerTodo && !$puedeFiltroAll) {
     // Si no tiene permiso de ver todo ni de filtrar todas, forzar su sucursal
     $misSucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
     $sucursalPropia = $misSucursales[0]['codigo'] ?? 'NINGUNA';

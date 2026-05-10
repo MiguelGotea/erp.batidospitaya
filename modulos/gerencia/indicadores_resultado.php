@@ -11,11 +11,10 @@ require_once 'includes/funciones_indicadores.php';
 // Obtener información del usuario
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
 // Verificar acceso al módulo
-//if (!verificarAccesoCargo([11, 16, 13, 42, 12, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+//if (!verificarAccesoCargo([11, 16, 13, 42, 12, 49])) {
 //    header('Location: ../../../index.php');
 //    exit();
 //}
@@ -196,7 +195,7 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, $esAdmin, 'Resultados de KPI'); ?>
+            <?php echo renderHeader($usuario, false, 'Resultados de KPI'); ?>
 
             <div class="info-periodo" style="display:none;">
                 <i class="fas fa-calendar-alt"></i>

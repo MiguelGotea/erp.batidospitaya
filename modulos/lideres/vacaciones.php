@@ -18,9 +18,7 @@ if (!$conn) {
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28]) && !$esAdmin) {
+if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -542,7 +540,7 @@ function obtenerTiposFaltaConPorcentajes()
                 <!-- Filtros -->
                 <div class="filtros-container">
                     <form method="get" action="vacaciones.php" class="filtros-form">
-                        <?php if ($esAdmin || !verificarAccesoCargo([2, 5])): ?>
+                        <?php if (!verificarAccesoCargo([2, 5])): ?>
                             <div class="filtro-group">
                                 <label for="sucursal">Sucursal</label>
                                 <select id="sucursal" name="sucursal">
@@ -589,7 +587,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 <i class="fas fa-search"></i> Buscar
                             </button>
 
-                            <?php if ($esAdmin || verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28])): ?>
+                            <?php if (verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28])): ?>
                                 <button type="button" onclick="mostrarModalNuevaVacacion()" class="btn btn-success">
                                     Vacaciones
                                 </button>
@@ -598,7 +596,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 </button>
                             <?php endif; ?>
 
-                            <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                            <?php if (verificarAccesoCargo([8, 16])): ?>
                                 <a href="vacaciones.php?<?= http_build_query([
                                     'sucursal' => $sucursalSeleccionada ?? '',
                                     'desde' => $fechaDesde,

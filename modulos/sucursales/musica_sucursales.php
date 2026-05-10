@@ -4,8 +4,6 @@ require_once '../../core/auth/auth.php';
 verificarAccesoCargo([27]);
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Definir las playlists segmentadas
 $playlists = [
     '1' => [
@@ -267,18 +265,18 @@ $playlistData = $playlists[$playlistActual] ?? $playlists['1'];
             <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
             <div class="user-info">
                 <div class="user-avatar">
-                    <?= $esAdmin ?
+                    <?= false ?
                         strtoupper(substr($usuario['nombre'], 0, 1)) :
                         strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                 </div>
                 <div>
                     <div>
-                        <?= $esAdmin ?
+                        <?= false ?
                             htmlspecialchars($usuario['nombre']) :
                             htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                     </div>
                     <small>
-                        <?= $esAdmin ?
+                        <?= false ?
                             'Administrador' :
                             htmlspecialchars($usuario['cargo_nombre'] ?? 'Sin cargo definido') ?>
                     </small>

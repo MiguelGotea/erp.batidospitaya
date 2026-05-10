@@ -12,9 +12,7 @@ require_once '../../core/layout/header_universal.php';
 
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-if (!verificarAccesoCargo([5, 43, 11, 27, 26, 42, 13, 53, 49, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([5, 43, 11, 27, 26, 42, 13, 53, 49, 21])) {
     header('Location: ../index.php');
     exit();
 }
@@ -96,7 +94,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin, 'Impulso de Ventas'); ?>
+            <?php echo renderHeader($usuario, false, 'Impulso de Ventas'); ?>
 
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success">

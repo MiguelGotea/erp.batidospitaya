@@ -9,8 +9,7 @@ $usuario = obtenerUsuarioActual();
 $cargoUsuario = $usuario['CodNivelesCargos'];
 
 // Solo quienes tienen permiso de gestionar o admin pueden eliminar (si se habilitara el botón)
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-if (!tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario) && !$esAdmin) {
+if (!tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario)) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para eliminar registros.']);
     exit();
 }

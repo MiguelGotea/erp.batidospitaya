@@ -25,7 +25,7 @@ $divide = intval($datos['divide']);
 $usuarioId = $_SESSION['usuario_id'];
 
 // Verificar que el usuario tiene permisos
-if (!verificarAccesoCargo([11, 16, 13, 42, 12, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([11, 16, 13, 42, 12, 49])) {
     echo json_encode(['success' => false, 'message' => 'No tienes permisos']);
     exit();
 }

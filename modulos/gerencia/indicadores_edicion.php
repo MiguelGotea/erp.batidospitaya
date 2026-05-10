@@ -12,11 +12,10 @@ require_once 'includes/funciones_indicadores.php';
 // Obtener información del usuario
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
 // Verificar acceso al módulo
-//if (!verificarAccesoCargo([11, 16, 13, 42, 12]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+//if (!verificarAccesoCargo([11, 16, 13, 42, 12])) {
 //    header('Location: ../../../index.php');
 //    exit();
 //}
@@ -146,7 +145,7 @@ function calcularResultado($indicador, $resultadoBD, $conn, $semanaId = null) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, $esAdmin, 'Edicion de KPI Semanal'); ?>
+            <?php echo renderHeader($usuario, false, 'Edicion de KPI Semanal'); ?>
             
             <?php if (empty($indicadoresPorArea)): ?>
                 <div class="info-box" style="background-color: #fff3cd; border-left-color: #ffc107;">

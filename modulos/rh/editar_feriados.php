@@ -10,8 +10,6 @@ require_once '../../core/permissions/permissions.php';
 // Obtener usuario y cargo antes de verificar permisos
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo mediante el sistema de permisos
 if (!tienePermiso('gestion_feriados', 'vista', $cargoOperario)) {
     header('Location: /index.php');
@@ -153,7 +151,7 @@ if (isset($_GET['editar'])) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, $esAdmin, 'Gestión de Feriados'); ?>
+            <?php echo renderHeader($usuario, false, 'Gestión de Feriados'); ?>
 
             <div class="container">
                 <!-- Cabecera eliminada por redundancia con el header universal -->

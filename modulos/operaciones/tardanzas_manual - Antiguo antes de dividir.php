@@ -18,9 +18,7 @@ $sucursales = [];
 
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-if (!verificarAccesoCargo([5, 46, 43, 16, 8, 13, 28, 39, 30, 37, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([5, 46, 43, 16, 8, 13, 28, 39, 30, 37, 49])) {
     header('Location: ../index.php');
     exit();
 }
@@ -31,7 +29,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Definir qué cargos ven la vista completa
 $cargosVistaCompleta = [13, 28, 39, 30, 37, 5, 43, 46, 49];
-$verVistaCompleta = $esAdmin || verificarAccesoCargo($cargosVistaCompleta);
+$verVistaCompleta = verificarAccesoCargo($cargosVistaCompleta);
 
 // Agrega al inicio del archivo (antes de cualquier output)
 ini_set('memory_limit', '512M');
@@ -3179,7 +3177,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin, 'Registro de Tardanzas'); ?>
+            <?php echo renderHeader($usuario, false, 'Registro de Tardanzas'); ?>
 
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success">
@@ -3218,7 +3216,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
 
             <div class="filters-container">
                 <div class="filters-form">
-                    <?php if ($esAdmin || !verificarAccesoCargo([5, 43, 2, 46])): ?>
+                    <?php if (!verificarAccesoCargo([5, 43, 2, 46])): ?>
                         <div class="filter-group">
                             <label for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
@@ -3293,7 +3291,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                         <?php endif; ?>
                     </div>
 
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 16])): ?>
                         <div class="action-buttons">
                             <a style="display:none;" href="tardanzas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',

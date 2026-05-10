@@ -7,8 +7,6 @@ require_once '../../core/permissions/permissions.php';
 // Obtener usuario y cargo antes de verificar permisos
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo mediante el sistema de permisos
 if (!tienePermiso('plan_feriados_anual', 'vista', $cargoOperario)) {
     header('Location: /index.php');
@@ -78,7 +76,7 @@ sort($aniosDisponibles);
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
-        <?php echo renderHeader($usuario, $esAdmin, "Plan Anual de Feriados $anio"); ?>
+        <?php echo renderHeader($usuario, false, "Plan Anual de Feriados $anio"); ?>
 
         <div class="container-fluid">
             <div class="controls">

@@ -6,8 +6,6 @@ require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso (SIEMPRE debe existir permiso 'vista')
 if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
     header('Location: /login.php');

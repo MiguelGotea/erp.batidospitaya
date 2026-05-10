@@ -20,7 +20,7 @@ $meta = isset($_POST['meta']) && $_POST['meta'] !== '' ? floatval($_POST['meta']
 $usuarioId = $_SESSION['usuario_id'];
 
 // Verificar que el usuario tiene permisos
-if (!verificarAccesoCargo([11, 16, 13, 42, 12]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([11, 16, 13, 42, 12])) {
     echo json_encode(['success' => false, 'message' => 'No tienes permisos para editar metas']);
     exit();
 }

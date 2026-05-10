@@ -11,8 +11,6 @@ require_once '../../core/layout/menu_lateral.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo
 if (!tienePermiso('nuevo_colaborador', 'vista', $cargoOperario)) {
     header('Location: /login.php');
@@ -487,7 +485,7 @@ function generarClave($nombre, $apellido)
     <div class="main-container">
         <div class="sub-container">
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, $esAdmin, 'Registrar Nuevo Colaborador'); ?>
+            <?php echo renderHeader($usuario, false, 'Registrar Nuevo Colaborador'); ?>
 
             <div class="container">
 
@@ -525,7 +523,7 @@ function generarClave($nombre, $apellido)
                                 (ddmmyy)</li>
                             <li>El estado del colaborador se establecerá como "Activo"</li>
                             <li>Se registrará que fue creado por:
-                                <?= $esAdmin ? htmlspecialchars($usuario['nombre']) : htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
+                                <?= false ? htmlspecialchars($usuario['nombre']) : htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                                 (ID: <?= $usuarioActualId ?>)
                             </li>
                             <li>Después de guardar, serás redirigido automáticamente a la página de edición del
@@ -542,7 +540,7 @@ function generarClave($nombre, $apellido)
                         </div>
                         <div style="display:none;" class="registrado-por">
                             Registrado por:
-                            <?= $esAdmin ? htmlspecialchars($usuario['nombre']) : htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
+                            <?= false ? htmlspecialchars($usuario['nombre']) : htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                         </div>
                     </div>
 

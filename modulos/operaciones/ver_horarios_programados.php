@@ -33,10 +33,8 @@ if (!function_exists('obtenerHorariosLiderPorSemanaYSucursal')) {
 }
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Redireccionar según el cargo (ahora para cargo 11 - Jefe de Operaciones y acá el 21 como supervisor)
-if (!$esAdmin && !verificarAccesoCargo([11])) {
+if (!verificarAccesoCargo([11])) {
     header('Location: /index.php');
     exit();
 }

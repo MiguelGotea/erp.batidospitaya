@@ -8,10 +8,8 @@ require_once '../../core/layout/menu_lateral.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo RH (Código 13 para Jefe de RH)
-if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28, 54]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28, 54])) {
     header('Location: ../index.php');
     exit();
 }
@@ -1620,7 +1618,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
 
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin); ?>
+            <?php echo renderHeader($usuario, false); ?>
 
             <h2 class="section-title">
                 <i class="fas fa-chart-line"></i> Indicadores de Control
@@ -1777,7 +1775,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
                 </div>
 
                 <!-- NUEVO: Indicador de Ausencias Colaboradores (3+ días sin marcar con estado Activo/Otra.Tienda) -->
-                <?php if ($esAdmin || verificarAccesoCargo([13, 16, 39, 30, 37])): ?>
+                <?php if (verificarAccesoCargo([13, 16, 39, 30, 37])): ?>
                     <div class="indicator-container" onclick="mostrarModalAusenciasColaboradores()"
                         style="cursor: pointer;">
                         <div class="indicator-header">
