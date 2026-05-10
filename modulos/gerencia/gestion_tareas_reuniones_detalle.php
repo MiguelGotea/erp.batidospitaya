@@ -25,7 +25,6 @@ if ($idItem <= 0) {
 }
 
 // Obtener datos del item
-require_once '../../core/database/conexion.php';
 
 $sql = "SELECT 
             i.*,

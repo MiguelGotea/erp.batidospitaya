@@ -3,7 +3,6 @@
 // Obtiene lista de sucursales activas
 
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/database/conexion.php';
 
 // Configurar zona horaria de Managua
 date_default_timezone_set('America/Managua');

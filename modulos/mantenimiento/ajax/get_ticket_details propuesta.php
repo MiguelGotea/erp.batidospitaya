@@ -5,7 +5,6 @@ header('Expires: 0');
 
 require_once '../models/Ticket.php';
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/helpers/funciones.php';
 
 if (!isset($_GET['id'])) {
     die('ID de ticket requerido');
@@ -22,7 +21,6 @@ $puedeEditar = $esAdmin || verificarAccesoCargo([14, 16, 35]);
 $esLider = verificarAccesoCargo([5]);
 
 if ($esLider && !$esAdmin && !verificarAccesoCargo([14, 16, 35])) {
-    require_once '../../../core/helpers/funciones.php';
     $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
     $codigosSucursales = array_column($sucursalesLider, 'codigo');
 

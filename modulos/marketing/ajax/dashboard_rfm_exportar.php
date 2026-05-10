@@ -1,6 +1,5 @@
 <?php
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/database/conexion.php';
 require_once '../../../core/permissions/permissions.php';
 
 // Sincronizar zona horaria de MySQL para este script

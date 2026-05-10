@@ -2,7 +2,6 @@
 // ajax/promo_get_productos.php — Devuelve productos para Select2 (búsqueda en tiempo real)
 // Retorna formato Select2: { success, data: [{id, text}] }
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {

@@ -1,7 +1,6 @@
 <?php
 // facturas_get_proveedores.php
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {

@@ -5,8 +5,6 @@
  */
 
 require_once '../../core/auth/auth.php';
-require_once '../../core/database/conexion.php';
-require_once '../../core/helpers/funciones.php';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 

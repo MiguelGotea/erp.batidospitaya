@@ -1,7 +1,6 @@
 <?php
 // postulacion_evaluacion_rh_guardar.php
 
-require_once '../../../core/database/conexion.php';
 require_once '../../../core/auth/auth.php';
 header('Content-Type: application/json');
 

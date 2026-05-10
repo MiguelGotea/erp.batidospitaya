@@ -1,7 +1,6 @@
 <?php
 // ajax/promo_get_datos.php — Listado paginado de promociones
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {

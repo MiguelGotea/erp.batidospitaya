@@ -1,7 +1,6 @@
 <?php
 // ajax/promo_get_grupos.php — Devuelve grupos, subgrupos o sucursales según parámetro ?tipo=
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {

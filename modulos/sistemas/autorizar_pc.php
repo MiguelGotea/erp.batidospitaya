@@ -1,7 +1,5 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/helpers/funciones.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/database/conexion.php';
 
 // Solo admin o personal de sistemas
 // verificarAccesoModulo('sistemas'); // Descomentar si se integra oficialmente en el menú
