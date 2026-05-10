@@ -1,5 +1,5 @@
-<?php
-require_once '../../core/auth/auth.php';
+﻿<?php
+require_once '../../../core/auth/auth.php';
 
 // Verificar que solo RH pueda acceder
 if (!verificarAccesoCargo([13, 39, 30, 37, 28])) {
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_falta'])) {
             if (isset($_GET['desde'])) $params['desde'] = $_GET['desde'];
             if (isset($_GET['hasta'])) $params['hasta'] = $_GET['hasta'];
             if (isset($_GET['operario']) && $_GET['operario'] != 0) $params['operario'] = $_GET['operario'];
-            header('Location: faltas_manual.php?' . http_build_query($params));
+            header('Location: ../faltas_manual.php?' . http_build_query($params));
             exit();
         }
         
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_falta'])) {
             if (isset($_GET['desde'])) $params['desde'] = $_GET['desde'];
             if (isset($_GET['hasta'])) $params['hasta'] = $_GET['hasta'];
             if (isset($_GET['operario']) && $_GET['operario'] != 0) $params['operario'] = $_GET['operario'];
-            header('Location: faltas_manual.php?' . http_build_query($params));
+            header('Location: ../faltas_manual.php?' . http_build_query($params));
             exit();
         }
         
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_falta'])) {
             if (isset($_GET['desde'])) $params['desde'] = $_GET['desde'];
             if (isset($_GET['hasta'])) $params['hasta'] = $_GET['hasta'];
             if (isset($_GET['operario']) && $_GET['operario'] != 0) $params['operario'] = $_GET['operario'];
-            header('Location: faltas_manual.php?' . http_build_query($params));
+            header('Location: ../faltas_manual.php?' . http_build_query($params));
             exit();
         }
         
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_falta'])) {
         // Validar que las observaciones RRHH no estén vacías
         if (empty($observaciones_rrhh)) {
             $_SESSION['error'] = 'El campo Observaciones RRHH es obligatorio';
-            header('Location: faltas_manual.php?' . http_build_query($_GET));
+            header('Location: ../faltas_manual.php?' . http_build_query($_GET));
             exit();
         }
         
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_falta'])) {
     if (isset($_GET['hasta'])) $params['hasta'] = $_GET['hasta'];
     if (isset($_GET['operario']) && $_GET['operario'] != 0) $params['operario'] = $_GET['operario'];
     
-    header('Location: faltas_manual.php?' . http_build_query($params));
+    header('Location: ../faltas_manual.php?' . http_build_query($params));
     exit();
 }
 
@@ -124,6 +124,6 @@ if (isset($_GET['desde'])) $params['desde'] = $_GET['desde'];
 if (isset($_GET['hasta'])) $params['hasta'] = $_GET['hasta'];
 if (isset($_GET['operario']) && $_GET['operario'] != 0) $params['operario'] = $_GET['operario'];
 
-header('Location: faltas_manual.php?' . http_build_query($params));
+header('Location: ../faltas_manual.php?' . http_build_query($params));
 exit();
 ?>

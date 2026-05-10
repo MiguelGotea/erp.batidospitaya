@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //session_start(); // Asegurar que la sesión esté iniciada
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
@@ -2379,7 +2379,7 @@ tr:hover {
                 // Opcional: limpiar operarios adicionales al cambiar de semana/sucursal
                 if (confirm('¿Desea limpiar los operarios adicionales al cambiar de semana/sucursal?')) {
                     // Hacer una petición para limpiar la sesión
-                    fetch('limpiar_operarios_adicionales.php', {
+                    fetch('ajax/limpiar_operarios_adicionales.php', {
                         method: 'POST'
                     });
                 }
@@ -2664,7 +2664,7 @@ tr:hover {
             
             // Enviar solicitud al servidor si existe en BD
             if (existeEnBD && idSemana) {
-                fetch('eliminar_horario_operario.php', {
+                fetch('ajax/eliminar_horario_operario.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',

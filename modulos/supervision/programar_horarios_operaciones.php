@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -3576,7 +3576,7 @@ function obtenerCategoriasDesdeBD()
 
             // Enviar solicitud al servidor si existe en BD
             if (existeEnBD && idSemana) {
-                fetch('eliminar_horario_operario.php', {
+                fetch('../lideres/ajax/eliminar_horario_operario.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',

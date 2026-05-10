@@ -1,5 +1,5 @@
-<?php
-require_once '../../core/auth/auth.php';
+﻿<?php
+require_once '../../../core/auth/auth.php';
 header('Content-Type: application/json');
 
 
@@ -77,6 +77,6 @@ try {
     echo json_encode($resultado);
     
 } catch (Exception $e) {
-    error_log("Error en obtener_seleccionados_actual.php: " . $e->getMessage());
+    error_log("Error en ajax/obtener_seleccionados_actual.php: " . $e->getMessage());
     echo json_encode([]);
 }

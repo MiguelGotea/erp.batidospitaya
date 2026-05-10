@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //session_start(); // Asegurar que la sesión esté iniciada
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
@@ -3141,7 +3141,7 @@ function obtenerCategoriaPorDefecto()
                 // Limpiar selección de colaboradores al cambiar de semana
                 //if (confirm('¿Cambiar de semana?\n\nSe perderán los cambios no guardados.')) {
                 // Hacer una petición para limpiar la sesión
-                fetch('limpiar_seleccion_colaboradores.php', {
+                fetch('ajax/limpiar_seleccion_colaboradores.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -3520,7 +3520,7 @@ function obtenerCategoriaPorDefecto()
 
             // Enviar solicitud al servidor si existe en BD
             if (existeEnBD && idSemana) {
-                fetch('eliminar_horario_operario.php', {
+                fetch('ajax/eliminar_horario_operario.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -4327,7 +4327,7 @@ function obtenerCategoriaPorDefecto()
             const semana = document.getElementById('semana').value;
             const t = new Date().getTime();
 
-            return fetch(`obtener_asignados_sucursal.php?sucursal=${sucursal}&semana=${semana}&t=${t}`)
+            return fetch(`ajax/obtener_asignados_sucursal.php?sucursal=${sucursal}&semana=${semana}&t=${t}`)
                 .then(response => {
                     if (!response.ok) throw new Error('Error al cargar asignados');
                     return response.json();
@@ -4347,7 +4347,7 @@ function obtenerCategoriaPorDefecto()
             const semana = document.getElementById('semana').value;
             const t = new Date().getTime();
 
-            return fetch(`obtener_seleccionados_actual.php?sucursal=${sucursal}&semana=${semana}&t=${t}`)
+            return fetch(`ajax/obtener_seleccionados_actual.php?sucursal=${sucursal}&semana=${semana}&t=${t}`)
                 .then(response => {
                     if (!response.ok) throw new Error('Error al cargar seleccionados');
                     return response.json();
@@ -4438,7 +4438,7 @@ function obtenerCategoriaPorDefecto()
 
             const sucursal = document.getElementById('sucursal').value;
 
-            fetch(`buscar_colaboradores_ajax.php?term=${encodeURIComponent(termino)}&sucursal=${sucursal}`)
+            fetch(`ajax/buscar_colaboradores_ajax.php?term=${encodeURIComponent(termino)}&sucursal=${sucursal}`)
                 .then(response => response.json())
                 .then(data => {
                     resultados.innerHTML = '';
@@ -4555,7 +4555,7 @@ function obtenerCategoriaPorDefecto()
             const sucursal = document.getElementById('sucursal').value;
             const semana = document.getElementById('semana').value;
 
-            return fetch('guardar_seleccion_colaboradores.php', {
+            return fetch('ajax/guardar_seleccion_colaboradores.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

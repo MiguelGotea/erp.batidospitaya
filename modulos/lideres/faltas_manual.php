@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
@@ -2081,7 +2081,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                 <h2 class="modal-title">Editar Falta Manual</h2>
                 <button class="modal-close" onclick="cerrarModal()">&times;</button>
             </div>
-            <form id="formEditarFalta" method="post" action="editar_falta_manual.php">
+            <form id="formEditarFalta" method="post" action="ajax/editar_falta_manual.php">
                 <input type="hidden" name="editar_falta" value="1">
                 <input type="hidden" id="editar_id" name="id">
                 <input type="hidden" id="editar_foto_path" name="foto_path_actual">
