@@ -490,10 +490,10 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                             data-max="2">
                                                             <?php foreach ($colaboradores['lideres'] as $lider): ?>
                                                                 <div class="drag-item lider" data-id="<?= $lider['codigo'] ?>"
-                                                                    data-cargo="<?= $lider['cod_cargo'] ?>">
+                                                                    data-cargo="<?= $lider['cod_cargo'] ?>" title="Código: <?= $lider['codigo'] ?>">
                                                                     <?php $cargo_lider_simplificado = preg_replace('/^Vendedor\s+/i', '', $lider['cargo_nombre']); ?>
                                                                     <div class="item-info">
-                                                                        <div class="item-name"><?= htmlspecialchars($lider['nombre']) ?> (<?= $lider['codigo'] ?>)</div>
+                                                                        <div class="item-name" title="<?= htmlspecialchars($lider['nombre']) ?>"><?= htmlspecialchars($lider['nombre']) ?></div>
                                                                     </div>
                                                                     <span class="item-badge" title="<?= htmlspecialchars($lider['cargo_nombre']) ?>"><?= htmlspecialchars($cargo_lider_simplificado) ?></span>
                                                                 </div>
@@ -517,10 +517,10 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                             <?php foreach ($colaboradores['colaboradores'] as $colaborador): ?>
                                                                 <div class="drag-item colaborador"
                                                                     data-id="<?= $colaborador['codigo'] ?>"
-                                                                    data-cargo="<?= $colaborador['cod_cargo'] ?>">
+                                                                    data-cargo="<?= $colaborador['cod_cargo'] ?>" title="Código: <?= $colaborador['codigo'] ?>">
                                                                     <?php $cargo_colaborador_simplificado = preg_replace('/^Vendedor\s+/i', '', $colaborador['cargo_nombre']); ?>
                                                                     <div class="item-info">
-                                                                        <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?> (<?= $colaborador['codigo'] ?>)</div>
+                                                                        <div class="item-name" title="<?= htmlspecialchars($colaborador['nombre']) ?>"><?= htmlspecialchars($colaborador['nombre']) ?></div>
                                                                     </div>
                                                                     <span class="item-badge" title="<?= htmlspecialchars($colaborador['cargo_nombre']) ?>"><?= htmlspecialchars($cargo_colaborador_simplificado) ?></span>
                                                                 </div>
@@ -553,10 +553,10 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                         data-tipo="no-asignados">
                                         <?php foreach ($colaboradoresNoAsignados as $colaborador): ?>
                                             <div class="drag-item no-asignado" data-id="<?= $colaborador['codigo'] ?>"
-                                                data-cargo="<?= $colaborador['cod_cargo'] ?>">
+                                                data-cargo="<?= $colaborador['cod_cargo'] ?>" title="Código: <?= $colaborador['codigo'] ?>">
                                                 <?php $cargo_no_asignado_simplificado = preg_replace('/^Vendedor\s+/i', '', $colaborador['cargo_nombre']); ?>
                                                 <div class="item-info">
-                                                    <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?> (<?= $colaborador['codigo'] ?>)</div>
+                                                    <div class="item-name" title="<?= htmlspecialchars($colaborador['nombre']) ?>"><?= htmlspecialchars($colaborador['nombre']) ?></div>
                                                 </div>
                                                 <span class="item-badge" title="<?= htmlspecialchars($colaborador['cargo_nombre']) ?>"><?= htmlspecialchars($cargo_no_asignado_simplificado) ?></span>
                                             </div>
