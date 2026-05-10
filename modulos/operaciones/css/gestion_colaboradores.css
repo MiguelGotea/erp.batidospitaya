@@ -240,6 +240,10 @@
             gap: 5px;
         }
 
+        .section-title i {
+            color: #51B8AC;
+        }
+
         /* Áreas de arrastre */
         .drag-area {
             min-height: 60px;
@@ -327,10 +331,12 @@
         }
 
         .item-badge {
-            background: #0E544C;
-            color: white;
+            background: rgba(81, 184, 172, 0.15);
+            color: #0E544C;
+            border: 1px solid #51B8AC;
+            font-weight: 600;
             font-size: 0.7em;
-            padding: 2px 6px;
+            padding: 1px 6px;
             border-radius: 10px;
             margin-left: 8px;
             width: 85px;
