@@ -8,7 +8,6 @@ require_once '../../../core/permissions/permissions.php';
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
- && $_SESSION['usuario_rol'] === 'admin';
 
 
 if (!tienePermiso('auditorias', 'vista', $cargoOperario)) {
