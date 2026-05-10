@@ -4,8 +4,8 @@
 //error_reporting(E_ALL);
 
 require_once '../../auth.php';
-require_once '../../includes/funciones.php';
-require_once '../../includes/conexion.php';
+require_once '../../core/helpers/funciones.php';
+require_once '../../core/database/conexion.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();

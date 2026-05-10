@@ -1,6 +1,6 @@
 <?php
 require_once '../../../core/auth/auth.php';
-require_once '../../includes/conexion.php';
+require_once '../../../core/database/conexion.php';
 
 // Verificar autenticación
 verificarAutenticacion();
