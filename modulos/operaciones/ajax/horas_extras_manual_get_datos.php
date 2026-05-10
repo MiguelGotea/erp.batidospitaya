@@ -6,14 +6,13 @@ header('Content-Type: application/json');
 
 
 $sucursal = $_GET['sucursal'] ?? '';
-$desde    = $_GET['desde']    ?? '';
-$hasta    = $_GET['hasta']    ?? '';
+$desde = $_GET['desde'] ?? '';
+$hasta = $_GET['hasta'] ?? '';
 $operario = $_GET['operario'] ?? '';
-$estado   = $_GET['estado']   ?? ''; // '', 'Pendiente', 'Aprobado', 'Denegado'
+$estado = $_GET['estado'] ?? ''; // '', 'Pendiente', 'Aprobado', 'Denegado'
 
-$usuarioInfo  = obtenerUsuarioActual();
+$usuarioInfo = obtenerUsuarioActual();
 $cargoUsuario = $usuarioInfo['CodNivelesCargos'] ?? 0;
-false      = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] == 'admin';
 
 if (!tienePermiso('horas_extras_manual', 'vista', $cargoUsuario)) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para ver estos datos.']);
@@ -21,14 +20,14 @@ if (!tienePermiso('horas_extras_manual', 'vista', $cargoUsuario)) {
 }
 
 // Regla de permisos para filtrar sucursales
-$puedeVerTodo   = tienePermiso('horas_extras_manual', 'ver_todo', $cargoUsuario);
+$puedeVerTodo = tienePermiso('horas_extras_manual', 'ver_todo', $cargoUsuario);
 $puedeFiltroAll = tienePermiso('horas_extras_manual', 'filtro_todas_tiendas', $cargoUsuario);
 
 if (!$puedeVerTodo && !$puedeFiltroAll) {
     // Si no tiene permiso de ver todo ni de filtrar todas, forzar su sucursal
     $misSucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
     $sucursalPropia = $misSucursales[0]['codigo'] ?? 'NINGUNA';
-    
+
     // Si intentó filtrar algo distinto a su sucursal, lo forzamos a la suya
     if (empty($sucursal) || $sucursal != $sucursalPropia) {
         $sucursal = $sucursalPropia;
@@ -36,8 +35,10 @@ if (!$puedeVerTodo && !$puedeFiltroAll) {
 }
 
 // Si no hay fechas, usar el mes actual por defecto
-if (empty($desde)) $desde = date('Y-m-01');
-if (empty($hasta)) $hasta = date('Y-m-t');
+if (empty($desde))
+    $desde = date('Y-m-01');
+if (empty($hasta))
+    $hasta = date('Y-m-t');
 
 try {
     // Construir columna de día dinámicamente para horarios

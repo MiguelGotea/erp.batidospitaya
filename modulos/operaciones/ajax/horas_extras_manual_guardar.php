@@ -7,7 +7,6 @@ header('Content-Type: application/json');
 
 $usuario = obtenerUsuarioActual();
 $cargoUsuario = $usuario['CodNivelesCargos'];
-false = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] == 'admin';
 
 $action = $_POST['action'] ?? '';
 
@@ -15,19 +14,19 @@ try {
     if ($action === 'guardar') {
         $id = $_POST['id'] ?? null;
         $codOperario = $_POST['cod_operario'];
-        $fecha       = $_POST['fecha'];
-        $horas       = $_POST['horas'];
-        $motivo      = $_POST['motivo_solicitud'] ?? '';
+        $fecha = $_POST['fecha'];
+        $horas = $_POST['horas'];
+        $motivo = $_POST['motivo_solicitud'] ?? '';
         $observaciones = $_POST['observaciones'] ?? '';
-        $estado      = $_POST['estado'] ?? 'Pendiente';
+        $estado = $_POST['estado'] ?? 'Pendiente';
 
         // Restricción de fecha según permiso de ver todo (si no puede ver todo, se asume que es líder/restringido)
         $puedeVerTodo = tienePermiso('horas_extras_manual', 'ver_todo', $cargoUsuario);
         if (!$puedeVerTodo) {
             $today = new DateTime();
-            $d = (int)$today->format('j');
-            $y = (int)$today->format('Y');
-            $m = (int)$today->format('n');
+            $d = (int) $today->format('j');
+            $y = (int) $today->format('Y');
+            $m = (int) $today->format('n');
 
             if ($d >= 13 && $d <= 26) {
                 $min = sprintf('%04d-%02d-13', $y, $m);
@@ -50,10 +49,10 @@ try {
                 throw new Exception("La fecha seleccionada ($fecha) está fuera del rango permitido para su quincena ($min - $max).");
             }
         }
-        
+
         // Detectar sucursal automáticamente según la asignación vigente en esa fecha
         $codSucursal = $_POST['cod_sucursal'] ?? '';
-        
+
         if (empty($codSucursal)) {
             $stmtSuc = $conn->prepare("
                 SELECT anc.Sucursal
@@ -68,7 +67,7 @@ try {
             $stmtSuc->execute([$codOperario, $fecha, $fecha]);
             $codSucursal = $stmtSuc->fetchColumn() ?: null;
         }
-        
+
         if (empty($codSucursal)) {
             echo json_encode([
                 'success' => false,
@@ -76,7 +75,7 @@ try {
             ]);
             exit();
         }
-        
+
         // Permisos de creación/edición unificados
         if ($id) {
             if (!tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario)) {

@@ -10,7 +10,6 @@ $fecha = $_GET['fecha'] ?? date('Y-m-d');
 
 $usuarioInfo = obtenerUsuarioActual();
 $cargoUsuario = $usuarioInfo['CodNivelesCargos'] ?? 0;
-false = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] == 'admin';
 
 if (!tienePermiso('horas_extras_manual', 'solicitar', $cargoUsuario)) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para solicitar horas extras.']);
