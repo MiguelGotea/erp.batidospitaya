@@ -1,7 +1,6 @@
 <?php
 // ajax/promo_get_productos_precios.php — Devuelve productos para la prueba con metadatos completos (RECALIBRADO), de prueba
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {

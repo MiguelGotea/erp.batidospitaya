@@ -20,8 +20,7 @@ $idRequisicion = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $requisicion = null;
 
 if ($idRequisicion > 0) {
-    require_once '../../core/database/conexion.php';
-    $sql = "SELECT * FROM requisicion_personal WHERE id = :id AND status = 'Solicitado'";
+$sql = "SELECT * FROM requisicion_personal WHERE id = :id AND status = 'Solicitado'";
     $stmt = $conn->prepare($sql);
     $stmt->bindValue(':id', $idRequisicion, PDO::PARAM_INT);
     $stmt->execute();

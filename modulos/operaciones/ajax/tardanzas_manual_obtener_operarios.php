@@ -1,7 +1,5 @@
 <?php
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/helpers/funciones.php';
-
 verificarAutenticacion();
 
 header('Content-Type: application/json');

@@ -3,8 +3,6 @@
 // Retorna las sucursales activas (activa=1 AND sucursal=1)
 
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/database/conexion.php';
-
 header('Content-Type: application/json');
 
 try {

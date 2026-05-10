@@ -5,8 +5,6 @@ require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
-require_once '../../core/helpers/funciones.php';
-
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
@@ -27,8 +25,6 @@ if ($idRequisicion <= 0) {
 }
 
 // Obtener datos de la requisición
-require_once '../../core/database/conexion.php';
-
 $sql = "SELECT 
             rp.*,
             s.nombre as sucursal_nombre,

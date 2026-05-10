@@ -5,7 +5,6 @@
    Devuelve: semana_actual, sucursales activas
    ============================================================ */
 require_once '../../../core/auth/auth.php';
-require_once '../../../core/database/conexion.php';
 require_once '../../../core/permissions/permissions.php';
 
 header('Content-Type: application/json; charset=utf-8');
