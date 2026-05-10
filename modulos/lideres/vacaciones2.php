@@ -977,7 +977,7 @@ function obtenerTiposFaltaConPorcentajes()
                         </a>
                     <?php endif; ?>
 
-                    <?php if (verificarAccesoCargo([5, 43, 11, 16, 27, 8, 28, 39, 30, 37, 28, 13, 48])): ?>
+                    <?php if (verificarAccesoCargo([5, 43, 11, 16, 27, 8, 28, 39, 30, 37, 28, 13, 49])): ?>
                         <a href="../operaciones/tardanzas_manual.php"
                             class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == '../operaciones/tardanzas_manual.php' ? '' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Tardanzas</span>
@@ -1243,7 +1243,7 @@ function obtenerTiposFaltaConPorcentajes()
                                         selected>
                                         <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
                                     </option>
-                                <?php
+                                    <?php
                                 endif;
                             endforeach;
                             ?>
@@ -1299,7 +1299,7 @@ function obtenerTiposFaltaConPorcentajes()
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                    { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
 
