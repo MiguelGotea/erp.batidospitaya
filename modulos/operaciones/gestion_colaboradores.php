@@ -199,6 +199,7 @@ function obtenerColaboradoresPorSucursal($codSucursal, $semana)
                 WHEN anc.CodNivelesCargos IN (5, 43) THEN 1  -- Líderes primero
                 ELSE 2 
             END,
+            nc.Peso DESC,
             o.Nombre, o.Apellido
     ");
 
@@ -509,7 +510,7 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                     <!-- Colaboradores generales -->
                                                     <div class="colaboradores-section">
                                                         <div class="section-title">
-                                                            <i class="fas fa-users"></i> Colaboradores
+                                                            <i class="fas fa-users"></i> Vendedores
                                                         </div>
                                                         <div class="drag-area colaboradores 
                                                 <?= $tipoSemana === 'siguiente' ? 'sortable-colaboradores' : '' ?>"
@@ -527,7 +528,7 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                             <?php endforeach; ?>
                                                             <?php if (empty($colaboradores['colaboradores'])): ?>
                                                                 <div style="text-align: center; color: #999; padding: 10px;">
-                                                                    Sin colaboradores asignados
+                                                                    Sin vendedores asignados
                                                                 </div>
                                                             <?php endif; ?>
                                                         </div>
