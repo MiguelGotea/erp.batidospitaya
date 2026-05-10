@@ -16,11 +16,10 @@ $fotos = $ticket_model->getFotos($_GET['id']);
 
 // Verificar permisos del usuario
 session_start();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-$puedeEditar = $esAdmin || verificarAccesoCargo([14, 16, 35]);
+$puedeEditar = verificarAccesoCargo([14, 16, 35]);
 $esLider = verificarAccesoCargo([5]);
 
-if ($esLider && !$esAdmin && !verificarAccesoCargo([14, 16, 35])) {
+if ($esLider && !verificarAccesoCargo([14, 16, 35])) {
     $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
     $codigosSucursales = array_column($sucursalesLider, 'codigo');
 

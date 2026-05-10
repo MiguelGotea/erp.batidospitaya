@@ -7,8 +7,6 @@ require_once '../../core/layout/menu_lateral.php';
 //******************************Estándar para header******************************
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso
 //if (!tienePermiso('resenas_google', 'vista', $cargoOperario)) {
 //    header('Location: /login.php');
@@ -246,7 +244,7 @@ $cargoUsuariocodigo = $cargoOperario;
     <div class="main-container">
         <div class="sub-container">
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, $esAdmin, 'Reseñas de Google'); ?>
+            <?php echo renderHeader($usuario, false, 'Reseñas de Google'); ?>
 
             <div class="container">
 

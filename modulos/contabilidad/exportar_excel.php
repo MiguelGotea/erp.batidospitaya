@@ -15,10 +15,8 @@ if (!$conn) {
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 13, 16]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([8, 13, 16])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -1396,13 +1394,13 @@ if (isset($_GET['exportar_horas_extras'])) {
                 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
+                        <?= false ? 
                             strtoupper(substr($usuario['nombre'], 0, 1)) : 
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
+                            <?= false ? 
                                 htmlspecialchars($usuario['nombre']) : 
                                 htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                         </div>

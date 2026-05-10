@@ -13,8 +13,7 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 
 // Verificar permisos
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-$puedeEditar = $esAdmin || verificarAccesoCargo([14, 16, 35]);
+$puedeEditar = verificarAccesoCargo([14, 16, 35]);
 
 if (!$puedeEditar) {
     echo json_encode(['success' => false, 'message' => 'No tienes permisos para eliminar fotos']);

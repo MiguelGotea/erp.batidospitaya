@@ -14,13 +14,11 @@ $assets_url = '/assets/';
 //******************************Estándar para header******************************
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo (solo cargos 2 y 5)
 //verificarAccesoCargo([2,5,43]);
 
 // Verificar acceso al módulo
-//if (!$esAdmin && !verificarAccesoCargo([2,5,43,44,45,46,47])) {
+//if (!verificarAccesoCargo([2,5,43,44,45,46,47])) {
 //    header('Location: /index.php');
 //    exit();
 //}

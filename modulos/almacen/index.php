@@ -10,7 +10,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo Almacén (Código 17 para Jefe de Almacén, 23 para Auxiliar)
 // También permitimos admin
-if (!verificarAccesoCargo([17, 23]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([17, 23])) {
     header('Location: ../index.php');
     exit();
 }

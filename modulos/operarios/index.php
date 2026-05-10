@@ -4,8 +4,6 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
@@ -521,7 +519,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
                 <h1 class="module-title-page">Área de Colaboradores</h1>
             </div>
             
-            <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+            <?php echo renderHeader($usuario, false, ''); ?>
             
             <!-- Tarjeta de Información/Bienvenida -->
             <div class="info-container" style="display:none;">
@@ -536,7 +534,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
                         </div>
                         <div class="info-text">
                             <div class="info-message">
-                                ¡Bienvenido <?= htmlspecialchars($esAdmin ? $usuario['nombre'] : $usuario['Nombre']) ?>!
+                                ¡Bienvenido <?= htmlspecialchars(false ? $usuario['nombre'] : $usuario['Nombre']) ?>!
                             </div>
                             <div class="info-details">
                                 <strong>Cargo:</strong> <?= htmlspecialchars($usuario['cargo_nombre'] ?? 'Operario') ?><br>
@@ -581,7 +579,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
             
             <!-- Módulos de Acceso Rápido -->
             <div class="modules">
-                <?php if ($esAdmin || verificarAccesoCargo([5])): ?>
+                <?php if (verificarAccesoCargo([5])): ?>
                     <a href="../lideres/index.php" class="module-card">
                         <div class="module-icon">
                             <i class="fas fa-user-tie"></i>
@@ -590,7 +588,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
                     </a>
                 <?php endif; ?>
                 
-                <?php if ($esAdmin || verificarAccesoCargo([22])): ?>
+                <?php if (verificarAccesoCargo([22])): ?>
                     <a href="../atencioncliente/index.php" class="module-card">
                         <div class="module-icon">
                             <i class="fas fa-user-tie"></i>
@@ -648,17 +646,17 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
             <div class="modal-body-info">
                 <div style="text-align: center; margin-bottom: 20px;">
                     <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #51B8AC 0%, #0E544C 100%); display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold; margin-bottom: 15px;">
-                        <?= $esAdmin ? 
+                        <?= false ? 
                             strtoupper(substr($usuario['nombre'], 0, 1)) : 
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <h4 style="color: #0E544C; margin-bottom: 5px;">
-                        <?= $esAdmin ? 
+                        <?= false ? 
                             htmlspecialchars($usuario['nombre']) : 
                             htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                     </h4>
                     <p style="color: #666; margin-bottom: 20px;">
-                        <?= $esAdmin ? 
+                        <?= false ? 
                             'Administrador' : 
                             htmlspecialchars($usuario['cargo_nombre'] ?? 'Operario') ?>
                     </p>

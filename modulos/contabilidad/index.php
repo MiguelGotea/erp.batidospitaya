@@ -8,12 +8,10 @@ require_once '../../core/layout/header_universal.php';
 verificarAccesoCargo([8, 16]);
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!$esAdmin && !verificarAccesoCargo([8, 16])) {
+if (!verificarAccesoCargo([8, 16])) {
     header('Location: ../index.php');
     exit();
 }
@@ -224,7 +222,7 @@ if (!$esAdmin && !verificarAccesoCargo([8, 16])) {
     
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, $esAdmin, ''); ?>
+            <?php echo renderHeader($usuario, false, ''); ?>
             
             <div style="display:none;" class="module-header">
                 <h1 class="module-title-page">Área de Contabilidad</h1>

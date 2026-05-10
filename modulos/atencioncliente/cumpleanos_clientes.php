@@ -7,9 +7,7 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-//if (!verificarAccesoCargo([22, 16, 28, 42, 26]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+//if (!verificarAccesoCargo([22, 16, 28, 42, 26])) {
 //    header('Location: ../index.php');
 //    exit();
 //}
@@ -295,7 +293,7 @@ if ($mesSeleccionado && !empty($diasSeleccionados)) {
         <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
             <!-- todo el contenido existente -->
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, $esAdmin, 'Cumpleaños de Clientes Club'); ?>
+            <?php echo renderHeader($usuario, false, 'Cumpleaños de Clientes Club'); ?>
             <div class="container">
 
                 <div class="filtros-container">
