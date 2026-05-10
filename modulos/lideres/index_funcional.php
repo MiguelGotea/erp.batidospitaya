@@ -7,7 +7,7 @@ require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
-require_once 'funciones_lideres.php';
+require_once 'funciones_antiguo_index/funciones_lideres.php';
 
 // Verificar conexión a la base de datos
 if (!$conn) {
