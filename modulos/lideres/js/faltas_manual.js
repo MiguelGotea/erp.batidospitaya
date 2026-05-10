@@ -584,33 +584,7 @@
             document.getElementById('modalConsultarMarcacion').style.display = 'none';
         }
 
-        // Cargar operarios cuando se selecciona una sucursal en el modal de nueva falta
-        document.getElementById('nueva_sucursal').addEventListener('change', function () {
-            const codSucursal = this.value;
-            const selectOperario = document.getElementById('nueva_operario');
 
-            if (!codSucursal) {
-                selectOperario.innerHTML = '<option value="">Seleccione un operario</option>';
-                return;
-            }
-
-            // Hacer petición AJAX para obtener operarios de la sucursal
-            fetch('ajax/obtener_operarios_sucursal.php?sucursal=' + codSucursal)
-                .then(response => response.json())
-                .then(data => {
-                    let options = '<option value="">Seleccione un operario</option>';
-
-                    data.forEach(operario => {
-                        options += `<option value="${operario.CodOperario}">${operario.Nombre} ${operario.Apellido}</option>`;
-                    });
-
-                    selectOperario.innerHTML = options;
-                })
-                .catch(error => {
-                    console.error('Error al cargar operarios:', error);
-                    selectOperario.innerHTML = '<option value="">Error al cargar operarios</option>';
-                });
-        });
 
         // Cerrar modal al hacer clic fuera del contenido
         //window.addEventListener('click', function(event) {

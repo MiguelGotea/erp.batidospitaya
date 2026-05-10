@@ -28,8 +28,12 @@ try {
     }
     
     echo json_encode($operarios);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     http_response_code(400);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode([
+        'error' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
 }
 ?>
