@@ -672,7 +672,7 @@ function obtenerNombreOperario($codOperario)
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Feriados Trabajados'); ?>
+            <?php echo renderHeader($usuario, 'Feriados Trabajados'); ?>
 
             <div class="container-feriados">
 

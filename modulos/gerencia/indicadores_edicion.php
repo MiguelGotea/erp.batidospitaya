@@ -145,7 +145,7 @@ function calcularResultado($indicador, $resultadoBD, $conn, $semanaId = null) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Edicion de KPI Semanal'); ?>
+            <?php echo renderHeader($usuario, 'Edicion de KPI Semanal'); ?>
             
             <?php if (empty($indicadoresPorArea)): ?>
                 <div class="info-box" style="background-color: #fff3cd; border-left-color: #ffc107;">

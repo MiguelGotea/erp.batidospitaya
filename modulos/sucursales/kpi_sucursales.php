@@ -94,7 +94,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, 'Impulso de Ventas'); ?>
+            <?php echo renderHeader($usuario, 'Impulso de Ventas'); ?>
 
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success">

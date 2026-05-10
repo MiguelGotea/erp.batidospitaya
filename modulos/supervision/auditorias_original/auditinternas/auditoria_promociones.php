@@ -453,7 +453,7 @@ $showSuccess = isset($_GET['success']);
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, 'Auditoría de Promociones Combos Pitaya'); ?>
+            <?php echo renderHeader($usuario, 'Auditoría de Promociones Combos Pitaya'); ?>
             <div class="success-message" id="successMessage">
                 <i class="fas fa-check-circle"></i> ¡La auditoría de promociones se ha guardado correctamente! Serás redirigido...
             </div>

@@ -59,7 +59,7 @@ if (!verificarAccesoCargo([17, 23])) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Módulo de Almacén'); ?>
+            <?php echo renderHeader($usuario, 'Módulo de Almacén'); ?>
             
             <div class="container-fluid p-4">
                 <div class="module-header">

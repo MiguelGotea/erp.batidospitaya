@@ -195,7 +195,7 @@ function getColorMeta($resultado, $meta, $tipometa, $resultadosemanaanteriordato
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Resultados de KPI'); ?>
+            <?php echo renderHeader($usuario, 'Resultados de KPI'); ?>
 
             <div class="info-periodo" style="display:none;">
                 <i class="fas fa-calendar-alt"></i>

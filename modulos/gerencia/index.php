@@ -75,7 +75,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($codOperario);
     <div class="main-container">
         <div class="sub-container">
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
 
             <!-- Tarjeta de Feliz Cumpleaños -->
             <?php if ($cumpleanosInfo): ?>

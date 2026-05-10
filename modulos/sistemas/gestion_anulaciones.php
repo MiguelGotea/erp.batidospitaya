@@ -42,7 +42,7 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Aprobación de Anulaciones'); ?>
+            <?php echo renderHeader($usuario, 'Aprobación de Anulaciones'); ?>
 
             <div class="container-fluid p-3">
 

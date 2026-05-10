@@ -39,7 +39,7 @@ $puedeDesactivar = tienePermiso('producto_presentacion', 'desactivar', $cargoOpe
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Productos de Presentación'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Productos de Presentación'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Botón para agregar nuevo producto -->

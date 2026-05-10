@@ -90,7 +90,7 @@ if ($colaborador_filtro) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Informe Diario de Mantenimiento'); ?>
+            <?php echo renderHeader($usuario, 'Informe Diario de Mantenimiento'); ?>
 
             <div class="container-fluid px-md-5 py-3">
                 <div class="container-fluid p-0">

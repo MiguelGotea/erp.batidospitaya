@@ -488,7 +488,7 @@ $sucursales_filtro = $stmt_sucursales_filtro->fetchAll(PDO::FETCH_ASSOC);
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container"> <!-- ya existe en el css de menu lateral -->
         <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
-            <?php echo renderHeader($usuario, false, 'Auditorias'); ?> <!-- Dejar vacio si Bienvenido.. -->
+            <?php echo renderHeader($usuario, 'Auditorias'); ?> <!-- Dejar vacio si Bienvenido.. -->
 
             <div style="background: #fff; padding: 2px; display:none;">
                 <p>Desempeño Acumulado</p>

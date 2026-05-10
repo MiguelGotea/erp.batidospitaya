@@ -298,7 +298,7 @@ $solicitudes_criticas = array_filter($tickets, function ($t) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Planificación Semanal'); ?>
+            <?php echo renderHeader($usuario, 'Planificación Semanal'); ?>
 
             <div class="container-fluid p-4">
                 <div class="row mb-4">

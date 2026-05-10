@@ -222,7 +222,7 @@ if (!verificarAccesoCargo([8, 16])) {
     
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
             
             <div style="display:none;" class="module-header">
                 <h1 class="module-title-page">Área de Contabilidad</h1>

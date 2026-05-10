@@ -273,7 +273,7 @@ function redimensionarImagen($origen, $destino, $anchoMax, $altoMax)
     
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Solicitud de Cotización'); ?>
+            <?php echo renderHeader($usuario, 'Solicitud de Cotización'); ?>
             
             <div class="container-fluid p-3">
                 

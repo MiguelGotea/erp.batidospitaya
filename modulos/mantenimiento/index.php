@@ -301,7 +301,7 @@ if (!tienePermiso('index_mantenimiento', 'vista', $cargoOperario)) {
             <!-- todo el contenido existente -->
 
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
 
             <?php
             $ticket = new Ticket();

@@ -1429,7 +1429,7 @@ function verificarTardanzaYaRegistrada(
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Historial de Marcaciones'); ?>
+            <?php echo renderHeader($usuario, 'Historial de Marcaciones'); ?>
 
             <div class="container-fluid p-3">
                 <?php if (isset($_SESSION['exito'])): ?>

@@ -48,7 +48,7 @@ if (!$codigoSucursal) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Registro de Pedidos de Insumos'); ?>
+            <?php echo renderHeader($usuario, 'Registro de Pedidos de Insumos'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Tabla de Productos -->

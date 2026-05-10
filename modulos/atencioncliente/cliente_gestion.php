@@ -319,7 +319,7 @@ $puedeEditar = tienePermiso('clientes_club_pos', 'edicion', $cargoOperario);
     
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Cliente'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Cliente'); ?>
             
             <div class="container-fluid px-0">
                 

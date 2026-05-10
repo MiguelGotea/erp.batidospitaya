@@ -483,7 +483,7 @@ if (!tienePermiso('index_desarrollo', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
 
             <div class="module-header" style="display:none;">
                 <h1 class="module-title-page">Líder de Desarrollo</h1>

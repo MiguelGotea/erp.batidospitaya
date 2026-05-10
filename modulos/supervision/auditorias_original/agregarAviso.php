@@ -530,7 +530,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Nuevo Aviso'); ?>
+            <?php echo renderHeader($usuario, 'Nuevo Aviso'); ?>
             <div class="contenedor-principal">
 
                 <?php if (!empty($errors)): ?>

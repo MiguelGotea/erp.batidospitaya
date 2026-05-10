@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, 'Solicitudes de Vacaciones'); ?>
+            <?php echo renderHeader($usuario, 'Solicitudes de Vacaciones'); ?>
             
             <div class="container-fluid p-3">
                 <?php if (isset($_SESSION['exito'])): ?>

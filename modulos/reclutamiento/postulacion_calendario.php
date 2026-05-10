@@ -48,7 +48,7 @@ if (!tienePermiso('postulacion_plazas_activas', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Calendario de Entrevistas'); ?>
+            <?php echo renderHeader($usuario, 'Calendario de Entrevistas'); ?>
 
             <div class="container-fluid p-4">
                 <div class="row">

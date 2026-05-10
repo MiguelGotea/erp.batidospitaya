@@ -518,7 +518,7 @@ function obtenerTiposFaltaConPorcentajes()
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Registro de Vacaciones'); ?>
+            <?php echo renderHeader($usuario, 'Registro de Vacaciones'); ?>
 
             <div class="container-fluid p-3">
                 <?php if (isset($_SESSION['exito'])): ?>

@@ -65,7 +65,7 @@ try {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Caja Inicial'); ?>
+            <?php echo renderHeader($usuario, 'Caja Inicial'); ?>
 
             <div class="container-fluid p-3">
 

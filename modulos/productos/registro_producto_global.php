@@ -53,7 +53,7 @@ if ($esNuevo && !$puedeCrear) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, $esNuevo ? 'Nuevo Producto' : 'Editar Producto'); ?>
+            <?php echo renderHeader($usuario, $esNuevo ? 'Nuevo Producto' : 'Editar Producto'); ?>
 
             <div class="container-fluid p-3">
                 <!-- FORMULARIO PRINCIPAL -->

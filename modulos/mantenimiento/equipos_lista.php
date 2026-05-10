@@ -47,7 +47,7 @@ if (tienePermiso('historial_activos', 'historial_total_activos', $cargoOperario)
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container"> <!-- ya existe en el css de menu lateral -->
         <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
-            <?php echo renderHeader($usuario, false, 'Historial de Activos'); ?> <!-- Dejar vacio si Bienvenido.. -->
+            <?php echo renderHeader($usuario, 'Historial de Activos'); ?> <!-- Dejar vacio si Bienvenido.. -->
             <div class="container-main">
                 <div class="table-container">
                     <div class="table-responsive">

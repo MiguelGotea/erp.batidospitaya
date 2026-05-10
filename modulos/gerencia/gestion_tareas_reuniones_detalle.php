@@ -131,7 +131,7 @@ if ($esReunion) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, ($esTarea ? 'Detalle de Tarea' : 'Detalle de Reunión')); ?>
+            <?php echo renderHeader($usuario, ($esTarea ? 'Detalle de Tarea' : 'Detalle de Reunión')); ?>
 
             <div class="container-fluid p-3">
 

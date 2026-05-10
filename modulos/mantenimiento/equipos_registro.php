@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Registro de Equipos'); ?>
+            <?php echo renderHeader($usuario, 'Registro de Equipos'); ?>
             <?php if (isset($mensaje)): ?>
                 <div class="alert alert-<?= $tipo_mensaje ?>">
                     <?= $mensaje ?>

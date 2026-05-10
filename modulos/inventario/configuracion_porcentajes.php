@@ -41,7 +41,7 @@ $version = mt_rand(1, 10000);
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Configuración de Porcentajes por Sucursal'); ?>
+            <?php echo renderHeader($usuario, 'Configuración de Porcentajes por Sucursal'); ?>
 
             <div class="p-4">
                 <div class="card border-0 shadow-sm">

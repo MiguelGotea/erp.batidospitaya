@@ -151,7 +151,7 @@ if (isset($_GET['editar'])) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Feriados'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Feriados'); ?>
 
             <div class="container">
                 <!-- Cabecera eliminada por redundancia con el header universal -->

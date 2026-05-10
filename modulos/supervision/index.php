@@ -1837,7 +1837,7 @@ function verificarAuditoriaEfectivo($tabla, $columnaSucursal, $codSucursal, $sem
     
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
             
             <div class="module-header">
                 <h1 class="module-title-page">Área de Supervisión</h1>

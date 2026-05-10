@@ -38,7 +38,7 @@ require_once '../../core/layout/header_universal.php';
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Campañas WhatsApp'); ?>
+            <?php echo renderHeader($usuario, 'Campañas WhatsApp'); ?>
 
             <div class="container-fluid p-3">
 

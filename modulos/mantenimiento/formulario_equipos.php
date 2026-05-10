@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="main-container">
         <div class="sub-container">
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, 'Solicitud de Equipos'); ?>
+            <?php echo renderHeader($usuario, 'Solicitud de Equipos'); ?>
             
             <div class="container-fluid p-3">
                 <div class="form-modern-container">

@@ -81,7 +81,7 @@ if (!$plaza) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Candidatos - ' . $plaza['nombre_cargo']); ?>
+            <?php echo renderHeader($usuario, 'Candidatos - ' . $plaza['nombre_cargo']); ?>
 
             <div class="container-fluid p-4">
 

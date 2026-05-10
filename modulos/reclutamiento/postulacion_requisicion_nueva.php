@@ -52,7 +52,7 @@ if ($idRequisicion > 0) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, ($idRequisicion > 0 ? 'Editar' : 'Nueva') . ' Requisición de Personal'); ?>
+            <?php echo renderHeader($usuario, ($idRequisicion > 0 ? 'Editar' : 'Nueva') . ' Requisición de Personal'); ?>
 
             <div class="container-fluid p-4">
                 <div class="card shadow-sm">

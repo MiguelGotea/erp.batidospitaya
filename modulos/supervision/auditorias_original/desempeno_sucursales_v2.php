@@ -49,7 +49,7 @@ $anio_seleccionado = isset($_GET['anio']) ? (int) $_GET['anio'] : (int) date('Y'
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Desempeño de Tienda'); ?>
+            <?php echo renderHeader($usuario, 'Desempeño de Tienda'); ?>
 
             <div class="contenedor-principal">
 

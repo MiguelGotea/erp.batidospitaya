@@ -409,7 +409,7 @@ if (!tienePermiso('index_infraestructura', 'vista', $cargoOperario)) {
     <div class="main-container">
         <div class="contenedor-principal">
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
 
             <?php
             $ticket = new Ticket();

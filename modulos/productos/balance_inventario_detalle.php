@@ -380,7 +380,7 @@ try {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Detalle de Balance'); ?>
+            <?php echo renderHeader($usuario, 'Detalle de Balance'); ?>
 
             <div class="bi-wrapper">
 

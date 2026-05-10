@@ -185,7 +185,7 @@ $tickets_pendientes = $ticketModel->getTicketsWithoutDates();
         <div class="sub-container"> <!-- Estructura estándar ERP -->
             <!-- todo el contenido existente -->
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, 'Programacion de Solicitudes'); ?>
+            <?php echo renderHeader($usuario, 'Programacion de Solicitudes'); ?>
             <div class="container-fluid p-3">
                 <!-- Navegación de semanas -->
                 <div class="d-flex justify-content-center align-items-center gap-3 mb-4">

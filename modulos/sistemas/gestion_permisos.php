@@ -39,7 +39,7 @@ $puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
     
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Permisos'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Permisos'); ?>
             
             <div class="container-fluid p-3">
                 <div class="row">

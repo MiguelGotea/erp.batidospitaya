@@ -293,7 +293,7 @@ if ($mesSeleccionado && !empty($diasSeleccionados)) {
         <div class="contenedor-principal"> <!-- ya existe en el css de menu lateral -->
             <!-- todo el contenido existente -->
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, 'Cumpleaños de Clientes Club'); ?>
+            <?php echo renderHeader($usuario, 'Cumpleaños de Clientes Club'); ?>
             <div class="container">
 
                 <div class="filtros-container">

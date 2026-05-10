@@ -74,7 +74,7 @@ $urgenciaClases = ['', 'urgencia-badge-1', 'urgencia-badge-2', 'urgencia-badge-3
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Detalle de Requisición de Personal'); ?>
+            <?php echo renderHeader($usuario, 'Detalle de Requisición de Personal'); ?>
 
             <div class="container-fluid p-4">
                 <div class="detalle-card card">

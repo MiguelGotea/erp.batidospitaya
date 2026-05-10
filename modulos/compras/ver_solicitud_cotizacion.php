@@ -230,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Ver Solicitud de Cotización'); ?>
+            <?php echo renderHeader($usuario, 'Ver Solicitud de Cotización'); ?>
 
             <div class="container-fluid p-3">
         

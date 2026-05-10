@@ -35,7 +35,7 @@ if (!tienePermiso('postulacion_plazas_activas', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Listado de Plazas Activas'); ?>
+            <?php echo renderHeader($usuario, 'Listado de Plazas Activas'); ?>
 
             <div class="container-fluid p-4">
                 <!-- Indicadores Superiores -->

@@ -36,7 +36,7 @@ $tienePermisoVistaCedula = tienePermiso('historial_clientes_club', 'vista_cedula
 
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, 'Historial de Clientes'); ?>
+            <?php echo renderHeader($usuario, 'Historial de Clientes'); ?>
 
             <div class="container-fluid p-3">
                 <div class="d-flex justify-content-end mb-3">

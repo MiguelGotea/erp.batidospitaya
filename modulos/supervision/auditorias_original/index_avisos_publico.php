@@ -600,7 +600,7 @@ try {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Anuncios Internos'); ?>
+            <?php echo renderHeader($usuario, 'Anuncios Internos'); ?>
 
             <?php if (empty($avisos)): ?>
                 <div style="background: white; padding: 20px; border-radius: 8px;">

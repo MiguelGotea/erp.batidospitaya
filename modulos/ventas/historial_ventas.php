@@ -41,7 +41,7 @@ $puedeActivarWorker = tienePermiso('historial_pedidos_globales', 'activar_bot_at
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Historial de Ventas'); ?>
+            <?php echo renderHeader($usuario, 'Historial de Ventas'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Resumen de totales -->

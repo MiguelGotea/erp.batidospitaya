@@ -343,7 +343,7 @@ foreach ($mantenimientosProgramados as $mant) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Calendario de Mantenimiento'); ?>
+            <?php echo renderHeader($usuario, 'Calendario de Mantenimiento'); ?>
             <div class="page-header">
                 <h1 class="page-title">📅 Calendario de Mantenimientos</h1>
                 <a href="equipos_lista.php" class="btn btn-secondary">← Volver</a>

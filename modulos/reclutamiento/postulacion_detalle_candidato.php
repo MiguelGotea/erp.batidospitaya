@@ -106,7 +106,7 @@ if (count($analisisIA) > 0) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Perfil del Candidato'); ?>
+            <?php echo renderHeader($usuario, 'Perfil del Candidato'); ?>
 
             <div class="container-fluid p-4">
                 <?php

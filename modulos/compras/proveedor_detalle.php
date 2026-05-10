@@ -65,7 +65,7 @@ $tiposPago = $stmtTiposPago->fetchAll();
     
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, $esEdicion ? 'Editar Proveedor' : 'Nuevo Proveedor'); ?>
+            <?php echo renderHeader($usuario, $esEdicion ? 'Editar Proveedor' : 'Nuevo Proveedor'); ?>
             
             <div class="container-fluid p-3">
                 <div class="row mb-3" style="display:none;">

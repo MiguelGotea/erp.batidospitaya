@@ -44,7 +44,7 @@ $permisoCancelar = tienePermiso('gestion_tareas_reuniones', 'cancelar_tarea_reun
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Tareas y Reuniones'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Tareas y Reuniones'); ?>
 
             <div class="container-fluid p-3">
 

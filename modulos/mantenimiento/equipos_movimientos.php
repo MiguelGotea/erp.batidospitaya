@@ -158,7 +158,7 @@ $equiposEnCentral = $db->fetchAll("
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Movimientos de Equipos'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Movimientos de Equipos'); ?>
             <div class="page-header">
 
                 <div>

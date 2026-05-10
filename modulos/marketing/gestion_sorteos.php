@@ -37,7 +37,7 @@ if (!tienePermiso('gestion_sorteos', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Sorteos - Pitaya Love'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Sorteos - Pitaya Love'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Barra de acciones -->

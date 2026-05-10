@@ -299,7 +299,7 @@ try {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Ventas'); ?>
+            <?php echo renderHeader($usuario, 'Ventas'); ?>
 
             <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
                 <a href="crearpedido.php" class="btn-nuevo-pedido" target="_blank">

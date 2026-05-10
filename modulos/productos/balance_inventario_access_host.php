@@ -32,7 +32,7 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
 <?php echo renderMenuLateral($cargoOperario); ?>
 <div class="main-container">
     <div class="sub-container">
-        <?php echo renderHeader($usuario, false, 'Balance Semanal de Existencias'); ?>
+        <?php echo renderHeader($usuario, 'Balance Semanal de Existencias'); ?>
 
         <div class="bi-wrapper">
 

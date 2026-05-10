@@ -41,7 +41,7 @@ $permisoCrear = tienePermiso('gestion_proyectos', 'crear_proyecto', $cargoOperar
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Proyectos Gantt'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Proyectos Gantt'); ?>
 
             <div class="container-fluid py-4">
 

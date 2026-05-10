@@ -36,7 +36,7 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Cupones'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Cupones'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Botón para agregar nuevo cupón - MOVIDO A FAB -->

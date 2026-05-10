@@ -458,7 +458,7 @@ try {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Anuncios'); ?>
+            <?php echo renderHeader($usuario, 'Anuncios'); ?>
             <!-- Filtros -->
             <div class="filters-container">
                 <div class="filter-group">

@@ -65,7 +65,7 @@ $evaluacion = $stmtEval->fetch(PDO::FETCH_ASSOC);
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Evaluación Técnica del Jefe de Área'); ?>
+            <?php echo renderHeader($usuario, 'Evaluación Técnica del Jefe de Área'); ?>
 
             <div class="container-fluid p-4">
                 <div class="card shadow-sm mb-4 border-start border-info border-5">

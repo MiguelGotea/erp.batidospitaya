@@ -50,7 +50,7 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Plantilla: Reembolsos con IA'); ?>
+            <?php echo renderHeader($usuario, 'Plantilla: Reembolsos con IA'); ?>
             
             <div class="container-fluid p-3">
                 <div class="row mb-4 align-items-center">

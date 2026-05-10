@@ -40,7 +40,7 @@ $puedeEditar = tienePermiso('compra_local_planificador_stock', 'edicion', $cargo
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Planificador de Stock Mínimo'); ?>
+            <?php echo renderHeader($usuario, 'Planificador de Stock Mínimo'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Selector de Producto -->

@@ -40,7 +40,7 @@ $version = mt_rand(1, 10000);
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Configuración de Logística'); ?>
+            <?php echo renderHeader($usuario, 'Configuración de Logística'); ?>
 
             <div class="container-fluid p-3">
 

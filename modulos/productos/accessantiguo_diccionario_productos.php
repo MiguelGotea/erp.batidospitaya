@@ -292,7 +292,7 @@ $puedeEditar = tienePermiso('diccionario_productos', 'edicion', $cargoOperario);
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Diccionario de Productos'); ?>
+            <?php echo renderHeader($usuario, 'Diccionario de Productos'); ?>
 
             <!-- Header -->
             <div class="page-header">

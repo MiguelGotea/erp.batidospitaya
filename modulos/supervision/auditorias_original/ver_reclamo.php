@@ -472,7 +472,7 @@ try {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">   <!-- ya existe en el css de menu lateral -->
         <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
-                    <?php echo renderHeader($usuario, false, 'Detalle de Reclamo'); ?> <!-- Dejar vacio si Bienvenido.. -->
+                    <?php echo renderHeader($usuario, 'Detalle de Reclamo'); ?> <!-- Dejar vacio si Bienvenido.. -->
             <div class="contenedor-principal">
         
                 

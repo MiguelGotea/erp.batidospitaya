@@ -37,7 +37,7 @@ $puedeEditar = tienePermiso('compra_local_gestion_perfiles', 'edicion', $cargoOp
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Perfiles de Despacho'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Perfiles de Despacho'); ?>
 
             <div class="container-fluid p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">

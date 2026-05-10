@@ -212,7 +212,7 @@ function parsearRespuesta($texto) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Pruebas de Selección con IA'); ?>
+            <?php echo renderHeader($usuario, 'Pruebas de Selección con IA'); ?>
             <div class="container-fluid p-3">
                 <div class="container">
                     <div class="header">

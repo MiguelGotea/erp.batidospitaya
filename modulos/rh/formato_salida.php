@@ -62,7 +62,7 @@ $tituloPagina = "Formato de Salida - " . $contrato['operario_nombre'] . " " . $c
     <?= renderMenuLateral($cargoId) ?>
     <div class="main-container">
         <div class="sub-container">
-            <?= renderHeader($usuarioActual, false, 'Recursos Humanos') ?>
+            <?= renderHeader($usuarioActual, 'Recursos Humanos') ?>
             
             <div class="exit-form-container">
                 <div class="form-header">

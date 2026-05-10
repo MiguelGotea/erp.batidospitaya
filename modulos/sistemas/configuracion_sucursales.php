@@ -40,7 +40,7 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
 
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false); ?>
+            <?php echo renderHeader($usuario); ?>
 
             <div class="suc-wrap">
 

@@ -485,7 +485,7 @@ function generarClave($nombre, $apellido)
     <div class="main-container">
         <div class="sub-container">
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, 'Registrar Nuevo Colaborador'); ?>
+            <?php echo renderHeader($usuario, 'Registrar Nuevo Colaborador'); ?>
 
             <div class="container">
 

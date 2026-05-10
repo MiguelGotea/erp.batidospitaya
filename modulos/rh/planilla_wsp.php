@@ -37,7 +37,7 @@ require_once '../../core/layout/header_universal.php';
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Notificaciones WhatsApp — Planilla'); ?>
+            <?php echo renderHeader($usuario, 'Notificaciones WhatsApp — Planilla'); ?>
 
             <div class="container-fluid p-3">
 

@@ -38,7 +38,7 @@ $version = mt_rand(1, 10000);
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Inventario Semanal'); ?>
+            <?php echo renderHeader($usuario, 'Inventario Semanal'); ?>
 
             <div class="p-3">
                 <!-- Filtros -->

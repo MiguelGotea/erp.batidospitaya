@@ -155,7 +155,7 @@ if (!tienePermiso('index_diseno', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
 
 
         </div>

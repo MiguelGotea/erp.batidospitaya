@@ -52,7 +52,7 @@ $solicitudes = $db->fetchAll("
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Solicitudes de Mantenimiento'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Solicitudes de Mantenimiento'); ?>
             <div class="page-header">
                 <h1 class="page-title">📋 Gestión de Solicitudes de Mantenimiento</h1>
                 <a href="equipos_lista.php" class="btn btn-secondary">← Volver</a>

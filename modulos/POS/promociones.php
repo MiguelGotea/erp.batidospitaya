@@ -37,7 +37,7 @@ $puedeCambiarEstado = tienePermiso('promociones', 'cambiar_estado', $cargoOperar
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Configurador de Promociones'); ?>
+            <?php echo renderHeader($usuario, 'Configurador de Promociones'); ?>
 
             <div class="container-fluid p-3">
 

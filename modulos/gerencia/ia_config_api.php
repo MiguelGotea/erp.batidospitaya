@@ -46,7 +46,7 @@ $links = [
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Configuración de APIs IA'); ?>
+            <?php echo renderHeader($usuario, 'Configuración de APIs IA'); ?>
 
             <div class="content-padding">
             <div class="row">

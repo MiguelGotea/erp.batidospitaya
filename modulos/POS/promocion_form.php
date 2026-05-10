@@ -51,7 +51,7 @@ $tituloPage = $esNuevo ? 'Nueva Promoción' : 'Editar Promoción';
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, $tituloPage); ?>
+            <?php echo renderHeader($usuario, $tituloPage); ?>
 
             <div class="container-fluid p-3">
                 <form id="formPromocion" novalidate>

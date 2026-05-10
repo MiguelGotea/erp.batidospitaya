@@ -34,7 +34,7 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Lista de Colaboradores'); ?>
+            <?php echo renderHeader($usuario, 'Lista de Colaboradores'); ?>
 
             <div class="container-fluid p-3">
                 <?php if (isset($_SESSION['exito'])): ?>

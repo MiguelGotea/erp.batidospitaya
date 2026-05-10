@@ -39,7 +39,7 @@ $anioActual = date('Y');
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Proyección de Ventas (Meta)'); ?>
+            <?php echo renderHeader($usuario, 'Proyección de Ventas (Meta)'); ?>
 
             <div class="container-fluid p-4">
                 <div class="d-flex justify-content-end align-items-center mb-4">

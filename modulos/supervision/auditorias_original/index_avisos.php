@@ -569,7 +569,7 @@ $canEdit = in_array($_SESSION['rol'] ?? '', $allowedRoles, true);
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, $esAdmin, 'Historial de Avisos'); ?>
+            <?php echo renderHeader($usuario, 'Historial de Avisos'); ?>
 
             <!-- Filtros y botón para agregar nuevo aviso -->
             <div class="filters-container">

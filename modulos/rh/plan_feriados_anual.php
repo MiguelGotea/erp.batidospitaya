@@ -76,7 +76,7 @@ sort($aniosDisponibles);
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
-        <?php echo renderHeader($usuario, false, "Plan Anual de Feriados $anio"); ?>
+        <?php echo renderHeader($usuario, "Plan Anual de Feriados $anio"); ?>
 
         <div class="container-fluid">
             <div class="controls">

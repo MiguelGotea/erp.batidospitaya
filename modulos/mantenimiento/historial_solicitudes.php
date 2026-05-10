@@ -108,7 +108,7 @@ function getTextoUrgencia($nivel)
     <div class="main-container"> <!-- ya existe en el css de menu lateral -->
         <div class="sub-container"> <!-- Estructura estándar ERP -->
             <!-- todo el contenido existente -->
-            <?php echo renderHeader($usuario, false, 'Historial de Solicitudes'); ?>
+            <?php echo renderHeader($usuario, 'Historial de Solicitudes'); ?>
             <div class="container-fluid p-3">
                 <!-- Header -->
 

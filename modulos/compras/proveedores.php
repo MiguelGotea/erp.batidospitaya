@@ -42,7 +42,7 @@ $permisos = [
     
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Gestión de Proveedores'); ?>
+            <?php echo renderHeader($usuario, 'Gestión de Proveedores'); ?>
             
             <div class="container-fluid p-3">
                 <!-- Botón para agregar nuevo proveedor -->

@@ -281,7 +281,7 @@ if (!tienePermiso('visor_recetas', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Visor de Recetas'); ?>
+            <?php echo renderHeader($usuario, 'Visor de Recetas'); ?>
 
             <!-- Selectores -->
             <div class="panel-selector">

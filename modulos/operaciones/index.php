@@ -989,7 +989,7 @@ if (!empty($sucursales)) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
             <!-- Obtener cantidad de anuncios no leídos -->
             <?php
             $cantidadAnunciosNoLeidos = 0;

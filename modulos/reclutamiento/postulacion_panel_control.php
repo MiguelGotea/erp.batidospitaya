@@ -38,7 +38,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Panel de Control de Personal'); ?>
+            <?php echo renderHeader($usuario, 'Panel de Control de Personal'); ?>
 
             <div class="container-fluid p-4">
                 <div class="card shadow-sm">

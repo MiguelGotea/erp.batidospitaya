@@ -42,7 +42,7 @@ $puedeReset = tienePermiso('crm_bot', 'resetear_sesion', $cargoOperario);
 
     <div class="main-container">
         <div class="sub-container">
-            <?= renderHeader($usuario, false, 'CRM Bot WhatsApp') ?>
+            <?= renderHeader($usuario, 'CRM Bot WhatsApp') ?>
 
             <div class="container-fluid p-3">
 

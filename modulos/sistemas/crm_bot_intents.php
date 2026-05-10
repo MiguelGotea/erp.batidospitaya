@@ -96,7 +96,7 @@ if (!tienePermiso('crm_bot', 'gestionar_intents', $cargoOperario)) {
     <?= renderMenuLateral($cargoOperario) ?>
     <div class="main-container">
         <div class="sub-container">
-            <?= renderHeader($usuario, false, 'Intenciones CRM Bot') ?>
+            <?= renderHeader($usuario, 'Intenciones CRM Bot') ?>
 
             <div class="container-fluid p-3">
                 <div class="d-flex justify-content-between align-items-center mb-3">

@@ -38,7 +38,7 @@ $puedeCrear = tienePermiso('unidades_conversion_productos', 'nuevo_registro', $c
     
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Administración de Unidades y Conversión'); ?>
+            <?php echo renderHeader($usuario, 'Administración de Unidades y Conversión'); ?>
             
             <div class="container-fluid p-3">
                 <!-- Botón para agregar nueva unidad -->

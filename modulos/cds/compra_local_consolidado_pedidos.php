@@ -38,7 +38,7 @@ $puedeEditar = tienePermiso('compra_local_consolidado_pedidos', 'edicion', $carg
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Consolidado de Pedidos'); ?>
+            <?php echo renderHeader($usuario, 'Consolidado de Pedidos'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Tabla Consolidada -->

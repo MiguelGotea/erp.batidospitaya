@@ -185,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Reporte de Mantenimiento'); ?>
+            <?php echo renderHeader($usuario, 'Reporte de Mantenimiento'); ?>
             <div class="page-header">
                 <div>
                     <h1 class="page-title">📝 Reporte de Mantenimiento</h1>

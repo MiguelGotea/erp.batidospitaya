@@ -205,7 +205,7 @@ $mantenimientosEnCurso = $db->fetchAll(
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Dashboard del Equipo'); ?>
+            <?php echo renderHeader($usuario, 'Dashboard del Equipo'); ?>
             <div class="page-header">
                 <div>
                     <h1 class="page-title">📊 Dashboard del Equipo</h1>

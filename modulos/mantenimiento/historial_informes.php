@@ -126,7 +126,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Control de Informes Diarios'); ?>
+            <?php echo renderHeader($usuario, 'Control de Informes Diarios'); ?>
 
             <div class="container-fluid p-4">
                 <div class="mb-4 d-flex justify-content-end align-items-center gap-3 no-print">

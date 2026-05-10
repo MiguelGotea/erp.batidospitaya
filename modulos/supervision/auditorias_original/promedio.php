@@ -608,7 +608,7 @@ $color_porcentaje_total = getColorClass($porcentaje_total / 20); // Convertir a 
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container"> <!-- ya existe en el css de menu lateral -->
         <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
-            <?php echo renderHeader($usuario, $esAdmin, 'Desempeño de TIenda'); ?> <!-- Dejar vacio si Bienvenido.. -->
+            <?php echo renderHeader($usuario, 'Desempeño de TIenda'); ?> <!-- Dejar vacio si Bienvenido.. -->
             <div class="contenedor-principal">
                 <!-- Filtros de mes y año -->
                 <div class="filtros-container">

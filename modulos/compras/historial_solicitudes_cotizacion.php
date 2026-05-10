@@ -38,7 +38,7 @@ if (!tienePermiso('historial_solicitudes_cotizacion', 'vista', $cargoOperario)) 
     
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, 'Solicitudes de Cotización'); ?>
+            <?php echo renderHeader($usuario, 'Solicitudes de Cotización'); ?>
             
             <?php if (isset($_SESSION['success'])): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">

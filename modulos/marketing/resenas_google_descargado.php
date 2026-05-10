@@ -49,7 +49,7 @@ $puedeManejarBot  = tienePermiso('configuracion_bot_resenasgoogle', 'vista', $ca
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Reseñas de Google - Historial'); ?>
+            <?php echo renderHeader($usuario, 'Reseñas de Google - Historial'); ?>
 
             <div class="container-fluid p-4">
 

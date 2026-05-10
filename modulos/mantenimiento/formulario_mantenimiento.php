@@ -207,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="main-container">
         <div class="sub-container">
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, 'Solicitud de Mantenimiento'); ?>
+            <?php echo renderHeader($usuario, 'Solicitud de Mantenimiento'); ?>
             
             <div class="container-fluid p-3">
                 <div class="form-modern-container">

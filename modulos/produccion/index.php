@@ -434,7 +434,7 @@ if (!tienePermiso('index_produccion', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
 
             <div class="module-header" style="display:none;">
                 <h1 class="module-title-page">Área de Producción</h1>

@@ -80,7 +80,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, $tituloPagina); ?>
+            <?php echo renderHeader($usuario, $tituloPagina); ?>
             
             <script>
                 const editingId = <?= json_encode($editingId) ?>;

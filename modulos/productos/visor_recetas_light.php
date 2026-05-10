@@ -40,7 +40,7 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Consulta de Recetas'); ?>
+            <?php echo renderHeader($usuario, 'Consulta de Recetas'); ?>
 
             <div class="vrl-layout p-3">
 

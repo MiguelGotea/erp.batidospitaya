@@ -61,7 +61,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
             <!-- Renderizar header universal -->
             <?php
             $cantidadAnunciosNoLeidos = obtenerCantidadAnunciosNoLeidos($_SESSION['usuario_id']);
-            echo renderHeader($usuario, false, '');
+            echo renderHeader($usuario, '');
             ?>
 
             <!-- Sección: Indicadores de Control -->

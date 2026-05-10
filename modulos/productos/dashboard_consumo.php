@@ -42,7 +42,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Análisis de Consumo de Insumos'); ?>
+            <?php echo renderHeader($usuario, 'Análisis de Consumo de Insumos'); ?>
 
             <div class="dc-wrapper p-3">
 

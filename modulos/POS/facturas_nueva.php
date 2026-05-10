@@ -27,7 +27,7 @@ $hoy           = date('Y-m-d');
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Nueva Factura'); ?>
+            <?php echo renderHeader($usuario, 'Nueva Factura'); ?>
 
             <div class="container-fluid p-3">
                 <div class="facturas-layout">

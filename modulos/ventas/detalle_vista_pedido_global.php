@@ -366,7 +366,7 @@ if ($pedidoGlobal) {
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Detalle del Pedido #' . $cod_pedido); ?>
+            <?php echo renderHeader($usuario, 'Detalle del Pedido #' . $cod_pedido); ?>
 
             <div class="container-fluid p-3">
                 <div class="detalle-wrapper">

@@ -57,7 +57,7 @@ try {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Pedido Sugerido'); ?>
+            <?php echo renderHeader($usuario, 'Pedido Sugerido'); ?>
 
             <div class="ps-wrapper p-3">
 

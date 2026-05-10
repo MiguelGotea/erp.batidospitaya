@@ -37,7 +37,7 @@ $puedeDescargar = tienePermiso('dashboard_rfm', 'descargar', $cargoOperario);
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Dashboard RFM & Segmentación'); ?>
+            <?php echo renderHeader($usuario, 'Dashboard RFM & Segmentación'); ?>
 
             <div class="container-fluid py-4">
 

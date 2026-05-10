@@ -233,7 +233,7 @@ if ($filtroEstado === 'activos') {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Contactos de Colaboradores'); ?>
+            <?php echo renderHeader($usuario, 'Contactos de Colaboradores'); ?>
 
             <div class="container-fluid p-3">
                 <div class="container-contactos">

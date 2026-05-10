@@ -244,7 +244,7 @@ $cargoUsuariocodigo = $cargoOperario;
     <div class="main-container">
         <div class="sub-container">
             <!-- Renderizar header universal -->
-            <?php echo renderHeader($usuario, false, 'Reseñas de Google'); ?>
+            <?php echo renderHeader($usuario, 'Reseñas de Google'); ?>
 
             <div class="container">
 

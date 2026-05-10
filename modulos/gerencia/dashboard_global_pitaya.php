@@ -46,7 +46,7 @@ $hoy = date('Y-m-d');
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Dashboard Global Pitaya'); ?>
+            <?php echo renderHeader($usuario, 'Dashboard Global Pitaya'); ?>
 
             <div class="da-wrapper">
 

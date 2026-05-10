@@ -44,7 +44,7 @@ if (empty($membresia)) {
 
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, 'Historial de Productos Vendidos'); ?>
+            <?php echo renderHeader($usuario, 'Historial de Productos Vendidos'); ?>
 
             <div class="container-fluid p-3">
                 <!-- Info del cliente y Toggle de Gráfico -->

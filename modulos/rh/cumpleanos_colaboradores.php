@@ -125,7 +125,7 @@ ORDER BY DAY(o.Cumpleanos), o.Nombre, o.Apellido
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Cumpleaños de Colaboradores'); ?>
+            <?php echo renderHeader($usuario, 'Cumpleaños de Colaboradores'); ?>
 
             <div class="container-fluid p-3">
                 <div class="container-cumpleanos">

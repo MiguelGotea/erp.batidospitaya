@@ -3177,7 +3177,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, 'Registro de Tardanzas'); ?>
+            <?php echo renderHeader($usuario, 'Registro de Tardanzas'); ?>
 
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success">

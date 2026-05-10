@@ -31,7 +31,7 @@ if (!tienePermiso('ia_graficos_ventas', 'vista', $cargoOperario)) {
     
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Visualización de Ventas con IA'); ?>
+            <?php echo renderHeader($usuario, 'Visualización de Ventas con IA'); ?>
             
             <div class="container-fluid p-3">
                 <!-- Sección de Favoritos (Colapsable) -->

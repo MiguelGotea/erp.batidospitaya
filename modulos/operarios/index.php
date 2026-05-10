@@ -519,7 +519,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
                 <h1 class="module-title-page">Área de Colaboradores</h1>
             </div>
             
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, ''); ?>
             
             <!-- Tarjeta de Información/Bienvenida -->
             <div class="info-container" style="display:none;">

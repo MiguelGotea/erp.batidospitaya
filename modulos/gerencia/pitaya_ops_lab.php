@@ -43,7 +43,7 @@ $finDefault = date('Y-m-t', strtotime('-1 month'));
   <?php echo renderMenuLateral($cargo); ?>
   <div class="main-container">
     <div class="sub-container">
-      <?php echo renderHeader($usuario, false, 'Pitaya OPS Lab'); ?>
+      <?php echo renderHeader($usuario, 'Pitaya OPS Lab'); ?>
       <div id="opsLabWrapper">
 
         <!-- HERO -->

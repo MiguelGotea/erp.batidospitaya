@@ -3474,7 +3474,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
     <?php echo renderMenuLateral($cargoId); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Datos del Colaborador'); ?>
+            <?php echo renderHeader($usuario, 'Datos del Colaborador'); ?>
             <div class="container-fluid">
 
                 <?php if (isset($_SESSION['exito'])): ?>

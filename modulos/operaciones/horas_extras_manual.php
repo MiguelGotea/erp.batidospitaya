@@ -154,7 +154,7 @@ $esRestringido = !$puedeVerTodo && !$puedeFiltroAll;
 
     <div class="main-container">
         <div class="container-fluid">
-            <?= renderHeader($usuario, false, 'Gestión de Horas Extras') ?>
+            <?= renderHeader($usuario, 'Gestión de Horas Extras') ?>
 
             <!-- Filtros -->
             <div class="card card-body mb-3 filters-container">

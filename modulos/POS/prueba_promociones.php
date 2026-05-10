@@ -39,7 +39,7 @@ if (!$usuario) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, '🧪 Demo Aplicación de Promociones'); ?>
+            <?php echo renderHeader($usuario, '🧪 Demo Aplicación de Promociones'); ?>
 
             <div class="container-fluid p-3">
                 <div class="row g-4">

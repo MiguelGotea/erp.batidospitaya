@@ -1638,7 +1638,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, 'Registro de Faltas/Ausencias'); ?>
+            <?php echo renderHeader($usuario, 'Registro de Faltas/Ausencias'); ?>
 
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success">

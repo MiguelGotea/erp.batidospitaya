@@ -26,7 +26,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, false, 'Historial de Facturas'); ?>
+            <?php echo renderHeader($usuario, 'Historial de Facturas'); ?>
 
             <div class="container-fluid p-3">
 
