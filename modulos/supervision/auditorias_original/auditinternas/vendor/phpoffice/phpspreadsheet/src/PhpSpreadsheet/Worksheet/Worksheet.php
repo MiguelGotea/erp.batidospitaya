@@ -3009,7 +3009,7 @@ class Worksheet
                 $thisCol = ($key % AddressRange::MAX_COLUMN_INT) ?: AddressRange::MAX_COLUMN_INT;
                 if ($thisCol >= $minColInt && $thisCol <= $maxColInt) {
                     $col = Coordinate::stringFromColumnIndex($thisCol);
-                    if ($hideColumns === !isset($hiddenColumns[$col])) {
+                    if ($hideColumns === false || !isset($hiddenColumns[$col])) {
                         $columnRef = $returnCellRef ? $col : ($thisCol - $minColInt);
                         $cell = $this->cellCollection->get("{$col}{$thisRow}");
                         if ($cell !== null) {

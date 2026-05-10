@@ -1319,7 +1319,7 @@ class Calculation extends CalculationLocale
 
                         if (
                             !is_numeric($val)
-                            && ((ctype_alpha($val) === strlen($val) > 3))
+                            && ((ctype_alpha($val) === false || strlen($val) > 3))
                             && (preg_match('/^' . self::CALCULATION_REGEXP_DEFINEDNAME . '$/mui', $val) !== false)
                             && ($this->spreadsheet === null || $this->spreadsheet->getNamedRange($val) !== null)
                         ) {

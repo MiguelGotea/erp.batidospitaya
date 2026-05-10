@@ -10,9 +10,11 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 //******************************Estándar para header******************************
 
 $usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 // Verificar acceso al módulo Operaciones (Código 11 para Jefe de Operaciones)
 
-if (!verificarAccesoCargo([21, 11, 5, 43, 27, 8, 13, 39, 30, 37, 28, 42, 54, 42])) {
+if (!verificarAccesoCargo([21, 11, 5, 43, 27, 8, 13, 39, 30, 37, 28, 42, 54, 42]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
@@ -22,7 +24,7 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 // Obtener sucursales - lógica mejorada
-if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42])) {
+if ($esAdmin || verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42])) {
     // Admin y supervisores ven todas las sucursales
     $sucursales = obtenerSucursalesFisicas();
 } elseif (verificarAccesoCargo([5, 43, 27])) {
@@ -1523,7 +1525,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                         <i class="fas fa-clock"></i> <span class="btn-text">Horarios Programados</span>
                     </a>
 
-                    <?php if (verificarAccesoCargo([13, 5, 43, 8, 11, 21, 22, 39, 30, 37, 28])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([13, 5, 43, 8, 11, 21, 22, 39, 30, 37, 28])): ?>
                         <a href="../rh/ver_marcaciones_todas.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'ver_marcaciones_todas.php' ? 'activo' : '' ?>">
                             <i class="fas fa-user-clock"></i> <span class="btn-text">Marcaciones</span>
                         </a>
@@ -1532,13 +1534,13 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= false ?
+                        <?= $esAdmin ?
                             strtoupper(substr($usuario['nombre'], 0, 1)) :
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= false ?
+                            <?= $esAdmin ?
                                 htmlspecialchars($usuario['nombre']) :
                                 htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                         </div>
@@ -1646,7 +1648,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                 <div class="filter-group">
                     <label style="display:none;" for="sucursal">Sucursal</label>
                     <select id="sucursal" name="sucursal" onchange="cambiarSucursal()">
-                        <?php if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42])): ?>
+                        <?php if ($esAdmin || verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42])): ?>
                             <option value="todas" <?= $mostrarTodas ? 'selected' : '' ?>>Todas las sucursales</option>
                         <?php endif; ?>
                         <?php foreach ($sucursales as $sucursal): ?>
@@ -1666,7 +1668,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                 <?php endif; ?>
             </div>
 
-            <?php if (verificarAccesoCargo([8, 16, 41])): ?>
+            <?php if ($esAdmin || verificarAccesoCargo([8, 16, 41])): ?>
                 <div class="filter-group" style="flex-direction: row; align-items: flex-end;">
                     <a href="exportar_horarios_compactos.php?semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>"
                         class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">

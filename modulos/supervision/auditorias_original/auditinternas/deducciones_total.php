@@ -12,11 +12,13 @@ $db = $conn;
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 // Verificar acceso al módulo 'supervision'
 //verificarAccesoCargo([2, 5, 8, 11, 16, 13]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([2, 5, 8, 11, 16, 13, 49])) {
+if (!verificarAccesoCargo([2, 5, 8, 11, 16, 13, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -1420,7 +1422,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
                 </div>
 
                 <div class="buttons-container">
-                    <?php if (verificarAccesoCargo([11, 16, 21])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([11, 16, 21])): ?>
                         <a href="auditorias_consolidadas.php"
                             class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Historial</span>
@@ -1432,14 +1434,14 @@ if (isset($_GET['exportar_faltante_caja'])) {
                         <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Deducciones</span>
                     </a>
 
-                    <?php if (verificarAccesoCargo([2, 5])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([2, 5])): ?>
                         <a href="../../../contabilidad/boleta_pago.php"
                             class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'boleta_pago.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Boleta de Pago</span>
                         </a>
                     <?php endif; ?>
 
-                    <?php if (verificarAccesoCargo([8, 16])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
                         <a href="faltante_caja.php"
                             class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_caja.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Faltante de Caja</span>
@@ -1449,13 +1451,13 @@ if (isset($_GET['exportar_faltante_caja'])) {
 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= false ?
+                        <?= $esAdmin ?
                             strtoupper(substr($usuario['nombre'], 0, 1)) :
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= false ?
+                            <?= $esAdmin ?
                                 htmlspecialchars($usuario['nombre']) :
                                 htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                         </div>
@@ -1598,7 +1600,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
                 <i class="fas fa-file-excel"></i> Exportar para Contabilidad
             </a>
 
-            <?php if (verificarAccesoCargo([8, 16])): ?>
+            <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
                 <!-- Nuevo botón para exportar solo faltantes de caja -->
                 <a style="display:none;" href="deducciones_total.php?<?php
                 echo http_build_query([

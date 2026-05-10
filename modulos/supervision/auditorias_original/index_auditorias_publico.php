@@ -8,7 +8,8 @@ require_once '../../../core/permissions/permissions.php';
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-//false = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+//$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 
 if (!tienePermiso('auditorias', 'vista', $cargoOperario)) {
@@ -489,7 +490,7 @@ $sucursales_filtro = $stmt_sucursales_filtro->fetchAll(PDO::FETCH_ASSOC);
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container"> <!-- ya existe en el css de menu lateral -->
         <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
-            <?php echo renderHeader($usuario, false, 'Auditorias'); ?> <!-- Dejar vacio si Bienvenido.. -->
+            <?php echo renderHeader($usuario, $esAdmin, 'Auditorias'); ?> <!-- Dejar vacio si Bienvenido.. -->
 
             <div style="background: #fff; padding: 2px; display:none;">
                 <p>Desempeño Acumulado</p>

@@ -8,11 +8,13 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: ant
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 // Verificar acceso al módulo 'supervision'
 verificarAccesoCargo([8, 11, 16, 21]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 11, 16, 21])) {
+if (!verificarAccesoCargo([8, 11, 16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }

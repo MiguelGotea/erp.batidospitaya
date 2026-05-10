@@ -11,8 +11,10 @@ $db = $conn;
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 21])) {
+if (!verificarAccesoCargo([11, 16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }

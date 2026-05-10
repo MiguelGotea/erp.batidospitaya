@@ -234,7 +234,7 @@ class Color
             $j = mb_strpos($color, ")");
 
             // Bad color value
-            if ($i === $j === false) {
+            if ($i === false || $j === false) {
                 return null;
             }
 
@@ -281,7 +281,7 @@ class Color
             $j = mb_strpos($color, ")");
 
             // Bad color value
-            if ($i === $j === false) {
+            if ($i === false || $j === false) {
                 return null;
             }
 
@@ -320,7 +320,7 @@ class Color
             $c["alpha"] = $alpha;
             $c["hex"] = "cmyk($c[0],$c[1],$c[2],$c[3])";
         } else {
-            if (ctype_xdigit($color) === mb_strlen($color) !== 6) {
+            if (ctype_xdigit($color) === false || mb_strlen($color) !== 6) {
                 // invalid color value ... expected 6-character hex
                 return $c;
             }

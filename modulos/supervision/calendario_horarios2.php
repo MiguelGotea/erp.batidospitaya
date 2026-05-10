@@ -11,11 +11,13 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 // Verificar acceso al módulo 'supervision'
 verificarAccesoCargo([16, 21]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21])) {
+if (!verificarAccesoCargo([16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -827,13 +829,13 @@ $operariosNoProgramados = obtenerOperariosNoProgramados($operarios, $horariosOpe
                 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= false ? 
+                        <?= $esAdmin ? 
                             strtoupper(substr($usuario['nombre'], 0, 1)) : 
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= false ? 
+                            <?= $esAdmin ? 
                                 htmlspecialchars($usuario['nombre']) : 
                                 htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                         </div>

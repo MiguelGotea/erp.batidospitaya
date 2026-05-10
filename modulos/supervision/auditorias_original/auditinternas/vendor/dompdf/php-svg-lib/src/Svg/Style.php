@@ -310,7 +310,7 @@ class Style
             $j = strpos($color, ")");
 
             // Bad url format
-            if ($i === $j === false) {
+            if ($i === false || $j === false) {
                 return null;
             }
 
@@ -326,7 +326,7 @@ class Style
         $j = strpos($color, ")");
 
         // Bad color value
-        if ($i === $j === false) {
+        if ($i === false || $j === false) {
             return null;
         }
 

@@ -9,7 +9,7 @@ require_once '../../../core/permissions/permissions.php';
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-//false = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+//$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 if (!tienePermiso('avisos_internos', 'vista', $cargoOperario)) {
     header('Location: ../../../index.php');
@@ -697,7 +697,7 @@ try {
                                                     $icon = 'fa-file-excel';
                                                 elseif (strpos($doc['file_type'], 'powerpoint') !== false)
                                                     $icon = 'fa-file-powerpoint';
-                                                elseif (strpos($doc['file_type'], 'zip') !== strpos($doc['file_type'], 'rar') !== false)
+                                                elseif (strpos($doc['file_type'], 'zip') !== false || strpos($doc['file_type'], 'rar') !== false)
                                                     $icon = 'fa-file-archive';
                                                 ?>
                                                 <a href="<?= htmlspecialchars($prefixedDocPath) ?>" target="_blank"

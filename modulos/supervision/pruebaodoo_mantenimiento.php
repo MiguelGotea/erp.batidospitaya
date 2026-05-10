@@ -10,10 +10,12 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 //******************************Estándar para header******************************
 
 $usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 // Verificar acceso al módulo Líderes (CodNivelesCargos 5) y Jefe de CDS (19)
 verificarAccesoCargo([14, 16]);
 
-if (!verificarAccesoCargo([14, 16])) {
+if (!verificarAccesoCargo([14, 16]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
@@ -26,7 +28,7 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
 $sucursalesUsuario = [];
 $urlOdoo = "https://pitaya-mantenimiento.odoo.com/mantenimiento"; // URL base
 
-if ((verificarAccesoCargo([5]) || verificarAccesoCargo([19]))) {
+if ((verificarAccesoCargo([5]) || verificarAccesoCargo([19])) && !$esAdmin) {
     // Para líderes (código 5)
     if (verificarAccesoCargo([5])) {
         $sucursalesUsuario = obtenerSucursalesLider($_SESSION['usuario_id']);
@@ -217,22 +219,22 @@ if ((verificarAccesoCargo([5]) || verificarAccesoCargo([19]))) {
                 </div>
                 
                 <div class="buttons-container">
-                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 19])): ?>
                         <a href="pruebaodoo.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo.php' ? 'activo' : '' ?>">
                             <i class="fas fa-sticky-note"></i> <span class="btn-text">Solicitudes Pendientes</span>
                         </a>
                     <?php endif; ?>
-                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 19])): ?>
                         <a href="pruebaodoo_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo_mantenimiento.php' ? 'activo' : '' ?>">
                             <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento</span>
                         </a>
                     <?php endif; ?>
-                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 19])): ?>
                         <a href="pruebaodoo_mobiliario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo_mobiliario.php' ? 'activo' : '' ?>">
                             <i class="fas fa-desktop"></i> <span class="btn-text">Equipos</span>
                         </a>
                     <?php endif; ?>
-                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 19])): ?>
                         <a href="pruebaodoo.php?finalizadas=1" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo.php' ? 'activo' : '' ?>">
                             <i class="fas fa-check-circle"></i> <span class="btn-text">Solicitudes Finalizadas</span>
                         </a>
@@ -241,13 +243,13 @@ if ((verificarAccesoCargo([5]) || verificarAccesoCargo([19]))) {
                 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= false ? 
+                        <?= $esAdmin ? 
                             strtoupper(substr($usuario['nombre'], 0, 1)) : 
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= false ? 
+                            <?= $esAdmin ? 
                                 htmlspecialchars($usuario['nombre']) : 
                                 htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                         </div>

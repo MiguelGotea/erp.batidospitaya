@@ -13,11 +13,13 @@ $db = $conn;
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 // Verificar acceso al módulo 'supervision'
 verificarAccesoCargo([16, 21]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21])) {
+if (!verificarAccesoCargo([16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -453,7 +455,7 @@ $showSuccess = isset($_GET['success']);
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, 'Auditoría de Promociones Combos Pitaya'); ?>
+            <?php echo renderHeader($usuario, $esAdmin, 'Auditoría de Promociones Combos Pitaya'); ?>
             <div class="success-message" id="successMessage">
                 <i class="fas fa-check-circle"></i> ¡La auditoría de promociones se ha guardado correctamente! Serás redirigido...
             </div>

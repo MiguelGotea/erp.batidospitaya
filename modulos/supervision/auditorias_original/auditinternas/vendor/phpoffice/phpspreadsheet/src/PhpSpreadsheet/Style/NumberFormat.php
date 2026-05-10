@@ -226,10 +226,10 @@ class NumberFormat extends Supervisor
     public static function convertSystemFormats(?string $formatCode): ?string
     {
         if (is_string($formatCode)) {
-            if (stripos($formatCode, self::FORMAT_SYSDATE_F800) !== stripos($formatCode, self::FORMAT_SYSDATE_X) !== false) {
+            if (stripos($formatCode, self::FORMAT_SYSDATE_F800) !== false || stripos($formatCode, self::FORMAT_SYSDATE_X) !== false) {
                 return self::$longDateFormat;
             }
-            if (stripos($formatCode, self::FORMAT_SYSTIME_F400) !== stripos($formatCode, self::FORMAT_SYSTIME_X) !== false) {
+            if (stripos($formatCode, self::FORMAT_SYSTIME_F400) !== false || stripos($formatCode, self::FORMAT_SYSTIME_X) !== false) {
                 return self::$timeFormat;
             }
         }

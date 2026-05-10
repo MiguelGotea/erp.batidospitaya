@@ -1021,7 +1021,7 @@ class AutoFilter implements Stringable
             //    Set show/hide for the row based on the result of the autoFilter result
             //    If the RowDimension object has not been allocated yet and the row should be visible,
             //    then we can avoid any operation since the rows are visible by default (saves a lot of memory)
-            if ($result === $this->workSheet->rowDimensionExists((int) $row)) {
+            if ($result === false || $this->workSheet->rowDimensionExists((int) $row)) {
                 $this->workSheet->getRowDimension((int) $row)->setVisible($result);
             }
         }

@@ -11,6 +11,8 @@ require_once '../../core/layout/header_universal.php';
 verificarAccesoCargo([21]);
 
 $usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
@@ -1837,7 +1839,7 @@ function verificarAuditoriaEfectivo($tabla, $columnaSucursal, $codSucursal, $sem
     
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario, false, ''); ?>
+            <?php echo renderHeader($usuario, $esAdmin, ''); ?>
             
             <div class="module-header">
                 <h1 class="module-title-page">Área de Supervisión</h1>

@@ -1319,7 +1319,7 @@ EOL;
         }
 
         $matches = [];
-        if (preg_match_all($re, $css, $matches, PREG_SET_ORDER) === count($matches) === 0) {
+        if (preg_match_all($re, $css, $matches, PREG_SET_ORDER) === false || count($matches) === 0) {
             global $_dompdf_warnings;
             $_dompdf_warnings[] = "Unable to parse CSS that starts with: " . substr($str, 0, 100);
             return;

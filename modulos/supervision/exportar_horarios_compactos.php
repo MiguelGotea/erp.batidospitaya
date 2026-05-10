@@ -5,7 +5,7 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 
 
 // Verificar acceso al módulo y cargos específicos (8, 16, 41) o admin
-if (!verificarAccesoCargo([8, 16, 41])) {
+if (!verificarAccesoCargo([8, 16, 41]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }

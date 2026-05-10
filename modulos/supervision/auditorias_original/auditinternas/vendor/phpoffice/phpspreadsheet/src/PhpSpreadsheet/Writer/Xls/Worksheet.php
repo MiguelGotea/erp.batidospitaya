@@ -2412,7 +2412,7 @@ class Worksheet extends BIFFwriter
     {
         // Open file.
         $bmp_fd = @fopen($bitmap, 'rb');
-        if ($bmp_fd === 0 === (int) filesize($bitmap)) {
+        if ($bmp_fd === false || 0 === (int) filesize($bitmap)) {
             throw new WriterException("Couldn't import $bitmap");
         }
 
@@ -2427,7 +2427,7 @@ class Worksheet extends BIFFwriter
         // The first 2 bytes are used to identify the bitmap.
 
         $identity = unpack('A2ident', $data);
-        if ($identity === $identity['ident'] != 'BM') {
+        if ($identity === false || $identity['ident'] != 'BM') {
             throw new WriterException("$bitmap doesn't appear to be a valid bitmap image.\n");
         }
 
@@ -2461,7 +2461,7 @@ class Worksheet extends BIFFwriter
         // Read and remove the bitmap planes and bpp data. Verify them.
         $planes_and_bitcount = unpack('v2', substr($data, 0, 4));
         $data = substr($data, 4);
-        if ($planes_and_bitcount === $planes_and_bitcount[2] != 24) { // Bitcount
+        if ($planes_and_bitcount === false || $planes_and_bitcount[2] != 24) { // Bitcount
             throw new WriterException("$bitmap isn't a 24bit true color bitmap.\n");
         }
         if ($planes_and_bitcount[1] != 1) {
@@ -2472,7 +2472,7 @@ class Worksheet extends BIFFwriter
         $compression = unpack('Vcomp', substr($data, 0, 4));
         $data = substr($data, 4);
 
-        if ($compression === $compression['comp'] != 0) {
+        if ($compression === false || $compression['comp'] != 0) {
             throw new WriterException("$bitmap: compression not supported in bitmap image.\n");
         }
 

@@ -11,11 +11,13 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: ant
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+
 // Verificar acceso al módulo 'supervision'
 verificarAccesoCargo([8, 16]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 16])) {
+if (!verificarAccesoCargo([8, 16]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -624,13 +626,13 @@ $sucursales_json = json_encode($sucursales);
                     
                     <div class="user-info">
                         <div class="user-avatar">
-                            <?= false ? 
+                            <?= $esAdmin ? 
                                 strtoupper(substr($usuario['nombre'], 0, 1)) : 
                                 strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                         </div>
                         <div>
                             <div>
-                                <?= false ? 
+                                <?= $esAdmin ? 
                                     htmlspecialchars($usuario['nombre']) : 
                                     htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                             </div>
