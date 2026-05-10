@@ -1245,7 +1245,7 @@ class Options
             return true;
         }
         $parsed_uri = parse_url($path);
-        if ($parsed_uri === false || (array_key_exists("scheme", $parsed_uri) && strtolower($parsed_uri["scheme"]) === "phar")) {
+        if ($parsed_uri === (array_key_exists("scheme", $parsed_uri) && strtolower($parsed_uri["scheme"]) === "phar")) {
             return false;
         }
         return true;

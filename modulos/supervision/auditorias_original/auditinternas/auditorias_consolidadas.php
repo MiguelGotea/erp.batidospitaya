@@ -16,13 +16,11 @@ $db = $conn;
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo 'supervision'
 verificarAccesoCargo([8, 11, 16, 21]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([11, 16, 21])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -1439,12 +1437,12 @@ header {
                     <a href="auditorias_consolidadas.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
                         <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Historial</span>
                     </a>
-                    <?php if ($esAdmin || verificarAccesoCargo([2, 5, 8, 11, 16])): ?>
+                    <?php if (verificarAccesoCargo([2, 5, 8, 11, 16])): ?>
                         <a href="deducciones_total.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'deducciones_total.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Deducciones</span>
                         </a>
                     <?php endif; ?>
-                    <?php if ($esAdmin || verificarAccesoCargo([8, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 16])): ?>
                         <a href="faltante_caja.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_caja.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Faltante de Caja</span>
                         </a>
@@ -1453,13 +1451,13 @@ header {
                 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
+                        <?= false ? 
                             strtoupper(substr($usuario['nombre'], 0, 1)) : 
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
+                            <?= false ? 
                                 htmlspecialchars($usuario['nombre']) : 
                                 htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                         </div>

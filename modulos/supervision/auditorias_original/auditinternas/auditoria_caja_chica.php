@@ -11,13 +11,11 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: ant
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo 'supervision'
 verificarAccesoCargo([16, 21]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([16, 21])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -639,13 +637,13 @@ header {
                 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
+                        <?= false ? 
                             strtoupper(substr($usuario['nombre'], 0, 1)) : 
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
+                            <?= false ? 
                                 htmlspecialchars($usuario['nombre']) : 
                                 htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                         </div>

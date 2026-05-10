@@ -454,7 +454,7 @@ function AddFont($family, $style='', $file='', $dir='')
 	$fontkey = $family.$style;
 	if(isset($this->fonts[$fontkey]))
 		return;
-	if(strpos($file,'/')!==false || strpos($file,"\\")!==false)
+	if(strpos($file,'/')!==strpos($file,"\\")!==false)
 		$this->Error('Incorrect font definition file name: '.$file);
 	if($dir=='')
 		$dir = $this->fontpath;
@@ -1228,7 +1228,7 @@ protected function _UTF8toUTF16($s)
 protected function _escape($s)
 {
 	// Escape special characters
-	if(strpos($s,'(')!==false || strpos($s,')')!==false || strpos($s,'\\')!==false || strpos($s,"\r")!==false)
+	if(strpos($s,'(')!==strpos($s,')')!==strpos($s,'\\')!==strpos($s,"\r")!==false)
 		return str_replace(array('\\','(',')',"\r"), array('\\\\','\\(','\\)','\\r'), $s);
 	else
 		return $s;

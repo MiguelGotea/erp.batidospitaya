@@ -82,7 +82,7 @@ class Replace
                 $returnValue = str_replace($fromText, $toText, $text);
             } else {
                 if (is_bool($instance)) {
-                    if ($instance === false || Functions::getCompatibilityMode() !== Functions::COMPATIBILITY_OPENOFFICE) {
+                    if ($instance === Functions::getCompatibilityMode() !== Functions::COMPATIBILITY_OPENOFFICE) {
                         return ExcelError::Value();
                     }
                     $instance = 1;

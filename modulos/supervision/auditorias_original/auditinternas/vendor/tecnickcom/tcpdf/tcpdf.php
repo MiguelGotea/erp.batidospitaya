@@ -24809,7 +24809,7 @@ class TCPDF {
      */
     protected function fileExists($file)
     {
-        if (isset($this->fileContentCache[$file]) || false !== $this->getImageBuffer($file)) {
+        if (isset($this->fileContentCache[$file]) !== $this->getImageBuffer($file)) {
             return true;
         }
 

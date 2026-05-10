@@ -10,12 +10,10 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 //******************************Estándar para header******************************
 
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo Líderes (CodNivelesCargos 5), 19 es CDS
 verificarAccesoCargo([14, 16]);
 
-if (!verificarAccesoCargo([14, 16]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([14, 16])) {
     header('Location: ../index.php');
     exit();
 }
@@ -28,7 +26,7 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
 $sucursalesUsuario = [];
 $codOdooUsuario = null;
 
-if ((verificarAccesoCargo([5]) || verificarAccesoCargo([19])) && !$esAdmin) {
+if ((verificarAccesoCargo([5]) || verificarAccesoCargo([19]))) {
     // Para líderes (código 5)
     if (verificarAccesoCargo([5])) {
         $sucursalesUsuario = obtenerSucursalesLider($_SESSION['usuario_id']);
@@ -540,23 +538,23 @@ $sucursalesOdoo = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
                 </div>
                 
                 <div class="buttons-container">
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 11, 16, 19, 21])): ?>
+                    <?php if (verificarAccesoCargo([5, 11, 16, 19, 21])): ?>
                         <a href="pruebaodoo.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo.php' && (!isset($_GET['finalizadas']) || $_GET['finalizadas'] != 1) ? 'activo' : '' ?>">
                             <i class="fas fa-sticky-note"></i> <span class="btn-text">Solicitudes Pendientes</span>
                         </a>
                     <?php endif; ?>
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
                         <a href="pruebaodoo_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo_mantenimiento.php' ? 'activo' : '' ?>">
                             <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento</span>
                         </a>
                     <?php endif; ?>
                     
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
                         <a href="pruebaodoo_mobiliario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo_mobiliario.php' ? 'activo' : '' ?>">
                             <i class="fas fa-desktop"></i> <span class="btn-text">Equipos</span>
                         </a>
                     <?php endif; ?>
-                    <?php if ($esAdmin || verificarAccesoCargo([5, 11, 16, 19, 21])): ?>
+                    <?php if (verificarAccesoCargo([5, 11, 16, 19, 21])): ?>
                         <a href="pruebaodoo.php?finalizadas=1" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo.php' && isset($_GET['finalizadas']) && $_GET['finalizadas'] == 1 ? 'activo' : '' ?>">
                             <i class="fas fa-check-circle"></i> <span class="btn-text">Solicitudes Finalizadas</span>
                         </a>
@@ -565,13 +563,13 @@ $sucursalesOdoo = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
                 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
+                        <?= false ? 
                             strtoupper(substr($usuario['nombre'], 0, 1)) : 
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
+                            <?= false ? 
                                 htmlspecialchars($usuario['nombre']) : 
                                 htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
                         </div>
@@ -614,7 +612,7 @@ $sucursalesOdoo = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
                     (<?= htmlspecialchars($sucursalesOdoo[$codOdooUsuario]) ?>)
                 <?php endif; ?>
             </div>
-        <?php elseif ($esAdmin || verificarAccesoCargo([16])): ?>
+        <?php elseif (verificarAccesoCargo([16])): ?>
             <div class="filtro-info">
                 <strong>Vista administrativa:</strong> Mostrando todos los tickets (sin filtro por sucursal)
             </div>

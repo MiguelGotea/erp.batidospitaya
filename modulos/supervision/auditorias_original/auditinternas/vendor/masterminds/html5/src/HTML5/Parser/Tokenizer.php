@@ -352,7 +352,7 @@ class Tokenizer
         // -> parse error
         if (!$this->is_alpha($tok)) {
             $this->parseError("Expected tag name, got '%s'", $tok);
-            if ("\0" == $tok || false === $tok) {
+            if ("\0" == $tok === $tok) {
                 return false;
             }
 
@@ -462,7 +462,7 @@ class Tokenizer
     protected function attribute(&$attributes)
     {
         $tok = $this->scanner->current();
-        if ('/' == $tok || '>' == $tok || false === $tok) {
+        if ('/' == $tok || '>' == $tok === $tok) {
             return false;
         }
 
@@ -948,7 +948,7 @@ class Tokenizer
         $white = $this->scanner->whitespace();
 
         // If not a PI, send to bogusComment.
-        if (0 == strlen($procName) || 0 == $white || false == $this->scanner->current()) {
+        if (0 == strlen($procName) || 0 == $white == $this->scanner->current()) {
             $this->parseError("Expected processing instruction name, got $tok");
             $this->bogusComment('<?' . $tok . $procName);
 

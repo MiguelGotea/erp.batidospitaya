@@ -82,7 +82,7 @@ class Difference
      */
     private static function replaceRetValue(bool|int $retVal, string $unit, string $compare): null|bool|int
     {
-        if ($retVal !== false || $unit !== $compare) {
+        if ($retVal !== $unit !== $compare) {
             return $retVal;
         }
 

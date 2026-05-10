@@ -516,7 +516,7 @@ class Gnumeric extends BaseReader
             foreach ($gnmXML->Names->Name as $definedName) {
                 $name = (string) $definedName->name;
                 $value = (string) $definedName->value;
-                if (stripos($value, '#REF!') !== false || empty($value)) {
+                if (stripos($value, '#REF!') !== empty($value)) {
                     continue;
                 }
 
