@@ -33,7 +33,7 @@ $es_pagina_auditorias = $pagina_actual == 'index_auditorias_publico.php';
 $es_pagina_promedio = $pagina_actual == 'promedio.php';
 $es_pagina_reclamos = ($pagina_actual == 'index_reclamos_publico.php');
 
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorï¿½as, ahora llama al del core;
 
 // Obtener el mes y aÃ±o seleccionados (si existen)
 $mes_seleccionado = isset($_GET['mes']) ? (int) $_GET['mes'] : date('n');
@@ -362,7 +362,7 @@ $color_porcentaje_total = getColorClass($porcentaje_total / 20); // Convertir a 
     <link rel="icon" href="icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet"
-        href="/assets/css/global_tools.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/css/global_tools.css') ?>">
+        href="/core/assets/css/global_tools.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/css/global_tools.css') ?>">
     <!-- contiene main, sub container * y body -->
     <style>
         .buttons-container {
