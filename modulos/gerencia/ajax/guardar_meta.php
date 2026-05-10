@@ -1,5 +1,5 @@
 <?php
-require_once '../../../includes/auth.php';
+require_once '../../../core/auth/auth.php';
 
 // Verificar que sea una petición POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
