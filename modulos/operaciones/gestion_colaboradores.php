@@ -132,9 +132,13 @@ function obtenerSucursalesAgrupadas()
             s.codigo, 
             s.nombre, 
             s.cod_departamento,
-            d.nombre as departamento_nombre
+            s.supervisor_asignado,
+            d.nombre as departamento_nombre,
+            o.Nombre as sup_nombre,
+            o.Apellido as sup_apellido
         FROM sucursales s
         JOIN departamentos d ON s.cod_departamento = d.codigo
+        LEFT JOIN Operarios o ON s.supervisor_asignado = o.CodOperario
         WHERE s.activa = 1
         AND s.sucursal = 1  -- Solo sucursales físicas
         ORDER BY 
@@ -451,16 +455,27 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                             $colaboradores = $colaboradoresPorSucursal[$sucursal['codigo']] ?? ['lideres' => [], 'colaboradores' => []];
                                             ?>
                                             <div class="sucursal-card" data-sucursal-id="<?= $sucursal['codigo'] ?>">
-                                                <div class="sucursal-header">
-                                                    <?= htmlspecialchars($sucursal['nombre']) ?>
-                                                    <div style="float: right; display: flex; align-items: center; gap: 8px;">
-                                                        <span class="sucursal-counter"
-                                                            style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.85em;">
-                                                            <?= $totalesPorSucursal[$sucursal['codigo']] ?? 0 ?>
-                                                        </span>
-                                                        <small
-                                                            style="opacity: 0.8; display:none;">#<?= $sucursal['codigo'] ?></small>
+                                                <div class="sucursal-header" style="flex-direction: column; align-items: flex-start;">
+                                                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                                                        <span><?= htmlspecialchars($sucursal['nombre']) ?></span>
+                                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                                            <span class="sucursal-counter"
+                                                                style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.85em;">
+                                                                <?= $totalesPorSucursal[$sucursal['codigo']] ?? 0 ?>
+                                                            </span>
+                                                            <small
+                                                                style="opacity: 0.8; display:none;">#<?= $sucursal['codigo'] ?></small>
+                                                        </div>
                                                     </div>
+                                                    <?php if (!empty($sucursal['supervisor_asignado'])): ?>
+                                                        <div style="font-size: 0.8em; opacity: 0.9; margin-top: 4px; font-weight: normal;">
+                                                            <i class="fas fa-user-tie"></i> Supervisor: <?= htmlspecialchars(trim($sucursal['sup_nombre'] . ' ' . $sucursal['sup_apellido'])) ?>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <div style="font-size: 0.8em; opacity: 0.9; margin-top: 4px; font-weight: normal; font-style: italic;">
+                                                            <i class="fas fa-user-tie"></i> Sin supervisor asignado
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </div>
 
                                                 <div class="sucursal-body">
