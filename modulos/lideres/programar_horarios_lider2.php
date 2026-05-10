@@ -4,9 +4,7 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
+require_once '../../core/auth/auth.php';
 if (!isset($_SESSION['operarios_seleccionados'])) {
     $_SESSION['operarios_seleccionados'] = [];
 }

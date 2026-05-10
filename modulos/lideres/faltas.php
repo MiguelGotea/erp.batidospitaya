@@ -1,7 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/funciones.php';
-
+require_once '../../core/auth/auth.php';
 // Verificar acceso al módulo Operaciones (Código 11 para Jefe de Operaciones)
 //verificarAccesoModulo('operaciones');
 //verificarAccesoCargo([11]);
