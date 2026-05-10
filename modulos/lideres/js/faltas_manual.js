@@ -1,4 +1,4 @@
-﻿
+
         // Datos de operarios para el autocompletado
         const operariosData = CONFIG_FALTAS.operariosData;
 
@@ -184,7 +184,7 @@
             selectOperario.disabled = true;
 
             // NUEVA URL: Incluye fecha_falta para filtrar por liquidación
-            let url = `ajax.php?action=obtener_operarios_sucursal&sucursal=${codSucursal}&fecha_falta=${fechaFalta}`;
+            let url = `ajax/obtener_operarios_sucursal.php?sucursal=${codSucursal}&fecha_falta=${fechaFalta}`;
 
             fetch(url)
                 .then(response => {
@@ -272,7 +272,7 @@
             submitBtn.disabled = true;
 
             // Hacer petición AJAX para verificar si realmente hubo falta
-            fetch('ajax.php?action=verificar_falta_real', {
+            fetch('ajax/verificar_falta_real.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -434,7 +434,7 @@
             document.getElementById('modalConsultarMarcacion').style.display = 'flex';
 
             // Hacer petición AJAX para obtener los datos
-            fetch(`ajax.php?action=consultar_marcacion_falta&cod_operario=${codOperario}&cod_sucursal=${codSucursal}&fecha=${fechaFalta}`)
+            fetch(`ajax/consultar_marcacion_falta.php?cod_operario=${codOperario}&cod_sucursal=${codSucursal}&fecha=${fechaFalta}`)
                 .then(response => response.json())
                 .then(data => {
                     // Mostrar horario programado
@@ -595,7 +595,7 @@
             }
 
             // Hacer petición AJAX para obtener operarios de la sucursal
-            fetch('ajax.php?action=obtener_operarios_sucursal&sucursal=' + codSucursal)
+            fetch('ajax/obtener_operarios_sucursal.php?sucursal=' + codSucursal)
                 .then(response => response.json())
                 .then(data => {
                     let options = '<option value="">Seleccione un operario</option>';

@@ -1454,7 +1454,7 @@ function obtenerTiposFaltaConPorcentajes() {
             selectOperario.innerHTML = '<option value="">Cargando colaboradores...</option>';
             
             // Hacer petición AJAX para obtener operarios de la sucursal
-            fetch('ajax.php?action=obtener_operarios_sucursal_simple&sucursal=' + codSucursal)
+            fetch('ajax/obtener_operarios_sucursal_simple.php?sucursal=' + codSucursal)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Error en la respuesta del servidor');

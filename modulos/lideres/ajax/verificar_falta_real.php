@@ -1,0 +1,117 @@
+<?php
+require_once '../../../core/auth/auth.php';
+header('Content-Type: application/json');
+
+try {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        throw new Exception('Método no permitido');
+    }
+
+    $codOperario = (int)$_POST['cod_operario'];
+    $codSucursal = $_POST['cod_sucursal'];
+    $fechaFalta = $_POST['fecha_falta'];
+    
+    if (!$codOperario || !$codSucursal || !$fechaFalta) {
+        throw new Exception('Parámetros incompletos para verificar falta');
+    }
+    
+    // VALIDACIÓN NUEVA: Verificar que la fecha no sea posterior a liquidación
+    if (fechaPosteriorLiquidacion($codOperario, $fechaFalta)) {
+        echo json_encode([
+            'existe_falta' => false,
+            'error' => 'No se puede registrar falta: El colaborador fue liquidado antes de esta fecha'
+        ]);
+        exit;
+    }
+    
+    // VALIDACIÓN NUEVA: Verificar que el operario tenga contrato
+    if (!operarioTieneContrato($codOperario)) {
+        echo json_encode([
+            'existe_falta' => false,
+            'error' => 'Este colaborador no tiene registro de contrato. Por favor contactar con el área de RH.'
+        ]);
+        exit;
+    }
+    
+    // EXCEPCIÓN: Para sucursales 6 y 18, RRHH puede registrar sin validación
+    $esSucursalEspecial = in_array($codSucursal, ['6', '18']);
+    $esRH = verificarAccesoCargo([13,28, 39, 30, 37]);
+    
+    if ($esSucursalEspecial && $esRH) {
+        // Para sucursales especiales y RRHH, siempre retornar true (permite registro)
+        echo json_encode(['existe_falta' => true]);
+        exit;
+    }
+    
+    // Función para verificar si realmente hubo falta
+    function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
+        global $conn;
+        
+        // 1. Verificar si hay marcaciones para ese día
+        $stmt = $conn->prepare("
+            SELECT COUNT(*) as total_marcaciones 
+            FROM marcaciones 
+            WHERE CodOperario = ? 
+            AND sucursal_codigo = ?
+            AND fecha = ?
+            AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL)
+        ");
+        $stmt->execute([$codOperario, $codSucursal, $fechaFalta]);
+        $result = $stmt->fetch();
+        
+        // Si hay marcaciones, no es una falta real
+        if ($result && $result['total_marcaciones'] > 0) {
+            return false;
+        }
+        
+        // 2. Verificar si el operario tenía horario programado para ese día
+        $diaSemana = date('N', strtotime($fechaFalta)); // 1=lunes, 7=domingo
+        
+        // Mapear a los nombres de columna
+        $dias = [
+            1 => 'lunes',
+            2 => 'martes', 
+            3 => 'miercoles',
+            4 => 'jueves',
+            5 => 'viernes',
+            6 => 'sabado',
+            7 => 'domingo'
+        ];
+        $diaColumna = $dias[$diaSemana];
+        
+        // Obtener el horario programado para ese día
+        $stmt = $conn->prepare("
+            SELECT 
+                {$diaColumna}_estado as estado,
+                {$diaColumna}_entrada as hora_entrada,
+                {$diaColumna}_salida as hora_salida
+            FROM HorariosSemanalesOperaciones hso
+            JOIN SemanasSistema ss ON hso.id_semana_sistema = ss.id
+            WHERE hso.cod_operario = ?
+            AND hso.cod_sucursal = ?
+            AND ? BETWEEN ss.fecha_inicio AND ss.fecha_fin
+            LIMIT 1
+        ");
+        $stmt->execute([$codOperario, $codSucursal, $fechaFalta]);
+        $horario = $stmt->fetch();
+        
+        // MODIFICADO: Permitir registro si el estado es Activo, Otra.Tienda, Subsidio o Vacaciones
+        $estadosPermitidos = ['Activo', 'Otra.Tienda', 'Subsidio', 'Vacaciones'];
+        
+        // Si no hay horario programado o el día no está en estados permitidos, no es una falta real
+        if (!$horario || !in_array($horario['estado'], $estadosPermitidos)) {
+            return false;
+        }
+        
+        // 3. Si no hay marcaciones Y tenía horario programado con estado permitido, entonces es una falta real
+        return true;
+    }
+    
+    $existeFalta = verificarFaltaReal($codOperario, $codSucursal, $fechaFalta);
+    
+    echo json_encode(['existe_falta' => $existeFalta]);
+} catch (Exception $e) {
+    http_response_code(400);
+    echo json_encode(['error' => $e->getMessage()]);
+}
+?>
