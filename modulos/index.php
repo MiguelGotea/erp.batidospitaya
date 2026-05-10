@@ -2,6 +2,8 @@
 // /public_html/modulos/index.php
 
 require_once '../core/auth/auth.php';
+require_once '../core/helpers/funciones.php';
+
 // Verificar que el usuario esté autenticado
 verificarAutenticacion();
 

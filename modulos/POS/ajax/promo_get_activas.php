@@ -1,6 +1,7 @@
 <?php
 // ajax/promo_get_activas.php — Devuelve lista de promociones ACTIVAS, de prueba
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {

@@ -24,7 +24,8 @@ $semActual = '';
 $semDesdeDefault = '';
 $semHastaDefault = '';
 try {
-$stmtSem = $conn->query("SELECT numero_semana FROM SemanasSistema WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin LIMIT 1");
+    require_once '../../core/database/conexion.php';
+    $stmtSem = $conn->query("SELECT numero_semana FROM SemanasSistema WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin LIMIT 1");
     $resSem = $stmtSem->fetch(PDO::FETCH_ASSOC);
     if ($resSem) {
         $semActual = (int)$resSem['numero_semana'];

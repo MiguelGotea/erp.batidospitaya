@@ -1,6 +1,8 @@
 <?php
 // compra_local_configuracion_despacho_update_field.php
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
+
 header('Content-Type: application/json');
 
 try {

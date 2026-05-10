@@ -1,5 +1,7 @@
 <?php
 // solicitudes_guardar.php
+require_once '../../../core/database/conexion.php';
+require_once '../../../core/helpers/funciones.php';
 require_once '../../../core/auth/auth.php';
 
 verificarAutenticacion();

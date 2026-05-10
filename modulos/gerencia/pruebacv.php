@@ -3,6 +3,7 @@
  * ANALIZADOR DE CV CON GEMINI API - FASE 2: PERFILES DESTILADOS
  */
 require_once '../../core/auth/auth.php';
+require_once '../../core/database/conexion.php';
 require_once '../../core/ai/AIService.php';
 require_once '../../core/utils/DocumentParser.php';
 require_once '../../core/layout/menu_lateral.php';

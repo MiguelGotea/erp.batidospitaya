@@ -1,6 +1,7 @@
 <?php
 // ajax/postulacion_detalle_candidato_modificar.php
 
+require_once '../../../core/database/conexion.php';
 require_once '../../../core/auth/auth.php';
 header('Content-Type: application/json');
 

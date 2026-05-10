@@ -4,6 +4,9 @@ session_start();
 
 require_once '../models/Ticket.php';
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/helpers/funciones.php';
+
+
 // Verificar autenticación
 if (!isset($_SESSION['usuario_id'])) {
     echo json_encode(['success' => false, 'message' => 'No autenticado']);

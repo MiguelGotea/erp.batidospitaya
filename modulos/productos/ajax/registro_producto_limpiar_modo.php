@@ -2,6 +2,7 @@
 // registro_producto_limpiar_modo.php
 // Limpia residuos en BD cuando se cambia el modo del toggle "¿Este producto tiene receta?"
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {

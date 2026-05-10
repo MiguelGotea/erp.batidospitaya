@@ -5,6 +5,8 @@
  */
 
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
+
 header('Content-Type: application/json; charset=utf-8');
 
 // Solo POST permitido

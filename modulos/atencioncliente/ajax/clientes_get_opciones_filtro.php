@@ -1,6 +1,7 @@
 <?php
 //clientes_get_opciones_filtro.php
-require_once '../../../core/database/conexion.php';
+require_once '../../../includes/conexion.php';
+
 header('Content-Type: application/json');
 
 try {

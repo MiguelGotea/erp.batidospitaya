@@ -1,6 +1,7 @@
 <?php
 // ajax/registro_producto_update_campo_inline.php
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {

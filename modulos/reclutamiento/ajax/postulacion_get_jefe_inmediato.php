@@ -1,6 +1,7 @@
 <?php
 // postulacion_get_jefe_inmediato.php
 
+require_once '../../../core/database/conexion.php';
 require_once '../../../core/auth/auth.php';
 header('Content-Type: application/json');
 

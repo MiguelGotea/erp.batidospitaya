@@ -25,6 +25,8 @@ if ($idItem <= 0) {
 }
 
 // Obtener datos del item
+require_once '../../core/database/conexion.php';
+
 $sql = "SELECT 
             i.*,
             nc.Nombre as nombre_cargo_asignado,

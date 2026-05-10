@@ -10,7 +10,9 @@ error_reporting(E_ALL);
 try {
     // 1. Cargar dependencias
     require_once '../../../core/auth/auth.php';
-// 2. Leer Input
+    require_once '../../../core/database/conexion.php';
+
+    // 2. Leer Input
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
 

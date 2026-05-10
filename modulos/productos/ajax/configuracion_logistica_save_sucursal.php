@@ -3,6 +3,8 @@
 // Guarda (INSERT o UPDATE) un campo del encabezado de configuración logística de una sucursal.
 
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
+
 header('Content-Type: application/json');
 
 try {

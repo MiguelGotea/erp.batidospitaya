@@ -3,6 +3,8 @@
 // Obtiene los pedidos registrados para una sucursal en un rango de fechas
 
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
+
 header('Content-Type: application/json');
 
 try {

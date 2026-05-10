@@ -1,6 +1,7 @@
 <?php
 // postulacion_panel_control_pdf_accion.php
 
+require_once '../../../core/database/conexion.php';
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/ai/AIService.php';
 require_once '../../../core/utils/DocumentParser.php';

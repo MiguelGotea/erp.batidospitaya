@@ -24,7 +24,8 @@ $sucsRaw = isset($_GET['sucs']) ? trim($_GET['sucs']) : '';
 // Obtener semana actual del sistema
 $semActualSistema = 0;
 try {
-$stSem = $conn->query("SELECT numero_semana FROM SemanasSistema WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin LIMIT 1");
+    require_once '../../core/database/conexion.php';
+    $stSem = $conn->query("SELECT numero_semana FROM SemanasSistema WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin LIMIT 1");
     $rSem = $stSem->fetch(PDO::FETCH_ASSOC);
     if ($rSem)
         $semActualSistema = (int) $rSem['numero_semana'];

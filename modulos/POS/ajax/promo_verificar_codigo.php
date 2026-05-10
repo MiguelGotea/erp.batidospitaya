@@ -1,6 +1,7 @@
 <?php
 // ajax/promo_verificar_codigo.php — Verifica que codigo_interno no esté duplicado
 require_once '../../../core/auth/auth.php';
+require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {
