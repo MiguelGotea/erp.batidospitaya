@@ -30,10 +30,9 @@ if (!$codOperario || !$idSemana || !$codSucursal) {
 }
 
 // Verificar que el usuario tiene permisos (supervisor o admin)
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 $esSupervisor = verificarAccesoCargo([21]);
 
-if (!$esAdmin && !$esSupervisor) {
+if (!$esSupervisor) {
     echo json_encode(['success' => false, 'message' => 'No tiene permiso para esta acción']);
     exit;
 }

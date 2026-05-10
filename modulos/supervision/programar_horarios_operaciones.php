@@ -10,8 +10,6 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = false;
-
 // Verificar acceso al módulo
 if (!verificarAccesoCargo([16, 21, 36, 11, 49])) {
     header('Location: ../../../index.php');
@@ -1808,13 +1806,13 @@ function obtenerCategoriasDesdeBD()
 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ?
+                        <?= false ?
                             strtoupper(substr($usuario['nombre'], 0, 1)) :
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ?
+                            <?= false ?
                                 htmlspecialchars($usuario['nombre']) :
                                 htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                         </div>

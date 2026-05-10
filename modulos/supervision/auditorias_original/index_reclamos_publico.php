@@ -539,7 +539,7 @@ function getBadgeResolucion($resolucion)
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container"> <!-- ya existe en el css de menu lateral -->
         <div class="sub-container"> <!-- ya existe en el css de menu lateral -->
-            <?php echo renderHeader($usuario, $esAdmin, 'Historial de Reclamos'); ?>
+            <?php echo renderHeader($usuario, false, 'Historial de Reclamos'); ?>
             <!-- Dejar vacio si Bienvenido.. -->
             <div class="contenedor-principal">
                 <!-- Mostrar registros de reclamos -->

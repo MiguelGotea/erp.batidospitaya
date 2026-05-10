@@ -10,8 +10,6 @@ require_once '../../../core/permissions/permissions.php';
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo
 if (!tienePermiso('desempeno_sucursales', 'vista', $cargoOperario)) {
     header('Location: ../../index.php');
@@ -51,7 +49,7 @@ $anio_seleccionado = isset($_GET['anio']) ? (int) $_GET['anio'] : (int) date('Y'
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, $esAdmin, 'Desempeño de Tienda'); ?>
+            <?php echo renderHeader($usuario, false, 'Desempeño de Tienda'); ?>
 
             <div class="contenedor-principal">
 

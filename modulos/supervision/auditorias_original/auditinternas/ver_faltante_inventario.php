@@ -9,13 +9,11 @@ require_once '../../../../core/helpers/config.php';
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
 // Verificar acceso al módulo 'supervision'
 verificarAccesoCargo([8, 11, 16, 21]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 11, 16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([8, 11, 16, 21])) {
     header('Location: ../../../index.php');
     exit();
 }

@@ -9,7 +9,7 @@ require_once '../../../core/permissions/permissions.php';
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-//$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+ && $_SESSION['usuario_rol'] === 'admin';
 
 if (!tienePermiso('avisos_internos', 'vista', $cargoOperario)) {
     header('Location: ../../../index.php');

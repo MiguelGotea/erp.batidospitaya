@@ -9,9 +9,7 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 
 // Obtener usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-if (!$esAdmin && !verificarAccesoCargo([16])) {
+if (!verificarAccesoCargo([16])) {
     header('Location: /index.php');
     exit();
 }
@@ -846,7 +844,7 @@ $operariosSinCategoria = $conn->query("
         <div class="section">
             <h2 class="section-title">Categorías Disponibles</h2>
             
-            <?php if (verificarAccesoCargo([16]) || $esAdmin): ?>
+            <?php if (verificarAccesoCargo([16])): ?>
                 <!-- Botón para abrir modal de nueva categoría -->
                 <button type="button" class="btn btn-nueva-categoria" onclick="abrirModalCategoria()">
                     <i class="fas fa-plus"></i> Nueva Categoría
@@ -861,7 +859,7 @@ $operariosSinCategoria = $conn->query("
                             <th style="display:none;">ID</th>
                             <th>Nombre</th>
                             <th>Peso</th>
-                            <?php if (verificarAccesoCargo([16]) || $esAdmin): ?>
+                            <?php if (verificarAccesoCargo([16])): ?>
                                 <th>Acciones</th>
                             <?php endif; ?>
                         </tr>
@@ -872,7 +870,7 @@ $operariosSinCategoria = $conn->query("
                                 <td style="display:none;"><?= $categoria['idCategoria'] ?></td>
                                 <td><?= htmlspecialchars($categoria['NombreCategoria']) ?></td>
                                 <td><?= $categoria['Peso'] ?></td>
-                                <?php if (verificarAccesoCargo([16]) || $esAdmin): ?>
+                                <?php if (verificarAccesoCargo([16])): ?>
                                     <td class="actions">
                                         <button class="btn" onclick="editarCategoria(<?= $categoria['idCategoria'] ?>, '<?= htmlspecialchars($categoria['NombreCategoria']) ?>', <?= $categoria['Peso'] ?>)">
                                             <i class="fas fa-edit"></i>

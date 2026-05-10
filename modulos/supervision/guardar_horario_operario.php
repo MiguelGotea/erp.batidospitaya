@@ -19,8 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Verificar permisos de supervisión (cargo 21)
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-if (!$esAdmin && !verificarAccesoCargo([21])) {
+if (!verificarAccesoCargo([21])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }

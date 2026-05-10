@@ -6,7 +6,7 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 header('Content-Type: application/json');
 
 // Verificar autenticación y permisos
-if (!verificarAccesoCargo([16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([16, 21])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }
