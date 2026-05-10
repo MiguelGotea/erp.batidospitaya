@@ -362,7 +362,7 @@ $color_porcentaje_total = getColorClass($porcentaje_total / 20); // Convertir a 
     <link rel="icon" href="icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet"
-        href="/core/assets/css/global_tools.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/css/global_tools.css') ?>">
+        href="/core/assets/css/global_tools.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/core/assets/css/global_tools.css') ?>">
     <!-- contiene main, sub container * y body -->
     <style>
         .buttons-container {
