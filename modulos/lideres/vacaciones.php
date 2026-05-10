@@ -18,7 +18,7 @@ if (!$conn) {
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28])) {
+if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28, 49])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -27,8 +27,8 @@ if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28])) {
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
-$esLider = verificarAccesoCargo([5, 43]);
-$esRH = verificarAccesoCargo([13, 8, 39, 30, 37, 28]);
+$esLider = verificarAccesoCargo([5, 43, 49]);
+$esRH = verificarAccesoCargo([13, 8, 39, 30, 37, 28, 49]);
 
 /**
  * Obtiene el porcentaje de pago para un tipo de falta específico
@@ -587,7 +587,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 <i class="fas fa-search"></i> Buscar
                             </button>
 
-                            <?php if (verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28])): ?>
+                            <?php if (verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28, 49])): ?>
                                 <button type="button" onclick="mostrarModalNuevaVacacion()" class="btn btn-success">
                                     Vacaciones
                                 </button>
@@ -596,7 +596,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 </button>
                             <?php endif; ?>
 
-                            <?php if (verificarAccesoCargo([8, 16])): ?>
+                            <?php if (verificarAccesoCargo([8, 16, 49])): ?>
                                 <a href="vacaciones.php?<?= http_build_query([
                                     'sucursal' => $sucursalSeleccionada ?? '',
                                     'desde' => $fechaDesde,
@@ -879,7 +879,7 @@ function obtenerTiposFaltaConPorcentajes()
         const operariosData = [
             { id: 0, nombre: 'Todos los colaboradores' },
             <?php foreach ($operarios as $op): ?>
-                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
             <?php endforeach; ?>
         ];
 
