@@ -257,19 +257,15 @@ function obtenerColaboradoresNoAsignados($semana)
              AND anc2.CodNivelesCargos IN (2, 5, 43, 44, 45, 46, 47)
              ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC 
              LIMIT 1) as ultimo_cargo,
-            -- Obtener el último contrato
-            (SELECT c.CodContrato
-             FROM Contratos c
-             WHERE c.cod_operario = o.CodOperario
-             ORDER BY c.inicio_contrato DESC, c.CodContrato DESC 
-             LIMIT 1) as ultimo_cod_contrato,
-            -- Obtener el código manual del último contrato
-            (SELECT c.codigo_manual_contrato
-             FROM Contratos c
-             WHERE c.cod_operario = o.CodOperario
-             ORDER BY c.inicio_contrato DESC, c.CodContrato DESC 
-             LIMIT 1) as ultimo_codigo_manual
+            uc.CodContrato as ultimo_cod_contrato,
+            uc.codigo_manual_contrato as ultimo_codigo_manual
         FROM Operarios o
+        INNER JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
+            AND uc.CodContrato = (
+                SELECT MAX(CodContrato) 
+                FROM Contratos 
+                WHERE cod_operario = o.CodOperario
+            )
         WHERE o.CodOperario NOT IN (
             -- Excluir operarios que ya tienen asignación activa durante esta semana
             SELECT DISTINCT anc.CodOperario
@@ -278,10 +274,11 @@ function obtenerColaboradoresNoAsignados($semana)
             AND anc.Fecha <= ? 
             AND (anc.Fin IS NULL OR anc.Fin >= ?)
         )
+        AND (uc.fecha_salida IS NULL OR uc.fecha_salida >= ?)
         ORDER BY o.Nombre, o.Apellido
     ");
 
-    $stmt->execute([$fechaFinSemana, $fechaInicioSemana]);
+    $stmt->execute([$fechaFinSemana, $fechaInicioSemana, $fechaInicioSemana]);
     $noAsignados = $stmt->fetchAll();
 
     // Filtrar para incluir solo los que tienen un cargo permitido
