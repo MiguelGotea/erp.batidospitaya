@@ -34,7 +34,7 @@ $version = mt_rand(1, 9999);
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario); ?>
+            <?php echo renderHeader($usuario, 'Monitor de Conexión'); ?>
 
             <div class="monitor-wrap">
 

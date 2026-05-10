@@ -19,6 +19,7 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,7 +27,8 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <!-- Leaflet -->
@@ -35,12 +37,13 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
     <link rel="stylesheet" href="../../core/assets/css/indexmodulos.css?v=<?php echo $version; ?>">
     <link rel="stylesheet" href="css/configuracion_sucursales.css?v=<?php echo $version; ?>">
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
         <div class="contenedor-principal">
-            <?php echo renderHeader($usuario); ?>
+            <?php echo renderHeader($usuario, 'Configuración de Tiendas'); ?>
 
             <div class="suc-wrap">
 
@@ -51,9 +54,10 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
                         Configuración de Tiendas
                     </h1>
                     <?php if (!$puedeEditar): ?>
-                    <span style="font-size:.75rem;background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:99px;font-weight:600;border:1px solid #f59e0b;">
-                        <i class="bi bi-eye"></i> Modo solo lectura
-                    </span>
+                        <span
+                            style="font-size:.75rem;background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:99px;font-weight:600;border:1px solid #f59e0b;">
+                            <i class="bi bi-eye"></i> Modo solo lectura
+                        </span>
                     <?php endif; ?>
                 </div>
 
@@ -97,16 +101,16 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
                         <input type="text" id="suc-search" placeholder="Buscar por nombre, código o departamento…">
                     </div>
                     <button class="fil-btn active" data-filtro="all">Todas</button>
-                    <button class="fil-btn f-act"  data-filtro="act">✅ Activas</button>
-                    <button class="fil-btn f-ina"  data-filtro="ina">🔴 Inactivas</button>
-                    <button class="fil-btn f-dvr"  data-filtro="dvr">📷 Con DVR</button>
+                    <button class="fil-btn f-act" data-filtro="act">✅ Activas</button>
+                    <button class="fil-btn f-ina" data-filtro="ina">🔴 Inactivas</button>
+                    <button class="fil-btn f-dvr" data-filtro="dvr">📷 Con DVR</button>
                     <button class="fil-btn f-ndvr" data-filtro="ndvr">⚠️ Sin DVR</button>
                 </div>
 
                 <!-- Grid de tiendas -->
                 <div id="suc-grid">
                     <?php for ($i = 0; $i < 6; $i++): ?>
-                    <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
                     <?php endfor; ?>
                 </div>
 
@@ -142,9 +146,9 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
                 </button>
             </div>
             <div id="dtab-general" class="suc-tab-content active"></div>
-            <div id="dtab-estado"  class="suc-tab-content"></div>
-            <div id="dtab-dvr"     class="suc-tab-content"></div>
-            <div id="dtab-mapa"    class="suc-tab-content"></div>
+            <div id="dtab-estado" class="suc-tab-content"></div>
+            <div id="dtab-dvr" class="suc-tab-content"></div>
+            <div id="dtab-mapa" class="suc-tab-content"></div>
         </div>
     </div>
 
@@ -158,4 +162,5 @@ $puedeEditar = tienePermiso('configuracion_sucursales', 'edicion', $cargoOperari
     </script>
     <script src="js/configuracion_sucursales.js?v=<?php echo $version; ?>"></script>
 </body>
+
 </html>
