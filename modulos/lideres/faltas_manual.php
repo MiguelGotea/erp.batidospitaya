@@ -23,10 +23,10 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 $cargoOperario = $usuario['CodNivelesCargos'];
 //******************************Estándar para header, termina******************************
 
-$esLider = verificarAccesoCargo([5, 43]);
-$esRH = verificarAccesoCargo([13, 8, 39, 30, 37, 28]);
+$esLider = verificarAccesoCargo([5, 43, 49]);
+$esRH = verificarAccesoCargo([13, 8, 39, 30, 37, 28, 49]);
 
-$siAcciones = verificarAccesoCargo([13, 16, 39, 30, 37, 28]);
+$siAcciones = verificarAccesoCargo([13, 16, 39, 30, 37, 28, 49]);
 
 /**
  * Obtiene los tipos de falta con sus porcentajes
@@ -2243,7 +2243,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
             operariosData: [
                 { id: 0, nombre: 'Todos los colaboradores' },
                 <?php foreach ($operarios as $op): ?>
-                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+                                { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
                 <?php endforeach; ?>
             ]
         };
