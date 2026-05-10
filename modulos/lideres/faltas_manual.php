@@ -1,7 +1,8 @@
-﻿<?php
+<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 // Verificar conexión
 if (!$conn) {
@@ -12,21 +13,22 @@ if (!$conn) {
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([5, 43, 8, 13, 16, 39, 30, 37, 28, 49])) {
+if (!tienePermiso('faltas_manual', 'vista', $cargoOperario)) {
     header('Location: ../../../index.php');
     exit();
 }
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-$cargoOperario = $usuario['CodNivelesCargos'];
 //******************************Estándar para header, termina******************************
 
-$esLider = verificarAccesoCargo([5, 43, 49]);
-$esRH = verificarAccesoCargo([13, 8, 39, 30, 37, 28, 49]);
-
-$siAcciones = verificarAccesoCargo([13, 16, 39, 30, 37, 28, 49]);
+$tieneTodasSucursales = tienePermiso('faltas_manual', 'todas_sucursales', $cargoOperario);
+$puedeAprobar = tienePermiso('faltas_manual', 'aprobar', $cargoOperario);
+$puedeNuevo = tienePermiso('faltas_manual', 'nuevo', $cargoOperario);
+$puedeExportar = tienePermiso('faltas_manual', 'exportar', $cargoOperario);
 
 /**
  * Obtiene los tipos de falta con sus porcentajes
@@ -790,7 +792,6 @@ if (isset($_GET['exportar_excel'])) {
         $sucursalSeleccionada, // Pasar el valor directamente
         $fechaDesde,
         $fechaHasta,
-        $esRH,
         $modoVista,
         true // Nuevo parámetro para excluir pendientes
     );
@@ -933,14 +934,12 @@ if (isset($_GET['exportar_excel'])) {
     exit;
 }
 
-// Obtener sucursales según el cargo del usuario
-if ($esRH) {
-    // RH puede ver todas las sucursales
+// Obtener sucursales según los permisos del usuario
+if ($tieneTodasSucursales) {
     $sucursales = obtenerTodasSucursales();
     // Agregar opción "Todas" al principio
     array_unshift($sucursales, ['codigo' => 'todas', 'nombre' => 'Todas las sucursales']);
 } else {
-    // Líder solo ve sus sucursales
     $sucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
 }
 
@@ -959,8 +958,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_falta'])) {
 // Obtener datos para los filtros
 $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursales[0]['codigo'] ?? null);
 
-// Si es líder y tiene múltiples sucursales, seleccionar la primera por defecto
-if (!$esRH && count($sucursales) > 0 && !isset($_GET['sucursal'])) {
+// Si no tiene todas las sucursales y tiene múltiples asignadas, seleccionar la primera por defecto
+if (!$tieneTodasSucursales && count($sucursales) > 0 && !isset($_GET['sucursal'])) {
     $sucursalSeleccionada = $sucursales[0]['codigo'];
 }
 
@@ -990,7 +989,6 @@ if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHa
         ($modoVista === 'todas') ? null : $sucursalSeleccionada,
         $fechaDesde,
         $fechaHasta,
-        $esRH,
         $modoVista,
         false,
         $operarioSeleccionado
@@ -1053,7 +1051,7 @@ function recortarTexto($texto, $longitud = 50)
 }
 
 // Funciones específicas para faltas manuales
-function obtenerFaltasManuales($codSucursal, $fechaDesde, $fechaHasta, $esRH = false, $modoVista = 'sucursal', $excluirPendientes = false, $operarioId = 0)
+function obtenerFaltasManuales($codSucursal, $fechaDesde, $fechaHasta, $modoVista = 'sucursal', $excluirPendientes = false, $operarioId = 0)
 {
     global $conn;
 
@@ -1151,14 +1149,17 @@ function obtenerFaltasManuales($codSucursal, $fechaDesde, $fechaHasta, $esRH = f
 
 function procesarRegistroFaltaManual()
 {
-    global $conn, $esLider, $esRH;
+    global $conn;
+    $cargoOperario = $_SESSION['cargo_cod'] ?? obtenerUsuarioActual()['CodNivelesCargos'];
 
-    // Permitir tanto a líderes como a RH registrar faltas
-    if (!$esLider && !$esRH) {
-        $_SESSION['error'] = 'Solo los líderes y RH pueden registrar nuevas faltas manuales';
+    // Verificar permiso para registrar faltas
+    if (!tienePermiso('faltas_manual', 'nuevo', $cargoOperario)) {
+        $_SESSION['error'] = 'No tiene permisos para registrar nuevas faltas manuales';
         header('Location: faltas_manual.php');
         exit();
     }
+
+    $puedeAprobar = tienePermiso('faltas_manual', 'aprobar', $cargoOperario);
 
     try {
         $codOperario = (int) $_POST['cod_operario'];
@@ -1190,12 +1191,11 @@ function procesarRegistroFaltaManual()
         }
 
         // VALIDACIÓN MEJORADA: Verificar si realmente hubo falta (no hay NINGUNA marcación)
-        // EXCEPCIÓN: Para sucursales 6 y 18, RRHH puede registrar sin validación de horario
+        // EXCEPCIÓN: Para sucursales 6 y 18, quienes aprueban pueden registrar sin validación de horario
         $esSucursalEspecial = in_array($codSucursal, ['6', '18']);
-        $esRH = verificarAccesoCargo([13, 39, 30, 37, 28]); // Código 13 es RRHH
 
-        if (!$esSucursalEspecial || !$esRH) {
-            // Solo validar horario si NO es sucursal especial O NO es RRHH
+        if (!$esSucursalEspecial || !$puedeAprobar) {
+            // Solo validar horario si NO es sucursal especial O NO puede aprobar
             if (!verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)) {
                 throw new Exception('No se puede registrar falta: El colaborador tiene marcaciones registradas para esta fecha (entrada o salida) o no tenía horario programado activo');
             }
@@ -1257,11 +1257,11 @@ function procesarRegistroFaltaManual()
             throw new Exception('Solo se permiten imágenes JPEG, PNG o GIF');
         }
 
-        // Determinar el tipo de falta según el cargo
-        if ($esRH) {
+        // Determinar el tipo de falta según permisos
+        if ($puedeAprobar) {
             $tipoFalta = $_POST['tipo_falta'] ?? 'No_Pagado';
         } else {
-            $tipoFalta = 'Pendiente'; // Líderes registran como Pendiente
+            $tipoFalta = 'Pendiente'; // Los que no aprueban registran como Pendiente
         }
 
         $porcentajePago = obtenerPorcentajePagoTipoFalta($tipoFalta);
@@ -1521,7 +1521,7 @@ $totalFaltasAuto = 0;
 $totalFaltasManualesRegistradas = 0;
 $faltasPendientes = 0;
 
-if ($sucursalSeleccionada || ($esRH && ($modoVista ?? 'sucursal') === 'todas')) {
+if ($sucursalSeleccionada || ($tieneTodasSucursales && ($modoVista ?? 'sucursal') === 'todas')) {
     if (($modoVista ?? 'sucursal') === 'todas') {
         // Modo "todas" - sumar todas las sucursales
         $totalFaltasAuto = 0;
@@ -1680,7 +1680,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
             <!-- Filtros -->
             <div class="filtros-container">
                 <form method="get" action="faltas_manual.php" class="filtros-form">
-                    <?php if (!verificarAccesoCargo([2, 5])): ?>
+                    <?php if ($tieneTodasSucursales || count($sucursales) > 1): ?>
                         <div class="filtro-group">
                             <label for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal">
@@ -1691,6 +1691,8 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                    <?php else: ?>
+                        <input type="hidden" name="sucursal" value="<?= htmlspecialchars($sucursales[0]['codigo'] ?? '') ?>">
                     <?php endif; ?>
 
                     <div class="filtro-group">
@@ -1731,13 +1733,13 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                         </a>
 
                         <!-- Botones de acción en la misma línea de filtros -->
-                        <?php if (verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28])): ?>
+                        <?php if ($puedeNuevo): ?>
                             <button type="button" onclick="mostrarModalNuevaFalta()" class="btn btn-success">
                                 <i class="fas fa-plus"></i> Nuevo
                             </button>
                         <?php endif; ?>
 
-                        <?php if (verificarAccesoCargo([8, 16])): ?>
+                        <?php if ($puedeExportar): ?>
                             <a style="display:none;" href="faltas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
                                 'desde' => $fechaDesde,
@@ -1811,7 +1813,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                                 <th>Registrado por</th>
                                 <th>Fecha Registro</th>
                                 <th>Foto</th>
-                                <?php if ($siAcciones): ?>
+                                <?php if ($puedeAprobar): ?>
                                     <th></th>
                                 <?php endif; ?>
                             </tr>
@@ -1925,7 +1927,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                                             </button>
                                         <?php endif; ?>
                                     </td>
-                                    <?php if ($siAcciones): ?>
+                                    <?php if ($puedeAprobar): ?>
                                         <td style="text-align: center;">
                                             <button type="button" class="btn btn-info btn-editar-falta"
                                                 data-id="<?= $falta['id'] ?>"
@@ -1996,15 +1998,15 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                     <div class="form-group">
                         <label for="nueva_sucursal" class="form-label">Sucursal:</label>
                         <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
-                            <?php if ($esRH): ?>
-                                <!-- Para RH, mostrar todas las sucursales -->
+                            <?php if ($tieneTodasSucursales): ?>
+                                <!-- Para usuarios con acceso a todas las sucursales -->
                                 <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
                                     <option value="<?= $sucursal['codigo'] ?>">
                                         <?= htmlspecialchars($sucursal['nombre']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <!-- Para líderes, mostrar solo sus sucursales -->
+                                <!-- Para usuarios limitados a sus sucursales -->
                                 <?php foreach (obtenerSucursalesLider($_SESSION['usuario_id']) as $sucursal): ?>
                                     <option value="<?= $sucursal['codigo'] ?>">
                                         <?= htmlspecialchars($sucursal['nombre']) ?>
@@ -2028,7 +2030,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                         </select>
                     </div>
 
-                    <?php if (in_array($_SESSION['cargo_cod'], [13, 39, 30, 37, 28])): // RH y otros cargos ?>
+                    <?php if ($puedeAprobar): ?>
                         <div class="form-group">
                             <label for="nueva_tipo" class="form-label">Tipo de Falta:</label>
                             <select id="nueva_tipo" name="tipo_falta" class="form-select" required
@@ -2145,15 +2147,15 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                         <small id="info-porcentaje-edicion" class="form-text text-muted" style="display: none;"></small>
                     </div>
 
-                    <!-- Observaciones RRHH (solo para RH) -->
-                    <?php if ($esRH): ?>
+                    <!-- Observaciones RRHH (solo para quienes pueden aprobar) -->
+                    <?php if ($puedeAprobar): ?>
                         <div class="form-group">
                             <label for="editar_observaciones_rrhh" class="form-label">Observaciones RRHH: *</label>
                             <textarea id="editar_observaciones_rrhh" name="observaciones_rrhh" class="form-textarea"
                                 required></textarea>
                         </div>
                     <?php else: ?>
-                        <!-- Para no-RRHH, mostrar solo lectura -->
+                        <!-- Para sin permisos de aprobar, mostrar solo lectura -->
                         <div class="form-group">
                             <label class="form-label">Observaciones RRHH:</label>
                             <div id="editar_observaciones_rrhh_view" class="info-value"
@@ -2166,7 +2168,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
 
                 <div class="modal-footer">
                     <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
-                    <?php if ($esRH): ?>
+                    <?php if ($puedeAprobar): ?>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                     <?php else: ?>
                         <button type="button" class="btn btn-secondary" disabled>Sin permisos para editar</button>
@@ -2239,7 +2241,8 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
 
     <script>
         const CONFIG_FALTAS = {
-            esRH: <?= $esRH ? 'true' : 'false' ?>,
+            puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
+            todasSucursales: <?= $tieneTodasSucursales ? 'true' : 'false' ?>,
             operariosData: [
                 { id: 0, nombre: 'Todos los colaboradores' },
                 <?php foreach ($operarios as $op): ?>

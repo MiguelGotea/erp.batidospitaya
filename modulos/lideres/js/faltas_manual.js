@@ -102,7 +102,7 @@
             // Construir URL con parámetros
             const params = new URLSearchParams();
 
-            if (CONFIG_FALTAS.esRH) {
+            if (CONFIG_FALTAS.todasSucursales) {
                 const modo = document.getElementById('modo')?.value || 'sucursal';
                 params.append('modo', modo);
 
@@ -366,10 +366,10 @@
             actualizarPorcentajeEdicion(tipo);
 
             // Manejar observaciones RRHH según el tipo de usuario
-            if (CONFIG_FALTAS.esRH) {
+            if (CONFIG_FALTAS.puedeAprobar) {
                 document.getElementById('editar_observaciones_rrhh').value = observaciones_rrhh || '';
             } else {
-                // Para no-RRHH, mostrar solo lectura
+                // Para no-aprobadores, mostrar solo lectura
                 document.getElementById('editar_observaciones_rrhh_view').textContent = observaciones_rrhh || '(Sin observaciones RRHH)';
                 document.getElementById('editar_observaciones_rrhh').value = observaciones_rrhh || '';
             }
@@ -623,7 +623,7 @@
         // En el formulario de nueva falta, después de seleccionar sucursal
         document.getElementById('nueva_sucursal').addEventListener('change', function () {
             const sucursalEspecial = ['6', '18'].includes(this.value);
-            const esRH = CONFIG_FALTAS.esRH;
+            const tieneTodasSucursales = CONFIG_FALTAS.todasSucursales;
             const mensaje = document.getElementById('mensaje-especial');
 
             if (!mensaje) {
@@ -635,11 +635,11 @@
                 document.querySelector('#formNuevaFalta .modal-body').prepend(nuevoMensaje);
             }
 
-            // Para RH: mostrar mensaje específico
-            if (esRH) {
+            // Para globales: mostrar mensaje específico
+            if (tieneTodasSucursales) {
                 document.getElementById('mensaje-especial').innerHTML =
                     '<div style="background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px;">' +
-                    '<i class="fas fa-info-circle"></i> Modo RH: Se mostrarán todos los operarios que tuvieron horario programado en esta sucursal' +
+                    '<i class="fas fa-info-circle"></i> Modo Global: Se mostrarán todos los operarios que tuvieron horario programado en esta sucursal' +
                     '</div>';
             }
             // Para sucursales especiales

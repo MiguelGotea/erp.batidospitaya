@@ -33,12 +33,14 @@ try {
         exit;
     }
     
-    // EXCEPCIÓN: Para sucursales 6 y 18, RRHH puede registrar sin validación
+    // EXCEPCIÓN: Para sucursales 6 y 18, quienes aprueban pueden registrar sin validación
+    require_once '../../../core/permissions/permissions.php';
+    $cargoOperario = $_SESSION['cargo_cod'] ?? 0;
+    $puedeAprobar = tienePermiso('faltas_manual', 'aprobar', $cargoOperario);
     $esSucursalEspecial = in_array($codSucursal, ['6', '18']);
-    $esRH = verificarAccesoCargo([13,28, 39, 30, 37]);
     
-    if ($esSucursalEspecial && $esRH) {
-        // Para sucursales especiales y RRHH, siempre retornar true (permite registro)
+    if ($esSucursalEspecial && $puedeAprobar) {
+        // Para sucursales especiales y quienes aprueban, siempre retornar true (permite registro)
         echo json_encode(['existe_falta' => true]);
         exit;
     }

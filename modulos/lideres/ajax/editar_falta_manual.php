@@ -1,8 +1,11 @@
-﻿<?php
+<?php
 require_once '../../../core/auth/auth.php';
 
-// Verificar que solo RH pueda acceder
-if (!verificarAccesoCargo([13, 39, 30, 37, 28])) {
+require_once '../../../core/permissions/permissions.php';
+$cargoOperario = $_SESSION['cargo_cod'] ?? 0;
+
+// Verificar que solo usuarios con permiso de aprobar puedan acceder
+if (!tienePermiso('faltas_manual', 'aprobar', $cargoOperario)) {
     header('Location: /index.php');
     exit();
 }
