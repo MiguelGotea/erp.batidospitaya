@@ -1,5 +1,8 @@
 <?php
-require_once '../../core/auth/auth.php';
+require_once '../../includes/auth.php';
+require_once '../../includes/conexion.php';
+require_once '../../includes/funciones.php';
+
 verificarAccesoModulo('atencioncliente');
 
 // Verificar que se haya proporcionado un ID de pedido
