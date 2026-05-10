@@ -3,8 +3,6 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
-// require_once '../../includes/auth.php';
-// require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
 // Obtener usuario actual
@@ -217,7 +215,6 @@ $operarios = $conn->query("
     AND (anc.Fin IS NULL OR anc.Fin >= DATE_SUB(CURDATE(), INTERVAL 7 DAY))
     ORDER BY o.Nombre, o.Apellido
 ")->fetchAll();
-
 
 // Obtener operarios sin categoría asignada (activa incluyendo los que terminaron hace menos de 7 días) - SIN DUPLICADOS
 $operariosSinCategoria = $conn->query("
