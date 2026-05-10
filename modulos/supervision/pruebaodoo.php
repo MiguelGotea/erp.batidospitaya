@@ -3,6 +3,8 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
+// require_once '../../includes/auth.php';
+// require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
 //******************************Estándar para header******************************
@@ -624,6 +626,7 @@ $sucursalesOdoo = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         <?php endif; ?>
 
         <h2 style="display:none;">Solicitud de Mantenimiento y Equipos</h2>
+
 
         <?php if ($cargoUsuariocodigo != 5 && $cargoUsuariocodigo != 19): ?>
             <form method="GET" style="margin-bottom:15px; text-align:center;">

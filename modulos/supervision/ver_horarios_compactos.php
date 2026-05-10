@@ -3,6 +3,8 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
+// require_once '../../includes/auth.php';
+// require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
 //******************************Estándar para header******************************
@@ -89,6 +91,7 @@ if ($semanaActual) {
     // 5. Ordenar por número de semana (cronológico)
     ksort($semanasDisponibles);
 }
+
 
 // Obtener datos para la vista
 $semanaSeleccionada = $_GET['semana'] ?? $semanaActual['numero_semana'];
