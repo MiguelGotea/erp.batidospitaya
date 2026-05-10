@@ -1386,7 +1386,7 @@ if (isset($_GET['exportar_nocturnos_guardados'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Viáticos - Operaciones</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <style>
         * {
             box-sizing: border-box;
@@ -1969,7 +1969,7 @@ header {
         <header>
             <div class="header-container">
                 <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+                    <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
                 
                 <div class="buttons-container">

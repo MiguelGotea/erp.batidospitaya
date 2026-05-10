@@ -471,7 +471,7 @@ if ($edicion) {
         </div>
     </div>
     
-    <script src="../../assets/js/jquery.min.js"></script>
+    <script src="../../core/assets/js/jquery.min.js"></script>
     <!--<script src="ventas.js"></script>-->
     <script>
         // Prevenir envío del formulario con Enter
@@ -544,7 +544,7 @@ if ($edicion) {
             let info = $(`
                 <div id="transferencia-info" style="margin-top: 5px; padding: 3px; background: #f5f5f5; border-radius: 5px;">
                     <h4 style="margin-bottom: 2px; color: #0E544C; display:none;">Información para Transferencia</h4>
-                    <img src="../../assets/img/bancos_pagopitaya.png" alt="Datos Bancarios" style="max-width: 100%; height: auto; border: 1px solid #ddd;">
+                    <img src="../../core/assets/img/bancos_pagopitaya.png" alt="Datos Bancarios" style="max-width: 100%; height: auto; border: 1px solid #ddd;">
                     <p style="margin-top: 5px; font-size: 0.9em;">
                         <strong>Nota:</strong> Por favor enviar comprobante de transferencia al WhatsApp de Batidos Pitaya.
                     </p>
@@ -1437,7 +1437,7 @@ function buscarPromociones(productoId) {
                         `;
                     } else if ($('#metodo-pago').val() === 'transferencia') {
                         detallesPago += `<div style="margin-top: 10px;">
-                            <img src="../../assets/img/bancos_pagopitaya.png" style="max-width: 100%; height: auto; border: 1px solid #ddd;">
+                            <img src="../../core/assets/img/bancos_pagopitaya.png" style="max-width: 100%; height: auto; border: 1px solid #ddd;">
                             <p style="margin-top: 5px; font-size: 0.9em;">
                                 <strong>Nota:</strong> Por favor enviar comprobante al WhatsApp de Batidos Pitaya.
                             </p>

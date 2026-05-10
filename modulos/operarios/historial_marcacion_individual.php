@@ -9,7 +9,7 @@ ob_start();
 require_once '../../core/auth/auth.php';
 // Después de los requires, se agrega para corregir el redireccionamiento de imágenes
 $base_path = $_SERVER['DOCUMENT_ROOT'] . '/';
-$assets_url = '/assets/';
+$assets_url = '/core/assets/';
 
 //******************************Estándar para header******************************
 

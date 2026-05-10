@@ -486,7 +486,7 @@ function obtenerTiposFaltaConPorcentajes() {
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <style>
         * {
             box-sizing: border-box;
@@ -943,7 +943,7 @@ function obtenerTiposFaltaConPorcentajes() {
         <header>
             <div class="header-container">
                 <div class="logo-container">
-                    <img src="../../assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+                    <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
                 
                 <div class="buttons-container">

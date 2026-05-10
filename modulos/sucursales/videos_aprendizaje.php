@@ -534,27 +534,27 @@ $usuario = obtenerUsuarioActual();
                     'items' => [
                         [
                             'titulo' => '',
-                            'imagen' => '../../assets/img/estaciones/menaje1.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/menaje1.jpg',
                             'descripcion' => ''
                         ],
                         [
                             'titulo' => '',
-                            'imagen' => '../../assets/img/estaciones/menaje2.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/menaje2.jpg',
                             'descripcion' => ''
                         ],
                         [
                             'titulo' => '',
-                            'imagen' => '../../assets/img/estaciones/menaje3.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/menaje3.jpg',
                             'descripcion' => ''
                         ],
                         [
                             'titulo' => '',
-                            'imagen' => '../../assets/img/estaciones/menaje4.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/menaje4.jpg',
                             'descripcion' => ''
                         ],
                         [
                             'titulo' => '',
-                            'imagen' => '../../assets/img/estaciones/menaje5.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/menaje5.jpg',
                             'descripcion' => ''
                         ]
                     ]
@@ -654,32 +654,32 @@ $usuario = obtenerUsuarioActual();
                     'items' => [
                         [
                             'titulo' => 'Estación de Batidos - Configuración Ideal',
-                            'imagen' => '../../assets/img/estaciones/organizador_acrilico.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/organizador_acrilico.jpg',
                             'descripcion' => 'Configuración óptima de la estación de batidos con todos los ingredientes organizados y equipos listos para uso.'
                         ],
                         [
                             'titulo' => 'Estación de Waffles - Organización Correcta',
-                            'imagen' => '../../assets/img/estaciones/organizacion_freezer.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/organizacion_freezer.jpg',
                             'descripcion' => 'Distribución adecuada de la estación de waffles con materias primas y utensilios en su lugar correspondiente.'
                         ],
                         [
                             'titulo' => 'Estación de Toppings - Presentación Estándar',
-                            'imagen' => '../../assets/img/estaciones/organizacion_refrigeradora.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/organizacion_refrigeradora.jpg',
                             'descripcion' => 'Presentación estándar de la estación de toppings con todos los ingredientes frescos y visibles para el cliente.'
                         ],
                         [
                             'titulo' => 'Estación de Batidos - Vista Completa',
-                            'imagen' => '../../assets/img/estaciones/estacion_batidos.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/estacion_batidos.jpg',
                             'descripcion' => 'Vista completa de la estación de batidos mostrando la disposición ideal de equipos e ingredientes.'
                         ],
                         [
                             'titulo' => 'Estación de Caja - Organización',
-                            'imagen' => '../../assets/img/estaciones/estacion_caja.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/estacion_caja.jpg',
                             'descripcion' => 'Organización correcta de la estación de caja y atención al cliente.'
                         ],
                         [
                             'titulo' => 'Estación de Waffles y Bowls',
-                            'imagen' => '../../assets/img/estaciones/estacion_waffles_bowls.jpg',
+                            'imagen' => '../../core/assets/img/estaciones/estacion_waffles_bowls.jpg',
                             'descripcion' => 'Configuración estándar para la preparación de waffles y bowls.'
                         ]
                     ]

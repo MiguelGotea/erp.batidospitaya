@@ -15,7 +15,7 @@ if (!isset($_SESSION['usuario_id'])) {
 
 $usuario = obtenerUsuarioActual();
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-$assets_url = '/assets/';
+$assets_url = '/core/assets/';
 
 // Obtener la última boleta del operario basada en el último contrato
 $cod_operario = $_SESSION['usuario_id'];

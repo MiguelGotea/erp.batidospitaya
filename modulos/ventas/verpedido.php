@@ -595,7 +595,7 @@ $total_dolares = $total / $tipo_cambio;
                         <?php elseif ($pedido['tipo_pago'] == 'transferencia'): ?>
                             <div class="form-group">
                                 <label>Información Bancaria</label>
-                                <img src="../../assets/img/bancos_pagopitaya.png" alt="Datos Bancarios" style="max-width: 50%; height: auto; border: 1px solid #ddd;">
+                                <img src="../../core/assets/img/bancos_pagopitaya.png" alt="Datos Bancarios" style="max-width: 50%; height: auto; border: 1px solid #ddd;">
                                 <p style="margin-top: 5px; font-size: 0.9em;">
                                     <strong>Nota:</strong> Comprobante enviado al WhatsApp de Batidos Pitaya.
                                 </p>
@@ -777,7 +777,7 @@ $total_dolares = $total / $tipo_cambio;
                                 <?php elseif ($pedido['tipo_pago'] == 'transferencia'): ?>
                                     <div class="form-group">
                                         <label>Información Bancaria</label>
-                                        <img src="../../assets/img/bancos_pagopitaya.png" alt="Datos Bancarios" style="max-width: 60%; height: auto; border: 1px solid #ddd;">
+                                        <img src="../../core/assets/img/bancos_pagopitaya.png" alt="Datos Bancarios" style="max-width: 60%; height: auto; border: 1px solid #ddd;">
                                         <p style="margin-top: 5px; font-size: 0.9em;">
                                             <strong>Nota:</strong> Comprobante enviado al WhatsApp de Batidos Pitaya.
                                         </p>

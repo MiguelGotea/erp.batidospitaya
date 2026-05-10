@@ -26,7 +26,7 @@ if (!tienePermiso('recetario_access_traducido', 'vista', $cargoOperario)) {
     <title>Consulta de Recetas · Pitaya ERP</title>
     <meta name="description" content="Visor compacto de recetas para auditoría rápida de productos">
 
-    <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
