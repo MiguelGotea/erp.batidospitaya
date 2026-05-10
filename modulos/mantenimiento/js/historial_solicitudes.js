@@ -458,7 +458,7 @@ function mostrarFotos(ticketId) {
                     carouselInner.append(`
                         <div class="carousel-item ${activeClass}">
                             <div class="d-flex justify-content-center align-items-center" style="min-height: 200px; background: #f8f9fa;">
-                                <img id="${imgId}" src="${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}" onerror="this.src='/assets/img/broken-image.png'">
+                                <img id="${imgId}" src="${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}" onerror="this.src='/core/assets/img/broken-image.png'">
                                 <div id="loader-${imgId}" class="spinner-border text-primary position-absolute" role="status" style="display: none;">
                                     <span class="visually-hidden">Cargando...</span>
                                 </div>
