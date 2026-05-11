@@ -1,28 +1,36 @@
 <?php
 /**
  * dvr_capturar_imagen.php
- * Endpoint AJAX: captura una imagen estática del DVR Hikvision de la sucursal del usuario.
- * POST → { canal: int (opcional, default canal_caja) }
- * Respuesta JSON → { success, path, filename, sucursal, canal, message? }
+ * Endpoint AJAX: captura una imagen estática del DVR Hikvision.
+ * POST JSON → { canal: int (opcional), cod_sucursal: string (opcional) }
+ * Si cod_sucursal se omite, usa la sucursal asignada al usuario.
+ * Respuesta JSON → { success, path, filename, sucursal, canal, ip, timestamp, size_kb, message? }
  */
 require_once '../../../core/auth/auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$usuario         = obtenerUsuarioActual();
-$codSucursal     = $usuario['sucursal_codigo'] ?? null;
+$usuario = obtenerUsuarioActual();
+if (!$usuario) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Sesión no válida.']);
+    exit;
+}
+
+// Leer body JSON
+$input = json_decode(file_get_contents('php://input'), true) ?? [];
+
+// Sucursal: la que viene del frontend (selector) o la propia del usuario
+$codSucursalParam = isset($input['cod_sucursal']) ? trim($input['cod_sucursal']) : null;
+$codSucursal      = $codSucursalParam ?: ($usuario['sucursal_codigo'] ?? null);
 
 if (!$codSucursal) {
     echo json_encode(['success' => false, 'message' => 'Sin sucursal asignada o sesión no válida.']);
     exit;
 }
 
-// Parámetro opcional de canal (por POST JSON o form-data)
-$input      = json_decode(file_get_contents('php://input'), true);
+// Canal: viene del frontend o se usa el de la BD
 $canalParam = isset($input['canal']) ? intval($input['canal']) : null;
-if (!$canalParam && isset($_POST['canal'])) {
-    $canalParam = intval($_POST['canal']);
-}
 
 // ── Obtener configuración DVR de la sucursal ──────────────────────────────
 try {

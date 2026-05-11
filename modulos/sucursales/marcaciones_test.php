@@ -154,6 +154,46 @@ foreach ($todasSucursales as $s) {
         .chip.dvr-err  { border-color: #da3633; }
         .chip.dvr-err i{ color: #f85149; }
 
+        /* ── Selector de Sucursal ──────────────────────────── */
+        .suc-selector-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .suc-label {
+            font-size: .85rem;
+            color: #8b949e;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .suc-label i { color: #51b8ac; }
+        .suc-select {
+            flex: 1;
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            border-radius: 8px;
+            padding: 9px 14px;
+            font-size: .9rem;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: border-color .2s, box-shadow .2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .suc-select:focus {
+            outline: none;
+            border-color: #51b8ac;
+            box-shadow: 0 0 0 3px rgba(81,184,172,.15);
+        }
+        .suc-select option { background: #21262d; }
+
         /* ── Selector de canal ─────────────────────────────── */
         .canal-row {
             display: flex;
@@ -392,50 +432,50 @@ foreach ($todasSucursales as $s) {
             <div class="icon-wrap">📷</div>
             <div>
                 <h1>Test Captura DVR</h1>
-                <p>Sucursal <strong><?= htmlspecialchars($codSucursal) ?></strong> · <?= htmlspecialchars($nombreUsuario) ?></p>
+                <p>Usuario: <strong><?= htmlspecialchars($nombreUsuario) ?></strong></p>
             </div>
         </div>
 
         <!-- Body -->
         <div class="card-body">
 
-            <!-- Chips de info -->
-            <div class="info-chips">
-                <div class="chip <?= $dvrOk ? 'dvr-ok' : 'dvr-err' ?>">
-                    <i class="bi bi-<?= $dvrOk ? 'check-circle-fill' : 'exclamation-triangle-fill' ?>"></i>
-                    DVR: <strong><?= htmlspecialchars($dvrIp) ?></strong>
-                </div>
-                <div class="chip">
-                    <i class="bi bi-camera-video"></i>
-                    Canal caja: <strong><?= (int)$dvrCanal ?></strong>
-                </div>
-                <div class="chip">
-                    <i class="bi bi-building"></i>
-                    Sucursal: <strong><?= htmlspecialchars($codSucursal) ?></strong>
-                </div>
+            <!-- Selector de Sucursal -->
+            <div class="suc-selector-wrap">
+                <label class="suc-label" for="selectSucursal">
+                    <i class="bi bi-building"></i> Sucursal
+                </label>
+                <select id="selectSucursal" class="suc-select" onchange="cambiarSucursal()">
+                    <?php foreach ($todasSucursales as $s): ?>
+                    <option value="<?= htmlspecialchars($s['CodSucursal']) ?>"
+                            data-ip="<?= htmlspecialchars($s['portal_ip_local'] ?? '') ?>"
+                            data-canal="<?= (int)($s['canal_caja'] ?? 101) ?>"
+                            data-ok="<?= (!empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave'])) ? '1' : '0' ?>"
+                            data-nombre="<?= htmlspecialchars($s['NombreSucursal']) ?>"
+                            <?= ($s['CodSucursal'] === ($sucursalDefault['CodSucursal'] ?? '')) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($s['NombreSucursal']) ?> (<?= htmlspecialchars($s['CodSucursal']) ?>)
+                    </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
-            <?php if (!$dvrOk): ?>
-            <div class="result-error" style="margin-bottom:20px;">
-                <div class="err-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                <div>
-                    <div class="err-title">Sin configuración DVR</div>
-                    <div class="err-msg">La sucursal <strong><?= htmlspecialchars($codSucursal) ?></strong> no tiene DVR configurado en la tabla <code>DVR_Sucursales</code> o faltan credenciales. Configura la IP, usuario y clave para continuar.</div>
-                </div>
+            <!-- Chips de info (dinámicos) -->
+            <div class="info-chips" id="infoChips">
+                <!-- Se renderizan por JS al cargar y al cambiar sucursal -->
             </div>
-            <?php endif; ?>
+
+            <!-- Aviso sin DVR (dinámico) -->
+            <div id="avisoDvr"></div>
 
             <!-- Selector de canal -->
             <div class="canal-row">
                 <label for="inputCanal"><i class="bi bi-camera-video" style="color:#51b8ac"></i> Canal DVR:</label>
                 <input type="number" id="inputCanal" class="canal-input"
-                       value="<?= (int)$dvrCanal ?>" min="1" max="999" step="1">
+                       value="<?= (int)($sucursalDefault['canal_caja'] ?? 101) ?>" min="1" max="999" step="1">
                 <span class="canal-hint">101 = canal 1, 201 = canal 2…</span>
             </div>
 
             <!-- Botón Analizar -->
-            <button class="btn-analizar" id="btnAnalizar" onclick="capturarImagen()"
-                    <?= !$dvrOk ? 'disabled' : '' ?>>
+            <button class="btn-analizar" id="btnAnalizar" onclick="capturarImagen()">
                 <div class="spinner" id="spinner"></div>
                 <i class="bi bi-camera-video-fill btn-icon" id="btnIcon"></i>
                 <span id="btnTexto">Analizar — Capturar Imagen DVR</span>
@@ -462,14 +502,90 @@ foreach ($todasSucursales as $s) {
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script>
-    // ── Estado ──────────────────────────────────────────────
-    const capturasSesion = [];   // historial en memoria
-    let capturaActiva    = null; // última captura exitosa
+    // ── Datos de sucursales desde PHP ────────────────────────
+    const sucursalesData = <?= json_encode($sucursalesJS, JSON_UNESCAPED_UNICODE) ?>;
 
-    // ── Botón Analizar ───────────────────────────────────────
+    // ── Estado ──────────────────────────────────────────────
+    const capturasSesion = [];
+    let capturaActiva    = null;
+
+    // ── Cambio de sucursal ───────────────────────────────────
+    function cambiarSucursal() {
+        const $opt  = $('#selectSucursal option:selected');
+        const cod   = $opt.val();
+        const ip    = $opt.data('ip')   || '';
+        const canal = parseInt($opt.data('canal')) || 101;
+        const ok    = $opt.data('ok')   === 1 || $opt.data('ok') === '1';
+
+        // Actualizar canal
+        $('#inputCanal').val(canal);
+
+        // Actualizar chips
+        renderChips(cod, ip, canal, ok);
+
+        // Actualizar aviso
+        renderAviso(cod, ok);
+
+        // Habilitar / deshabilitar botón
+        $('#btnAnalizar').prop('disabled', !ok);
+        if (ok) {
+            $('#btnTexto').text('Analizar \u2014 Capturar Imagen DVR');
+        } else {
+            $('#btnTexto').text('Sin DVR configurado');
+        }
+
+        // Limpiar resultado al cambiar sucursal
+        $('#resultado').html(`
+            <div class="result-placeholder">
+                <i class="bi bi-image"></i>
+                <p>La imagen capturada del DVR aparecer\u00e1 aqu\u00ed</p>
+            </div>
+        `);
+    }
+
+    function renderChips(cod, ip, canal, ok) {
+        const iconClass = ok ? 'check-circle-fill' : 'exclamation-triangle-fill';
+        const chipClass = ok ? 'dvr-ok' : 'dvr-err';
+        const ipLabel   = ip || '\u2014';
+        $('#infoChips').html(`
+            <div class="chip ${chipClass}">
+                <i class="bi bi-${iconClass}"></i>
+                DVR: <strong>${escHtml(ipLabel)}</strong>
+            </div>
+            <div class="chip">
+                <i class="bi bi-camera-video"></i>
+                Canal: <strong>${canal}</strong>
+            </div>
+            <div class="chip">
+                <i class="bi bi-building"></i>
+                C\u00f3d: <strong>${escHtml(cod)}</strong>
+            </div>
+        `);
+    }
+
+    function renderAviso(cod, ok) {
+        if (!ok) {
+            $('#avisoDvr').html(`
+                <div class="result-error" style="margin-bottom:20px;">
+                    <div class="err-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    <div>
+                        <div class="err-title">Sin configuraci\u00f3n DVR</div>
+                        <div class="err-msg">La sucursal <strong>${escHtml(cod)}</strong>
+                        no tiene DVR configurado en <code>DVR_Sucursales</code>
+                        o faltan credenciales.</div>
+                    </div>
+                </div>
+            `);
+        } else {
+            $('#avisoDvr').empty();
+        }
+    }
+
+    // ── Bot\u00f3n Analizar ───────────────────────────────────────
     function capturarImagen() {
-        const $btn    = $('#btnAnalizar');
-        const canal   = parseInt($('#inputCanal').val()) || <?= (int)$dvrCanal ?>;
+        const $btn       = $('#btnAnalizar');
+        const canal      = parseInt($('#inputCanal').val()) || 101;
+        const codSucursal = $('#selectSucursal').val();
 
         // Estado: cargando
         $btn.prop('disabled', true).addClass('loading');
@@ -480,17 +596,18 @@ foreach ($todasSucursales as $s) {
             url    : 'ajax/dvr_capturar_imagen.php',
             method : 'POST',
             contentType: 'application/json',
-            data   : JSON.stringify({ canal }),
+            data   : JSON.stringify({ canal, cod_sucursal: codSucursal }),
             dataType: 'json',
-            timeout: 20000,
+            timeout: 22000,
 
             success: function(resp) {
-                $btn.prop('disabled', false).removeClass('loading');
+                const ok = $('#selectSucursal option:selected').data('ok');
+                $btn.prop('disabled', !(ok === 1 || ok === '1')).removeClass('loading');
 
                 if (resp.success) {
                     mostrarExito(resp);
                     agregarHistorial(resp);
-                    $('#btnTexto').text('Analizar — Capturar Imagen DVR');
+                    $('#btnTexto').text('Analizar \u2014 Capturar Imagen DVR');
                 } else {
                     mostrarError(resp.message || 'Error desconocido.', resp.debug || null);
                     $('#btnTexto').text('Reintentar');
@@ -498,9 +615,10 @@ foreach ($todasSucursales as $s) {
             },
 
             error: function(xhr, status) {
-                $btn.prop('disabled', false).removeClass('loading');
+                const ok = $('#selectSucursal option:selected').data('ok');
+                $btn.prop('disabled', !(ok === 1 || ok === '1')).removeClass('loading');
                 const msg = status === 'timeout'
-                    ? 'Timeout: el DVR tardó demasiado en responder (>20s).'
+                    ? 'Timeout: el DVR tard\u00f3 demasiado en responder (>20s).'
                     : `Error de red (${status}). Verifica conectividad con el DVR.`;
                 mostrarError(msg, null);
                 $('#btnTexto').text('Reintentar');
@@ -511,16 +629,17 @@ foreach ($todasSucursales as $s) {
     // ── Renderizado de estados ───────────────────────────────
 
     function mostrarCargando() {
+        const nombre = $('#selectSucursal option:selected').data('nombre') || '';
         $('#resultado').html(`
             <div class="result-placeholder" style="border-style:solid; border-color:#30363d;">
                 <div style="display:flex;align-items:center;justify-content:center;gap:12px;color:#51b8ac;">
                     <div style="width:28px;height:28px;border:3px solid rgba(81,184,172,.3);
                                 border-top-color:#51b8ac;border-radius:50%;
                                 animation:spin .7s linear infinite;"></div>
-                    <span style="font-size:.9rem;color:#8b949e;">Capturando imagen del DVR...</span>
+                    <span style="font-size:.9rem;color:#8b949e;">Capturando imagen de ${escHtml(nombre)}...</span>
                 </div>
                 <p style="margin-top:12px;font-size:.78rem;color:#484f58;">
-                    Conectando vía ISAPI Hikvision · puede tomar hasta 15 segundos
+                    Conectando v\u00eda ISAPI Hikvision \u00b7 puede tomar hasta 15 segundos
                 </p>
             </div>
         `);
@@ -528,9 +647,7 @@ foreach ($todasSucursales as $s) {
 
     function mostrarError(mensaje, debug) {
         let debugHtml = '';
-        if (debug) {
-            debugHtml = `<div class="err-debug">${escHtml(debug)}</div>`;
-        }
+        if (debug) debugHtml = `<div class="err-debug">${escHtml(debug)}</div>`;
         $('#resultado').html(`
             <div class="result-error">
                 <div class="err-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
@@ -564,7 +681,7 @@ foreach ($todasSucursales as $s) {
                     <span class="meta-tag"><i class="bi bi-camera-video"></i> Canal ${resp.canal}</span>
                     <span class="meta-tag"><i class="bi bi-building"></i> ${escHtml(resp.sucursal)}</span>
                     <span class="meta-tag"><i class="bi bi-file-earmark-image"></i> ${resp.size_kb} KB</span>
-                    <a class="meta-tag" href="${escHtml(resp.path)}" target="_blank" style="color:#51b8ac; text-decoration:none;">
+                    <a class="meta-tag" href="${escHtml(resp.path)}" target="_blank" style="color:#51b8ac;text-decoration:none;">
                         <i class="bi bi-box-arrow-up-right"></i> Abrir original
                     </a>
                 </div>
@@ -572,28 +689,23 @@ foreach ($todasSucursales as $s) {
         `);
     }
 
-    // ── Historial de sesión ──────────────────────────────────
-
+    // ── Historial de sesi\u00f3n ──────────────────────────────────
     function agregarHistorial(resp) {
         capturasSesion.unshift(resp);
         renderHistorial();
     }
-
     function renderHistorial() {
         if (capturasSesion.length === 0) {
-            $('#historialLista').html('<div class="hist-vacio">Aún no hay capturas en esta sesión.</div>');
+            $('#historialLista').html('<div class="hist-vacio">A\u00fan no hay capturas en esta sesi\u00f3n.</div>');
             return;
         }
-
-        const items = capturasSesion.map((c, idx) => `
-            <a class="hist-item" href="${escHtml(c.path)}" target="_blank"
-               title="Abrir imagen ${escHtml(c.filename)}">
+        const items = capturasSesion.map(c => `
+            <a class="hist-item" href="${escHtml(c.path)}" target="_blank">
                 <i class="bi bi-image-fill"></i>
-                <span class="hist-nombre">${escHtml(c.filename)}</span>
-                <span class="hist-hora">${escHtml(c.timestamp)} · ${c.size_kb}KB</span>
+                <span class="hist-nombre">${escHtml(c.sucursal)} \u00b7 ${escHtml(c.filename)}</span>
+                <span class="hist-hora">${escHtml(c.timestamp)} \u00b7 ${c.size_kb}KB</span>
             </a>
         `).join('');
-
         $('#historialLista').html(items);
     }
 
@@ -607,7 +719,12 @@ foreach ($todasSucursales as $s) {
             .replace(/"/g, '&quot;');
     }
 
-    // Enter en el campo canal dispara la captura
+    // Inicializar al cargar
+    $(document).ready(function() {
+        cambiarSucursal();
+    });
+
+    // Enter en canal dispara captura
     $('#inputCanal').on('keydown', function(e) {
         if (e.key === 'Enter') capturarImagen();
     });
