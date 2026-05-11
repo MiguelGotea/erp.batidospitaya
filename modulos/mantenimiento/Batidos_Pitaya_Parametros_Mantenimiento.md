@@ -1,6 +1,6 @@
 # Parámetros de Clasificación de Mantenimiento — Batidos Pitaya
 **Documento base para análisis con IA**  
-Versión 1.1 · Mayo 2026
+Versión 1.2 · Mayo 2026
 
 ---
 
@@ -18,20 +18,21 @@ Batidos Pitaya es una cadena de tiendas de batidos, bowls, waffles y snacks natu
 
 Toda solicitud debe clasificarse en **una sola categoría principal**. En caso de ambigüedad, se elige la de mayor impacto operativo.
 
-### A. EQUIPOS DE PRODUCCIÓN
-Equipos directamente involucrados en la elaboración del producto (batidos, bowls, waffles).
+### A. EQUIPOS DE PREPARACIÓN
+Equipos que soportan directamente el área de preparación del producto (batidos, bowls, waffles).
 
 **Incluye:**
 - Congeladores horizontales (almacenamiento de fruta/insumos congelados)
 - Refrigeradoras y coolers de insumos
 - Mesas de trabajo de acero (estaciones de batidos y bowls)
-- Máquinas de waffles y equipos de preparación
 - Bomba de agua del tanque (suministro para lavado de equipos)
-- Filtros de agua usados en producción de batidos
+- Filtros de agua usados en preparación de batidos
 - Hieleras y sistemas de hielo
 
-**Proceso afectado:** Preparación y elaboración del producto  
-**Impacto directo en operación:** SÍ — si falla, la tienda no puede producir correctamente
+**No incluye:** Máquinas de waffles, licuadoras y extractores de naranja — atendidos directamente por el área de Operaciones.
+
+**Proceso afectado:** Almacenamiento de insumos y soporte al área de preparación
+**Impacto directo en operación:** SÍ — si falla, la tienda no puede preparar correctamente
 
 ---
 
@@ -39,13 +40,14 @@ Equipos directamente involucrados en la elaboración del producto (batidos, bowl
 Equipos y sistemas que garantizan la higiene, sanidad y seguridad del producto y del ambiente de preparación.
 
 **Incluye:**
-- Lámparas UV anti-mosquitos (prevención de plagas en área de producción)
+- Lámparas UV anti-mosquitos (prevención de plagas en área de preparación)
 - Filtros de agua (cuando presentan contaminación o partículas en el agua)
+- Llaves de agua filtrada empotradas en pared (salida del agua post-filtro usada en batidos)
 - Sistemas de desagüe y drenaje del área de preparación
-- Lavanderos y pantry del área de producción (limpieza de utensilios)
+- Lavanderos y pantry del área de preparación (limpieza de utensilios)
 - Mangueras de lavado del área de preparación
 
-**Proceso afectado:** Higiene y sanidad alimentaria  
+**Proceso afectado:** Higiene y sanidad alimentaria
 **Impacto directo en operación:** SÍ — riesgo sanitario y regulatorio
 
 ---
@@ -70,12 +72,12 @@ Equipos que regulan la temperatura y confort del ambiente para clientes y colabo
 
 **Incluye:**
 - Abanicos de salón, bodega y área de preparación
+- Serpentinas de techo (presentes en algunos locales — climatización fija instalada)
 - Sistemas de ventilación del local
-- Serpentinas de techo (si aplica)
 - Bajaretes y cortinas externas (cuando su función es protección del sol/calor)
 
-**Proceso afectado:** Confort operativo y experiencia del cliente  
-**Impacto directo en operación:** SÍ cuando hay riesgo de caída del abanico o el calor impide la operación
+**Proceso afectado:** Confort operativo y experiencia del cliente
+**Impacto directo en operación:** SÍ cuando hay riesgo de caída del abanico, fallo de serpentina en local sin otra ventilación, o el calor impide la operación normal
 
 ---
 
@@ -194,18 +196,27 @@ Baños de clientes y colaboradores.
 
 ## 3. PARÁMETROS DE NIVEL DE URGENCIA
 
+### Dos dimensiones de evaluación
+
+Toda solicitud se evalúa en **dos dimensiones**. La operativa tiene mayor peso, pero la visual también entra en la decisión:
+
+| Dimensión | Peso | Descripción |
+|-----------|------|-------------|
+| **Impacto operativo** | Alto | Afecta la capacidad de la tienda de preparar y vender su producto, o representa riesgo de seguridad |
+| **Impacto visual / imagen** | Medio | Afecta lo que el cliente ve: fachada, salón, rotulación, mobiliario visible, baños |
+
+**Regla de combinación:** Si un problema solo tiene impacto visual (sin afectación operativa), su nivel máximo es 2-Medio. Si tiene impacto operativo, el visual puede sumar un nivel cuando la exposición al cliente es directa y significativa.
+
 ### Escala de 4 niveles
 
-| Nivel | Nombre | Color referencia | Descripción general |
-|-------|--------|-----------------|---------------------|
-| 1 | No Urgente | Verde | Deterioro estético o funcional menor, no afecta operación |
-| 2 | Medio | Amarillo | Molestia operativa o riesgo potencial, pero la tienda puede funcionar |
-| 3 | Urgente | Naranja | Afecta la operación de forma significativa o representa riesgo cercano |
-| 4 | Crítico | Rojo | La tienda no puede operar correctamente O existe riesgo de seguridad inmediata |
+| Nivel | Nombre | Color | Criterio operativo | Criterio visual |
+|-------|--------|-------|--------------------|-----------------|
+| 1 | No Urgente | 🟢 Verde | Sin afectación operativa | Deterioro estético menor, área no visible o de bajo tráfico |
+| 2 | Medio | 🟡 Amarillo | Molestia operativa, tienda funciona | Problema visible al cliente: pintura, muebles, señalización menor |
+| 3 | Urgente | 🟠 Naranja | Afecta operación significativamente o riesgo cercano | Impacto visual en elemento central de marca (rótulo LED, fachada principal) |
+| 4 | Crítico | 🔴 Rojo | Tienda no puede operar O riesgo de seguridad inmediato | No aplica como criterio único — siempre requiere impacto operativo |
 
----
 
-### Criterios de clasificación por categoría
 
 #### NIVEL 4 — CRÍTICO
 La tienda no puede funcionar correctamente o hay riesgo de seguridad física o alimentaria inmediato.
