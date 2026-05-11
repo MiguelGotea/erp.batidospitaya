@@ -91,7 +91,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($auditoria_seleccionada) ? 'Detalle de Auditoría #' . $auditoria_id : 'Historial de Auditorías' ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="css/ver_auditorias_facturacion.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
@@ -100,7 +100,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
             <header>
                 <div class="header-container">
                     <div class="logo-container">
-                        <img src="../Logo.svg" alt="Batidos Pitaya" class="logo">
+                        <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                     </div>
                     
                     <div class="buttons-container">

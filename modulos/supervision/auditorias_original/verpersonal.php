@@ -308,7 +308,7 @@ if (isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalles de Auditoría de Personal</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
 
     <!-- Incluir html2canvas y jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -319,7 +319,7 @@ if (isset($_GET['id'])) {
     <!-- Header con logo -->
     <header>
         <a href="index.php">
-            <img src="Logo.svg" alt="Logo de la empresa" class="logo" style="max-width:75px;">
+            <img src="/core/assets/img/Logo.svg" alt="Logo de la empresa" class="logo" style="max-width:75px;">
         </a>
     </header>
 

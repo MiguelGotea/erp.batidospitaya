@@ -147,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Auditoría Presentación del Personal</title>
     <link rel="stylesheet" href="styleagg.css">
     <!-- Favicon -->
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="stylesauditpers.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -318,7 +318,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <!-- Header con logo -->
     <header>
         <a href="logout.php">
-            <img src="Logo.svg" alt="Logo de la empresa" class="logo" style="max-width:75px;">
+            <img src="/core/assets/img/Logo.svg" alt="Logo de la empresa" class="logo" style="max-width:75px;">
         </a>
     </header>
 

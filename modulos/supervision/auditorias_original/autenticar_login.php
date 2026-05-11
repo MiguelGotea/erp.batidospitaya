@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <title>Iniciar Sesión</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <div class="logo-container">
         <a href="index_auditorias_publico.php">
-            <img src="Logo.svg" alt="Logo de la empresa" class="logo">
+            <img src="/core/assets/img/Logo.svg" alt="Logo de la empresa" class="logo">
         </a>
     </div>
     

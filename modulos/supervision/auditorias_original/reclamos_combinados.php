@@ -134,7 +134,7 @@ function formatearFechaHora($fecha_hora) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reclamos Combinados</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <style>
         * {
             font-family: 'Calibri', sans-serif;
@@ -321,7 +321,7 @@ function formatearFechaHora($fecha_hora) {
     <div class="header-container">
         <div class="logo-container">
             <a href="index.php">
-                <img src="Logo.svg" alt="Logo de la empresa" class="logo">
+                <img src="/core/assets/img/Logo.svg" alt="Logo de la empresa" class="logo">
             </a>
         </div>
         <div class="buttons-container">

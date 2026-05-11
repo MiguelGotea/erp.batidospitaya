@@ -102,13 +102,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="styles.css">
     
     <!-- Favicon -->
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
 </head>
 <body>
     <!-- Header con logo -->
     <header style="margin-top:20px;">
         <a href="index.php">
-            <img src="Logo.svg" alt="Logo de la empresa" class="logo"  style="max-width:100px;">
+            <img src="/core/assets/img/Logo.svg" alt="Logo de la empresa" class="logo"  style="max-width:100px;">
         </a>
     </header>
     

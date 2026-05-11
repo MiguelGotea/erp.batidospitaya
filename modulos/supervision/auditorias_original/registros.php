@@ -75,7 +75,7 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registros de Auditoría</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         * {
@@ -320,7 +320,7 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
     <div class="header-container">
         <div class="logo-container">
             <a href="logout.php">
-                <img src="Logo.svg" alt="Logo de la empresa" class="logo">
+                <img src="/core/assets/img/Logo.svg" alt="Logo de la empresa" class="logo">
             </a>
         </div>
     </div>

@@ -202,7 +202,7 @@ $showSuccess = isset($_GET['success']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditoría de Facturación de Caja</title>
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="css/auditoria_caja_facturacion.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
@@ -215,7 +215,7 @@ $showSuccess = isset($_GET['success']);
         <header>
             <div class="header-container">
                 <div class="logo-container">
-                    <img src="../Logo.svg" alt="Batidos Pitaya" class="logo">
+                    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
                 
                 <div class="buttons-container">

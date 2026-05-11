@@ -418,7 +418,7 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditorías en Efectivo</title>
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -692,7 +692,7 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
                 <div class="card shadow">
                     <!-- Contenedor con fondo blanco para logo y botones -->
                     <div class="header-container">
-                        <img src="Logo.svg" alt="Logo" class="header-logo">
+                        <img src="/core/assets/img/Logo.svg" alt="Logo" class="header-logo">
                         
                         <div class="container botones-container">
                             <div class="row no-gutters">

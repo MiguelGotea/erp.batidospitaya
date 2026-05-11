@@ -68,7 +68,7 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ver Auditoría de Promociones - #<?php echo $id; ?></title>
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="css/ver_auditoria_promociones.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
@@ -77,7 +77,7 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
         <header>
             <div class="header-container">
                 <div class="logo-container">
-                    <img src="../Logo.svg" alt="Batidos Pitaya" class="logo">
+                    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
                 <a href="../index.php" class="btn-volver">
                     <i class="fas fa-arrow-left"></i> Volver al Historial

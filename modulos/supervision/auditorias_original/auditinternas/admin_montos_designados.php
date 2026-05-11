@@ -84,12 +84,12 @@ if (isset($_GET['success'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administrar Montos Designados</title>
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="css/admin_montos_designados.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
     <div class="header">
-        <img src="Logo.svg" alt="Logo">
+        <img src="/core/assets/img/Logo.svg" alt="Logo">
     </div>
     
     <div class="container">

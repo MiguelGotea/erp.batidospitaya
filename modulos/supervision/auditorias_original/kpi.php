@@ -382,7 +382,7 @@ $color_general_total = getColorClass($general_total);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desempeño Acumulado</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -918,7 +918,7 @@ header {
         <header>
             <div class="header-container">
                 <div class="logo-container">
-                    <img src="Logo.svg" alt="Batidos Pitaya" class="logo">
+                    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
                 
                 <div class="buttons-container">

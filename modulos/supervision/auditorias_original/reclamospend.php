@@ -66,7 +66,7 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reclamos Pendientes de Investigación</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="icon12.png" type="image/png">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <style>
         * {
             box-sizing: border-box;
@@ -364,7 +364,7 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
     <header>
         <div class="header-container">
             <div class="logo-container">
-                <img src="Logo.svg" alt="Batidos Pitaya" class="logo">
+                <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
             </div>
 
             <div class="buttons-container">

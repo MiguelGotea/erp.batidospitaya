@@ -95,12 +95,12 @@ function mostrarListadoAuditorias($conn) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Historial de Auditorías de Caja Chica</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <link rel="icon" href="icon12.png" type="image/png">
+        <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
         <link rel="stylesheet" href="css/ver_auditorias_caja_chica.css?v=<?php echo mt_rand(1, 10000); ?>">
     </head>
     <body>
         <div class="header">
-            <img src="Logo.svg" alt="Logo">
+            <img src="/core/assets/img/Logo.svg" alt="Logo">
         </div>
         
         <div class="container">
@@ -207,7 +207,7 @@ function mostrarDetalleAuditoria($conn, $id) {
         <title>Detalle Auditoría Caja Chica #<?= $id ?></title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
-        <link rel="icon" href="icon12.png" type="image/png">
+        <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
         <link rel="stylesheet" href="css/ver_auditorias_caja_chica.css?v=<?php echo mt_rand(1, 10000); ?>">
     </head>
     <body>
@@ -216,7 +216,7 @@ function mostrarDetalleAuditoria($conn, $id) {
             <header>
                 <div class="header-container">
                     <div class="logo-container">
-                        <img src="../Logo.svg" alt="Batidos Pitaya" class="logo">
+                        <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                     </div>
                     
                     <div class="buttons-container">
