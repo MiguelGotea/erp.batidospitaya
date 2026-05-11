@@ -2,26 +2,61 @@
 // marcaciones_test.php — Test de captura DVR via AJAX (patrón Analizar)
 require_once '../../core/auth/auth.php';
 
-$usuarioActual   = obtenerUsuarioActual();
-$codSucursal     = $usuarioActual['sucursal_codigo'] ?? null;
-$nombreUsuario   = $usuarioActual['nombre'] ?? 'Usuario';
+$usuarioActual  = obtenerUsuarioActual();
+$nombreUsuario  = $usuarioActual['nombre'] ?? 'Usuario';
 
-if (!$codSucursal) {
-    die("No tienes una sucursal asignada o no estás autenticado.");
+if (!$usuarioActual) {
+    die("No estás autenticado.");
 }
 
-// Obtener datos del DVR para mostrar info en la UI
+// Cargar TODAS las sucursales que tienen DVR configurado
 try {
-    $stmt = $conn->prepare("SELECT * FROM DVR_Sucursales WHERE cod_sucursal = ? LIMIT 1");
-    $stmt->execute([$codSucursal]);
-    $dvr = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmtSucs = $conn->query("
+        SELECT
+            s.CodSucursal,
+            s.NombreSucursal,
+            d.portal_ip_local,
+            d.portal_usuario,
+            d.portal_clave,
+            d.canal_caja
+        FROM Sucursales s
+        LEFT JOIN DVR_Sucursales d ON d.cod_sucursal = s.CodSucursal
+        ORDER BY s.NombreSucursal ASC
+    ");
+    $todasSucursales = $stmtSucs->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
-    $dvr = null;
+    $todasSucursales = [];
 }
 
-$dvrIp    = $dvr['portal_ip_local'] ?? '—';
-$dvrCanal = $dvr['canal_caja']      ?? 101;
-$dvrOk    = !empty($dvr['portal_ip_local']) && !empty($dvr['portal_usuario']) && !empty($dvr['portal_clave']);
+// Sucursal seleccionada por defecto: la del usuario (o la primera)
+$codSucursalUsuario = $usuarioActual['sucursal_codigo'] ?? null;
+$sucursalDefault    = null;
+foreach ($todasSucursales as $s) {
+    if ($s['CodSucursal'] === $codSucursalUsuario) {
+        $sucursalDefault = $s;
+        break;
+    }
+}
+if (!$sucursalDefault && count($todasSucursales) > 0) {
+    $sucursalDefault = $todasSucursales[0];
+}
+
+$dvrIp    = $sucursalDefault['portal_ip_local'] ?? '—';
+$dvrCanal = $sucursalDefault['canal_caja']       ?? 101;
+$dvrOk    = !empty($sucursalDefault['portal_ip_local'])
+            && !empty($sucursalDefault['portal_usuario'])
+            && !empty($sucursalDefault['portal_clave']);
+
+// Mapa de sucursales para JavaScript
+$sucursalesJS = [];
+foreach ($todasSucursales as $s) {
+    $sucursalesJS[$s['CodSucursal']] = [
+        'nombre'   => $s['NombreSucursal'],
+        'ip'       => $s['portal_ip_local'] ?? '',
+        'canal'    => $s['canal_caja']      ?? 101,
+        'ok'       => !empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave']),
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -29,7 +64,7 @@ $dvrOk    = !empty($dvr['portal_ip_local']) && !empty($dvr['portal_usuario']) &&
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Captura DVR — Sucursal <?= htmlspecialchars($codSucursal) ?></title>
+    <title>Test Captura DVR — DVR Sucursales</title>
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
