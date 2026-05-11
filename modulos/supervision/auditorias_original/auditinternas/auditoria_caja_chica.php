@@ -14,8 +14,13 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21])) {
+// Verificar permisos
+$puede_ver         = tienePermiso('auditoria_efectivo', 'vista',      $cargoOperario);
+$puede_nuevo       = tienePermiso('auditoria_efectivo', 'nuevo',      $cargoOperario);
+$puede_nuevo_todos = tienePermiso('auditoria_efectivo', 'nuevo_todos', $cargoOperario);
+$puede_editar      = tienePermiso('auditoria_efectivo', 'editar',     $cargoOperario);
+
+if (!$puede_ver) {
     header('Location: /index.php');
     exit();
 }
@@ -25,6 +30,10 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
 // Procesar formulario (modificado)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$puede_nuevo) {
+        header('Location: auditorias_consolidadas.php');
+        exit();
+    }
     try {
         // Validar campos de texto
         $error_message = '';
@@ -161,12 +170,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Obtener sucursales y montos designados (se mantiene igual), excluimos la 0 central, 14 ferias, 16 las bisas, 17 rivas
-$stmtSucursales = $conn->query("SELECT s.codigo as id, s.nombre as name, cs.monto_designado 
-                               FROM sucursales s
-                               LEFT JOIN caja_chica_sucursales cs ON s.codigo = cs.sucursal_id AND cs.activo = 1
-                               WHERE s.activa = 1 AND s.codigo NOT IN (0, 14)
-                               ORDER BY s.nombre");
+// Obtener sucursales (filtradas por supervisor_asignado si no tiene nuevo_todos)
+// Excluimos la 0 central, 14 ferias
+if ($puede_nuevo_todos) {
+    $stmtSucursales = $conn->query("SELECT s.codigo as id, s.nombre as name, cs.monto_designado 
+                                   FROM sucursales s
+                                   LEFT JOIN caja_chica_sucursales cs ON s.codigo = cs.sucursal_id AND cs.activo = 1
+                                   WHERE s.activa = 1 AND s.codigo NOT IN (0, 14)
+                                   ORDER BY s.nombre");
+} else {
+    $stmtSucursales = $conn->prepare("SELECT s.codigo as id, s.nombre as name, cs.monto_designado 
+                                     FROM sucursales s
+                                     LEFT JOIN caja_chica_sucursales cs ON s.codigo = cs.sucursal_id AND cs.activo = 1
+                                     WHERE s.activa = 1 AND s.codigo NOT IN (0, 14) AND s.supervisor_asignado = ?
+                                     ORDER BY s.nombre");
+    $stmtSucursales->execute([$_SESSION['usuario_id']]);
+}
 $sucursales = $stmtSucursales->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -279,7 +298,9 @@ $sucursales = $stmtSucursales->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 
                 <div class="btn-container">
+                    <?php if ($puede_nuevo): ?>
                     <button type="submit" class="btn btn-special" id="guardarBtn" disabled>Guardar Auditoría</button>
+                    <?php endif; ?>
                     <button type="button" class="btn btn-reset" onclick="window.location.href='auditorias_consolidadas.php'">Cancelar</button>
                 </div>
             </form>

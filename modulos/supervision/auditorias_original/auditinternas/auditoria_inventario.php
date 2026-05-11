@@ -12,8 +12,13 @@ require_once '../../../../core/helpers/config.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21])) {
+// Verificar permisos — antes de que $conn sea sobreescrito por mysqli
+$puede_ver         = tienePermiso('auditoria_efectivo', 'vista',      $cargoOperario);
+$puede_nuevo       = tienePermiso('auditoria_efectivo', 'nuevo',      $cargoOperario);
+$puede_nuevo_todos = tienePermiso('auditoria_efectivo', 'nuevo_todos', $cargoOperario);
+$puede_editar      = tienePermiso('auditoria_efectivo', 'editar',     $cargoOperario);
+
+if (!$puede_ver) {
     header('Location: /index.php');
     exit();
 }
@@ -99,6 +104,10 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$puede_nuevo) {
+        header('Location: auditorias_consolidadas.php');
+        exit();
+    }
     $fecha_hora = date('Y-m-d H:i:s');
     $sucursal_id = $_POST['sucursal'];
     
@@ -352,10 +361,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Obtener sucursales (filtradas por supervisor_asignado si no tiene nuevo_todos)
 $sucursales = [];
 try {
-    $query = "SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 ORDER BY nombre";
-    $result = $conn->query($query);
+    if ($puede_nuevo_todos) {
+        $query = "SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 ORDER BY nombre";
+        $result = $conn->query($query);
+    } else {
+        $query = "SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 AND supervisor_asignado = ? ORDER BY nombre";
+        $stmt_suc = $conn->prepare($query);
+        $stmt_suc->bind_param("i", $_SESSION['usuario_id']);
+        $stmt_suc->execute();
+        $result = $stmt_suc->get_result();
+    }
     if ($result && $result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
             $sucursales[] = $row;
@@ -547,7 +565,9 @@ function obtenerColorCategoria($color_bd) {
         </div>
         
         <div class="button-container">
+            <?php if ($puede_nuevo): ?>
             <button type="submit" class="btn" id="guardarBtn">Guardar Auditoría</button>
+            <?php endif; ?>
             <button type="button" class="btn-cancelar" onclick="window.location.href='auditorias_consolidadas.php'">Cancelar</button>
         </div>
     </form>

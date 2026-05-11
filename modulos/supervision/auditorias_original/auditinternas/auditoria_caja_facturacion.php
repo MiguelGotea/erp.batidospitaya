@@ -14,8 +14,13 @@ $db = $conn; // En este archivo se usa $db para la conexión
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21])) {
+// Verificar permisos
+$puede_ver         = tienePermiso('auditoria_efectivo', 'vista',      $cargoOperario);
+$puede_nuevo       = tienePermiso('auditoria_efectivo', 'nuevo',      $cargoOperario);
+$puede_nuevo_todos = tienePermiso('auditoria_efectivo', 'nuevo_todos', $cargoOperario);
+$puede_editar      = tienePermiso('auditoria_efectivo', 'editar',     $cargoOperario);
+
+if (!$puede_ver) {
     header('Location: /index.php');
     exit();
 }
@@ -23,10 +28,15 @@ if (!verificarAccesoCargo([16, 21])) {
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
-// Obtener sucursales para el select
+// Obtener sucursales (filtradas por supervisor_asignado si no tiene nuevo_todos)
 $sucursales = [];
 try {
-    $stmt = $db->query("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 ORDER BY nombre");
+    if ($puede_nuevo_todos) {
+        $stmt = $db->query("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 ORDER BY nombre");
+    } else {
+        $stmt = $db->prepare("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 AND supervisor_asignado = ? ORDER BY nombre");
+        $stmt->execute([$_SESSION['usuario_id']]);
+    }
     $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     die("Error al obtener sucursales: " . $e->getMessage());
@@ -56,6 +66,10 @@ function obtenerOperariosActivosPorSucursal($db, $sucursal_id) {
 
 // Procesar el formulario cuando se envía
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$puede_nuevo) {
+        header('Location: auditorias_consolidadas.php');
+        exit();
+    }
     // Verificar que se haya enviado una foto
     if (empty($_POST['photoData'])) {
         die("Error: Debe tomar una foto de evidencia para guardar la auditoría");
@@ -332,9 +346,11 @@ $showSuccess = isset($_GET['success']);
             </div>
             
             <div class="button-container">
+                <?php if ($puede_nuevo): ?>
                 <button type="button" class="btn btn-special" id="submitBtn" disabled>
                     Guardar Auditoría
                 </button>
+                <?php endif; ?>
                 <button type="button" 
                         class="btn btn-cancel" 
                         onclick="window.location.href='auditorias_consolidadas.php'">

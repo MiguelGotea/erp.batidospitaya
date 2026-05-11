@@ -16,8 +16,13 @@ $db = $conn;
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 11, 16, 21])) {
+// Verificar permisos
+$puede_ver      = tienePermiso('auditoria_efectivo', 'vista',    $cargoOperario);
+$puede_nuevo    = tienePermiso('auditoria_efectivo', 'nuevo',    $cargoOperario);
+$puede_exportar = tienePermiso('auditoria_efectivo', 'exportar', $cargoOperario);
+$puede_editar   = tienePermiso('auditoria_efectivo', 'editar',   $cargoOperario);
+
+if (!$puede_ver) {
     header('Location: /index.php');
     exit();
 }
@@ -408,12 +413,13 @@ if (isset($_GET['exportar_faltante_caja'])) {
                     </a>
                 </div>
                 
+                <?php if ($puede_exportar): ?>
                 <div class="filtro-buttons">
                     <a href="auditorias_consolidadas.php?<?php 
                         echo http_build_query([
-                            'tipo' => $tipo_seleccionado,
-                            'sucursal' => $sucursal_id,
-                            'operario' => $operario_id,
+                            'tipo'        => $tipo_seleccionado,
+                            'sucursal'    => $sucursal_id,
+                            'operario'    => $operario_id,
                             'fecha_desde' => $fecha_desde,
                             'fecha_hasta' => $fecha_hasta,
                             'exportar_deducciones' => 1
@@ -425,9 +431,9 @@ if (isset($_GET['exportar_faltante_caja'])) {
                     <!-- Nuevo botón para exportar solo faltantes de caja -->
                     <a href="auditorias_consolidadas.php?<?php 
                         echo http_build_query([
-                            'tipo' => $tipo_seleccionado,
-                            'sucursal' => $sucursal_id,
-                            'operario' => $operario_id,
+                            'tipo'        => $tipo_seleccionado,
+                            'sucursal'    => $sucursal_id,
+                            'operario'    => $operario_id,
                             'fecha_desde' => $fecha_desde,
                             'fecha_hasta' => $fecha_hasta,
                             'exportar_faltante_caja' => 1
@@ -436,10 +442,11 @@ if (isset($_GET['exportar_faltante_caja'])) {
                         <i class="fas fa-file-excel"></i> Faltantes Caja
                     </a>
                 </div>
+                <?php endif; ?>
             </form>
         </div>
         
-        <?php if (verificarAccesoCargo([21, 16])): ?>
+        <?php if ($puede_nuevo): ?>
             <!-- Botón Flotante de Nueva Auditoría (FAB) -->
             <div class="fab-container" id="fabNuevaAuditoria">
                 <div class="fab-options">
@@ -722,9 +729,11 @@ if (isset($_GET['exportar_faltante_caja'])) {
                                 ?>">
                                 <div class="promedio-contenedor">
                                     C$ <?php echo number_format($monto_mostrar, 2); ?>
+                                    <?php if ($puede_editar): ?>
                                     <a href="<?php echo $registro['url_ver']; ?>?id=<?php echo $registro['id']; ?>" style="color:#51B8AC;">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
