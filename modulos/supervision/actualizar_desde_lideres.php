@@ -3,7 +3,10 @@
 // require_once '../../includes/auth.php';
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
-if (!tienePermiso('confirmar_horarios', 'gestionar')) {
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+if (!tienePermiso('confirmar_horarios', 'gestionar', $cargoOperario)) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'No tiene permiso para realizar esta acción']);
     exit();
