@@ -1628,6 +1628,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="css/faltas_manual.css">
 </head>
 
@@ -1733,13 +1734,6 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                             <i class="fas fa-times"></i> Limpiar
                         </a>
 
-                        <!-- Botones de acción en la misma línea de filtros -->
-                        <?php if ($puedeNuevo): ?>
-                            <button type="button" onclick="mostrarModalNuevaFalta()" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Nuevo
-                            </button>
-                        <?php endif; ?>
-
                         <?php if ($puedeExportar): ?>
                             <a style="display:none;" href="faltas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',
@@ -1760,40 +1754,6 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                                 'exportar_contabilidad' => 1
                             ]) ?>" class="btn-agregar excel-contabilidad">
                                 <i class="fas fa-file-excel"></i> Contabilidad
-                            </a>
-
-                            <!-- Botones de exportación específicos -->
-                            <a href="faltas_manual.php?<?= http_build_query([
-                                'sucursal' => $sucursalSeleccionada ?? '',
-                                'desde' => $fechaDesde,
-                                'hasta' => $fechaHasta,
-                                'operario' => $operarioSeleccionado,
-                                'exportar_faltas_auto_septimo' => 1
-                            ]) ?>" class="btn-agregar"
-                                style="background-color: #ffc107; border-color: #ffc107; color: #000;">
-                                <i class="fas fa-file-excel"></i> No Reportadas + 7mo
-                            </a>
-
-                            <a href="faltas_manual.php?<?= http_build_query([
-                                'sucursal' => $sucursalSeleccionada ?? '',
-                                'desde' => $fechaDesde,
-                                'hasta' => $fechaHasta,
-                                'operario' => $operarioSeleccionado,
-                                'exportar_permisos' => 1
-                            ]) ?>" class="btn-agregar"
-                                style="background-color: #17a2b8; border-color: #17a2b8; color: white;">
-                                <i class="fas fa-file-excel"></i> Permisos
-                            </a>
-
-                            <a href="faltas_manual.php?<?= http_build_query([
-                                'sucursal' => $sucursalSeleccionada ?? '',
-                                'desde' => $fechaDesde,
-                                'hasta' => $fechaHasta,
-                                'operario' => $operarioSeleccionado,
-                                'exportar_vacaciones' => 1
-                            ]) ?>" class="btn-agregar"
-                                style="background-color: #28a745; border-color: #28a745; color: white;">
-                                <i class="fas fa-file-excel"></i> Vacaciones
                             </a>
                         <?php endif; ?>
                     </div>
@@ -2277,6 +2237,58 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
         };
     </script>
     <script src="js/faltas_manual.js?v=<?= time() ?>"></script>
+
+    <!-- Botón Flotante con opciones -->
+    <?php if ($puedeNuevo || $puedeExportar): ?>
+        <div class="fab-container">
+            <div class="fab-options">
+                <?php if ($puedeNuevo): ?>
+                    <div class="fab-option" onclick="mostrarModalNuevaFalta()">
+                        <span class="fab-label">Nuevo</span>
+                        <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($puedeExportar): ?>
+                    <a href="faltas_manual.php?<?= http_build_query([
+                        'sucursal' => $sucursalSeleccionada ?? '',
+                        'desde' => $fechaDesde,
+                        'hasta' => $fechaHasta,
+                        'operario' => $operarioSeleccionado,
+                        'exportar_vacaciones' => 1
+                    ]) ?>" class="fab-option">
+                        <span class="fab-label">Descargar Vacaciones</span>
+                        <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
+                    </a>
+
+                    <a href="faltas_manual.php?<?= http_build_query([
+                        'sucursal' => $sucursalSeleccionada ?? '',
+                        'desde' => $fechaDesde,
+                        'hasta' => $fechaHasta,
+                        'operario' => $operarioSeleccionado,
+                        'exportar_permisos' => 1
+                    ]) ?>" class="fab-option">
+                        <span class="fab-label">Descargar Permisos</span>
+                        <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
+                    </a>
+
+                    <a href="faltas_manual.php?<?= http_build_query([
+                        'sucursal' => $sucursalSeleccionada ?? '',
+                        'desde' => $fechaDesde,
+                        'hasta' => $fechaHasta,
+                        'operario' => $operarioSeleccionado,
+                        'exportar_faltas_auto_septimo' => 1
+                    ]) ?>" class="fab-option">
+                        <span class="fab-label">Descargar No reportados + 7mo</span>
+                        <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
+                    </a>
+                <?php endif; ?>
+            </div>
+            <div class="btn-floating-pitaya" title="Herramientas">
+                <i class="fas fa-wrench"></i>
+            </div>
+        </div>
+    <?php endif; ?>
 </body>
 
 </html>
