@@ -8,17 +8,17 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo
-if (!tienePermiso('confirmar_horarios', 'vista')) {
+if (!tienePermiso('confirmar_horarios', 'vista', $cargoOperario)) {
     header('Location: ../../../index.php');
     exit();
 }
 
 // Definir variables de permisos para uso en el módulo
-$canManage = tienePermiso('confirmar_horarios', 'gestionar');
-$canAuthorize = tienePermiso('confirmar_horarios', 'autorizar_edicion');
-$canSeeAll = tienePermiso('confirmar_horarios', 'ver_todo');
-$canFilterAll = tienePermiso('confirmar_horarios', 'filtro_todas_tiendas');
-$canFilterAssigned = tienePermiso('confirmar_horarios', 'filtro_sucursales_asignadas');
+$canManage = tienePermiso('confirmar_horarios', 'gestionar', $cargoOperario);
+$canAuthorize = tienePermiso('confirmar_horarios', 'autorizar_edicion', $cargoOperario);
+$canSeeAll = tienePermiso('confirmar_horarios', 'ver_todo', $cargoOperario);
+$canFilterAll = tienePermiso('confirmar_horarios', 'filtro_todas_tiendas', $cargoOperario);
+$canFilterAssigned = tienePermiso('confirmar_horarios', 'filtro_sucursales_asignadas', $cargoOperario);
 
 // Obtenemos el cargo principal del usuario para determinar permisos
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
