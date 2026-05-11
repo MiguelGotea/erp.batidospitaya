@@ -2,8 +2,8 @@
 // marcaciones_test.php — Test de captura DVR via AJAX (patrón Analizar)
 require_once '../../core/auth/auth.php';
 
-$usuarioActual  = obtenerUsuarioActual();
-$nombreUsuario  = $usuarioActual['nombre'] ?? 'Usuario';
+$usuarioActual = obtenerUsuarioActual();
+$nombreUsuario = $usuarioActual['nombre'] ?? 'Usuario';
 
 if (!$usuarioActual) {
     die("No estás autenticado.");
@@ -20,7 +20,7 @@ try {
             d.portal_clave,
             d.canal_caja
         FROM Sucursales s
-        LEFT JOIN DVR_Sucursales d ON d.cod_sucursal = s.CodSucursal
+        LEFT JOIN DVR_Sucursales d ON d.cod_sucursal = s.codigo
         ORDER BY s.NombreSucursal ASC
     ");
     $todasSucursales = $stmtSucs->fetchAll(PDO::FETCH_ASSOC);
@@ -30,7 +30,7 @@ try {
 
 // Sucursal seleccionada por defecto: la del usuario (o la primera)
 $codSucursalUsuario = $usuarioActual['sucursal_codigo'] ?? null;
-$sucursalDefault    = null;
+$sucursalDefault = null;
 foreach ($todasSucursales as $s) {
     if ($s['CodSucursal'] === $codSucursalUsuario) {
         $sucursalDefault = $s;
@@ -41,20 +41,20 @@ if (!$sucursalDefault && count($todasSucursales) > 0) {
     $sucursalDefault = $todasSucursales[0];
 }
 
-$dvrIp    = $sucursalDefault['portal_ip_local'] ?? '—';
-$dvrCanal = $sucursalDefault['canal_caja']       ?? 101;
-$dvrOk    = !empty($sucursalDefault['portal_ip_local'])
-            && !empty($sucursalDefault['portal_usuario'])
-            && !empty($sucursalDefault['portal_clave']);
+$dvrIp = $sucursalDefault['portal_ip_local'] ?? '—';
+$dvrCanal = $sucursalDefault['canal_caja'] ?? 101;
+$dvrOk = !empty($sucursalDefault['portal_ip_local'])
+    && !empty($sucursalDefault['portal_usuario'])
+    && !empty($sucursalDefault['portal_clave']);
 
 // Mapa de sucursales para JavaScript
 $sucursalesJS = [];
 foreach ($todasSucursales as $s) {
     $sucursalesJS[$s['CodSucursal']] = [
-        'nombre'   => $s['NombreSucursal'],
-        'ip'       => $s['portal_ip_local'] ?? '',
-        'canal'    => $s['canal_caja']      ?? 101,
-        'ok'       => !empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave']),
+        'nombre' => $s['NombreSucursal'],
+        'ip' => $s['portal_ip_local'] ?? '',
+        'canal' => $s['canal_caja'] ?? 101,
+        'ok' => !empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave']),
     ];
 }
 ?>
@@ -72,7 +72,13 @@ foreach ($todasSucursales as $s) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ── Reset & Base ───────────────────────────────────── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -93,7 +99,7 @@ foreach ($todasSucursales as $s) {
             width: 100%;
             max-width: 680px;
             overflow: hidden;
-            box-shadow: 0 8px 48px rgba(0,0,0,.5);
+            box-shadow: 0 8px 48px rgba(0, 0, 0, .5);
         }
 
         /* ── Header ────────────────────────────────────────── */
@@ -104,23 +110,29 @@ foreach ($todasSucursales as $s) {
             align-items: center;
             gap: 16px;
         }
+
         .card-header .icon-wrap {
-            width: 52px; height: 52px;
-            background: rgba(255,255,255,.15);
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 255, 255, .15);
             border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 24px;
             flex-shrink: 0;
         }
+
         .card-header h1 {
             font-size: 1.25rem;
             font-weight: 700;
             color: #fff;
             line-height: 1.2;
         }
+
         .card-header p {
             font-size: .82rem;
-            color: rgba(255,255,255,.75);
+            color: rgba(255, 255, 255, .75);
             margin-top: 3px;
         }
 
@@ -136,6 +148,7 @@ foreach ($todasSucursales as $s) {
             gap: 10px;
             margin-bottom: 24px;
         }
+
         .chip {
             display: inline-flex;
             align-items: center;
@@ -147,12 +160,30 @@ foreach ($todasSucursales as $s) {
             font-size: .78rem;
             color: #8b949e;
         }
-        .chip i { color: #51b8ac; }
-        .chip strong { color: #c9d1d9; }
-        .chip.dvr-ok   { border-color: #238636; }
-        .chip.dvr-ok i { color: #3fb950; }
-        .chip.dvr-err  { border-color: #da3633; }
-        .chip.dvr-err i{ color: #f85149; }
+
+        .chip i {
+            color: #51b8ac;
+        }
+
+        .chip strong {
+            color: #c9d1d9;
+        }
+
+        .chip.dvr-ok {
+            border-color: #238636;
+        }
+
+        .chip.dvr-ok i {
+            color: #3fb950;
+        }
+
+        .chip.dvr-err {
+            border-color: #da3633;
+        }
+
+        .chip.dvr-err i {
+            color: #f85149;
+        }
 
         /* ── Selector de Sucursal ──────────────────────────── */
         .suc-selector-wrap {
@@ -161,6 +192,7 @@ foreach ($todasSucursales as $s) {
             gap: 12px;
             margin-bottom: 20px;
         }
+
         .suc-label {
             font-size: .85rem;
             color: #8b949e;
@@ -169,7 +201,11 @@ foreach ($todasSucursales as $s) {
             align-items: center;
             gap: 6px;
         }
-        .suc-label i { color: #51b8ac; }
+
+        .suc-label i {
+            color: #51b8ac;
+        }
+
         .suc-select {
             flex: 1;
             background: #21262d;
@@ -187,12 +223,16 @@ foreach ($todasSucursales as $s) {
             background-position: right 12px center;
             padding-right: 32px;
         }
+
         .suc-select:focus {
             outline: none;
             border-color: #51b8ac;
-            box-shadow: 0 0 0 3px rgba(81,184,172,.15);
+            box-shadow: 0 0 0 3px rgba(81, 184, 172, .15);
         }
-        .suc-select option { background: #21262d; }
+
+        .suc-select option {
+            background: #21262d;
+        }
 
         /* ── Selector de canal ─────────────────────────────── */
         .canal-row {
@@ -201,11 +241,13 @@ foreach ($todasSucursales as $s) {
             gap: 12px;
             margin-bottom: 24px;
         }
+
         .canal-row label {
             font-size: .85rem;
             color: #8b949e;
             white-space: nowrap;
         }
+
         .canal-input {
             background: #21262d;
             border: 1px solid #30363d;
@@ -216,10 +258,12 @@ foreach ($todasSucursales as $s) {
             width: 90px;
             transition: border-color .2s;
         }
+
         .canal-input:focus {
             outline: none;
             border-color: #51b8ac;
         }
+
         .canal-hint {
             font-size: .75rem;
             color: #6e7681;
@@ -243,28 +287,44 @@ foreach ($todasSucursales as $s) {
             transition: opacity .2s, transform .1s;
             letter-spacing: .3px;
         }
+
         .btn-analizar:hover:not(:disabled) {
             opacity: .9;
             transform: translateY(-1px);
         }
+
         .btn-analizar:active:not(:disabled) {
             transform: translateY(0);
         }
+
         .btn-analizar:disabled {
             opacity: .55;
             cursor: not-allowed;
         }
+
         .btn-analizar .spinner {
-            width: 18px; height: 18px;
-            border: 2px solid rgba(255,255,255,.4);
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, .4);
             border-top-color: #fff;
             border-radius: 50%;
             animation: spin .7s linear infinite;
             display: none;
         }
-        .btn-analizar.loading .spinner { display: block; }
-        .btn-analizar.loading .btn-icon { display: none; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .btn-analizar.loading .spinner {
+            display: block;
+        }
+
+        .btn-analizar.loading .btn-icon {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
         /* ── Área de resultado ─────────────────────────────── */
         #resultado {
@@ -279,8 +339,16 @@ foreach ($todasSucursales as $s) {
             text-align: center;
             color: #484f58;
         }
-        .result-placeholder i { font-size: 2.5rem; margin-bottom: 10px; display: block; }
-        .result-placeholder p  { font-size: .85rem; }
+
+        .result-placeholder i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .result-placeholder p {
+            font-size: .85rem;
+        }
 
         /* Estado: error */
         .result-error {
@@ -292,6 +360,7 @@ foreach ($todasSucursales as $s) {
             gap: 12px;
             align-items: flex-start;
         }
+
         .result-error .err-icon {
             font-size: 1.4rem;
             color: #f85149;
@@ -299,17 +368,20 @@ foreach ($todasSucursales as $s) {
             line-height: 1;
             margin-top: 2px;
         }
+
         .result-error .err-title {
             font-size: .9rem;
             font-weight: 600;
             color: #f85149;
             margin-bottom: 4px;
         }
+
         .result-error .err-msg {
             font-size: .82rem;
             color: #c9d1d9;
             word-break: break-word;
         }
+
         .result-error .err-debug {
             margin-top: 8px;
             font-family: monospace;
@@ -323,7 +395,8 @@ foreach ($todasSucursales as $s) {
         }
 
         /* Estado: éxito */
-        .result-success { }
+        .result-success {}
+
         .result-success .success-bar {
             background: rgba(63, 185, 80, .1);
             border: 1px solid rgba(63, 185, 80, .3);
@@ -336,7 +409,13 @@ foreach ($todasSucursales as $s) {
             color: #3fb950;
             font-weight: 500;
         }
-        .result-success .success-bar span { margin-left: auto; color: #6e7681; font-weight: 400; }
+
+        .result-success .success-bar span {
+            margin-left: auto;
+            color: #6e7681;
+            font-weight: 400;
+        }
+
         .result-success .img-wrap {
             border: 1px solid #30363d;
             border-top: none;
@@ -345,17 +424,20 @@ foreach ($todasSucursales as $s) {
             background: #0d1117;
             position: relative;
         }
+
         .result-success .img-wrap img {
             width: 100%;
             display: block;
             transition: opacity .4s ease;
         }
+
         .result-success .img-meta {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 12px;
         }
+
         .meta-tag {
             display: inline-flex;
             align-items: center;
@@ -367,7 +449,11 @@ foreach ($todasSucursales as $s) {
             font-size: .75rem;
             color: #8b949e;
         }
-        .meta-tag i { color: #51b8ac; font-size: .8rem; }
+
+        .meta-tag i {
+            color: #51b8ac;
+            font-size: .8rem;
+        }
 
         /* ── Historial mini ────────────────────────────────── */
         .historial-section {
@@ -375,6 +461,7 @@ foreach ($todasSucursales as $s) {
             padding-top: 24px;
             border-top: 1px solid #21262d;
         }
+
         .historial-title {
             font-size: .8rem;
             font-weight: 600;
@@ -383,11 +470,13 @@ foreach ($todasSucursales as $s) {
             letter-spacing: .8px;
             margin-bottom: 12px;
         }
+
         #historialLista {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
+
         .hist-item {
             display: flex;
             align-items: center;
@@ -400,8 +489,16 @@ foreach ($todasSucursales as $s) {
             transition: border-color .15s;
             text-decoration: none;
         }
-        .hist-item:hover { border-color: #51b8ac; }
-        .hist-item i { color: #51b8ac; font-size: .95rem; }
+
+        .hist-item:hover {
+            border-color: #51b8ac;
+        }
+
+        .hist-item i {
+            color: #51b8ac;
+            font-size: .95rem;
+        }
+
         .hist-item .hist-nombre {
             font-size: .8rem;
             color: #c9d1d9;
@@ -410,11 +507,13 @@ foreach ($todasSucursales as $s) {
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         .hist-item .hist-hora {
             font-size: .72rem;
             color: #6e7681;
             white-space: nowrap;
         }
+
         .hist-vacio {
             font-size: .8rem;
             color: #484f58;
@@ -446,14 +545,14 @@ foreach ($todasSucursales as $s) {
                 </label>
                 <select id="selectSucursal" class="suc-select" onchange="cambiarSucursal()">
                     <?php foreach ($todasSucursales as $s): ?>
-                    <option value="<?= htmlspecialchars($s['CodSucursal']) ?>"
+                        <option value="<?= htmlspecialchars($s['CodSucursal']) ?>"
                             data-ip="<?= htmlspecialchars($s['portal_ip_local'] ?? '') ?>"
-                            data-canal="<?= (int)($s['canal_caja'] ?? 101) ?>"
+                            data-canal="<?= (int) ($s['canal_caja'] ?? 101) ?>"
                             data-ok="<?= (!empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave'])) ? '1' : '0' ?>"
                             data-nombre="<?= htmlspecialchars($s['NombreSucursal']) ?>"
                             <?= ($s['CodSucursal'] === ($sucursalDefault['CodSucursal'] ?? '')) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($s['NombreSucursal']) ?> (<?= htmlspecialchars($s['CodSucursal']) ?>)
-                    </option>
+                            <?= htmlspecialchars($s['NombreSucursal']) ?> (<?= htmlspecialchars($s['CodSucursal']) ?>)
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -470,7 +569,7 @@ foreach ($todasSucursales as $s) {
             <div class="canal-row">
                 <label for="inputCanal"><i class="bi bi-camera-video" style="color:#51b8ac"></i> Canal DVR:</label>
                 <input type="number" id="inputCanal" class="canal-input"
-                       value="<?= (int)($sucursalDefault['canal_caja'] ?? 101) ?>" min="1" max="999" step="1">
+                    value="<?= (int) ($sucursalDefault['canal_caja'] ?? 101) ?>" min="1" max="999" step="1">
                 <span class="canal-hint">101 = canal 1, 201 = canal 2…</span>
             </div>
 
@@ -502,52 +601,52 @@ foreach ($todasSucursales as $s) {
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script>
-    // ── Datos de sucursales desde PHP ────────────────────────
-    const sucursalesData = <?= json_encode($sucursalesJS, JSON_UNESCAPED_UNICODE) ?>;
+        // ── Datos de sucursales desde PHP ────────────────────────
+        const sucursalesData = <?= json_encode($sucursalesJS, JSON_UNESCAPED_UNICODE) ?>;
 
-    // ── Estado ──────────────────────────────────────────────
-    const capturasSesion = [];
-    let capturaActiva    = null;
+        // ── Estado ──────────────────────────────────────────────
+        const capturasSesion = [];
+        let capturaActiva = null;
 
-    // ── Cambio de sucursal ───────────────────────────────────
-    function cambiarSucursal() {
-        const $opt  = $('#selectSucursal option:selected');
-        const cod   = $opt.val();
-        const ip    = $opt.data('ip')   || '';
-        const canal = parseInt($opt.data('canal')) || 101;
-        const ok    = $opt.data('ok')   === 1 || $opt.data('ok') === '1';
+        // ── Cambio de sucursal ───────────────────────────────────
+        function cambiarSucursal() {
+            const $opt = $('#selectSucursal option:selected');
+            const cod = $opt.val();
+            const ip = $opt.data('ip') || '';
+            const canal = parseInt($opt.data('canal')) || 101;
+            const ok = $opt.data('ok') === 1 || $opt.data('ok') === '1';
 
-        // Actualizar canal
-        $('#inputCanal').val(canal);
+            // Actualizar canal
+            $('#inputCanal').val(canal);
 
-        // Actualizar chips
-        renderChips(cod, ip, canal, ok);
+            // Actualizar chips
+            renderChips(cod, ip, canal, ok);
 
-        // Actualizar aviso
-        renderAviso(cod, ok);
+            // Actualizar aviso
+            renderAviso(cod, ok);
 
-        // Habilitar / deshabilitar botón
-        $('#btnAnalizar').prop('disabled', !ok);
-        if (ok) {
-            $('#btnTexto').text('Analizar \u2014 Capturar Imagen DVR');
-        } else {
-            $('#btnTexto').text('Sin DVR configurado');
-        }
+            // Habilitar / deshabilitar botón
+            $('#btnAnalizar').prop('disabled', !ok);
+            if (ok) {
+                $('#btnTexto').text('Analizar \u2014 Capturar Imagen DVR');
+            } else {
+                $('#btnTexto').text('Sin DVR configurado');
+            }
 
-        // Limpiar resultado al cambiar sucursal
-        $('#resultado').html(`
+            // Limpiar resultado al cambiar sucursal
+            $('#resultado').html(`
             <div class="result-placeholder">
                 <i class="bi bi-image"></i>
                 <p>La imagen capturada del DVR aparecer\u00e1 aqu\u00ed</p>
             </div>
         `);
-    }
+        }
 
-    function renderChips(cod, ip, canal, ok) {
-        const iconClass = ok ? 'check-circle-fill' : 'exclamation-triangle-fill';
-        const chipClass = ok ? 'dvr-ok' : 'dvr-err';
-        const ipLabel   = ip || '\u2014';
-        $('#infoChips').html(`
+        function renderChips(cod, ip, canal, ok) {
+            const iconClass = ok ? 'check-circle-fill' : 'exclamation-triangle-fill';
+            const chipClass = ok ? 'dvr-ok' : 'dvr-err';
+            const ipLabel = ip || '\u2014';
+            $('#infoChips').html(`
             <div class="chip ${chipClass}">
                 <i class="bi bi-${iconClass}"></i>
                 DVR: <strong>${escHtml(ipLabel)}</strong>
@@ -561,11 +660,11 @@ foreach ($todasSucursales as $s) {
                 C\u00f3d: <strong>${escHtml(cod)}</strong>
             </div>
         `);
-    }
+        }
 
-    function renderAviso(cod, ok) {
-        if (!ok) {
-            $('#avisoDvr').html(`
+        function renderAviso(cod, ok) {
+            if (!ok) {
+                $('#avisoDvr').html(`
                 <div class="result-error" style="margin-bottom:20px;">
                     <div class="err-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
                     <div>
@@ -576,61 +675,61 @@ foreach ($todasSucursales as $s) {
                     </div>
                 </div>
             `);
-        } else {
-            $('#avisoDvr').empty();
+            } else {
+                $('#avisoDvr').empty();
+            }
         }
-    }
 
-    // ── Bot\u00f3n Analizar ───────────────────────────────────────
-    function capturarImagen() {
-        const $btn       = $('#btnAnalizar');
-        const canal      = parseInt($('#inputCanal').val()) || 101;
-        const codSucursal = $('#selectSucursal').val();
+        // ── Bot\u00f3n Analizar ───────────────────────────────────────
+        function capturarImagen() {
+            const $btn = $('#btnAnalizar');
+            const canal = parseInt($('#inputCanal').val()) || 101;
+            const codSucursal = $('#selectSucursal').val();
 
-        // Estado: cargando
-        $btn.prop('disabled', true).addClass('loading');
-        $('#btnTexto').text('Conectando con DVR...');
-        mostrarCargando();
+            // Estado: cargando
+            $btn.prop('disabled', true).addClass('loading');
+            $('#btnTexto').text('Conectando con DVR...');
+            mostrarCargando();
 
-        $.ajax({
-            url    : 'ajax/dvr_capturar_imagen.php',
-            method : 'POST',
-            contentType: 'application/json',
-            data   : JSON.stringify({ canal, cod_sucursal: codSucursal }),
-            dataType: 'json',
-            timeout: 22000,
+            $.ajax({
+                url: 'ajax/dvr_capturar_imagen.php',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ canal, cod_sucursal: codSucursal }),
+                dataType: 'json',
+                timeout: 22000,
 
-            success: function(resp) {
-                const ok = $('#selectSucursal option:selected').data('ok');
-                $btn.prop('disabled', !(ok === 1 || ok === '1')).removeClass('loading');
+                success: function (resp) {
+                    const ok = $('#selectSucursal option:selected').data('ok');
+                    $btn.prop('disabled', !(ok === 1 || ok === '1')).removeClass('loading');
 
-                if (resp.success) {
-                    mostrarExito(resp);
-                    agregarHistorial(resp);
-                    $('#btnTexto').text('Analizar \u2014 Capturar Imagen DVR');
-                } else {
-                    mostrarError(resp.message || 'Error desconocido.', resp.debug || null);
+                    if (resp.success) {
+                        mostrarExito(resp);
+                        agregarHistorial(resp);
+                        $('#btnTexto').text('Analizar \u2014 Capturar Imagen DVR');
+                    } else {
+                        mostrarError(resp.message || 'Error desconocido.', resp.debug || null);
+                        $('#btnTexto').text('Reintentar');
+                    }
+                },
+
+                error: function (xhr, status) {
+                    const ok = $('#selectSucursal option:selected').data('ok');
+                    $btn.prop('disabled', !(ok === 1 || ok === '1')).removeClass('loading');
+                    const msg = status === 'timeout'
+                        ? 'Timeout: el DVR tard\u00f3 demasiado en responder (>20s).'
+                        : `Error de red (${status}). Verifica conectividad con el DVR.`;
+                    mostrarError(msg, null);
                     $('#btnTexto').text('Reintentar');
                 }
-            },
+            });
+        }
 
-            error: function(xhr, status) {
-                const ok = $('#selectSucursal option:selected').data('ok');
-                $btn.prop('disabled', !(ok === 1 || ok === '1')).removeClass('loading');
-                const msg = status === 'timeout'
-                    ? 'Timeout: el DVR tard\u00f3 demasiado en responder (>20s).'
-                    : `Error de red (${status}). Verifica conectividad con el DVR.`;
-                mostrarError(msg, null);
-                $('#btnTexto').text('Reintentar');
-            }
-        });
-    }
+        // ── Renderizado de estados ───────────────────────────────
 
-    // ── Renderizado de estados ───────────────────────────────
-
-    function mostrarCargando() {
-        const nombre = $('#selectSucursal option:selected').data('nombre') || '';
-        $('#resultado').html(`
+        function mostrarCargando() {
+            const nombre = $('#selectSucursal option:selected').data('nombre') || '';
+            $('#resultado').html(`
             <div class="result-placeholder" style="border-style:solid; border-color:#30363d;">
                 <div style="display:flex;align-items:center;justify-content:center;gap:12px;color:#51b8ac;">
                     <div style="width:28px;height:28px;border:3px solid rgba(81,184,172,.3);
@@ -643,12 +742,12 @@ foreach ($todasSucursales as $s) {
                 </p>
             </div>
         `);
-    }
+        }
 
-    function mostrarError(mensaje, debug) {
-        let debugHtml = '';
-        if (debug) debugHtml = `<div class="err-debug">${escHtml(debug)}</div>`;
-        $('#resultado').html(`
+        function mostrarError(mensaje, debug) {
+            let debugHtml = '';
+            if (debug) debugHtml = `<div class="err-debug">${escHtml(debug)}</div>`;
+            $('#resultado').html(`
             <div class="result-error">
                 <div class="err-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
                 <div>
@@ -658,12 +757,12 @@ foreach ($todasSucursales as $s) {
                 </div>
             </div>
         `);
-    }
+        }
 
-    function mostrarExito(resp) {
-        capturaActiva = resp;
-        const ts = resp.timestamp || new Date().toLocaleString('es');
-        $('#resultado').html(`
+        function mostrarExito(resp) {
+            capturaActiva = resp;
+            const ts = resp.timestamp || new Date().toLocaleString('es');
+            $('#resultado').html(`
             <div class="result-success">
                 <div class="success-bar">
                     <i class="bi bi-check-circle-fill"></i>
@@ -687,47 +786,48 @@ foreach ($todasSucursales as $s) {
                 </div>
             </div>
         `);
-    }
-
-    // ── Historial de sesi\u00f3n ──────────────────────────────────
-    function agregarHistorial(resp) {
-        capturasSesion.unshift(resp);
-        renderHistorial();
-    }
-    function renderHistorial() {
-        if (capturasSesion.length === 0) {
-            $('#historialLista').html('<div class="hist-vacio">A\u00fan no hay capturas en esta sesi\u00f3n.</div>');
-            return;
         }
-        const items = capturasSesion.map(c => `
+
+        // ── Historial de sesi\u00f3n ──────────────────────────────────
+        function agregarHistorial(resp) {
+            capturasSesion.unshift(resp);
+            renderHistorial();
+        }
+        function renderHistorial() {
+            if (capturasSesion.length === 0) {
+                $('#historialLista').html('<div class="hist-vacio">A\u00fan no hay capturas en esta sesi\u00f3n.</div>');
+                return;
+            }
+            const items = capturasSesion.map(c => `
             <a class="hist-item" href="${escHtml(c.path)}" target="_blank">
                 <i class="bi bi-image-fill"></i>
                 <span class="hist-nombre">${escHtml(c.sucursal)} \u00b7 ${escHtml(c.filename)}</span>
                 <span class="hist-hora">${escHtml(c.timestamp)} \u00b7 ${c.size_kb}KB</span>
             </a>
         `).join('');
-        $('#historialLista').html(items);
-    }
+            $('#historialLista').html(items);
+        }
 
-    // ── Utilidad ─────────────────────────────────────────────
-    function escHtml(str) {
-        if (str === null || str === undefined) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
+        // ── Utilidad ─────────────────────────────────────────────
+        function escHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
 
-    // Inicializar al cargar
-    $(document).ready(function() {
-        cambiarSucursal();
-    });
+        // Inicializar al cargar
+        $(document).ready(function () {
+            cambiarSucursal();
+        });
 
-    // Enter en canal dispara captura
-    $('#inputCanal').on('keydown', function(e) {
-        if (e.key === 'Enter') capturarImagen();
-    });
+        // Enter en canal dispara captura
+        $('#inputCanal').on('keydown', function (e) {
+            if (e.key === 'Enter') capturarImagen();
+        });
     </script>
 </body>
+
 </html>
