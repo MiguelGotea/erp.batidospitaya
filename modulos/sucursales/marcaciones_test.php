@@ -10,20 +10,19 @@ if (!$usuarioActual) {
 }
 
 // Cargar TODAS las sucursales con su configuración DVR
-// RELACIÓN: DVR_Sucursales.cod_sucursal (int) = sucursales.id (int)
-// sucursales.codigo es el código varchar (ej: "GR01"), NO el FK del DVR
+// RELACIÓN REAL: DVR_Sucursales.cod_sucursal = CAST(sucursales.codigo AS INT)
+// Los códigos de sucursal son numéricos (ej: "9") y se almacenan como int en DVR_Sucursales
 try {
     $stmtSucs = $conn->query("
         SELECT
-            s.id              AS id_sucursal,
-            s.codigo          AS CodSucursal,
-            s.nombre          AS NombreSucursal,
+            s.codigo     AS CodSucursal,
+            s.nombre     AS NombreSucursal,
             d.portal_ip_local,
             d.portal_usuario,
             d.portal_clave,
             d.canal_caja
         FROM sucursales s
-        LEFT JOIN DVR_Sucursales d ON d.cod_sucursal = s.id
+        LEFT JOIN DVR_Sucursales d ON d.cod_sucursal = CAST(s.codigo AS UNSIGNED)
         WHERE s.activa = 1
         ORDER BY s.nombre ASC
     ");
@@ -32,11 +31,11 @@ try {
     $todasSucursales = [];
 }
 
-// Sucursal seleccionada por defecto: la del usuario (match por codigo varchar) o la primera
-$codSucursalUsuario = $usuarioActual['sucursal_codigo'] ?? null; // es el codigo varchar
+// Sucursal por defecto: la del usuario logueado (o la primera de la lista)
+$codSucursalUsuario = $usuarioActual['sucursal_codigo'] ?? null;
 $sucursalDefault = null;
 foreach ($todasSucursales as $s) {
-    if ($s['CodSucursal'] === $codSucursalUsuario) { // compara varchar con varchar
+    if ($s['CodSucursal'] === $codSucursalUsuario) {
         $sucursalDefault = $s;
         break;
     }
@@ -51,13 +50,11 @@ $dvrOk    = !empty($sucursalDefault['portal_ip_local'])
     && !empty($sucursalDefault['portal_usuario'])
     && !empty($sucursalDefault['portal_clave']);
 
-// Mapa de sucursales para JavaScript
-// La clave usada como value del <option> es id_sucursal (int → FK de DVR_Sucursales)
+// Mapa de sucursales para JavaScript (clave = codigo varchar)
 $sucursalesJS = [];
 foreach ($todasSucursales as $s) {
-    $sucursalesJS[$s['id_sucursal']] = [
+    $sucursalesJS[$s['CodSucursal']] = [
         'nombre' => $s['NombreSucursal'],
-        'codigo' => $s['CodSucursal'],
         'ip'     => $s['portal_ip_local'] ?? '',
         'canal'  => $s['canal_caja']      ?? 101,
         'ok'     => !empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave']),
