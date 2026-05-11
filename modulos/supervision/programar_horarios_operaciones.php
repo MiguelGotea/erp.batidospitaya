@@ -1,26 +1,12 @@
-<<<<<<< Updated upstream
-﻿<?php
-//ini_set('display_errors', 1);
-//ini_set('display_startup_errors', 1);
-//error_reporting(E_ALL);
-
-=======
 <?php
->>>>>>> Stashed changes
-// require_once '../../includes/auth.php';
-// require_once '../../includes/funciones.php';
-require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
+require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-<<<<<<< Updated upstream
-=======
 $cargoOperario = $usuario['CodNivelesCargos'];
-
->>>>>>> Stashed changes
 // Verificar acceso al módulo
 if (!verificarAccesoCargo([16, 21, 36, 11, 49])) {
     header('Location: ../../../index.php');
@@ -841,16 +827,12 @@ function obtenerCategoriasDesdeBD()
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmación de Horarios - Operaciones y Supervisión</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-<<<<<<< Updated upstream
-    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
-=======
     <link rel="icon" href="../../assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/fab_button.css">
->>>>>>> Stashed changes
     <style>
         /* Mantener el mismo CSS que el original */
         * {
@@ -1731,23 +1713,13 @@ function obtenerCategoriasDesdeBD()
 </head>
 
 <body>
-<<<<<<< Updated upstream
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
-=======
+<body>
     <?php echo renderMenuLateral($cargoOperario); ?>
->>>>>>> Stashed changes
 
     <div class="main-container">
         <div class="sub-container">
             <?php echo renderHeader($usuario, 'Confirmación de Horarios'); ?>
 
-<<<<<<< Updated upstream
-                <div class="user-info">
                     <div class="user-avatar">
                         <?= false ?
                             strtoupper(substr($usuario['nombre'], 0, 1)) :
@@ -1762,7 +1734,6 @@ function obtenerCategoriasDesdeBD()
                         <small>
                             <?= htmlspecialchars($cargoUsuario) ?>
                         </small>
-=======
             <div class="container-fluid p-0">
 
                 <?php if (isset($_SESSION['exito'])): ?>
@@ -1776,7 +1747,6 @@ function obtenerCategoriasDesdeBD()
                     <div class="alert alert-danger">
                         <?= $_SESSION['error'] ?>
                         <?php unset($_SESSION['error']); ?>
->>>>>>> Stashed changes
                     </div>
                 <?php endif; ?>
 
@@ -3347,17 +3317,6 @@ function obtenerCategoriasDesdeBD()
             }
 
 
-<<<<<<< Updated upstream
-            // Enviar solicitud al servidor si existe en BD
-            if (existeEnBD && idSemana) {
-                fetch('../lideres/ajax/eliminar_horario_operario.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `cod_operario=${codOperario}&id_semana=${idSemana}&cod_sucursal=${codSucursal}`
-                })
-=======
             // Fin de utilidades de estado
 
             function validarTodosHorarios() {
@@ -3435,7 +3394,6 @@ function obtenerCategoriasDesdeBD()
                         method: 'POST',
                         body: formData
                     })
->>>>>>> Stashed changes
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
