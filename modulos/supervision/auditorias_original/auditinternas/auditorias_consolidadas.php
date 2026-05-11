@@ -68,7 +68,6 @@ if (!empty($fecha_desde) && !empty($fecha_hasta) && $fecha_desde > $fecha_hasta)
     $fecha_desde = $fecha_hasta;
 }
 
-
 // Construir URL base para el botón de limpiar filtros
 $url_limpiar_filtros = 'auditorias_consolidadas.php';
 
@@ -528,7 +527,8 @@ if (isset($_GET['exportar_faltante_caja'])) {
                         'fecha_hasta' => $fecha_hasta,
                         'exportar_deducciones' => 1
                     ]);
-                    ?>" class="btn-agregar" style="background-color: transparent; color: #9b59b6; border: 1px solid #9b59b6;">
+                    ?>" class="btn-agregar"
+                        style="background-color: transparent; color: #9b59b6; border: 1px solid #9b59b6;">
                         <i class="fas fa-user-check"></i> Exportar Deducciones
                     </a>
 
@@ -541,7 +541,8 @@ if (isset($_GET['exportar_faltante_caja'])) {
                         'fecha_hasta' => $fecha_hasta,
                         'exportar_contabilidad' => 1
                     ]);
-                    ?>" class="btn-agregar" style="background-color: transparent; color: #3498db; border: 1px solid #3498db;">
+                    ?>" class="btn-agregar"
+                        style="background-color: transparent; color: #3498db; border: 1px solid #3498db;">
                         <i class="fas fa-file-invoice-dollar"></i> Exportar para Contabilidad
                     </a>
 
@@ -811,7 +812,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
         // Datos de operarios para el autocompletado
         const operariosData = [
             <?php foreach ($operarios as $op): ?>
-        {
+            {
                     id: <?= $op['CodOperario'] ?>,
                     nombre: '<?= addslashes($op['nombre_completo']) ?>'
                 },
