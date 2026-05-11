@@ -617,20 +617,21 @@ foreach ($todasSucursales as $s) {
 
         // ── Cambio de sucursal ───────────────────────────────────
         function cambiarSucursal() {
-            const $opt = $('#selectSucursal option:selected');
-            const cod = $opt.val();
-            const ip = $opt.data('ip') || '';
+            const $opt  = $('#selectSucursal option:selected');
+            const idSuc = parseInt($opt.val());         // int → FK de DVR_Sucursales
+            const codigo = $opt.data('codigo') || '';  // varchar → código de texto (ej: GR01)
+            const ip    = $opt.data('ip')    || '';
             const canal = parseInt($opt.data('canal')) || 101;
-            const ok = $opt.data('ok') === 1 || $opt.data('ok') === '1';
+            const ok    = $opt.data('ok') === 1 || $opt.data('ok') === '1';
 
             // Actualizar canal
             $('#inputCanal').val(canal);
 
-            // Actualizar chips
-            renderChips(cod, ip, canal, ok);
+            // Actualizar chips (mostramos el codigo varchar, legible)
+            renderChips(codigo, ip, canal, ok);
 
             // Actualizar aviso
-            renderAviso(cod, ok);
+            renderAviso(codigo, ok);
 
             // Habilitar / deshabilitar botón
             $('#btnAnalizar').prop('disabled', !ok);
@@ -649,10 +650,10 @@ foreach ($todasSucursales as $s) {
         `);
         }
 
-        function renderChips(cod, ip, canal, ok) {
+        function renderChips(codigo, ip, canal, ok) {
             const iconClass = ok ? 'check-circle-fill' : 'exclamation-triangle-fill';
             const chipClass = ok ? 'dvr-ok' : 'dvr-err';
-            const ipLabel = ip || '\u2014';
+            const ipLabel   = ip || '\u2014';
             $('#infoChips').html(`
             <div class="chip ${chipClass}">
                 <i class="bi bi-${iconClass}"></i>
@@ -664,7 +665,7 @@ foreach ($todasSucursales as $s) {
             </div>
             <div class="chip">
                 <i class="bi bi-building"></i>
-                C\u00f3d: <strong>${escHtml(cod)}</strong>
+                C\u00f3d: <strong>${escHtml(codigo)}</strong>
             </div>
         `);
         }
@@ -689,11 +690,11 @@ foreach ($todasSucursales as $s) {
 
         // ── Bot\u00f3n Analizar ───────────────────────────────────────
         function capturarImagen() {
-            const $btn = $('#btnAnalizar');
-            const canal = parseInt($('#inputCanal').val()) || 101;
-            const codSucursal = $('#selectSucursal').val();
+            const $btn     = $('#btnAnalizar');
+            const canal    = parseInt($('#inputCanal').val()) || 101;
+            // Enviamos el id (int) — es el cod_sucursal FK de DVR_Sucursales
+            const idSucursal = parseInt($('#selectSucursal').val());
 
-            // Estado: cargando
             $btn.prop('disabled', true).addClass('loading');
             $('#btnTexto').text('Conectando con DVR...');
             mostrarCargando();
@@ -702,7 +703,7 @@ foreach ($todasSucursales as $s) {
                 url: 'ajax/dvr_capturar_imagen.php',
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ canal, cod_sucursal: codSucursal }),
+                data: JSON.stringify({ canal, cod_sucursal: idSucursal }),
                 dataType: 'json',
                 timeout: 22000,
 
