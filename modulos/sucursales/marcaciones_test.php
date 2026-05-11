@@ -548,12 +548,11 @@ foreach ($todasSucursales as $s) {
                 </label>
                 <select id="selectSucursal" class="suc-select" onchange="cambiarSucursal()">
                     <?php foreach ($todasSucursales as $s): ?>
-                        <option value="<?= (int)$s['id_sucursal'] ?>"
+                        <option value="<?= htmlspecialchars($s['CodSucursal']) ?>"
                             data-ip="<?= htmlspecialchars($s['portal_ip_local'] ?? '') ?>"
                             data-canal="<?= (int)($s['canal_caja'] ?? 101) ?>"
                             data-ok="<?= (!empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave'])) ? '1' : '0' ?>"
                             data-nombre="<?= htmlspecialchars($s['NombreSucursal']) ?>"
-                            data-codigo="<?= htmlspecialchars($s['CodSucursal']) ?>"
                             <?= ($s['CodSucursal'] === ($sucursalDefault['CodSucursal'] ?? '')) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($s['NombreSucursal']) ?> (<?= htmlspecialchars($s['CodSucursal']) ?>)
                         </option>
@@ -614,17 +613,16 @@ foreach ($todasSucursales as $s) {
 
         // ── Cambio de sucursal ───────────────────────────────────
         function cambiarSucursal() {
-            const $opt  = $('#selectSucursal option:selected');
-            const idSuc = parseInt($opt.val());         // int → FK de DVR_Sucursales
-            const codigo = $opt.data('codigo') || '';  // varchar → código de texto (ej: GR01)
-            const ip    = $opt.data('ip')    || '';
-            const canal = parseInt($opt.data('canal')) || 101;
-            const ok    = $opt.data('ok') === 1 || $opt.data('ok') === '1';
+            const $opt   = $('#selectSucursal option:selected');
+            const codigo = $opt.val();                         // varchar: '9', '5', etc.
+            const ip     = $opt.data('ip')    || '';
+            const canal  = parseInt($opt.data('canal')) || 101;
+            const ok     = $opt.data('ok') === 1 || $opt.data('ok') === '1';
 
             // Actualizar canal
             $('#inputCanal').val(canal);
 
-            // Actualizar chips (mostramos el codigo varchar, legible)
+            // Actualizar chips
             renderChips(codigo, ip, canal, ok);
 
             // Actualizar aviso
@@ -687,10 +685,10 @@ foreach ($todasSucursales as $s) {
 
         // ── Bot\u00f3n Analizar ───────────────────────────────────────
         function capturarImagen() {
-            const $btn     = $('#btnAnalizar');
-            const canal    = parseInt($('#inputCanal').val()) || 101;
-            // Enviamos el id (int) — es el cod_sucursal FK de DVR_Sucursales
-            const idSucursal = parseInt($('#selectSucursal').val());
+            const $btn    = $('#btnAnalizar');
+            const canal   = parseInt($('#inputCanal').val()) || 101;
+            // val() es el codigo varchar ('9') — el servidor hace intval() para comparar con DVR_Sucursales.cod_sucursal
+            const codSucursal = $('#selectSucursal').val();
 
             $btn.prop('disabled', true).addClass('loading');
             $('#btnTexto').text('Conectando con DVR...');
@@ -700,7 +698,7 @@ foreach ($todasSucursales as $s) {
                 url: 'ajax/dvr_capturar_imagen.php',
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ canal, cod_sucursal: idSucursal }),
+                data: JSON.stringify({ canal, cod_sucursal: codSucursal }),
                 dataType: 'json',
                 timeout: 22000,
 
