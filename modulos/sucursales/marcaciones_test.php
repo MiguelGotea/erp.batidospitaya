@@ -9,30 +9,34 @@ if (!$usuarioActual) {
     die("No estás autenticado.");
 }
 
-// Cargar TODAS las sucursales que tienen DVR configurado
+// Cargar TODAS las sucursales con su configuración DVR
+// RELACIÓN: DVR_Sucursales.cod_sucursal (int) = sucursales.id (int)
+// sucursales.codigo es el código varchar (ej: "GR01"), NO el FK del DVR
 try {
     $stmtSucs = $conn->query("
         SELECT
-            s.CodSucursal,
-            s.NombreSucursal,
+            s.id              AS id_sucursal,
+            s.codigo          AS CodSucursal,
+            s.nombre          AS NombreSucursal,
             d.portal_ip_local,
             d.portal_usuario,
             d.portal_clave,
             d.canal_caja
-        FROM Sucursales s
-        LEFT JOIN DVR_Sucursales d ON d.cod_sucursal = s.codigo
-        ORDER BY s.NombreSucursal ASC
+        FROM sucursales s
+        LEFT JOIN DVR_Sucursales d ON d.cod_sucursal = s.id
+        WHERE s.activa = 1
+        ORDER BY s.nombre ASC
     ");
     $todasSucursales = $stmtSucs->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $todasSucursales = [];
 }
 
-// Sucursal seleccionada por defecto: la del usuario (o la primera)
-$codSucursalUsuario = $usuarioActual['sucursal_codigo'] ?? null;
+// Sucursal seleccionada por defecto: la del usuario (match por codigo varchar) o la primera
+$codSucursalUsuario = $usuarioActual['sucursal_codigo'] ?? null; // es el codigo varchar
 $sucursalDefault = null;
 foreach ($todasSucursales as $s) {
-    if ($s['CodSucursal'] === $codSucursalUsuario) {
+    if ($s['CodSucursal'] === $codSucursalUsuario) { // compara varchar con varchar
         $sucursalDefault = $s;
         break;
     }
@@ -41,20 +45,22 @@ if (!$sucursalDefault && count($todasSucursales) > 0) {
     $sucursalDefault = $todasSucursales[0];
 }
 
-$dvrIp = $sucursalDefault['portal_ip_local'] ?? '—';
-$dvrCanal = $sucursalDefault['canal_caja'] ?? 101;
-$dvrOk = !empty($sucursalDefault['portal_ip_local'])
+$dvrIp    = $sucursalDefault['portal_ip_local'] ?? '—';
+$dvrCanal = $sucursalDefault['canal_caja']       ?? 101;
+$dvrOk    = !empty($sucursalDefault['portal_ip_local'])
     && !empty($sucursalDefault['portal_usuario'])
     && !empty($sucursalDefault['portal_clave']);
 
 // Mapa de sucursales para JavaScript
+// La clave usada como value del <option> es id_sucursal (int → FK de DVR_Sucursales)
 $sucursalesJS = [];
 foreach ($todasSucursales as $s) {
-    $sucursalesJS[$s['CodSucursal']] = [
+    $sucursalesJS[$s['id_sucursal']] = [
         'nombre' => $s['NombreSucursal'],
-        'ip' => $s['portal_ip_local'] ?? '',
-        'canal' => $s['canal_caja'] ?? 101,
-        'ok' => !empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave']),
+        'codigo' => $s['CodSucursal'],
+        'ip'     => $s['portal_ip_local'] ?? '',
+        'canal'  => $s['canal_caja']      ?? 101,
+        'ok'     => !empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave']),
     ];
 }
 ?>
