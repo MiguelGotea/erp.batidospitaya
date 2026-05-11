@@ -17,6 +17,21 @@ $(document).ready(function () {
         if (!$(e.target).closest('.filter-panel, .filter-icon, .daterange-calendar-day, .daterange-month-selector').length) {
             cerrarTodosFiltros();
         }
+
+        // Cerrar FAB si se hace clic fuera
+        if (!$(e.target).closest('.fab-container').length) {
+            $('.fab-container').removeClass('active');
+            $('.btn-floating-pitaya').removeClass('active');
+        }
+    });
+
+    // Manejar clic en el botón flotante (para móvil)
+    $(document).on('click', '.btn-floating-pitaya', function (e) {
+        const container = $(this).closest('.fab-container');
+        if (container.length) {
+            container.toggleClass('active');
+            $(this).toggleClass('active');
+        }
     });
 
 

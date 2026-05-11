@@ -127,9 +127,17 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <?php if (tienePermiso('reembolsos_ia_plantilla', 'nuevo_registro', $cargoOperario)): ?>
-    <a href="reembolsos_ia_nuevo.php" class="btn-floating-pitaya" title="Nuevo Resumen">
-        <i class="fas fa-plus"></i>
-    </a>
+    <div class="fab-container">
+        <div class="fab-options">
+            <a href="reembolsos_ia_nuevo.php" class="fab-option">
+                <span class="fab-label">Nuevo Resumen</span>
+                <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
+            </a>
+        </div>
+        <div class="btn-floating-pitaya" title="Herramientas">
+            <i class="fas fa-wrench"></i>
+        </div>
+    </div>
     <?php endif; ?>
 
     <!-- Modal de Ayuda Universal -->

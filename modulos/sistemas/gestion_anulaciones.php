@@ -540,8 +540,8 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                     <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
                 </div>
             </div>
-            <div class="btn-floating-pitaya" title="Nueva Anulación" onclick="abrirModalNuevaAnulacion()">
-                <i class="fas fa-plus"></i>
+            <div class="btn-floating-pitaya" title="Herramientas">
+                <i class="fas fa-wrench"></i>
             </div>
         </div>
     <?php endif; ?>

@@ -154,10 +154,18 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                     <?php endif; ?>
                 </div>
 
-                <!-- Botón Flotante Nueva Solicitud -->
-                <a href="agenda_colaborador.php" class="btn-floating-pitaya" title="Nuevo Reporte de Hoy">
-                    <i class="fas fa-plus"></i>
-                </a>
+                <!-- Botón Flotante Herramientas -->
+                <div class="fab-container">
+                    <div class="fab-options">
+                        <a href="agenda_colaborador.php" class="fab-option">
+                            <span class="fab-label">Nuevo Reporte</span>
+                            <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
+                        </a>
+                    </div>
+                    <div class="btn-floating-pitaya" title="Herramientas">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                </div>
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-body p-0">

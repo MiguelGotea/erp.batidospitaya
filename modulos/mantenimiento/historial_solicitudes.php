@@ -261,8 +261,8 @@ function getTextoUrgencia($nivel)
                     <div class="fab-icon-holder"><i class="fas fa-tools"></i></div>
                 </a>
             </div>
-            <div class="btn-floating-pitaya" title="Nueva Solicitud">
-                <i class="fas fa-plus"></i>
+            <div class="btn-floating-pitaya" title="Herramientas">
+                <i class="fas fa-wrench"></i>
             </div>
         </div>
     <?php endif; ?>

@@ -60,11 +60,19 @@ endif; ?>
             
             <div class="container-fluid p-3">
 
-                <!-- Botón Flotante Nueva Solicitud -->
+                <!-- Botón Flotante Herramientas -->
                 <?php if (tienePermiso('historial_solicitudes_cotizacion', 'boton_nuevo', $cargoOperario)): ?>
-                <a href="solicitud_cotizacion.php" class="btn-floating-pitaya" title="Nueva Solicitud de Cotización">
-                    <i class="fas fa-plus"></i>
-                </a>
+                <div class="fab-container">
+                    <div class="fab-options">
+                        <a href="solicitud_cotizacion.php" class="fab-option">
+                            <span class="fab-label">Nueva Solicitud</span>
+                            <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
+                        </a>
+                    </div>
+                    <div class="btn-floating-pitaya" title="Herramientas">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                </div>
                 <?php endif; ?>
 
                 <div class="table-responsive">
