@@ -1,28 +1,27 @@
 <?php
 // Incluir configuración y verificar autenticación
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 // Antes llamaba a ../funciones.php de auditora
 // require_once 'config.php'; // Comentado por migración al core
 
 // Verificar acceso al módulo 'supervision'
 //verificarAccesoModulo('supervision');
 
-//******************************Estándar para header******************************
-
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
 if (!verificarAccesoCargo([16, 21])) {
-    header('Location: ../../../index.php');
+    header('Location: /index.php');
     exit();
 }
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-//******************************Estándar para header, termina******************************
 
 date_default_timezone_set('America/Managua');
 
@@ -311,54 +310,25 @@ function obtenerColorCategoria($color_bd) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Registro de Faltante por Daños</title>
-    <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="css/faltante_danos.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <header>
-                <div class="header-container">
-                    <div class="logo-container">
-                        <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                    </div>
-                    
-                    <div class="buttons-container">
-                        <a href="auditorias_consolidadas.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Historial</span>
-                        </a>
-                    </div>
-                    
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            <?= false ? 
-                                strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                                strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                        </div>
-                        <div>
-                            <div>
-                                <?= false ? 
-                                    htmlspecialchars($usuario['nombre']) : 
-                                    htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                            </div>
-                            <small>
-                                <?= htmlspecialchars($cargoUsuario) ?>
-                            </small>
-                        </div>
-                        <a href="auditorias_consolidadas.php" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </a>
-                    </div>
-                </div>
-            </header>
-            
-            <h1 style="text-align:center;">Registro de Faltante por Daños</h1>
-        </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Registro de Faltante por Daños'); ?>
+
+            <div class="container-fluid p-3">
+        <div class="container">
         
         <?php if (isset($_SESSION['success_message'])): ?>
             <div class="message success"><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></div>
@@ -455,7 +425,10 @@ function obtenerColorCategoria($color_bd) {
                 <button type="button" class="btn btn-cancelar" onclick="window.location.href='auditorias_consolidadas.php'">Cancelar</button>
             </div>
         </form>
-    </div>
+        </div><!-- /.container -->
+            </div><!-- /.container-fluid -->
+        </div><!-- /.sub-container -->
+    </div><!-- /.main-container -->
 
     <!-- Modal para mensajes -->
     <div id="modal" class="modal">
@@ -605,5 +578,6 @@ function obtenerColorCategoria($color_bd) {
             actualizarCalculoMonto();
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

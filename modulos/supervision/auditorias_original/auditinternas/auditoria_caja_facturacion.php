@@ -1,5 +1,8 @@
 <?php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 // Antes llamaba a ../funciones.php de auditora
 // require_once 'config.php'; // Comentado por migración al core
 
@@ -7,22 +10,18 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: ant
 $conn = $conn ?? null; // Asegurar que $conn esté disponible si se usa más abajo
 $db = $conn; // En este archivo se usa $db para la conexión
 
-//******************************Estándar para header******************************
-
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
 if (!verificarAccesoCargo([16, 21])) {
-    header('Location: ../../../index.php');
+    header('Location: /index.php');
     exit();
 }
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-//******************************Estándar para header, termina******************************
 
 // Obtener sucursales para el select
 $sucursales = [];
@@ -204,56 +203,23 @@ $showSuccess = isset($_GET['success']);
     <title>Auditoría de Facturación de Caja</title>
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/auditoria_caja_facturacion.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
-    <div class="container">
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Auditoría Caja Facturación'); ?>
+
+            <div class="container-fluid p-3">
+        <div class="container">
         <div class="success-message" id="successMessage" style="display: <?php echo $showSuccess ? 'block' : 'none'; ?>;">
             ¡La auditoría se ha guardado correctamente! Serás redirigido...
         </div>
-        
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
-                
-                <div class="buttons-container">
-                    <a href="auditorias_consolidadas.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Historial</span>
-                    </a>
-                    
-                    <?php if (verificarAccesoCargo([16])): ?>
-                        <a href="auditoria_caja_facturacion.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditoria_caja_facturacion.php' ? 'activo' : '' ?>"><i class="fas fa-cash-register"></i> Auditoría Caja Facturación</a>
-                        <a href="auditoria_caja_chica.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditoria_caja_chica.php' ? 'activo' : '' ?>"><i class="fas fa-wallet"></i> Auditoría Caja Chica</a>
-                        <a href="auditoria_inventario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditoria_inventario.php' ? 'activo' : '' ?>"><i class="fas fa-boxes"></i> Auditoría Inventario</a>
-                        <a href="faltante_inventario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_inventario.php' ? 'activo' : '' ?>"><i class="fas fa-exclamation-triangle"></i> Faltante Inventario</a>
-                        <a href="faltante_danos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_danos.php' ? 'activo' : '' ?>"><i class="fas fa-times-circle"></i> Faltante Daños</a>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= false ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= false ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="auditorias_consolidadas.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
         
         <h1 style="text-align:center;">Auditoría Caja de Facturación</h1>
         
@@ -376,7 +342,10 @@ $showSuccess = isset($_GET['success']);
                 </button>
             </div>
         </form>
-    </div>
+        </div><!-- /.container -->
+            </div><!-- /.container-fluid -->
+        </div><!-- /.sub-container -->
+    </div><!-- /.main-container -->
 
     <script>
         function formatNumber(num) {
@@ -771,5 +740,6 @@ $showSuccess = isset($_GET['success']);
             });
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
