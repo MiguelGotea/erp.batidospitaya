@@ -1238,30 +1238,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Función para alternar la visibilidad del filtro de mes/año
-        function toggleFiltroMesAnio() {
-            const filtro = document.getElementById('filtro-mes-anio');
-            filtro.classList.toggle('activo');
-        }
-        
-        // Función para cerrar el filtro de mes/año
-        function cerrarFiltroMesAnio() {
-            const filtro = document.getElementById('filtro-mes-anio');
-            filtro.classList.remove('activo');
-        }
-        
-        // Cerrar el filtro si se hace clic fuera de él
-        document.addEventListener('click', function(event) {
-            const filtro = document.getElementById('filtro-mes-anio');
-            const target = event.target;
-            
-            // Si el clic no fue dentro del filtro ni en el botón que lo activa
-            if (!filtro.contains(target) && !target.closest('.filtro-encabezado')) {
-                filtro.classList.remove('activo');
-            }
-        });
-    </script>
+
     
     <script>
 // Datos de operarios para el autocompletado
@@ -1273,82 +1250,7 @@ const operariosData = [
     },
     <?php endforeach; ?>
 ];
-
-// Elementos del DOM
-const operarioInput = document.getElementById('operario');
-const operarioIdInput = document.getElementById('operario_id');
-const sugerenciasDiv = document.getElementById('operarios-sugerencias');
-
-// Función para buscar operarios
-function buscarOperarios(texto) {
-    if (!texto) return [];
-    const textoLower = texto.toLowerCase();
-    return operariosData.filter(op => 
-        op.nombre.toLowerCase().includes(textoLower)
-    );
-}
-
-// Función para mostrar sugerencias
-function mostrarSugerencias(resultados) {
-    sugerenciasDiv.innerHTML = '';
-    
-    if (resultados.length === 0) {
-        sugerenciasDiv.style.display = 'none';
-        return;
-    }
-    
-    resultados.forEach(op => {
-        const div = document.createElement('div');
-        div.textContent = op.nombre;
-        div.className = 'sugerencia-item';
-        div.addEventListener('click', () => {
-            operarioInput.value = op.nombre;
-            operarioIdInput.value = op.id;
-            sugerenciasDiv.style.display = 'none';
-        });
-        sugerenciasDiv.appendChild(div);
-    });
-    
-    sugerenciasDiv.style.display = 'block';
-}
-
-// Event Listeners
-operarioInput.addEventListener('input', function() {
-    const texto = this.value.trim();
-    if (texto.length >= 2) {
-        mostrarSugerencias(buscarOperarios(texto));
-    } else {
-        sugerenciasDiv.style.display = 'none';
-    }
-});
-
-operarioInput.addEventListener('focus', function() {
-    if (this.value.trim() === '') {
-        mostrarSugerencias(operariosData.slice(0, 10)); // Muestra los primeros 10 por defecto
-    }
-});
-
-// Cerrar sugerencias al hacer clic fuera
-document.addEventListener('click', function(e) {
-    if (!operarioInput.contains(e.target) && !sugerenciasDiv.contains(e.target)) {
-        sugerenciasDiv.style.display = 'none';
-    }
-});
-
-// Validación de fechas
-document.getElementById('fecha_desde').addEventListener('change', function() {
-    const fechaHasta = document.getElementById('fecha_hasta');
-    if (this.value && fechaHasta.value && this.value > fechaHasta.value) {
-        fechaHasta.value = this.value;
-    }
-});
-
-document.getElementById('fecha_hasta').addEventListener('change', function() {
-    const fechaDesde = document.getElementById('fecha_desde');
-    if (this.value && fechaDesde.value && this.value < fechaDesde.value) {
-        fechaDesde.value = this.value;
-    }
-});
-</script>
+    </script>
+    <script src="js/auditorias_consolidadas.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 </html>
