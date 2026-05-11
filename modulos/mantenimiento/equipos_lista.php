@@ -15,6 +15,7 @@ if (!tienePermiso('historial_activos', 'vista', $cargoOperario)) {
     exit();
 }
 
+
 $equipoModel = new Equipo();
 
 // Obtener equipos según el cargo
