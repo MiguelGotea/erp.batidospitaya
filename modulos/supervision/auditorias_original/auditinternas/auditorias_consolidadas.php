@@ -4,30 +4,26 @@
 //error_reporting(E_ALL);
 
 // Configuración inicial y autenticación
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
-// Antes llamaba a ../funciones.php de auditora
-// require_once 'config.php'; // Comentado por migración al core
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 
 // Establecer conexión a la base de datos
-// $db = conectarDB(); // Comentado por migración al core
 $db = $conn;
-
-//******************************Estándar para header******************************
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([8, 11, 16, 21]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 21])) {
-    header('Location: ../../../index.php');
+if (!verificarAccesoCargo([8, 11, 16, 21])) {
+    header('Location: /index.php');
     exit();
 }
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-//******************************Estándar para header, termina******************************
 
 // Obtener lista de operarios para el filtro
 $sql_operarios = "SELECT o.CodOperario, 
@@ -838,148 +834,50 @@ if (isset($_GET['exportar_faltante_caja'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditorías de Efectivo</title>
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="icon" href="../icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
-        * {
-            font-family: 'Calibri', sans-serif;
-            text-align: center;
-            align-content: center;
+        /* ── Botones de acción ─────────────────────────────────────── */
+        .btn-agregar {
+            background-color: transparent;
+            color: #51B8AC;
+            border: 1px solid #51B8AC;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            font-size: clamp(11px, 2vw, 16px) !important;
+            gap: 8px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 14px;
+            flex-shrink: 0;
         }
 
-        body {
-            background-color: #F6F6F6;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 99%;
+        .btn-agregar.activo {
+            background-color: #51B8AC;
+            color: white;
+            font-weight: normal;
         }
 
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
+        .btn-agregar:hover {
+            background-color: #0E544C;
+            color: white;
+            border-color: #0E544C;
+        }
 
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 0 5px;
-    box-sizing: border-box;
-    margin: 1px auto;
-    flex-wrap: wrap;
-}
-
-.logo {
-    height: 50px;
-}
-
-.logo-container {
-    flex-shrink: 0;
-    margin-right: auto;
-}
-
-.buttons-container {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    flex-grow: 1;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-left: auto;
-}
-
-.btn-agregar {
-    background-color: transparent;
-    color: #51B8AC;
-    border: 1px solid #51B8AC;
-    text-decoration: none;
-    padding: 6px 10px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s;
-    white-space: nowrap;
-    font-size: 14px;
-    flex-shrink: 0;
-}
-
-.btn-agregar.activo {
-    background-color: #51B8AC;
-    color: white;
-    font-weight: normal;
-}
-
-.btn-agregar:hover {
-    background-color: #0E544C;
-    color: white;
-    border-color: #0E544C;
-}
-
-.user-avatar {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background-color: #51B8AC;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-}
-
-.btn-logout {
-    background: #51B8AC;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.btn-logout:hover {
-    background: #0E544C;
-}
-        
         .btn-agregar.excel {
             background-color: transparent;
             color: #1d6f42;
             border: 1px solid #1d6f42;
         }
-        
+
         .btn-agregar.excel:hover {
             background-color: #1d6f42;
             color: white;
-        }
-
-        .contenedor-principal {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 25px 1px;
         }
 
         table {
@@ -1245,73 +1143,43 @@ header {
         }
         
         @media (max-width: 768px) {
-    .header-container {
-        flex-direction: row;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .buttons-container {
-        position: static;
-        transform: none;
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        margin-top: 10px;
-    }
-    
-    .logo-container {
-        order: 1;
-        margin-right: 0;
-    }
-    
-    .user-info {
-        order: 2;
-        margin-left: auto;
-    }
-    
-    .btn-agregar {
-        padding: 6px 10px;
-        font-size: 13px;
-    }
-            
+            .btn-agregar {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+
             .filtro-opciones.sucursal {
                 width: 160px;
                 left: 50%;
                 transform: translateX(-50%);
             }
-            
+
             .filtro-opciones.sucursal .sucursales-grid {
                 grid-template-columns: 1fr;
             }
         }
         
         @media (max-width: 480px) {
-    .btn-agregar {
-        flex-grow: 1;
-        justify-content: center;
-        white-space: normal;
-        text-align: center;
-        padding: 8px 5px;
-    }
-    
-    .user-info {
-        flex-direction: column;
-        align-items: flex-end;
-    }
-            
+            .btn-agregar {
+                flex-grow: 1;
+                justify-content: center;
+                white-space: normal;
+                text-align: center;
+                padding: 8px 5px;
+            }
+
             .btn-agregar i {
                 margin-right: 4px;
             }
-            
+
             .filtro-opciones.sucursal {
                 width: 130px;
             }
-            
+
             .filtro-opciones.sucursal .sucursales-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .filtro-opciones.mes-anio {
                 width: 160px;
                 right: -50px;
@@ -1425,52 +1293,13 @@ header {
     </style>
 </head>
 <body>
-    <!-- Header con logo -->
-    <div class="contenedor-principal">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
-                
-                <div class="buttons-container">
-                    <a href="auditorias_consolidadas.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Historial</span>
-                    </a>
-                    <?php if (verificarAccesoCargo([2, 5, 8, 11, 16])): ?>
-                        <a href="deducciones_total.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'deducciones_total.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Deducciones</span>
-                        </a>
-                    <?php endif; ?>
-                    <?php if (verificarAccesoCargo([8, 16])): ?>
-                        <a href="faltante_caja.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_caja.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Faltante de Caja</span>
-                        </a>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= false ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= false ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="../../../index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Auditorías de Efectivo'); ?>
+
+            <div class="container-fluid p-3">
         
         <!-- Filtros -->
         <div class="filtros-container">
@@ -1853,9 +1682,13 @@ header {
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
-            </table>
-        </div>
+                </table>
+            </div><!-- /.container-fluid -->
+        </div><!-- /.sub-container -->
+    </div><!-- /.main-container -->
 
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Función para alternar la visibilidad del filtro de mes/año
         function toggleFiltroMesAnio() {
