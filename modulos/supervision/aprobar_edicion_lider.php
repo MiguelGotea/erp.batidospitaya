@@ -4,7 +4,7 @@
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
 // Verificar permisos (solo supervisores o admin)
-if (!verificarAccesoCargo([21])) {
+if (!tienePermiso('confirmar_horarios', 'autorizar_edicion')) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'No tiene permiso para realizar esta acción']);
     exit();

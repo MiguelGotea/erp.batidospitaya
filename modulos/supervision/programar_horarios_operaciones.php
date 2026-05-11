@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
@@ -8,10 +8,17 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21, 36, 11, 49])) {
+if (!tienePermiso('confirmar_horarios', 'vista')) {
     header('Location: ../../../index.php');
     exit();
 }
+
+// Definir variables de permisos para uso en el módulo
+$canManage = tienePermiso('confirmar_horarios', 'gestionar');
+$canAuthorize = tienePermiso('confirmar_horarios', 'autorizar_edicion');
+$canSeeAll = tienePermiso('confirmar_horarios', 'ver_todo');
+$canFilterAll = tienePermiso('confirmar_horarios', 'filtro_todas_tiendas');
+$canFilterAssigned = tienePermiso('confirmar_horarios', 'filtro_sucursales_asignadas');
 
 // Obtenemos el cargo principal del usuario para determinar permisos
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
@@ -19,8 +26,20 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
 date_default_timezone_set('America/Managua');
 
-// Obtener todas las sucursales (el jefe de operaciones puede ver todas)
-$sucursales = obtenerSucursalesFisicas();
+// Lógica de obtención de sucursales según permisos
+$sucursales = [];
+if ($canFilterAll) {
+    $sucursales = obtenerSucursalesFisicas();
+} elseif ($canFilterAssigned) {
+    // Filtrar por sucursales donde el usuario es supervisor asignado
+    $stmt_suc = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal = 1 AND supervisor_asignado = ? ORDER BY nombre");
+    $stmt_suc->execute([$_SESSION['usuario_id']]);
+    $sucursales = $stmt_suc->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    // Si no tiene permisos de filtro amplios, el array queda vacío
+    $sucursales = [];
+}
+
 $todasSucursales = obtenerSucursalesFisicas(); // Para el selector de sucursal externa
 
 // Verificar restricción de edición según semana del sistema
@@ -1820,6 +1839,7 @@ function obtenerCategoriasDesdeBD()
                     </div>
 
                     <!-- Botón de aprobación/desaprobación -->
+                    <?php if ($canAuthorize): ?>
                     <div class="filter-item">
                         <label>&nbsp;</label>
                         <button type="button" onclick="aprobarEdicionLider()" class="btn btn-warning">
@@ -1827,6 +1847,7 @@ function obtenerCategoriasDesdeBD()
                             <?= $horarioAutorizado ? 'Cerrar Edición Líder' : 'Liberar Edición Líder' ?>
                         </button>
                     </div>
+                    <?php endif; ?>
 
                     <!-- Formulario para agregar operarios adicionales -->
                     <?php if ($puedeEditar && $semanaSeleccionada && $sucursalSeleccionada && $semana): ?>
@@ -1870,9 +1891,11 @@ function obtenerCategoriasDesdeBD()
                                 ?>
                             </select>
 
+                            <?php if ($canManage): ?>
                             <button type="button" onclick="agregarOperario()" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Agregar
                             </button>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -1891,11 +1914,13 @@ function obtenerCategoriasDesdeBD()
                             <strong>¡Atención!</strong> Se detectaron cambios en los horarios programados por los líderes
                             después de la última confirmación.
                             <button type="button" onclick="mostrarDetallesCambios()" class="btn btn-sm btn-outline-dark ml-2">
-                                Ver detalles
+                                <i class="fas fa-history"></i> Ver Cambios de Líderes
                             </button>
+                            <?php if ($canManage): ?>
                             <button type="button" onclick="actualizarDesdeLideres()" class="btn btn-sm btn-primary ml-2">
-                                <i class="fas fa-sync-alt"></i> Actualizar desde líderes
+                                <i class="fas fa-sync"></i> Sincronizar desde Líderes
                             </button>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -2870,12 +2895,14 @@ function obtenerCategoriasDesdeBD()
 
         <?php if ($puedeEditar): ?>
             <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <?php if ($canManage): ?>
                 <button style="display:none;" type="button" onclick="guardarHorarios()" class="btn btn-primary">
                     <i class="fas fa-save"></i> Guardar Cambios
                 </button>
                 <button type="button" onclick="confirmarHorarios()" class="btn btn-success">
-                    <i class="fas fa-check-circle"></i> Confirmar Horarios
+                    <i class="fas fa-check-double"></i> Confirmar y Bloquear Horario
                 </button>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
         </form>
