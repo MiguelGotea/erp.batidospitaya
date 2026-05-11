@@ -17,10 +17,10 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar permisos
-$puede_ver      = tienePermiso('auditoria_efectivo', 'vista',    $cargoOperario);
-$puede_nuevo    = tienePermiso('auditoria_efectivo', 'nuevo',    $cargoOperario);
+$puede_ver = tienePermiso('auditoria_efectivo', 'vista', $cargoOperario);
+$puede_nuevo = tienePermiso('auditoria_efectivo', 'nuevo', $cargoOperario);
 $puede_exportar = tienePermiso('auditoria_efectivo', 'exportar', $cargoOperario);
-$puede_editar   = tienePermiso('auditoria_efectivo', 'editar',   $cargoOperario);
+$puede_editar = tienePermiso('auditoria_efectivo', 'editar', $cargoOperario);
 
 if (!$puede_ver) {
     header('Location: /index.php');
@@ -67,6 +67,7 @@ if (!in_array($tipo_seleccionado, $tipos_permitidos)) {
 if (!empty($fecha_desde) && !empty($fecha_hasta) && $fecha_desde > $fecha_hasta) {
     $fecha_desde = $fecha_hasta;
 }
+
 
 // Construir URL base para el botón de limpiar filtros
 $url_limpiar_filtros = 'auditorias_consolidadas.php';
@@ -209,9 +210,9 @@ try {
 // Redirigir exportación a Excel al archivo ajax correspondiente
 if (isset($_GET['exportar_excel'])) {
     $query = http_build_query([
-        'tipo'        => $tipo_seleccionado,
-        'sucursal'    => $sucursal_id,
-        'operario'    => $operario_id,
+        'tipo' => $tipo_seleccionado,
+        'sucursal' => $sucursal_id,
+        'operario' => $operario_id,
         'fecha_desde' => $fecha_desde,
         'fecha_hasta' => $fecha_hasta,
     ]);
@@ -221,9 +222,18 @@ if (isset($_GET['exportar_excel'])) {
 
 // Generar opciones de meses y años para los selectores
 $meses = [
-    1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
-    5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
-    9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+    1 => 'Enero',
+    2 => 'Febrero',
+    3 => 'Marzo',
+    4 => 'Abril',
+    5 => 'Mayo',
+    6 => 'Junio',
+    7 => 'Julio',
+    8 => 'Agosto',
+    9 => 'Septiembre',
+    10 => 'Octubre',
+    11 => 'Noviembre',
+    12 => 'Diciembre'
 ];
 
 $anios = range(2020, date('Y') + 1); // Desde 2020 hasta el próximo año
@@ -231,10 +241,10 @@ $anios = range(2020, date('Y') + 1); // Desde 2020 hasta el próximo año
 // Construir URL base para los filtros
 $url_base = 'auditorias_consolidadas.php?';
 $params = [];
-if(isset($_GET['tipo'])) {
+if (isset($_GET['tipo'])) {
     $params[] = 'tipo=' . urlencode($_GET['tipo']);
 }
-if(isset($_GET['sucursal'])) {
+if (isset($_GET['sucursal'])) {
     $params[] = 'sucursal=' . urlencode($_GET['sucursal']);
 }
 $url_filtros = $url_base . implode('&', $params);
@@ -242,8 +252,8 @@ $url_filtros = $url_base . implode('&', $params);
 // Redirigir exportación de deducciones al archivo ajax correspondiente
 if (isset($_GET['exportar_deducciones'])) {
     $query = http_build_query([
-        'sucursal'    => $sucursal_id,
-        'operario'    => $operario_id,
+        'sucursal' => $sucursal_id,
+        'operario' => $operario_id,
         'fecha_desde' => $fecha_desde,
         'fecha_hasta' => $fecha_hasta,
     ]);
@@ -259,8 +269,8 @@ $total_faltante = 0;
 foreach ($registros as $registro) {
     $tipo = $registro['tipo_auditoria'];
     $monto = $registro['monto_faltante'];
-    
-    switch($tipo) {
+
+    switch ($tipo) {
         case 'facturacion':
         case 'caja_chica':
             // Sumar solo si es negativo (faltante)
@@ -268,17 +278,17 @@ foreach ($registros as $registro) {
                 $total_faltante += abs($monto);
             }
             break;
-            
+
         case 'inventario':
             // Sumar el valor absoluto (ya que puede ser negativo o positivo)
             $total_faltante += abs($monto);
             break;
-        
+
         case 'faltante_caja':
             // Para faltante de caja: sumar el monto directamente (ya es positivo)
             $total_faltante += $monto;
             break;
-        
+
         case 'faltante_inventario':
         case 'faltante_danos':
             // Sumar solo si es positivo (ya que los negativos se consideran 0)
@@ -304,8 +314,8 @@ if (isset($_GET['exportar_contabilidad'])) {
 // Redirigir exportación faltante de caja al archivo ajax correspondiente
 if (isset($_GET['exportar_faltante_caja'])) {
     $query = http_build_query([
-        'sucursal'    => $sucursal_id,
-        'operario'    => $operario_id,
+        'sucursal' => $sucursal_id,
+        'operario' => $operario_id,
         'fecha_desde' => $fecha_desde,
         'fecha_hasta' => $fecha_hasta,
     ]);
@@ -317,6 +327,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -329,6 +340,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
     <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="css/auditorias_consolidadas.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
 
@@ -337,383 +349,408 @@ if (isset($_GET['exportar_faltante_caja'])) {
             <?php echo renderHeader($usuario, 'Auditorías de Efectivo'); ?>
 
             <div class="container-fluid p-3">
-        
-        <!-- Filtros -->
-        <div class="filtros-container">
-            <form method="get" action="auditorias_consolidadas.php" class="filtros-form">
-                <!-- Filtro de Tipo -->
-                <div style="display:none;" class="filtro-group">
-                    <label for="tipo">Tipo</label>
-                    <select id="tipo" name="tipo" class="filtro-select">
-                        <option value="todos" <?= $tipo_seleccionado == 'todos' ? 'selected' : '' ?>>Todos los tipos</option>
-                        <option value="facturacion" <?= $tipo_seleccionado == 'facturacion' ? 'selected' : '' ?>>Caja Facturación</option>
-                        <option value="caja_chica" <?= $tipo_seleccionado == 'caja_chica' ? 'selected' : '' ?>>Caja Chica</option>
-                        <option value="inventario" <?= $tipo_seleccionado == 'inventario' ? 'selected' : '' ?>>Auditoría Inventario</option>
-                        <option value="faltante_inventario" <?= $tipo_seleccionado == 'faltante_inventario' ? 'selected' : '' ?>>Faltante Inventario</option>
-                        <option value="faltante_danos" <?= $tipo_seleccionado == 'faltante_danos' ? 'selected' : '' ?>>Faltante Daños</option>
-                        <option value="faltante_caja" <?= $tipo_seleccionado == 'faltante_caja' ? 'selected' : '' ?>>Faltante Caja</option>
-                    </select>
+
+                <!-- Filtros -->
+                <div class="filtros-container">
+                    <form method="get" action="auditorias_consolidadas.php" class="filtros-form">
+                        <!-- Filtro de Tipo -->
+                        <div style="display:none;" class="filtro-group">
+                            <label for="tipo">Tipo</label>
+                            <select id="tipo" name="tipo" class="filtro-select">
+                                <option value="todos" <?= $tipo_seleccionado == 'todos' ? 'selected' : '' ?>>Todos los
+                                    tipos</option>
+                                <option value="facturacion" <?= $tipo_seleccionado == 'facturacion' ? 'selected' : '' ?>>
+                                    Caja Facturación</option>
+                                <option value="caja_chica" <?= $tipo_seleccionado == 'caja_chica' ? 'selected' : '' ?>>Caja
+                                    Chica</option>
+                                <option value="inventario" <?= $tipo_seleccionado == 'inventario' ? 'selected' : '' ?>>
+                                    Auditoría Inventario</option>
+                                <option value="faltante_inventario" <?= $tipo_seleccionado == 'faltante_inventario' ? 'selected' : '' ?>>Faltante Inventario</option>
+                                <option value="faltante_danos" <?= $tipo_seleccionado == 'faltante_danos' ? 'selected' : '' ?>>Faltante Daños</option>
+                                <option value="faltante_caja" <?= $tipo_seleccionado == 'faltante_caja' ? 'selected' : '' ?>>Faltante Caja</option>
+                            </select>
+                        </div>
+
+                        <!-- Filtro de Sucursal -->
+                        <div class="filtro-group">
+                            <label for="sucursal">Sucursal</label>
+                            <select id="sucursal" name="sucursal" class="filtro-select">
+                                <option value="todas" <?= $sucursal_id == 'todas' ? 'selected' : '' ?>>Todas las sucursales
+                                </option>
+                                <?php foreach ($sucursales as $sucursal): ?>
+                                    <option value="<?= $sucursal['codigo'] ?>" <?= ($sucursal['codigo'] == $sucursal_id || $sucursal['nombre'] == $sucursal_id) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Filtro de Colaborador -->
+                        <div style="display:none;" class="filtro-group">
+                            <label for="operario">Colaborador</label>
+                            <input type="text" id="operario" name="operario_nombre" placeholder="Escriba para buscar..."
+                                value="<?php
+                                if ($operario_id > 0) {
+                                    foreach ($operarios as $op) {
+                                        if ($op['CodOperario'] == $operario_id) {
+                                            echo htmlspecialchars($op['nombre_completo']);
+                                            break;
+                                        }
+                                    }
+                                }
+                                ?>">
+                            <input type="hidden" id="operario_id" name="operario" value="<?= $operario_id ?>">
+                            <div id="operarios-sugerencias" style="display: none;"></div>
+                        </div>
+
+                        <!-- Filtro de Fechas -->
+                        <div class="filtro-group">
+                            <label for="fecha_desde">Desde</label>
+                            <input type="date" id="fecha_desde" name="fecha_desde"
+                                value="<?= htmlspecialchars($fecha_desde) ?>" max="<?= date('Y-m-d') ?>">
+                        </div>
+
+                        <div class="filtro-group">
+                            <label for="fecha_hasta">Hasta</label>
+                            <input type="date" id="fecha_hasta" name="fecha_hasta"
+                                value="<?= htmlspecialchars($fecha_hasta) ?>" max="<?= date('Y-m-d') ?>">
+                        </div>
+
+                        <!-- Botones del Formulario -->
+                        <div class="filtro-buttons">
+                            <button type="submit" class="btn-aplicar">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                            <a style="display:none;" href="<?= $url_limpiar_filtros ?>" class="btn-limpiar">
+                                <i class="fas fa-times"></i> Limpiar
+                            </a>
+                        </div>
+
+                        <?php if ($puede_exportar): ?>
+                            <div class="filtro-buttons">
+                                <a href="auditorias_consolidadas.php?<?php
+                                echo http_build_query([
+                                    'tipo' => $tipo_seleccionado,
+                                    'sucursal' => $sucursal_id,
+                                    'operario' => $operario_id,
+                                    'fecha_desde' => $fecha_desde,
+                                    'fecha_hasta' => $fecha_hasta,
+                                    'exportar_deducciones' => 1
+                                ]);
+                                ?>" class="btn-agregar excel">
+                                    <i class="fas fa-file-excel"></i> Exportar
+                                </a>
+
+                                <!-- Nuevo botón para exportar solo faltantes de caja -->
+                                <a href="auditorias_consolidadas.php?<?php
+                                echo http_build_query([
+                                    'tipo' => $tipo_seleccionado,
+                                    'sucursal' => $sucursal_id,
+                                    'operario' => $operario_id,
+                                    'fecha_desde' => $fecha_desde,
+                                    'fecha_hasta' => $fecha_hasta,
+                                    'exportar_faltante_caja' => 1
+                                ]);
+                                ?>" class="btn-agregar excel"
+                                    style="background-color: #f39c12; border-color: #f39c12; color: white;">
+                                    <i class="fas fa-file-excel"></i> Faltantes Caja
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </form>
                 </div>
-                
-                <!-- Filtro de Sucursal -->
-                <div class="filtro-group">
-                    <label for="sucursal">Sucursal</label>
-                    <select id="sucursal" name="sucursal" class="filtro-select">
-                        <option value="todas" <?= $sucursal_id == 'todas' ? 'selected' : '' ?>>Todas las sucursales</option>
-                        <?php foreach ($sucursales as $sucursal): ?>
-                            <option value="<?= $sucursal['codigo'] ?>" 
-                                <?= ($sucursal['codigo'] == $sucursal_id || $sucursal['nombre'] == $sucursal_id) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($sucursal['nombre']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <!-- Filtro de Colaborador -->
-                <div style="display:none;" class="filtro-group">
-                    <label for="operario">Colaborador</label>
-                    <input type="text" id="operario" name="operario_nombre" 
-                           placeholder="Escriba para buscar..." 
-                           value="<?php 
-                               if ($operario_id > 0) {
-                                   foreach ($operarios as $op) {
-                                       if ($op['CodOperario'] == $operario_id) {
-                                           echo htmlspecialchars($op['nombre_completo']);
-                                           break;
-                                       }
-                                   }
-                               }
-                           ?>">
-                    <input type="hidden" id="operario_id" name="operario" value="<?= $operario_id ?>">
-                    <div id="operarios-sugerencias" style="display: none;"></div>
-                </div>
-                
-                <!-- Filtro de Fechas -->
-                <div class="filtro-group">
-                    <label for="fecha_desde">Desde</label>
-                    <input type="date" id="fecha_desde" name="fecha_desde" 
-                           value="<?= htmlspecialchars($fecha_desde) ?>" 
-                           max="<?= date('Y-m-d') ?>">
-                </div>
-                
-                <div class="filtro-group">
-                    <label for="fecha_hasta">Hasta</label>
-                    <input type="date" id="fecha_hasta" name="fecha_hasta" 
-                           value="<?= htmlspecialchars($fecha_hasta) ?>" 
-                           max="<?= date('Y-m-d') ?>">
-                </div>
-                
-                <!-- Botones del Formulario -->
-                <div class="filtro-buttons">
-                    <button type="submit" class="btn-aplicar">
-                        <i class="fas fa-search"></i> Buscar
-                    </button>
-                    <a style="display:none;" href="<?= $url_limpiar_filtros ?>" class="btn-limpiar">
-                        <i class="fas fa-times"></i> Limpiar
-                    </a>
-                </div>
-                
-                <?php if ($puede_exportar): ?>
-                <div class="filtro-buttons">
-                    <a href="auditorias_consolidadas.php?<?php 
-                        echo http_build_query([
-                            'tipo'        => $tipo_seleccionado,
-                            'sucursal'    => $sucursal_id,
-                            'operario'    => $operario_id,
-                            'fecha_desde' => $fecha_desde,
-                            'fecha_hasta' => $fecha_hasta,
-                            'exportar_deducciones' => 1
-                        ]); 
-                    ?>" class="btn-agregar excel">
-                        <i class="fas fa-file-excel"></i> Exportar
-                    </a>
-                    
-                    <!-- Nuevo botón para exportar solo faltantes de caja -->
-                    <a href="auditorias_consolidadas.php?<?php 
-                        echo http_build_query([
-                            'tipo'        => $tipo_seleccionado,
-                            'sucursal'    => $sucursal_id,
-                            'operario'    => $operario_id,
-                            'fecha_desde' => $fecha_desde,
-                            'fecha_hasta' => $fecha_hasta,
-                            'exportar_faltante_caja' => 1
-                        ]); 
-                    ?>" class="btn-agregar excel" style="background-color: #f39c12; border-color: #f39c12; color: white;">
-                        <i class="fas fa-file-excel"></i> Faltantes Caja
-                    </a>
-                </div>
+
+                <?php if ($puede_nuevo): ?>
+                    <!-- Botón Flotante de Nueva Auditoría (FAB) -->
+                    <div class="fab-container" id="fabNuevaAuditoria">
+                        <div class="fab-options">
+                            <a href="faltante_danos.php" class="fab-option">
+                                <span class="fab-label">Faltante Daños</span>
+                                <div class="fab-icon-holder"><i class="fas fa-times-circle"></i></div>
+                            </a>
+                            <a href="faltante_inventario.php" class="fab-option">
+                                <span class="fab-label">Faltante Inventario</span>
+                                <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
+                            </a>
+                            <a href="auditoria_inventario.php" class="fab-option">
+                                <span class="fab-label">Auditoría Inventario</span>
+                                <div class="fab-icon-holder"><i class="fas fa-boxes"></i></div>
+                            </a>
+                            <a href="auditoria_caja_chica.php" class="fab-option">
+                                <span class="fab-label">Auditoría Caja Chica</span>
+                                <div class="fab-icon-holder"><i class="fas fa-wallet"></i></div>
+                            </a>
+                            <a href="auditoria_caja_facturacion.php" class="fab-option">
+                                <span class="fab-label">Auditoría Caja Facturación</span>
+                                <div class="fab-icon-holder"><i class="fas fa-cash-register"></i></div>
+                            </a>
+                        </div>
+                        <div class="btn-floating-pitaya" title="Nueva Auditoría">
+                            <i class="fas fa-wrench"></i>
+                        </div>
+                    </div>
                 <?php endif; ?>
-            </form>
-        </div>
-        
-        <?php if ($puede_nuevo): ?>
-            <!-- Botón Flotante de Nueva Auditoría (FAB) -->
-            <div class="fab-container" id="fabNuevaAuditoria">
-                <div class="fab-options">
-                    <a href="faltante_danos.php" class="fab-option">
-                        <span class="fab-label">Faltante Daños</span>
-                        <div class="fab-icon-holder"><i class="fas fa-times-circle"></i></div>
+
+                <!-- Mostrar registros de la tabla seleccionada -->
+                <div class="encabezado-historial">
+                    <!-- Limpiar campos de Filtros aplicados a la página actual -->
+                    <a href="<?php echo $url_limpiar_filtros; ?>" class="btn-agregar"
+                        style=" display:none; background-color: #f1f1f1; color: #333; border: 1px solid #ccc;">
+                        <i class="fas fa-times-circle"></i> Limpiar Filtros
                     </a>
-                    <a href="faltante_inventario.php" class="fab-option">
-                        <span class="fab-label">Faltante Inventario</span>
-                        <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
+
+                    <h3 style="display:none;" class="titulo-historial">
+                        <i class="fas fa-history"></i> Historial de Auditorías -
+                        <?php
+                        echo date('d/m/Y', strtotime($fecha_desde)) . ' al ' . date('d/m/Y', strtotime($fecha_hasta));
+                        ?>
+                    </h3>
+
+                    <a style="display:none;" href="auditorias_consolidadas.php?<?php
+                    echo http_build_query([
+                        'tipo' => $tipo_seleccionado,
+                        'sucursal' => $sucursal_id,
+                        'operario' => $operario_id,
+                        'fecha_desde' => $fecha_desde,
+                        'fecha_hasta' => $fecha_hasta,
+                        'exportar_excel' => 1
+                    ]);
+                    ?>" class="btn-agregar excel" style="margin-left: auto;">
+                        <i class="fas fa-file-excel"></i> Exportar a Excel
                     </a>
-                    <a href="auditoria_inventario.php" class="fab-option">
-                        <span class="fab-label">Auditoría Inventario</span>
-                        <div class="fab-icon-holder"><i class="fas fa-boxes"></i></div>
+
+                    <a style="display:none;" href="auditorias_consolidadas.php?<?php
+                    echo http_build_query([
+                        'tipo' => $tipo_seleccionado,
+                        'sucursal' => $sucursal_id,
+                        'operario' => $operario_id,
+                        'fecha_desde' => $fecha_desde,
+                        'fecha_hasta' => $fecha_hasta,
+                        'exportar_deducciones' => 1
+                    ]);
+                    ?>" class="btn-agregar" style="background-color: transparent; color: #9b59b6; border: 1px solid #9b59b6;">
+                        <i class="fas fa-user-check"></i> Exportar Deducciones
                     </a>
-                    <a href="auditoria_caja_chica.php" class="fab-option">
-                        <span class="fab-label">Auditoría Caja Chica</span>
-                        <div class="fab-icon-holder"><i class="fas fa-wallet"></i></div>
+
+                    <a style="display:none;" href="auditorias_consolidadas.php?<?php
+                    echo http_build_query([
+                        'tipo' => $tipo_seleccionado,
+                        'sucursal' => $sucursal_id,
+                        'operario' => $operario_id,
+                        'fecha_desde' => $fecha_desde,
+                        'fecha_hasta' => $fecha_hasta,
+                        'exportar_contabilidad' => 1
+                    ]);
+                    ?>" class="btn-agregar" style="background-color: transparent; color: #3498db; border: 1px solid #3498db;">
+                        <i class="fas fa-file-invoice-dollar"></i> Exportar para Contabilidad
                     </a>
-                    <a href="auditoria_caja_facturacion.php" class="fab-option">
-                        <span class="fab-label">Auditoría Caja Facturación</span>
-                        <div class="fab-icon-holder"><i class="fas fa-cash-register"></i></div>
-                    </a>
+
+                    <h3 style="display:none; margin: 0; color: #333;">
+                        Total de Faltantes:
+                        <span
+                            style="color: <?php echo ($total_faltante > 0) ? '#e74c3c' : '#27ae60'; ?>; font-weight: bold;">
+                            C$ <?php echo number_format($total_faltante, 2); ?>
+                        </span>
+                    </h3>
                 </div>
-                <div class="btn-floating-pitaya" title="Nueva Auditoría">
-                    <i class="fas fa-wrench"></i>
+
+                <!-- Resumen de total de faltantes -->
+                <div
+                    style="background-color: #f8f9fa; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd; text-align: center; display:none;">
+                    <h3 style="margin: 0; color: #333;">
+                        Total de Faltantes:
+                        <span
+                            style="color: <?php echo ($total_faltante > 0) ? '#e74c3c' : '#27ae60'; ?>; font-weight: bold;">
+                            C$ <?php echo number_format($total_faltante, 2); ?>
+                        </span>
+                    </h3>
+                    <?php if (!empty($registros)): ?>
+                        <p style="margin: 5px 0 0; color: #666; font-size: 14px; display:none;">
+                            Mostrando <?php echo count($registros); ?> registro(s) -
+                            Filtros: <?php echo ucfirst($tipo_seleccionado); ?> /
+                            <?php echo ucfirst($sucursal_seleccionada); ?> /
+                            <?php echo $meses[$mes_seleccionado] . ' ' . $anio_seleccionado; ?>
+                        </p>
+                    <?php endif; ?>
                 </div>
-            </div>
-        <?php endif; ?>
-        
-        <!-- Mostrar registros de la tabla seleccionada -->
-        <div class="encabezado-historial">
-            <!-- Limpiar campos de Filtros aplicados a la página actual -->
-            <a href="<?php echo $url_limpiar_filtros; ?>" class="btn-agregar" style=" display:none; background-color: #f1f1f1; color: #333; border: 1px solid #ccc;">
-                <i class="fas fa-times-circle"></i> Limpiar Filtros
-            </a>
-            
-            <h3 style="display:none;" class="titulo-historial">
-                <i class="fas fa-history"></i> Historial de Auditorías - 
-                <?php 
-                    echo date('d/m/Y', strtotime($fecha_desde)) . ' al ' . date('d/m/Y', strtotime($fecha_hasta));
-                ?>
-            </h3>
-            
-            <a style="display:none;" href="auditorias_consolidadas.php?<?php 
-                echo http_build_query([
-                    'tipo' => $tipo_seleccionado,
-                    'sucursal' => $sucursal_id,
-                    'operario' => $operario_id,
-                    'fecha_desde' => $fecha_desde,
-                    'fecha_hasta' => $fecha_hasta,
-                    'exportar_excel' => 1
-                ]); 
-            ?>" class="btn-agregar excel" style="margin-left: auto;">
-                <i class="fas fa-file-excel"></i> Exportar a Excel
-            </a>
-            
-            <a style="display:none;" href="auditorias_consolidadas.php?<?php 
-                echo http_build_query([
-                    'tipo' => $tipo_seleccionado,
-                    'sucursal' => $sucursal_id,
-                    'operario' => $operario_id,
-                    'fecha_desde' => $fecha_desde,
-                    'fecha_hasta' => $fecha_hasta,
-                    'exportar_deducciones' => 1
-                ]); 
-            ?>" class="btn-agregar" style="background-color: transparent; color: #9b59b6; border: 1px solid #9b59b6;">
-                <i class="fas fa-user-check"></i> Exportar Deducciones
-            </a>
-            
-            <a style="display:none;" href="auditorias_consolidadas.php?<?php 
-                echo http_build_query([
-                    'tipo' => $tipo_seleccionado,
-                    'sucursal' => $sucursal_id,
-                    'operario' => $operario_id,
-                    'fecha_desde' => $fecha_desde,
-                    'fecha_hasta' => $fecha_hasta,
-                    'exportar_contabilidad' => 1
-                ]); 
-            ?>" class="btn-agregar" style="background-color: transparent; color: #3498db; border: 1px solid #3498db;">
-                <i class="fas fa-file-invoice-dollar"></i> Exportar para Contabilidad
-            </a>
-            
-            <h3 style="display:none; margin: 0; color: #333;">
-                Total de Faltantes: 
-                <span style="color: <?php echo ($total_faltante > 0) ? '#e74c3c' : '#27ae60'; ?>; font-weight: bold;">
-                    C$ <?php echo number_format($total_faltante, 2); ?>
-                </span>
-            </h3>
-        </div>
-        
-        <!-- Resumen de total de faltantes -->
-        <div style="background-color: #f8f9fa; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd; text-align: center; display:none;">
-            <h3 style="margin: 0; color: #333;">
-                Total de Faltantes: 
-                <span style="color: <?php echo ($total_faltante > 0) ? '#e74c3c' : '#27ae60'; ?>; font-weight: bold;">
-                    C$ <?php echo number_format($total_faltante, 2); ?>
-                </span>
-            </h3>
-            <?php if (!empty($registros)): ?>
-                <p style="margin: 5px 0 0; color: #666; font-size: 14px; display:none;">
-                    Mostrando <?php echo count($registros); ?> registro(s) - 
-                    Filtros: <?php echo ucfirst($tipo_seleccionado); ?> / 
-                    <?php echo ucfirst($sucursal_seleccionada); ?> / 
-                    <?php echo $meses[$mes_seleccionado] . ' ' . $anio_seleccionado; ?>
-                </p>
-            <?php endif; ?>
-            </div>
-        
-            <table>
-                <thead>
-                    <tr>
-                        <th class="encabezado">Fecha</th>
-                        <th class="encabezado">
-                            Sucursal
-                            <div class="filtro-contenedor">
-                                <span class="filtro-encabezado">
-                                    <i class="fas fa-caret-down"></i>
-                                </span>
-                                <div class="filtro-opciones">
-                                    <?php
-                                    $params_base = [
-                                        'mes' => $mes_seleccionado,
-                                        'anio' => $anio_seleccionado,
-                                        'tipo' => $tipo_seleccionado,
-                                        'operario' => $operario_id,
-                                        'fecha_desde' => $fecha_desde,
-                                        'fecha_hasta' => $fecha_hasta
-                                    ];
-                                    ?>
-                                    <a href="?<?= http_build_query(array_merge($params_base, ['sucursal' => 'todas'])) ?>">
-                                        Todas
-                                    </a>
-                                    <?php foreach ($sucursales as $sucursal): ?>
-                                        <a href="?<?= http_build_query(array_merge($params_base, ['sucursal' => $sucursal['codigo']])) ?>">
-                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="encabezado">Fecha</th>
+                            <th class="encabezado">
+                                Sucursal
+                                <div class="filtro-contenedor">
+                                    <span class="filtro-encabezado">
+                                        <i class="fas fa-caret-down"></i>
+                                    </span>
+                                    <div class="filtro-opciones">
+                                        <?php
+                                        $params_base = [
+                                            'mes' => $mes_seleccionado,
+                                            'anio' => $anio_seleccionado,
+                                            'tipo' => $tipo_seleccionado,
+                                            'operario' => $operario_id,
+                                            'fecha_desde' => $fecha_desde,
+                                            'fecha_hasta' => $fecha_hasta
+                                        ];
+                                        ?>
+                                        <a
+                                            href="?<?= http_build_query(array_merge($params_base, ['sucursal' => 'todas'])) ?>">
+                                            Todas
                                         </a>
-                                    <?php endforeach; ?>
+                                        <?php foreach ($sucursales as $sucursal): ?>
+                                            <a
+                                                href="?<?= http_build_query(array_merge($params_base, ['sucursal' => $sucursal['codigo']])) ?>">
+                                                <?= htmlspecialchars($sucursal['nombre']) ?>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
                                 </div>
-                            </div>
-                        </th>
-                        <th class="encabezado">
-                            Tipo
-                            <div class="filtro-contenedor">
-                                <span class="filtro-encabezado">
-                                    <i class="fas fa-caret-down"></i>
-                                </span>
-                                <div class="filtro-opciones">
-                                    <a href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'todos'])) ?>">
-                                        Todos
-                                    </a>
-                                    <a href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'facturacion'])) ?>">
-                                        Caja Facturación
-                                    </a>
-                                    <a href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'caja_chica'])) ?>">
-                                        Caja Chica
-                                    </a>
-                                    <a href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'inventario'])) ?>">
-                                        Auditoría Inventario
-                                    </a>
-                                    <a href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'faltante_inventario'])) ?>">
-                                        Faltante Inventario
-                                    </a>
-                                    <a href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'faltante_danos'])) ?>">
-                                        Faltante Daños
-                                    </a>
-                                    <a href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'faltante_caja'])) ?>">
-                                        Faltante Caja
-                                    </a>
+                            </th>
+                            <th class="encabezado">
+                                Tipo
+                                <div class="filtro-contenedor">
+                                    <span class="filtro-encabezado">
+                                        <i class="fas fa-caret-down"></i>
+                                    </span>
+                                    <div class="filtro-opciones">
+                                        <a
+                                            href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'todos'])) ?>">
+                                            Todos
+                                        </a>
+                                        <a
+                                            href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'facturacion'])) ?>">
+                                            Caja Facturación
+                                        </a>
+                                        <a
+                                            href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'caja_chica'])) ?>">
+                                            Caja Chica
+                                        </a>
+                                        <a
+                                            href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'inventario'])) ?>">
+                                            Auditoría Inventario
+                                        </a>
+                                        <a
+                                            href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'faltante_inventario'])) ?>">
+                                            Faltante Inventario
+                                        </a>
+                                        <a
+                                            href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'faltante_danos'])) ?>">
+                                            Faltante Daños
+                                        </a>
+                                        <a
+                                            href="?<?= http_build_query(array_merge($params_base, ['tipo' => 'faltante_caja'])) ?>">
+                                            Faltante Caja
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                        </th>
-                        <th class="encabezado">Faltante (C$)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($registros)): ?>
-                        <tr>
-                            <td colspan="4" style="text-align:center; background-color:#fff;">Sin registros actualmente.</td>
+                            </th>
+                            <th class="encabezado">Faltante (C$)</th>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($registros as $registro): ?>
-                        <tr>
-                            <td style="text-align:center;">
-                                <?php
-                                    $meses_cortos = [
-                                        1 => 'ene', 2 => 'feb', 3 => 'mar', 4 => 'abr',
-                                        5 => 'may', 6 => 'jun', 7 => 'jul', 8 => 'ago',
-                                        9 => 'sep', 10 => 'oct', 11 => 'nov', 12 => 'dic'
-                                    ];
-                                    
-                                    if ($registro['tipo_auditoria'] == 'faltante_caja') {
-                                        // Para faltante_caja, mostrar solo la fecha (sin hora)
-                                        $fecha = new DateTime($registro['fecha_hora']);
-                                        $dia = $fecha->format('d');
-                                        $mes = $meses_cortos[(int)$fecha->format('m')];
-                                        $anio = $fecha->format('y');
-                                        echo "$dia-$mes-$anio";
-                                    } else {
-                                        // Para los demás tipos, mostrar fecha y hora (con ajuste de -6 horas)
-                                        $fecha = new DateTime($registro['fecha_hora']);
-                                        $fecha->sub(new DateInterval('PT6H'));
-                                        
-                                        $dia = $fecha->format('d');
-                                        $mes = $meses_cortos[(int)$fecha->format('m')];
-                                        $anio = $fecha->format('y');
-                                        
-                                        $hora = $fecha->format('H:i');
-                                        $hora_formateada = ($hora == '00:00') ? '12:00 am' :
-                                                          (($fecha->format('H') < 12) ? $fecha->format('g:i a') :
-                                                          (($fecha->format('H') == 12) ? $fecha->format('g:i') . ' pm' :
-                                                          (($fecha->format('g:i'))) . ' pm'));
-                                        
-                                        echo "$dia-$mes-$anio $hora_formateada";
-                                    }
-                                ?>
-                            </td>
-                            <td style="text-align:center;"><?php echo $registro['sucursal']; ?></td>
-                            <td style="text-align:center;">
-                                <?php 
-                                    // Mostrar el tipo de auditoría con un badge de color
-                                    $tipo = $registro['tipo_auditoria'];
-                                    $badge_class = 'badge-' . $tipo;
-                                    $tipo_text = '';
-                                    
-                                    switch($tipo) {
-                                        case 'facturacion':
-                                            $tipo_text = 'Caja Facturación';
-                                            break;
-                                        case 'caja_chica':
-                                            $tipo_text = 'Caja Chica';
-                                            break;
-                                        case 'inventario':
-                                            $tipo_text = 'Auditoría Inventario';
-                                            break;
-                                        case 'faltante_inventario':
-                                            $tipo_text = 'Faltante Inventario';
-                                            break;
-                                        case 'faltante_danos':
-                                            $tipo_text = 'Faltante Daños';
-                                            break;
-                                        case 'faltante_caja':
-                                            $tipo_text = 'Faltante de Caja';
-                                            break;
-                                    }
-                                    
-                                    echo '<span class="badge-tipo ' . $badge_class . '">' . $tipo_text . '</span>';
-                                ?>
-                            </td>
-                            <td style="text-align:center;" class="monto-faltante <?php 
+                    </thead>
+                    <tbody>
+                        <?php if (empty($registros)): ?>
+                            <tr>
+                                <td colspan="4" style="text-align:center; background-color:#fff;">Sin registros actualmente.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($registros as $registro): ?>
+                                <tr>
+                                    <td style="text-align:center;">
+                                        <?php
+                                        $meses_cortos = [
+                                            1 => 'ene',
+                                            2 => 'feb',
+                                            3 => 'mar',
+                                            4 => 'abr',
+                                            5 => 'may',
+                                            6 => 'jun',
+                                            7 => 'jul',
+                                            8 => 'ago',
+                                            9 => 'sep',
+                                            10 => 'oct',
+                                            11 => 'nov',
+                                            12 => 'dic'
+                                        ];
+
+                                        if ($registro['tipo_auditoria'] == 'faltante_caja') {
+                                            // Para faltante_caja, mostrar solo la fecha (sin hora)
+                                            $fecha = new DateTime($registro['fecha_hora']);
+                                            $dia = $fecha->format('d');
+                                            $mes = $meses_cortos[(int) $fecha->format('m')];
+                                            $anio = $fecha->format('y');
+                                            echo "$dia-$mes-$anio";
+                                        } else {
+                                            // Para los demás tipos, mostrar fecha y hora (con ajuste de -6 horas)
+                                            $fecha = new DateTime($registro['fecha_hora']);
+                                            $fecha->sub(new DateInterval('PT6H'));
+
+                                            $dia = $fecha->format('d');
+                                            $mes = $meses_cortos[(int) $fecha->format('m')];
+                                            $anio = $fecha->format('y');
+
+                                            $hora = $fecha->format('H:i');
+                                            $hora_formateada = ($hora == '00:00') ? '12:00 am' :
+                                                (($fecha->format('H') < 12) ? $fecha->format('g:i a') :
+                                                    (($fecha->format('H') == 12) ? $fecha->format('g:i') . ' pm' :
+                                                        (($fecha->format('g:i'))) . ' pm'));
+
+                                            echo "$dia-$mes-$anio $hora_formateada";
+                                        }
+                                        ?>
+                                    </td>
+                                    <td style="text-align:center;"><?php echo $registro['sucursal']; ?></td>
+                                    <td style="text-align:center;">
+                                        <?php
+                                        // Mostrar el tipo de auditoría con un badge de color
+                                        $tipo = $registro['tipo_auditoria'];
+                                        $badge_class = 'badge-' . $tipo;
+                                        $tipo_text = '';
+
+                                        switch ($tipo) {
+                                            case 'facturacion':
+                                                $tipo_text = 'Caja Facturación';
+                                                break;
+                                            case 'caja_chica':
+                                                $tipo_text = 'Caja Chica';
+                                                break;
+                                            case 'inventario':
+                                                $tipo_text = 'Auditoría Inventario';
+                                                break;
+                                            case 'faltante_inventario':
+                                                $tipo_text = 'Faltante Inventario';
+                                                break;
+                                            case 'faltante_danos':
+                                                $tipo_text = 'Faltante Daños';
+                                                break;
+                                            case 'faltante_caja':
+                                                $tipo_text = 'Faltante de Caja';
+                                                break;
+                                        }
+
+                                        echo '<span class="badge-tipo ' . $badge_class . '">' . $tipo_text . '</span>';
+                                        ?>
+                                    </td>
+                                    <td style="text-align:center;" class="monto-faltante <?php
                                     // Determinar la clase CSS basada en el tipo de auditoría y el monto
                                     $monto_mostrar = 0;
-                                    
-                                    switch($registro['tipo_auditoria']) {
+
+                                    switch ($registro['tipo_auditoria']) {
                                         case 'facturacion':
                                         case 'caja_chica':
                                             // Para facturación y caja chica: mostrar 0 si es positivo o cero, mostrar valor absoluto si es negativo
                                             $monto_mostrar = ($registro['monto_faltante'] >= 0) ? 0 : abs($registro['monto_faltante']);
                                             echo ($monto_mostrar > 0) ? 'monto-negativo' : 'monto-positivo';
                                             break;
-                                            
+
                                         case 'inventario':
                                             // Para inventario: mostrar valor absoluto siempre
                                             $monto_mostrar = abs($registro['monto_faltante']);
                                             echo ($registro['monto_faltante'] < 0) ? 'monto-negativo' : 'monto-positivo';
                                             break;
-                                            
+
                                         case 'faltante_inventario':
                                         case 'faltante_danos':
                                             // Para faltantes: mostrar 0 si es negativo, mostrar valor tal cual si es positivo
@@ -726,20 +763,21 @@ if (isset($_GET['exportar_faltante_caja'])) {
                                             echo ($monto_mostrar > 0) ? 'monto-negativo' : 'monto-positivo';
                                             break;
                                     }
-                                ?>">
-                                <div class="promedio-contenedor">
-                                    C$ <?php echo number_format($monto_mostrar, 2); ?>
-                                    <?php if ($puede_editar): ?>
-                                    <a href="<?php echo $registro['url_ver']; ?>?id=<?php echo $registro['id']; ?>" style="color:#51B8AC;">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
+                                    ?>">
+                                        <div class="promedio-contenedor">
+                                            C$ <?php echo number_format($monto_mostrar, 2); ?>
+                                            <?php if ($puede_editar): ?>
+                                                <a href="<?php echo $registro['url_ver']; ?>?id=<?php echo $registro['id']; ?>"
+                                                    style="color:#51B8AC;">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
                 </table>
             </div><!-- /.container-fluid -->
         </div><!-- /.sub-container -->
@@ -749,37 +787,38 @@ if (isset($_GET['exportar_faltante_caja'])) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-    // FAB: toggle al hacer clic en móvil / cerrar al hacer clic fuera
-    $(document).ready(function () {
-        $(document).on('click', '.btn-floating-pitaya', function (e) {
-            const container = $(this).closest('.fab-container');
-            if (container.length) {
-                container.toggleClass('active');
-                $(this).toggleClass('active');
-            }
-        });
+        // FAB: toggle al hacer clic en móvil / cerrar al hacer clic fuera
+        $(document).ready(function () {
+            $(document).on('click', '.btn-floating-pitaya', function (e) {
+                const container = $(this).closest('.fab-container');
+                if (container.length) {
+                    container.toggleClass('active');
+                    $(this).toggleClass('active');
+                }
+            });
 
-        $(document).on('click', function (e) {
-            if (!$(e.target).closest('.fab-container').length) {
-                $('.fab-container').removeClass('active');
-                $('.btn-floating-pitaya').removeClass('active');
-            }
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.fab-container').length) {
+                    $('.fab-container').removeClass('active');
+                    $('.btn-floating-pitaya').removeClass('active');
+                }
+            });
         });
-    });
     </script>
 
-    
+
     <script>
-// Datos de operarios para el autocompletado
-const operariosData = [
-    <?php foreach ($operarios as $op): ?>
-    {
-        id: <?= $op['CodOperario'] ?>,
-        nombre: '<?= addslashes($op['nombre_completo']) ?>'
-    },
-    <?php endforeach; ?>
-];
+        // Datos de operarios para el autocompletado
+        const operariosData = [
+            <?php foreach ($operarios as $op): ?>
+        {
+                    id: <?= $op['CodOperario'] ?>,
+                    nombre: '<?= addslashes($op['nombre_completo']) ?>'
+                },
+            <?php endforeach; ?>
+        ];
     </script>
     <script src="js/auditorias_consolidadas.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
+
 </html>
