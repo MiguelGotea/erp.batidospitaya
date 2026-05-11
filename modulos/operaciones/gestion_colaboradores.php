@@ -398,9 +398,21 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                             <?php endif; ?>
                         </div>
 
-                        <div class="nav-right">
+                        <div class="nav-right" style="display: flex; align-items: center; gap: 10px;">
+                            <div style="position: relative;">
+                                <i class="bi bi-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 14px; pointer-events: none;"></i>
+                                <input
+                                    type="text"
+                                    id="buscadorTienda"
+                                    placeholder="Buscar tienda..."
+                                    autocomplete="off"
+                                    style="padding: 6px 12px 6px 32px; border-radius: 20px; border: 1px solid #ced4da; font-size: 13px; outline: none; width: 190px; transition: border-color .2s, box-shadow .2s;"
+                                    onfocus="this.style.borderColor='#0E544C'; this.style.boxShadow='0 0 0 3px rgba(14,84,76,.15)';"
+                                    onblur="this.style.borderColor='#ced4da'; this.style.boxShadow='none';"
+                                >
+                            </div>
                             <span class="global-counter"
-                                style="background: #0E544C; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+                                style="background: #0E544C; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; white-space: nowrap;">
                                 Total: <?= $totalColaboradoresGlobal ?> colaboradores
                             </span>
                         </div>
@@ -585,6 +597,41 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/gestion_colaboradores.js"></script>
+
+    <script>
+    (function () {
+        const input = document.getElementById('buscadorTienda');
+        if (!input) return;
+
+        input.addEventListener('input', function () {
+            const query = this.value.trim().toLowerCase();
+
+            // Recorrer cada sección de departamento
+            document.querySelectorAll('.departamento-section').forEach(function (seccion) {
+                // Ignorar el pool de no-asignados (no tiene tarjetas de sucursal)
+                const cards = seccion.querySelectorAll('.sucursal-card');
+                if (cards.length === 0) return; // sección sin tarjetas (ej. pool)
+
+                let visibles = 0;
+                cards.forEach(function (card) {
+                    // Obtener el nombre de la sucursal del span del header
+                    const nombreElem = card.querySelector('.sucursal-header span');
+                    const nombre = nombreElem ? nombreElem.textContent.toLowerCase() : '';
+
+                    if (!query || nombre.includes(query)) {
+                        card.style.display = '';
+                        visibles++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Ocultar la sección completa si ninguna tarjeta es visible
+                seccion.style.display = visibles === 0 ? 'none' : '';
+            });
+        });
+    })();
+    </script>
 </body>
 
 </html>
