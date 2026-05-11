@@ -2251,7 +2251,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
             ]
         };
     </script>
-    <script src="js/faltas_manual.js"></script>
+    <script src="js/faltas_manual.js?v=<?= time() ?>"></script>
 </body>
 
 </html>
