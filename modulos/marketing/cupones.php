@@ -126,33 +126,39 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
                         <input type="hidden" id="cuponId" name="id">
 
                         <div class="mb-3">
-                            <label for="numeroCupon" class="form-label small fw-bold text-muted text-uppercase">Número de Cupón *</label>
-                            <input type="text" class="form-control" id="numeroCupon" name="numero_cupon" readonly style="background-color: #e9ecef;">
+                            <label for="numeroCupon" class="form-label small fw-bold text-muted text-uppercase">Número
+                                de Cupón *</label>
+                            <input type="text" class="form-control" id="numeroCupon" name="numero_cupon" readonly
+                                style="background-color: #e9ecef;">
                             <small class="text-muted">Se genera automáticamente</small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="montoCupon" class="form-label small fw-bold text-muted text-uppercase">Monto *</label>
+                            <label for="montoCupon" class="form-label small fw-bold text-muted text-uppercase">Monto
+                                *</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">C$</span>
                                 <input type="number" class="form-control" id="montoCupon" name="monto" required min="0">
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="fechaCaducidad" class="form-label small fw-bold text-muted text-uppercase">Fecha de Caducidad *</label>
+                            <label for="fechaCaducidad" class="form-label small fw-bold text-muted text-uppercase">Fecha
+                                de Caducidad *</label>
                             <input type="date" class="form-control" id="fechaCaducidad" name="fecha_caducidad" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones</label>
+                            <label for="observaciones"
+                                class="form-label small fw-bold text-muted text-uppercase">Observaciones</label>
                             <textarea class="form-control" id="observaciones" name="observaciones" rows="3"
                                 placeholder="Notas adicionales sobre el cupón" style="resize: none;"></textarea>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between">
-                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-modern btn-modern-secondary"
+                        data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn-modern btn-modern-primary" onclick="guardarCupon()">
                         <i class="fas fa-save me-2"></i>Guardar Cupón
                     </button>
