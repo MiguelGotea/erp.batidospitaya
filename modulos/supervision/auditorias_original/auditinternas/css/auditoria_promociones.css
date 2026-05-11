@@ -1,0 +1,243 @@
+* {
+    font-family: 'Calibri', sans-serif;
+    box-sizing: border-box;
+    font-size: clamp(11px, 2vw, 16px) !important;
+}
+
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #F6F6F6;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.pregunta-container {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.pregunta-numero {
+    display: inline-block;
+    background-color: #51B8AC;
+    color: white;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 25px;
+    margin-right: 10px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.pregunta-texto {
+    font-weight: 600;
+    color: #0E544C;
+    margin-bottom: 10px;
+}
+
+.btn {
+    background-color: #0E544C;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    background-color: #0a3d37;
+}
+
+.btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: none;
+    text-align: center;
+}
+
+.stats-box {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.stats-box h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.percentage {
+    font-size: 28px;
+    font-weight: bold;
+    color: #0E544C;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+}
+
+.btn-cancelar {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+.btn-cancelar:hover {
+    background-color: #5a6268 !important;
+}
+
+/* Estilos para autocomplete */
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1000;
+}
+
+.ui-menu-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.ui-menu-item:hover {
+    background-color: #0E544C;
+    color: white;
+}
+
+.invalid {
+    border: 2px solid #dc3545 !important;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 25px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.modal-message {
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.readonly-field {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+@media (min-width: 768px) {
+    .btn {
+        width: auto;
+        margin-bottom: 0;
+    }
+    
+    .button-container {
+        flex-direction: row;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .buttons-container {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        margin: 30% auto;
+        width: 95%;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-agregar {
+        flex-grow: 1;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+        padding: 8px 5px;
+    }
+    
+    .user-info {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+}

@@ -1,0 +1,361 @@
+* {
+    font-family: 'Calibri', sans-serif;
+    box-sizing: border-box;
+    font-size: clamp(11px, 2vw, 16px) !important;
+}
+
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #F6F6F6;
+}
+
+.container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 15px;
+    background-color: white;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0 5px;
+    box-sizing: border-box;
+    margin: 1px auto;
+    flex-wrap: wrap;
+}
+
+.logo {
+    height: 50px;
+}
+
+.logo-container {
+    flex-shrink: 0;
+    margin-right: auto;
+}
+
+.buttons-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    flex-grow: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.btn-agregar {
+    background-color: transparent;
+    color: #51B8AC;
+    border: 1px solid #51B8AC;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    white-space: nowrap;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.btn-agregar.activo {
+    background-color: #51B8AC;
+    color: white;
+    font-weight: normal;
+}
+
+.btn-agregar:hover {
+    background-color: #0E544C;
+    color: white;
+    border-color: #0E544C;
+}
+
+.user-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: #51B8AC;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.btn-logout {
+    background: #51B8AC;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-logout:hover {
+    background: #0E544C;
+}
+
+h1 {
+    color: black;
+    margin: 20px 0;
+    text-align: center;
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.checkbox-group {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 5px;
+}
+
+.checkbox-item label {
+    margin: 0;
+    padding-left: 10px;
+    flex-grow: 1;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.checkbox-item:hover {
+    background-color: #f0f0f0;
+}
+
+.btn {
+    background-color: #0E544C;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.btn-special {
+    background-color: #0E544C;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.stats-box {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.stats-box h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.percentage {
+    font-size: 24px;
+    font-weight: bold;
+    color: #0E544C;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+}
+
+.btn-cancelar {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+.btn-cancelar:hover {
+    background-color: #5a6268 !important;
+    color: white !important;
+}
+
+/* Estilos para autocomplete */
+.ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1000;
+}
+
+.ui-menu-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.ui-menu-item:hover {
+    background-color: #0E544C;
+    color: white;
+}
+
+.invalid {
+    border: 1px solid red !important;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 400px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.modal-message {
+    margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+    .btn {
+        width: auto;
+        margin-bottom: 0;
+    }
+    
+    .button-container {
+        flex-direction: row;
+    }
+    
+    .checkbox-group {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .modal-content {
+        margin: 30% auto;
+        width: 90%;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-agregar {
+        flex-grow: 1;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+        padding: 8px 5px;
+    }
+    
+    .user-info {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+    
+    .checkbox-group {
+        grid-template-columns: 1fr;
+    }
+}
