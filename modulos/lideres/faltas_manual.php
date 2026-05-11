@@ -1627,6 +1627,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/faltas_manual.css">
 </head>
 
@@ -1974,16 +1975,24 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
     </div>
 
     <!-- Modal para nueva falta manual -->
-    <div class="modal" id="modalNuevaFalta">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Registrar Falta Manual</h2>
-                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+    <div class="modal" id="modalNuevaFalta" style="backdrop-filter: blur(10px); background-color: rgba(0, 0, 0, 0.45);">
+        <div class="modal-content" style="padding: 0; overflow: hidden; max-width: 600px;">
+            <div class="modal-header" style="background: #0E544C; color: #fff; padding: 20px; border-bottom: none; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: rgba(255,255,255,0.25); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <i class="fas fa-file-alt" style="font-size: 1.2rem;"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title" style="margin: 0; font-size: 1.25rem !important; font-weight: bold; color: #fff;">Registrar Falta Manual</h2>
+                        <p style="margin: 0; font-size: 0.85rem; opacity: 0.75;">Configura los detalles de la falta</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="cerrarModal()" style="color: #fff; opacity: 0.8;">&times;</button>
             </div>
             <form id="formNuevaFalta" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="registrar_falta" value="1">
 
-                <div class="modal-body">
+                <div class="modal-body" style="padding: 20px; background: #f8f9fa;">
                     <!-- NUEVO: Mensaje de advertencia para operarios sin contrato -->
                     <div id="mensaje-advertencia-contrato" style="display: none; 
                                 background-color: #fff3cd; 
@@ -2068,27 +2077,35 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                <div class="modal-footer" style="padding: 20px; background: white; border-top: none; display: flex; justify-content: space-between;">
+                    <button type="button" onclick="cerrarModal()" class="btn-modern btn-modern-secondary">Cancelar</button>
+                    <button type="submit" class="btn-modern btn-modern-primary"><i class="fas fa-save" style="margin-right: 8px;"></i> Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal para editar falta manual -->
-    <div class="modal" id="modalEditarFalta">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Editar Falta Manual</h2>
-                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+    <div class="modal" id="modalEditarFalta" style="backdrop-filter: blur(10px); background-color: rgba(0, 0, 0, 0.45);">
+        <div class="modal-content" style="padding: 0; overflow: hidden; max-width: 600px;">
+            <div class="modal-header" style="background: #0E544C; color: #fff; padding: 20px; border-bottom: none; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: rgba(255,255,255,0.25); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <i class="fas fa-edit" style="font-size: 1.2rem;"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title" style="margin: 0; font-size: 1.25rem !important; font-weight: bold; color: #fff;">Editar Falta Manual</h2>
+                        <p style="margin: 0; font-size: 0.85rem; opacity: 0.75;">Actualiza los detalles de la falta</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="cerrarModal()" style="color: #fff; opacity: 0.8;">&times;</button>
             </div>
             <form id="formEditarFalta" method="post" action="ajax/editar_falta_manual.php">
                 <input type="hidden" name="editar_falta" value="1">
                 <input type="hidden" id="editar_id" name="id">
                 <input type="hidden" id="editar_foto_path" name="foto_path_actual">
 
-                <div class="modal-body">
+                <div class="modal-body" style="padding: 20px; background: #f8f9fa;">
                     <!-- Información básica -->
                     <div class="info-group">
                         <span class="info-label">Colaborador:</span>
@@ -2166,12 +2183,12 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                     <?php endif; ?>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+                <div class="modal-footer" style="padding: 20px; background: white; border-top: none; display: flex; justify-content: space-between;">
+                    <button type="button" onclick="cerrarModal()" class="btn-modern btn-modern-secondary">Cancelar</button>
                     <?php if ($puedeAprobar): ?>
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <button type="submit" class="btn-modern btn-modern-primary"><i class="fas fa-save" style="margin-right: 8px;"></i> Guardar Cambios</button>
                     <?php else: ?>
-                        <button type="button" class="btn btn-secondary" disabled>Sin permisos para editar</button>
+                        <button type="button" class="btn-modern btn-modern-secondary" disabled>Sin permisos para editar</button>
                     <?php endif; ?>
                 </div>
             </form>
@@ -2179,13 +2196,21 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
     </div>
 
     <!-- Modal para consultar marcaciones relacionadas con la falta -->
-    <div class="modal" id="modalConsultarMarcacion">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2 class="modal-title">Detalles de Marcación</h2>
-                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+    <div class="modal" id="modalConsultarMarcacion" style="backdrop-filter: blur(10px); background-color: rgba(0, 0, 0, 0.45);">
+        <div class="modal-content" style="max-width: 600px; padding: 0; overflow: hidden;">
+            <div class="modal-header" style="background: #0E544C; color: #fff; padding: 20px; border-bottom: none; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: rgba(255,255,255,0.25); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <i class="fas fa-clock" style="font-size: 1.2rem;"></i>
+                    </div>
+                    <div>
+                        <h2 class="modal-title" style="margin: 0; font-size: 1.25rem !important; font-weight: bold; color: #fff;">Detalles de Marcación</h2>
+                        <p style="margin: 0; font-size: 0.85rem; opacity: 0.75;">Consulta el registro de horario</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="cerrarModal()" style="color: #fff; opacity: 0.8;">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding: 20px; background: #f8f9fa;">
                 <div class="info-group">
                     <span class="info-label">Colaborador:</span>
                     <span class="info-value" id="consulta_nombre"></span>
@@ -2233,8 +2258,8 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                     <span class="info-value" id="consulta_diferencia_salida">-</span>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cerrar</button>
+            <div class="modal-footer" style="padding: 20px; background: white; border-top: none; display: flex; justify-content: flex-end;">
+                <button type="button" onclick="cerrarModal()" class="btn-modern btn-modern-secondary">Cerrar</button>
             </div>
         </div>
     </div>

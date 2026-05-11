@@ -604,7 +604,7 @@ $(document).ready(function () {
         language: {
             url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
         },
-        dom: '<"top"l>rt<"bottom"ip>', // Quitamos la "f" en "top"lf (filter/search)
+        dom: 'rt<"bottom"lip>', // Quitamos la "f" en "top"lf y movemos "l" al final
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
         pageLength: 25,
 
