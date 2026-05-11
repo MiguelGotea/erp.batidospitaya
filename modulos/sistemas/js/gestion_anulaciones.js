@@ -586,18 +586,11 @@ async function abrirModalDecision(id, codPedido, codCambio, sucursal, sucursalNo
         document.getElementById('dec_comentario').value = '';
     }
 
-    // Bloquear botones si es pasado
+    // Habilitar siempre los botones (sin restricción por fecha)
     const btnApr = document.getElementById('btnAprobar');
     const btnRec = document.getElementById('btnRechazar');
-    if (btnApr) btnApr.disabled = !!esPasado;
-    if (btnRec) btnRec.disabled = !!esPasado;
-    if (esPasado) {
-        if (btnApr) btnApr.title = 'Bloqueado: Fecha pasada';
-        if (btnRec) btnRec.title = 'Bloqueado: Fecha pasada';
-    } else {
-        if (btnApr) btnApr.title = 'Aprobar';
-        if (btnRec) btnRec.title = 'Rechazar';
-    }
+    if (btnApr) { btnApr.disabled = false; btnApr.title = 'Aprobar'; }
+    if (btnRec) { btnRec.disabled = false; btnRec.title = 'Rechazar'; }
 
     // Reset panel IA al abrir modal
     _iaPedidoPrincipal = null;
