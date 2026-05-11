@@ -358,7 +358,7 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, 'Gestión de Colaboradores'); ?>
+            <?php echo renderHeader($usuario, 'Panel de Equipos Tiendas'); ?>
 
             <div class="container-fluid p-3">
                 <div class="gestion-container">
