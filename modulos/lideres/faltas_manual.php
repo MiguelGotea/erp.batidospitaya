@@ -2284,7 +2284,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                     </a>
                 <?php endif; ?>
             </div>
-            <div class="btn-floating-pitaya" title="Herramientas">
+            <div class="btn-floating-pitaya" title="Herramientas" onclick="this.parentElement.classList.toggle('active')">
                 <i class="fas fa-wrench"></i>
             </div>
         </div>
