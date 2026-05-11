@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
@@ -1524,10 +1524,6 @@ function obtenerCategoriasDesdeBD()
                 padding: 8px 5px;
             }
 
-            .user-info {
-                flex-direction: column;
-                align-items: flex-end;
-            }
         }
 
         /* Nuevos estilos para la reorganización de filtros */
@@ -1713,27 +1709,11 @@ function obtenerCategoriasDesdeBD()
 </head>
 
 <body>
-<body>
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
         <div class="sub-container">
             <?php echo renderHeader($usuario, 'Confirmación de Horarios'); ?>
-
-                    <div class="user-avatar">
-                        <?= false ?
-                            strtoupper(substr($usuario['nombre'], 0, 1)) :
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= false ?
-                                htmlspecialchars($usuario['nombre']) :
-                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
             <div class="container-fluid p-0">
 
                 <?php if (isset($_SESSION['exito'])): ?>
@@ -1815,20 +1795,6 @@ function obtenerCategoriasDesdeBD()
                 <?php endif; ?>
 
                 <div class="filters-row">
-                    <!-- Selector de vistas -->
-                    <div class="filter-item">
-                        <label>Vista</label>
-                        <div class="filter-controls">
-                            <a href="programar_horarios_operaciones.php"
-                                class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'programar_horarios_operaciones.php' ? 'activo' : '' ?>">
-                                <i class="fas fa-table"></i> <span class="btn-text">Tabla</span>
-                            </a>
-                            <a style="display:none;" href="calendario_horarios2.php"
-                                class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'calendario_horarios2.php' ? 'activo' : '' ?>">
-                                <i class="fas fa-calendar-alt"></i> <span class="btn-text">Calendario</span>
-                            </a>
-                        </div>
-                    </div>
                     <!-- Filtro de semana -->
                     <div class="filter-item">
                         <label for="semana">No. Semana</label>
@@ -1971,7 +1937,7 @@ function obtenerCategoriasDesdeBD()
                                             }
                                             ?>
                                             <th rowspan="2">Total Horas</th>
-                                            <th rowspan="2"></th>
+                                            <th rowspan="2" style="display:none;"></th>
                                         </tr>
                                         <tr>
                                             <?php
@@ -2244,7 +2210,7 @@ function obtenerCategoriasDesdeBD()
                                                     <?= number_format($totalHoras, 2) ?>
                                                 </td>
 
-                                                <td style="text-align: center;">
+                                                <td style="text-align: center; display: none;">
                                                     <?php if ($puedeEditar): ?>
                                                         <button style="display:none;" type="button"
                                                             onclick="guardarOperario(<?= $operario['CodOperario'] ?>)" class="btn btn-primary"
