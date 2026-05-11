@@ -201,113 +201,16 @@ try {
     die("Error en la consulta: " . $e->getMessage());
 }
 
-// Verificar si se solicitó la exportación a Excel
+// Redirigir exportación a Excel al archivo ajax correspondiente
 if (isset($_GET['exportar_excel'])) {
-    // Para Excel, usamos la misma consulta corregida (sin duplicados)
-    $sql_excel = $sql;
-    
-    // Aplicar los mismos filtros
-    if ($tipo_seleccionado != 'todos') {
-        $sql_excel .= " AND tipo_auditoria = :tipo";
-    }
-
-    if ($sucursal_id != 'todas') {
-        if (is_numeric($sucursal_id)) {
-            $sql_excel .= " AND sucursal_id = :sucursal_id";
-        } else {
-            $sql_excel .= " AND sucursal = :sucursal";
-        }
-    }
-
-    if ($operario_id > 0) {
-        $sql_excel .= " AND operario_id = :operario_id";
-    }
-
-    if (!empty($fecha_desde)) {
-        $sql_excel .= " AND DATE(fecha_hora) >= :fecha_desde";
-    }
-
-    if (!empty($fecha_hasta)) {
-        $sql_excel .= " AND DATE(fecha_hora) <= :fecha_hasta";
-    }
-
-    $sql_excel .= " ORDER BY fecha_hora DESC";
-
-    // Ejecutar la consulta para Excel
-    try {
-        $stmt_excel = $db->prepare($sql_excel);
-        $stmt_excel->execute($params);
-        $registros_excel = $stmt_excel->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        die("Error en la consulta para Excel: " . $e->getMessage());
-    }
-
-    // Configurar headers para descarga de archivo Excel
-    header('Content-Type: application/vnd.ms-excel');
-    header('Content-Disposition: attachment; filename="auditorias_consolidadas_'.date('Y-m-d').'.xls"');
-    
-    // Iniciar salida
-    echo '<table border="1">';
-    echo '<tr>';
-    echo '<th>Fecha</th>';
-    echo '<th>Código</th>'; // NUEVA COLUMNA
-    echo '<th>Sucursal</th>';
-    echo '<th>Tipo de Auditoria</th>';
-    echo '<th>Faltante (C$)</th>';
-    echo '</tr>';
-    
-    foreach ($registros_excel as $registro) {
-        // USAR LA FUNCIÓN formatoFecha de funciones.php
-        if ($registro['tipo_auditoria'] == 'faltante_caja') {
-            // Para faltante_caja, usar la fecha directamente (ya que formatoFecha solo muestra fecha)
-            $fecha_formateada = formatoFecha($registro['fecha_hora']);
-        } else {
-            // Para los demás tipos, usar la función formatoFecha que ya maneja el ajuste
-            $fecha_formateada = formatoFecha($registro['fecha_hora']);
-        }
-        
-        // Determinar el tipo de auditoría
-        $tipo = $registro['tipo_auditoria'];
-        $tipo_text = '';
-        
-        switch($tipo) {
-            case 'facturacion':
-                $tipo_text = 'Caja Facturacion';
-                break;
-            case 'caja_chica':
-                $tipo_text = 'Caja Chica';
-                break;
-            case 'inventario':
-                $tipo_text = 'Auditoría Inventario';
-                break;
-            case 'faltante_inventario':
-                $tipo_text = 'Faltante Inventario';
-                break;
-            case 'faltante_danos':
-                $tipo_text = 'Faltante Daños';
-                break;
-            case 'faltante_caja':
-                $tipo_text = 'Faltante de Caja';
-                break;
-        }
-        
-        // Formatear monto faltante
-        $monto = ($tipo == 'inventario') ? abs($registro['monto_faltante']) : $registro['monto_faltante'];
-        $monto_formateado = number_format($monto, 2);
-        
-        // Obtener código de operario
-        $codigo_operario = $registro['operario_id'] ?? '';
-        
-        echo '<tr>';
-        echo '<td>' . $fecha_formateada . '</td>';
-        echo '<td>' . $codigo_operario . '</td>'; // NUEVA COLUMNA
-        echo '<td>' . $registro['sucursal'] . '</td>';
-        echo '<td>' . $tipo_text . '</td>';
-        echo '<td>' . $monto_formateado . '</td>';
-        echo '</tr>';
-    }
-    
-    echo '</table>';
+    $query = http_build_query([
+        'tipo'        => $tipo_seleccionado,
+        'sucursal'    => $sucursal_id,
+        'operario'    => $operario_id,
+        'fecha_desde' => $fecha_desde,
+        'fecha_hasta' => $fecha_hasta,
+    ]);
+    header('Location: ajax/exportar_excel.php?' . $query);
     exit;
 }
 
@@ -331,221 +234,19 @@ if(isset($_GET['sucursal'])) {
 }
 $url_filtros = $url_base . implode('&', $params);
 
-// Verificar si se solicitó la exportación de deducciones por operario
+// Redirigir exportación de deducciones al archivo ajax correspondiente
 if (isset($_GET['exportar_deducciones'])) {
-    try {
-        // Consulta para obtener todas las deducciones de los diferentes tipos para el rango de fechas seleccionado
-        $sql_deducciones = "
-            (SELECT 
-                'facturacion' AS tipo,
-                af.id,
-                af.fecha_hora_regsys AS fecha_evento,
-                af.fecha_deduccion,
-                af.sucursal_id,
-                s.nombre AS sucursal_nombre,
-                af.cajero AS operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                af.comentarios,
-                af.faltante_sobrante AS monto,
-                'ver_auditorias_facturacion.php' AS url_ver
-            FROM auditoria_facturacion af
-            JOIN Operarios o ON af.cajero = o.CodOperario
-            JOIN sucursales s ON af.sucursal_id = s.codigo
-            WHERE DATE(af.fecha_hora_regsys) BETWEEN :fecha_desde1 AND :fecha_hasta1 AND af.faltante_sobrante != 0)
-            
-            UNION ALL
-            
-            (SELECT 
-                'caja_chica' AS tipo,
-                acc.id,
-                acc.fecha_hora_regsys AS fecha_evento,
-                acc.fecha_deduccion,
-                acc.sucursal_id,
-                s.nombre AS sucursal_nombre,
-                acc.lider_tienda_codigo AS operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                acc.comentarios,
-                acc.faltante_sobrante AS monto,
-                'ver_auditorias_caja_chica.php' AS url_ver
-            FROM auditoria_caja_chica acc
-            JOIN Operarios o ON acc.lider_tienda_codigo = o.CodOperario
-            JOIN sucursales s ON acc.sucursal_id = s.codigo
-            WHERE DATE(acc.fecha_hora_regsys) BETWEEN :fecha_desde2 AND :fecha_hasta2 AND acc.faltante_sobrante != 0)
-            
-            UNION ALL
-            
-            (SELECT 
-                'inventario' AS tipo,
-                ai.id,
-                ai.fecha_hora_regsys AS fecha_evento,
-                aio.fecha_deduccion,
-                ai.sucursal_id,
-                s.nombre AS sucursal_nombre,
-                aio.operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                ai.comentarios,
-                aio.monto,
-                'ver_auditorias_inventario.php' AS url_ver
-            FROM auditoria_inventario ai
-            JOIN auditoria_inventario_operarios aio ON ai.id = aio.auditoria_id
-            JOIN Operarios o ON aio.operario_id = o.CodOperario
-            JOIN sucursales s ON ai.sucursal_id = s.codigo
-            WHERE DATE(ai.fecha_hora_regsys) BETWEEN :fecha_desde3 AND :fecha_hasta3 AND aio.monto != 0)
-            
-            UNION ALL
-            
-            (SELECT 
-                'faltante_inventario' AS tipo,
-                fi.id,
-                fi.fecha_hora_regsys AS fecha_evento,
-                fio.fecha_deduccion,
-                fi.sucursal_id,
-                s.nombre AS sucursal_nombre,
-                fio.operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                fi.comentarios,
-                fio.monto,
-                'ver_faltante_inventario.php' AS url_ver
-            FROM faltante_inventario fi
-            JOIN faltante_inventario_operarios fio ON fi.id = fio.faltante_id
-            JOIN Operarios o ON fio.operario_id = o.CodOperario
-            JOIN sucursales s ON fi.sucursal_id = s.codigo
-            WHERE DATE(fi.fecha_hora_regsys) BETWEEN :fecha_desde4 AND :fecha_hasta4 AND fio.monto != 0)
-            
-            UNION ALL
-            
-            (SELECT 
-                'faltante_danos' AS tipo,
-                fd.id,
-                fd.fecha_hora_regsys AS fecha_evento,
-                fdo.fecha_deduccion,
-                fd.sucursal_codigo AS sucursal_id,
-                s.nombre AS sucursal_nombre,
-                fdo.operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                fd.comentarios,
-                fdo.monto,
-                'ver_faltante_danos.php' AS url_ver
-            FROM faltante_danos fd
-            JOIN faltante_danos_operarios fdo ON fd.id = fdo.faltante_id
-            JOIN Operarios o ON fdo.operario_id = o.CodOperario
-            JOIN sucursales s ON fd.sucursal_codigo = s.codigo
-            WHERE DATE(fd.fecha_hora_regsys) BETWEEN :fecha_desde5 AND :fecha_hasta5 AND fdo.monto != 0)
-            
-            ORDER BY fecha_evento DESC
-        ";
-        
-        $stmt_deducciones = $db->prepare($sql_deducciones);
-        
-        // Bind de parámetros para cada subconsulta
-        $stmt_deducciones->bindValue(':fecha_desde1', $fecha_desde);
-        $stmt_deducciones->bindValue(':fecha_hasta1', $fecha_hasta);
-        $stmt_deducciones->bindValue(':fecha_desde2', $fecha_desde);
-        $stmt_deducciones->bindValue(':fecha_hasta2', $fecha_hasta);
-        $stmt_deducciones->bindValue(':fecha_desde3', $fecha_desde);
-        $stmt_deducciones->bindValue(':fecha_hasta3', $fecha_hasta);
-        $stmt_deducciones->bindValue(':fecha_desde4', $fecha_desde);
-        $stmt_deducciones->bindValue(':fecha_hasta4', $fecha_hasta);
-        $stmt_deducciones->bindValue(':fecha_desde5', $fecha_desde);
-        $stmt_deducciones->bindValue(':fecha_hasta5', $fecha_hasta);
-        
-        $stmt_deducciones->execute();
-        $deducciones = $stmt_deducciones->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Configurar headers para descarga de archivo Excel
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment; filename="deducciones_operarios_'.date('Y-m-d').'.xls"');
-        
-        // Iniciar salida
-        echo '<table border="1">';
-        echo '<tr>';
-        echo '<th>Persona</th>';
-        echo '<th>Código</th>';
-        echo '<th>Sucursal</th>';
-        echo '<th>Fecha Incidente</th>';
-        echo '<th>Fecha Deducción</th>';
-        echo '<th>Monto a Descontar</th>';
-        // echo '<th>Tipo CONCEPTO</th>';
-        echo '<th>Detalle</th>';
-        echo '</tr>';
-        
-        foreach ($deducciones as $deduccion) {
-            // USAR LA FUNCIÓN formatoFecha
-            if ($deduccion['tipo'] == 'faltante_caja') {
-                // Para faltante_caja, usar la fecha directamente (ya que formatoFecha solo muestra fecha)
-                $fecha_evento_formatted = formatoFecha($deduccion['fecha_evento']);
-            } else {
-                // Para los demás tipos, usar la función formatoFecha que ya maneja el ajuste
-                $fecha_evento_formatted = formatoFecha($deduccion['fecha_evento']);
-            }
-            
-            $fecha_deduccion = '';
-            if (!empty($deduccion['fecha_deduccion'])) {
-                $fecha_deduccion = formatoFecha($deduccion['fecha_deduccion']);
-            }
-            
-            // Determinar el tipo de auditoría
-            $tipo = $deduccion['tipo'];
-            $tipo_text = '';
-            
-            switch($tipo) {
-                case 'facturacion':
-                    $tipo_text = 'Caja Facturación';
-                    break;
-                case 'caja_chica':
-                    $tipo_text = 'Caja Chica';
-                    break;
-                case 'inventario':
-                    $tipo_text = 'Auditoría Inventario';
-                    break;
-                case 'faltante_inventario':
-                    $tipo_text = 'Faltante Inventario';
-                    break;
-                case 'faltante_danos':
-                    $tipo_text = 'Faltante Daños';
-                    break;
-                case 'faltante_caja':
-                    $tipo_text = 'Faltante de Caja';
-                    break;
-            }
-            
-            echo '<tr>';
-            // Usar la función mejorada para obtener el nombre completo
-            $nombre_completo = obtenerNombreCompletoOperario([
-                'Nombre' => $deduccion['operario_nombre'] ?? '',
-                'Nombre2' => '',
-                'Apellido' => '', 
-                'Apellido2' => ''
-            ]);
-            // Si la función anterior no funciona bien, usar esta alternativa más robusta:
-            if (empty(trim($nombre_completo)) || $nombre_completo === 'Nombre no disponible') {
-                // Intentar obtener los datos desde la base de datos
-                $datos_operario = obtenerDatosCompletosOperario($deduccion['operario_id']);
-                if ($datos_operario) {
-                    $nombre_completo = obtenerNombreCompletoOperario($datos_operario);
-                } else {
-                    $nombre_completo = 'Código: ' . $deduccion['operario_id'];
-                }
-            }
-            
-            echo '<td>' . htmlspecialchars($nombre_completo) . '</td>';
-            echo '<td>' . $deduccion['operario_id'] . '</td>';
-            echo '<td>' . $deduccion['sucursal_nombre'] . '</td>';
-            echo '<td>' . $fecha_evento_formatted . '</td>';
-            echo '<td>' . $fecha_deduccion . '</td>';
-            echo '<td>' . number_format(abs($deduccion['monto']), 2) . '</td>';
-            // echo '<td>' . $tipo_text . '</td>';
-            echo '<td>' . htmlspecialchars($deduccion['comentarios'] ?? '') . '</td>';
-            echo '</tr>';
-        }
-        
-        echo '</table>';
-        exit;
-        
-    } catch (PDOException $e) {
-        die("Error en la consulta de deducciones: " . $e->getMessage());
-    }
+    $query = http_build_query([
+        'sucursal'    => $sucursal_id,
+        'operario'    => $operario_id,
+        'fecha_desde' => $fecha_desde,
+        'fecha_hasta' => $fecha_hasta,
+    ]);
+    header('Location: ajax/exportar_deducciones.php?' . $query);
+    exit;
 }
+
+
 
 // Calcular el total de faltantes según los filtros aplicados
 $total_faltante = 0;
@@ -583,249 +284,30 @@ foreach ($registros as $registro) {
     }
 }
 
-// Verificar si se solicitó la exportación para contabilidad
+// Redirigir exportación contabilidad al archivo ajax correspondiente
 if (isset($_GET['exportar_contabilidad'])) {
-    try {
-        // Consulta para obtener todas las deducciones agrupadas por operario
-        $sql_contabilidad = "
-            (SELECT 
-                af.cajero AS operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                af.fecha_deduccion,
-                SUM(ABS(af.faltante_sobrante)) AS monto_total,
-                'facturacion' AS tipo
-            FROM auditoria_facturacion af
-            JOIN Operarios o ON af.cajero = o.CodOperario
-            WHERE DATE(af.fecha_hora_regsys) BETWEEN :fecha_desde1 AND :fecha_hasta1 
-            AND af.faltante_sobrante != 0
-            GROUP BY operario_id, operario_nombre, af.fecha_deduccion)
-            
-            UNION ALL
-            
-            (SELECT 
-                acc.lider_tienda_codigo AS operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                acc.fecha_deduccion,
-                SUM(ABS(acc.faltante_sobrante)) AS monto_total,
-                'caja_chica' AS tipo
-            FROM auditoria_caja_chica acc
-            JOIN Operarios o ON acc.lider_tienda_codigo = o.CodOperario
-            WHERE DATE(acc.fecha_hora_regsys) BETWEEN :fecha_desde2 AND :fecha_hasta2 
-            AND acc.faltante_sobrante != 0
-            GROUP BY operario_id, operario_nombre, acc.fecha_deduccion)
-            
-            UNION ALL
-            
-            (SELECT 
-                aio.operario_id AS operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                aio.fecha_deduccion,
-                SUM(ABS(aio.monto)) AS monto_total,
-                'inventario' AS tipo
-            FROM auditoria_inventario ai
-            JOIN auditoria_inventario_operarios aio ON ai.id = aio.auditoria_id
-            JOIN Operarios o ON aio.operario_id = o.CodOperario
-            WHERE DATE(ai.fecha_hora_regsys) BETWEEN :fecha_desde3 AND :fecha_hasta3 
-            AND aio.monto != 0
-            GROUP BY operario_id, operario_nombre, aio.fecha_deduccion)
-            
-            UNION ALL
-            
-            (SELECT 
-                fio.operario_id AS operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                fio.fecha_deduccion,
-                SUM(ABS(fio.monto)) AS monto_total,
-                'faltante_inventario' AS tipo
-            FROM faltante_inventario fi
-            JOIN faltante_inventario_operarios fio ON fi.id = fio.faltante_id
-            JOIN Operarios o ON fio.operario_id = o.CodOperario
-            WHERE DATE(fi.fecha_hora_regsys) BETWEEN :fecha_desde4 AND :fecha_hasta4 
-            AND fio.monto != 0
-            GROUP BY operario_id, operario_nombre, fio.fecha_deduccion)
-            
-            UNION ALL
-            
-            (SELECT 
-                fdo.operario_id AS operario_id,
-                CONCAT(o.Nombre, ' ', o.Nombre2, ' ', o.Apellido, ' ', o.Apellido2) AS operario_nombre,
-                fdo.fecha_deduccion,
-                SUM(ABS(fdo.monto)) AS monto_total,
-                'faltante_danos' AS tipo
-            FROM faltante_danos fd
-            JOIN faltante_danos_operarios fdo ON fd.id = fdo.faltante_id
-            JOIN Operarios o ON fdo.operario_id = o.CodOperario
-            WHERE DATE(fd.fecha_hora_regsys) BETWEEN :fecha_desde5 AND :fecha_hasta5 
-            AND fdo.monto != 0
-            GROUP BY operario_id, operario_nombre, fdo.fecha_deduccion)
-            
-            ORDER BY operario_nombre, fecha_deduccion
-        ";
-        
-        $stmt_contabilidad = $db->prepare($sql_contabilidad);
-        
-        // Bind de parámetros para cada subconsulta
-        $stmt_contabilidad->bindValue(':fecha_desde1', $fecha_desde);
-        $stmt_contabilidad->bindValue(':fecha_hasta1', $fecha_hasta);
-        $stmt_contabilidad->bindValue(':fecha_desde2', $fecha_desde);
-        $stmt_contabilidad->bindValue(':fecha_hasta2', $fecha_hasta);
-        $stmt_contabilidad->bindValue(':fecha_desde3', $fecha_desde);
-        $stmt_contabilidad->bindValue(':fecha_hasta3', $fecha_hasta);
-        $stmt_contabilidad->bindValue(':fecha_desde4', $fecha_desde);
-        $stmt_contabilidad->bindValue(':fecha_hasta4', $fecha_hasta);
-        $stmt_contabilidad->bindValue(':fecha_desde5', $fecha_desde);
-        $stmt_contabilidad->bindValue(':fecha_hasta5', $fecha_hasta);
-        
-        $stmt_contabilidad->execute();
-        $deducciones_contabilidad = $stmt_contabilidad->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Configurar headers para descarga de archivo Excel
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment; filename="deducciones_contabilidad_'.date('Y-m-d').'.xls"');
-        
-        // Iniciar salida
-        echo '<table border="1">';
-        echo '<tr>';
-        echo '<th>Colaborador</th>';
-        echo '<th>Código</th>';
-        echo '<th>Fecha a Deducir</th>';
-        echo '<th>Monto Total (C$)</th>';
-        echo '<th>Tipo de Deducción</th>';
-        echo '</tr>';
-        
-        foreach ($deducciones_contabilidad as $deduccion) {
-            // Formatear fecha de deducción usando formatoFecha
-            $fecha_deduccion = '';
-            if (!empty($deduccion['fecha_deduccion'])) {
-                if ($deduccion['tipo'] == 'faltante_caja') {
-                    // Para faltante_caja, usar la fecha directamente (ya que formatoFecha solo muestra fecha)
-                    $fecha_deduccion = formatoFecha($deduccion['fecha_deduccion']);
-                } else {
-                    // Para los demás tipos, usar la función formatoFecha que ya maneja el ajuste
-                    $fecha_deduccion = formatoFecha($deduccion['fecha_deduccion']);
-                }
-            }
-            
-            // Determinar el tipo de deducción
-            $tipo = $deduccion['tipo'];
-            $tipo_text = '';
-            
-            switch($tipo) {
-                case 'facturacion':
-                    $tipo_text = 'Caja Facturación';
-                    break;
-                case 'caja_chica':
-                    $tipo_text = 'Caja Chica';
-                    break;
-                case 'inventario':
-                    $tipo_text = 'Auditoría Inventario';
-                    break;
-                case 'faltante_inventario':
-                    $tipo_text = 'Faltante Inventario';
-                    break;
-                case 'faltante_danos':
-                    $tipo_text = 'Faltante Daños';
-                    break;
-            }
-            
-            echo '<tr>';
-            echo '<td>' . $deduccion['operario_nombre'] . '</td>';
-            echo '<td>' . $deduccion['operario_id'] . '</td>';
-            echo '<td>' . $fecha_deduccion . '</td>';
-            echo '<td>' . number_format($deduccion['monto_total'], 2) . '</td>';
-            echo '<td>' . $tipo_text . '</td>';
-            echo '</tr>';
-        }
-        
-        echo '</table>';
-        exit;
-        
-    } catch (PDOException $e) {
-        die("Error en la consulta para contabilidad: " . $e->getMessage());
-    }
-}
-
-// Verificar si se solicitó la exportación a Excel solo para faltantes de caja
-if (isset($_GET['exportar_faltante_caja'])) {
-    // Consulta específica para faltantes de caja
-    $sql_export = "
-        SELECT 
-            fc.id,
-            fc.fecha AS fecha_hora,
-            fc.fecha_deduccion,
-            fc.sucursal_id,
-            s.nombre AS sucursal_nombre,
-            fc.operario_id,
-            fc.operario_nombre,
-            fc.comentarios,
-            fc.monto
-        FROM faltante_caja fc
-        JOIN sucursales s ON fc.sucursal_id = s.codigo
-        WHERE 1=1
-    ";
-    
-    $params_export = [];
-    
-    // Aplicar mismos filtros
-    if ($operario_id > 0) {
-        $sql_export .= " AND fc.operario_id = ?";
-        $params_export[] = $operario_id;
-    }
-    
-    if ($sucursal_id != 'todas') {
-        $sql_export .= " AND fc.sucursal_id = ?";
-        $params_export[] = $sucursal_id;
-    }
-    
-    if (!empty($fecha_desde)) {
-        $sql_export .= " AND DATE(fc.fecha) >= ?";
-        $params_export[] = $fecha_desde;
-    }
-    
-    if (!empty($fecha_hasta)) {
-        $sql_export .= " AND DATE(fc.fecha) <= ?";
-        $params_export[] = $fecha_hasta;
-    }
-    
-    $sql_export .= " ORDER BY fc.fecha DESC";
-    
-    $stmt_export = $db->prepare($sql_export);
-    $stmt_export->execute($params_export);
-    $registros_export = $stmt_export->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Configurar headers para descarga de archivo Excel - INCLUYENDO RANGO DE FECHAS
-    $nombre_archivo = "faltantes_caja_" . str_replace('-', '', $fecha_desde) . "_" . str_replace('-', '', $fecha_hasta) . ".xls";
-    header('Content-Type: application/vnd.ms-excel');
-    header('Content-Disposition: attachment; filename="' . $nombre_archivo . '"');
-    
-    // Iniciar salida
-    echo '<table border="1">';
-    echo '<tr>';
-    echo '<th>Fecha</th>';
-    echo '<th>Colaborador</th>';
-    echo '<th>Código</th>';
-    echo '<th>Sucursal</th>';
-    echo '<th>Monto (C$)</th>';
-    echo '<th>Comentarios</th>';
-    echo '</tr>';
-    
-    foreach ($registros_export as $registro) {
-        // Para faltante_caja, usar la fecha directamente (sin hora)
-        $fecha_formateada = formatoFecha($registro['fecha_hora']);
-        
-        echo '<tr>';
-        echo '<td>' . $fecha_formateada . '</td>';
-        echo '<td>' . $registro['operario_nombre'] . '</td>';
-        echo '<td>' . $registro['operario_id'] . '</td>';
-        echo '<td>' . $registro['sucursal_nombre'] . '</td>';
-        echo '<td>' . number_format(abs($registro['monto']), 2) . '</td>';
-        echo '<td>' . htmlspecialchars($registro['comentarios'] ?? '') . '</td>';
-        echo '</tr>';
-    }
-    
-    echo '</table>';
+    $query = http_build_query([
+        'fecha_desde' => $fecha_desde,
+        'fecha_hasta' => $fecha_hasta,
+    ]);
+    header('Location: ajax/exportar_contabilidad.php?' . $query);
     exit;
 }
+
+
+
+// Redirigir exportación faltante de caja al archivo ajax correspondiente
+if (isset($_GET['exportar_faltante_caja'])) {
+    $query = http_build_query([
+        'sucursal'    => $sucursal_id,
+        'operario'    => $operario_id,
+        'fecha_desde' => $fecha_desde,
+        'fecha_hasta' => $fecha_hasta,
+    ]);
+    header('Location: ajax/exportar_faltante_caja.php?' . $query);
+    exit;
+}
+
 ?>
 
 <!DOCTYPE html>
