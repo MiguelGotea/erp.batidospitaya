@@ -551,11 +551,12 @@ foreach ($todasSucursales as $s) {
                 </label>
                 <select id="selectSucursal" class="suc-select" onchange="cambiarSucursal()">
                     <?php foreach ($todasSucursales as $s): ?>
-                        <option value="<?= htmlspecialchars($s['CodSucursal']) ?>"
+                        <option value="<?= (int)$s['id_sucursal'] ?>"
                             data-ip="<?= htmlspecialchars($s['portal_ip_local'] ?? '') ?>"
-                            data-canal="<?= (int) ($s['canal_caja'] ?? 101) ?>"
+                            data-canal="<?= (int)($s['canal_caja'] ?? 101) ?>"
                             data-ok="<?= (!empty($s['portal_ip_local']) && !empty($s['portal_usuario']) && !empty($s['portal_clave'])) ? '1' : '0' ?>"
                             data-nombre="<?= htmlspecialchars($s['NombreSucursal']) ?>"
+                            data-codigo="<?= htmlspecialchars($s['CodSucursal']) ?>"
                             <?= ($s['CodSucursal'] === ($sucursalDefault['CodSucursal'] ?? '')) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($s['NombreSucursal']) ?> (<?= htmlspecialchars($s['CodSucursal']) ?>)
                         </option>
