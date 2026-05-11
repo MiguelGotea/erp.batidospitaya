@@ -231,10 +231,11 @@ Batidos Pitaya es una cadena de tiendas de batidos, bowls, waffles y snacks natu
 
 # GRUPOS DE ÁREAS / CATEGORÍAS
 
-A. EQUIPOS DE PRODUCCIÓN — Congeladores horizontales, refrigeradoras, mesas de trabajo de acero, máquinas de waffles, bomba de agua del tanque, filtros de agua, hieleras. Impacto directo en operación: SÍ.
-B. INOCUIDAD ALIMENTARIA — Lámparas UV anti-mosquitos, filtros de agua (contaminación), sistemas de desagüe, lavanderos del área de producción, mangueras de lavado. Impacto directo en operación: SÍ — riesgo sanitario.
+A. EQUIPOS DE PREPARACIÓN — Congeladores horizontales, refrigeradoras, mesas de trabajo de acero, bomba de agua del tanque, filtros de agua, hieleras. Impacto directo en operación: SÍ.
+Nota: Máquinas de waffles, licuadoras y extractores de naranja son atendidos por Operaciones directamente — NO se incluyen aquí.
+B. INOCUIDAD ALIMENTARIA — Lámparas UV anti-mosquitos, filtros de agua (contaminación), llaves de agua filtrada empotradas en pared (salida del agua post-filtro usada en batidos), sistemas de desagüe, lavanderos del área de preparación, mangueras de lavado. Impacto directo en operación: SÍ — riesgo sanitario.
 C. INSTALACIONES ELÉCTRICAS — Tomacorrientes, enchufes, cables, bujías, lámparas, luminarias, interruptores. Impacto varía.
-D. CLIMATIZACIÓN Y VENTILACIÓN — Abanicos de salón/bodega/producción, sistemas de ventilación, serpentinas, bajaretes.
+D. CLIMATIZACIÓN Y VENTILACIÓN — Abanicos de salón/bodega/área de preparación, sistemas de ventilación, serpentinas de techo (presentes en algunos locales), bajaretes y cortinas externas de protección solar.
 E. PLOMERÍA E HIDRÁULICA — Fugas y filtraciones, llaves de paso, grifos, mangueras, inodoros, lavamanos de baños.
 F. INFRAESTRUCTURA Y ACABADOS — Pintura de paredes, papel tapiz, vinil decorativo, cerámica y azulejos, techo (goteras), madera decorativa. Afecta imagen y auditorías.
 G. MOBILIARIO DE SALÓN — Sillas y mesas de salón/terraza. La pintura/restauración de sillas y mesas es TERCERIZADA (tiempo interno = 0H).
@@ -245,12 +246,23 @@ K. SERVICIOS SANITARIOS (BAÑOS) — Inodoros, lavamanos, espejos, acabados de b
 
 # ESCALA DE URGENCIA (1-4)
 
-| Nivel | Nombre | Descripción |
-|-------|--------|-------------|
-| 1 | No Urgente | Deterioro estético o funcional menor, no afecta operación |
-| 2 | Medio | Molestia operativa o riesgo potencial, la tienda funciona |
-| 3 | Urgente | Afecta operación significativamente o riesgo cercano |
-| 4 | Crítico | Tienda no puede operar correctamente O riesgo de seguridad inmediata |
+## Dos dimensiones de evaluación
+
+Toda solicitud se evalúa en dos dimensiones. La operativa tiene mayor peso:
+
+| Dimensión | Peso | Descripción |
+|-----------|------|-------------|
+| Impacto operativo | ALTO | Afecta la capacidad de preparar/vender el producto o representa riesgo de seguridad |
+| Impacto visual / imagen | MEDIO | Afecta lo que el cliente ve: fachada, salón, rotulación, mobiliario visible, baños |
+
+Regla de combinación: Si un problema solo tiene impacto visual (sin afectación operativa), su nivel máximo es 2-Medio. Si tiene impacto operativo, el visual puede sumar un nivel cuando la exposición al cliente es directa y significativa.
+
+| Nivel | Nombre | Criterio operativo | Criterio visual |
+|-------|--------|--------------------|-----------------|
+| 1 | No Urgente | Sin afectación operativa | Deterioro estético menor, área no visible o de bajo tráfico |
+| 2 | Medio | Molestia operativa, tienda funciona | Problema visible al cliente: pintura, muebles, señalización menor |
+| 3 | Urgente | Afecta operación significativamente o riesgo cercano | Impacto visual en elemento central de marca (rótulo LED, fachada principal) |
+| 4 | Crítico | Tienda no puede operar O riesgo de seguridad inmediato | No aplica como criterio único — siempre requiere impacto operativo |
 
 ## NIVEL 4 — CRÍTICO (automático)
 - Congelador principal NO refrigera (puerta dañada, compresor muerto)
@@ -259,21 +271,23 @@ K. SERVICIOS SANITARIOS (BAÑOS) — Inodoros, lavamanos, espejos, acabados de b
 - CUALQUIER problema de inocuidad alimentaria → Crítico automático SIN EXCEPCIÓN: agua filtrada con contaminación/partículas/lama, lámpara UV fundida, filtro de agua comprometido
 - Portón o puerta principal que no abre → impide apertura de la tienda
 - Abanico de salón completamente desprendido o a punto de caer sobre clientes/colaboradores
-- Fuga masiva de agua que inunda el área de producción o caja y no puede contenerse
+- Fuga masiva de agua que inunda el área de preparación o caja y no puede contenerse
 
 ## NIVEL 3 — URGENTE
 - Congelador funciona pero con bisagra dañada, tapa que no sostiene
 - Abanico de salón o bodega que NO gira completamente (sin riesgo de caída)
 - Enchufe inestable de equipo crítico (freezer, congelador)
 - Rótulo LED principal apagado, parpadeando o con letras dañadas
-- Fuga de agua en pantry, lavamanos o manguera del área de producción que impide uso parcial
+- Fuga de agua en pantry, lavamanos o manguera del área de preparación que impide uso parcial
 - Lámpara UV anti-mosquitos fundida
-- Tomacorriente con partes peladas en área de producción
+- Tomacorriente con partes peladas en área de preparación
 - Abanico flojo con ruidos (riesgo de caída en el corto plazo)
 - Cortina principal que no sube/baja correctamente
 - Manguera de desagüe de hielera con fuga → piso mojado en área de trabajo
-- Mesa de trabajo de producción desnivelada
+- Mesa de trabajo de preparación desnivelada
 - Baño completamente inutilizable (lavamanos sin agua, inodoro sin descarga, inundación activa)
+- Llave/grifo de manguera de lavado externo quebrada → limpieza externa comprometida
+- Cable eléctrico insuficiente que impide colocar un freezer en su lugar correcto
 
 ## NIVEL 2 — MEDIO
 - Abanico con tornillos flojos (funciona pero requiere ajuste preventivo)
@@ -288,6 +302,12 @@ K. SERVICIOS SANITARIOS (BAÑOS) — Inodoros, lavamanos, espejos, acabados de b
 - Pintura de paredes descascarada en área visible o de fachada
 - Cerámica o azulejo desprendido en área de tráfico
 - Cámara de seguridad floja o sin uso
+- Cadenas de acceso con dificultad para abrir/cerrar (requiere engrase)
+- Puertas con pintura deteriorada o tope quebrado
+- Portabolsas, portamanguera o accesorios pequeños rotos
+- Manguera de hielera con goteo leve (no inunda)
+- Baño que opera pero con daño estético significativo
+- Parrilla de freezer quebrada (no impide funcionamiento)
 
 ## NIVEL 1 — NO URGENTE
 - Pintura de sillas y mesas de salón (SIEMPRE TERCERIZADO)
@@ -299,6 +319,10 @@ K. SERVICIOS SANITARIOS (BAÑOS) — Inodoros, lavamanos, espejos, acabados de b
 - Sellado de huecos pequeños en paredes (no estructurales)
 - Instalación de DVR o cámaras adicionales (mejora, no falla activa)
 - Instalación de serpentina de techo (mejora)
+- Madera o barniz deteriorado en murales o marcos decorativos
+- Cortinas para ventanas (protección de sol, no urgente)
+- Grifo de lavamanos con goteo muy leve en área no crítica
+- Pintura de basurero o elementos decorativos
 
 # REGLAS ESPECIALES DE CLASIFICACIÓN
 
@@ -307,6 +331,7 @@ K. SERVICIOS SANITARIOS (BAÑOS) — Inodoros, lavamanos, espejos, acabados de b
 - Cables/enchufes pelados en equipos menores → Nivel 3
 - Tomacorriente inestable (se mueve, no está fijo) → Nivel 3
 - Tomacorriente despegado (sin cables expuestos) → Nivel 2
+- Bujía/cepo fundido en área de preparación o sin iluminación alternativa → Nivel 3; con iluminación alternativa → Nivel 2
 
 ## Inocuidad alimentaria
 - CUALQUIER falla en equipos de inocuidad → Nivel 4 Crítico AUTOMÁTICO SIN EXCEPCIÓN
@@ -322,7 +347,7 @@ K. SERVICIOS SANITARIOS (BAÑOS) — Inodoros, lavamanos, espejos, acabados de b
 
 ## Abanicos
 - Abanico caído o a punto de caer → Nivel 4
-- Abanico que NO gira (salón o producción) → Nivel 3
+- Abanico que NO gira (salón o preparación) → Nivel 3
 - Abanico de bodega que no gira → Nivel 2
 - Abanico con ruido/tornillos flojos en salón → Nivel 3; en bodega → Nivel 2
 
@@ -337,7 +362,7 @@ K. SERVICIOS SANITARIOS (BAÑOS) — Inodoros, lavamanos, espejos, acabados de b
 
 Sube un nivel si:
 - El problema implica riesgo de caída sobre personas
-- El problema impide usar un equipo de producción aunque sea parcialmente
+- El problema impide usar un equipo de preparación aunque sea parcialmente
 - El daño afecta simultáneamente a más de un área del local
 - El baño afectado es el único disponible de la tienda
 
