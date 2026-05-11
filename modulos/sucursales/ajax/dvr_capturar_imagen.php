@@ -20,12 +20,13 @@ if (!$usuario) {
 // Leer body JSON
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
-// Sucursal: la que viene del frontend (selector) o la propia del usuario
-$codSucursalParam = isset($input['cod_sucursal']) ? trim($input['cod_sucursal']) : null;
-$codSucursal      = $codSucursalParam ?: ($usuario['sucursal_codigo'] ?? null);
+// cod_sucursal recibido del frontend = sucursales.id (int) = DVR_Sucursales.cod_sucursal (int)
+// Si no viene del frontend, NO hay fallback por varchar (sucursal_codigo del usuario es varchar)
+$codSucursalParam = isset($input['cod_sucursal']) ? intval($input['cod_sucursal']) : 0;
+$codSucursal      = $codSucursalParam > 0 ? $codSucursalParam : null;
 
 if (!$codSucursal) {
-    echo json_encode(['success' => false, 'message' => 'Sin sucursal asignada o sesión no válida.']);
+    echo json_encode(['success' => false, 'message' => 'Sin sucursal especificada.']);
     exit;
 }
 
