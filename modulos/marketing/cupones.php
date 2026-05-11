@@ -87,8 +87,7 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
                     </table>
                 </div>
 
-                <div class="d-flex justify-content-end align-items-center gap-4 mt-3">
-                    <div id="paginacion"></div>
+                <div class="d-flex justify-content-between align-items-center mt-3">
                     <div class="d-flex align-items-center gap-2">
                         <label class="mb-0">Mostrar:</label>
                         <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
@@ -99,6 +98,7 @@ if (!tienePermiso('cupones', 'vista', $cargoOperario)) {
                         </select>
                         <span class="mb-0">registros</span>
                     </div>
+                    <div id="paginacion"></div>
                 </div>
             </div>
         </div>

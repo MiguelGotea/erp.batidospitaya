@@ -115,8 +115,7 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                     </table>
                 </div>
 
-                <div class="d-flex justify-content-end align-items-center gap-4 mt-3">
-                    <div id="paginacion"></div>
+                <div class="d-flex justify-content-between align-items-center mt-3">
                     <div class="d-flex align-items-center gap-2">
                         <label class="mb-0">Mostrar:</label>
                         <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
@@ -127,6 +126,7 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                         </select>
                         <span class="mb-0">registros</span>
                     </div>
+                    <div id="paginacion"></div>
                 </div>
 
             </div><!-- /container-fluid -->
@@ -303,21 +303,14 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
     <?php if ($puedeAprobar): ?>
         <div class="modal fade" id="modalNuevaAnulacion" data-bs-backdrop="static" tabindex="-1">
             <div class="modal-dialog modal-lg">
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-                    <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
-                                style="width: 40px; height: 40px;">
-                                <i class="bi bi-plus-circle fs-4"></i>
-                            </div>
-                            <div>
-                                <h5 class="modal-title fw-bold mb-0">Nueva Solicitud de Anulación (Web)</h5>
-                                <p class="small mb-0 opacity-75">Configura los detalles de la solicitud web</p>
-                            </div>
-                        </div>
+                <div class="modal-content">
+                    <div class="modal-header" style="background:#218838; color:#fff;">
+                        <h5 class="modal-title">
+                            <i class="bi bi-plus-circle me-2"></i>Nueva Solicitud de Anulación (Web)
+                        </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body p-4 bg-light">
+                    <div class="modal-body">
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <label class="form-label small fw-semibold">Sucursal</label>
@@ -353,11 +346,11 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                             <div class="small mt-1">No se encontró el pedido.</div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between">
+                    <div class="modal-footer border-0">
                         <button class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button class="btn-modern btn-modern-primary" id="btnEnviarAnulacionWeb"
                             onclick="enviarAnulacionWeb()" disabled>
-                            <i class="bi bi-send me-2"></i>Enviar Solicitud
+                            <i class="bi bi-send me-1"></i>Enviar Solicitud
                         </button>
                     </div>
                 </div>
@@ -371,21 +364,14 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
     <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true"
         data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
-                            style="width: 40px; height: 40px;">
-                            <i class="fas fa-info-circle fs-4"></i>
-                        </div>
-                        <div>
-                            <h5 class="modal-title fw-bold mb-0" id="pageHelpModalLabel">Guía de Aprobación de Anulaciones</h5>
-                            <p class="small mb-0 opacity-75">Información sobre el proceso y flujo</p>
-                        </div>
-                    </div>
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>Guía de Aprobación de Anulaciones
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4 bg-light">
+                <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <div class="card h-100 border-0 bg-light">
