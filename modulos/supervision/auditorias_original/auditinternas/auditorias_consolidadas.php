@@ -321,6 +321,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="css/auditorias_consolidadas.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
@@ -439,17 +440,34 @@ if (isset($_GET['exportar_faltante_caja'])) {
         </div>
         
         <?php if (verificarAccesoCargo([21, 16])): ?>
-            <!-- Botones para agregar nuevos registros -->
-            <div style="background: #fff; padding: 2px;">
-                <p>Nueva Auditoría</p>
-                <a href="auditoria_caja_facturacion.php" class="btn-agregar"><i class="fas fa-cash-register"></i> AUDITORÍA CAJA FACTURACIÓN</a>
-                <a href="auditoria_caja_chica.php" class="btn-agregar"><i class="fas fa-wallet"></i> AUDITORÍA CAJA CHICA</a>
-                <a href="auditoria_inventario.php" class="btn-agregar"><i class="fas fa-boxes"></i> AUDITORÍA INVENTARIO</a>
-                <a href="faltante_inventario.php" class="btn-agregar"><i class="fas fa-exclamation-triangle"></i> FALTANTE INVENTARIO</a>
-                <a href="faltante_danos.php" class="btn-agregar"><i class="fas fa-times-circle"></i> FALTANTE DAÑOS</a>
-                <br><br>
+            <!-- Botón Flotante de Nueva Auditoría (FAB) -->
+            <div class="fab-container" id="fabNuevaAuditoria">
+                <div class="fab-options">
+                    <a href="faltante_danos.php" class="fab-option">
+                        <span class="fab-label">Faltante Daños</span>
+                        <div class="fab-icon-holder"><i class="fas fa-times-circle"></i></div>
+                    </a>
+                    <a href="faltante_inventario.php" class="fab-option">
+                        <span class="fab-label">Faltante Inventario</span>
+                        <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
+                    </a>
+                    <a href="auditoria_inventario.php" class="fab-option">
+                        <span class="fab-label">Auditoría Inventario</span>
+                        <div class="fab-icon-holder"><i class="fas fa-boxes"></i></div>
+                    </a>
+                    <a href="auditoria_caja_chica.php" class="fab-option">
+                        <span class="fab-label">Auditoría Caja Chica</span>
+                        <div class="fab-icon-holder"><i class="fas fa-wallet"></i></div>
+                    </a>
+                    <a href="auditoria_caja_facturacion.php" class="fab-option">
+                        <span class="fab-label">Auditoría Caja Facturación</span>
+                        <div class="fab-icon-holder"><i class="fas fa-cash-register"></i></div>
+                    </a>
+                </div>
+                <div class="btn-floating-pitaya" title="Nueva Auditoría">
+                    <i class="fas fa-wrench"></i>
+                </div>
             </div>
-            <br>
         <?php endif; ?>
         
         <!-- Mostrar registros de la tabla seleccionada -->
@@ -720,6 +738,26 @@ if (isset($_GET['exportar_faltante_caja'])) {
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    // FAB: toggle al hacer clic en móvil / cerrar al hacer clic fuera
+    $(document).ready(function () {
+        $(document).on('click', '.btn-floating-pitaya', function (e) {
+            const container = $(this).closest('.fab-container');
+            if (container.length) {
+                container.toggleClass('active');
+                $(this).toggleClass('active');
+            }
+        });
+
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.fab-container').length) {
+                $('.fab-container').removeClass('active');
+                $('.btn-floating-pitaya').removeClass('active');
+            }
+        });
+    });
+    </script>
 
     
     <script>
