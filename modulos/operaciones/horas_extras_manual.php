@@ -276,6 +276,13 @@ $esRestringido = !$puedeVerTodo && !$puedeFiltroAll;
                     <input type="hidden" name="cod_operario" id="sol_cod_operario">
                     <input type="hidden" name="cod_sucursal" id="sol_cod_sucursal">
 
+                    <!-- Fecha -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Fecha <span class="text-danger">*</span></label>
+                        <input type="date" name="fecha" id="sol_fecha" class="form-control" value="<?= date('Y-m-d') ?>"
+                            required>
+                    </div>
+
                     <!-- Colaborador con búsqueda -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Colaborador <span class="text-danger">*</span></label>
@@ -292,13 +299,6 @@ $esRestringido = !$puedeVerTodo && !$puedeFiltroAll;
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Fecha -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Fecha <span class="text-danger">*</span></label>
-                        <input type="date" name="fecha" id="sol_fecha" class="form-control" value="<?= date('Y-m-d') ?>"
-                            required>
                     </div>
 
                     <!-- Horas Extras -->
