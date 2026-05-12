@@ -2,9 +2,11 @@
 // actualizar_desde_lideres.php
 // require_once '../../includes/auth.php';
 // require_once '../../includes/funciones.php';
-require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
+require_once '../../core/auth/auth.php'; 
+require_once '../../core/permissions/permissions.php';
+
 $usuario = obtenerUsuarioActual();
-$cargoOperario = $usuario['CodNivelesCargos'];
+$cargoOperario = $usuario['CodNivelesCargos'] ?? null;
 
 if (!tienePermiso('confirmar_horarios', 'gestionar', $cargoOperario)) {
     header('Content-Type: application/json');
