@@ -2,23 +2,15 @@
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
-// Al inicio del archivo, verificar autenticación y acceso al módulo
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
-require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
 
-// Verificar acceso al módulo 'publico' (o el nombre que corresponda según tus permisos)
-//verificarAccesoModulo('supervision');
-
-//******************************Estándar para header******************************
-verificarAutenticacion();
+require_once '../../../core/auth/auth.php';
+require_once '../../../core/layout/menu_lateral.php';
+require_once '../../../core/layout/header_universal.php';
+require_once '../../../core/permissions/permissions.php';
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-// Verificar acceso al módulo 'supervision'
-//verificarAccesoCargo([11, 16, 22, 28]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
 if (!verificarAccesoCargo([11, 16, 22, 28, 50, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
@@ -26,15 +18,11 @@ if (!verificarAccesoCargo([11, 16, 22, 28, 50, 49]) && !(isset($_SESSION['usuari
     exit();
 }
 
-// Obtenemos el cargo principal usando la función de funciones.php
-$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-//******************************Estándar para header, termina******************************
-
-// Configuración de zona horaria
+// ConfiguraciÃ³n de zona horaria
 date_default_timezone_set('America/Managua');
 setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'es');
 
-// Al inicio del archivo, después de la conexión a BD
+// Al inicio del archivo, despuÃ©s de la conexiÃ³n a BD
 $sucursales_fisicas = obtenerTodasSucursales();
 
 // Obtener grupos de reclamos
@@ -62,7 +50,7 @@ function obtenerTodosTiposReclamos($conn) {
 $gruposReclamos = obtenerGruposReclamos($conn);
 $tiposReclamosJSON = json_encode(obtenerTodosTiposReclamos($conn));
 
-// Obtener el próximo número de reclamo
+// Obtener el prÃ³ximo nÃºmero de reclamo
 function obtenerProximoNumeroReclamo($conn) {
     $query = "SELECT MAX(id) as max_id FROM reclamos";
     $stmt = $conn->query($query);
@@ -77,25 +65,25 @@ function obtenerGestoresReclamos($conn) {
         $stmt = $conn->query($query);
         $gestores = $stmt->fetchAll(PDO::FETCH_COLUMN);
         
-        // Asegurarnos que está en la lista
-        if (!in_array('Keyli Mejía', $gestores)) {
-            array_unshift($gestores, 'Keyli Mejía');
+        // Asegurarnos que estÃ¡ en la lista
+        if (!in_array('Keyli MejÃ­a', $gestores)) {
+            array_unshift($gestores, 'Keyli MejÃ­a');
         }
         
         return $gestores;
     } catch (PDOException $e) {
         error_log("Error al obtener gestores: " . $e->getMessage());
-        return ['Keyli Mejía']; // Valor por defecto si hay error
+        return ['Keyli MejÃ­a']; // Valor por defecto si hay error
     }
 }
 
 $gestores = obtenerGestoresReclamos($conn);
-$gestorActual = $datosFormulario['gestor_reclamo'] ?? 'Keyli Mejía';
-$mostrarInput = ($gestorActual !== 'Keyli Mejía' && !in_array($gestorActual, $gestores));
+$gestorActual = $datosFormulario['gestor_reclamo'] ?? 'Keyli MejÃ­a';
+$mostrarInput = ($gestorActual !== 'Keyli MejÃ­a' && !in_array($gestorActual, $gestores));
 
 $proximoNumero = obtenerProximoNumeroReclamo($conn);
 
-// Procesar el formulario cuando se envía
+// Procesar el formulario cuando se envÃ­a
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
         // Validar campos requeridos
@@ -110,11 +98,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'productos' => 'Productos en Reclamo',
             'grupo_id' => 'Grupo de Reclamo',
             'tipo_reclamo_id' => 'Tipo de Reclamo',
-            'descripcion' => 'Descripción del Reclamo',
-            'investigacion_preliminar' => 'Investigación Preliminar'
+            'descripcion' => 'DescripciÃ³n del Reclamo',
+            'investigacion_preliminar' => 'InvestigaciÃ³n Preliminar'
         ];
         
-        // Ya no necesitamos buscar el código, lo tenemos directamente
+        // Ya no necesitamos buscar el cÃ³digo, lo tenemos directamente
         $sucursal_codigo = $_POST['sucursal_codigo'];
         
         // Obtener el nombre de la sucursal para mantener compatibilidad
@@ -164,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mkdir('uploads/reclamos/videos', 0777, true);
         }
         
-        // Procesar imágenes
+        // Procesar imÃ¡genes
         $imagenes = [];
         if (!empty($_FILES['fotos']['name'][0])) {
             $totalImagenes = count($_FILES['fotos']['name']);
@@ -234,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':gestor_reclamo' => $_POST['gestor_reclamo'],
             ':fuente' => $_POST['fuente'],
             ':sucursal' => $sucursal_nombre,        // Nombre para compatibilidad
-            ':sucursal_codigo' => $sucursal_codigo, // Código para nuevo sistema
+            ':sucursal_codigo' => $sucursal_codigo, // CÃ³digo para nuevo sistema
             ':fecha_reclamo' => $_POST['fecha_reclamo'],
             ':fecha_evento' => $_POST['fecha_evento'],
             ':hora_evento' => $_POST['hora_evento'],
@@ -261,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ]);
         }
         
-        // Insertar imágenes
+        // Insertar imÃ¡genes
         if (!empty($imagenes)) {
             $queryImagen = "INSERT INTO reclamos_imagenes (reclamo_id, ruta_imagen) VALUES (:reclamo_id, :ruta_imagen)";
             $stmtImagen = $conn->prepare($queryImagen);
@@ -289,16 +277,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         $conn->commit();
         
-        // Éxito - redirigir a página de confirmación
+        // Ã‰xito - redirigir a pÃ¡gina de confirmaciÃ³n
         $_SESSION['reclamo_exitoso'] = true;
         $_SESSION['reclamo_id'] = $reclamoId;
         
         try {
-            // Obtener mes y año ACTUAL (fecha de registro, no del evento)
+            // Obtener mes y aÃ±o ACTUAL (fecha de registro, no del evento)
             $mes_actual = date('n');
             $anio_actual = date('Y');
             
-            // Verificar si ya existe un registro para esta sucursal/mes/año
+            // Verificar si ya existe un registro para esta sucursal/mes/aÃ±o
             $queryKPI = "SELECT id, reclamos_totales, reclamos_cantidad FROM kpi_reclamos 
                          WHERE mes = :mes AND anio = :anio AND cod_sucursal = :cod_sucursal 
                          LIMIT 1";
@@ -358,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         error_log("Trace: " . $e->getTraceAsString());
         
         $_SESSION['errores'] = [
-            "Ocurrió un error al procesar el reclamo: " . $e->getMessage(),
+            "OcurriÃ³ un error al procesar el reclamo: " . $e->getMessage(),
             "Por favor intente nuevamente."
         ];
         $_SESSION['datos_formulario'] = $_POST;
@@ -375,12 +363,18 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Nuevo Reclamo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <style>
         * {
             box-sizing: border-box;
@@ -867,40 +861,13 @@ header {
     </style>
 </head>
 <body>
-    <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
-                
-                <div class="buttons-container">
-                    <a href="nuevoreclamo.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'nuevoreclamo.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-tasks"></i> <span class="btn-text">Nuevo Reclamo</span>
-                    </a>
-                </div>
-                
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="../../../index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Nuevo Reclamo'); ?>
+
+            <div class="container-fluid p-3">
     
     <div class="container">
         <h1><strong>REPORTE DE NUEVO RECLAMO</strong></h1>
@@ -924,7 +891,7 @@ header {
                 </div>
                 
                 <div class="form-group" style="flex: 1;">
-                    <label>Código de Reclamo</label>
+                    <label>CÃ³digo de Reclamo</label>
                     <input style="display:none;" type="text" value="RCL-<?php echo str_pad($proximoNumero, 5, '0', STR_PAD_LEFT); ?>" readonly>
                     <input type="text" value="<?php echo $proximoNumero; ?>" readonly>
                 </div>
@@ -934,7 +901,7 @@ header {
             <div class="form-group">
                 <label class="required">Gestor(a) de Reclamo</label>
                 <div id="gestorContainer">
-                    <!-- Campo oculto que se enviará con el formulario -->
+                    <!-- Campo oculto que se enviarÃ¡ con el formulario -->
                     <input type="hidden" name="gestor_reclamo" id="gestorHidden" value="<?php echo htmlspecialchars($gestorActual); ?>">
                     
                     <!-- Selector de gestores -->
@@ -959,7 +926,7 @@ header {
             <div class="form-group">
                 <label class="required">Fuente</label>
                 <select name="fuente" required>
-                    <option value="">Seleccione una opción</option>
+                    <option value="">Seleccione una opciÃ³n</option>
                     <option value="Whatsapp" <?php echo ($datosFormulario['fuente'] ?? '') === 'Whatsapp' ? 'selected' : ''; ?>>Whatsapp</option>
                     <option value="Google Business" <?php echo ($datosFormulario['fuente'] ?? '') === 'Google Business' ? 'selected' : ''; ?>>Google Business</option>
                     <option value="Pedidos Ya" <?php echo ($datosFormulario['fuente'] ?? '') === 'Pedidos Ya' ? 'selected' : ''; ?>>Pedidos Ya</option>
@@ -972,7 +939,7 @@ header {
             <div class="form-group">
                 <label class="required">Sucursal</label>
                 <select name="sucursal_codigo" required>  <!-- Cambiar name a sucursal_codigo -->
-                    <option value="">Seleccione una opción</option>
+                    <option value="">Seleccione una opciÃ³n</option>
                     <?php foreach ($sucursales_fisicas as $sucursal): ?>
                         <option value="<?php echo htmlspecialchars($sucursal['codigo']); ?>" 
                             <?php echo (($datosFormulario['sucursal_codigo'] ?? '') === $sucursal['codigo']) ? 'selected' : ''; ?>>
@@ -1018,7 +985,7 @@ header {
             <div class="form-group">
                 <label class="required">Medio de Compra</label>
                 <select name="medio_compra" required>
-                    <option value="">Seleccione una opción</option>
+                    <option value="">Seleccione una opciÃ³n</option>
                     <option value="Directo en Local" <?php echo ($datosFormulario['medio_compra'] ?? '') === 'Directo en Local' ? 'selected' : ''; ?>>Directo en Local</option>
                     <option value="Delivery Coordinado por Whatsapp" <?php echo ($datosFormulario['medio_compra'] ?? '') === 'Delivery Coordinado por Whatsapp' ? 'selected' : ''; ?>>Delivery Coordinado por Whatsapp</option>
                     <option value="Pedidos Ya" <?php echo ($datosFormulario['medio_compra'] ?? '') === 'Pedidos Ya' ? 'selected' : ''; ?>>Pedidos Ya</option>
@@ -1028,7 +995,7 @@ header {
             <div class="form-group">
                 <label class="required">Productos en Reclamo + Precio</label>
                 <div class="productos-container" id="productosContainer">
-                    <!-- Los productos se agregarán aquí dinámicamente -->
+                    <!-- Los productos se agregarÃ¡n aquÃ­ dinÃ¡micamente -->
                 </div>
                 <button type="button" class="btn-add-producto" id="btnAddProducto">
                     <i class="fas fa-plus"></i> Agregar Producto
@@ -1052,17 +1019,17 @@ header {
                 <label class="required">Tipo de Reclamo</label>
                 <select name="tipo_reclamo_id" id="tipo_reclamo_id" required>
                     <option value="">Seleccione un tipo</option>
-                    <!-- Se poblará dinámicamente -->
+                    <!-- Se poblarÃ¡ dinÃ¡micamente -->
                 </select>
             </div>
             
             <div class="form-group">
-                <label class="required">Descripción del Reclamo</label>
+                <label class="required">DescripciÃ³n del Reclamo</label>
                 <textarea name="descripcion" required><?php echo htmlspecialchars($datosFormulario['descripcion'] ?? ''); ?></textarea>
             </div>
             
             <div class="form-group">
-                <label class="required">Investigación Preliminar</label>
+                <label class="required">InvestigaciÃ³n Preliminar</label>
                 <textarea name="investigacion_preliminar" required><?php echo htmlspecialchars($datosFormulario['investigacion_preliminar'] ?? ''); ?></textarea>
             </div>
             
@@ -1087,7 +1054,7 @@ header {
                 </div>
                 <div class="file-info" id="fileInfo">No se han seleccionado archivos</div>
                 <div class="media-preview-container" id="mediaPreviewContainer">
-                    <!-- Las previsualizaciones de medios se agregarán aquí -->
+                    <!-- Las previsualizaciones de medios se agregarÃ¡n aquÃ­ -->
                 </div>
             </div>
             
@@ -1097,12 +1064,17 @@ header {
             </div>
         </form>
     </div>
+            </div>
+        </div>
+    </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Datos de tipos de reclamos desde PHP
         const tiposReclamos = <?php echo $tiposReclamosJSON; ?>;
         
-        // Elementos de categorización
+        // Elementos de categorizaciÃ³n
         const grupoSelect = document.getElementById('grupo_id');
         const tipoSelect = document.getElementById('tipo_reclamo_id');
         
@@ -1130,7 +1102,7 @@ header {
         
         grupoSelect.addEventListener('change', actualizarTipos);
         
-        // Inicializar tipos si ya hay un grupo seleccionado (por ejemplo, después de error de validación)
+        // Inicializar tipos si ya hay un grupo seleccionado (por ejemplo, despuÃ©s de error de validaciÃ³n)
         if (grupoSelect.value) {
             actualizarTipos();
         }
@@ -1140,7 +1112,7 @@ header {
         const productosHidden = document.getElementById('productosHidden');
         const btnAddProducto = document.getElementById('btnAddProducto');
         
-        // Cargar productos si ya existían
+        // Cargar productos si ya existÃ­an
         let productos = JSON.parse(productosHidden.value);
         
         function renderProductos() {
@@ -1220,7 +1192,7 @@ header {
             renderProductos();
         }
         
-        // Previsualización de medios (fotos y videos)
+        // PrevisualizaciÃ³n de medios (fotos y videos)
         const fotosInput = document.getElementById('fotosInput');
         const videosInput = document.getElementById('videosInput');
         const mediaPreviewContainer = document.getElementById('mediaPreviewContainer');
@@ -1232,7 +1204,7 @@ header {
             videos: []
         };
         
-        // Función para manejar la selección de archivos
+        // FunciÃ³n para manejar la selecciÃ³n de archivos
         function handleFileSelection(type, files) {
             if (files && files.length > 0) {
                 Array.from(files).forEach(file => {
@@ -1260,7 +1232,7 @@ header {
                     videosInput.files = dataTransfer.files;
                 }
                 
-                // Actualizar la información del archivo
+                // Actualizar la informaciÃ³n del archivo
                 updateFileInfo();
                 
                 // Actualizar las previsualizaciones
@@ -1339,7 +1311,7 @@ header {
                             videosInput.files = dataTransfer.files;
                         }
                         
-                        // Actualizar la información y las previsualizaciones
+                        // Actualizar la informaciÃ³n y las previsualizaciones
                         updateFileInfo();
                         updateMediaPreviews();
                     });
@@ -1384,7 +1356,7 @@ header {
                             videosInput.files = dataTransfer.files;
                         }
                         
-                        // Actualizar la información y las previsualizaciones
+                        // Actualizar la informaciÃ³n y las previsualizaciones
                         updateFileInfo();
                         updateMediaPreviews();
                     });
@@ -1394,9 +1366,9 @@ header {
             });
         }
         
-        // Confirmación antes de enviar o cancelar
+        // ConfirmaciÃ³n antes de enviar o cancelar
         function confirmCancel() {
-            if (confirm('¿Está seguro que desea cancelar? Los datos ingresados se perderán.')) {
+            if (confirm('Â¿EstÃ¡ seguro que desea cancelar? Los datos ingresados se perderÃ¡n.')) {
                 window.location.href = 'index.php';
             }
         }
@@ -1407,16 +1379,16 @@ header {
             
             if (productosValidos.length === 0) {
                 e.preventDefault();
-                alert('Debe agregar al menos un producto válido');
+                alert('Debe agregar al menos un producto vÃ¡lido');
                 return;
             }
             
-            // Validar que ningún precio esté vacío
+            // Validar que ningÃºn precio estÃ© vacÃ­o
             const preciosInvalidos = productos.some(p => p.precio === null || p.precio === undefined || p.precio === '');
             
             if (preciosInvalidos) {
                 e.preventDefault();
-                alert('El campo de Precio no puede estar vacío. Si el producto no tiene costo, ingrese 0.');
+                alert('El campo de Precio no puede estar vacÃ­o. Si el producto no tiene costo, ingrese 0.');
                 return;
             }
             
@@ -1427,12 +1399,12 @@ header {
                 return;
             }
             
-            if (!confirm('¿Está seguro que desea guardar este reclamo?')) {
+            if (!confirm('Â¿EstÃ¡ seguro que desea guardar este reclamo?')) {
                 e.preventDefault();
             }
         });
         
-        // Mostrar errores específicos
+        // Mostrar errores especÃ­ficos
         <?php if (!empty($errores)): ?>
             setTimeout(() => {
                 const firstErrorField = document.querySelector('[name="<?php echo array_key_first($datosFormulario); ?>"]');
@@ -1477,7 +1449,7 @@ header {
         
         actualizarGestor();
         
-        // Función para formatear fechas
+        // FunciÃ³n para formatear fechas
         function formatDate(inputDate) {
             if (!inputDate) return '';
             
@@ -1501,7 +1473,7 @@ header {
             return `${formattedDay}-${formattedMonth}-${formattedYear}`;
         }
         
-        // Función para parsear fechas en formato dd-mmm-aaaa
+        // FunciÃ³n para parsear fechas en formato dd-mmm-aaaa
         function parseDisplayDate(displayDate) {
             if (!displayDate) return null;
             
@@ -1560,7 +1532,7 @@ header {
                 fechaEventoInput.click();
             });
             
-            // También permitir que el ícono del calendario abra el datepicker
+            // TambiÃ©n permitir que el Ã­cono del calendario abra el datepicker
             document.querySelectorAll('.calendar-icon').forEach(icon => {
                 icon.addEventListener('click', function() {
                     const inputId = this.previousElementSibling.id;
@@ -1571,3 +1543,4 @@ header {
     </script>
 </body>
 </html>
+
