@@ -3599,10 +3599,11 @@ function obtenerCategoriasDesdeBD()
                 const semana = document.getElementById('semana').value;
                 const sucursal = document.getElementById('sucursal').value;
                 const accion = <?= $horarioAutorizado ? '0' : '1' ?>;
-                const accionTexto = <?= $horarioAutorizado ? "'DESAPROBAR'" : "'APROBAR'"; ?>;
-                const icono = <?= $horarioAutorizado ? "'🔒'" : "'✅'"; ?>;
+                const accionTexto = <?= $horarioAutorizado ? "'CERRAR'" : "'ABRIR'"; ?>;
+                
+                console.log('Enviando aprobación:', {semana, sucursal, accion});
 
-                if (!confirm(`${icono} ¿Está seguro que desea ${accionTexto} la edición para:\n\nSemana: ${semana}\nSucursal: ${sucursal}\n?`)) {
+                if (!confirm(`¿Está seguro que desea ${accionTexto} la edición para la Semana ${semana} en la Sucursal ${sucursal}?`)) {
                     return;
                 }
 
