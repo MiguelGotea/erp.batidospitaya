@@ -88,14 +88,14 @@ if ($periodoEdicion) {
     $semanaPermitida = $semanaSiguiente['numero_semana'];
 }
 
-// Verificar si el horario está autorizado para edición
-$horarioAutorizado = true;
+// Verificar si el horario está autorizado para edición en la tabla AutorizacionesEdicion
+$horarioAutorizado = false;
 if ($sucursalSeleccionada && $semanaSeleccionada && isset($semana) && $semana) {
-    $stmt = $conn->prepare("SELECT COUNT(*) as autorizado FROM HorariosSemanalesOperaciones 
-                           WHERE id_semana_sistema = ? AND cod_sucursal = ? AND autorizado = 1");
+    $stmt = $conn->prepare("SELECT autorizado FROM AutorizacionesEdicion 
+                           WHERE id_semana = ? AND cod_sucursal = ?");
     $stmt->execute([$semana['id'], $sucursalSeleccionada]);
     $result = $stmt->fetch();
-    $horarioAutorizado = ($result['autorizado'] > 0);
+    $horarioAutorizado = ($result && $result['autorizado'] == 1);
 }
 
 /*
@@ -2900,7 +2900,7 @@ function obtenerCategoriasDesdeBD()
                     <i class="fas fa-save"></i> Guardar Cambios
                 </button>
                 <button type="button" onclick="confirmarHorarios()" class="btn btn-success">
-                    <i class="fas fa-check-double"></i> Confirmar y Bloquear Horario
+                    <i class="fas fa-check"></i> Confirmar Horarios
                 </button>
                 <?php endif; ?>
             </div>
@@ -3595,10 +3595,9 @@ function obtenerCategoriasDesdeBD()
                     alert('Operario eliminado correctamente');
                 }
             }
-
             function aprobarEdicionLider() {
-                const semana = document.querySelector('input[name="semana"]').value;
-                const sucursal = document.querySelector('input[name="sucursal"]').value;
+                const semana = document.getElementById('semana').value;
+                const sucursal = document.getElementById('sucursal').value;
                 const accion = <?= $horarioAutorizado ? '0' : '1' ?>;
                 const accionTexto = <?= $horarioAutorizado ? "'DESAPROBAR'" : "'APROBAR'"; ?>;
                 const icono = <?= $horarioAutorizado ? "'🔒'" : "'✅'"; ?>;
