@@ -14,12 +14,17 @@ $(document).ready(function () {
     $('#operario_search').on('input', function () {
         const q = $(this).val();
         if (q.length < 3) { $('#operarios-sugerencias').hide(); return; }
-        $.get('/includes/buscar_operario.php', { nombre: q, sucursal: $('#sucursal').val() }, function (data) {
+        $.get('../../includes/buscar_operario.php', { 
+            nombre: q, 
+            sucursal: $('#sucursal').val(),
+            fecha: $('#desde').val() || new Date().toISOString().split('T')[0]
+        }, function (data) {
             let html = '';
             data.forEach(op => {
+                const nombreCompleto = `${op.Nombre} ${op.Nombre2 || ''} ${op.Apellido} ${op.Apellido2 || ''}`.replace(/\s+/g, ' ').trim();
                 html += `<button type="button" class="list-group-item list-group-item-action"
-                    onclick="seleccionarOperario('${op.CodOperario}','${op.Nombre} ${op.Apellido}')">
-                    ${op.Nombre} ${op.Apellido} <small class="text-muted">(${op.sucursal_nombre})</small>
+                    onclick="seleccionarOperario('${op.CodOperario}','${nombreCompleto}')">
+                    ${nombreCompleto} <small class="text-muted">(${op.cargo_nombre})</small>
                 </button>`;
             });
             $('#operarios-sugerencias').html(html).show();
@@ -30,12 +35,17 @@ $(document).ready(function () {
     $('#sol_operario_search').on('input', function () {
         const q = $(this).val();
         if (q.length < 3) { $('#sol-sugerencias').hide(); return; }
-        $.get('/includes/buscar_operario.php', { nombre: q, sucursal: $('#sucursal').val() }, function (data) {
+        $.get('../../includes/buscar_operario.php', { 
+            nombre: q, 
+            sucursal: $('#sucursal').val(),
+            fecha: $('#sol_fecha').val()
+        }, function (data) {
             let html = '';
             data.forEach(op => {
+                const nombreCompleto = `${op.Nombre} ${op.Nombre2 || ''} ${op.Apellido} ${op.Apellido2 || ''}`.replace(/\s+/g, ' ').trim();
                 html += `<button type="button" class="list-group-item list-group-item-action"
-                    onclick="seleccionarOperarioModal('${op.CodOperario}','${op.Nombre} ${op.Apellido}','${op.sucursal_codigo || ''}')">
-                    ${op.Nombre} ${op.Apellido} <small class="text-muted">(${op.sucursal_nombre})</small>
+                    onclick="seleccionarOperarioModal('${op.CodOperario}','${nombreCompleto}','${op.sucursal_codigo || ''}')">
+                    ${nombreCompleto} <small class="text-muted">(${op.cargo_nombre})</small>
                 </button>`;
             });
             $('#sol-sugerencias').html(html).show();
