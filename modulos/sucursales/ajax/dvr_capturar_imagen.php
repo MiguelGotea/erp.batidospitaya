@@ -17,7 +17,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 // URL del snapshot server corriendo en el VPS
 define('SNAPSHOT_SERVER_URL', 'http://198.211.97.243:8765/snapshot');
-define('SNAPSHOT_API_TOKEN',  'a8f5e2d9c4b7a1e6f3d8c5b2a9e6d3f0c7a4b1e8d5c2a9f6e3d0c7b4a1e8f5d2');
+define('SNAPSHOT_API_TOKEN',  'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50');
 define('DVR_VPS_IP',          '127.0.0.1');  // IP local en el VPS (tunel SSH)
 
 $usuario = obtenerUsuarioActual();
