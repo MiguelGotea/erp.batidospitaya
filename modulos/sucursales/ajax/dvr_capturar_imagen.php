@@ -58,9 +58,10 @@ if (!$dvr) {
     exit;
 }
 
-$usuario_dvr  = trim($dvr['portal_usuario'] ?? '');
-$clave        = trim($dvr['portal_clave']   ?? '');
-$puertoRtsp   = !empty($dvr['puerto_rtsp_vps']) ? intval($dvr['puerto_rtsp_vps']) : 0;
+$usuario_dvr  = trim($dvr['portal_usuario']   ?? '');
+$clave        = trim($dvr['portal_clave']     ?? '');
+$puertoRtsp   = !empty($dvr['puerto_rtsp_vps'])  ? intval($dvr['puerto_rtsp_vps'])  : 0;
+$puertoHttp   = !empty($dvr['puerto_http_vps'])  ? intval($dvr['puerto_http_vps'])  : 0; // 0 = no hay tunel HTTP
 $tunelActivo  = !empty($dvr['tunel_activo']);
 $canal        = $canalParam ?: (!empty($dvr['canal_caja']) ? intval($dvr['canal_caja']) : 101);
 
@@ -81,12 +82,15 @@ if (!$tunelActivo || !$puertoRtsp) {
 }
 
 // ── Llamar al snapshot server en el VPS ─────────────────────────────────
+// Si el DVR tiene puerto HTTP (firmware moderno), el snapshot server
+// usara ISAPI para imagen en vivo. Si no, usara RTSP + grabacion (~5 min lag).
 $payload = json_encode([
-    'usuario'     => $usuario_dvr,
-    'clave'       => $clave,
-    'puerto_rtsp' => $puertoRtsp,
-    'canal'       => $canal,
-    'vps_ip'      => DVR_VPS_IP,
+    'usuario'      => $usuario_dvr,
+    'clave'        => $clave,
+    'puerto_rtsp'  => $puertoRtsp,
+    'puerto_http'  => $puertoHttp,   // 0 = firmware antiguo, >0 = ISAPI disponible
+    'canal'        => $canal,
+    'vps_ip'       => DVR_VPS_IP,
 ]);
 
 $ch = curl_init(SNAPSHOT_SERVER_URL);
