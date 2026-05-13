@@ -45,6 +45,7 @@ if ($faltanteId) {
 }
 
 function mostrarListadoFaltantesCaja($conn) {
+    global $usuario;
     // Paginación
     $pagina = $_GET['pagina'] ?? 1;
     $porPagina = 10;
@@ -154,6 +155,7 @@ function mostrarListadoFaltantesCaja($conn) {
 }
 
 function mostrarDetalleFaltanteCaja($conn, $id) {
+    global $usuario;
     // Obtener datos principales con nombre del registrador desde Operarios
     $stmt = $conn->prepare("SELECT fc.*, s.nombre as sucursal_nombre,
                            CONCAT(

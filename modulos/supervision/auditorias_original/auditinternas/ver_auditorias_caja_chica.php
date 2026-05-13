@@ -65,6 +65,7 @@ if ($auditoriaId) {
 }
 
 function mostrarListadoAuditorias($conn) {
+    global $usuario;
     // Paginación
     $pagina = $_GET['pagina'] ?? 1;
     $porPagina = 10;
@@ -179,6 +180,7 @@ function mostrarListadoAuditorias($conn) {
 }
 
 function mostrarDetalleAuditoria($conn, $id) {
+    global $usuario;
     // Obtener datos principales
     $stmt = $conn->prepare("SELECT a.*, s.nombre as sucursal_nombre, 
                            CONCAT(o.Nombre, ' ', o.Apellido) as nombre_lider,
