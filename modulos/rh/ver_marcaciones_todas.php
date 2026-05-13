@@ -1592,7 +1592,7 @@ function verificarTardanzaYaRegistrada(
 
                     <?php if ($esContabilidad): ?>
                         <!-- Botón Exportar (opcional, puedes eliminarlo si no lo quieres) -->
-                        <div class="filter-group" style="align-self: flex-end;">
+                        <div style="display:none;" class="filter-group" style="align-self: flex-end;">
                             <a href="ver_marcaciones_todas.php?<?= http_build_query([
                                                                     'modo' => $modoVista,
                                                                     'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1607,7 +1607,7 @@ function verificarTardanzaYaRegistrada(
                         </div>
 
                         <!-- Nuevos botones para Faltas y Tardanzas -->
-                        <div class="filter-group" style="align-self: flex-end;">
+                        <div class="filter-group" style="align-self: flex-end; display:none;">
                             <a href="ver_marcaciones_todas.php?<?= http_build_query([
                                                                     'modo' => $modoVista,
                                                                     'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
@@ -1636,7 +1636,7 @@ function verificarTardanzaYaRegistrada(
                         </div>
 
                         <!-- Botón para exportar tardanzas detalladas -->
-                        <div class="filter-group" style="align-self: flex-end;">
+                        <div class="filter-group" style="align-self: flex-end; display:none;">
                             <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
                                                                         'modo' => $modoVista,
                                                                         'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
