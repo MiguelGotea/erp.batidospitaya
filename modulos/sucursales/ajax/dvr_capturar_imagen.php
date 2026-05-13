@@ -5,10 +5,19 @@
  * POST JSON → { canal: int (opcional), cod_sucursal: string (opcional) }
  * Si cod_sucursal se omite, usa la sucursal asignada al usuario.
  * Respuesta JSON → { success, path, filename, sucursal, canal, ip, timestamp, size_kb, message? }
+ *
+ * ARQUITECTURA DE CONEXION:
+ *   - Si tunel_activo=1 y puerto_http_vps tiene valor:
+ *       → conecta a http://VPS_IP:puerto_http_vps/ISAPI/...  (a través del túnel SSH)
+ *   - Si tunel_activo=0 o sin tunnel:
+ *       → conecta a http://portal_ip_local/ISAPI/...  (red local, solo para pruebas)
  */
 require_once '../../../core/auth/auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
+
+// IP pública del VPS donde viven los túneles SSH de DVR
+define('DVR_VPS_IP', '198.211.97.243');
 
 $usuario = obtenerUsuarioActual();
 if (!$usuario) {
@@ -51,12 +60,14 @@ if (!$dvr) {
     exit;
 }
 
-$ip      = trim($dvr['portal_ip_local'] ?? '');
-$usuario_dvr = trim($dvr['portal_usuario'] ?? '');
-$clave   = trim($dvr['portal_clave']    ?? '');
-$canal   = $canalParam ?: (!empty($dvr['canal_caja']) ? intval($dvr['canal_caja']) : 101);
+$ipLocal       = trim($dvr['portal_ip_local'] ?? '');
+$usuario_dvr   = trim($dvr['portal_usuario']  ?? '');
+$clave         = trim($dvr['portal_clave']     ?? '');
+$canal         = $canalParam ?: (!empty($dvr['canal_caja']) ? intval($dvr['canal_caja']) : 101);
+$tunelActivo   = !empty($dvr['tunel_activo']);
+$puertoHttpVps = !empty($dvr['puerto_http_vps']) ? intval($dvr['puerto_http_vps']) : null;
 
-if (!$ip || !$usuario_dvr || !$clave) {
+if (!$ipLocal || !$usuario_dvr || !$clave) {
     echo json_encode([
         'success' => false,
         'message' => 'Configuración DVR incompleta (falta IP, usuario o clave).'
@@ -64,9 +75,20 @@ if (!$ip || !$usuario_dvr || !$clave) {
     exit;
 }
 
-// ── Llamada ISAPI Hikvision ───────────────────────────────────────────────
-$url = "http://{$ip}/ISAPI/Streaming/channels/{$canal}/picture";
+// ── Decidir cómo conectar al DVR ─────────────────────────────────────────
+// Si el túnel SSH está activo, usamos el puerto HTTP expuesto en el VPS.
+// Esto evita intentar conectar a la IP local del DVR desde el servidor ERP.
+if ($tunelActivo && $puertoHttpVps) {
+    // Conexión a través del túnel SSH inverso en el VPS
+    $url       = "http://" . DVR_VPS_IP . ":{$puertoHttpVps}/ISAPI/Streaming/channels/{$canal}/picture";
+    $ipDisplay = DVR_VPS_IP . ":{$puertoHttpVps} (túnel→{$ipLocal})";
+} else {
+    // Conexión directa a IP local (solo funciona si el ERP está en la misma red)
+    $url       = "http://{$ipLocal}/ISAPI/Streaming/channels/{$canal}/picture";
+    $ipDisplay = $ipLocal;
+}
 
+// ── Llamada ISAPI Hikvision ───────────────────────────────────────────────
 $ch = curl_init();
 curl_setopt_array($ch, [
     CURLOPT_URL            => $url,
@@ -87,7 +109,7 @@ curl_close($ch);
 if ($curlError) {
     echo json_encode([
         'success' => false,
-        'message' => "Error de conexión con DVR ({$ip}): {$curlError}"
+        'message' => "Error de conexión con DVR ({$ipDisplay}): {$curlError}"
     ]);
     exit;
 }
@@ -95,7 +117,8 @@ if ($curlError) {
 if ($httpCode !== 200 || !$imageData) {
     echo json_encode([
         'success' => false,
-        'message' => "DVR respondió HTTP {$httpCode} sin imagen. Verifica IP/credenciales."
+        'message' => "DVR respondió HTTP {$httpCode} sin imagen. Verifica IP/credenciales.",
+        'url_usada' => $url
     ]);
     exit;
 }
@@ -137,7 +160,7 @@ echo json_encode([
     'filename'  => $filename,
     'sucursal'  => $codSucursal,
     'canal'     => $canal,
-    'ip'        => $ip,
+    'ip'        => $ipDisplay,
     'timestamp' => date('Y-m-d H:i:s'),
     'size_kb'   => round(strlen($imageData) / 1024, 1),
 ]);
