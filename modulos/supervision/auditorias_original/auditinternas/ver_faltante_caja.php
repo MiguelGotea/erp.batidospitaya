@@ -1,8 +1,9 @@
 <?php
 // Incluir configuración y verificar autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
-// Antes llamaba a ../funciones.php de auditora
-// require_once 'config.php'; // Comentado por migración al core
+require_once '../../../../core/layout/menu_lateral.php';
+require_once '../../../../core/layout/header_universal.php';
+require_once '../../../../core/permissions/permissions.php';
 
 //******************************Estándar para header******************************
 
@@ -84,9 +85,13 @@ function mostrarListadoFaltantesCaja($conn) {
         <link rel="stylesheet" href="css/ver_faltante_caja.css?v=<?php echo mt_rand(1, 10000); ?>">
     </head>
     <body>
-        <div class="header">
-            <img src="/core/assets/img/Logo.svg" alt="Logo">
-        </div>
+        <?php echo renderMenuLateral($usuario['CodNivelesCargos']); ?>
+
+        <div class="main-container">
+            <div class="sub-container">
+                <?php echo renderHeader($usuario, 'Historial de Faltantes de Caja'); ?>
+                
+                <div class="container-fluid p-3">
         
         <div class="container">
             <h1>Historial de Faltantes de Caja</h1>
@@ -140,6 +145,8 @@ function mostrarListadoFaltantesCaja($conn) {
                 <?php endfor; ?>
             </div>
             <?php endif; ?>
+                </div>
+            </div>
         </div>
     </body>
     </html>
@@ -187,43 +194,13 @@ function mostrarDetalleFaltanteCaja($conn, $id) {
         <link rel="stylesheet" href="css/ver_faltante_caja.css?v=<?php echo mt_rand(1, 10000); ?>">
     </head>
     <body>
-        <!-- Header replicado de ver_auditorias_caja_chica.php -->
-        <div class="header">
-            <header>
-                <div class="header-container">
-                    <div class="logo-container">
-                        <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                    </div>
-                    
-                    <div class="buttons-container">
-                        <a href="auditorias_consolidadas.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Historial</span>
-                        </a>
-                    </div>
-                    
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            <?= isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin' ? 
-                                strtoupper(substr(obtenerUsuarioActual()['nombre'], 0, 1)) : 
-                                strtoupper(substr(obtenerUsuarioActual()['Nombre'], 0, 1)) ?>
-                        </div>
-                        <div>
-                            <div>
-                                <?= isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin' ? 
-                                    htmlspecialchars(obtenerUsuarioActual()['nombre']) : 
-                                    htmlspecialchars(obtenerUsuarioActual()['Nombre'].' '.obtenerUsuarioActual()['Apellido']) ?>
-                            </div>
-                            <small>
-                                <?= htmlspecialchars(obtenerCargoPrincipalUsuario($_SESSION['usuario_id'])) ?>
-                            </small>
-                        </div>
-                        <a href="auditorias_consolidadas.php" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </a>
-                    </div>
-                </div>
-            </header>
-        </div>
+        <?php echo renderMenuLateral($usuario['CodNivelesCargos']); ?>
+
+        <div class="main-container">
+            <div class="sub-container">
+                <?php echo renderHeader($usuario, 'Detalle Faltante de Caja #' . $id); ?>
+                
+                <div class="container-fluid p-3">
         
         <div class="container">
             <h3 style="text-align:center;">Faltante de Caja #<?= $id ?></h3>
@@ -284,6 +261,8 @@ function mostrarDetalleFaltanteCaja($conn, $id) {
                 <a href="auditorias_consolidadas.php" class="btn">
                     <i class="fas fa-arrow-left"></i> Volver al Historial
                 </a>
+            </div>
+                </div>
             </div>
         </div>
     </body>
