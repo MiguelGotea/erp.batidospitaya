@@ -42,11 +42,6 @@ try {
     
     $conn->set_charset("utf8mb4");
     
-    // Verificar y modificar la tabla si es necesario
-    $check_column = $conn->query("SHOW COLUMNS FROM `auditoria_inventario` LIKE 'foto_path_2'");
-    if ($check_column->num_rows == 0) {
-        $conn->query("ALTER TABLE `auditoria_inventario` ADD COLUMN `foto_path_2` varchar(255) DEFAULT NULL AFTER `foto_path`");
-    }
     
     // Obtener operarios si ya se seleccionó una sucursal
     $operarios = [];
