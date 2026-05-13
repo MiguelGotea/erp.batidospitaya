@@ -2064,8 +2064,10 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
-        <div class="contenedor-principal">
+        <div class="sub-container">
             <?php echo renderHeader($usuario, 'Registro de Tardanzas'); ?>
+            
+            <div class="container-fluid p-3">
 
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success">
@@ -2541,6 +2543,9 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
 
 
     <!-- DataTables y demás JS movidos a js/tardanzas_manual.js -->
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -3,9 +3,13 @@
 //ini_set('display_errors', 1);
 
 require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 
 $usuario = obtenerUsuarioActual();
+$cargoUsuarioId = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo Operaciones (Codigo 11 para Jefe de Operaciones)
 verificarAccesoCargo([8, 16]);
 
@@ -1965,79 +1969,13 @@ header {
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
-                
-                <div class="buttons-container">
-                    <?php if (verificarAccesoCargo([8, 5, 13, 16])): ?>
-                        <a href="../lideres/faltas_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltas_manual.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-user-times"></i> <span class="btn-text">Faltas/Ausencias</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if (false): ?>
-                        <a href="../rh/tf_operarios.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'tf_operarios.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-user-clock"></i> <span class="btn-text">Totales</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if (verificarAccesoCargo([8, 11, 16])): ?>
-                        <a href="tardanzas_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'tardanzas_manual.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-clock"></i> <span class="btn-text">Tardanzas</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if (verificarAccesoCargo([8, 11, 16])): ?>
-                        <a href="horas_extras_manual.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'horas_extras_manual.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-user-clock"></i> <span class="btn-text">Horas Extras</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if (verificarAccesoCargo([8, 11, 16])): ?>
-                        <a href="feriados.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'feriados.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-calendar-day"></i> <span class="btn-text">Feriados</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if (verificarAccesoCargo([8, 16])): ?>
-                        <a href="viaticos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'viaticos.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-check-alt"></i> <span class="btn-text">Viáticos</span>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if (verificarAccesoCargo([5, 16])): ?>
-                        <a href="../lideres/programar_horarios_lider.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'programar_horarios_lider.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-user-clock"></i> <span class="btn-text">Generar Horarios</span>
-                        </a>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= false ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= false ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+    <?php echo renderMenuLateral($cargoUsuarioId); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Gestión de Viáticos'); ?>
+            
+            <div class="container-fluid p-3">
         
         <?php if (isset($_SESSION['exito'])): ?>
             <div class="alert alert-success">
@@ -2953,5 +2891,8 @@ function exportarNocturnos2Excel() {
             }
         });
     </script>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

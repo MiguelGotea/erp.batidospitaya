@@ -6,9 +6,13 @@
 // require_once '../../includes/auth.php';
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 // Obtener usuario actual
 $usuario = obtenerUsuarioActual();
+$cargoUsuarioId = $usuario['CodNivelesCargos'];
 if (!verificarAccesoCargo([16])) {
     header('Location: /index.php');
     exit();
@@ -817,16 +821,14 @@ $operariosSinCategoria = $conn->query("
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 class="title">Gestión de Categorías de Colaboradores</h1>
-            <div class="user-info">
-                <span><?= htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?></span>
-                <a href="index.php" class="btn btn-secondary">
-                    <i class="fas fa-sign-out-alt"></i> Regresar
-                </a>
-            </div>
-        </div>
+    <?php echo renderMenuLateral($cargoUsuarioId); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Gestión de Categorías de Colaboradores'); ?>
+            
+            <div class="container-fluid p-3">
+                <!-- El contenido original se mantiene aquí, pero envuelto en el nuevo layout -->
         
         <?php if ($mensaje): ?>
             <div class="alert alert-success">
@@ -1775,5 +1777,8 @@ $operariosSinCategoria = $conn->query("
             }
         }
     </script>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

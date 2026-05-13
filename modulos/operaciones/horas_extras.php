@@ -3,8 +3,12 @@
 //ini_set('display_errors', 1);
 
 require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
+$cargoUsuarioId = $usuario['CodNivelesCargos'];
 // Obtener todas las sucursales (el jefe de operaciones puede ver todas)
 $sucursales = obtenerTodasSucursales();
 
@@ -493,16 +497,13 @@ function procesarAprobacionHorasExtras()
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 class="title">Gestión de Horas Extras</h1>
-            <div class="user-info">
-                <span><?= htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?></span>
-                <a href="index.php" class="btn btn-secondary">
-                    <i class="fas fa-sign-out-alt"></i> Regresar
-                </a>
-            </div>
-        </div>
+    <?php echo renderMenuLateral($cargoUsuarioId); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Gestión de Horas Extras'); ?>
+            
+            <div class="container-fluid p-3">
 
         <?php if (isset($_SESSION['exito'])): ?>
             <div class="alert alert-success">
@@ -733,6 +734,9 @@ function procesarAprobacionHorasExtras()
             return `${horas12.toString().padStart(2, '0')}:${minutos} ${ampm}`;
         }
     </script>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
