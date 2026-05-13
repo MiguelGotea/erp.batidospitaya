@@ -6,13 +6,17 @@
 // require_once '../../includes/auth.php';
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 //******************************Estándar para header******************************
 
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo Operaciones (Código 11 para Jefe de Operaciones)
+$cargoOperario = $usuario['CodNivelesCargos'];
 
-if (!verificarAccesoCargo([21, 11, 5, 43, 27, 8, 13, 39, 30, 37, 28, 42, 54, 42])) {
+// Verificar acceso
+if (!verificarAccesoCargo([21, 11, 5, 43, 27, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33])) {
     header('Location: ../index.php');
     exit();
 }
@@ -22,7 +26,7 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 // Obtener sucursales - lógica mejorada
-if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42])) {
+if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33])) {
     // Admin y supervisores ven todas las sucursales
     $sucursales = obtenerSucursalesFisicas();
 } elseif (verificarAccesoCargo([5, 43, 27])) {
@@ -56,7 +60,7 @@ if ($semanaActual) {
 
     // 2. Determinar rango según cargo
     $rangoAnterior = 1; // Por defecto 1 para colaboradores/líderes
-    if (verificarAccesoCargo([21, 8, 13, 11, 39, 30, 37, 28, 42])) {
+    if (verificarAccesoCargo([21, 8, 13, 11, 39, 30, 37, 28, 42, 33])) {
         $rangoAnterior = 10; // Supervisores ven hasta 10 atrás
     }
 
@@ -74,7 +78,7 @@ if ($semanaActual) {
     }
 
     // 4. Buscar semana siguiente (si aplica según cargo)
-    if (verificarAccesoCargo([21, 8, 27, 5, 43, 13, 11, 39, 30, 37, 28, 42])) {
+    if (verificarAccesoCargo([21, 8, 27, 5, 43, 13, 11, 39, 30, 37, 28, 42, 33])) {
         $numSiguiente = $semanaActual['numero_semana'] + 1;
         $stmt = $conn->prepare("SELECT * FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
         $stmt->execute([$numSiguiente]);
@@ -735,8 +739,14 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
     <title>Visualización de Horarios</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <style>
         * {
@@ -751,129 +761,6 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
             background-color: #F6F6F6;
             color: #333;
             padding: 5px;
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 5px;
-            box-sizing: border-box;
-            margin: 1px auto;
-            flex-wrap: wrap;
-        }
-
-        .logo {
-            height: 50px;
-        }
-
-        .logo-container {
-            flex-shrink: 0;
-            margin-right: auto;
-        }
-
-        .buttons-container {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            flex-grow: 1;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-        .btn-agregar {
-            background-color: transparent;
-            color: #51B8AC;
-            border: 1px solid #51B8AC;
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            white-space: nowrap;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .btn-agregar.activo {
-            background-color: #51B8AC;
-            color: white;
-            font-weight: normal;
-        }
-
-        .btn-agregar:hover {
-            background-color: #0E544C;
-            color: white;
-            border-color: #0E544C;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-logout {
-            background: #51B8AC;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn-logout:hover {
-            background: #0E544C;
-        }
-
-        .title {
-            color: #0E544C;
-            font-size: 1.5rem !important;
-        }
-
-        .subtitle {
-            color: #51B8AC;
-            font-size: 1.2rem !important;
-            margin-bottom: 20px;
         }
 
         .current-week {
@@ -1510,200 +1397,329 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-                <div class="buttons-container">
-                    <!-- Aquí revisar bien que sea el mismo nombre de archivo tanto en el herf como en el PHP_SELF -->
-                    <a href="../supervision/ver_horarios_compactos.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'ver_horarios_compactos.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-clock"></i> <span class="btn-text">Horarios Programados</span>
-                    </a>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Visualización de Horarios'); ?>
 
-                    <?php if (verificarAccesoCargo([13, 5, 43, 8, 11, 21, 22, 39, 30, 37, 28])): ?>
-                        <a href="../rh/ver_marcaciones_todas.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'ver_marcaciones_todas.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-user-clock"></i> <span class="btn-text">Marcaciones</span>
-                        </a>
+            <div class="container-fluid p-3">
+
+                <?php if (isset($_SESSION['exito'])): ?>
+                    <div class="alert alert-success">
+                        <?= $_SESSION['exito'] ?>
+                        <?php unset($_SESSION['exito']); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger">
+                        <?= $_SESSION['error'] ?>
+                        <?php unset($_SESSION['error']); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (($mostrarTodas && !empty($horariosPorSucursal)) || (!$mostrarTodas && !empty($operarios))): ?>
+                    <div class="categoria-leyenda">
+                        <strong>Leyenda de categorías:</strong>
+                        <?php
+                        $categoriasMostradas = [];
+
+                        if ($mostrarTodas) {
+                            foreach ($horariosPorSucursal as $data) {
+                                foreach ($data['operarios'] as $operario) {
+                                    $catId = $operario['categoria']['idCategoria'];
+                                    if (!in_array($catId, $categoriasMostradas)) {
+                                        $categoriasMostradas[] = $catId;
+                                    }
+                                }
+                            }
+                        } else {
+                            foreach ($operarios as $operario) {
+                                $catId = $operario['categoria']['idCategoria'];
+                                if (!in_array($catId, $categoriasMostradas)) {
+                                    $categoriasMostradas[] = $catId;
+                                }
+                            }
+                        }
+
+                        // Obtener todas las categorías desde la BD
+                        $todasCategorias = obtenerCategoriasDesdeBD();
+
+                        // Mostrar solo las categorías que están presentes
+                        foreach ($todasCategorias as $categoria):
+                            if (in_array($categoria['idCategoria'], $categoriasMostradas)):
+                                $colorFondo = obtenerColorCategoria($categoria['idCategoria']);
+                        ?>
+                                <span class="leyenda-item" style="background-color: <?= obtenerColorCategoriaMejorado($categoria['idCategoria']) ?>;">
+                                    <?= htmlspecialchars($categoria['NombreCategoria']) ?> (<?= $categoria['Peso'] ?>)
+                                </span>
+                        <?php
+                            endif;
+                        endforeach;
+                        ?>
+                    </div>
+                <?php endif; ?>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label style="display:none;" for="semana">Semana</label>
+
+                        <?php if ($mostrarBotonesSemana): ?>
+                            <!-- BOTONES PARA CARGOS 5 Y 27 -->
+                            <div class="week-buttons">
+                                <?php foreach ($semanasDisponibles as $num => $sem): ?>
+                                    <button class="week-btn <?= $semanaSeleccionada == $num ? 'active' : '' ?>"
+                                        onclick="cambiarSemanaConBoton(<?= $num ?>, '<?= $sucursalSeleccionada ?>')">
+                                        <?php
+                                        $etiqueta = "Semana $num";
+                                        if ($sem['tipo'] == 'Actual') $etiqueta = "Semana Actual";
+                                        if ($sem['tipo'] == 'Siguiente') $etiqueta = "Semana Siguiente";
+                                        echo $etiqueta;
+                                        ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <!-- SELECTOR NORMAL PARA OTROS CARGOS -->
+                            <select id="semana" name="semana" onchange="cambiarSemana()">
+                                <?php foreach ($semanasDisponibles as $num => $sem): ?>
+                                    <option value="<?= $num ?>" <?= $semanaSeleccionada == $num ? 'selected' : '' ?>>
+                                        Semana <?= $num ?>
+                                        (<?= ($sem['tipo'] == 'Actual' ? 'Actual, ' : ($sem['tipo'] == 'Siguiente' ? 'Siguiente, ' : '')) . formatoFecha($sem['fecha_inicio']) ?> al <?= formatoFecha($sem['fecha_fin']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
+
+                    </div>
+
+                    <?php if (!verificarAccesoCargo([5, 43, 27])): ?>
+                        <div class="filter-group">
+                            <label style="display:none;" for="sucursal">Sucursal</label>
+                            <select id="sucursal" name="sucursal" onchange="cambiarSucursal()">
+                                <?php if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 33])): ?>
+                                    <option value="todas" <?= $mostrarTodas ? 'selected' : '' ?>>Todas las sucursales</option>
+                                <?php endif; ?>
+                                <?php foreach ($sucursales as $sucursal): ?>
+                                    <option value="<?= $sucursal['codigo'] ?>" <?= $sucursalSeleccionada == $sucursal['codigo'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="filter-group">
+                        <?php if (!$mostrarTodas): ?>
+                            <span class="status-indicator <?= $estados[$estadoHorario]['clase'] ?>">
+                                <?= $estados[$estadoHorario]['mensaje'] ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if (verificarAccesoCargo([8, 16, 41])): ?>
+                        <div class="filter-group" style="flex-direction: row; align-items: flex-end;">
+                            <a href="exportar_horarios_compactos.php?semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>"
+                                class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-download"></i> Descargar Horarios (Excel)
+                            </a>
+                        </div>
                     <?php endif; ?>
                 </div>
 
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= false ?
-                            strtoupper(substr($usuario['nombre'], 0, 1)) :
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= false ?
-                                htmlspecialchars($usuario['nombre']) :
-                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+                <?php if ($semanaSeleccionada && $semana): ?>
+                    <?php if ($mostrarTodas): ?>
+                        <?php if (empty($horariosPorSucursal)): ?>
+                            <div class="alert alert-info">
+                                No hay registros de horarios para ninguna sucursal en la semana seleccionada.
+                            </div>
+                        <?php else: ?>
+                            <div style="font-weight:bold; display:none;" class="subtitle">
+                                Visualizando horarios para la semana <?= $semanaSeleccionada ?>
+                                (<?= formatoFecha($semana['fecha_inicio']) ?> al <?= formatoFecha($semana['fecha_fin']) ?>)
+                                | Todas las sucursales
+                                <?php if ($usarHorariosLideres): ?>
+                                    <span class="status-indicator status-info">Mostrando horarios programados por líderes</span>
+                                <?php endif; ?>
+                            </div>
 
-        <?php if (isset($_SESSION['exito'])): ?>
-            <div class="alert alert-success">
-                <?= $_SESSION['exito'] ?>
-                <?php unset($_SESSION['exito']); ?>
-            </div>
-        <?php endif; ?>
+                            <?php foreach ($horariosPorSucursal as $codSucursal => $data): ?>
+                                <div class="sucursal-section">
+                                    <h3 class="sucursal-title"><?= htmlspecialchars($data['nombre']) ?></h3>
 
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger">
-                <?= $_SESSION['error'] ?>
-                <?php unset($_SESSION['error']); ?>
-            </div>
-        <?php endif; ?>
+                                    <?php if ($data['esDeLider']): ?>
+                                        <div class="alert alert-info" style="margin-bottom: 15px;">
+                                            <i class="fas fa-info-circle"></i> Horarios programados por líderes (no confirmados aún por operaciones)
+                                        </div>
+                                    <?php endif; ?>
 
-        <?php if (($mostrarTodas && !empty($horariosPorSucursal)) || (!$mostrarTodas && !empty($operarios))): ?>
-            <div class="categoria-leyenda">
-                <strong>Leyenda de categorías:</strong>
-                <?php
-                $categoriasMostradas = [];
+                                    <div class="table-container">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th class="fixed-column">Colaborador</th>
+                                                    <?php
+                                                    $diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                                                    $fechasSemana = [];
+                                                    $fechaActual = new DateTime($semana['fecha_inicio']);
 
-                if ($mostrarTodas) {
-                    foreach ($horariosPorSucursal as $data) {
-                        foreach ($data['operarios'] as $operario) {
-                            $catId = $operario['categoria']['idCategoria'];
-                            if (!in_array($catId, $categoriasMostradas)) {
-                                $categoriasMostradas[] = $catId;
-                            }
-                        }
-                    }
-                } else {
-                    foreach ($operarios as $operario) {
-                        $catId = $operario['categoria']['idCategoria'];
-                        if (!in_array($catId, $categoriasMostradas)) {
-                            $categoriasMostradas[] = $catId;
-                        }
-                    }
-                }
+                                                    foreach ($diasSemana as $dia) {
+                                                        echo '<th><div>' . $dia . '<br><span class="day-date">' . formatoFecha($fechaActual->format('Y-m-d')) . '</span></div></th>';
+                                                        $fechasSemana[] = $fechaActual->format('Y-m-d');
+                                                        $fechaActual->modify('+1 day');
+                                                    }
+                                                    ?>
+                                                    <th>Total Horas</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($data['operarios'] as $operario):
+                                                    $horario = $data['horarios'][$operario['CodOperario']] ?? null;
 
-                // Obtener todas las categorías desde la BD
-                $todasCategorias = obtenerCategoriasDesdeBD();
+                                                    if (!$horario) continue;
 
-                // Mostrar solo las categorías que están presentes
-                foreach ($todasCategorias as $categoria):
-                    if (in_array($categoria['idCategoria'], $categoriasMostradas)):
-                        $colorFondo = obtenerColorCategoria($categoria['idCategoria']);
-                ?>
-                        <span class="leyenda-item" style="background-color: <?= obtenerColorCategoriaMejorado($categoria['idCategoria']) ?>;">
-                            <?= htmlspecialchars($categoria['NombreCategoria']) ?> (<?= $categoria['Peso'] ?>)
-                        </span>
-                <?php
-                    endif;
-                endforeach;
-                ?>
-            </div>
-        <?php endif; ?>
+                                                    // Calcular total de horas solo para días que NO están vacíos
+                                                    $totalHoras = 0;
+                                                    $dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+                                                    foreach ($dias as $dia) {
+                                                        $estado = $horario["{$dia}_estado"] ?? '';
+                                                        if (!empty($estado)) {  // Solo sumar si el día no está vacío
+                                                            $totalHoras += $horario["{$dia}_horas"] ?? 0;
+                                                        }
+                                                    }
+                                                ?>
+                                                    <tr class="<?= obtenerClaseCategoriaMejorada($operario['categoria']['NombreCategoria']) ?>"
+                                                        data-operario="<?= $operario['CodOperario'] ?>"
+                                                        style="background-color: <?= obtenerColorCategoriaMejorado($operario['categoria']['idCategoria']) ?>;">
 
-        <div class="filters">
-            <div class="filter-group">
-                <label style="display:none;" for="semana">Semana</label>
+                                                        <td class="fixed-column operario-cell" style="font-weight:bold; background-color: <?= obtenerColorCategoriaMejorado($operario['categoria']['idCategoria']) ?>; color: #333;">
+                                                            <?= htmlspecialchars($operario['Nombre'] . ' ' . $operario['Apellido'] . ' ' . $operario['Apellido2']) ?>
+                                                            <div class="categoria-indicator" style="background-color: <?= obtenerColorCategoriaMejorado($operario['categoria']['idCategoria']) ?>; color: #333; display:none;">
+                                                                <?= htmlspecialchars($operario['categoria']['NombreCategoria']) ?>
+                                                            </div>
+                                                        </td>
+                                                        <?php
+                                                        foreach ($dias as $dia):
+                                                            // Obtener datos del día
+                                                            $estado = $horario["{$dia}_estado"] ?? '';
+                                                            $entrada = $horario["{$dia}_entrada"] ?? null;
+                                                            $salida = $horario["{$dia}_salida"] ?? null;
+                                                            $horasDia = $horario["{$dia}_horas"] ?? 0;
+                                                            $comentario = $horario["{$dia}_comentario"] ?? null;
+                                                            $sucursalExterna = $horario["{$dia}_sucursal_externa"] ?? null;
+                                                            $esNocturno = $salida && substr($salida, 0, 2) >= 20;
 
-                <?php if ($mostrarBotonesSemana): ?>
-                    <!-- BOTONES PARA CARGOS 5 Y 27 -->
-                    <div class="week-buttons">
-                        <?php foreach ($semanasDisponibles as $num => $sem): ?>
-                            <button class="week-btn <?= $semanaSeleccionada == $num ? 'active' : '' ?>"
-                                onclick="cambiarSemanaConBoton(<?= $num ?>, '<?= $sucursalSeleccionada ?>')">
-                                <?php 
-                                    $etiqueta = "Semana $num";
-                                    if ($sem['tipo'] == 'Actual') $etiqueta = "Semana Actual";
-                                    if ($sem['tipo'] == 'Siguiente') $etiqueta = "Semana Siguiente";
-                                    echo $etiqueta;
-                                ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <!-- SELECTOR NORMAL PARA OTROS CARGOS -->
-                    <select id="semana" name="semana" onchange="cambiarSemana()">
-                        <?php foreach ($semanasDisponibles as $num => $sem): ?>
-                            <option value="<?= $num ?>" <?= $semanaSeleccionada == $num ? 'selected' : '' ?>>
-                                Semana <?= $num ?> 
-                                (<?= ($sem['tipo'] == 'Actual' ? 'Actual, ' : ($sem['tipo'] == 'Siguiente' ? 'Siguiente, ' : '')) . formatoFecha($sem['fecha_inicio']) ?> al <?= formatoFecha($sem['fecha_fin']) ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                <?php endif; ?>
+                                                            // Determinar si es día vacío (no aplica para esta sucursal)
+                                                            $esDiaVacio = empty($estado);
 
-            </div>
+                                                            // Si es día vacío, mostrar "-"
+                                                            if ($esDiaVacio): ?>
+                                                                <td style="font-weight:bold; font-size:10px !important;" data-label="<?= $dia ?>">
+                                                                    <div class="tooltip-container">
+                                                                        <div style="font-weight:bold; font-size:11px !important;" class="day-cell-content empty-cell">
+                                                                            <span style="color: #ccc;">-</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            <?php else:
+                                                                // Obtener nombre de sucursal externa si es Otra.Tienda
+                                                                $nombreSucursalExterna = null;
+                                                                $esOtraTienda = ($estado === 'Otra.Tienda');
+                                                                if ($esOtraTienda && !empty($sucursalExterna)) {
+                                                                    $nombreSucursalExterna = obtenerNombreSucursalExterna($sucursalExterna);
+                                                                }
+                                                            ?>
+                                                                <td style="font-weight:bold; font-size:10px !important;" data-label="<?= $dia ?>">
+                                                                    <div class="tooltip-container">
+                                                                        <div style="font-weight:bold; font-size:11px !important;"
+                                                                            class="day-cell-content 
+                            <?= $estado == 'Activo' && $entrada && $salida ? ($esNocturno ? 'extended-hours' : 'status-activo') : ($esOtraTienda ? 'otra-tienda-cell' : 'inactive-hours') ?>">
 
-            <?php if (!verificarAccesoCargo([5, 43, 27])): ?>
-                <div class="filter-group">
-                    <label style="display:none;" for="sucursal">Sucursal</label>
-                    <select id="sucursal" name="sucursal" onchange="cambiarSucursal()">
-                        <?php if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42])): ?>
-                            <option value="todas" <?= $mostrarTodas ? 'selected' : '' ?>>Todas las sucursales</option>
+                                                                            <?php if ($entrada && $salida): ?>
+                                                                                <?= formatoHoraAmPm($entrada) ?> - <?= formatoHoraAmPm($salida) ?>
+                                                                                <?php if ($esOtraTienda && $nombreSucursalExterna): ?>
+                                                                                    <div style="font-size: 8px !important; color: #0E544C; margin-top: 1px; font-weight:bold;">
+                                                                                        <?= htmlspecialchars($nombreSucursalExterna) ?>
+                                                                                    </div>
+                                                                                <?php endif; ?>
+                                                                                <div style="font-weight:bold; font-size:10px !important;" class="horas-dia">
+                                                                                    <?= number_format($horasDia, 1) ?> hrs
+                                                                                </div>
+
+                                                                            <?php elseif ($esOtraTienda && $nombreSucursalExterna): ?>
+                                                                                <div style="font-size: 9px !important; color: #0E544C; font-weight: bold;">
+                                                                                    <?= htmlspecialchars($nombreSucursalExterna) ?>
+                                                                                </div>
+                                                                                <?php if (floatval($horasDia) > 0): ?>
+                                                                                    <div style="font-weight:bold; font-size:10px !important;" class="horas-dia">
+                                                                                        <?= number_format($horasDia, 1) ?> hrs
+                                                                                    </div>
+                                                                                <?php endif; ?>
+
+                                                                            <?php else: ?>
+                                                                                <?= htmlspecialchars($estado) ?>
+                                                                                <?php if (floatval($horasDia) > 0): ?>
+                                                                                    <div style="font-weight:bold; font-size:10px !important;" class="horas-dia">
+                                                                                        <?= number_format($horasDia, 1) ?> hrs
+                                                                                    </div>
+                                                                                <?php endif; ?>
+                                                                            <?php endif; ?>
+                                                                        </div>
+
+                                                                        <?php if (!empty($comentario)): ?>
+                                                                            <span class="tooltip-text"><?= htmlspecialchars($comentario) ?></span>
+                                                                        <?php endif; ?>
+
+                                                                        <?php if ($esOtraTienda && $nombreSucursalExterna && !empty($comentario)): ?>
+                                                                            <span class="tooltip-text">
+                                                                                <strong>Otra Tienda:</strong> <?= htmlspecialchars($nombreSucursalExterna) ?><br>
+                                                                                <?= htmlspecialchars($comentario) ?>
+                                                                            </span>
+                                                                        <?php elseif ($esOtraTienda && $nombreSucursalExterna): ?>
+                                                                            <span class="tooltip-text">
+                                                                                <strong>Otra Tienda:</strong> <?= htmlspecialchars($nombreSucursalExterna) ?>
+                                                                            </span>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </td>
+                                                            <?php endif; ?>
+                                                        <?php endforeach; ?>
+
+                                                        <td class="total-hours">
+                                                            <?= number_format($totalHoras, 1) ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         <?php endif; ?>
-                        <?php foreach ($sucursales as $sucursal): ?>
-                            <option value="<?= $sucursal['codigo'] ?>" <?= $sucursalSeleccionada == $sucursal['codigo'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($sucursal['nombre']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            <?php endif; ?>
+                    <?php elseif ($sucursalSeleccionada): ?>
+                        <?php if (empty($operarios) && empty($horariosLideres)): ?>
+                            <div class="alert alert-info">
+                                No hay registros de horarios para la sucursal "<?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>" en la semana seleccionada.
+                            </div>
+                        <?php else: ?>
+                            <div style="font-weight:bold; display:none;" class="subtitle">
+                                Visualizando horarios para la semana <?= $semanaSeleccionada ?>
+                                (<?= formatoFecha($semana['fecha_inicio']) ?> al <?= formatoFecha($semana['fecha_fin']) ?>)
+                                | Sucursal: <?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>
+                                <?php if ($usarHorariosLideres): ?>
+                                    <span class="status-indicator status-info">Mostrando horarios programados por líderes</span>
+                                <?php endif; ?>
+                            </div>
 
-            <div class="filter-group">
-                <?php if (!$mostrarTodas): ?>
-                    <span class="status-indicator <?= $estados[$estadoHorario]['clase'] ?>">
-                        <?= $estados[$estadoHorario]['mensaje'] ?>
-                    </span>
-                <?php endif; ?>
-            </div>
-
-            <?php if (verificarAccesoCargo([8, 16, 41])): ?>
-                <div class="filter-group" style="flex-direction: row; align-items: flex-end;">
-                    <a href="exportar_horarios_compactos.php?semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>"
-                        class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-download"></i> Descargar Horarios (Excel)
-                    </a>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <?php if ($semanaSeleccionada && $semana): ?>
-            <?php if ($mostrarTodas): ?>
-                <?php if (empty($horariosPorSucursal)): ?>
-                    <div class="alert alert-info">
-                        No hay registros de horarios para ninguna sucursal en la semana seleccionada.
-                    </div>
-                <?php else: ?>
-                    <div style="font-weight:bold; display:none;" class="subtitle">
-                        Visualizando horarios para la semana <?= $semanaSeleccionada ?>
-                        (<?= formatoFecha($semana['fecha_inicio']) ?> al <?= formatoFecha($semana['fecha_fin']) ?>)
-                        | Todas las sucursales
-                        <?php if ($usarHorariosLideres): ?>
-                            <span class="status-indicator status-info">Mostrando horarios programados por líderes</span>
-                        <?php endif; ?>
-                    </div>
-
-                    <?php foreach ($horariosPorSucursal as $codSucursal => $data): ?>
-                        <div class="sucursal-section">
-                            <h3 class="sucursal-title"><?= htmlspecialchars($data['nombre']) ?></h3>
-
-                            <?php if ($data['esDeLider']): ?>
-                                <div class="alert alert-info" style="margin-bottom: 15px;">
+                            <?php if ($usarHorariosLideres): ?>
+                                <div class="alert alert-info">
                                     <i class="fas fa-info-circle"></i> Horarios programados por líderes (no confirmados aún por operaciones)
                                 </div>
                             <?php endif; ?>
 
                             <div class="table-container">
-                                <table>
+                                <table id="horariosProgramados">
                                     <thead>
                                         <tr>
                                             <th class="fixed-column">Colaborador</th>
@@ -1722,8 +1738,12 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($data['operarios'] as $operario):
-                                            $horario = $data['horarios'][$operario['CodOperario']] ?? null;
+                                        <?php
+                                        // Usamos $operarios que ahora puede venir de HorariosSemanalesOperaciones o HorariosSemanales
+                                        $horariosMostrar = $horariosOperaciones;
+
+                                        foreach ($operarios as $operario):
+                                            $horario = $horariosMostrar[$operario['CodOperario']] ?? null;
 
                                             if (!$horario) continue;
 
@@ -1842,185 +1862,19 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            <?php elseif ($sucursalSeleccionada): ?>
-                <?php if (empty($operarios) && empty($horariosLideres)): ?>
-                    <div class="alert alert-info">
-                        No hay registros de horarios para la sucursal "<?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>" en la semana seleccionada.
-                    </div>
-                <?php else: ?>
-                    <div style="font-weight:bold; display:none;" class="subtitle">
-                        Visualizando horarios para la semana <?= $semanaSeleccionada ?>
-                        (<?= formatoFecha($semana['fecha_inicio']) ?> al <?= formatoFecha($semana['fecha_fin']) ?>)
-                        | Sucursal: <?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>
-                        <?php if ($usarHorariosLideres): ?>
-                            <span class="status-indicator status-info">Mostrando horarios programados por líderes</span>
                         <?php endif; ?>
-                    </div>
-
-                    <?php if ($usarHorariosLideres): ?>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> Horarios programados por líderes (no confirmados aún por operaciones)
-                        </div>
                     <?php endif; ?>
-
-                    <div class="table-container">
-                        <table id="horariosProgramados">
-                            <thead>
-                                <tr>
-                                    <th class="fixed-column">Colaborador</th>
-                                    <?php
-                                    $diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-                                    $fechasSemana = [];
-                                    $fechaActual = new DateTime($semana['fecha_inicio']);
-
-                                    foreach ($diasSemana as $dia) {
-                                        echo '<th><div>' . $dia . '<br><span class="day-date">' . formatoFecha($fechaActual->format('Y-m-d')) . '</span></div></th>';
-                                        $fechasSemana[] = $fechaActual->format('Y-m-d');
-                                        $fechaActual->modify('+1 day');
-                                    }
-                                    ?>
-                                    <th>Total Horas</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                // Usamos $operarios que ahora puede venir de HorariosSemanalesOperaciones o HorariosSemanales
-                                $horariosMostrar = $horariosOperaciones;
-
-                                foreach ($operarios as $operario):
-                                    $horario = $horariosMostrar[$operario['CodOperario']] ?? null;
-
-                                    if (!$horario) continue;
-
-                                    // Calcular total de horas solo para días que NO están vacíos
-                                    $totalHoras = 0;
-                                    $dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-                                    foreach ($dias as $dia) {
-                                        $estado = $horario["{$dia}_estado"] ?? '';
-                                        if (!empty($estado)) {  // Solo sumar si el día no está vacío
-                                            $totalHoras += $horario["{$dia}_horas"] ?? 0;
-                                        }
-                                    }
-                                ?>
-                                    <tr class="<?= obtenerClaseCategoriaMejorada($operario['categoria']['NombreCategoria']) ?>"
-                                        data-operario="<?= $operario['CodOperario'] ?>"
-                                        style="background-color: <?= obtenerColorCategoriaMejorado($operario['categoria']['idCategoria']) ?>;">
-
-                                        <td class="fixed-column operario-cell" style="font-weight:bold; background-color: <?= obtenerColorCategoriaMejorado($operario['categoria']['idCategoria']) ?>; color: #333;">
-                                            <?= htmlspecialchars($operario['Nombre'] . ' ' . $operario['Apellido'] . ' ' . $operario['Apellido2']) ?>
-                                            <div class="categoria-indicator" style="background-color: <?= obtenerColorCategoriaMejorado($operario['categoria']['idCategoria']) ?>; color: #333; display:none;">
-                                                <?= htmlspecialchars($operario['categoria']['NombreCategoria']) ?>
-                                            </div>
-                                        </td>
-                                        <?php
-                                        foreach ($dias as $dia):
-                                            // Obtener datos del día
-                                            $estado = $horario["{$dia}_estado"] ?? '';
-                                            $entrada = $horario["{$dia}_entrada"] ?? null;
-                                            $salida = $horario["{$dia}_salida"] ?? null;
-                                            $horasDia = $horario["{$dia}_horas"] ?? 0;
-                                            $comentario = $horario["{$dia}_comentario"] ?? null;
-                                            $sucursalExterna = $horario["{$dia}_sucursal_externa"] ?? null;
-                                            $esNocturno = $salida && substr($salida, 0, 2) >= 20;
-
-                                            // Determinar si es día vacío (no aplica para esta sucursal)
-                                            $esDiaVacio = empty($estado);
-
-                                            // Si es día vacío, mostrar "-"
-                                            if ($esDiaVacio): ?>
-                                                <td style="font-weight:bold; font-size:10px !important;" data-label="<?= $dia ?>">
-                                                    <div class="tooltip-container">
-                                                        <div style="font-weight:bold; font-size:11px !important;" class="day-cell-content empty-cell">
-                                                            <span style="color: #ccc;">-</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            <?php else:
-                                                // Obtener nombre de sucursal externa si es Otra.Tienda
-                                                $nombreSucursalExterna = null;
-                                                $esOtraTienda = ($estado === 'Otra.Tienda');
-                                                if ($esOtraTienda && !empty($sucursalExterna)) {
-                                                    $nombreSucursalExterna = obtenerNombreSucursalExterna($sucursalExterna);
-                                                }
-                                            ?>
-                                                <td style="font-weight:bold; font-size:10px !important;" data-label="<?= $dia ?>">
-                                                    <div class="tooltip-container">
-                                                        <div style="font-weight:bold; font-size:11px !important;"
-                                                            class="day-cell-content 
-                            <?= $estado == 'Activo' && $entrada && $salida ? ($esNocturno ? 'extended-hours' : 'status-activo') : ($esOtraTienda ? 'otra-tienda-cell' : 'inactive-hours') ?>">
-
-                                                            <?php if ($entrada && $salida): ?>
-                                                                <?= formatoHoraAmPm($entrada) ?> - <?= formatoHoraAmPm($salida) ?>
-                                                                <?php if ($esOtraTienda && $nombreSucursalExterna): ?>
-                                                                    <div style="font-size: 8px !important; color: #0E544C; margin-top: 1px; font-weight:bold;">
-                                                                        <?= htmlspecialchars($nombreSucursalExterna) ?>
-                                                                    </div>
-                                                                <?php endif; ?>
-                                                                <div style="font-weight:bold; font-size:10px !important;" class="horas-dia">
-                                                                    <?= number_format($horasDia, 1) ?> hrs
-                                                                </div>
-
-                                                            <?php elseif ($esOtraTienda && $nombreSucursalExterna): ?>
-                                                                <div style="font-size: 9px !important; color: #0E544C; font-weight: bold;">
-                                                                    <?= htmlspecialchars($nombreSucursalExterna) ?>
-                                                                </div>
-                                                                <?php if (floatval($horasDia) > 0): ?>
-                                                                    <div style="font-weight:bold; font-size:10px !important;" class="horas-dia">
-                                                                        <?= number_format($horasDia, 1) ?> hrs
-                                                                    </div>
-                                                                <?php endif; ?>
-
-                                                            <?php else: ?>
-                                                                <?= htmlspecialchars($estado) ?>
-                                                                <?php if (floatval($horasDia) > 0): ?>
-                                                                    <div style="font-weight:bold; font-size:10px !important;" class="horas-dia">
-                                                                        <?= number_format($horasDia, 1) ?> hrs
-                                                                    </div>
-                                                                <?php endif; ?>
-                                                            <?php endif; ?>
-                                                        </div>
-
-                                                        <?php if (!empty($comentario)): ?>
-                                                            <span class="tooltip-text"><?= htmlspecialchars($comentario) ?></span>
-                                                        <?php endif; ?>
-
-                                                        <?php if ($esOtraTienda && $nombreSucursalExterna && !empty($comentario)): ?>
-                                                            <span class="tooltip-text">
-                                                                <strong>Otra Tienda:</strong> <?= htmlspecialchars($nombreSucursalExterna) ?><br>
-                                                                <?= htmlspecialchars($comentario) ?>
-                                                            </span>
-                                                        <?php elseif ($esOtraTienda && $nombreSucursalExterna): ?>
-                                                            <span class="tooltip-text">
-                                                                <strong>Otra Tienda:</strong> <?= htmlspecialchars($nombreSucursalExterna) ?>
-                                                            </span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </td>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-
-                                        <td class="total-hours">
-                                            <?= number_format($totalHoras, 1) ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                <?php elseif ($sucursalSeleccionada && !$semanaSeleccionada): ?>
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        Ingrese un número de semana para ver los horarios
+                    </div>
+                <?php elseif ($semanaSeleccionada && !$semana): ?>
+                    <div style="text-align: center; padding: 20px; color: #dc3545;">
+                        La semana ingresada no existe en el sistema
                     </div>
                 <?php endif; ?>
-            <?php endif; ?>
-        <?php elseif ($sucursalSeleccionada && !$semanaSeleccionada): ?>
-            <div style="text-align: center; padding: 20px; color: #666;">
-                Ingrese un número de semana para ver los horarios
             </div>
-        <?php elseif ($semanaSeleccionada && !$semana): ?>
-            <div style="text-align: center; padding: 20px; color: #dc3545;">
-                La semana ingresada no existe en el sistema
-            </div>
-        <?php endif; ?>
+        </div>
     </div>
 
     <script>
