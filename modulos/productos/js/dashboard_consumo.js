@@ -2063,19 +2063,27 @@ let chartKardexExistencia = null;
 function cargarKardex(idPP, item) {
     const KARDEX_AJAX = 'ajax/';
 
-    // Validar semana de corte
+    // Validar semana de corte — si vacío, usar semDesde como default
     const semDesde = datosActuales._semDesde;
     const semHasta = datosActuales._semHasta;
-    const semCorteRaw = parseInt($('#kardexSemanaCorte').val());
+    const inputCorte = $('#kardexSemanaCorte');
+
+    // Auto-poblar con semDesde si está vacío (primera carga)
+    if (!inputCorte.val()) {
+        inputCorte.val(semDesde);
+    }
+
+    const semCorteRaw = parseInt(inputCorte.val());
 
     if (!semCorteRaw || semCorteRaw < semDesde || semCorteRaw > semHasta) {
         Swal.fire({
             icon: 'warning',
-            title: 'Semana de Corte requerida',
-            html: `Ingresa una semana de corte válida entre <strong>${semDesde}</strong> y <strong>${semHasta}</strong>.<br>
-                   <small style="color:#888">Es el punto de referencia para construir el inventario.</small>`,
+            title: 'Semana de Corte fuera de rango',
+            html: `La semana de corte debe estar entre <strong>${semDesde}</strong> y <strong>${semHasta}</strong>.<br>
+                   <small style="color:#888">Se resetea al valor por defecto (${semDesde}).</small>`,
             confirmButtonColor: '#0E544C'
         });
+        inputCorte.val(semDesde);
         return;
     }
 

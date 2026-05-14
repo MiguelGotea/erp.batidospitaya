@@ -356,17 +356,19 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                         </div>
                         <!-- Semana de Corte -->
                         <div class="d-flex align-items-center gap-2 ms-auto" style="flex-shrink:0">
-                            <label class="dc-label mb-0 text-nowrap" for="kardexSemanaCorte"
-                                style="font-size:.75rem; font-weight:700; color:var(--neu-accent-dark, #0E544C)">
-                                <i class="fas fa-cut me-1" style="color:#f39c12"></i>Sem. Corte
+                            <label for="kardexSemanaCorte"
+                                style="font-size:.73rem; font-weight:700; color:rgba(255,255,255,.9); margin:0; white-space:nowrap; cursor:pointer;">
+                                <i class="fas fa-cut me-1" style="color:#f9c74f"></i>Sem. Corte
                             </label>
                             <input type="number" id="kardexSemanaCorte"
-                                class="form-control form-control-sm dc-input-semana"
                                 min="1" max="9999" placeholder="Ej: 12"
-                                style="width:82px; border:2px solid #f39c12; border-radius:8px;"
-                                title="Semana de referencia: el inventario de esta semana se usa como punto de partida fijo">
-                            <span style="font-size:.68rem; color:#888; max-width:140px; line-height:1.2">
-                                Punto de partida del inventario
+                                style="width:78px; padding:4px 8px; font-size:.82rem; font-weight:700; text-align:center;
+                                       background:rgba(255,255,255,.95); color:#0E544C;
+                                       border:2px solid #f9c74f !important; border-radius:8px;
+                                       box-shadow: inset 2px 2px 4px rgba(0,0,0,.1);"
+                                title="Semana de referencia: punto de partida fijo del inventario">
+                            <span style="font-size:.65rem; color:rgba(255,255,255,.6); max-width:110px; line-height:1.2;">
+                                punto de partida del inventario
                             </span>
                         </div>
                     </div>
