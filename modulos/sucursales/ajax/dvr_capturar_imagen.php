@@ -1,15 +1,16 @@
 <?php
 /**
  * dvr_capturar_imagen.php
- * Endpoint AJAX: captura una imagen estatica del DVR Hikvision.
- * POST JSON → { canal: int (opcional), cod_sucursal: string (opcional) }
+ * Endpoint AJAX: captura una imagen estática del DVR Hikvision de una sucursal.
+ * POST JSON → { canal: int (opcional), cod_sucursal: int }
  * Respuesta JSON → { success, path, filename, sucursal, canal, ip, timestamp, size_kb, message? }
  *
  * ARQUITECTURA:
- *   ERP → snapshot_server (VPS:8765) → ffmpeg → tunel RTSP → DVR
+ *   ERP (Hostinger) → snapshot_server (VPS:8765) → DVR via tunel SSH
  *
- *   El DVR DS-7104HGHI-M1 no soporta ISAPI HTTP snapshot, por eso
- *   usamos el snapshot_server en el VPS que captura via RTSP con ffmpeg.
+ *   El snapshot_server detecta automáticamente el tipo de firmware:
+ *   - DVR moderno (puerto_http_vps > 0): ISAPI HTTP Digest → imagen EN VIVO inmediata
+ *   - DVR firmware antiguo (puerto_http_vps NULL): RTSP/ffmpeg → grabación ~5 min atrás
  */
 require_once '../../../core/auth/auth.php';
 
