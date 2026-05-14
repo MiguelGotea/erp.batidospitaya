@@ -20,6 +20,7 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargo)) {
 $idPP = isset($_POST['id_pp']) ? (int) $_POST['id_pp'] : 0;
 $semDesde = isset($_POST['semana_desde']) ? (int) $_POST['semana_desde'] : 0;
 $semHasta = isset($_POST['semana_hasta']) ? (int) $_POST['semana_hasta'] : 0;
+$semCorte = isset($_POST['semana_corte']) ? (int) $_POST['semana_corte'] : 0;
 $sucsPost = isset($_POST['sucursales']) ? array_map('intval', (array) $_POST['sucursales']) : [];
 
 if (!$idPP || !$semDesde || !$semHasta) {
@@ -28,6 +29,11 @@ if (!$idPP || !$semDesde || !$semHasta) {
 }
 $semDesde = min($semDesde, $semHasta);
 $semHasta = max($semDesde, $semHasta);
+
+if (!$semCorte || $semCorte < $semDesde || $semCorte > $semHasta) {
+    echo json_encode(['ok' => false, 'msg' => 'Semana de corte inválida o fuera del rango']);
+    exit();
+}
 
 try {
     ini_set('memory_limit', '512M');
@@ -38,14 +44,20 @@ try {
     $fechaInicioRange = $rangeDates['inicio'];
     $fechaFinRange = $rangeDates['fin'];
 
-    // ── Semana anterior ──────────────────────────────────────────────
-    $r = $conn->prepare("SELECT numero_semana FROM SemanasSistema WHERE numero_semana < :d ORDER BY numero_semana DESC LIMIT 1");
-    $r->execute([':d' => $semDesde]);
-    $semAnt = $r->fetchColumn();
-    if (!$semAnt) {
-        echo json_encode(['ok' => false, 'msg' => 'Sin semana anterior']);
+    // ── Semana anterior al CORTE (punto de partida del inventario) ─────
+    $r = $conn->prepare("SELECT numero_semana FROM SemanasSistema WHERE numero_semana < :c ORDER BY numero_semana DESC LIMIT 1");
+    $r->execute([':c' => $semCorte]);
+    $semAntCorte = $r->fetchColumn();
+    if (!$semAntCorte) {
+        echo json_encode(['ok' => false, 'msg' => 'Sin semana anterior al corte']);
         exit();
     }
+    $semAnt = $semAntCorte; // alias para compatibilidad con código posterior
+
+    // Fecha inicio de la semana de corte (pivot del gráfico)
+    $rFechaCorte = $conn->prepare("SELECT fecha_inicio FROM SemanasSistema WHERE numero_semana = :c");
+    $rFechaCorte->execute([':c' => $semCorte]);
+    $fechaInicioCorte = $rFechaCorte->fetchColumn();
 
     // ── Sucursales ───────────────────────────────────────────────────
     $r2 = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE activa=1 AND sucursal=1");
@@ -422,6 +434,28 @@ try {
         }
     }
 
+    // ── Inventario Físico de Domingos del rango (scatter visual) ───────
+    $puntosDomingo = [];
+    if (!empty($allCods) && !empty($sucFiltro)) {
+        $stmtDom = $conn->prepare("
+            SELECT k.Fecha, k.CodCotizacion, k.Cantidad
+            FROM msaccess_masivo_InventarioCotizacion k
+            INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
+            WHERE ss.numero_semana BETWEEN ? AND ?
+              AND DAYOFWEEK(k.Fecha) = 1
+              AND k.CodCotizacion IN ($phCods)
+              AND k.Sucursal IN ($phSucs)
+        ");
+        $stmtDom->execute(array_merge([$semDesde, $semHasta], $allCods, $sucFiltro));
+        foreach ($stmtDom->fetchAll(PDO::FETCH_ASSOC) as $pd) {
+            $fecha = $pd['Fecha'];
+            $info  = $codMapBalance[(int)$pd['CodCotizacion']] ?? null;
+            if (!$info) continue;
+            if (!isset($puntosDomingo[$fecha])) $puntosDomingo[$fecha] = 0;
+            $puntosDomingo[$fecha] += round((float)$pd['Cantidad'] * $info['factor'], 4);
+        }
+    }
+
     $totales = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'compras' => 0, 'merma' => 0, 'inv_final' => 0];
     foreach ($registros as $reg)
         if (isset($totales[$reg['tipo']]))
@@ -430,17 +464,20 @@ try {
     $consumoReal = round($totales['inv_inicial'] + $totales['ajuste'] + $totales['despacho'] + $totales['compras'] - $totales['merma'] - $totales['inv_final'], 4);
 
     echo json_encode([
-        'ok' => true,
-        'producto' => $prodMeta,
-        'semana_ant' => (int) $semAnt,
-        'fecha_inicio' => $fechaInicioRange,
-        'fecha_fin' => $fechaFinRange,
-        'registros' => $registros,
-        'totales_tipo' => array_map(fn($v) => round($v, 4), $totales),
-        'consumo_real' => $consumoReal,
-        'consumo_teorico' => round(array_sum($consTeoDiario), 4),
+        'ok'                     => true,
+        'producto'               => $prodMeta,
+        'semana_ant'             => (int) $semAntCorte,
+        'semana_corte'           => (int) $semCorte,
+        'fecha_inicio_corte'     => $fechaInicioCorte,
+        'fecha_inicio'           => $fechaInicioRange,
+        'fecha_fin'              => $fechaFinRange,
+        'registros'              => $registros,
+        'totales_tipo'           => array_map(fn($v) => round($v, 4), $totales),
+        'consumo_real'           => $consumoReal,
+        'consumo_teorico'        => round(array_sum($consTeoDiario), 4),
         'consumo_teorico_diario' => $consTeoDiario,
-        'num_mapeos' => count($codMapBalance)
+        'puntos_domingo'         => $puntosDomingo,
+        'num_mapeos'             => count($codMapBalance)
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {

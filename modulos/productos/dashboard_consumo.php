@@ -349,10 +349,25 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 <!-- PANEL KARDEX (Traído de balance_inventario_detalle)   -->
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <div id="panelKardex" class="dc-insumo-panel mb-3 d-none">
-                    <div class="dc-insumo-panel-header">
+                    <div class="dc-insumo-panel-header" style="flex-wrap:wrap; gap:.5rem;">
                         <div class="dc-insumo-panel-title">
                             <i class="fas fa-exchange-alt me-2"></i>
                             Movimiento de Existencia (Kardex)
+                        </div>
+                        <!-- Semana de Corte -->
+                        <div class="d-flex align-items-center gap-2 ms-auto" style="flex-shrink:0">
+                            <label class="dc-label mb-0 text-nowrap" for="kardexSemanaCorte"
+                                style="font-size:.75rem; font-weight:700; color:var(--neu-accent-dark, #0E544C)">
+                                <i class="fas fa-cut me-1" style="color:#f39c12"></i>Sem. Corte
+                            </label>
+                            <input type="number" id="kardexSemanaCorte"
+                                class="form-control form-control-sm dc-input-semana"
+                                min="1" max="9999" placeholder="Ej: 12"
+                                style="width:82px; border:2px solid #f39c12; border-radius:8px;"
+                                title="Semana de referencia: el inventario de esta semana se usa como punto de partida fijo">
+                            <span style="font-size:.68rem; color:#888; max-width:140px; line-height:1.2">
+                                Punto de partida del inventario
+                            </span>
                         </div>
                     </div>
                     <div class="dc-insumo-panel-body">

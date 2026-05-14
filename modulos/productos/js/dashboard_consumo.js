@@ -2062,6 +2062,23 @@ let chartKardexExistencia = null;
 
 function cargarKardex(idPP, item) {
     const KARDEX_AJAX = 'ajax/';
+
+    // Validar semana de corte
+    const semDesde = datosActuales._semDesde;
+    const semHasta = datosActuales._semHasta;
+    const semCorteRaw = parseInt($('#kardexSemanaCorte').val());
+
+    if (!semCorteRaw || semCorteRaw < semDesde || semCorteRaw > semHasta) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Semana de Corte requerida',
+            html: `Ingresa una semana de corte válida entre <strong>${semDesde}</strong> y <strong>${semHasta}</strong>.<br>
+                   <small style="color:#888">Es el punto de referencia para construir el inventario.</small>`,
+            confirmButtonColor: '#0E544C'
+        });
+        return;
+    }
+
     $('#panelKardex').removeClass('d-none');
     $('#bdLoaderKardex').removeClass('d-none');
     $('#bdResumen').addClass('d-none');
@@ -2069,14 +2086,13 @@ function cargarKardex(idPP, item) {
     $('#bdChartStockBadge').hide();
     $('#bdChartNota').hide();
 
-    const semDesde = datosActuales._semDesde;
-    const semHasta = datosActuales._semHasta;
     const sucursalesSelec = SucPicker.getSelected();
 
     const fd = new FormData();
     fd.append('id_pp', idPP);
     fd.append('semana_desde', semDesde);
     fd.append('semana_hasta', semHasta);
+    fd.append('semana_corte', semCorteRaw);
     sucursalesSelec.forEach(s => fd.append('sucursales[]', s));
 
     fetch(KARDEX_AJAX + 'balance_inventario_get_detalle.php', { method: 'POST', body: fd })
@@ -2102,10 +2118,11 @@ function renderDetalleKardex(res) {
     // Función fmt local para kardex
     const fmtKardex = (v, d = 4) => v === null || v === undefined ? '—' : parseFloat(v).toLocaleString('es', { minimumFractionDigits: d, maximumFractionDigits: d });
     
+    const semCorte = res.semana_corte || '?';
     bdResumen.innerHTML = `
-        <div class="bd-resumen-item">
-            <div class="bd-resumen-label">INV. INICIAL</div>
-            <div class="bd-resumen-val" style="color:var(--bd-neutral)">${fmtKardex(t.inv_inicial, 2)}</div>
+        <div class="bd-resumen-item" style="border-left:3px solid #f39c12">
+            <div class="bd-resumen-label"><i class="fas fa-cut me-1" style="color:#f39c12"></i>INV. CORTE S${semCorte}</div>
+            <div class="bd-resumen-val" style="color:#f39c12">${fmtKardex(t.inv_inicial, 2)}</div>
         </div>
         <div class="bd-resumen-item">
             <div class="bd-resumen-label">+ AJUSTE</div>
@@ -2145,13 +2162,17 @@ function renderDetalleKardex(res) {
 function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     const regs = res.registros || [];
     const t = res.totales_tipo;
-    const invIni = t.inv_inicial || 0;
-    const invFin = t.inv_final || 0;
+    const invCorte = t.inv_inicial || 0;       // Inventario de la semana de corte
+    const invFin   = t.inv_final   || 0;
+    const semCorte = res.semana_corte;
+    const pivotDate = res.fecha_inicio_corte;  // Primer día de la semana de corte
     const consTeoDiario = res.consumo_teorico_diario || {};
+    const puntosDomingo = res.puntos_domingo  || {};
     const fmtKardex = (v, d = 4) => v === null || v === undefined ? '—' : parseFloat(v).toLocaleString('es', { minimumFractionDigits: d, maximumFractionDigits: d });
 
+    // ── Construir lista de días del rango completo ──────────────────────
     const start = new Date(res.fecha_inicio + 'T12:00:00');
-    const end = new Date(res.fecha_fin + 'T12:00:00');
+    const end   = new Date(res.fecha_fin   + 'T12:00:00');
     const allDays = [];
     let curr = new Date(start);
     while (curr <= end) {
@@ -2159,6 +2180,7 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         curr.setDate(curr.getDate() + 1);
     }
 
+    // ── Movimientos por fecha (merma negativa, resto positivo) ──────────
     const movsPorFecha = {};
     regs.forEach(r => {
         if (r.tipo === 'inv_inicial' || r.tipo === 'inv_final') return;
@@ -2168,24 +2190,60 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         movsPorFecha[r.fecha] += val;
     });
 
-    const labels = ['Inicial (S' + res.semana_ant + ')'];
-    const stockTeoData = [invIni];
-    let balTeo = invIni;
+    // ── Índice del pivot (primer día de semana de corte) ─────────────────
+    const pivotIdx = pivotDate ? allDays.indexOf(pivotDate) : 0;
+    const pIdx = pivotIdx >= 0 ? pivotIdx : 0;
 
-    allDays.forEach(day => {
-        const mov = movsPorFecha[day] || 0;
-        const cTeo = consTeoDiario[day] || 0;
-        balTeo = balTeo + mov - cTeo;
+    // ── Cálculo bidireccional ─────────────────────────────────────────────
+    // stockTeoData[i] = balance al FINAL del día i
+    // invCorte = balance al INICIO del primer día del corte
+    //          = balance al FINAL del día (pIdx - 1)
+    const stockTeoData = new Array(allDays.length).fill(null);
 
+    // Hacia adelante: pIdx → fin
+    // balance inicio pIdx = invCorte; luego se aplican movimientos del día
+    let balFwd = invCorte;
+    for (let i = pIdx; i < allDays.length; i++) {
+        const mov  = movsPorFecha[allDays[i]] || 0;
+        const cTeo = consTeoDiario[allDays[i]] || 0;
+        balFwd = balFwd + mov - cTeo;
+        stockTeoData[i] = balFwd;
+    }
+
+    // Hacia atrás: (pIdx - 1) → 0
+    // end_of_day[i] = end_of_day[i+1] - mov[i+1] + cTeo[i+1]
+    // end_of_day[pIdx - 1] = invCorte (inicio del pivot = fin del día anterior)
+    if (pIdx > 0) {
+        let balBwd = invCorte;
+        stockTeoData[pIdx - 1] = balBwd;
+        for (let i = pIdx - 2; i >= 0; i--) {
+            const mov  = movsPorFecha[allDays[i + 1]] || 0;
+            const cTeo = consTeoDiario[allDays[i + 1]] || 0;
+            balBwd = balBwd - mov + cTeo;
+            stockTeoData[i] = balBwd;
+        }
+    }
+
+    // ── Labels ────────────────────────────────────────────────────────────
+    const labels = allDays.map(day => {
         const dObj = new Date(day + 'T12:00:00');
-        const dLabel = dObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-        labels.push(dLabel);
-        stockTeoData.push(balTeo);
+        return dObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
     });
 
-    const realFinalPoint = new Array(labels.length).fill(null);
-    realFinalPoint[labels.length - 1] = invFin;
+    // ── Dataset: Marcador del corte (triángulo naranja en pIdx) ──────────
+    // Lo colocamos en pIdx - 1 si existe (= el valor invCorte justo antes del pivot)
+    // o en pIdx como primer punto del forward si pIdx = 0
+    const corteMarkerIdx = pIdx > 0 ? pIdx - 1 : pIdx;
+    const corteMarker = new Array(labels.length).fill(null);
+    corteMarker[corteMarkerIdx] = invCorte;
 
+    // ── Dataset: Inventario físico de domingos (scatter rojo) ───────────
+    const domingoData = allDays.map(day => {
+        const v = puntosDomingo[day];
+        return (v !== undefined && v !== null) ? v : null;
+    });
+
+    // ── Construir datasets ────────────────────────────────────────────────
     const ctx = document.getElementById('existenciaChart').getContext('2d');
     if (chartKardexExistencia) chartKardexExistencia.destroy();
 
@@ -2194,22 +2252,33 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             label: 'Stock Teórico (Ventas + Kardex)',
             data: stockTeoData,
             borderColor: '#51B8AC',
-            backgroundColor: 'rgba(81, 184, 172, 0.1)',
+            backgroundColor: 'rgba(81,184,172,0.1)',
             borderWidth: 3,
             fill: true,
             tension: 0.3,
-            pointRadius: 3,
+            pointRadius: 2,
             pointBackgroundColor: '#fff',
         },
         {
-            label: 'Inventario Físico Real (Conteo)',
-            data: realFinalPoint,
+            label: `Corte S${semCorte} (${fmtKardex(invCorte, 2)})`,
+            data: corteMarker,
+            borderColor: '#f39c12',
+            backgroundColor: '#f39c12',
+            pointRadius: 11,
+            pointHoverRadius: 13,
+            pointStyle: 'triangle',
+            showLine: false,
+        },
+        {
+            label: 'Inv. Físico Domingo',
+            data: domingoData,
             borderColor: '#e74c3c',
             backgroundColor: '#e74c3c',
-            pointRadius: 8,
+            pointRadius: 7,
+            pointHoverRadius: 9,
             pointStyle: 'rectRot',
             showLine: false,
-        }
+        },
     ];
 
     const n = labels.length;
