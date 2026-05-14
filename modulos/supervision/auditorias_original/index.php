@@ -1,10 +1,9 @@
 ﻿<?php
 // index.php - Registros de Auditoría con filtros avanzados
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
-require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
-require_once '../../../core/layout/menu_lateral.php';
-require_once '../../../core/layout/header_universal.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
@@ -27,31 +26,33 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registros de Auditoría</title>
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
-    
+
     <!-- Librerías Estándar ERP -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
+
     <!-- Estilos Estándar ERP -->
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/fab_button.css">
-    
+
     <!-- CSS personalizado de la página -->
     <link rel="stylesheet" href="css/auditorias.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
-    
+
     <div class="main-container">
         <div class="sub-container">
             <?php echo renderHeader($usuario, 'Registros de Auditoría'); ?>
-            
+
             <div class="container-fluid p-3">
                 <!-- La navegación se movió al FAB y el botón Historial se eliminó por redundancia -->
 
@@ -140,17 +141,17 @@ $cargoOperario = $usuario['CodNivelesCargos'];
     <!-- jQuery y Bootstrap Bundle -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- JavaScript personalizado -->
     <script src="js/auditorias.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
-    
+
     <script>
         // Inicialización de interacciones FAB si no están en auditorias.js
         $(document).ready(function() {
             $('.btn-floating-pitaya').on('click', function() {
                 $('.fab-container').toggleClass('active');
             });
-            
+
             // Cerrar FAB al hacer clic fuera
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.fab-container').length) {
@@ -160,4 +161,5 @@ $cargoOperario = $usuario['CodNivelesCargos'];
         });
     </script>
 </body>
+
 </html>
