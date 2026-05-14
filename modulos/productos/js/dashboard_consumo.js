@@ -267,6 +267,7 @@ function bindEventos() {
         const idSel = parseInt($(this).val()) || 0;
         if (idSel > 0) {
             const item = datosActuales.consumo.find(c => c.id == idSel);
+            $('#panelAnalisisInsumo').removeClass('d-none');  // mostrar panel
             $('#chartPlaceholder').addClass('d-none');
             $('#chartWrap').removeClass('d-none');
             // Actualizar hint en el header del panel
@@ -277,6 +278,7 @@ function bindEventos() {
             $('#kardexSemanaCorte').val('');
             cargarKardex(idSel, item);
         } else {
+            $('#panelAnalisisInsumo').addClass('d-none');  // ocultar panel
             $('#chartPlaceholder').removeClass('d-none');
             $('#chartWrap').addClass('d-none');
             $('#panelKardex').addClass('d-none');

@@ -294,7 +294,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <!-- PANEL INSUMO: KPIs + Gráfico de Tendencia              -->
                 <!-- ═══════════════════════════════════════════════════════ -->
-                <div class="dc-insumo-panel mb-3">
+                <div class="dc-insumo-panel mb-3 d-none" id="panelAnalisisInsumo">
                     <div class="dc-insumo-panel-header">
                         <div class="dc-insumo-panel-title">
                             <i class="fas fa-chart-line me-2"></i>
