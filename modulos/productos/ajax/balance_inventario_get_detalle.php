@@ -434,7 +434,7 @@ try {
         }
     }
 
-    // ── Inventario Físico de Domingos del rango (scatter visual) ───────
+    // ── Inventario Físico de cada semana del rango (scatter visual) ────────
     $puntosDomingo = [];
     if (!empty($allCods) && !empty($sucFiltro)) {
         $stmtDom = $conn->prepare("
@@ -442,7 +442,6 @@ try {
             FROM msaccess_masivo_InventarioCotizacion k
             INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
             WHERE ss.numero_semana BETWEEN ? AND ?
-              AND DAYOFWEEK(k.Fecha) = 1
               AND k.CodCotizacion IN ($phCods)
               AND k.Sucursal IN ($phSucs)
         ");

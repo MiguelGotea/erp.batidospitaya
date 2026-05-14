@@ -241,36 +241,65 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 </div>
 
                 <!-- ═══════════════════════════════════════════════════════ -->
-                <!-- PANEL INSUMO: Selector + KPIs + Gráfico (todo ligado)  -->
+                <!-- BARRA DE CONTROL: Insumo + Sem. Corte + Refresh         -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <div class="dc-filtros-card card border-0 mb-3" style="overflow:visible">
+                    <div class="card-body py-3 px-4">
+                        <div class="row g-3 align-items-end">
+
+                            <!-- Selector de Insumo -->
+                            <div class="col-12 col-md-6 col-lg-5" style="position:relative">
+                                <label class="dc-label" for="dcInsumoSearch">
+                                    <i class="fas fa-box me-1" style="color:var(--neu-accent)"></i>Insumo Analizado
+                                </label>
+                                <div class="dc-suc-trigger" id="dcInsumoTrigger">
+                                    <div class="dc-suc-trigger-inner">
+                                        <input type="text" class="dc-suc-search w-100" id="dcInsumoSearch"
+                                            placeholder="Escribe para buscar un insumo..." autocomplete="off"
+                                            style="background:transparent; border:none; outline:none; font-size:.84rem; font-weight:600; color:var(--neu-accent-dark);">
+                                    </div>
+                                    <div class="dc-suc-trigger-right">
+                                        <i class="fas fa-chevron-down dc-suc-chevron" id="dcInsumoChevron"></i>
+                                    </div>
+                                </div>
+                                <div class="dc-suc-dropdown" id="dcInsumoDropdown">
+                                    <div class="dc-suc-list" id="dcInsumoList"></div>
+                                </div>
+                                <select id="chartInsumoSel" style="display:none"><option value=""></option></select>
+                            </div>
+
+                            <!-- Semana de Corte -->
+                            <div class="col-6 col-md-2 col-lg-2">
+                                <label class="dc-label" for="kardexSemanaCorte">
+                                    <i class="fas fa-cut me-1" style="color:#e67e22"></i>Sem. Corte
+                                </label>
+                                <input type="number" id="kardexSemanaCorte"
+                                    class="form-control form-control-sm dc-input-semana"
+                                    min="1" max="9999" placeholder="Auto"
+                                    title="Semana de referencia del inventario — punto de partida del Kardex. Vacío = usa la semana inicial del rango.">
+                            </div>
+
+                            <!-- Botón Refresh Kardex -->
+                            <div class="col-auto d-flex align-items-end">
+                                <button class="btn btn-sm dc-btn-primary" id="btnRefreshKardex"
+                                    title="Recargar el Kardex con la semana de corte indicada">
+                                    <i class="fas fa-sync-alt me-1"></i>Actualizar Kardex
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- PANEL INSUMO: KPIs + Gráfico de Tendencia              -->
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <div class="dc-insumo-panel mb-3">
-
-                    <!-- Encabezado con selector de insumo -->
                     <div class="dc-insumo-panel-header">
                         <div class="dc-insumo-panel-title">
-                            <i class="fas fa-filter me-2"></i>
-                            Insumo Analizado
-                            <span class="dc-insumo-panel-hint">— selecciona para ver KPIs, tendencia y métricas</span>
-                        </div>
-                        <div class="dc-insumo-sel-wrap">
-                            <div class="dc-suc-trigger" id="dcInsumoTrigger">
-                                <div class="dc-suc-trigger-inner">
-                                    <input type="text" class="dc-suc-search w-100" id="dcInsumoSearch" 
-                                        placeholder="Escribe para buscar un insumo..." autocomplete="off" 
-                                        style="background:transparent; border:none; outline:none; font-size:.84rem; font-weight:600; color:var(--neu-accent-dark);">
-                                </div>
-                                <div class="dc-suc-trigger-right">
-                                    <i class="fas fa-chevron-down dc-suc-chevron" id="dcInsumoChevron"></i>
-                                </div>
-                            </div>
-                            <!-- Dropdown panel -->
-                            <div class="dc-suc-dropdown" id="dcInsumoDropdown">
-                                <div class="dc-suc-list" id="dcInsumoList"></div>
-                            </div>
-                            <!-- Select oculto para compatibilidad con el JS existente -->
-                            <select id="chartInsumoSel" style="display:none">
-                                <option value=""></option>
-                            </select>
+                            <i class="fas fa-chart-line me-2"></i>
+                            Análisis de Insumo
+                            <span class="dc-insumo-panel-hint" id="insumoNombreHint">— selecciona un insumo arriba para ver KPIs y tendencia</span>
                         </div>
                     </div>
 
@@ -349,28 +378,12 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 <!-- PANEL KARDEX (Traído de balance_inventario_detalle)   -->
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <div id="panelKardex" class="dc-insumo-panel mb-3 d-none">
-                    <div class="dc-insumo-panel-header" style="flex-wrap:wrap; gap:.5rem;">
+                    <div class="dc-insumo-panel-header">
                         <div class="dc-insumo-panel-title">
                             <i class="fas fa-exchange-alt me-2"></i>
                             Movimiento de Existencia (Kardex)
                         </div>
-                        <!-- Semana de Corte -->
-                        <div class="d-flex align-items-center gap-2 ms-auto" style="flex-shrink:0">
-                            <label for="kardexSemanaCorte"
-                                style="font-size:.73rem; font-weight:700; color:rgba(255,255,255,.9); margin:0; white-space:nowrap; cursor:pointer;">
-                                <i class="fas fa-cut me-1" style="color:#f9c74f"></i>Sem. Corte
-                            </label>
-                            <input type="number" id="kardexSemanaCorte"
-                                min="1" max="9999" placeholder="Ej: 12"
-                                style="width:78px; padding:4px 8px; font-size:.82rem; font-weight:700; text-align:center;
-                                       background:rgba(255,255,255,.95); color:#0E544C;
-                                       border:2px solid #f9c74f !important; border-radius:8px;
-                                       box-shadow: inset 2px 2px 4px rgba(0,0,0,.1);"
-                                title="Semana de referencia: punto de partida fijo del inventario">
-                            <span style="font-size:.65rem; color:rgba(255,255,255,.6); max-width:110px; line-height:1.2;">
-                                punto de partida del inventario
-                            </span>
-                        </div>
+                        <span id="bdKardexCorteTag" style="font-size:.7rem;background:rgba(255,255,255,.18);color:#fff;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35);"></span>
                     </div>
                     <div class="dc-insumo-panel-body">
                         <!-- Loader -->

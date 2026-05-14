@@ -261,7 +261,7 @@ function bindEventos() {
         $(this).hide();
     });
 
-    // Cambiar insumo en el panel de análisis → re-renderizar gráfico + KPIs
+    // Cambiar insumo en el panel de análisis → re-renderizar gráfico + KPIs + Kardex
     $('#chartInsumoSel').on('change', function () {
         if (!datosActuales) return;
         const idSel = parseInt($(this).val()) || 0;
@@ -269,18 +269,35 @@ function bindEventos() {
             const item = datosActuales.consumo.find(c => c.id == idSel);
             $('#chartPlaceholder').addClass('d-none');
             $('#chartWrap').removeClass('d-none');
+            // Actualizar hint en el header del panel
+            $('#insumoNombreHint').text(item ? `— ${item.nombre}` : '');
             renderKPIs(datosActuales, item);
             renderGrafico(datosActuales);
+            // Limpiar corte al cambiar de insumo para que use el semDesde como default
+            $('#kardexSemanaCorte').val('');
             cargarKardex(idSel, item);
         } else {
             $('#chartPlaceholder').removeClass('d-none');
             $('#chartWrap').addClass('d-none');
             $('#panelKardex').addClass('d-none');
+            $('#insumoNombreHint').text('— selecciona un insumo arriba para ver KPIs y tendencia');
             if (chartTendencia) { chartTendencia.destroy(); chartTendencia = null; }
             $('#tituloTendencia').html('<i class="fas fa-chart-line me-2"></i>Análisis de Insumo');
             renderKPIs(datosActuales, null);
         }
     });
+
+    // Botón Actualizar Kardex → recarga con la semana de corte actual
+    $('#btnRefreshKardex').on('click', function () {
+        const idSel = parseInt($('#chartInsumoSel').val()) || 0;
+        if (!datosActuales || !idSel) {
+            Swal.fire({ icon: 'info', title: 'Sin insumo seleccionado', text: 'Primero selecciona un insumo para cargar el Kardex.', confirmButtonColor: '#0E544C' });
+            return;
+        }
+        const item = datosActuales.consumo.find(c => c.id == idSel);
+        cargarKardex(idSel, item);
+    });
+
 
     // Buscar en tabla historial
     $('#buscarHistorial').on('keyup', function () {
@@ -2245,11 +2262,19 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     const corteMarker = new Array(labels.length).fill(null);
     corteMarker[corteMarkerIdx] = invCorte;
 
-    // ── Dataset: Inventario físico de domingos (scatter rojo) ───────────
+    // ── Dataset: Inventario físico de semanas (scatter rojo) ────────────
     const domingoData = allDays.map(day => {
         const v = puntosDomingo[day];
         return (v !== undefined && v !== null) ? v : null;
     });
+
+    // ── Dataset: Inventario físico FINAL (siempre mostrar en último día) ─
+    const realFinalPoint = new Array(allDays.length).fill(null);
+    realFinalPoint[allDays.length - 1] = invFin;
+
+    // ── Actualizar tag de corte en header del Kardex ──────────────────────
+    const corteTag = document.getElementById('bdKardexCorteTag');
+    if (corteTag) corteTag.textContent = `✂ Corte: S${semCorte}  |  Inv: ${fmtKardex(invCorte, 2)}`;
 
     // ── Construir datasets ────────────────────────────────────────────────
     const ctx = document.getElementById('existenciaChart').getContext('2d');
@@ -2278,12 +2303,22 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             showLine: false,
         },
         {
-            label: 'Inv. Físico Domingo',
+            label: 'Inv. Físico Conteo',
             data: domingoData,
             borderColor: '#e74c3c',
             backgroundColor: '#e74c3c',
             pointRadius: 7,
             pointHoverRadius: 9,
+            pointStyle: 'rectRot',
+            showLine: false,
+        },
+        {
+            label: 'Inv. Final S' + res.semana_ant,
+            data: realFinalPoint,
+            borderColor: '#8e44ad',
+            backgroundColor: '#8e44ad',
+            pointRadius: 9,
+            pointHoverRadius: 11,
             pointStyle: 'rectRot',
             showLine: false,
         },
