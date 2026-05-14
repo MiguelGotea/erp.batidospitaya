@@ -32,11 +32,17 @@ $cargoOperario = $usuario['CodNivelesCargos'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registros de Auditoría</title>
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
-    <!-- Font Awesome para iconos generales -->
+    
+    <!-- Librerías Estándar ERP -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <!-- Bootstrap Icons para iconos de filtro -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <!-- CSS personalizado -->
+    
+    <!-- Estilos Estándar ERP -->
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
+    
+    <!-- CSS personalizado de la página -->
     <link rel="stylesheet" href="css/auditorias.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
@@ -47,83 +53,111 @@ $cargoOperario = $usuario['CodNivelesCargos'];
             <?php echo renderHeader($usuario, 'Registros de Auditoría'); ?>
             
             <div class="container-fluid p-3">
-                
-                <div class="buttons-container-nav mb-4" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                    <a href="index.php" class="btn-agregar activo">
-                        <i class="fas fa-clipboard-check"></i> <span class="btn-text">Historial</span>
-                    </a>
-                    
-                    <?php if (verificarAccesoCargo([16])): ?>
-                        <a href="agregar.php" class="btn-agregar"><i class="fas fa-cash-register"></i> Auditoría Limpieza</a>
-                        <a href="agregarpersonal.php" class="btn-agregar"><i class="fas fa-wallet"></i> Auditoría Personal</a>
-                        <a href="agregarservicio.php" class="btn-agregar"><i class="fas fa-boxes"></i> Auditoría Servicio</a>
-                    <?php endif; ?>
+                <!-- La navegación se movió al FAB y el botón Historial se eliminó por redundancia -->
+
+                <!-- Tabla de auditorías -->
+                <div class="table-responsive">
+                    <table class="auditorias-table table table-hover" id="tablaAuditorias">
+                        <thead>
+                            <tr>
+                                <th class="columna-numero">No.</th>
+                                <th data-column="fecha_hora" data-type="daterange">
+                                    Fecha
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="sucursal" data-type="list">
+                                    Sucursal
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="persona" data-type="text">
+                                    Colaborador
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="tipo_auditoria" data-type="list">
+                                    Tipo
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th class="columna-promedio">Puntaje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaAuditoriasBody">
+                            <!-- Datos cargados vía AJAX -->
+                            <tr>
+                                <td colspan="6" class="sin-registros">Cargando datos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-        
-        <?php if (verificarAccesoCargo([21])): ?>
-            <!-- Botones para agregar nuevo registro -->
-            <div class="nueva-auditoria-container">
-                <p>Nueva Auditoría</p>
-                <a href="agregar.php" class="btn-agregar"><i class="fas fa-broom"></i> LIMPIEZA</a>
-                <a href="agregarpersonal.php" class="btn-agregar"><i class="fas fa-user-tie"></i> PERSONAL</a>
-                <a href="agregarservicio.php" class="btn-agregar"><i class="fas fa-concierge-bell"></i> SERVICIO</a>
-                <a href="auditinternas/auditoria_proceso.php" class="btn-agregar"><i class="fas fa-clipboard-check"></i> PROCESOS</a>
-                <a href="auditinternas/auditoria_promociones.php" class="btn-agregar"><i class="fas fa-tags"></i> PROMOCIONES</a>
-            </div>
-        <?php endif; ?>
 
-        <!-- Tabla de auditorías -->
-        <table class="auditorias-table" id="tablaAuditorias">
-            <thead>
-                <tr>
-                    <th class="columna-numero">No.</th>
-                    <th data-column="fecha_hora" data-type="daterange">
-                        Fecha
-                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                    </th>
-                    <th data-column="sucursal" data-type="list">
-                        Sucursal
-                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                    </th>
-                    <th data-column="persona" data-type="text">
-                        Colaborador
-                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                    </th>
-                    <th data-column="tipo_auditoria" data-type="list">
-                        Tipo
-                        <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                    </th>
-                    <th class="columna-promedio">Puntaje</th>
-                </tr>
-            </thead>
-            <tbody id="tablaAuditoriasBody">
-                <!-- Datos cargados vía AJAX -->
-                <tr>
-                    <td colspan="6" class="sin-registros">Cargando datos...</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Paginación -->
-        <div class="pagination-container">
-            <div class="pagination-info">
-                <label>Mostrar:</label>
-                <select id="registrosPorPagina" onchange="cambiarRegistrosPorPagina()">
-                    <option value="25" selected>25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-                <span>registros</span>
-            </div>
-            <div id="paginacion"></div>
-        </div>
+                <!-- Paginación -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <label>Mostrar:</label>
+                        <select id="registrosPorPagina" onchange="cambiarRegistrosPorPagina()">
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>registros</span>
+                    </div>
+                    <div id="paginacion"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- jQuery -->
+    <!-- Botón Flotante con opciones (FAB) -->
+    <?php if (verificarAccesoCargo([16, 21])): ?>
+        <div class="fab-container">
+            <div class="fab-options">
+                <a href="auditinternas/auditoria_promociones.php" class="fab-option">
+                    <span class="fab-label">Promociones</span>
+                    <div class="fab-icon-holder"><i class="fas fa-tags"></i></div>
+                </a>
+                <a href="auditinternas/auditoria_proceso.php" class="fab-option">
+                    <span class="fab-label">Procesos</span>
+                    <div class="fab-icon-holder"><i class="fas fa-clipboard-check"></i></div>
+                </a>
+                <a href="agregarservicio.php" class="fab-option">
+                    <span class="fab-label">Auditoría Servicio</span>
+                    <div class="fab-icon-holder"><i class="fas fa-concierge-bell"></i></div>
+                </a>
+                <a href="agregarpersonal.php" class="fab-option">
+                    <span class="fab-label">Auditoría Personal</span>
+                    <div class="fab-icon-holder"><i class="fas fa-user-tie"></i></div>
+                </a>
+                <a href="agregar.php" class="fab-option">
+                    <span class="fab-label">Auditoría Limpieza</span>
+                    <div class="fab-icon-holder"><i class="fas fa-broom"></i></div>
+                </a>
+            </div>
+            <div class="btn-floating-pitaya" title="Nueva Auditoría">
+                <i class="fas fa-plus"></i>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- jQuery y Bootstrap Bundle -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <!-- JavaScript personalizado -->
     <script src="js/auditorias.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    
+    <script>
+        // Inicialización de interacciones FAB si no están en auditorias.js
+        $(document).ready(function() {
+            $('.btn-floating-pitaya').on('click', function() {
+                $('.fab-container').toggleClass('active');
+            });
+            
+            // Cerrar FAB al hacer clic fuera
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.fab-container').length) {
+                    $('.fab-container').removeClass('active');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

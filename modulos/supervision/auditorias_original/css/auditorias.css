@@ -1,5 +1,6 @@
 /* auditorias.css */
 
+/* 
 * {
     font-family: 'Calibri', sans-serif;
     text-align: center;
@@ -8,7 +9,9 @@
     justify-content: center;
     font-size: clamp(11px, 2vw, 16px) !important;
 }
+*/
 
+/*
 body {
     background-color: #F6F6F6;
     margin: 0;
@@ -18,6 +21,7 @@ body {
     align-items: center;
     width: 99%;
 }
+*/
 
 /* Header */
 header {
