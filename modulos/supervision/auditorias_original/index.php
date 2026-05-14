@@ -1,8 +1,8 @@
-<?php
+﻿<?php
 // index.php - Registros de Auditoría con filtros avanzados
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
 require_once '../../../core/layout/menu_lateral.php';
 require_once '../../../core/layout/header_universal.php';
 
@@ -41,14 +41,14 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 </head>
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
-    <div class="contenedor-principal">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
+    
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Registros de Auditoría'); ?>
+            
+            <div class="container-fluid p-3">
                 
-                <div class="buttons-container">
+                <div class="buttons-container-nav mb-4" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
                     <a href="index.php" class="btn-agregar activo">
                         <i class="fas fa-clipboard-check"></i> <span class="btn-text">Historial</span>
                     </a>
@@ -59,29 +59,6 @@ $cargoOperario = $usuario['CodNivelesCargos'];
                         <a href="agregarservicio.php" class="btn-agregar"><i class="fas fa-boxes"></i> Auditoría Servicio</a>
                     <?php endif; ?>
                 </div>
-                
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="../../../index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
         
         <?php if (verificarAccesoCargo([21])): ?>
             <!-- Botones para agregar nuevo registro -->
@@ -139,6 +116,8 @@ $cargoOperario = $usuario['CodNivelesCargos'];
                 <span>registros</span>
             </div>
             <div id="paginacion"></div>
+        </div>
+            </div>
         </div>
     </div>
 
