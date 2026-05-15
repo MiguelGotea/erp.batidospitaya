@@ -646,35 +646,27 @@ try {
     }
     unset($p);
 
-    /* ── 10. Stock Pronóstico ─────────────────────────────────────────────────
-       Fórmula: inv_fisico(semCortePron) + movimientos(semCortePron+1..semInv)
-                                         - consumo_teo(semCortePron+1..semInv)
-       Resultado en presentación de despacho (mismas unidades que stock mín).
-    ──────────────────────────────────────────────────────────────────────── */
+    /* ── 10. Stock Pronóstico ──────────────────────────────────────────────────────
+       Lógica idéntica al Kardex (balance_inventario_get_detalle.php):
+         inv_fisico( semAntCortePron )           <- semana ANTERIOR al corte
+         + movimientos( semCortePron .. semInv ) <- desde el corte en adelante
+         - consumo_teo( semCortePron .. semInv )
+    ─────────────────────────────────────────────────────────────── */
     $semCortePron = max(1, $semCortePron);
-    // Inicializar pronóstico como null
     foreach ($productos as &$p) { $p['_stock_pronostico'] = null; }
     unset($p);
 
-    $semPronDesde = $semCortePron + 1; // primer día a acumular movimientos
+    // Semana anterior al corte (mismo mecanismo que balance_inventario_get_detalle.php)
+    $rSAC = $conn->prepare("SELECT numero_semana FROM SemanasSistema WHERE numero_semana < ? ORDER BY numero_semana DESC LIMIT 1");
+    $rSAC->execute([$semCortePron]);
+    $semAntCortePron = (int)$rSAC->fetchColumn();
+
+    // Movimientos corren DESDE semCortePron (igual que el Kardex)
+    $semPronDesde = $semCortePron;
     $semPronHasta = $numSemanaInv;
 
-    if ($semPronDesde <= $semPronHasta) {
-        // ── Fechas ──────────────────────────────────────────────────────────
-        $rFAll = $conn->prepare("SELECT MIN(fecha_inicio) as fi, MAX(fecha_fin) as ff FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?");
-        $rFAll->execute([$semCortePron, $semPronHasta]);
-        $fdAll = $rFAll->fetch(PDO::FETCH_ASSOC);
-        $fCorteIni = $fdAll['fi'];  // inicio de la semana de corte (para el inv físico)
-        $fPronFin  = $fdAll['ff'];  // fin de semana_inv
-
-        // Inicio/fin exactos de la semana de corte (para query de inv físico)
-        $rFCor = $conn->prepare("SELECT fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = ?");
-        $rFCor->execute([$semCortePron]);
-        $fdCor = $rFCor->fetch(PDO::FETCH_ASSOC);
-        $fCorIni = $fdCor['fecha_inicio'];
-        $fCorFin = $fdCor['fecha_fin'];
-
-        // Inicio/fin del período de movimientos (semCortePron+1..semInv)
+    if ($semAntCortePron > 0 && $semPronDesde <= $semPronHasta) {
+        // ── Fechas del período de movimientos y consumo ────────────────────
         $rFMov = $conn->prepare("SELECT MIN(fecha_inicio) as fi, MAX(fecha_fin) as ff FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?");
         $rFMov->execute([$semPronDesde, $semPronHasta]);
         $fdMov = $rFMov->fetch(PDO::FETCH_ASSOC);
@@ -759,7 +751,8 @@ try {
             $phCods      = implode(',', array_fill(0, count($allCodsPron), '?'));
             $sucInt      = (int)$codSucursal;
 
-            // ── Inventario físico de la semana de corte (punto de partida) ──────
+            // ── Inventario físico de semAntCortePron (semana ANTERIOR al corte) ───
+            // Mismo que el Kardex: inv de la semana ANTES del corte = punto de partida
             $pronInv = []; // [id_pp => cantidad_en_unidades]
             $stmtInvF = $conn->prepare("
                 SELECT k.CodCotizacion, SUM(k.Cantidad) as qty
@@ -769,7 +762,7 @@ try {
                   AND k.Sucursal = ?
                 GROUP BY k.CodCotizacion
             ");
-            $stmtInvF->execute(array_merge([$semCortePron], $allCodsPron, [$sucInt]));
+            $stmtInvF->execute(array_merge([$semAntCortePron], $allCodsPron, [$sucInt]));
             foreach ($stmtInvF->fetchAll(PDO::FETCH_ASSOC) as $r) {
                 $cod = (int)$r['CodCotizacion'];
                 if (!isset($gCodeMap[$cod])) continue;
