@@ -455,6 +455,32 @@ try {
         }
     }
 
+    // ── Inventario real al INICIO del rango (semana anterior a semDesde) ──────
+    // Independiente del corte — siempre el arranque físico del período
+    $invIniRango = 0;
+    $semAntDesde = null;
+    if (!empty($allCods) && !empty($sucFiltro)) {
+        $rSAD = $conn->prepare("SELECT numero_semana FROM SemanasSistema WHERE numero_semana < :d ORDER BY numero_semana DESC LIMIT 1");
+        $rSAD->execute([':d' => $semDesde]);
+        $semAntDesde = $rSAD->fetchColumn() ?: null;
+        if ($semAntDesde) {
+            $stmtIR = $conn->prepare("
+                SELECT k.CodCotizacion, k.Cantidad
+                FROM msaccess_masivo_InventarioCotizacion k
+                INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
+                WHERE ss.numero_semana = ?
+                  AND k.CodCotizacion IN ($phCods)
+                  AND k.Sucursal IN ($phSucs)
+            ");
+            $stmtIR->execute(array_merge([$semAntDesde], $allCods, $sucFiltro));
+            foreach ($stmtIR->fetchAll(PDO::FETCH_ASSOC) as $ri) {
+                $info = $codMapBalance[(int)$ri['CodCotizacion']] ?? null;
+                if (!$info) continue;
+                $invIniRango += round((float)$ri['Cantidad'] * $info['factor'], 4);
+            }
+        }
+    }
+
     $totales = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'compras' => 0, 'merma' => 0, 'inv_final' => 0];
     foreach ($registros as $reg)
         if (isset($totales[$reg['tipo']]))
@@ -470,6 +496,8 @@ try {
         'fecha_inicio_corte'     => $fechaInicioCorte,
         'fecha_inicio'           => $fechaInicioRange,
         'fecha_fin'              => $fechaFinRange,
+        'inv_inicial_rango'      => round($invIniRango, 4),
+        'semana_ant_rango'       => (int) ($semAntDesde ?? 0),
         'registros'              => $registros,
         'totales_tipo'           => array_map(fn($v) => round($v, 4), $totales),
         'consumo_real'           => $consumoReal,

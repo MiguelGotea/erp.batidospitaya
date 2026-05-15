@@ -2189,10 +2189,12 @@ function renderDetalleKardex(res) {
 function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     const regs = res.registros || [];
     const t = res.totales_tipo;
-    const invCorte = t.inv_inicial || 0;       // Inventario de la semana de corte
-    const invFin   = t.inv_final   || 0;
-    const semCorte = res.semana_corte;
-    const pivotDate = res.fecha_inicio_corte;  // Primer día de la semana de corte
+    const invCorte      = t.inv_inicial || 0;       // Inventario de la semana de corte
+    const invFin        = t.inv_final   || 0;
+    const semCorte      = res.semana_corte;
+    const pivotDate     = res.fecha_inicio_corte;  // Primer día de la semana de corte
+    const invIniRango   = res.inv_inicial_rango ?? null;  // Inicial real del rango completo
+    const semAntRango   = res.semana_ant_rango   || 0;
     const consTeoDiario = res.consumo_teorico_diario || {};
     const puntosDomingo = res.puntos_domingo  || {};
     const fmtKardex = (v, d = 4) => v === null || v === undefined ? '—' : parseFloat(v).toLocaleString('es', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -2274,9 +2276,13 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     const realFinalPoint = new Array(allDays.length).fill(null);
     realFinalPoint[allDays.length - 1] = invFin;
 
+    // ── Dataset: Inventario real al INICIO del rango (estrella verde en pos 0) ─
+    const invIniRangoData = new Array(allDays.length).fill(null);
+    if (invIniRango !== null) invIniRangoData[0] = invIniRango;
+
     // ── Actualizar tag de corte en header del Kardex ──────────────────────
     const corteTag = document.getElementById('bdKardexCorteTag');
-    if (corteTag) corteTag.textContent = `✂ Corte: S${semCorte}  |  Inv: ${fmtKardex(invCorte, 2)}`;
+    if (corteTag) corteTag.textContent = `✂ Corte S${semCorte}: ${fmtKardex(invCorte, 2)}  |  Ini Rango S${semAntRango}: ${fmtKardex(invIniRango, 2)}`;
 
     // ── Construir datasets ────────────────────────────────────────────────
     const ctx = document.getElementById('existenciaChart').getContext('2d');
@@ -2322,6 +2328,16 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             pointRadius: 9,
             pointHoverRadius: 11,
             pointStyle: 'rectRot',
+            showLine: false,
+        },
+        {
+            label: `Ini Rango S${semAntRango} (${fmtKardex(invIniRango, 2)})`,
+            data: invIniRangoData,
+            borderColor: '#27ae60',
+            backgroundColor: '#27ae60',
+            pointRadius: 10,
+            pointHoverRadius: 12,
+            pointStyle: 'star',
             showLine: false,
         },
     ];
