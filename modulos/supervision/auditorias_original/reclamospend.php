@@ -1,465 +1,219 @@
 <?php
-//ini_set('display_errors', 1);
-//ini_set('display_startup_errors', 1);
-//error_reporting(E_ALL);
-// Al inicio del archivo, verificar autenticación y acceso al módulo
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
-require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
 
-// Verificar acceso al módulo 'publico' (o el nombre que corresponda según tus permisos)
-//verificarAccesoModulo('supervision');
+/**
+ * reclamospend.php
+ * Reclamos pendientes de investigación final (procesamiento)
+ */
 
-//******************************Estándar para header******************************
-verificarAutenticacion();
+require_once '../../../core/auth/auth.php';
+require_once '../../../core/layout/menu_lateral.php';
+require_once '../../../core/layout/header_universal.php';
+require_once '../../../core/permissions/permissions.php';
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([11, 16, 42]);
-
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 49, 42]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+// Verificar acceso al módulo (Cargos permitidos: admin, gerencia, operaciones, supervisión)
+if (!verificarAccesoCargo([49, 16, 11, 21, 42, 50]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
-
-// Obtenemos el cargo principal usando la función de funciones.php
-$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-//******************************Estándar para header, termina******************************
 
 // Configuración de zona horaria
 date_default_timezone_set('America/Managua');
 setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'es');
 
 // Obtener reclamos pendientes de investigación (sin reporte final)
-$queryReclamosPendientes = "SELECT r.id, 
-                           DATE_FORMAT(r.fecha_evento, '%d-%b-%y') as fecha_evento_formatted,
-                           s.nombre as sucursal, 
-                           r.sucursal_codigo,
-                           r.descripcion,
-                           r.tipo_reclamo,
-                           rg.nombre as grupo_nombre,
-                           rt.nombre as tipo_nombre,
-                           r.medio_compra,
-                           r.fecha_evento
-                           FROM reclamos r 
-                           LEFT JOIN reportes_investigacion ri ON r.id = ri.reclamo_id 
-                           JOIN sucursales s ON r.sucursal_codigo = s.codigo
-                           LEFT JOIN reclamos_grupos rg ON r.grupo_id = rg.id
-                           LEFT JOIN reclamos_tipos rt ON r.tipo_reclamo_id = rt.id
-                           WHERE ri.id IS NULL 
-                           ORDER BY r.fecha_evento DESC";
-$reclamosPendientes = $conn->query($queryReclamosPendientes)->fetchAll();
+try {
+    $queryReclamosPendientes = "SELECT r.id, 
+                               DATE_FORMAT(r.fecha_evento, '%d-%b-%y') as fecha_evento_formatted,
+                               s.nombre as sucursal, 
+                               r.sucursal_codigo,
+                               r.descripcion,
+                               r.tipo_reclamo,
+                               rg.nombre as grupo_nombre,
+                               rt.nombre as tipo_nombre,
+                               r.medio_compra,
+                               r.fecha_evento
+                               FROM reclamos r 
+                               LEFT JOIN reportes_investigacion ri ON r.id = ri.reclamo_id 
+                               JOIN sucursales s ON r.sucursal_codigo = s.codigo
+                               LEFT JOIN reclamos_grupos rg ON r.grupo_id = rg.id
+                               LEFT JOIN reclamos_tipos rt ON r.tipo_reclamo_id = rt.id
+                               WHERE ri.id IS NULL 
+                               ORDER BY r.fecha_evento DESC";
+    $reclamosPendientes = $conn->query($queryReclamosPendientes)->fetchAll();
+} catch (PDOException $e) {
+    $reclamosPendientes = [];
+    error_log("Error al obtener reclamos pendientes: " . $e->getMessage());
+}
 
 // Verificar si hay parámetro de éxito en la URL
 $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reclamos Pendientes de Investigación</title>
+    <title>Reclamos Pendientes de Investigación | Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Calibri', sans-serif;
-            font-size: clamp(11px, 2vw, 16px);
-        }
-
-        body {
-            background-color: #F6F6F6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 5px;
-            box-sizing: border-box;
-            margin: 1px auto;
-            flex-wrap: wrap;
-        }
-
-        .logo {
-            height: 50px;
-        }
-
-        .logo-container {
-            flex-shrink: 0;
-            margin-right: auto;
-        }
-
-        .buttons-container {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            flex-grow: 1;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-        .btn-agregar {
-            background-color: transparent;
-            color: #51B8AC;
-            border: 1px solid #51B8AC;
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            white-space: nowrap;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .btn-agregar.activo {
-            background-color: #51B8AC;
-            color: white;
-            font-weight: normal;
-        }
-
-        .btn-agregar:hover {
-            background-color: #0E544C;
-            color: white;
-            border-color: #0E544C;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-logout {
-            background: #51B8AC;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn-logout:hover {
-            background: #0E544C;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #0E544C;
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 24px;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            border: 1px solid #c3e6cb;
-        }
-
         .reclamos-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
-        .reclamos-table th,
-        .reclamos-table td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        .reclamos-table th {
+        .reclamos-table thead th {
             background-color: #0E544C;
             color: white;
+            border-bottom: none;
+            padding: 15px;
+            font-weight: 600;
         }
 
-        .reclamos-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        .reclamos-table tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        .btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            padding: 3px;
-            background-color: #51B8AC;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #0E544C;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 3px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: clamp(11px, 2vw, 16px);
+        .reclamos-table tbody td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f0f0f0;
         }
 
         .badge-pendiente {
-            background-color: #FFC107;
-            color: #333;
+            background-color: #FFF3CD;
+            color: #856404;
+            border: 1px solid #FFEEBA;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
         }
 
-        .no-data {
+        .btn-investigar {
+            background-color: #51B8AC;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-investigar:hover {
+            background-color: #0E544C;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(81, 184, 172, 0.3);
+        }
+
+        .no-data-card {
+            background-color: white;
+            border-radius: 16px;
+            padding: 40px;
             text-align: center;
-            padding: 20px;
-            color: #777;
-            font-style: italic;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
 
-        @media (max-width: 768px) {
-            .header-container {
-                flex-direction: row;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .buttons-container {
-                position: static;
-                transform: none;
-                order: 3;
-                width: 100%;
-                justify-content: center;
-                margin-top: 10px;
-            }
-
-            .logo-container {
-                order: 1;
-                margin-right: 0;
-            }
-
-            .user-info {
-                order: 2;
-                margin-left: auto;
-            }
-
-            .btn-agregar {
-                padding: 6px 10px;
-                font-size: 13px;
-            }
-
-            .container {
-                padding: 15px;
-            }
-
-            h1 {
-                font-size: 20px;
-            }
-
-            .reclamos-table {
-                font-size: 14px;
-            }
-
-            .reclamos-table th,
-            .reclamos-table td {
-                padding: 8px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .btn-agregar {
-                flex-grow: 1;
-                justify-content: center;
-                white-space: normal;
-                text-align: center;
-                padding: 8px 5px;
-            }
-
-            .user-info {
-                flex-direction: column;
-                align-items: flex-end;
-            }
-
-            .btn-agregar i {
-                margin-right: 4px;
-            }
-
-            .reclamos-table {
-                display: block;
-                overflow-x: auto;
-            }
+        .no-data-icon {
+            font-size: 4rem;
+            color: #e0e0e0;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 
 <body>
-    <header>
-        <div class="header-container">
-            <div class="logo-container">
-                <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-            </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-            <div class="buttons-container">
-                <a href="index_avisos.php"
-                    class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'index_avisos.php' ? 'activo' : '' ?>">
-                    <i class="fas fa-bullhorn"></i> <span class="btn-text">Nuevo Aviso</span>
-                </a>
-                <a href="kpi.php"
-                    class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'kpi.php' ? 'activo' : '' ?>">
-                    <i class="fas fa-chart-line"></i> <span class="btn-text">KPI</span>
-                </a>
-                <a href="reclamospend.php"
-                    class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'reclamospend.php' ? 'activo' : '' ?>">
-                    <i class="fas fa-search"></i> <span class="btn-text">Reclamos</span>
-                </a>
-            </div>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Reclamos Pendientes de Investigación'); ?>
 
-            <div class="user-info">
-                <div class="user-avatar">
-                    <?= $esAdmin ?
-                        strtoupper(substr($usuario['nombre'], 0, 1)) :
-                        strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                </div>
-                <div>
-                    <div>
-                        <?= $esAdmin ?
-                            htmlspecialchars($usuario['nombre']) :
-                            htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
+            <div class="container-fluid p-4">
+                <?php if ($reporteExitoso): ?>
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="border-radius: 12px; border-left: 5px solid #28a745 !important;">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle fs-4 me-3"></i>
+                            <div>
+                                <h6 class="alert-heading fw-bold mb-1">¡Operación Exitosa!</h6>
+                                <p class="mb-0 small">El reporte de investigación se ha guardado correctamente.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                    <small>
-                        <?= htmlspecialchars($cargoUsuario) ?>
-                    </small>
+                <?php endif; ?>
+
+                <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                    <div class="card-body p-0">
+                        <?php if (count($reclamosPendientes) > 0): ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0 reclamos-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center" style="width: 80px;">ID</th>
+                                            <th>Fecha Evento</th>
+                                            <th>Sucursal</th>
+                                            <th>Medio</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center" style="width: 150px;">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($reclamosPendientes as $reclamo): ?>
+                                            <tr>
+                                                <td class="text-center fw-bold text-muted">#<?php echo htmlspecialchars($reclamo['id']); ?></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="far fa-calendar-alt me-2 text-primary"></i>
+                                                        <?php echo traducirMes(htmlspecialchars($reclamo['fecha_evento_formatted'])); ?>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold text-dark"><?php echo htmlspecialchars($reclamo['sucursal']); ?></div>
+                                                    <small class="text-muted">Cod: <?php echo htmlspecialchars($reclamo['sucursal_codigo']); ?></small>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border"><?php echo htmlspecialchars($reclamo['medio_compra'] ?? '--'); ?></span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge-pendiente">Abierto</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <a href="reportereclamo.php?reclamo_id=<?php echo $reclamo['id']; ?>" class="btn-investigar text-decoration-none">
+                                                        <i class="fas fa-search me-1"></i> Investigar
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="no-data-card">
+                                <div class="no-data-icon">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </div>
+                                <h4 class="fw-bold text-dark">¡Todo al día!</h4>
+                                <p class="text-muted">No se encontraron reclamos pendientes de investigación en este momento.</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
-                <a href="../../../index.php" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
             </div>
         </div>
-    </header>
-
-    <div>
-        <h1><strong>RECLAMOS PENDIENTES DE INVESTIGACIÓN FINAL</strong></h1>
-
-        <?php if ($reporteExitoso): ?>
-            <div class="alert-success">
-                <i class="fas fa-check-circle"></i> El reporte de investigación se ha guardado exitosamente.
-            </div>
-        <?php endif; ?>
-
-        <?php if (count($reclamosPendientes) > 0): ?>
-            <table class="reclamos-table">
-                <thead>
-                    <tr>
-                        <th style="text-align:center;">Código</th>
-                        <th style="text-align:center;">Fecha Evento</th>
-                        <th style="text-align:center;">Sucursal</th>
-                        <th style="text-align:center; display:none;">Categoría / Tipo</th>
-                        <th style="text-align:center; display:none;">Medio de Compra</th>
-                        <th style="text-align:center; display:none;">Descripción</th>
-                        <th style="text-align:center;">Estado</th>
-                        <th style="text-align:center;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($reclamosPendientes as $reclamo): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($reclamo['id']); ?></td>
-                            <td><?php echo traducirMes(htmlspecialchars($reclamo['fecha_evento_formatted'])); ?></td>
-                            <td><?php echo htmlspecialchars($reclamo['sucursal']); ?></td>
-                            <td style="display:none;"><?php echo htmlspecialchars($reclamo['tipo_reclamo'] ?? '--'); ?></td>
-                            <td style="display:none;"><?php echo htmlspecialchars($reclamo['medio_compra'] ?? '--'); ?></td>
-                            <td style="display:none;">
-                                <?php echo mb_strimwidth(htmlspecialchars($reclamo['descripcion']), 0, 50, '...'); ?>
-                            </td>
-                            <td style="text-align:center;"><span class="badge badge-pendiente">Abierto</span></td>
-                            <td style="text-align:center;">
-                                <a href="ver_reclamo.php?id=<?php echo $reclamo['id']; ?>" class="btn btn-secondary"
-                                    title="Ver detalles" style="display:none;">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="reportereclamo.php?reclamo_id=<?php echo $reclamo['id']; ?>" class="btn btn-primary"
-                                    title="Agregar investigación final">
-                                    Investigar
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <div class="no-data">
-                <p>No hay reclamos pendientes de investigación en este momento.</p>
-            </div>
-        <?php endif; ?>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
