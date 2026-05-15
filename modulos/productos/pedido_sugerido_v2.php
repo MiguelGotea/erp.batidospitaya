@@ -100,7 +100,7 @@ try {
                                 </select>
                             </div>
 
-                            <!-- Semana actual + Botón -->
+                            <!-- Semana actual + Botón Calcular -->
                             <div class="col-12 col-md-5 d-flex flex-wrap gap-2 justify-content-end align-items-center">
                                 <div id="badgeSemanaActual" class="ps-badge-semana <?php echo !empty($semActual) ? '' : 'd-none'; ?>">
                                     <i class="fas fa-calendar-check"></i>
@@ -108,6 +108,32 @@ try {
                                 </div>
                                 <button class="btn btn-sm ps-btn-primary" id="btnCalcular">
                                     <i class="fas fa-calculator me-1"></i>Calcular
+                                </button>
+                            </div>
+
+                            <!-- Separador visual -->
+                            <div class="col-12"><hr class="my-1 opacity-25"></div>
+
+                            <!-- Sem. Corte (Pronóstico) -->
+                            <div class="col-auto">
+                                <label class="ps-label" for="semCortePron"
+                                       title="Semana cuyo inventario real (domingo) se usa como punto de partida del pronóstico">
+                                    <i class="bi bi-graph-up-arrow me-1"></i>Sem. Corte (Pronóst.)
+                                </label>
+                                <input type="number" id="semCortePron"
+                                       class="form-control form-control-sm ps-input-semana"
+                                       placeholder="ej: <?php echo $semHastaDefault; ?>"
+                                       min="1" max="9999" style="width:120px"
+                                       title="Número de semana cuyo inventario real (domingo) se usa como base del pronóstico D-1">
+                                <div class="form-text small text-muted" style="font-size:10px">Semana de inventario real</div>
+                            </div>
+
+                            <!-- Botón Calcular Pronóstico -->
+                            <div class="col-auto d-flex align-items-end">
+                                <button id="btnCalcularPronostico"
+                                        class="btn btn-outline-primary btn-sm" disabled
+                                        title="Calcula el stock proyectado al día anterior al próximo despacho">
+                                    <i class="bi bi-graph-up-arrow me-1"></i> Calcular Pronóstico D-1
                                 </button>
                             </div>
 
@@ -207,11 +233,14 @@ try {
                                             <th class="text-end" title="Stock máximo final en unidades de despacho (ajustado para congelados si aplica)">Stock Máx Final</th>
                                             <th class="text-center col-inventario" title="Inventario actual en tienda">Inventario Actual</th>
                                             <th class="text-center col-pedido" title="Pedido sugerido = Stock Máx Final − Inventario Actual">Pedido Sugerido</th>
+                                            <th class="text-center col-pronostico" title="Próximo despacho de esta categoría según el plan">Próx. Despacho</th>
+                                            <th class="text-end col-pronostico" title="Stock estimado al cierre del día anterior al despacho">Stock Pronóst. D-1</th>
+                                            <th class="text-center col-pronostico" title="ceil(Stock Máx Final − Stock D-1). Requiere calcular pronóstico.">Despacho Pron. (paq)</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tbodyProductos">
                                         <tr>
-                                            <td colspan="12" class="text-center text-muted py-4">
+                                            <td colspan="15" class="text-center text-muted py-4">
                                                 Aplica los filtros para calcular el pedido sugerido.
                                             </td>
                                         </tr>

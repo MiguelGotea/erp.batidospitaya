@@ -12,8 +12,9 @@ const CAT_LABELS = {
 const CAT_ORDER = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 // Estado global
-let datosResultado = [];   // Array completo de productos devuelto por el AJAX
-let inventarioInicial = {}; // Mapa para detectar cambios de edición [id_pp: valor]
+let datosResultado = [];     // Array completo de productos devuelto por el AJAX
+let inventarioInicial = {};  // Mapa para detectar cambios de edición [id_pp: valor]
+let codSucursalActual = null; // Sucursal activa al momento del último cálculo
 
 // ====================================================
 // Inicialización
@@ -23,6 +24,14 @@ $(document).ready(function () {
     cargarSemanaActual();
 
     $('#btnCalcular').on('click', calcularPedido);
+    $('#btnCalcularPronostico').on('click', calcularPronosticoMasivo);
+
+    // Habilitar btnCalcularPronostico cuando semCortePron tenga valor y haya cálculo previo
+    $('#semCortePron').on('input', function () {
+        const tieneCorte = parseInt($(this).val()) > 0;
+        const tieneDatos = datosResultado.length > 0;
+        $('#btnCalcularPronostico').prop('disabled', !(tieneCorte && tieneDatos));
+    });
 
     // Búsqueda en tabla
     $('#buscarProducto').on('input', function () {
@@ -126,6 +135,10 @@ function calcularPedido() {
                 return Swal.fire({ icon: 'error', title: 'Error', text: res.msg, confirmButtonColor: '#51B8AC' });
             }
             datosResultado = res.productos;
+            codSucursalActual = $('#filtroSucursal').val();
+            // Habilitar pronóstico si ya hay semana de corte ingresada
+            const _sc = parseInt($('#semCortePron').val());
+            $('#btnCalcularPronostico').prop('disabled', !(_sc > 0));
             renderizarResultados(res);
         },
         error: function () {

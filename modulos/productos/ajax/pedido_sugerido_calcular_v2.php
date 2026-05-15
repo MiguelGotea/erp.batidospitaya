@@ -122,6 +122,76 @@ function calcularDiasPreparacion(?array $planCat): ?float {
     return (float)($planCat['dias_preparacion'] ?? 1);
 }
 
+/**
+ * Calcula la fecha del próximo despacho para una categoría.
+ *
+ * @param array|null $planCat   Fila de plan_despacho_sucursal
+ * @param string     $hoy      Fecha actual 'Y-m-d'
+ * @param PDO        $conn     Conexión BD (para consultar SemanasSistema)
+ * @return string|null         Fecha 'Y-m-d' del próximo despacho, o null si no hay plan
+ */
+function calcularProximoDespacho(?array $planCat, string $hoy, PDO $conn): ?string {
+    if (!$planCat || !($planCat['activo'] ?? 0)) return null;
+
+    $tipo = $planCat['tipo_frecuencia'];
+
+    if ($tipo === 'dias_semana') {
+        $diasSemana = $planCat['dias_semana'];
+        if (is_string($diasSemana)) $diasSemana = json_decode($diasSemana, true);
+        if (empty($diasSemana)) return null;
+        sort($diasSemana);  // 0=Lun,...,6=Dom
+
+        $hoyTs = strtotime($hoy);
+        for ($d = 1; $d <= 14; $d++) {
+            $ts  = strtotime("+{$d} days", $hoyTs);
+            $dow = (int)date('N', $ts) - 1; // 0=Lun,...,6=Dom
+            if (in_array($dow, $diasSemana)) {
+                return date('Y-m-d', $ts);
+            }
+        }
+        return null;
+    }
+
+    if ($tipo === 'n_semanas') {
+        $intervalo = (int)($planCat['intervalo_semanas'] ?? 1);
+        $diaFijo   = (int)($planCat['dia_despacho']     ?? 0); // 0=Lun,...,6=Dom
+        $semAncla  = (int)($planCat['semana_ancla']     ?? 0);
+
+        if (!$semAncla) return null;
+
+        $stmtSem = $conn->prepare("
+            SELECT numero_semana
+            FROM SemanasSistema
+            WHERE fecha_inicio <= ? AND fecha_fin >= ?
+            LIMIT 1
+        ");
+        $stmtSem->execute([$hoy, $hoy]);
+        $semActual = (int)($stmtSem->fetchColumn() ?: 0);
+        if (!$semActual) return null;
+
+        $delta      = ($semActual - $semAncla) % $intervalo;
+        $semProximo = ($delta === 0) ? $semActual : $semActual + ($intervalo - $delta);
+
+        $stmtFecha = $conn->prepare("SELECT fecha_inicio FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
+        $stmtFecha->execute([$semProximo]);
+        $inicioSem = $stmtFecha->fetchColumn();
+        if (!$inicioSem) return null;
+
+        $fechaDespacho = date('Y-m-d', strtotime($inicioSem . " +{$diaFijo} days"));
+
+        if ($fechaDespacho <= $hoy) {
+            $semProximo += $intervalo;
+            $stmtFecha->execute([$semProximo]);
+            $inicioSem = $stmtFecha->fetchColumn();
+            if (!$inicioSem) return null;
+            $fechaDespacho = date('Y-m-d', strtotime($inicioSem . " +{$diaFijo} days"));
+        }
+        return $fechaDespacho;
+    }
+
+    return null;
+}
+
 try {
     // 1. Rango de fechas
     $stmtR = $conn->prepare("SELECT MIN(fecha_inicio) as f1, MAX(fecha_fin) as f2 FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?");
@@ -502,6 +572,12 @@ try {
         // sumB sigue acumulando en unidades de uso (se convierte a paquetes después)
         if ($cat === 'B')
             $sumB += $sMax;
+        // Calcular próximo despacho para la categoría
+        $fechaProxDespacho = calcularProximoDespacho($planCat, date('Y-m-d'), $conn);
+        $diasHastaDespacho = $fechaProxDespacho
+            ? max(0, (int)((strtotime($fechaProxDespacho) - strtotime('today')) / 86400))
+            : null;
+
         $res[$idP] = [
             'id_pp' => $idP,
             'nombre' => $m['n'],
@@ -521,6 +597,8 @@ try {
             'es_ajustado' => false,
             'inventario_actual' => $invA[$idP] ?? null,
             'pedido_sugerido' => null,
+            'fecha_proximo_despacho' => $fechaProxDespacho,
+            'dias_hasta_despacho'   => $diasHastaDespacho,
             '_tc' => $cP !== null
         ];
     }
