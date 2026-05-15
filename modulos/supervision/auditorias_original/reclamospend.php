@@ -14,11 +14,8 @@ require_once '../../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo (Cargos permitidos: admin, gerencia, operaciones, supervisión)
-if (!verificarAccesoCargo([49, 16, 11, 21, 42, 50]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
-    header('Location: ../../../index.php');
-    exit();
-}
+// Verificar acceso al módulo mediante el sistema de permisos (Herramienta: investigacion_reclamos, Acción: vista)
+verificarPermisoORedireccionar('investigacion_reclamos', 'vista', $cargoOperario);
 
 // Configuración de zona horaria
 date_default_timezone_set('America/Managua');

@@ -9,11 +9,8 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-// Verificar acceso al módulo (Cargos permitidos: admin, gerencia, operaciones, supervisión)
-if (!verificarAccesoCargo([49, 16, 11, 21, 42, 50]) && !$esAdmin) {
-    header('Location: ../../../index.php');
-    exit();
-}
+// Verificar acceso al módulo mediante el sistema de permisos (Herramienta: investigacion_reclamos, Acción: investigar)
+verificarPermisoORedireccionar('investigacion_reclamos', 'investigar', $cargoOperario);
 
 // Configuración de zona horaria
 date_default_timezone_set('America/Managua');
