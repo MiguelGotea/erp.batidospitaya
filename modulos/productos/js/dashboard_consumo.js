@@ -2209,6 +2209,20 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         curr.setDate(curr.getDate() + 1);
     }
 
+    // ── Extender allDays hasta fecha objetivo de pronóstico (si aplica) ──
+    const fechaObjetivoPronostico = ($('#kardexFechaPronostico').val() || '').trim();
+    // Guardar el límite del rango real ANTES de extender (el Kardex solo usa hasta aquí)
+    const originalRangeLen = allDays.length;
+    if (fechaObjetivoPronostico && fechaObjetivoPronostico > allDays[allDays.length - 1]) {
+        const endExt = new Date(fechaObjetivoPronostico + 'T12:00:00');
+        let extCurr = new Date(allDays[allDays.length - 1] + 'T12:00:00');
+        extCurr.setDate(extCurr.getDate() + 1);
+        while (extCurr <= endExt) {
+            allDays.push(extCurr.toISOString().split('T')[0]);
+            extCurr.setDate(extCurr.getDate() + 1);
+        }
+    }
+
     // ── Movimientos por fecha (merma negativa, resto positivo) ──────────
     const movsPorFecha = {};
     regs.forEach(r => {
@@ -2229,10 +2243,9 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     //          = balance al FINAL del día (pIdx - 1)
     const stockTeoData = new Array(allDays.length).fill(null);
 
-    // Hacia adelante: pIdx → fin
-    // balance inicio pIdx = invCorte; luego se aplican movimientos del día
+    // Hacia adelante: pIdx → fin del rango original (el Kardex no se extiende a días de pronóstico)
     let balFwd = invCorte;
-    for (let i = pIdx; i < allDays.length; i++) {
+    for (let i = pIdx; i < originalRangeLen; i++) {
         const mov  = movsPorFecha[allDays[i]] || 0;
         const cTeo = consTeoDiario[allDays[i]] || 0;
         balFwd = balFwd + mov - cTeo;
@@ -2272,9 +2285,9 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         return (v !== undefined && v !== null) ? v : null;
     });
 
-    // ── Dataset: Inventario físico FINAL (siempre mostrar en último día) ─
+    // ── Dataset: Inventario físico FINAL (en el último día del rango real, no el extendido) ─
     const realFinalPoint = new Array(allDays.length).fill(null);
-    realFinalPoint[allDays.length - 1] = invFin;
+    realFinalPoint[originalRangeLen - 1] = invFin;
 
     // ── Dataset: Inventario real al INICIO del rango (estrella verde en pos 0) ─
     const invIniRangoData = new Array(allDays.length).fill(null);
@@ -2368,6 +2381,80 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             fill: false,
             tension: 0,
         });
+    }
+
+    // ── Pronóstico de consumo (línea adicional, no modifica nada existente) ──
+    if (fechaObjetivoPronostico) {
+        // Calcular promedios de consumo teórico por día de semana del historial
+        const _cntDow = [0,0,0,0,0,0,0];
+        const _sumDow = [0,0,0,0,0,0,0];
+        let _totalCons = 0, _totalDias = 0;
+        Object.entries(consTeoDiario).forEach(([f, v]) => {
+            if (v > 0) {
+                const dow = new Date(f + 'T12:00:00').getDay();
+                _sumDow[dow] += v;
+                _cntDow[dow]++;
+                _totalCons += v;
+                _totalDias++;
+            }
+        });
+        const _promDiario = _totalDias > 0 ? _totalCons / _totalDias : 0;
+        const _promDow = _sumDow.map((s, i) => _cntDow[i] > 0 ? s / _cntDow[i] : _promDiario);
+
+        // Para cada día: usa consumo real si existe, sino estima (65% mismo DOW + 35% promedio diario)
+        const _getConsEst = (fechaStr) => {
+            const real = consTeoDiario[fechaStr];
+            if (real !== undefined && real !== null && real > 0) return real;
+            const dow = new Date(fechaStr + 'T12:00:00').getDay();
+            const pDow = _promDow[dow] > 0 ? _promDow[dow] : _promDiario;
+            return 0.65 * pDow + 0.35 * _promDiario;
+        };
+
+        // Construir línea de pronóstico: arranca en invCorte desde corteMarkerIdx,
+        // solo resta consumo (sin movimientos de kardex), hasta fechaObjetivoPronostico
+        const forecastData = new Array(allDays.length).fill(null);
+        // Ancla visual: mismo punto que el triángulo de corte
+        forecastData[corteMarkerIdx] = invCorte;
+        // Avanzar desde pIdx restando consumo estimado
+        let _balFc = invCorte;
+        for (let i = pIdx; i < allDays.length; i++) {
+            if (allDays[i] > fechaObjetivoPronostico) break;
+            _balFc = _balFc - _getConsEst(allDays[i]);
+            forecastData[i] = _balFc;
+        }
+
+        // Punto final destacado en la fecha objetivo
+        const _idxObj = allDays.indexOf(fechaObjetivoPronostico);
+        const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
+        const _finalPoint = new Array(allDays.length).fill(null);
+        if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
+
+        datasets.push({
+            label: `Pronóstico → ${fechaObjetivoPronostico}`,
+            data: forecastData,
+            borderColor: '#8e44ad',
+            backgroundColor: 'rgba(142,68,173,0.06)',
+            borderWidth: 2.5,
+            borderDash: [10, 5],
+            fill: false,
+            tension: 0.2,
+            pointRadius: 2,
+            pointBackgroundColor: '#8e44ad',
+            spanGaps: false,
+        });
+
+        if (_valObj !== null) {
+            datasets.push({
+                label: `Al ${fechaObjetivoPronostico}: ${fmtKardex(_valObj, 2)}`,
+                data: _finalPoint,
+                borderColor: '#8e44ad',
+                backgroundColor: '#8e44ad',
+                pointRadius: 11,
+                pointHoverRadius: 13,
+                pointStyle: 'crossRot',
+                showLine: false,
+            });
+        }
     }
 
     chartKardexExistencia = new Chart(ctx, {

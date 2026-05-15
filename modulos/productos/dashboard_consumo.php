@@ -279,6 +279,16 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                     title="Semana de referencia del inventario — punto de partida del Kardex. Vacío = usa la semana inicial del rango.">
                             </div>
 
+                            <!-- Fecha Pronóstico -->
+                            <div class="col-6 col-md-2 col-lg-2">
+                                <label class="dc-label" for="kardexFechaPronostico">
+                                    <i class="fas fa-magic me-1" style="color:#8e44ad"></i>Fecha Pronóstico
+                                </label>
+                                <input type="date" id="kardexFechaPronostico"
+                                    class="form-control form-control-sm"
+                                    title="Fecha objetivo para proyectar existencia (solo consume — sin ingresos ni mermas). Opcional.">
+                            </div>
+
                             <!-- Botón Refresh Kardex -->
                             <div class="col-auto d-flex align-items-end">
                                 <button class="btn btn-sm dc-btn-primary" id="btnRefreshKardex"
