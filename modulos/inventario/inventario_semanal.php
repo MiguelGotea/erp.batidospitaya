@@ -61,7 +61,7 @@ $version = mt_rand(1, 10000);
                             <div class="col-md-2">
                                 <label class="form-label small fw-bold d-flex align-items-center gap-1">
                                     <i class="bi bi-scissors text-warning" style="font-size:.8rem"></i>
-                                    Corte Pronóstico
+                                    Corte Para Pronóstico
                                 </label>
                                 <input type="number" class="form-control form-control-sm"
                                     id="filtroSemanaCortePronostico" placeholder="Auto"
@@ -201,7 +201,8 @@ $version = mt_rand(1, 10000);
                                     <p class="small text-muted mb-0">Presentación con
                                         <code>presentacion_despacho=1</code> y receta con <b>exactamente 1
                                             componente</b> = la unidad básica. El factor es la cantidad en esa receta
-                                        (ej: 100 × Banano unid → factor 100). No requiere conversión de unidades.</p>
+                                        (ej: 100 × Banano unid → factor 100). No requiere conversión de unidades.
+                                    </p>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -213,7 +214,8 @@ $version = mt_rand(1, 10000);
                                         presentación del mismo <code>producto_maestro</code> con
                                         <code>presentacion_despacho=1</code>. Factor =
                                         <code>cantidad_despacho / (cantidad_básica × conversión_unidades)</code>. Ej:
-                                        <em>Fresa 1oz → Bandeja 400gr</em>.</p>
+                                        <em>Fresa 1oz → Bandeja 400gr</em>.
+                                    </p>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -221,7 +223,8 @@ $version = mt_rand(1, 10000);
                                     <div class="fw-bold small mb-1" style="color:#854d0e;"><i
                                             class="bi bi-3-circle-fill me-1"></i>Paso C — Receta-Paquete por Maestro
                                         <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Último
-                                            recurso</span></div>
+                                            recurso</span>
+                                    </div>
                                     <p class="small text-muted mb-0">Solo si B <b>y</b> A fallan: busca una receta de
                                         despacho cuyo componente comparta el mismo maestro. Ej: <b>Naranja oz → Cajilla
                                             100u</b> (componente = "Naranja Unidad", mismo maestro; la cajilla no tiene
