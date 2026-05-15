@@ -81,7 +81,7 @@ try {
                 (:cod_sucursal, :categoria_insumo, 'n_semanas',
                  :intervalo_semanas, :dia_despacho, :semana_ancla,
                  NULL, :dias_preparacion, :activo,
-                 :cod_operario, :cod_operario)
+                 :creado_por, :modificado_por)
             ON DUPLICATE KEY UPDATE
                 tipo_frecuencia   = 'n_semanas',
                 intervalo_semanas = VALUES(intervalo_semanas),
@@ -100,7 +100,8 @@ try {
             ':semana_ancla'      => $semana_ancla,
             ':dias_preparacion'  => $dias_preparacion,
             ':activo'            => $activo,
-            ':cod_operario'      => $codOperario,
+            ':creado_por'        => $codOperario,
+            ':modificado_por'    => $codOperario,
         ];
     } else {
         $sql = "
@@ -113,7 +114,7 @@ try {
                 (:cod_sucursal, :categoria_insumo, 'dias_semana',
                  NULL, NULL, NULL,
                  :dias_semana, :dias_preparacion, :activo,
-                 :cod_operario, :cod_operario)
+                 :creado_por, :modificado_por)
             ON DUPLICATE KEY UPDATE
                 tipo_frecuencia   = 'dias_semana',
                 intervalo_semanas = NULL,
@@ -130,7 +131,8 @@ try {
             ':dias_semana'      => $dias_semana_json,
             ':dias_preparacion' => $dias_preparacion,
             ':activo'           => $activo,
-            ':cod_operario'     => $codOperario,
+            ':creado_por'       => $codOperario,
+            ':modificado_por'   => $codOperario,
         ];
     }
 

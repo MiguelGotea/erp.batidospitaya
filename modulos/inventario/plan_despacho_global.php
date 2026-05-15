@@ -16,37 +16,6 @@ if (!tienePermiso('plan_despacho_global', 'vista', $cargoOperario)) {
 }
 $puedeEditar = tienePermiso('plan_despacho_global', 'edicion', $cargoOperario);
 $version = mt_rand(1, 10000);
-
-/* ── Auto-migración silenciosa ────────────────────────────── */
-try {
-    $conn->exec("
-        CREATE TABLE IF NOT EXISTS plan_despacho_sucursal (
-            id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            cod_sucursal        VARCHAR(20)       NOT NULL,
-            categoria_insumo    CHAR(1)           NOT NULL COMMENT 'A,B,C,D,E,F,G',
-            tipo_frecuencia     ENUM('n_semanas','dias_semana') NOT NULL DEFAULT 'n_semanas',
-            intervalo_semanas   TINYINT UNSIGNED  NULL COMMENT '1, 2 o 3 semanas',
-            dia_despacho        TINYINT UNSIGNED  NULL COMMENT '0=Lun 1=Mar 2=Mie 3=Jue 4=Vie 5=Sab 6=Dom',
-            semana_ancla        SMALLINT UNSIGNED NULL COMMENT 'numero_semana de un despacho real conocido',
-            dias_semana         JSON              NULL COMMENT 'Ej: [0,2,4] para Lun/Mie/Vie',
-            dias_preparacion    TINYINT UNSIGNED  NOT NULL DEFAULT 1 COMMENT 'Días que tarda central en preparar y entregar',
-            activo              TINYINT(1)        NOT NULL DEFAULT 1,
-            creado_por          VARCHAR(20)       NULL,
-            modificado_por      VARCHAR(20)       NULL,
-            fecha_creacion      TIMESTAMP         DEFAULT CURRENT_TIMESTAMP,
-            fecha_actualizacion TIMESTAMP         DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY uq_suc_cat (cod_sucursal, categoria_insumo)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ");
-} catch (Exception $e) { /* silencioso */ }
-
-try {
-    $conn->exec("ALTER TABLE configuracion_logistica_sucursal
-        ADD COLUMN IF NOT EXISTS capacidad_congelados_paquetes SMALLINT UNSIGNED NULL
-            COMMENT 'Capacidad física del congelador en paquetes estándar de despacho',
-        ADD COLUMN IF NOT EXISTS capacidad_congelados_obs VARCHAR(200) NULL
-            COMMENT 'Descripción: ej: 2 congeladores de 100 paquetes c/u'");
-} catch (Exception $e) { /* silencioso */ }
 ?>
 <!DOCTYPE html>
 <html lang="es">
