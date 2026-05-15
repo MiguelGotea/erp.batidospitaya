@@ -1,0 +1,144 @@
+<?php
+/* ============================================================
+   PÁGINA: Plan de Despacho Global
+   Ruta: modulos/inventario/plan_despacho_global.php
+   ============================================================ */
+require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
+
+$usuario       = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+if (!tienePermiso('plan_despacho_global', 'vista', $cargoOperario)) {
+    header('Location: ../../index.php'); exit();
+}
+$puedeEditar = tienePermiso('plan_despacho_global', 'edicion', $cargoOperario);
+$version = mt_rand(1, 10000);
+
+/* ── Auto-migración silenciosa ────────────────────────────── */
+try {
+    $conn->exec("
+        CREATE TABLE IF NOT EXISTS plan_despacho_sucursal (
+            id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            cod_sucursal        VARCHAR(20)       NOT NULL,
+            categoria_insumo    CHAR(1)           NOT NULL COMMENT 'A,B,C,D,E,F,G',
+            tipo_frecuencia     ENUM('n_semanas','dias_semana') NOT NULL DEFAULT 'n_semanas',
+            intervalo_semanas   TINYINT UNSIGNED  NULL COMMENT '1, 2 o 3 semanas',
+            dia_despacho        TINYINT UNSIGNED  NULL COMMENT '0=Lun 1=Mar 2=Mie 3=Jue 4=Vie 5=Sab 6=Dom',
+            semana_ancla        SMALLINT UNSIGNED NULL COMMENT 'numero_semana de un despacho real conocido',
+            dias_semana         JSON              NULL COMMENT 'Ej: [0,2,4] para Lun/Mie/Vie',
+            dias_preparacion    TINYINT UNSIGNED  NOT NULL DEFAULT 1 COMMENT 'Días que tarda central en preparar y entregar',
+            activo              TINYINT(1)        NOT NULL DEFAULT 1,
+            creado_por          VARCHAR(20)       NULL,
+            modificado_por      VARCHAR(20)       NULL,
+            fecha_creacion      TIMESTAMP         DEFAULT CURRENT_TIMESTAMP,
+            fecha_actualizacion TIMESTAMP         DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_suc_cat (cod_sucursal, categoria_insumo)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+} catch (Exception $e) { /* silencioso */ }
+
+try {
+    $conn->exec("ALTER TABLE configuracion_logistica_sucursal
+        ADD COLUMN IF NOT EXISTS capacidad_congelados_paquetes SMALLINT UNSIGNED NULL
+            COMMENT 'Capacidad física del congelador en paquetes estándar de despacho',
+        ADD COLUMN IF NOT EXISTS capacidad_congelados_obs VARCHAR(200) NULL
+            COMMENT 'Descripción: ej: 2 congeladores de 100 paquetes c/u'");
+} catch (Exception $e) { /* silencioso */ }
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Despacho Global · Pitaya ERP</title>
+    <meta name="description" content="Configuración del plan de despacho por sucursal y categoría de insumo para el ERP Batidos Pitaya.">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo $version;?>">
+    <link rel="stylesheet" href="css/plan_despacho_global.css?v=<?php echo $version;?>">
+</head>
+<body>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Plan de Despacho Global'); ?>
+
+            <div class="container-fluid p-3">
+
+                <!-- Encabezado informativo -->
+                <div class="pdg-header-card mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="pdg-header-icon">
+                            <i class="fas fa-truck-moving"></i>
+                        </div>
+                        <div>
+                            <h1 class="pdg-header-title">Plan de Despacho Global</h1>
+                            <p class="pdg-header-subtitle mb-0">
+                                Configura la frecuencia y días de despacho por categoría de insumo para cada sucursal.
+                                Los cambios afectan directamente el cálculo de inventario sugerido.
+                            </p>
+                        </div>
+                        <?php if (!$puedeEditar): ?>
+                        <div class="ms-auto">
+                            <span class="badge pdg-badge-readonly">
+                                <i class="bi bi-lock-fill me-1"></i> Solo lectura
+                            </span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Loader de sucursales -->
+                <div id="loaderSucursales" class="pdg-loader-main">
+                    <div class="spinner-border pdg-spinner" role="status"></div>
+                    <p class="mt-3 text-muted small">Cargando sucursales…</p>
+                </div>
+
+                <!-- Contenedor de tabs por sucursal -->
+                <div id="sucursalesContainer" style="display:none;">
+
+                    <!-- Tabs nav -->
+                    <div class="card border-0 shadow-sm mb-0">
+                        <div class="card-body pb-0">
+                            <ul class="nav nav-tabs pdg-nav-tabs" id="sucursalesTabs" role="tablist">
+                                <!-- Generado por JS -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tabs content -->
+                    <div class="tab-content pdg-tab-content" id="sucursalesTabContent">
+                        <!-- Generado por JS -->
+                    </div>
+
+                </div>
+
+                <!-- Estado vacío si no hay sucursales -->
+                <div id="sinSucursales" style="display:none;" class="pdg-empty-state">
+                    <i class="bi bi-building-x"></i>
+                    <h5>No hay sucursales activas</h5>
+                    <p class="text-muted small">No se encontraron sucursales configuradas como activas en el sistema.</p>
+                </div>
+
+            </div><!-- /container-fluid -->
+        </div>
+    </div>
+
+    <!-- Tooltip container (Bootstrap) -->
+    <div id="tooltipAncla" class="d-none">
+        Ingresa el número de semana de un despacho real ya ocurrido. Ej: si la semana 540 fue el último despacho, escribe 540. El sistema usa esto para calcular si la semana actual "toca" según el intervalo configurado.
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script>const PUEDE_EDITAR = <?php echo $puedeEditar ? 'true' : 'false'; ?>;</script>
+    <script src="js/plan_despacho_global.js?v=<?php echo $version;?>"></script>
+</body>
+</html>

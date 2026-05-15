@@ -1,0 +1,29 @@
+<?php
+/* ============================================================
+   AJAX: plan_despacho_get_sucursales.php
+   Ruta: modulos/inventario/ajax/plan_despacho_get_sucursales.php
+   Método: GET
+   ============================================================ */
+require_once '../../../core/auth/auth.php';
+header('Content-Type: application/json');
+
+try {
+    $stmt = $conn->prepare(
+        "SELECT codigo, nombre FROM sucursales
+         WHERE activa = 1 AND sucursal = 1
+         ORDER BY nombre ASC"
+    );
+    $stmt->execute();
+    $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        'success' => true,
+        'data'    => $sucursales
+    ]);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
+}
