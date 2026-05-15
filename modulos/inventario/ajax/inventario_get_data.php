@@ -860,10 +860,11 @@ try {
                     // semana fuera del rango histórico (ej: semana_inv)
                     // Usamos consumo diario promedio calculado en step 9
                     foreach ($productos as $p2) {
-                        $idPPc  = (int)$p2['id'];
-                        $cdDia  = (float)($p2['_cons_diario'] ?? 0);
-                        // 7 días de consumo diario (semana completa)
-                        $pronCons[$idPPc] = ($pronCons[$idPPc] ?? 0) + $cdDia * 7;
+                        $idPPc = (int)$p2['id'];
+                        // Usar promedio bruto (sin ajuste_demanda ni desviación)
+                        // _cons_diario * 7 incluye ajuste, lo que infla el consumo estimado
+                        $prom  = (float)($p2['_promedio'] ?? 0);
+                        $pronCons[$idPPc] = ($pronCons[$idPPc] ?? 0) + $prom;
                     }
                 }
             }
