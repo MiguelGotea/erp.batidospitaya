@@ -463,20 +463,20 @@ try {
         $rSAD = $conn->prepare("SELECT numero_semana FROM SemanasSistema WHERE numero_semana < :d ORDER BY numero_semana DESC LIMIT 1");
         $rSAD->execute([':d' => $semDesde]);
         $semAntDesde = $rSAD->fetchColumn() ?: null;
+
         if ($semAntDesde) {
-            $stmtIR = $conn->prepare("
-                SELECT k.CodCotizacion, k.Cantidad
-                FROM msaccess_masivo_InventarioCotizacion k
-                INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
-                WHERE ss.numero_semana = ?
-                  AND k.CodCotizacion IN ($phCods)
-                  AND k.Sucursal IN ($phSucs)
-            ");
-            $stmtIR->execute(array_merge([$semAntDesde], $allCods, $sucFiltro));
-            foreach ($stmtIR->fetchAll(PDO::FETCH_ASSOC) as $ri) {
-                $info = $codMapBalance[(int)$ri['CodCotizacion']] ?? null;
-                if (!$info) continue;
-                $invIniRango += round((float)$ri['Cantidad'] * $info['factor'], 4);
+            // Si la semana anterior al rango coincide con la del corte, reusar el dato ya calculado
+            if ((int)$semAntDesde === (int)$semAntCorte) {
+                $invIniRango = $totales['inv_inicial'];
+            } else {
+                // Query idéntico al stmt1 pero para la semana anterior al rango
+                $stmtIR = $conn->prepare("SELECT k.Fecha, k.Sucursal, k.CodCotizacion, k.Cantidad, ss.numero_semana AS semana FROM msaccess_masivo_InventarioCotizacion k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phCods) AND k.Sucursal IN ($phSucs)");
+                $stmtIR->execute(array_merge([$semAntDesde], $allCods, $sucFiltro));
+                foreach ($stmtIR->fetchAll(PDO::FETCH_ASSOC) as $ri) {
+                    $info = $codMapBalance[(int)$ri['CodCotizacion']] ?? null;
+                    if (!$info) continue;
+                    $invIniRango += round((float)$ri['Cantidad'] * $info['factor'], 4);
+                }
             }
         }
     }
