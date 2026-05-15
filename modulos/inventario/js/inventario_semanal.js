@@ -35,7 +35,7 @@ function cargarSucursales() {
 /* ── obtener y calcular ───────────────────────────────────── */
 function cargarDatosInventario() {
     const sucursal = $('#filtroSucursal').val();
-    const semInv   = parseInt($('#filtroSemanaInv').val());
+    const semInv = parseInt($('#filtroSemanaInv').val());
     const semCorte = parseInt($('#filtroSemanaCortePronostico').val()) || (semInv - 1);
 
     // El rango ahora es automático: 5 semanas hacia atrás desde la semana de inventario
@@ -66,7 +66,7 @@ function cargarDatosInventario() {
 
             // Actualizar label del corte en el encabezado de la tabla
             const corteUsado = res.semana_corte_pronostico || semCorte;
-            $('#labelCortePronostico').text(`Corte: S${corteUsado}`);
+            $('#labelCortePronostico').text(`Corte: ${corteUsado}`);
 
             renderizarTabla(res, semInv);
             $('#tablaInventarioContainer').show();
@@ -161,7 +161,7 @@ function renderizarTabla(res, semInv) {
             const sMin = parseFloat(p._stock_min) || 0;
             const sMax = parseFloat(p.stock_max_final) || 0;
             let colorClass = '';
-            let icon       = '';
+            let icon = '';
             if (sMin > 0 && pron < sMin) {
                 colorClass = 'text-danger fw-bold';
                 icon = '<i class="bi bi-exclamation-triangle-fill me-1" style="font-size:.7rem"></i>';
