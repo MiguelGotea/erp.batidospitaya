@@ -9,6 +9,7 @@ $(document).ready(function () {
     establecerSemanasDefecto();
     $('#btnCalcular').on('click', cargarDatosInventario);
     $('#btnGuardarInventario').on('click', guardarInventario);
+    $('#filtroSemanaInv').on('input change', actualizarNotaReferencia);
 });
 
 /* ── semana por defecto ───────────────────────────────────── */
@@ -19,7 +20,19 @@ function establecerSemanasDefecto() {
         $('#filtroSemanaInv').val(semanaActual);
         // Default: corte = semana anterior
         $('#filtroSemanaCortePronostico').val(semanaActual - 1);
+        actualizarNotaReferencia();
     });
+}
+
+function actualizarNotaReferencia() {
+    const semInv = parseInt($('#filtroSemanaInv').val());
+    if (semInv) {
+        const semDesde = semInv - 5;
+        const semHasta = semInv - 1;
+        $('#noteReferenciaCalculo').html(`<i class="bi bi-calculator me-1"></i> Ref. cálculo stock mín/máx sugerido: Semanas <strong>${semDesde}</strong> a <strong>${semHasta}</strong>`);
+    } else {
+        $('#noteReferenciaCalculo').text('');
+    }
 }
 
 /* ── lista de sucursales ──────────────────────────────────── */
@@ -41,6 +54,7 @@ function cargarDatosInventario() {
     // El rango ahora es automático: 5 semanas hacia atrás desde la semana de inventario
     const semDesde = semInv - 5;
     const semHasta = semInv - 1;
+    actualizarNotaReferencia();
 
     if (!sucursal || !semInv) {
         Swal.fire('Atención', 'Seleccione sucursal y semana de inventario.', 'warning');

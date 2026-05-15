@@ -92,8 +92,10 @@ $version = mt_rand(1, 10000);
                 <div id="tablaInventarioContainer" style="display:none;">
                     <div
                         class="alert alert-info py-2 px-3 small mb-2 d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-info-circle me-1"></i> Mostrando inventario de la semana
-                            seleccionada.</span>
+                        <div class="d-flex align-items-center gap-3">
+                            <span><i class="bi bi-info-circle me-1"></i> Mostrando inventario de la semana seleccionada.</span>
+                            <span id="noteReferenciaCalculo" class="text-muted border-start ps-3" style="font-size: 0.75rem;"></span>
+                        </div>
                         <span id="labelRangoFechas" class="fw-bold"></span>
                     </div>
                     <div class="table-responsive bg-white rounded shadow-sm">
