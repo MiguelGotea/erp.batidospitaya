@@ -202,6 +202,7 @@ function renderizarTabla(res, semInv) {
                 <td class="text-muted">—</td>
             </tr>
         `);
+    }); // end forEach productos
 
     // Recalcular pedido en tiempo real al editar inventario
     $('#tbodyInventario').off('input').on('input', '.input-inv-pres, .input-inv-unidades', function (e) {

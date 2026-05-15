@@ -125,4 +125,32 @@
     font-weight: bold;
 }
 
+/* ── Columna Stock Pronóstico ──────────────────────────────── */
+.th-pronostico {
+    background: linear-gradient(135deg, #1a6b62 0%, #0E544C 100%) !important;
+    color: #fff !important;
+    font-weight: bold;
+    font-size: 0.78rem;
+    text-align: center;
+    vertical-align: middle !important;
+    border-left: 3px solid #51B8AC !important;
+    border-right: 3px solid #51B8AC !important;
+    min-width: 90px;
+}
 
+.th-pronostico .bi-graph-up-arrow {
+    animation: pulse-pron 2s infinite;
+}
+
+@keyframes pulse-pron {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.55; }
+}
+
+/* Celda pronóstico — borde sutil para distinguirla */
+.tabla-inventario tbody td.bg-light:has(span.text-danger),
+.tabla-inventario tbody td.bg-light:has(span.text-warning),
+.tabla-inventario tbody td.bg-light:has(span.text-success) {
+    border-left: 2px solid rgba(81, 184, 172, 0.3);
+    border-right: 2px solid rgba(81, 184, 172, 0.3);
+}
