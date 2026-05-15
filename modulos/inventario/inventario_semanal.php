@@ -51,11 +51,19 @@ $version = mt_rand(1, 10000);
                                     <option value="">-- Seleccione Sucursal --</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label small fw-bold">Semana de Inventario</label>
                                 <input type="number" class="form-control form-control-sm" id="filtroSemanaInv" placeholder="Ej: 538">
                             </div>
-                            <div class="col-md-6 d-flex gap-2">
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold d-flex align-items-center gap-1">
+                                    <i class="bi bi-scissors text-warning" style="font-size:.8rem"></i>
+                                    Corte Pronóstico
+                                </label>
+                                <input type="number" class="form-control form-control-sm" id="filtroSemanaCortePronostico"
+                                    placeholder="Auto" title="Semana cuyo inventario físico se usa como punto de partida del pronóstico. Por defecto: semana anterior.">
+                            </div>
+                            <div class="col-md-4 d-flex gap-2">
                                 <button class="btn btn-sm btn-primary-pitaya flex-grow-1" id="btnCalcular">
                                     <i class="fas fa-calculator me-1"></i> Cargar y Calcular
                                 </button>
@@ -85,8 +93,13 @@ $version = mt_rand(1, 10000);
                         <table class="table table-hover tabla-inventario mb-0">
                             <thead>
                                 <tr>
-                                    <th rowspan="2" style="width:20%;">Producto</th>
+                                    <th rowspan="2" style="width:18%;">Producto</th>
                                     <th colspan="4" class="th-inventario">INVENTARIO SEMANAL</th>
+                                    <th class="th-pronostico" rowspan="2"
+                                        title="Stock estimado al cierre de la semana de inventario, partiendo del inventario físico de la semana de corte">
+                                        <i class="bi bi-graph-up-arrow me-1"></i>Stock Pronóstico
+                                        <span id="labelCortePronostico" class="d-block fw-normal" style="font-size:.65rem;opacity:.8"></span>
+                                    </th>
                                     <th class="th-inventario">Stock Mínimo</th>
                                     <th class="th-inventario">Stock Máximo (B)</th>
                                     <th class="th-pedido-sugerido">PEDIDO SUGERIDO (+B - A)</th>

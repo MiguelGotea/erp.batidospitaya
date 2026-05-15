@@ -23,10 +23,11 @@ if (!tienePermiso('inventario_semanal', 'vista', $cargo)) {
     exit();
 }
 
-$codSucursal  = $_GET['cod_sucursal'] ?? '';
-$numSemanaInv = isset($_GET['semana_inv'])   ? (int)$_GET['semana_inv']   : 0;
-$numDesde     = isset($_GET['semana_desde']) ? (int)$_GET['semana_desde'] : 0;
-$numHasta     = isset($_GET['semana_hasta']) ? (int)$_GET['semana_hasta'] : 0;
+$codSucursal        = $_GET['cod_sucursal'] ?? '';
+$numSemanaInv       = isset($_GET['semana_inv'])              ? (int)$_GET['semana_inv']              : 0;
+$numDesde           = isset($_GET['semana_desde'])            ? (int)$_GET['semana_desde']            : 0;
+$numHasta           = isset($_GET['semana_hasta'])            ? (int)$_GET['semana_hasta']            : 0;
+$semCortePron       = isset($_GET['semana_corte_pronostico']) ? (int)$_GET['semana_corte_pronostico'] : max(1, $numSemanaInv - 1);
 
 if (empty($codSucursal) || !$numSemanaInv) {
     echo json_encode(['ok' => false, 'msg' => 'Sucursal y semana de inventario requeridas.']);
@@ -645,15 +646,262 @@ try {
     }
     unset($p);
 
+    /* ── 10. Stock Pronóstico ─────────────────────────────────────────────────
+       Fórmula: inv_fisico(semCortePron) + movimientos(semCortePron+1..semInv)
+                                         - consumo_teo(semCortePron+1..semInv)
+       Resultado en presentación de despacho (mismas unidades que stock mín).
+    ──────────────────────────────────────────────────────────────────────── */
+    $semCortePron = max(1, $semCortePron);
+    // Inicializar pronóstico como null
+    foreach ($productos as &$p) { $p['_stock_pronostico'] = null; }
+    unset($p);
+
+    $semPronDesde = $semCortePron + 1; // primer día a acumular movimientos
+    $semPronHasta = $numSemanaInv;
+
+    if ($semPronDesde <= $semPronHasta) {
+        // ── Fechas ──────────────────────────────────────────────────────────
+        $rFAll = $conn->prepare("SELECT MIN(fecha_inicio) as fi, MAX(fecha_fin) as ff FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?");
+        $rFAll->execute([$semCortePron, $semPronHasta]);
+        $fdAll = $rFAll->fetch(PDO::FETCH_ASSOC);
+        $fCorteIni = $fdAll['fi'];  // inicio de la semana de corte (para el inv físico)
+        $fPronFin  = $fdAll['ff'];  // fin de semana_inv
+
+        // Inicio/fin exactos de la semana de corte (para query de inv físico)
+        $rFCor = $conn->prepare("SELECT fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = ?");
+        $rFCor->execute([$semCortePron]);
+        $fdCor = $rFCor->fetch(PDO::FETCH_ASSOC);
+        $fCorIni = $fdCor['fecha_inicio'];
+        $fCorFin = $fdCor['fecha_fin'];
+
+        // Inicio/fin del período de movimientos (semCortePron+1..semInv)
+        $rFMov = $conn->prepare("SELECT MIN(fecha_inicio) as fi, MAX(fecha_fin) as ff FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?");
+        $rFMov->execute([$semPronDesde, $semPronHasta]);
+        $fdMov = $rFMov->fetch(PDO::FETCH_ASSOC);
+        $fMovIni = $fdMov['fi'];
+        $fMovFin = $fdMov['ff'];
+
+        // ── Build Global Code Map: CodCotizacion → [id_pp, factor] ──────────
+        $allPPIds  = array_column($productos, 'id');
+        $phPP      = implode(',', array_fill(0, count($allPPIds), '?'));
+
+        // A: Direct — CodCotizacion que apunta directamente a una presentación básica
+        $rDir = $conn->prepare("
+            SELECT d.CodCotizacion, pp.id as id_pp
+            FROM diccionario_productos_legado d
+            INNER JOIN producto_presentacion pp ON pp.id = d.id_producto_presentacion
+            WHERE pp.presentacion_basica_inventario = 1 AND pp.Activo = 'SI'
+              AND pp.id IN ($phPP)
+        ");
+        $rDir->execute(array_values($allPPIds));
+        $gCodeMap = []; // [cod => ['id_pp' => int, 'factor' => float]]
+        foreach ($rDir->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $gCodeMap[(int)$row['CodCotizacion']] = ['id_pp' => (int)$row['id_pp'], 'factor' => 1.0];
+        }
+
+        // B: Cascade — paquete con exactamente 1 componente básico
+        $rCas = $conn->prepare("
+            SELECT d.CodCotizacion, crp.id_presentacion_producto as base_id, crp.cantidad as factor
+            FROM producto_presentacion pp_pkg
+            INNER JOIN diccionario_productos_legado d ON d.id_producto_presentacion = pp_pkg.id
+            INNER JOIN componentes_receta_producto crp ON crp.id_receta_producto_global = pp_pkg.Id_receta_producto
+            INNER JOIN producto_presentacion pp_base ON pp_base.id = crp.id_presentacion_producto
+                AND pp_base.presentacion_basica_inventario = 1 AND pp_base.Activo = 'SI'
+                AND pp_base.id IN ($phPP)
+            WHERE pp_pkg.presentacion_receta = 1 AND pp_pkg.Activo = 'SI'
+              AND (SELECT COUNT(DISTINCT id_presentacion_producto)
+                   FROM componentes_receta_producto
+                   WHERE id_receta_producto_global = pp_pkg.Id_receta_producto) = 1
+        ");
+        $rCas->execute(array_values($allPPIds));
+        foreach ($rCas->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $cod = (int)$row['CodCotizacion'];
+            if (!isset($gCodeMap[$cod]))
+                $gCodeMap[$cod] = ['id_pp' => (int)$row['base_id'], 'factor' => (float)$row['factor']];
+        }
+
+        // C: Maestro fallback — presentación no básica, no receta → base vía maestro
+        $rAlt = $conn->prepare("
+            SELECT d.CodCotizacion,
+                   pp_alt.id_unidad_producto as alt_unid, pp_alt.cantidad as alt_cant,
+                   pp_base.id as base_id, pp_base.id_unidad_producto as base_unid,
+                   pp_base.cantidad as base_cant
+            FROM diccionario_productos_legado d
+            INNER JOIN producto_presentacion pp_alt ON pp_alt.id = d.id_producto_presentacion
+                AND pp_alt.Activo = 'SI'
+                AND pp_alt.presentacion_basica_inventario = 0
+                AND pp_alt.presentacion_receta = 0
+                AND pp_alt.id_producto_maestro IS NOT NULL
+            INNER JOIN producto_presentacion pp_base ON pp_base.id_producto_maestro = pp_alt.id_producto_maestro
+                AND pp_base.presentacion_basica_inventario = 1 AND pp_base.Activo = 'SI'
+                AND pp_base.id IN ($phPP)
+        ");
+        $rAlt->execute(array_values($allPPIds));
+        foreach ($rAlt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $cod = (int)$row['CodCotizacion'];
+            if (isset($gCodeMap[$cod])) continue;
+            $altUnid  = (int)$row['alt_unid'];
+            $baseUnid = (int)$row['base_unid'];
+            $altCant  = max((float)$row['alt_cant'], 0.001);
+            $baseCant = max((float)$row['base_cant'], 0.001);
+            if ($altUnid === $baseUnid) {
+                $factor = $altCant / $baseCant;
+            } elseif (isset($convIndex[$altUnid][$baseUnid])) {
+                $factor = ($altCant * $convIndex[$altUnid][$baseUnid]) / $baseCant;
+            } else {
+                continue;
+            }
+            $gCodeMap[$cod] = ['id_pp' => (int)$row['base_id'], 'factor' => $factor];
+        }
+
+        if (!empty($gCodeMap)) {
+            $allCodsPron = array_keys($gCodeMap);
+            $phCods      = implode(',', array_fill(0, count($allCodsPron), '?'));
+            $sucInt      = (int)$codSucursal;
+
+            // ── Inventario físico de la semana de corte (punto de partida) ──────
+            $pronInv = []; // [id_pp => cantidad_en_unidades]
+            $stmtInvF = $conn->prepare("
+                SELECT k.CodCotizacion, SUM(k.Cantidad) as qty
+                FROM msaccess_masivo_InventarioCotizacion k
+                INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
+                WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phCods)
+                  AND k.Sucursal = ?
+                GROUP BY k.CodCotizacion
+            ");
+            $stmtInvF->execute(array_merge([$semCortePron], $allCodsPron, [$sucInt]));
+            foreach ($stmtInvF->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $cod = (int)$r['CodCotizacion'];
+                if (!isset($gCodeMap[$cod])) continue;
+                $idPP  = $gCodeMap[$cod]['id_pp'];
+                $fac   = $gCodeMap[$cod]['factor'];
+                $pronInv[$idPP] = ($pronInv[$idPP] ?? 0) + (float)$r['qty'] * $fac;
+            }
+
+            // ── Movimientos del período (semCortePron+1 → semInv) ────────────
+            $pronMov = []; // [id_pp => delta_en_unidades] (+entradas -salidas)
+
+            if ($fMovIni && $fMovFin) {
+                // Ajustes (+)
+                $stmtA = $conn->prepare("
+                    SELECT k.CodCotizacion, SUM(k.Cantidad) as qty
+                    FROM msaccess_masivo_AjustesInventario k
+                    INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
+                    WHERE ss.numero_semana BETWEEN ? AND ? AND k.CodCotizacion IN ($phCods)
+                      AND k.Sucursal = ?
+                    GROUP BY k.CodCotizacion
+                ");
+                $stmtA->execute(array_merge([$semPronDesde, $semPronHasta], $allCodsPron, [$sucInt]));
+                foreach ($stmtA->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                    $cod = (int)$r['CodCotizacion'];
+                    if (!isset($gCodeMap[$cod])) continue;
+                    $idPP = $gCodeMap[$cod]['id_pp'];
+                    $pronMov[$idPP] = ($pronMov[$idPP] ?? 0) + (float)$r['qty'] * $gCodeMap[$cod]['factor'];
+                }
+
+                // Mermas (-)
+                $stmtM = $conn->prepare("
+                    SELECT k.CodCotizacion, SUM(k.Cantidad) as qty
+                    FROM msaccess_masivo_MermaCotizacion k
+                    INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
+                    WHERE ss.numero_semana BETWEEN ? AND ? AND k.CodCotizacion IN ($phCods)
+                      AND k.Sucursal = ?
+                    GROUP BY k.CodCotizacion
+                ");
+                $stmtM->execute(array_merge([$semPronDesde, $semPronHasta], $allCodsPron, [$sucInt]));
+                foreach ($stmtM->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                    $cod = (int)$r['CodCotizacion'];
+                    if (!isset($gCodeMap[$cod])) continue;
+                    $idPP = $gCodeMap[$cod]['id_pp'];
+                    $pronMov[$idPP] = ($pronMov[$idPP] ?? 0) - (float)$r['qty'] * $gCodeMap[$cod]['factor'];
+                }
+
+                // Despachos (+) — solo los destinados a esta sucursal
+                $stmtD = $conn->prepare("
+                    SELECT sub.CodCotizacion, SUM(sub.Cantidad) as qty
+                    FROM msaccess_masivo_SubPreIngresosPitaya sub
+                    INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya = sub.CodPreIngresoPitaya
+                    INNER JOIN SemanasSistema ss ON pre.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
+                    WHERE ss.numero_semana BETWEEN ? AND ? AND sub.CodCotizacion IN ($phCods)
+                      AND pre.Destino REGEXP CONCAT('^[Pp]itaya[[:space:]]+', ?)
+                    GROUP BY sub.CodCotizacion
+                ");
+                $stmtD->execute(array_merge([$semPronDesde, $semPronHasta], $allCodsPron, [$sucInt]));
+                foreach ($stmtD->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                    $cod = (int)$r['CodCotizacion'];
+                    if (!isset($gCodeMap[$cod])) continue;
+                    $idPP = $gCodeMap[$cod]['id_pp'];
+                    $pronMov[$idPP] = ($pronMov[$idPP] ?? 0) + (float)$r['qty'] * $gCodeMap[$cod]['factor'];
+                }
+
+                // Compras (+)
+                $stmtC2 = $conn->prepare("
+                    SELECT k.CodCotizacion, SUM(k.Cantidad) as qty
+                    FROM msaccess_masivo_Compras k
+                    INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
+                    WHERE ss.numero_semana BETWEEN ? AND ? AND k.CodCotizacion IN ($phCods)
+                      AND k.Sucursal = ?
+                    GROUP BY k.CodCotizacion
+                ");
+                $stmtC2->execute(array_merge([$semPronDesde, $semPronHasta], $allCodsPron, [$sucInt]));
+                foreach ($stmtC2->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                    $cod = (int)$r['CodCotizacion'];
+                    if (!isset($gCodeMap[$cod])) continue;
+                    $idPP = $gCodeMap[$cod]['id_pp'];
+                    $pronMov[$idPP] = ($pronMov[$idPP] ?? 0) + (float)$r['qty'] * $gCodeMap[$cod]['factor'];
+                }
+            }
+
+            // ── Consumo teórico del período de pronóstico ───────────────────
+            // Usar $conAgg para semanas ya calculadas; semana_inv = separate pass
+            $pronCons = []; // [id_pp => consumo_total_unidades]
+            for ($s = $semPronDesde; $s <= $semPronHasta; $s++) {
+                if (isset($conAgg) && $s >= $numDesde && $s <= $numHasta) {
+                    // ya calculado en step 6
+                    foreach ($conAgg as $idPPc => $semMap) {
+                        if (isset($semMap[$s])) {
+                            $pronCons[$idPPc] = ($pronCons[$idPPc] ?? 0) + $semMap[$s];
+                        }
+                    }
+                } else {
+                    // semana fuera del rango histórico (ej: semana_inv)
+                    // Usamos consumo diario promedio calculado en step 9
+                    foreach ($productos as $p2) {
+                        $idPPc  = (int)$p2['id'];
+                        $cdDia  = (float)($p2['_cons_diario'] ?? 0);
+                        // 7 días de consumo diario (semana completa)
+                        $pronCons[$idPPc] = ($pronCons[$idPPc] ?? 0) + $cdDia * 7;
+                    }
+                }
+            }
+
+            // ── Calcular pronóstico por producto ─────────────────────────────
+            foreach ($productos as &$p) {
+                $idPP = (int)$p['id'];
+                $df   = (float)($p['despacho_factor'] ?? 1);
+                if ($df <= 0) $df = 1;
+
+                $invFisico = $pronInv[$idPP]  ?? 0.0; // unidades básicas
+                $movTotal  = $pronMov[$idPP]  ?? 0.0;
+                $consTotal = $pronCons[$idPP] ?? 0.0;
+
+                $pronUnid = $invFisico + $movTotal - $consTotal;
+                $p['_stock_pronostico'] = round($pronUnid / $df, 4);
+            }
+            unset($p);
+        }
+    }
+
     echo json_encode([
-        'ok'               => true,
-        'rango_fechas_inv' => $semInv,
-        'n_semanas'        => $nSemanas,
-        'factor_c'         => $factorC,
-        'capacidad_c'      => $capC,
-        'sum_smax_b'       => round($sumSMaxB, 4),
-        'porcentajes'      => $configPct,
-        'productos'        => $productos,
+        'ok'                     => true,
+        'rango_fechas_inv'       => $semInv,
+        'n_semanas'              => $nSemanas,
+        'factor_c'               => $factorC,
+        'capacidad_c'            => $capC,
+        'sum_smax_b'             => round($sumSMaxB, 4),
+        'porcentajes'            => $configPct,
+        'semana_corte_pronostico'=> $semCortePron,
+        'productos'              => $productos,
     ]);
 } catch (Exception $e) {
     echo json_encode(['ok' => false, 'msg' => 'Error: ' . $e->getMessage()]);

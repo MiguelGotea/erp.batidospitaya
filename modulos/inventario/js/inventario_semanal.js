@@ -17,6 +17,8 @@ function establecerSemanasDefecto() {
         if (!res.ok) return;
         semanaActual = parseInt(res.semana);
         $('#filtroSemanaInv').val(semanaActual);
+        // Default: corte = semana anterior
+        $('#filtroSemanaCortePronostico').val(semanaActual - 1);
     });
 }
 
@@ -33,7 +35,8 @@ function cargarSucursales() {
 /* ── obtener y calcular ───────────────────────────────────── */
 function cargarDatosInventario() {
     const sucursal = $('#filtroSucursal').val();
-    const semInv = parseInt($('#filtroSemanaInv').val());
+    const semInv   = parseInt($('#filtroSemanaInv').val());
+    const semCorte = parseInt($('#filtroSemanaCortePronostico').val()) || (semInv - 1);
 
     // El rango ahora es automático: 5 semanas hacia atrás desde la semana de inventario
     const semDesde = semInv - 5;
@@ -44,6 +47,11 @@ function cargarDatosInventario() {
         return;
     }
 
+    // Sincronizar corte con semana_inv si el usuario no lo editó aún
+    if (!$('#filtroSemanaCortePronostico').val()) {
+        $('#filtroSemanaCortePronostico').val(semInv - 1);
+    }
+
     $('#loader').show();
     $('#tablaInventarioContainer').hide();
     $('#btnGuardarInventario').hide();
@@ -51,10 +59,14 @@ function cargarDatosInventario() {
     $.ajax({
         url: 'ajax/inventario_get_data.php',
         method: 'GET',
-        data: { cod_sucursal: sucursal, semana_inv: semInv, semana_desde: semDesde, semana_hasta: semHasta },
+        data: { cod_sucursal: sucursal, semana_inv: semInv, semana_desde: semDesde, semana_hasta: semHasta, semana_corte_pronostico: semCorte },
         success: function (res) {
             $('#loader').hide();
             if (!res.ok) return Swal.fire('Error', res.msg, 'error');
+
+            // Actualizar label del corte en el encabezado de la tabla
+            const corteUsado = res.semana_corte_pronostico || semCorte;
+            $('#labelCortePronostico').text(`Corte: S${corteUsado}`);
 
             renderizarTabla(res, semInv);
             $('#tablaInventarioContainer').show();
@@ -112,7 +124,7 @@ function renderizarTabla(res, semInv) {
             const labelGrupo = cat !== '—' ? `${cat} — ${nomCat}` : nomCat;
             tbody.append(`
                 <tr class="table-light">
-                    <td colspan="11" class="fw-bold py-2 ps-3" style="background-color: #e9ecef; color: #495057; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
+                    <td colspan="12" class="fw-bold py-2 ps-3" style="background-color: #e9ecef; color: #495057; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
                         ${labelGrupo}
                     </td>
                 </tr>
@@ -142,6 +154,27 @@ function renderizarTabla(res, semInv) {
 
 
 
+        // Stock pronóstico (antes de stock mínimo)
+        let pronHtml = '<span class="text-muted small">—</span>';
+        if (p._stock_pronostico !== null && p._stock_pronostico !== undefined) {
+            const pron = parseFloat(p._stock_pronostico);
+            const sMin = parseFloat(p._stock_min) || 0;
+            const sMax = parseFloat(p.stock_max_final) || 0;
+            let colorClass = '';
+            let icon       = '';
+            if (sMin > 0 && pron < sMin) {
+                colorClass = 'text-danger fw-bold';
+                icon = '<i class="bi bi-exclamation-triangle-fill me-1" style="font-size:.7rem"></i>';
+            } else if (sMin > 0 && pron < sMin * 1.2) {
+                colorClass = 'text-warning fw-bold';
+                icon = '<i class="bi bi-dash-circle-fill me-1" style="font-size:.7rem"></i>';
+            } else {
+                colorClass = 'text-success fw-bold';
+                icon = '<i class="bi bi-check-circle-fill me-1" style="font-size:.7rem"></i>';
+            }
+            pronHtml = `<span class="${colorClass}">${icon}${fmt(pron)}</span>`;
+        }
+
         tbody.append(`
             <tr data-id="${idPP}" data-cat="${cat}"
                 data-smax="${p.stock_max_final ?? ''}"
@@ -160,6 +193,7 @@ function renderizarTabla(res, semInv) {
                 <td class="small text-muted">
                     ${p.despacho_nombre ? p.despacho_nombre : ''}
                 </td>
+                <td class="bg-light text-center" style="min-width:80px">${pronHtml}</td>
                 <td class="bg-light">${fmt(p._stock_min)}</td>
                 <td class="bg-light">${sMaxHtml}</td>
                 <td class="col-sug">${pedidoHtml}</td>
@@ -168,7 +202,6 @@ function renderizarTabla(res, semInv) {
                 <td class="text-muted">—</td>
             </tr>
         `);
-    });
 
     // Recalcular pedido en tiempo real al editar inventario
     $('#tbodyInventario').off('input').on('input', '.input-inv-pres, .input-inv-unidades', function (e) {
