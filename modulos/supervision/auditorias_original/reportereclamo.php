@@ -1,27 +1,19 @@
 <?php
-// Al inicio del archivo, verificar autenticación y acceso al módulo
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
-require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
-
-// Verificar acceso al módulo 'publico' (o el nombre que corresponda según tus permisos)
-//verificarAccesoModulo('operaciones');
-
-//******************************Estándar para header******************************
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'] ?? null;
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 42]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+// Verificar acceso al módulo (Cargos permitidos: admin, gerencia, operaciones, supervisión)
+if (!verificarAccesoCargo([49, 16, 11, 21, 42, 50]) && !$esAdmin) {
     header('Location: ../../../index.php');
     exit();
 }
-
-// Obtenemos el cargo principal usando la función de funciones.php
-$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-//******************************Estándar para header, termina******************************
 
 // Configuración de zona horaria
 date_default_timezone_set('America/Managua');
@@ -95,102 +87,102 @@ if ($modoSeleccionDirecta) {
 
         // Construir HTML de detalles del reclamo
         $detallesReclamo = '
-        <div class="card" style="margin-bottom: 30px;">
-            <div class="card-header">
-                <h2 class="card-title">Reclamo #' . $reclamoPreSeleccionado['id'] . '</h2>
-                <span class="badge badge-pendiente">ABIERTO</span>
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+            <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h4 class="fw-bold text-dark mb-0">Reclamo #' . $reclamoPreSeleccionado['id'] . '</h4>
+                <span class="badge bg-warning text-dark">ABIERTO</span>
             </div>
-            <div class="card-body">
-                <div class="info-group">
-                    <span class="info-label">Fecha de Registro:</span>
-                    <div class="info-value">
-                        ' . htmlspecialchars($reclamoPreSeleccionado['fecha_registro_formateada']) . '
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="small fw-bold text-muted text-uppercase mb-1">Fecha de Registro</label>
+                        <div class="p-2 bg-light rounded border-start border-primary border-4">
+                            ' . htmlspecialchars($reclamoPreSeleccionado['fecha_registro_formateada']) . '
+                        </div>
                     </div>
-                </div>
-                
-                <div class="info-group">
-                    <span class="info-label">Medio de Compra:</span>
-                    <div class="info-value">
-                        ' . htmlspecialchars($reclamoPreSeleccionado['medio_compra'] ?? '--') . '
+                    <div class="col-md-4">
+                        <label class="small fw-bold text-muted text-uppercase mb-1">Medio de Compra</label>
+                        <div class="p-2 bg-light rounded border-start border-primary border-4">
+                            ' . htmlspecialchars($reclamoPreSeleccionado['medio_compra'] ?? '--') . '
+                        </div>
                     </div>
-                </div>
-                
-                <div class="info-group">
-                    <span class="info-label">Sucursal:</span>
-                    <div class="info-value">
-                        ' . htmlspecialchars($reclamoPreSeleccionado['sucursal']) . '
+                    <div class="col-md-4">
+                        <label class="small fw-bold text-muted text-uppercase mb-1">Sucursal</label>
+                        <div class="p-2 bg-light rounded border-start border-primary border-4">
+                            ' . htmlspecialchars($reclamoPreSeleccionado['sucursal']) . '
+                        </div>
                     </div>
-                </div>
-                
-                <div class="info-group">
-                    <span class="info-label">Categoría de Reclamo:</span>
-                    <div class="info-value">
-                        ' . (!empty($reclamoPreSeleccionado['grupo_nombre']) ?
+                    <div class="col-md-6">
+                        <label class="small fw-bold text-muted text-uppercase mb-1">Categoría de Reclamo</label>
+                        <div class="p-2 bg-light rounded border-start border-primary border-4">
+                            ' . (!empty($reclamoPreSeleccionado['grupo_nombre']) ?
             '<strong>' . htmlspecialchars($reclamoPreSeleccionado['grupo_nombre']) . '</strong> - ' . htmlspecialchars($reclamoPreSeleccionado['tipo_nombre']) :
             htmlspecialchars($reclamoPreSeleccionado['tipo_reclamo'] ?? '--')) . '
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small fw-bold text-muted text-uppercase mb-1">Fecha y Hora del Evento</label>
+                        <div class="p-2 bg-light rounded border-start border-primary border-4">
+                            ' . traducirMes(date('d-M-Y', strtotime($reclamoPreSeleccionado['fecha_evento']))) . ' | ' . htmlspecialchars($reclamoPreSeleccionado['hora_evento']) . '
+                        </div>
                     </div>
                 </div>
 
-                <div class="info-group">
-                    <span class="info-label">Fecha y Hora del Evento:</span>
-                    <div class="info-value">
-                        ' . traducirMes(date('d-M-Y', strtotime($reclamoPreSeleccionado['fecha_evento']))) . ' | ' . htmlspecialchars($reclamoPreSeleccionado['hora_evento']) . '
-                    </div>
-                </div>';
+                ' . (!$puedeInvestigar ? '
+                    <div class="alert alert-warning border-0 shadow-sm mt-4 d-flex align-items-center" style="border-radius: 12px;">
+                        <i class="fas fa-exclamation-triangle fs-4 me-3 text-warning"></i>
+                        <div>
+                            <strong>Atención:</strong> Su cargo no está autorizado para realizar la investigación final de este tipo de reclamo.
+                        </div>
+                    </div>' : '') . '
 
-        if (!$puedeInvestigar) {
-            $detallesReclamo .= '
-                <div class="alert-warning" style="background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 4px; border: 1px solid #ffeeba; margin-top: 20px;">
-                    <i class="fas fa-exclamation-triangle"></i> <strong>Atención:</strong> Su cargo no está autorizado para realizar la investigación final de este tipo de reclamo.
-                </div>';
-        }
-
-        $detallesReclamo .= '
-                <div class="info-group">
-                    <span class="info-label">Investigación Preliminar:</span>
-                    <div class="info-value">
+                <div class="mt-4">
+                    <label class="small fw-bold text-muted text-uppercase mb-1">Investigación Preliminar</label>
+                    <div class="p-3 bg-light rounded border-start border-info border-4">
                         ' . htmlspecialchars($reclamoPreSeleccionado['investigacion_preliminar'] ?? '--') . '
                     </div>
                 </div>
-                
-                <div class="info-group">
-                    <span class="info-label">Descripción:</span>
-                    <div class="info-value">
+
+                <div class="mt-4">
+                    <label class="small fw-bold text-muted text-uppercase mb-1">Descripción</label>
+                    <div class="p-3 bg-light rounded border-start border-info border-4">
                         ' . nl2br(htmlspecialchars($reclamoPreSeleccionado['descripcion'])) . '
                     </div>
                 </div>';
 
         if (!empty($productos)) {
             $detallesReclamo .= '
-                <div class="info-group">
-                    <span class="info-label">Producto(s) en Reclamo:</span>
-                    <table class="productos-table">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Precio</th>
-                            </tr>
-                        </thead>
-                        <tbody>';
+                <div class="mt-4">
+                    <label class="small fw-bold text-muted text-uppercase mb-1">Producto(s) en Reclamo</label>
+                    <div class="table-responsive rounded border overflow-hidden">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3 py-2 border-0 small text-muted">Producto</th>
+                                    <th class="pe-3 py-2 border-0 small text-muted text-end">Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>';
 
             foreach ($productos as $producto) {
                 $detallesReclamo .= '
-                            <tr>
-                                <td>' . htmlspecialchars($producto['producto']) . '</td>
-                                <td>C$ ' . number_format($producto['precio'], 2) . '</td>
-                            </tr>';
+                                <tr>
+                                    <td class="ps-3 py-2 border-0">' . htmlspecialchars($producto['producto']) . '</td>
+                                    <td class="pe-3 py-2 border-0 text-end">C$ ' . number_format($producto['precio'], 2) . '</td>
+                                </tr>';
             }
 
             $detallesReclamo .= '
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>';
         }
 
         if (!empty($imagenes)) {
             $detallesReclamo .= '
-                <div class="info-group">
-                    <span class="info-label">Fotos de Evidencia:</span>
+                <div class="mt-4">
+                    <label class="small fw-bold text-muted text-uppercase mb-1">Fotos de Evidencia</label>
                     <div class="galeria-imagenes">';
 
             foreach ($imagenes as $imagen) {
@@ -205,9 +197,9 @@ if ($modoSeleccionDirecta) {
 
         if (!empty($reclamoPreSeleccionado['accion_inmediata'])) {
             $detallesReclamo .= '
-                <div class="info-group">
-                    <span class="info-label">Acción Inmediata:</span>
-                    <div class="info-value">
+                <div class="mt-4">
+                    <label class="small fw-bold text-muted text-uppercase mb-1">Acción Inmediata</label>
+                    <div class="p-3 bg-light rounded border-start border-info border-4">
                         ' . nl2br(htmlspecialchars($reclamoPreSeleccionado['accion_inmediata'])) . '
                     </div>
                 </div>';
@@ -344,7 +336,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['reporte_id'] = $reporteId;
         header("Location: confirmacion_reporte.php");
         exit();
-
     } catch (Exception $e) {
         if ($conn->inTransaction()) {
             $conn->rollBack();
@@ -384,265 +375,23 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte de Investigación Final</title>
+    <title>Reporte de Investigación Final | Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <style>
         * {
             box-sizing: border-box;
             font-family: 'Calibri', sans-serif;
         }
 
-        body {
-            background-color: #F6F6F6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
 
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 5px;
-            box-sizing: border-box;
-            margin: 1px auto;
-            flex-wrap: wrap;
-        }
-
-        .logo {
-            height: 50px;
-        }
-
-        .logo-container {
-            flex-shrink: 0;
-            margin-right: auto;
-        }
-
-        .buttons-container {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            flex-grow: 1;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-        .btn-agregar {
-            background-color: transparent;
-            color: #51B8AC;
-            border: 1px solid #51B8AC;
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            white-space: nowrap;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .btn-agregar.activo {
-            background-color: #51B8AC;
-            color: white;
-            font-weight: normal;
-        }
-
-        .btn-agregar:hover {
-            background-color: #0E544C;
-            color: white;
-            border-color: #0E544C;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-logout {
-            background: #51B8AC;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn-logout:hover {
-            background: #0E544C;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #0E544C;
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 24px;
-        }
-
-        .form-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            width: 100%;
-        }
-
-        .form-group.half-width {
-            width: calc(50% - 10px);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        .required:after {
-            content: " *";
-            color: red;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .error {
-            color: red;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        .btn-primary {
-            background-color: #51B8AC;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #0E544C;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-
-        .colaboradores-container {
-            margin-bottom: 20px;
-        }
-
-        .colaborador-item {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-
-        .colaborador-item input {
-            flex: 1;
-        }
-
-        .btn-remove-colaborador {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .btn-add-colaborador {
-            background-color: #0E544C;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 15px;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 30px;
-        }
-
-        .search-container {
-            position: relative;
-            margin-bottom: 15px;
-        }
-
+        /* Estilos específicos para este módulo */
         .search-results {
             position: absolute;
             width: 100%;
@@ -650,90 +399,43 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
             overflow-y: auto;
             background: white;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            z-index: 100;
+            border-radius: 8px;
+            z-index: 1000;
             display: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .search-result-item {
-            padding: 10px;
+            padding: 12px;
             cursor: pointer;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
         }
 
         .search-result-item:hover {
-            background-color: #f5f5f5;
+            background-color: #f8f9fa;
         }
 
-        /* Estilos para la tarjeta de reclamo */
-        .card {
-            background-color: white;
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .selected-reclamo-container {
+            display: none;
+            background-color: #e9ecef;
+            padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-        .card-header {
-            border-bottom: 1px solid #eee;
-            padding-bottom: 15px;
             margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-left: 4px solid #0D6EFD;
         }
 
-        .card-title {
-            color: #0E544C;
-            margin: 0;
-            font-size: 22px;
-        }
-
-        .card-body {
-            line-height: 1.6;
-        }
-
-        .info-group {
-            margin-bottom: 15px;
-        }
-
-        .info-label {
+        .selected-reclamo-title {
             font-weight: bold;
-            color: #555;
-            display: block;
             margin-bottom: 5px;
+            color: #495057;
         }
 
-        .info-value {
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-            border-left: 3px solid #51B8AC;
-        }
-
-        .productos-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .productos-table th,
-        .productos-table td {
-            padding: 12px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        .productos-table th {
-            background-color: #51B8AC;
-            color: white;
-        }
-
-        .productos-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
+        /* Ajustes para fotos de evidencia */
         .galeria-imagenes {
             display: flex;
             flex-wrap: wrap;
@@ -745,314 +447,189 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
             width: 150px;
             height: 150px;
             object-fit: cover;
-            border-radius: 4px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .imagen-evidencia:hover {
             transform: scale(1.05);
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .badge-pendiente {
-            background-color: #FFC107;
-            color: #333;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
         /* Modal para imágenes */
         .modal-imagen {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 2000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.9);
-            overflow: auto;
+            backdrop-filter: blur(5px);
         }
 
         .modal-contenido {
             margin: auto;
             display: block;
             max-width: 90%;
-            max-height: 90%;
+            max-height: 85%;
             margin-top: 50px;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
         }
 
         .cerrar-modal {
             position: absolute;
-            top: 15px;
-            right: 35px;
-            color: white;
+            top: 20px;
+            right: 30px;
+            color: #fff;
             font-size: 40px;
             font-weight: bold;
             cursor: pointer;
+            transition: 0.3s;
         }
 
-        @media (max-width: 768px) {
-            .header-container {
-                flex-direction: row;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .buttons-container {
-                position: static;
-                transform: none;
-                order: 3;
-                width: 100%;
-                justify-content: center;
-                margin-top: 10px;
-            }
-
-            .logo-container {
-                order: 1;
-                margin-right: 0;
-            }
-
-            .user-info {
-                order: 2;
-                margin-left: auto;
-            }
-
-            .btn-agregar {
-                padding: 6px 10px;
-                font-size: 13px;
-            }
-
-            .container {
-                padding: 15px;
-            }
-
-            h1 {
-                font-size: 20px;
-            }
-
-            .form-group.half-width {
-                width: 100%;
-            }
-
-            .colaborador-item {
-                flex-direction: column;
-                gap: 5px;
-            }
-
-            .colaborador-item input {
-                width: 100%;
-            }
-
-            .form-actions {
-                flex-direction: column;
-            }
-
-            .form-actions .btn {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            .imagen-evidencia {
-                width: 100px;
-                height: 100px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .btn-agregar {
-                flex-grow: 1;
-                justify-content: center;
-                white-space: normal;
-                text-align: center;
-                padding: 8px 5px;
-            }
-
-            .user-info {
-                flex-direction: column;
-                align-items: flex-end;
-            }
-
-            .btn-agregar i {
-                margin-right: 4px;
-            }
+        .cerrar-modal:hover {
+            color: #bbb;
         }
     </style>
 </head>
 
 <body>
-    <header>
-        <div class="header-container">
-            <div class="logo-container">
-                <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-            </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-            <div class="buttons-container">
-                <a href="index_avisos.php"
-                    class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'index_avisos.php' ? 'activo' : '' ?>">
-                    <i class="fas fa-bullhorn"></i> <span class="btn-text">Nuevo Aviso</span>
-                </a>
-                <a href="kpi.php"
-                    class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'kpi.php' ? 'activo' : '' ?>">
-                    <i class="fas fa-chart-line"></i> <span class="btn-text">KPI</span>
-                </a>
-                <a href="reclamospend.php"
-                    class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'reclamospend.php' ? 'activo' : '' ?>">
-                    <i class="fas fa-search"></i> <span class="btn-text">Reclamos</span>
-                </a>
-            </div>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Reporte de Investigación Final'); ?>
 
-            <div class="user-info">
-                <div class="user-avatar">
-                    <?= $esAdmin ?
-                        strtoupper(substr($usuario['nombre'], 0, 1)) :
-                        strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                </div>
-                <div>
-                    <div>
-                        <?= $esAdmin ?
-                            htmlspecialchars($usuario['nombre']) :
-                            htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
+            <div class="container-fluid p-4">
+                <?php if ($modoSeleccionDirecta && $detallesReclamo): ?>
+                    <?php echo $detallesReclamo; ?>
+                <?php endif; ?>
+
+                <?php if (!empty($errores)): ?>
+                    <div style="color: red; margin-bottom: 20px; padding: 10px; background-color: #ffeeee; border-radius: 4px;">
+                        <strong>Errores:</strong>
+                        <ul>
+                            <?php foreach ($errores as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
                     </div>
-                    <small>
-                        <?= htmlspecialchars($cargoUsuario) ?>
-                    </small>
-                </div>
-                <a href="../../../index.php" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-            </div>
-        </div>
-    </header>
+                <?php endif; ?>
 
-    <div class="container">
-        <?php if ($modoSeleccionDirecta && $detallesReclamo): ?>
-            <?php echo $detallesReclamo; ?>
-        <?php endif; ?>
+                <form id="reporteForm" method="POST">
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted text-uppercase small">Fecha de Resolución</label>
+                            <input type="text" class="form-control bg-light" value="<?php echo strftime('%d-%b-%Y'); ?>" readonly>
+                        </div>
 
-        <h1><strong>REPORTE DE INVESTIGACIÓN FINAL</strong></h1>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted text-uppercase small required">Código de Reclamo</label>
+                            <?php if ($modoSeleccionDirecta): ?>
+                                <input type="text" class="form-control bg-light" value="Reclamo #<?php echo htmlspecialchars($reclamoPreSeleccionado['id']); ?>"
+                                    readonly>
+                                <input type="hidden" name="reclamo_id"
+                                    value="<?php echo htmlspecialchars($reclamoPreSeleccionado['id']); ?>">
+                            <?php else: ?>
+                                <div class="search-container">
+                                    <div class="input-group">
+                                        <input type="text" id="reclamoSearch" class="form-control" placeholder="Ingrese código o sucursal"
+                                            value="<?php echo htmlspecialchars($datosFormulario['reclamo_search'] ?? ''); ?>"
+                                            autocomplete="off">
+                                        <button type="button" id="btnBuscarReclamo" class="btn btn-outline-primary">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="reclamo_id" id="reclamoId"
+                                        value="<?php echo htmlspecialchars($datosFormulario['reclamo_id'] ?? ''); ?>" required>
+                                    <div class="search-results" id="searchResults"></div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
 
-        <?php if (!empty($errores)): ?>
-            <div style="color: red; margin-bottom: 20px; padding: 10px; background-color: #ffeeee; border-radius: 4px;">
-                <strong>Errores:</strong>
-                <ul>
-                    <?php foreach ($errores as $error): ?>
-                        <li><?php echo htmlspecialchars($error); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
-
-        <form id="reporteForm" method="POST">
-            <div class="form-header">
-                <div class="form-group half-width">
-                    <label>Fecha de Resolución</label>
-                    <input type="text" value="<?php echo strftime('%d-%b-%Y'); ?>" readonly>
-                </div>
-
-                <div class="form-group half-width">
-                    <label class="required">Código de Reclamo</label>
-                    <?php if ($modoSeleccionDirecta): ?>
-                        <input type="text" value="Reclamo #<?php echo htmlspecialchars($reclamoPreSeleccionado['id']); ?>"
-                            readonly>
-                        <input type="hidden" name="reclamo_id"
-                            value="<?php echo htmlspecialchars($reclamoPreSeleccionado['id']); ?>">
-                    <?php else: ?>
-                        <div class="search-container">
-                            <div style="display: flex; gap: 5px;">
-                                <input type="text" id="reclamoSearch" placeholder="Ingrese código o sucursal"
-                                    value="<?php echo htmlspecialchars($datosFormulario['reclamo_search'] ?? ''); ?>"
-                                    autocomplete="off" style="flex: 1;">
-                                <button type="button" id="btnBuscarReclamo" class="btn" style="padding: 10px;">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                            <input type="hidden" name="reclamo_id" id="reclamoId"
-                                value="<?php echo htmlspecialchars($datosFormulario['reclamo_id'] ?? ''); ?>" required>
-                            <div class="search-results" id="searchResults"></div>
+                    <?php if (!$modoSeleccionDirecta): ?>
+                        <!-- Contenedor del reclamo seleccionado (solo en modo búsqueda) -->
+                        <div class="selected-reclamo-container" id="reclamoInfo">
+                            <div class="selected-reclamo-title">Reclamo seleccionado:</div>
+                            <div class="selected-reclamo-details" id="reclamoDetails"></div>
                         </div>
                     <?php endif; ?>
-                </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted text-uppercase small required">Colaborador(es) involucrado(s) y responsabilidad</label>
+                        <div class="colaboradores-container mb-3" id="colaboradoresContainer">
+                            <!-- Los colaboradores se agregarán aquí dinámicamente -->
+                        </div>
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3" id="btnAddColaborador">
+                            <i class="fas fa-plus me-1"></i> Agregar Colaborador
+                        </button>
+                        <input type="hidden" name="colaboradores" id="colaboradoresHidden"
+                            value="<?php echo htmlspecialchars($datosFormulario['colaboradores'] ?? '[]'); ?>">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted text-uppercase small">Tipo de Reclamo (Determinado por Operaciones)</label>
+                        <select name="tipo_reclamo_operaciones" class="form-select">
+                            <option value="">Seleccione una opción (si difiere del original)</option>
+                            <option value="Producto fuera de estándar" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto fuera de estándar' ? 'selected' : ''; ?>>Producto fuera de estándar</option>
+                            <option value="Producto con contaminante" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto con contaminante' ? 'selected' : ''; ?>>Producto con contaminante</option>
+                            <option value="Producto incompleto" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto incompleto' ? 'selected' : ''; ?>>Producto incompleto</option>
+                            <option value="Producto no siguió indicaciones del cliente" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto no siguió indicaciones del cliente' ? 'selected' : ''; ?>>Producto no siguió indicaciones del cliente</option>
+                            <option value="Mala atención" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Mala atención' ? 'selected' : ''; ?>>Mala atención</option>
+                            <option value="No se entregó factura" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'No se entregó factura' ? 'selected' : ''; ?>>No se entregó factura</option>
+                            <option value="Se cobró monto diferente a la factura" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Se cobró monto diferente a la factura' ? 'selected' : ''; ?>>Se cobró monto diferente a la factura</option>
+                            <option value="Infraestructura inadecuada" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Infraestructura inadecuada' ? 'selected' : ''; ?>>Infraestructura inadecuada</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted text-uppercase small required">Resolución</label>
+                        <select name="resolucion" class="form-select" required>
+                            <option value="">Seleccione una opción</option>
+                            <option value="Empresa" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Empresa' ? 'selected' : ''; ?>>Empresa</option>
+                            <option value="Equipo de Tienda" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Equipo de Tienda' ? 'selected' : ''; ?>>Equipo de Tienda</option>
+                            <option value="Pedidos Ya" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Pedidos Ya' ? 'selected' : ''; ?>>Pedidos Ya</option>
+                            <option value="Sin resolución" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Sin resolución' ? 'selected' : ''; ?>>Sin resolución</option>
+                            <option value="Atención al cliente digital" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Atención al cliente digital' ? 'selected' : ''; ?>>Atención al cliente digital</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted text-uppercase small required">Investigación</label>
+                        <textarea name="investigacion" class="form-control" rows="4"
+                            required><?php echo htmlspecialchars($datosFormulario['investigacion'] ?? ''); ?></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted text-uppercase small required">Plan de acción</label>
+                        <textarea name="plan_accion" class="form-control" rows="4"
+                            required><?php echo htmlspecialchars($datosFormulario['plan_accion'] ?? ''); ?></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-5">
+                        <button type="button" class="btn btn-light border px-4" onclick="confirmCancel()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm">Guardar Reporte</button>
+                    </div>
+                </form>
             </div>
 
-            <?php if (!$modoSeleccionDirecta): ?>
-                <!-- Contenedor del reclamo seleccionado (solo en modo búsqueda) -->
-                <div class="selected-reclamo-container" id="reclamoInfo">
-                    <div class="selected-reclamo-title">Reclamo seleccionado:</div>
-                    <div class="selected-reclamo-details" id="reclamoDetails"></div>
-                </div>
-            <?php endif; ?>
-
-            <div class="form-group">
-                <label class="required">Colaborador(es) involucrado(s) y responsabilidad</label>
-                <div class="colaboradores-container" id="colaboradoresContainer">
-                    <!-- Los colaboradores se agregarán aquí dinámicamente -->
-                </div>
-                <button type="button" class="btn-add-colaborador" id="btnAddColaborador">
-                    <i class="fas fa-plus"></i> Agregar Colaborador
-                </button>
-                <input type="hidden" name="colaboradores" id="colaboradoresHidden"
-                    value="<?php echo htmlspecialchars($datosFormulario['colaboradores'] ?? '[]'); ?>">
+            <!-- Modal para imágenes -->
+            <div id="modalImagen" class="modal-imagen">
+                <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
+                <img class="modal-contenido" id="imagenAmpliada">
             </div>
 
-            <div class="form-group">
-                <label>Tipo de Reclamo (Determinado por Operaciones)</label>
-                <select name="tipo_reclamo_operaciones">
-                    <option value="">Seleccione una opción (si difiere del original)</option>
-                    <option value="Producto fuera de estándar" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto fuera de estándar' ? 'selected' : ''; ?>>Producto fuera de estándar</option>
-                    <option value="Producto con contaminante" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto con contaminante' ? 'selected' : ''; ?>>Producto con contaminante</option>
-                    <option value="Producto incompleto" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto incompleto' ? 'selected' : ''; ?>>Producto incompleto</option>
-                    <option value="Producto no siguió indicaciones del cliente" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto no siguió indicaciones del cliente' ? 'selected' : ''; ?>>Producto no siguió indicaciones del cliente</option>
-                    <option value="Mala atención" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Mala atención' ? 'selected' : ''; ?>>Mala atención</option>
-                    <option value="No se entregó factura" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'No se entregó factura' ? 'selected' : ''; ?>>No se entregó factura</option>
-                    <option value="Se cobró monto diferente a la factura" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Se cobró monto diferente a la factura' ? 'selected' : ''; ?>>Se cobró monto diferente a la factura</option>
-                    <option value="Infraestructura inadecuada" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Infraestructura inadecuada' ? 'selected' : ''; ?>>Infraestructura inadecuada</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Resolución</label>
-                <select name="resolucion" required>
-                    <option value="">Seleccione una opción</option>
-                    <option value="Empresa" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Empresa' ? 'selected' : ''; ?>>Empresa</option>
-                    <option value="Equipo de Tienda" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Equipo de Tienda' ? 'selected' : ''; ?>>Equipo de Tienda</option>
-                    <option value="Pedidos Ya" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Pedidos Ya' ? 'selected' : ''; ?>>Pedidos Ya</option>
-                    <option value="Sin resolución" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Sin resolución' ? 'selected' : ''; ?>>Sin resolución</option>
-                    <option value="Atención al cliente digital" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Atención al cliente digital' ? 'selected' : ''; ?>>Atención al cliente digital</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Investigación</label>
-                <textarea name="investigacion"
-                    required><?php echo htmlspecialchars($datosFormulario['investigacion'] ?? ''); ?></textarea>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Plan de acción</label>
-                <textarea name="plan_accion"
-                    required><?php echo htmlspecialchars($datosFormulario['plan_accion'] ?? ''); ?></textarea>
-            </div>
-
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="confirmCancel()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar Reporte</button>
-            </div>
-        </form>
+        </div>
     </div>
 
-    <!-- Modal para imágenes -->
-    <div id="modalImagen" class="modal-imagen">
-        <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
-        <img class="modal-contenido" id="imagenAmpliada">
-    </div>
-
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Colaboradores
         const colaboradoresContainer = document.getElementById('colaboradoresContainer');
@@ -1069,11 +646,22 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
                 colaboradorDiv.className = 'colaborador-item';
 
                 colaboradorDiv.innerHTML = `
-                    <input type="text" placeholder="Nombre del colaborador" class="colaborador-nombre" value="${colaborador.nombre}" data-index="${index}">
-                    <input type="number" placeholder="Monto responsabilidad (C$)" class="colaborador-monto" value="${colaborador.monto}" data-index="${index}" step="0.01" min="0">
-                    <button type="button" class="btn-remove-colaborador" data-index="${index}">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <div class="row g-2 align-items-center w-100 mb-2">
+                        <div class="col-7">
+                            <input type="text" placeholder="Nombre del colaborador" class="form-control colaborador-nombre" value="${colaborador.nombre}" data-index="${index}">
+                        </div>
+                        <div class="col-4">
+                            <div class="input-group">
+                                <span class="input-group-text">C$</span>
+                                <input type="number" placeholder="Monto" class="form-control colaborador-monto" value="${colaborador.monto}" data-index="${index}" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div class="col-1 text-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm border-0 btn-remove-colaborador" data-index="${index}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                 `;
 
                 colaboradoresContainer.appendChild(colaboradorDiv);
@@ -1086,7 +674,7 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
             });
 
             document.querySelectorAll('.colaborador-monto').forEach(input => {
-                input.addEventListener('blur', function () {
+                input.addEventListener('blur', function() {
                     if (this.value.trim() === '') {
                         this.value = '0';
                         updateColaboradores.call(this);
@@ -1117,7 +705,10 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
         }
 
         function addColaborador() {
-            colaboradores.push({ nombre: '', monto: 0 });
+            colaboradores.push({
+                nombre: '',
+                monto: 0
+            });
             renderColaboradores();
         }
 
@@ -1148,12 +739,12 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
             let reclamosPendientes = <?php echo isset($reclamosPendientes) ? json_encode($reclamosPendientes) : '[]'; ?>;
 
             // Eventos de búsqueda
-            reclamoSearch.addEventListener('input', function () {
+            reclamoSearch.addEventListener('input', function() {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(triggerSearch, 500);
             });
 
-            btnBuscarReclamo.addEventListener('click', function () {
+            btnBuscarReclamo.addEventListener('click', function() {
                 clearTimeout(searchTimeout);
                 triggerSearch();
             });
@@ -1215,14 +806,14 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
                         <small>${reclamo.fecha_evento_formatted} - ${reclamo.descripcion.substring(0, 50)}...</small>
                     `;
                         item.dataset.id = reclamo.id;
-                        item.dataset.cod_sucursal = reclamo.sucursal_codigo;  // NUEVO
+                        item.dataset.cod_sucursal = reclamo.sucursal_codigo; // NUEVO
                         item.dataset.details = `
                         <strong>Sucursal:</strong> ${reclamo.sucursal}<br>
                         <strong>Fecha:</strong> ${reclamo.fecha_evento_formatted}<br>
                         <strong>Descripción:</strong> ${reclamo.descripcion}
                     `;
 
-                        item.addEventListener('click', function () {
+                        item.addEventListener('click', function() {
                             selectReclamo(this.dataset.id, this.dataset.cod_sucursal, this.dataset.details);
                         });
 
@@ -1249,7 +840,7 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
             }
 
             // Cerrar resultados al hacer clic fuera
-            document.addEventListener('click', function (e) {
+            document.addEventListener('click', function(e) {
                 if (!reclamoSearch.contains(e.target) && !btnBuscarReclamo.contains(e.target) && !searchResults.contains(e.target)) {
                     searchResults.style.display = 'none';
                 }
@@ -1265,7 +856,7 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
 
         const puedeInvestigar = <?php echo $puedeInvestigar ? 'true' : 'false'; ?>;
 
-        document.getElementById('reporteForm').addEventListener('submit', function (e) {
+        document.getElementById('reporteForm').addEventListener('submit', function(e) {
             if (!puedeInvestigar) {
                 e.preventDefault();
                 alert('No tiene autorización para guardar este reporte de investigación.');
@@ -1305,7 +896,7 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
 
                     if (firstErrorField.tagName === 'SELECT') {
                         firstErrorField.size = firstErrorField.options.length;
-                        firstErrorField.addEventListener('blur', function () {
+                        firstErrorField.addEventListener('blur', function() {
                             this.size = 1;
                         });
                     }
@@ -1327,7 +918,7 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
         }
 
         // Cerrar modal al hacer clic fuera de la imagen
-        window.onclick = function (event) {
+        window.onclick = function(event) {
             var modal = document.getElementById("modalImagen");
             if (event.target == modal) {
                 modal.style.display = "none";
