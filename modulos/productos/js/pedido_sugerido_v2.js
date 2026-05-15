@@ -203,7 +203,7 @@ function renderizarResultados(res) {
             ? 'Sin Categoría Asignada'
             : `${cat} — ${CAT_LABELS[cat] || cat}`;
 
-        html += `<tr class="fila-grupo-header"><td colspan="12">${catLabel} (${items.length})</td></tr>`;
+        html += `<tr class="fila-grupo-header"><td colspan="15">${catLabel} (${items.length})</td></tr>`;
 
         items.forEach(p => {
             totalFilas++;
@@ -213,7 +213,7 @@ function renderizarResultados(res) {
         });
     });
 
-    $('#tbodyProductos').html(html || '<tr><td colspan="12" class="text-center text-muted py-4">Sin productos con consumo en el período.</td></tr>');
+    $('#tbodyProductos').html(html || '<tr><td colspan="15" class="text-center text-muted py-4">Sin productos con consumo en el período.</td></tr>');
     $('#labelResultados').text(`${totalFilas} producto${totalFilas !== 1 ? 's' : ''}`);
 
     $('#panelDatos').removeClass('d-none');
@@ -266,7 +266,7 @@ function buildFila(p, cat) {
 
     const detalleHtml = `
         <tr class="ps-fila-indicadores cat-${cat !== '_sin_cat' ? cat : 'X'}" data-parent="${p.id_pp}">
-            <td colspan="12">
+            <td colspan="15">
                 <div class="ps-indicadores-wrapper">
                     <div class="ps-indicadores-container">
                         <span class="ps-ind-item" title="Ajuste Demanda"><b>Adj:</b> ${fmt(p.ajuste_demanda * 100, 2)}%</span>
@@ -280,6 +280,19 @@ function buildFila(p, cat) {
             </td>
         </tr>
     `;
+
+    // Semáforo: fecha del próximo despacho
+    const fechaDesp = p.fecha_proximo_despacho;
+    const diasHasta = p.dias_hasta_despacho;
+    let cellFecha = '—';
+    if (fechaDesp) {
+        let sem = '';
+        const dp = p.dias_desfase ?? 1;
+        if      (diasHasta <= dp)                        sem = '🔴';
+        else if (diasHasta <= (p.dias_ciclo ?? 14) / 2) sem = '🟡';
+        else                                              sem = '🟢';
+        cellFecha = `${sem} ${fechaDesp}<br><small class="text-muted">en ${diasHasta}d</small>`;
+    }
 
     // Label de unidad de despacho (aparece encima del número en columnas de stock/pedido)
     const despTag = p.despacho_nombre
@@ -300,6 +313,9 @@ function buildFila(p, cat) {
             <td class="text-end">${despTag}${stockMaxFinalHtml}</td>
             <td class="text-center col-inventario">${despTag}${inputHtml}</td>
             <td class="text-center col-pedido" id="pedido-${p.id_pp}">${despTag}${pedidoHtml}</td>
+            <td class="text-center col-pronostico">${cellFecha}</td>
+            <td class="text-end col-pronostico"><span class="pron-d1" data-idpp="${p.id_pp}">—</span></td>
+            <td class="text-center col-pronostico"><span class="pron-desp" data-idpp="${p.id_pp}">—</span></td>
         </tr>
         ${detalleHtml}
     `;
@@ -422,6 +438,71 @@ function guardarInventario() {
             Swal.fire({ icon: 'error', title: 'Error de conexión', confirmButtonColor: '#51B8AC' });
         }
     });
+}
+
+// ====================================================
+// Calcular pronóstico D-1 para todos los productos
+// ====================================================
+async function calcularPronosticoMasivo() {
+    const semCorte = parseInt($('#semCortePron').val());
+    if (!semCorte || !datosResultado.length || !codSucursalActual) {
+        return Swal.fire({
+            icon: 'warning', title: 'Datos incompletos',
+            text: 'Primero calcula el pedido sugerido e ingresa la semana de corte.',
+            confirmButtonColor: '#51B8AC'
+        });
+    }
+
+    const $btn = $('#btnCalcularPronostico');
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Calculando…');
+
+    // Limpiar resultados anteriores
+    $('.pron-d1').html('<span class="text-muted small">…</span>');
+    $('.pron-desp').html('<span class="text-muted small">…</span>');
+
+    const productos = datosResultado.filter(p => p.fecha_proximo_despacho);
+    const LOTE = 5;
+    let errores = 0;
+
+    for (let i = 0; i < productos.length; i += LOTE) {
+        const batch = productos.slice(i, i + LOTE);
+        await Promise.all(batch.map(prod => $.ajax({
+            url:      'ajax/pedido_sugerido_pronostico_despacho.php',
+            method:   'POST',
+            dataType: 'json',
+            data: {
+                id_pp:           prod.id_pp,
+                cod_sucursal:    codSucursalActual,
+                sem_corte:       semCorte,
+                fecha_despacho:  prod.fecha_proximo_despacho,
+                cons_diario:     prod.cons_diario,
+                despacho_factor: prod.despacho_factor  ?? 1,
+                stock_max_final: prod.stock_max_final  ?? 0
+            }
+        }).then(resp => {
+            const $d1   = $(`.pron-d1[data-idpp="${prod.id_pp}"]`);
+            const $desp = $(`.pron-desp[data-idpp="${prod.id_pp}"]`);
+            if (!resp || !resp.ok) { errores++; $d1.html('—'); $desp.html('—'); return; }
+
+            if (resp.sin_inventario) {
+                $d1.html('<span class="text-muted small">Sin datos</span>');
+                $desp.html('<span class="text-muted">—</span>');
+                return;
+            }
+
+            const d1Val = Number(resp.stock_D1_paquetes ?? 0).toFixed(1);
+            $d1.html(`${d1Val} <small class="text-muted">paq</small>`);
+
+            const dp = resp.despacho_sugerido_pronostico ?? 0;
+            const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success';
+            $desp.html(`<span class="${cls}">${dp}</span>`);
+        }).catch(() => { errores++; })));
+    }
+
+    const label = errores > 0
+        ? `<i class="bi bi-graph-up-arrow me-1"></i> Recalcular (${errores} errores)`
+        : '<i class="bi bi-graph-up-arrow me-1"></i> Recalcular';
+    $btn.prop('disabled', false).html(label);
 }
 
 // ====================================================
