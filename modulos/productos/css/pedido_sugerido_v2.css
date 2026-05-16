@@ -13,9 +13,60 @@
 /* =====================
    Layout
    ===================== */
-html { overflow-y: scroll; }
+html, body { 
+    overflow: hidden !important; 
+    height: 100vh;
+}
 
-.ps-wrapper { min-height: calc(100vh - 120px); }
+.main-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sub-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.ps-wrapper { 
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#panelDatos:not(.d-none) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#panelDatos > .card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#panelDatos > .card > .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#panelInicial, #panelLoader {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 
 /* =====================
    Filtros
@@ -196,7 +247,8 @@ html { overflow-y: scroll; }
 /* ── Sticky header & Scrollable Container ──────────────────────────────────── */
 #tablaWrapper {
     width: 100%;
-    max-height: calc(100vh - 220px);
+    flex: 1;
+    min-height: 0;
     overflow: auto;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
