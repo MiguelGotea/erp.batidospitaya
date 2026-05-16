@@ -152,7 +152,8 @@ try {
                     <div class="ps-empty-icon"><i class="fas fa-shopping-cart"></i></div>
                     <h5>Configura los filtros</h5>
                     <p class="text-muted">Selecciona el rango de semanas y la sucursal, luego haz clic en
-                        <strong>Calcular</strong>.</p>
+                        <strong>Calcular</strong>.
+                    </p>
                 </div>
 
                 <!-- ══════════════════════════════════════════ -->
@@ -210,7 +211,7 @@ try {
                             <div
                                 class="ps-tabla-toolbar px-3 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span id="labelResultados" class="ps-result-count"></span>
+                                    <span id="labelResultados" class="ps-result-count"></span>`
                                 </div>
                                 <div class="d-flex gap-2 align-items-center">
                                     <input type="text" class="form-control form-control-sm" id="buscarProducto"
@@ -451,7 +452,8 @@ try {
                                     <p class="small text-muted mb-0">Si B falla, busca cualquier presentación del mismo
                                         <code>producto_maestro</code> con <code>presentacion_despacho=1</code>. El
                                         factor = <code>cant_despacho / (cant_básica × conversión_unidades)</code>. Ej:
-                                        <em>Fresa 1oz → Bandeja 400gr</em>.</p>
+                                        <em>Fresa 1oz → Bandeja 400gr</em>.
+                                    </p>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -459,7 +461,8 @@ try {
                                     <div class="fw-bold small mb-1" style="color:#854d0e;"><i
                                             class="bi bi-3-circle-fill me-1"></i>Paso C — Receta-Paquete por Maestro
                                         <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Último
-                                            recurso</span></div>
+                                            recurso</span>
+                                    </div>
                                     <p class="small text-muted mb-0">Solo si B <b>y</b> A fallan: busca una receta de
                                         despacho cuyo componente comparta el mismo maestro (aunque no sea la
                                         presentación exacta). Ej: <em>Naranja oz → Cajilla 100u</em> (la cajilla no
