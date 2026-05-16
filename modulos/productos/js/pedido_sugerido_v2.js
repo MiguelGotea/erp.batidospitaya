@@ -270,7 +270,18 @@ function buildFila(p, cat) {
         if (diasHasta <= dp) sem = '🔴';
         else if (diasHasta <= (p.dias_ciclo ?? 14) / 2) sem = '🟡';
         else sem = '🟢';
-        cellFecha = `${sem} ${fechaDesp}<br><small class="text-muted">en ${diasHasta}d</small>`;
+
+        const mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const partesFecha = fechaDesp.split('-');
+        let fechaDespFormat = fechaDesp;
+        if (partesFecha.length === 3) {
+            const año = partesFecha[0].substring(2, 4);
+            const mes = mesesCortos[parseInt(partesFecha[1], 10) - 1];
+            const dia = partesFecha[2];
+            fechaDespFormat = `${dia}/${mes}/${año}`;
+        }
+
+        cellFecha = `${sem} ${fechaDespFormat}<br><small class="text-muted">en ${diasHasta}d</small>`;
     }
 
     // Label de unidad de despacho (aparece encima del número en columnas de stock/pedido)
