@@ -61,13 +61,13 @@ try {
         <div class="sub-container">
             <?php echo renderHeader($usuario, 'Pedido Sugerido'); ?>
 
-            <div class="ps-wrapper p-3">
+            <div class="ps-wrapper p-2">
 
                 <!-- ══════════════════════════════════════════ -->
                 <!--  PANEL DE FILTROS                         -->
                 <!-- ══════════════════════════════════════════ -->
-                <div class="card border-0 shadow-sm mb-3 ps-filtros-card">
-                    <div class="card-body py-2 px-3">
+                <div class="card border-0 shadow-sm mb-2 ps-filtros-card">
+                    <div class="card-body py-1 px-2">
                         <div class="row g-2 align-items-end">
 
                             <!-- Semana Desde -->
@@ -174,7 +174,7 @@ try {
                 <div id="panelDatos" class="d-none">
 
                     <!-- KPI Cards -->
-                    <div class="row g-2 mb-3" id="kpiRow">
+                    <div class="row g-2 mb-2" id="kpiRow">
                         <div class="col-6 col-lg-3">
                             <div class="ps-kpi-card">
                                 <div class="ps-kpi-icon" style="color:#51B8AC"><i class="fas fa-hashtag"></i></div>
@@ -209,7 +209,7 @@ try {
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-0">
                             <div
-                                class="ps-tabla-toolbar px-3 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                class="ps-tabla-toolbar px-2 py-1 d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div class="d-flex align-items-center gap-2">
                                     <span id="labelResultados" class="ps-result-count"></span>`
                                 </div>

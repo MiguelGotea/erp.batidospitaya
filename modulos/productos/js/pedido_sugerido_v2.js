@@ -237,7 +237,7 @@ function buildFila(p, cat) {
     if (p.stock_max_final !== null) {
         stockMaxFinalHtml = fmt2(p.stock_max_final);
         if (p.es_ajustado) {
-            stockMaxFinalHtml += '<br><span class="badge-ajustado">Ajustado</span>';
+            stockMaxFinalHtml += ' <span class="badge-ajustado">Adj</span>';
         }
     } else {
         stockMaxFinalHtml = '<span class="val-na">N/A</span>';
@@ -266,7 +266,7 @@ function buildFila(p, cat) {
             fechaDespFormat = `${dia}/${mes}/${año}`;
         }
 
-        cellFecha = `<div class="d-flex flex-column align-items-center" style="line-height: 1.2;"><span class="fw-bold text-dark" style="font-size: 13px;">${sem} ${fechaDespFormat}</span><small class="text-muted" style="font-size: 10px;">en ${diasHasta}d</small></div>`;
+        cellFecha = `<div class="text-center" style="line-height: 1.1;"><span class="fw-bold text-dark">${sem} ${fechaDespFormat}</span> <small class="text-muted" style="font-size: 0.85em;">(${diasHasta}d)</small></div>`;
     }
 
     // Label de unidad de despacho (aparece debajo del número)
@@ -277,27 +277,27 @@ function buildFila(p, cat) {
     return `
         <tr class="ps-fila-producto" data-id="${p.id_pp}">
             <td class="col-producto">
-                <div class="fw-bold text-dark" style="font-size: 13px;">${escHtml(p.nombre)}</div>
+                <div class="fw-bold text-dark">${escHtml(p.nombre)}</div>
             </td>
             <td class="col-presentacion">
-                <div class="text-muted" style="font-size: 11px;">${escHtml(p.unidad || '—')}</div>
+                <div class="text-muted" style="font-size: 0.9em;">${escHtml(p.unidad || '—')}</div>
             </td>
             
-            <td class="text-end num-cell bg-light-gray" style="font-size: 13px;">${fmt2(p.prom_consumo)}</td>
-            <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 12px;">${fmt2(p.desv_estandar)}</td>
-            <td class="text-end num-cell fw-bold text-dark bg-light-gray" style="font-size: 13px;">${fmt2(p.cons_semanal)}</td>
-            <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 13px;">${fmt(p.cons_diario, 3)}</td>
+            <td class="text-end num-cell bg-light-gray">${fmt2(p.prom_consumo)}</td>
+            <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 0.9em;">${fmt2(p.desv_estandar)}</td>
+            <td class="text-end num-cell fw-bold text-dark bg-light-gray">${fmt2(p.cons_semanal)}</td>
+            <td class="text-end num-cell text-muted bg-light-gray">${fmt(p.cons_diario, 3)}</td>
             
             <td class="text-end num-cell bg-mid-gray">
-                <div style="font-size: 13px;">${fmt2(p.stock_minimo)}</div>
+                <div>${fmt2(p.stock_minimo)}</div>
                 ${despTag}
             </td>
             <td class="text-end num-cell bg-mid-gray">
-                <div style="font-size: 13px;">${fmt2(p.stock_maximo)}</div>
+                <div>${fmt2(p.stock_maximo)}</div>
                 ${despTag}
             </td>
             <td class="text-end num-cell fw-bold text-dark bg-mid-gray">
-                <div style="font-size: 13px;">${stockMaxFinalHtml}</div>
+                <div>${stockMaxFinalHtml}</div>
                 ${despTag}
             </td>
 
@@ -305,10 +305,10 @@ function buildFila(p, cat) {
                 ${cellFecha}
             </td>
             <td class="text-end col-pronostico num-cell bg-pronostico align-middle">
-                <div class="pron-d1" data-idpp="${p.id_pp}" style="font-size: 13px;">—</div>
+                <div class="pron-d1" data-idpp="${p.id_pp}">—</div>
             </td>
             <td class="text-center col-pronostico num-cell bg-pronostico align-middle">
-                <div class="pron-desp" data-idpp="${p.id_pp}" style="font-size: 14px;">—</div>
+                <div class="pron-desp fw-bold" data-idpp="${p.id_pp}" style="font-size: 1.1em;">—</div>
             </td>
         </tr>
     `;

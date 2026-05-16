@@ -203,16 +203,16 @@ html, body {
 .ps-kpi-card {
     background: #fff;
     border: 1px solid #e9ecef;
-    border-radius: 10px;
-    padding: 14px 16px;
+    border-radius: 8px;
+    padding: 8px 12px;
     box-shadow: 0 2px 6px rgba(14,84,76,.06);
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
 }
-.ps-kpi-icon { font-size: 1.3rem; }
-.ps-kpi-label { font-size: 11px; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
-.ps-kpi-valor { font-size: 1.4rem; font-weight: 700; color: var(--pitaya-dark); line-height: 1.2; }
+.ps-kpi-icon { font-size: 1.1rem; }
+.ps-kpi-label { font-size: 10px; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.ps-kpi-valor { font-size: 1.2rem; font-weight: 700; color: var(--pitaya-dark); line-height: 1.2; }
 
 /* =====================
    Toolbar de tabla
@@ -242,7 +242,7 @@ html, body {
 /* =====================
    Tabla
    ===================== */
-.ps-tabla { border-collapse: collapse; font-size: 13px; min-width: 1200px; }
+.ps-tabla { border-collapse: collapse; font-size: 11px; width: 100%; }
 
 /* ── Sticky header & Scrollable Container ──────────────────────────────────── */
 #tablaWrapper {
@@ -261,8 +261,8 @@ html, body {
     background: #ffffff;
     border-bottom: 2px solid #dee2e6;
     border-right: 1px solid #f0f0f0;
-    padding: 12px 10px;
-    font-size: 10.5px;
+    padding: 6px 4px;
+    font-size: 9.5px;
     font-weight: 700;
     color: #495057;
     text-transform: uppercase;
@@ -287,7 +287,7 @@ html, body {
 .ps-tabla tbody tr:hover td { background-color: var(--pitaya-hover) !important; }
 
 .ps-tabla tbody td {
-    padding: 10px 10px;
+    padding: 4px 4px;
     vertical-align: middle;
     border-right: 1px solid #f8f9fa;
     white-space: nowrap;
@@ -304,10 +304,10 @@ html, body {
     background: var(--pitaya-dark);
     color: white;
     font-weight: 700;
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: .8px;
-    padding: 8px 12px;
+    padding: 4px 8px;
     border: none;
 }
 
@@ -335,11 +335,11 @@ html, body {
 /* Input de inventario */
 .input-inventario {
     border: 1.5px solid #dee2e6;
-    border-radius: 6px;
-    padding: 4px 8px;
+    border-radius: 4px;
+    padding: 2px 4px;
     text-align: center;
-    width: 90px;
-    font-size: 13px;
+    width: 60px;
+    font-size: 11px;
     font-weight: 600;
     transition: border-color .2s, box-shadow .2s;
 }
@@ -356,12 +356,12 @@ html, body {
 /* Celda de pedido sugerido */
 .pedido-valor {
     display: inline-block;
-    min-width: 70px;
+    min-width: 50px;
     text-align: center;
-    padding: 4px 10px;
-    border-radius: 20px;
+    padding: 2px 6px;
+    border-radius: 12px;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 11px;
 }
 .pedido-ok   { background: #e8f5e9; color: #2e7d32; }   /* ≤ 0 : no ordenar */
 .pedido-warn { background: #fff8e1; color: #e65100; }   /* > 0 : ordenar  */
@@ -386,13 +386,13 @@ html, body {
 
 /* Label de unidad de despacho — aparece debajo del número */
 .desp-unit-label {
-    font-size: 9px;
+    font-size: 8.5px;
     font-weight: 600;
     color: #8c98a4;
     text-transform: uppercase;
     letter-spacing: 0.4px;
     line-height: 1;
-    margin-top: 3px;
+    margin-top: 1px;
     margin-bottom: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -402,10 +402,10 @@ html, body {
 }
 
 /* Col widths */
-.col-producto { min-width: 180px; max-width: 250px; white-space: normal !important; line-height: 1.3; }
-.col-presentacion { min-width: 100px; max-width: 130px; white-space: normal !important; line-height: 1.3; }
-.col-num { min-width: 85px; }
-.col-pronostico { min-width: 110px; }
+.col-producto { min-width: 120px; max-width: 160px; white-space: normal !important; line-height: 1.1; }
+.col-presentacion { min-width: 70px; max-width: 100px; white-space: normal !important; line-height: 1.1; }
+.col-num { min-width: 50px; }
+.col-pronostico { min-width: 65px; }
 
 /* Tabular numbers */
 .num-cell {
