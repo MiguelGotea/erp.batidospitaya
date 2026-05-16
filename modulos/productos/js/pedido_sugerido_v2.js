@@ -13,7 +13,6 @@ const CAT_ORDER = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 // Estado global
 let datosResultado = [];     // Array completo de productos devuelto por el AJAX
-let inventarioInicial = {};  // Mapa para detectar cambios de edición [id_pp: valor]
 let codSucursalActual = null; // Sucursal activa al momento del último cálculo
 
 // ====================================================
@@ -153,9 +152,7 @@ function calcularPedido() {
 // Renderizar KPIs y tabla
 // ====================================================
 function renderizarResultados(res) {
-    // Resetear rastreador de cambios
-    inventarioInicial = {};
-    $('#btnGuardarFlotante').removeClass('active');
+    // (Lógica de inventario removida)
     // KPIs
     $('#kpiNSemanas').text(res.n_semanas);
     $('#kpiNProductos').text(res.productos.length);
@@ -203,17 +200,15 @@ function renderizarResultados(res) {
             ? 'Sin Categoría Asignada'
             : `${cat} — ${CAT_LABELS[cat] || cat}`;
 
-        html += `<tr class="fila-grupo-header"><td colspan="15">${catLabel} (${items.length})</td></tr>`;
+        html += `<tr class="fila-grupo-header"><td colspan="13">${catLabel} (${items.length})</td></tr>`;
 
         items.forEach(p => {
             totalFilas++;
-            // Registrar valor inicial para detección de cambios
-            inventarioInicial[p.id_pp] = (p.inventario_actual !== null) ? parseFloat(p.inventario_actual) : null;
             html += buildFila(p, cat);
         });
     });
 
-    $('#tbodyProductos').html(html || '<tr><td colspan="15" class="text-center text-muted py-4">Sin productos con consumo en el período.</td></tr>');
+    $('#tbodyProductos').html(html || '<tr><td colspan="13" class="text-center text-muted py-4">Sin productos con consumo en el período.</td></tr>');
     $('#labelResultados').text(`${totalFilas} producto${totalFilas !== 1 ? 's' : ''}`);
 
     $('#panelDatos').removeClass('d-none');
@@ -241,23 +236,7 @@ function buildFila(p, cat) {
         stockMaxFinalHtml = '<span class="val-na">N/A</span>';
     }
 
-    // Input de inventario
-    const inventarioVal = p.inventario_actual !== null ? p.inventario_actual : '';
-    const roAttr = PUEDE_EDITAR ? '' : 'disabled';
-    const inputHtml = PUEDE_EDITAR
-        ? `<input type="number" min="0" step="1"
-                  class="input-inventario"
-                  data-id-pp="${p.id_pp}"
-                  data-stock-max-final="${p.stock_max_final}"
-                  value="${inventarioVal}"
-                  placeholder="0"
-                  ${roAttr}
-                  onfocus="this.dataset.inicial = this.value"
-                  oninput="recalcularPedidoFila(this)">`
-        : `<span class="fw-bold">${inventarioVal !== '' ? inventarioVal : '—'}</span>`;
-
-    // Pedido sugerido inicial
-    const pedidoHtml = buildPedidoHtml(p.stock_max_final, inventarioVal !== '' ? Number(inventarioVal) : null);
+    // (Inventario y pedido sugerido removidos)
 
     // Indicadores detallados (para verificación)
     const despInfo = p.despacho_nombre
@@ -266,7 +245,7 @@ function buildFila(p, cat) {
 
     const detalleHtml = `
         <tr class="ps-fila-indicadores cat-${cat !== '_sin_cat' ? cat : 'X'}" data-parent="${p.id_pp}">
-            <td colspan="15">
+            <td colspan="13">
                 <div class="ps-indicadores-wrapper">
                     <div class="ps-indicadores-container">
                         <span class="ps-ind-item" title="Ajuste Demanda"><b>Adj:</b> ${fmt(p.ajuste_demanda * 100, 2)}%</span>
@@ -311,8 +290,7 @@ function buildFila(p, cat) {
             <td class="text-end">${despTag}${fmt2(p.stock_minimo)}</td>
             <td class="text-end">${despTag}${fmt2(p.stock_maximo)}</td>
             <td class="text-end">${despTag}${stockMaxFinalHtml}</td>
-            <td class="text-center col-inventario">${despTag}${inputHtml}</td>
-            <td class="text-center col-pedido" id="pedido-${p.id_pp}">${despTag}${pedidoHtml}</td>
+
             <td class="text-center col-pronostico">${cellFecha}</td>
             <td class="text-end col-pronostico"><span class="pron-d1" data-idpp="${p.id_pp}">—</span></td>
             <td class="text-center col-pronostico"><span class="pron-desp" data-idpp="${p.id_pp}">—</span></td>
@@ -321,124 +299,6 @@ function buildFila(p, cat) {
     `;
 }
 
-// ====================================================
-// Construir HTML del pedido sugerido
-// ====================================================
-function buildPedidoHtml(stockMaxFinal, inventario) {
-    if (stockMaxFinal === null) {
-        return '<span class="pedido-valor pedido-nd">Sin config.</span>';
-    }
-    if (inventario === null) {
-        return '<span class="pedido-valor pedido-nd">Ingresa inv.</span>';
-    }
-    const pedido = stockMaxFinal - inventario;
-    if (pedido <= 0) {
-        return `<span class="pedido-valor pedido-ok">No ordenar</span>`;
-    }
-    return `<span class="pedido-valor pedido-warn">${Number(pedido).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
-}
-
-// ====================================================
-// Recalcular pedido en tiempo real al cambiar inventario
-// ====================================================
-function recalcularPedidoFila(inputEl) {
-    const idPP = parseInt(inputEl.dataset.idPp);
-    const stockMaxFinal = parseFloat(inputEl.dataset.stockMaxFinal);
-    const inventario = inputEl.value !== '' ? parseFloat(inputEl.value) : null;
-
-    $(`#pedido-${idPP}`).html(buildPedidoHtml(
-        isNaN(stockMaxFinal) ? null : stockMaxFinal,
-        inventario
-    ));
-
-    // Verificar si hay cambios con respecto a los valores iniciales
-    verificarCambios();
-}
-
-// ====================================================
-// Verificar si hay cambios pendientes de guardar
-// ====================================================
-function verificarCambios() {
-    let hayCambios = false;
-
-    $('.input-inventario').each(function () {
-        const id = parseInt($(this).data('id-pp'));
-        const valActual = $(this).val() !== '' ? parseFloat($(this).val()) : null;
-        const valInicial = inventarioInicial[id];
-
-        if (valActual !== valInicial) {
-            hayCambios = true;
-            return false; // Break loop
-        }
-    });
-
-    if (hayCambios) {
-        $('#btnGuardarFlotante').addClass('active');
-    } else {
-        $('#btnGuardarFlotante').removeClass('active');
-    }
-}
-
-// ====================================================
-// Guardar inventario en BD
-// ====================================================
-function guardarInventario() {
-    if (!PUEDE_EDITAR) return;
-
-    const items = [];
-    $('.input-inventario').each(function () {
-        const val = $(this).val().trim();
-        if (val !== '') {
-            items.push({
-                id_producto_presentacion: $(this).data('id-pp'),
-                cantidad: parseInt(val, 10),
-                cod_sucursal: $('#filtroSucursal').val(),
-                fecha_inventario: new Date().toISOString().slice(0, 10)
-            });
-        }
-    });
-
-    if (items.length === 0) {
-        return Swal.fire({ icon: 'info', title: 'Sin datos', text: 'No hay valores de inventario ingresados.', confirmButtonColor: '#51B8AC' });
-    }
-
-    const $btnFlotante = $('#btnGuardarFlotante button');
-    $btnFlotante.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando…');
-
-    $.ajax({
-        url: 'ajax/pedido_sugerido_guardar_inventario.php',
-        method: 'POST',
-        data: JSON.stringify({ items }),
-        contentType: 'application/json',
-        dataType: 'json',
-        success: function (res) {
-            $btnFlotante.prop('disabled', false).html('<i class="bi bi-save2-fill me-2"></i> Guardar Inventario');
-            if (res.ok) {
-                // Actualizar inventarioInicial con los nuevos valores guardados
-                $('.input-inventario').each(function () {
-                    const id = $(this).data('id-pp');
-                    const val = $(this).val().trim();
-                    inventarioInicial[id] = (val !== '') ? parseFloat(val) : null;
-                });
-                
-                // Ocultar botón flotante
-                $('#btnGuardarFlotante').removeClass('active');
-
-                Swal.fire({
-                    icon: 'success', title: 'Guardado', toast: true, position: 'top-end',
-                    text: `${res.guardados} registro${res.guardados !== 1 ? 's' : ''} guardado${res.guardados !== 1 ? 's' : ''}.`,
-                    timer: 2000, showConfirmButton: false
-                });
-            } else {
-                Swal.fire({ icon: 'error', title: 'Error al guardar', text: res.msg, confirmButtonColor: '#51B8AC' });
-            }
-        },
-        error: function () {
-            $btnFlotante.prop('disabled', false).html('<i class="bi bi-save2-fill me-2"></i> Guardar Inventario');
-            Swal.fire({ icon: 'error', title: 'Error de conexión', confirmButtonColor: '#51B8AC' });
-        }
-    });
-}
 
 // ====================================================
 // Calcular pronóstico D-1 para todos los productos

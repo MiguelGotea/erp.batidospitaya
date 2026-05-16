@@ -231,8 +231,7 @@ try {
                                             <th class="text-end" title="Stock mínimo en unidades de despacho = (cons_diario × dias_stock_minimo) ÷ factor_despacho">Stock Mín</th>
                                             <th class="text-end" title="Stock máximo en unidades de despacho = (cons_diario × (ciclo + desfase + stock_min)) ÷ factor_despacho">Stock Máx</th>
                                             <th class="text-end" title="Stock máximo final en unidades de despacho (ajustado para congelados si aplica)">Stock Máx Final</th>
-                                            <th class="text-center col-inventario" title="Inventario actual en tienda">Inventario Actual</th>
-                                            <th class="text-center col-pedido" title="Pedido sugerido = Stock Máx Final − Inventario Actual">Pedido Sugerido</th>
+
                                             <th class="text-center col-pronostico" title="Próximo despacho de esta categoría según el plan">Próx. Despacho</th>
                                             <th class="text-end col-pronostico" title="Stock estimado al cierre del día anterior al despacho">Stock Pronóst. D-1</th>
                                             <th class="text-center col-pronostico" title="ceil(Stock Máx Final − Stock D-1). Requiere calcular pronóstico.">Despacho Pron. (paq)</th>
@@ -240,7 +239,7 @@ try {
                                     </thead>
                                     <tbody id="tbodyProductos">
                                         <tr>
-                                            <td colspan="15" class="text-center text-muted py-4">
+                                            <td colspan="13" class="text-center text-muted py-4">
                                                 Aplica los filtros para calcular el pedido sugerido.
                                             </td>
                                         </tr>
@@ -452,12 +451,7 @@ try {
         </div>
     </div>
 
-    <!-- Botón guardar flotante (se activa al detectar cambios) -->
-    <div class="floating-save-btn" id="btnGuardarFlotante" style="display: none;">
-        <button class="btn btn-success rounded-pill px-4 shadow-lg" onclick="guardarInventario()">
-            <i class="bi bi-save2-fill me-2"></i> Guardar Inventario
-        </button>
-    </div>
+
 
     <!-- JavaScript Principal -->
     <script src="js/pedido_sugerido_v2.js?v=<?php echo $version; ?>"></script>

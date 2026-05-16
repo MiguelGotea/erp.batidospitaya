@@ -507,12 +507,7 @@ try {
     foreach ($stmtPD->fetchAll(PDO::FETCH_ASSOC) as $pdRow)
         $planDespacho[$pdRow['categoria_insumo']] = $pdRow;
 
-    // 6. Inventario
-    $stmtV = $conn->prepare("SELECT i.id_producto_presentacion, i.cantidad FROM inventario i INNER JOIN (SELECT id_producto_presentacion, MAX(id) as mid FROM inventario WHERE cod_sucursal=? GROUP BY id_producto_presentacion) l ON i.id=l.mid");
-    $stmtV->execute([$codSucursal]);
-    $invA = [];
-    foreach ($stmtV->fetchAll() as $row)
-        $invA[(int) $row['id_producto_presentacion']] = (int) $row['cantidad'];
+
 
     // 7. Cálculos finales
     $res = [];
@@ -595,8 +590,7 @@ try {
             'stock_maximo' => round($sMax, 4),
             'stock_max_final' => null,
             'es_ajustado' => false,
-            'inventario_actual' => $invA[$idP] ?? null,
-            'pedido_sugerido' => null,
+
             'fecha_proximo_despacho' => $fechaProxDespacho,
             'dias_hasta_despacho'   => $diasHastaDespacho,
             '_tc' => $cP !== null
@@ -760,12 +754,7 @@ try {
         $p['stock_maximo'] = $p['_tc'] ? round($sMaxUso / $df, 4) : null;
         $p['stock_max_final'] = $sMaxFinalUso !== null ? round($sMaxFinalUso / $df, 4) : null;
 
-        // Pedido sugerido e inventario actual también en despacho
-        if ($p['stock_max_final'] !== null && $p['inventario_actual'] !== null) {
-            $invDesp = round($p['inventario_actual'] / $df, 4);
-            $p['inventario_actual'] = $invDesp;
-            $p['pedido_sugerido'] = round(max(0, $p['stock_max_final'] - $invDesp), 4);
-        }
+
         unset($p['_tc']);
     }
 
