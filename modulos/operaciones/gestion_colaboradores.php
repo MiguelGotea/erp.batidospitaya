@@ -145,6 +145,7 @@ function obtenerSucursalesAgrupadas()
     $stmt->execute();
     $sucursales = $stmt->fetchAll();
 
+    
     // Resolver nombres de supervisores (supervisor_asignado ahora es JSON array)
     foreach ($sucursales as &$suc) {
         $ids = json_decode($suc['supervisor_asignado'] ?? '[]', true) ?: [];
