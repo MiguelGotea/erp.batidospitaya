@@ -222,34 +222,19 @@ try {
                                 <table class="table table-hover ps-tabla mb-0" id="tablaProductos">
                                     <thead>
                                         <tr>
-                                            <th class="col-producto">Producto</th>
-                                            <th>Presentación</th>
-                                            <th class="text-end" title="Promedio de consumo semanal">Prom./Sem.</th>
-                                            <th class="text-end" title="Desviación estándar de muestra">Desv. Std</th>
-                                            <th class="text-end" title="Consumo semanal = promedio + desv. estándar">
-                                                Cons. Semanal</th>
-                                            <th class="text-end"
-                                                title="Consumo diario = (cons_semanal × (1 + ajuste)) / 7">Cons. Diario
-                                            </th>
-                                            <th class="text-end"
-                                                title="Stock mínimo en unidades de despacho = (cons_diario × dias_stock_minimo) ÷ factor_despacho">
-                                                Stock Mín</th>
-                                            <th class="text-end"
-                                                title="Stock máximo en unidades de despacho = (cons_diario × (ciclo + desfase + stock_min)) ÷ factor_despacho">
-                                                Stock Máx</th>
-                                            <th class="text-end"
-                                                title="Stock máximo final en unidades de despacho (ajustado para congelados si aplica)">
-                                                Stock Máx Final</th>
+                                            <th class="col-producto align-bottom">Producto</th>
+                                            <th class="col-presentacion align-bottom">Presentación</th>
+                                            <th class="text-end bg-light-gray col-num align-bottom" title="Promedio de consumo semanal">Prom./Sem.</th>
+                                            <th class="text-end bg-light-gray col-num align-bottom text-muted" title="Desviación estándar de muestra" style="font-weight: 600;">Desv. Std</th>
+                                            <th class="text-end bg-light-gray col-num align-bottom" title="Consumo semanal = promedio + desv. estándar" style="color: var(--pitaya-dark);">Cons. Semanal</th>
+                                            <th class="text-end bg-light-gray col-num align-bottom text-muted" title="Consumo diario = (cons_semanal × (1 + ajuste)) / 7" style="font-weight: 600;">Cons. Diario</th>
+                                            <th class="text-end bg-mid-gray col-num align-bottom" title="Stock mínimo en unidades de despacho = (cons_diario × dias_stock_minimo) ÷ factor_despacho">Stock Mín</th>
+                                            <th class="text-end bg-mid-gray col-num align-bottom" title="Stock máximo en unidades de despacho = (cons_diario × (ciclo + desfase + stock_min)) ÷ factor_despacho">Stock Máx</th>
+                                            <th class="text-end bg-mid-gray col-num align-bottom" title="Stock máximo final en unidades de despacho (ajustado para congelados si aplica)" style="color: var(--pitaya-dark);">Stock Máx Final</th>
 
-                                            <th class="text-center col-pronostico"
-                                                title="Próximo despacho de esta categoría según el plan">Próx. Despacho
-                                            </th>
-                                            <th class="text-end col-pronostico"
-                                                title="Stock estimado al cierre del día anterior al despacho">Stock
-                                                Pronóst. D-1</th>
-                                            <th class="text-center col-pronostico"
-                                                title="ceil(Stock Máx Final − Stock D-1). Requiere calcular pronóstico.">
-                                                Despacho Pron. (paq)</th>
+                                            <th class="text-center col-pronostico align-bottom" title="Próximo despacho de esta categoría según el plan">Próx. Despacho</th>
+                                            <th class="text-end col-pronostico col-num align-bottom" title="Stock estimado al cierre del día anterior al despacho">Stock Pronóst. D-1</th>
+                                            <th class="text-center col-pronostico col-num align-bottom text-primary" title="ceil(Stock Máx Final − Stock D-1). Requiere calcular pronóstico.">Despacho Pron. (paq)</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tbodyProductos">

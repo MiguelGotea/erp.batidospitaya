@@ -237,7 +237,7 @@ function buildFila(p, cat) {
     if (p.stock_max_final !== null) {
         stockMaxFinalHtml = fmt2(p.stock_max_final);
         if (p.es_ajustado) {
-            stockMaxFinalHtml += '<span class="badge-ajustado">Ajustado</span>';
+            stockMaxFinalHtml += '<br><span class="badge-ajustado">Ajustado</span>';
         }
     } else {
         stockMaxFinalHtml = '<span class="val-na">N/A</span>';
@@ -266,29 +266,50 @@ function buildFila(p, cat) {
             fechaDespFormat = `${dia}/${mes}/${año}`;
         }
 
-        cellFecha = `${sem} ${fechaDespFormat}<br><small class="text-muted">en ${diasHasta}d</small>`;
+        cellFecha = `<div class="d-flex flex-column align-items-center" style="line-height: 1.2;"><span class="fw-bold text-dark" style="font-size: 13px;">${sem} ${fechaDespFormat}</span><small class="text-muted" style="font-size: 10px;">en ${diasHasta}d</small></div>`;
     }
 
-    // Label de unidad de despacho (aparece encima del número en columnas de stock/pedido)
+    // Label de unidad de despacho (aparece debajo del número)
     const despTag = p.despacho_nombre
         ? `<div class="desp-unit-label" title="${escHtml(p.despacho_nombre)}">${escHtml(p.despacho_nombre)}</div>`
         : '';
 
     return `
-        <tr class="ps-fila-producto cat-${cat !== '_sin_cat' ? cat : 'X'}" data-id="${p.id_pp}">
-            <td class="col-producto"><span class="fw-500">${escHtml(p.nombre)}</span></td>
-            <td>${escHtml(p.unidad || '—')}</td>
-            <td class="text-end">${fmt2(p.prom_consumo)}</td>
-            <td class="text-end">${fmt2(p.desv_estandar)}</td>
-            <td class="text-end fw-bold">${fmt2(p.cons_semanal)}</td>
-            <td class="text-end">${fmt(p.cons_diario)}</td>
-            <td class="text-end">${despTag}${fmt2(p.stock_minimo)}</td>
-            <td class="text-end">${despTag}${fmt2(p.stock_maximo)}</td>
-            <td class="text-end">${despTag}${stockMaxFinalHtml}</td>
+        <tr class="ps-fila-producto" data-id="${p.id_pp}">
+            <td class="col-producto">
+                <div class="fw-bold text-dark" style="font-size: 13px;">${escHtml(p.nombre)}</div>
+            </td>
+            <td class="col-presentacion">
+                <div class="text-muted" style="font-size: 11px;">${escHtml(p.unidad || '—')}</div>
+            </td>
+            
+            <td class="text-end num-cell bg-light-gray" style="font-size: 13px;">${fmt2(p.prom_consumo)}</td>
+            <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 12px;">${fmt2(p.desv_estandar)}</td>
+            <td class="text-end num-cell fw-bold text-dark bg-light-gray" style="font-size: 13px;">${fmt2(p.cons_semanal)}</td>
+            <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 13px;">${fmt(p.cons_diario, 3)}</td>
+            
+            <td class="text-end num-cell bg-mid-gray">
+                <div style="font-size: 13px;">${fmt2(p.stock_minimo)}</div>
+                ${despTag}
+            </td>
+            <td class="text-end num-cell bg-mid-gray">
+                <div style="font-size: 13px;">${fmt2(p.stock_maximo)}</div>
+                ${despTag}
+            </td>
+            <td class="text-end num-cell fw-bold text-dark bg-mid-gray">
+                <div style="font-size: 13px;">${stockMaxFinalHtml}</div>
+                ${despTag}
+            </td>
 
-            <td class="text-center col-pronostico">${cellFecha}</td>
-            <td class="text-end col-pronostico"><span class="pron-d1" data-idpp="${p.id_pp}">—</span></td>
-            <td class="text-center col-pronostico"><span class="pron-desp" data-idpp="${p.id_pp}">—</span></td>
+            <td class="text-center col-pronostico bg-pronostico align-middle">
+                ${cellFecha}
+            </td>
+            <td class="text-end col-pronostico num-cell bg-pronostico align-middle">
+                <div class="pron-d1" data-idpp="${p.id_pp}" style="font-size: 13px;">—</div>
+            </td>
+            <td class="text-center col-pronostico num-cell bg-pronostico align-middle">
+                <div class="pron-desp" data-idpp="${p.id_pp}" style="font-size: 14px;">—</div>
+            </td>
         </tr>
     `;
 }
@@ -346,10 +367,10 @@ async function calcularPronosticoMasivo() {
             }
 
             const d1Val = Number(resp.stock_D1_paquetes ?? 0).toFixed(1);
-            $d1.html(`${d1Val} <small class="text-muted">paq</small>`);
+            $d1.html(`${d1Val} <br><small class="text-muted" style="font-size: 9px; font-weight: 600;">PAQ</small>`);
 
             const dp = resp.despacho_sugerido_pronostico ?? 0;
-            const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success';
+            const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
             $desp.html(`<span class="${cls}">${dp}</span>`);
         }).catch(() => { errores++; })));
     }

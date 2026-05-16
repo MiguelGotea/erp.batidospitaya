@@ -191,7 +191,7 @@ html { overflow-y: scroll; }
 /* =====================
    Tabla
    ===================== */
-.ps-tabla { border-collapse: collapse; font-size: 13px; min-width: 1100px; }
+.ps-tabla { border-collapse: collapse; font-size: 13px; min-width: 1200px; }
 
 /* ── Sticky header ──────────────────────────────────── */
 #tablaWrapper {
@@ -202,38 +202,46 @@ html { overflow-y: scroll; }
     position: sticky;
     top: 0;
     z-index: 2;
-    background: #f8f9fa;
-    border-bottom: 2px solid var(--pitaya-dark);
-    border-right: 1px solid #e9ecef;
-    padding: 10px 12px;
-    font-size: 11px;
+    background: #ffffff;
+    border-bottom: 2px solid #dee2e6;
+    border-right: 1px solid #f0f0f0;
+    padding: 12px 10px;
+    font-size: 10.5px;
     font-weight: 700;
-    color: var(--pitaya-dark);
+    color: #495057;
     text-transform: uppercase;
-    letter-spacing: .4px;
+    letter-spacing: 0.5px;
     white-space: nowrap;
-    vertical-align: middle;
+    vertical-align: bottom;
     /* Sombra sutil para separar visualmente al hacer scroll */
     box-shadow: 0 2px 4px rgba(14, 84, 76, 0.08);
 }
 
 .ps-tabla thead th:last-child { border-right: none; }
-.ps-tabla thead th.col-inventario,
-.ps-tabla thead th.col-pedido { background: rgba(81,184,172,.12); }
+
+/* Column groups header */
+.ps-tabla thead th.bg-light-gray { background-color: #fafafa; border-bottom: 2px solid #e0e0e0; }
+.ps-tabla thead th.bg-mid-gray { background-color: #f5f5f5; border-bottom: 2px solid #d5d5d5; }
+.ps-tabla thead th.col-pronostico { background-color: #f0f4fc; border-bottom: 2px solid #3b82f6; color: #1e3a8a; }
 
 .ps-tabla tbody tr {
     border-bottom: 1px solid #f0f0f0;
     transition: background .15s;
 }
-.ps-tabla tbody tr:hover { background: var(--pitaya-hover); }
+.ps-tabla tbody tr:hover td { background-color: var(--pitaya-hover) !important; }
 
 .ps-tabla tbody td {
-    padding: 9px 12px;
+    padding: 10px 10px;
     vertical-align: middle;
-    border-right: 1px solid #f0f0f0;
+    border-right: 1px solid #f8f9fa;
     white-space: nowrap;
 }
 .ps-tabla tbody td:last-child { border-right: none; }
+
+/* Column groups body */
+.ps-tabla tbody td.bg-light-gray { background-color: rgba(0,0,0,0.01); }
+.ps-tabla tbody td.bg-mid-gray { background-color: rgba(0,0,0,0.02); }
+.ps-tabla tbody td.bg-pronostico { background-color: rgba(59, 130, 246, 0.02); }
 
 /* Separador de grupo (categoria) */
 .ps-tabla tbody tr.fila-grupo-header td {
@@ -243,26 +251,9 @@ html { overflow-y: scroll; }
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: .8px;
-    padding: 6px 12px;
+    padding: 8px 12px;
     border: none;
 }
-
-/* Colores de fila por categoria */
-.ps-tabla tbody tr.cat-A td { background-color: rgba(16,185,129,.04); }
-.ps-tabla tbody tr.cat-B td { background-color: rgba(59,130,246,.04); }
-.ps-tabla tbody tr.cat-C td { background-color: rgba(244,63,94,.04); }
-.ps-tabla tbody tr.cat-D td { background-color: rgba(245,158,11,.04); }
-.ps-tabla tbody tr.cat-E td { background-color: rgba(139,92,246,.04); }
-.ps-tabla tbody tr.cat-F td { background-color: rgba(107,114,128,.04); }
-.ps-tabla tbody tr.cat-G td { background-color: rgba(236,72,153,.04); }
-
-.ps-tabla tbody tr.cat-A:hover td,
-.ps-tabla tbody tr.cat-B:hover td,
-.ps-tabla tbody tr.cat-C:hover td,
-.ps-tabla tbody tr.cat-D:hover td,
-.ps-tabla tbody tr.cat-E:hover td,
-.ps-tabla tbody tr.cat-F:hover td,
-.ps-tabla tbody tr.cat-G:hover td { background-color: var(--pitaya-hover) !important; }
 
 /* Badges de categoría */
 .cat-badge {
@@ -320,39 +311,51 @@ html { overflow-y: scroll; }
 .pedido-warn { background: #fff8e1; color: #e65100; }   /* > 0 : ordenar  */
 .pedido-nd   { background: #f1f3f5; color: #868e96; font-weight: 400; font-size: 12px; } /* sin config */
 
-/* Columna fija de nombre */
-.col-producto { min-width: 200px; }
-.col-inventario { min-width: 110px; }
-.col-pedido { min-width: 130px; }
-
 /* Ajuste ajustado badge */
 .badge-ajustado {
-    font-size: 10px;
-    background: rgba(59,130,246,.15);
-    color: #1d4ed8;
+    font-size: 9px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
     border-radius: 4px;
-    padding: 1px 5px;
-    margin-left: 4px;
+    padding: 2px 4px;
+    margin-left: 0;
+    margin-top: 2px;
+    display: inline-block;
     vertical-align: middle;
+    font-weight: 600;
 }
 
 /* Valor numérico NA */
 .val-na { color: #adb5bd; font-size: 12px; }
 
-/* Label de unidad de despacho — aparece encima del número */
+/* Label de unidad de despacho — aparece debajo del número */
 .desp-unit-label {
-    font-size: 9.5px;
-    font-weight: 700;
-    color: var(--pitaya-primary);
+    font-size: 9px;
+    font-weight: 600;
+    color: #8c98a4;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
     line-height: 1;
-    margin-bottom: 2px;
+    margin-top: 3px;
+    margin-bottom: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 110px;
-    opacity: 0.85;
+    max-width: 100%;
+    opacity: 0.9;
+}
+
+/* Col widths */
+.col-producto { min-width: 180px; max-width: 250px; white-space: normal !important; line-height: 1.3; }
+.col-presentacion { min-width: 100px; max-width: 130px; white-space: normal !important; line-height: 1.3; }
+.col-num { min-width: 85px; }
+.col-pronostico { min-width: 110px; }
+
+/* Tabular numbers */
+.num-cell {
+    font-variant-numeric: tabular-nums;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: -0.2px;
 }
 
 /* Fila de indicadores (efecto drawer ultra-suave) */
