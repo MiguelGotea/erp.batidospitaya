@@ -469,73 +469,71 @@ function formatoHoraAmPm(hora) {
 }
 
 // =============================================
-// VISOR DE FOTOS CON ZOOM
+// VISOR DE FOTOS ESTANDARIZADO
 // =============================================
 
 function mostrarFotoAmpliadaDesdeTabla(fotoPath) {
     if (!fotoPath) { alert('No hay foto disponible'); return; }
-    var fotoAmpliada = document.getElementById('fotoAmpliada');
-    currentZoomLevel = 1;
-    fotoAmpliada.style.transform = 'scale(1)';
-    fotoAmpliada.style.cursor = 'zoom-in';
-    fotoAmpliada.src = 'uploads/tardanzas/' + fotoPath;
-    document.getElementById('modalVerFoto').style.display = 'flex';
+    mostrarFotoAmpliada('uploads/tardanzas/' + fotoPath);
 }
 
 function mostrarFotoAmpliada(src) {
-    var fotoAmpliada = document.getElementById('fotoAmpliada');
-    currentZoomLevel = 1;
-    fotoAmpliada.style.transform = 'scale(1)';
-    fotoAmpliada.style.cursor = 'zoom-in';
-    fotoAmpliada.src = src;
-    document.getElementById('modalVerFoto').style.display = 'flex';
+    const carouselInner = $('#carouselFotosInner');
+    carouselInner.empty();
+    
+    const isHeic = src.toLowerCase().endsWith('.heic') || src.toLowerCase().endsWith('.heif');
+    const imgId = 'evidencia-photo';
+    
+    carouselInner.append(`
+        <div class="carousel-item active">
+            <div class="d-flex justify-content-center align-items-center" style="min-height: 200px; background: #f8f9fa;">
+                <img id="${imgId}" src="${src}" class="d-block w-100" alt="Evidencia" onerror="this.src='/core/assets/img/broken-image.png'" style="max-height: 500px; object-fit: contain;">
+                <div id="loader-${imgId}" class="spinner-border text-primary position-absolute" role="status" style="display: none;">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        </div>
+    `);
+
+    if (isHeic) {
+        const loader = document.getElementById(`loader-${imgId}`);
+        if (loader) loader.style.display = 'block';
+        
+        fetch(src)
+            .then(res => res.blob())
+            .then(blob => heic2any({ 
+                blob, 
+                toType: "image/jpeg",
+                quality: 0.6
+            }))
+            .then(conversionResult => {
+                const url = URL.createObjectURL(Array.isArray(conversionResult) ? conversionResult[0] : conversionResult);
+                document.getElementById(imgId).src = url;
+                if (loader) loader.style.display = 'none';
+            })
+            .catch(e => {
+                console.error("Error converting HEIC:", e);
+                if (loader) loader.style.display = 'none';
+            });
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('modalFotos'));
+    modal.show();
 }
 
 function cerrarModalFoto() {
-    document.getElementById('modalVerFoto').style.display = 'none';
-    currentZoomLevel = 1;
-    var fotoAmpliada = document.getElementById('fotoAmpliada');
-    if (fotoAmpliada) { fotoAmpliada.style.transform = 'scale(1)'; fotoAmpliada.style.cursor = 'zoom-in'; }
-}
-
-function zoomIn() { if (currentZoomLevel < maxZoomLevel) { currentZoomLevel += zoomStep; applyZoom(); } }
-function zoomOut() { if (currentZoomLevel > minZoomLevel) { currentZoomLevel -= zoomStep; applyZoom(); } }
-function resetZoom() { currentZoomLevel = 1; applyZoom(); }
-
-function applyZoom() {
-    var fotoAmpliada = document.getElementById('fotoAmpliada');
-    if (fotoAmpliada) {
-        fotoAmpliada.style.transform = 'scale(' + currentZoomLevel + ')';
-        fotoAmpliada.style.cursor = currentZoomLevel > 1 ? 'zoom-out' : 'zoom-in';
-    }
+    const modalEl = document.getElementById('modalFotos');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    var modalFoto = document.getElementById('modalVerFoto');
-    var imageContainer = document.getElementById('imageContainer');
-    var fotoAmpliada = document.getElementById('fotoAmpliada');
-
-    if (modalFoto) {
-        modalFoto.addEventListener('click', function (e) { if (e.target === modalFoto) cerrarModalFoto(); });
-    }
-    if (imageContainer) {
-        imageContainer.addEventListener('click', function (e) { e.stopPropagation(); });
-    }
-    if (fotoAmpliada) {
-        fotoAmpliada.addEventListener('wheel', function (e) {
-            e.preventDefault(); e.stopPropagation();
-            if (e.deltaY < 0) zoomIn(); else zoomOut();
-        });
-        fotoAmpliada.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (currentZoomLevel === 1) zoomIn(); else resetZoom();
+    const modalFotos = document.getElementById('modalFotos');
+    if (modalFotos) {
+        modalFotos.addEventListener('hidden.bs.modal', function () {
+            $('#carouselFotosInner').empty();
         });
     }
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && document.getElementById('modalVerFoto').style.display === 'flex') {
-            cerrarModalFoto();
-        }
-    });
 });
 
 window.addEventListener('click', function (event) {
