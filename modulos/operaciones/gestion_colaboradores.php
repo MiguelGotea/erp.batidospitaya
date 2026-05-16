@@ -133,12 +133,9 @@ function obtenerSucursalesAgrupadas()
             s.nombre, 
             s.cod_departamento,
             s.supervisor_asignado,
-            d.nombre as departamento_nombre,
-            o.Nombre as sup_nombre,
-            o.Apellido as sup_apellido
+            d.nombre as departamento_nombre
         FROM sucursales s
         JOIN departamentos d ON s.cod_departamento = d.codigo
-        LEFT JOIN Operarios o ON s.supervisor_asignado = o.CodOperario
         WHERE s.activa = 1
         AND s.sucursal = 1  -- Solo sucursales físicas
         ORDER BY 
@@ -147,6 +144,23 @@ function obtenerSucursalesAgrupadas()
     ");
     $stmt->execute();
     $sucursales = $stmt->fetchAll();
+
+    // Resolver nombres de supervisores (supervisor_asignado ahora es JSON array)
+    foreach ($sucursales as &$suc) {
+        $ids = json_decode($suc['supervisor_asignado'] ?? '[]', true) ?: [];
+        $ids = array_filter(array_map('intval', $ids));
+        if (!empty($ids)) {
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $stmtSup = $conn->prepare(
+                "SELECT CodOperario, Nombre, Apellido FROM Operarios WHERE CodOperario IN ($placeholders)"
+            );
+            $stmtSup->execute($ids);
+            $suc['supervisores'] = $stmtSup->fetchAll();
+        } else {
+            $suc['supervisores'] = [];
+        }
+    }
+    unset($suc);
 
     // Agrupar por departamento
     $agrupadas = [
@@ -477,9 +491,10 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                                 style="opacity: 0.8; display:none;">#<?= $sucursal['codigo'] ?></small>
                                                         </div>
                                                     </div>
-                                                    <?php if (!empty($sucursal['supervisor_asignado'])): ?>
+                                                    <?php if (!empty($sucursal['supervisores'])): ?>
                                                         <div style="font-size: 0.8em; opacity: 0.9; margin-top: 4px; font-weight: normal;">
-                                                            <i class="fas fa-user-tie"></i> Supervisor: <?= htmlspecialchars(trim($sucursal['sup_nombre'] . ' ' . $sucursal['sup_apellido'])) ?>
+                                                            <i class="fas fa-user-tie"></i> Supervisor<?= count($sucursal['supervisores']) > 1 ? 'es' : '' ?>:
+                                                            <?= htmlspecialchars(implode(', ', array_map(fn($s) => trim($s['Nombre'] . ' ' . $s['Apellido']), $sucursal['supervisores']))) ?>
                                                         </div>
                                                     <?php else: ?>
                                                         <div style="font-size: 0.8em; opacity: 0.9; margin-top: 4px; font-weight: normal; font-style: italic;">
