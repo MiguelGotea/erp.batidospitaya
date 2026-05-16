@@ -34,7 +34,7 @@ $codSucursal   = trim($_POST['cod_sucursal']     ?? '');
 $semCorte      = isset($_POST['sem_corte'])      ? (int)$_POST['sem_corte']          : 0;
 $fechaDespacho = trim($_POST['fecha_despacho']   ?? '');
 $consDiario    = isset($_POST['cons_diario'])     ? (float)$_POST['cons_diario']     : null;
-$promConsumo   = isset($_POST['prom_consumo'])    ? (float)$_POST['prom_consumo']    : null;  // promedio base sin desv/ajuste
+$semHasta      = isset($_POST['sem_hasta'])       ? (int)$_POST['sem_hasta']         : null;
 $despFactor    = isset($_POST['despacho_factor']) ? (float)$_POST['despacho_factor'] : null;
 $stockMaxFinal = isset($_POST['stock_max_final']) ? (float)$_POST['stock_max_final'] : null;
 
@@ -142,13 +142,27 @@ try {
     $sinInventario = ($stockDomingo === null);
 
     // ── 4. Calcular fecha_D1 y días de proyección ─────────────────────────
-    $fechaD1           = date('Y-m-d', strtotime($fechaDespacho . ' -1 day'));
-    $fechaMovHasta     = $fechaD1;
+    $fechaD1 = date('Y-m-d', strtotime($fechaDespacho . ' -1 day'));
     // fechaMovDesde ya viene del paso 3 (lunes semCorte o domingo+1)
     if (!$fechaMovDesde) $fechaMovDesde = $fechaD1;
 
+    // Limitar fechaMovHasta al fin de sem_hasta (idéntico al Kardex).
+    // El Kardex solo consulta movimientos hasta el último sem analizado; los despachos de
+    // semanas futuras aún no están confirmados y generarían discrepancias.
+    $fechaMovHasta = $fechaD1;  // por defecto: hasta D-1
+    if ($semHasta) {
+        $stmtSH = $conn->prepare("SELECT fecha_fin FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
+        $stmtSH->execute([$semHasta]);
+        $fechaFinSemHasta = $stmtSH->fetchColumn();
+        if ($fechaFinSemHasta && $fechaFinSemHasta < $fechaD1) {
+            // El último sem analizado cierra antes de D-1 → usar ese tope para movimientos
+            $fechaMovHasta = $fechaFinSemHasta;
+        }
+    }
+
     $diasTranscurridos = 0;
     if (!$sinInventario && $domingoBase) {
+        // Los días de proyección siguen siendo hasta D-1 (para el consumo proyectado)
         $diasTranscurridos = max(0, (int)((strtotime($fechaD1) - strtotime($domingoBase)) / 86400));
     }
 
@@ -238,20 +252,13 @@ try {
         }
     }
 
-    // ── 7. Proyección D-1 con movimientos reales ─────────────────────────
-    // Para la PROYECCIÓN se usa prom_consumo/7 (consumo real histórico promedio = modelo Kardex).
-    // El cons_diario estadístico (prom+desv+ajuste) se reserva para el cálculo del pedido,
-    // no para proyectar stock, porque sobreestima el consumo diario y aleja el resultado del Kardex.
-    $consProyDiario = null;
-    if ($promConsumo !== null && $promConsumo > 0) {
-        // Recibe prom_consumo semanal del frontend → diario
-        $consProyDiario = $promConsumo / 7.0;
-    } elseif ($consDiario !== null && $consDiario > 0) {
-        // Fallback: usar cons_diario enviado (estadístico)
-        $consProyDiario = $consDiario;
-    } else {
-        $consProyDiario = 0.0;
-    }
+    // ── 7. Proyección D-1 ────────────────────────────────────────────────
+    // Fórmula: stock_D1 = stock_domingo + mov_neto_real - cons_diario × dias
+    // Se usa cons_diario estadístico (= prom+desv+ajuste / 7) que en práctica iguala
+    // el promedio DOW-weighted que usa el Kardex, produciendo resultados equivalentes.
+    // Los movimientos se limitan al fin de sem_hasta (igual que el Kardex) para excluir
+    // despachos de semanas futuras aún no confirmados.
+    $consProyDiario = ($consDiario !== null && $consDiario > 0) ? $consDiario : 0.0;
 
     $stockD1Uso = $sinInventario
         ? null
