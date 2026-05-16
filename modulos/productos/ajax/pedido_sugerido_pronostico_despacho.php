@@ -270,6 +270,21 @@ try {
         'despacho_sugerido_pronostico' => $despachoPron,
         'despacho_factor'             => round($dfSafe, 6),
         'sin_inventario'              => $sinInventario,
+        '_debug' => [
+            'suc_int'          => $sucInt,
+            'sem_ant_corte'    => $semAntCorte,
+            'domingo_ant'      => $domingoAnt,
+            'domingo_base'     => $domingoBase,
+            'fecha_inicio_sem' => $fechaInicioSem,
+            'fecha_mov_desde'  => $fechaMovDesde,
+            'fecha_mov_hasta'  => $fechaMovHasta,
+            'dias'             => $diasTranscurridos,
+            'stock_domingo_raw' => $sinInventario ? null : $stockDomingo,
+            'mov_neto'         => $movimientoNeto,
+            'cons_diario_recv' => (float)($_POST['cons_diario'] ?? 'no_enviado'),
+            'desp_factor_recv' => (float)($_POST['despacho_factor'] ?? 'no_enviado'),
+            'n_cods'           => count($allCods),
+        ],
     ]);
 
 } catch (Exception $e) {
