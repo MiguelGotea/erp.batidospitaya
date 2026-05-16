@@ -352,6 +352,7 @@ async function calcularPronosticoMasivo() {
                 sem_corte: semCorte,
                 fecha_despacho: prod.fecha_proximo_despacho,
                 cons_diario: prod.cons_diario,
+                prom_consumo: prod.prom_consumo,   // promedio base sin desv ni ajuste (= modelo Kardex)
                 despacho_factor: prod.despacho_factor ?? 1,
                 stock_max_final: prod.stock_max_final ?? 0
             }
