@@ -370,7 +370,6 @@ try {
                                     <li class="mb-1"><b>Ciclo:</b> Cuántos días pasan entre un pedido y el siguiente.</li>
                                     <li class="mb-1"><b>Desfase:</b> Cuántos días tarda el proveedor en entregar el producto.</li>
                                     <li class="mb-1"><b>S.Mín:</b> Días de reserva que quieres tener siempre "por si acaso".</li>
-                                    <li class="mb-1"><b>C.Diario:</b> El consumo por día exacto usado para calcular los stocks.</li>
                                 </ul>
                             </div>
                         </div>
