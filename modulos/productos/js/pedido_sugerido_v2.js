@@ -240,7 +240,7 @@ function buildFila(p, cat) {
 
     // Indicadores detallados (para verificación)
     const despInfo = p.despacho_nombre
-        ? `<span class="ps-ind-item" title="Presentación de despacho"><b>Desp:</b> ${escHtml(p.despacho_nombre)}${p.despacho_unidad ? ' (' + escHtml(p.despacho_unidad) + ')' : ''} &times;${Number(p.despacho_factor).toLocaleString('es-NI',{minimumFractionDigits:2,maximumFractionDigits:4})}</span>`
+        ? `<span class="ps-ind-item" title="Presentación de despacho"><b>Desp:</b> ${escHtml(p.despacho_nombre)}${p.despacho_unidad ? ' (' + escHtml(p.despacho_unidad) + ')' : ''} &times;${Number(p.despacho_factor).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>`
         : '';
 
     const detalleHtml = `
@@ -267,9 +267,9 @@ function buildFila(p, cat) {
     if (fechaDesp) {
         let sem = '';
         const dp = p.dias_desfase ?? 1;
-        if      (diasHasta <= dp)                        sem = '🔴';
+        if (diasHasta <= dp) sem = '🔴';
         else if (diasHasta <= (p.dias_ciclo ?? 14) / 2) sem = '🟡';
-        else                                              sem = '🟢';
+        else sem = '🟢';
         cellFecha = `${sem} ${fechaDesp}<br><small class="text-muted">en ${diasHasta}d</small>`;
     }
 
@@ -320,6 +320,7 @@ async function calcularPronosticoMasivo() {
     $('.pron-d1').html('<span class="text-muted small">…</span>');
     $('.pron-desp').html('<span class="text-muted small">…</span>');
 
+
     const productos = datosResultado.filter(p => p.fecha_proximo_despacho);
     const LOTE = 5;
     let errores = 0;
@@ -327,20 +328,20 @@ async function calcularPronosticoMasivo() {
     for (let i = 0; i < productos.length; i += LOTE) {
         const batch = productos.slice(i, i + LOTE);
         await Promise.all(batch.map(prod => $.ajax({
-            url:      'ajax/pedido_sugerido_pronostico_despacho.php',
-            method:   'POST',
+            url: 'ajax/pedido_sugerido_pronostico_despacho.php',
+            method: 'POST',
             dataType: 'json',
             data: {
-                id_pp:           prod.id_pp,
-                cod_sucursal:    codSucursalActual,
-                sem_corte:       semCorte,
-                fecha_despacho:  prod.fecha_proximo_despacho,
-                cons_diario:     prod.cons_diario,
-                despacho_factor: prod.despacho_factor  ?? 1,
-                stock_max_final: prod.stock_max_final  ?? 0
+                id_pp: prod.id_pp,
+                cod_sucursal: codSucursalActual,
+                sem_corte: semCorte,
+                fecha_despacho: prod.fecha_proximo_despacho,
+                cons_diario: prod.cons_diario,
+                despacho_factor: prod.despacho_factor ?? 1,
+                stock_max_final: prod.stock_max_final ?? 0
             }
         }).then(resp => {
-            const $d1   = $(`.pron-d1[data-idpp="${prod.id_pp}"]`);
+            const $d1 = $(`.pron-d1[data-idpp="${prod.id_pp}"]`);
             const $desp = $(`.pron-desp[data-idpp="${prod.id_pp}"]`);
             if (!resp || !resp.ok) { errores++; $d1.html('—'); $desp.html('—'); return; }
 
