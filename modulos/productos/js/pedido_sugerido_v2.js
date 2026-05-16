@@ -350,7 +350,7 @@ async function calcularPronosticoMasivo() {
                 id_pp: prod.id_pp,
                 cod_sucursal: codSucursalActual,
                 sem_corte: semCorte,
-                sem_hasta: parseInt($('#filtroHasta').val()) || semCorte,  // límite superior = último sem analizado
+                sem_hasta: parseInt($('#filtroSemanaHasta').val()) || semCorte,  // límite superior = último sem analizado
                 fecha_despacho: prod.fecha_proximo_despacho,
                 cons_diario: prod.cons_diario,
                 despacho_factor: prod.despacho_factor ?? 1,
