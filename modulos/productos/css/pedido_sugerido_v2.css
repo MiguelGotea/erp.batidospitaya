@@ -193,15 +193,19 @@ html { overflow-y: scroll; }
    ===================== */
 .ps-tabla { border-collapse: collapse; font-size: 13px; min-width: 1200px; }
 
-/* ── Sticky header ──────────────────────────────────── */
+/* ── Sticky header & Scrollable Container ──────────────────────────────────── */
 #tablaWrapper {
-    overflow: visible;
+    width: 100%;
+    max-height: calc(100vh - 220px);
+    overflow: auto;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 
 .ps-tabla thead th {
     position: sticky;
     top: 0;
-    z-index: 2;
+    z-index: 10;
     background: #ffffff;
     border-bottom: 2px solid #dee2e6;
     border-right: 1px solid #f0f0f0;
@@ -239,9 +243,9 @@ html { overflow-y: scroll; }
 .ps-tabla tbody td:last-child { border-right: none; }
 
 /* Column groups body */
-.ps-tabla tbody td.bg-light-gray { background-color: rgba(0,0,0,0.01); }
-.ps-tabla tbody td.bg-mid-gray { background-color: rgba(0,0,0,0.02); }
-.ps-tabla tbody td.bg-pronostico { background-color: rgba(59, 130, 246, 0.02); }
+.ps-tabla tbody td.bg-light-gray { background-color: rgba(0,0,0,0.015); }
+.ps-tabla tbody td.bg-mid-gray { background-color: rgba(0,0,0,0.025); }
+.ps-tabla tbody td.bg-pronostico { background-color: rgba(59, 130, 246, 0.035); }
 
 /* Separador de grupo (categoria) */
 .ps-tabla tbody tr.fila-grupo-header td {
