@@ -2055,10 +2055,13 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
-    <link rel="stylesheet" href="css/tardanzas_manual.css">
+    <link rel="stylesheet" href="css/tardanzas_manual.css?v=<?= time() ?>">
+    <!-- Library for HEIC support -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 </head>
 
 <body>
@@ -2269,9 +2272,25 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
         </div>
     </div>
 
+    <script>
+        // Variables para manejar el estado de edición
+        let editandoObservaciones = {};
+        let observacionesOriginales = {};
+
+        // Datos de operarios para el autocompletado (generado por PHP)
+        const operariosData = [
+            { id: 0, nombre: 'Todos los colaboradores' },
+            <?php foreach ($operarios as $op): ?>
+                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
+            <?php endforeach; ?>
+        ];
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/tardanzas_manual.js?v=<?= time() ?>"></script>
+
     <!-- Modal para nueva tardanza manual -->
-    <div class="modal" id="modalNuevaTardanza">
-        <div class="modal-content">
+    <div class="modal-custom" id="modalNuevaTardanza">
+        <div class="modal-custom-content">
             <div class="modal-header">
                 <h2 class="modal-title">Registrar Tardanza Manual</h2>
                 <button class="modal-close" onclick="cerrarModal()">&times;</button>
@@ -2347,32 +2366,36 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
         </div>
     </div>
 
-    <!-- Modal para ver foto ampliada - VERSIÓN CORREGIDA -->
-    <div class="modal" id="modalVerFoto">
-        <div class="modal-content-foto">
-            <div class="modal-header-foto">
-                <button class="modal-close-foto" onclick="cerrarModalFoto()">&times;</button>
-                <div class="zoom-controls">
-                    <button class="btn-zoom" onclick="zoomIn()" title="Acercar">
-                        <i class="fas fa-search-plus"></i>
-                    </button>
-                    <button class="btn-zoom" onclick="zoomOut()" title="Alejar">
-                        <i class="fas fa-search-minus"></i>
-                    </button>
-                    <button class="btn-zoom" onclick="resetZoom()" title="Tamaño original">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
+    <!-- Modal para fotos -->
+    <div class="modal fade" id="modalFotos" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #0E544C; color: white;">
+                    <h5 class="modal-title">Evidencia de la Tardanza</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
-            <div class="image-container">
-                <img id="fotoAmpliada" src="" alt="Foto ampliada">
+                <div class="modal-body">
+                    <div id="carouselFotos" class="carousel slide">
+                        <div class="carousel-inner" id="carouselFotosInner">
+                            <!-- Fotos cargadas vía JS -->
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselFotos"
+                            data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselFotos"
+                            data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Modal para editar tardanza manual -->
-    <div class="modal" id="modalEditarTardanza">
-        <div class="modal-content">
+    <div class="modal-custom" id="modalEditarTardanza">
+        <div class="modal-custom-content">
             <div class="modal-header">
                 <h2 class="modal-title">Editar Tardanza Manual</h2>
                 <button class="modal-close" onclick="cerrarModal()">&times;</button>
@@ -2453,8 +2476,8 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
     </div>
 
     <!-- Popup para consultar marcaciones -->
-    <div class="modal" id="modalConsultarMarcaciones">
-        <div class="modal-content" style="max-width: 700px;">
+    <div class="modal-custom" id="modalConsultarMarcaciones">
+        <div class="modal-custom-content" style="max-width: 700px;">
             <div class="modal-header">
                 <h2 class="modal-title">Información de Marcaciones</h2>
                 <button class="modal-close" onclick="cerrarModalConsultar()">&times;</button>
@@ -2516,33 +2539,6 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="cerrarModalConsultar()" class="btn btn-primary">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Variables globales de zoom
-        let currentZoomLevel = 1;
-        const maxZoomLevel = 5;
-        const minZoomLevel = 1;
-        const zoomStep = 0.5;
-
-        // Variables para manejar el estado de edición
-        let editandoObservaciones = {};
-        let observacionesOriginales = {};
-
-        // Datos de operarios para el autocompletado (generado por PHP)
-        const operariosData = [
-            { id: 0, nombre: 'Todos los colaboradores' },
-            <?php foreach ($operarios as $op): ?>
-                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
-            <?php endforeach; ?>
-        ];
-    </script>
-    <script src="js/tardanzas_manual.js"></script>
-
-
-    <!-- DataTables y demás JS movidos a js/tardanzas_manual.js -->
             </div>
         </div>
     </div>

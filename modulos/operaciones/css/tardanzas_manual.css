@@ -227,7 +227,7 @@ td:nth-child(6) {
     color: #0c5460;
 }
 
-.modal {
+.modal-custom {
     display: none;
     position: fixed;
     top: 0;
@@ -240,7 +240,7 @@ td:nth-child(6) {
     align-items: center;
 }
 
-.modal-content {
+.modal-custom-content {
     background: white;
     padding: 20px;
     border-radius: 8px;
@@ -248,9 +248,7 @@ td:nth-child(6) {
     width: 90%;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     max-height: 90vh;
-    /* Limitar altura máxima */
     overflow-y: auto;
-    /* Habilitar scroll vertical */
 }
 
 .modal-header {
@@ -431,33 +429,11 @@ td:nth-child(6) {
     color: #6c757d;
 }
 
-/* Estilos para el modal de foto ampliada */
-#modalVerFoto {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
-    z-index: 10000;
-    justify-content: center;
-    align-items: center;
-}
-
-#modalVerFoto .modal-content {
-    background: rgba(0, 0, 0, 0.9);
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-#modalVerFoto .modal-close {
-    pointer-events: auto;
-}
-
-#fotoAmpliada {
-    max-width: 100%;
-    max-height: 100%;
+/* Estilos para el modal de fotos estandarizado */
+.carousel-inner img {
+    max-height: 500px;
     object-fit: contain;
+    width: 100%;
 }
 
 .btn-contabilidad {
@@ -544,130 +520,6 @@ a.btn {
     color: #0E544C !important;
 }
 
-/* Estilos para el modal de foto ampliada - CORREGIDOS */
-#modalVerFoto {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
-    z-index: 10000;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    /* Cambia el cursor a pointer para indicar que se puede cerrar */
-}
-
-.modal-content-foto {
-    background: transparent;
-    max-width: 85%;
-    max-height: 85%;
-    width: auto;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    cursor: default;
-    /* El contenido no cambia el cursor */
-}
-
-.modal-header-foto {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding: 0 10px;
-}
-
-.modal-close-foto {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 1.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s;
-}
-
-.modal-close-foto:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.zoom-controls {
-    display: flex;
-    gap: 10px;
-}
-
-.btn-zoom {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s;
-}
-
-.btn-zoom:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.image-container {
-    overflow: auto;
-    max-width: 100%;
-    max-height: calc(85vh - 80px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: transparent;
-    border-radius: 8px;
-    padding: 10px;
-    cursor: default;
-    /* El contenedor de imagen no cambia el cursor */
-}
-
-#fotoAmpliada {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    transition: transform 0.3s ease;
-    border-radius: 4px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    cursor: default;
-    /* La imagen no cambia el cursor */
-}
-
-/* Estados de zoom */
-#fotoAmpliada.zoom-1 {
-    transform: scale(1);
-}
-
-#fotoAmpliada.zoom-2 {
-    transform: scale(1.5);
-}
-
-#fotoAmpliada.zoom-3 {
-    transform: scale(2);
-}
-
-#fotoAmpliada.zoom-4 {
-    transform: scale(2.5);
-}
-
-#fotoAmpliada.zoom-5 {
-    transform: scale(3);
-}
 
 /* Estilos para botones de acción inline */
 .action-buttons-inline {
