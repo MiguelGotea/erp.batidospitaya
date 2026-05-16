@@ -362,9 +362,9 @@ try {
                                     <li class="mb-1"><b>Sugerencia:</b> La resta entre el Stock Máximo Final y tu Inventario Actual.</li>
                                 </ul>
                             </div>
-                            <!-- Desglose Hover -->
+                            <!-- Desglose Indicadores -->
                             <div class="col-md-6 border-start ps-3">
-                                <h7 class="fw-bold text-primary small d-block mb-2">Indicadores (Hover)</h7>
+                                <h7 class="fw-bold text-primary small d-block mb-2">Indicadores (Encabezado)</h7>
                                 <ul class="list-unstyled small text-muted">
                                     <li class="mb-1"><b>Adj:</b> Porcentaje manual de aumento o disminución de la demanda.</li>
                                     <li class="mb-1"><b>Ciclo:</b> Cuántos días pasan entre un pedido y el siguiente.</li>

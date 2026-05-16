@@ -40,10 +40,8 @@ $(document).ready(function () {
             const idParent = $(this).data('id');
             if (txt.includes(q)) {
                 $(this).show();
-                $(`.ps-fila-indicadores[data-parent="${idParent}"]`).show();
             } else {
                 $(this).hide();
-                $(`.ps-fila-indicadores[data-parent="${idParent}"]`).hide();
             }
         });
         // Ocultar headers de grupo vacíos
@@ -200,7 +198,20 @@ function renderizarResultados(res) {
             ? 'Sin Categoría Asignada'
             : `${cat} — ${CAT_LABELS[cat] || cat}`;
 
-        html += `<tr class="fila-grupo-header"><td colspan="13">${catLabel} (${items.length})</td></tr>`;
+        const fmtLocal = (v, d = 4) => v !== null && v !== undefined ? Number(v).toLocaleString('es-NI', { minimumFractionDigits: d, maximumFractionDigits: d }) : 'N/A';
+
+        let headerInfo = '';
+        if (cat !== '_sin_cat' && items.length > 0) {
+            const p0 = items[0];
+            headerInfo = ` <span class="ms-3 small fw-normal text-muted" style="font-size: 0.85em;">
+                <b title="Ajuste Demanda">Adj:</b> ${fmtLocal(p0.ajuste_demanda * 100, 2)}% <span class="mx-1">|</span>
+                <b title="Días Ciclo">Ciclo:</b> ${p0.dias_ciclo}d <span class="mx-1">|</span>
+                <b title="Días Desfase">Desf:</b> ${p0.dias_desfase}d <span class="mx-1">|</span>
+                <b title="Días Stock Mínimo">S.Mín:</b> ${p0.dias_stock_min}d
+            </span>`;
+        }
+
+        html += `<tr class="fila-grupo-header"><td colspan="13">${catLabel} (${items.length})${headerInfo}</td></tr>`;
 
         items.forEach(p => {
             totalFilas++;
@@ -237,21 +248,6 @@ function buildFila(p, cat) {
     }
 
     // (Inventario y pedido sugerido removidos)
-
-    const detalleHtml = `
-        <tr class="ps-fila-indicadores cat-${cat !== '_sin_cat' ? cat : 'X'}" data-parent="${p.id_pp}">
-            <td colspan="13">
-                <div class="ps-indicadores-wrapper">
-                    <div class="ps-indicadores-container">
-                        <span class="ps-ind-item" title="Ajuste Demanda"><b>Adj:</b> ${fmt(p.ajuste_demanda * 100, 2)}%</span>
-                        <span class="ps-ind-item" title="Días Ciclo"><b>Ciclo:</b> ${p.dias_ciclo}d</span>
-                        <span class="ps-ind-item" title="Días Desfase"><b>Desf:</b> ${p.dias_desfase}d</span>
-                        <span class="ps-ind-item" title="Días Stock Mínimo"><b>S.Mín:</b> ${p.dias_stock_min}d</span>
-                    </div>
-                </div>
-            </td>
-        </tr>
-    `;
 
     // Semáforo: fecha del próximo despacho
     const fechaDesp = p.fecha_proximo_despacho;
@@ -299,7 +295,6 @@ function buildFila(p, cat) {
             <td class="text-end col-pronostico"><span class="pron-d1" data-idpp="${p.id_pp}">—</span></td>
             <td class="text-center col-pronostico"><span class="pron-desp" data-idpp="${p.id_pp}">—</span></td>
         </tr>
-        ${detalleHtml}
     `;
 }
 
