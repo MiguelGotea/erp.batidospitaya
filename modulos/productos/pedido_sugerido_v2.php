@@ -222,7 +222,6 @@ try {
                                     <thead>
                                         <tr>
                                             <th class="col-producto">Producto</th>
-                                            <th class="text-center">Cat.</th>
                                             <th>Presentación</th>
                                             <th class="text-end" title="Promedio de consumo semanal">Prom./Sem.</th>
                                             <th class="text-end" title="Desviación estándar de muestra">Desv. Std</th>
@@ -239,7 +238,7 @@ try {
                                     </thead>
                                     <tbody id="tbodyProductos">
                                         <tr>
-                                            <td colspan="13" class="text-center text-muted py-4">
+                                            <td colspan="12" class="text-center text-muted py-4">
                                                 Aplica los filtros para calcular el pedido sugerido.
                                             </td>
                                         </tr>

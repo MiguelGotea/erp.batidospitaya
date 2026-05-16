@@ -203,7 +203,7 @@ function renderizarResultados(res) {
         let headerInfo = '';
         if (cat !== '_sin_cat' && items.length > 0) {
             const p0 = items[0];
-            headerInfo = ` <span class="ms-3 small fw-normal text-muted" style="font-size: 0.85em;">
+            headerInfo = ` <span class="ms-3 small fw-normal text-white" style="font-size: 0.85em;">
                 <b title="Ajuste Demanda">Adj:</b> ${fmtLocal(p0.ajuste_demanda * 100, 2)}% <span class="mx-1">|</span>
                 <b title="Días Ciclo">Ciclo:</b> ${p0.dias_ciclo}d <span class="mx-1">|</span>
                 <b title="Días Desfase">Desf:</b> ${p0.dias_desfase}d <span class="mx-1">|</span>
@@ -211,7 +211,7 @@ function renderizarResultados(res) {
             </span>`;
         }
 
-        html += `<tr class="fila-grupo-header"><td colspan="13">${catLabel} (${items.length})${headerInfo}</td></tr>`;
+        html += `<tr class="fila-grupo-header"><td colspan="12">${catLabel} (${items.length})${headerInfo}</td></tr>`;
 
         items.forEach(p => {
             totalFilas++;
@@ -219,7 +219,7 @@ function renderizarResultados(res) {
         });
     });
 
-    $('#tbodyProductos').html(html || '<tr><td colspan="13" class="text-center text-muted py-4">Sin productos con consumo en el período.</td></tr>');
+    $('#tbodyProductos').html(html || '<tr><td colspan="12" class="text-center text-muted py-4">Sin productos con consumo en el período.</td></tr>');
     $('#labelResultados').text(`${totalFilas} producto${totalFilas !== 1 ? 's' : ''}`);
 
     $('#panelDatos').removeClass('d-none');
@@ -229,10 +229,6 @@ function renderizarResultados(res) {
 // Construir fila de la tabla
 // ====================================================
 function buildFila(p, cat) {
-    const catBadge = cat !== '_sin_cat'
-        ? `<span class="cat-badge cat-${cat}-bg">${cat}</span>`
-        : '<span class="val-na">—</span>';
-
     const fmt = (v, d = 4) => v !== null && v !== undefined ? Number(v).toLocaleString('es-NI', { minimumFractionDigits: d, maximumFractionDigits: d }) : '<span class="val-na">N/A</span>';
     const fmt2 = (v) => fmt(v, 2);
 
@@ -281,7 +277,6 @@ function buildFila(p, cat) {
     return `
         <tr class="ps-fila-producto cat-${cat !== '_sin_cat' ? cat : 'X'}" data-id="${p.id_pp}">
             <td class="col-producto"><span class="fw-500">${escHtml(p.nombre)}</span></td>
-            <td class="text-center">${catBadge}</td>
             <td>${escHtml(p.unidad || '—')}</td>
             <td class="text-end">${fmt2(p.prom_consumo)}</td>
             <td class="text-end">${fmt2(p.desv_estandar)}</td>
