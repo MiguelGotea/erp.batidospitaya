@@ -16,6 +16,7 @@ if (!$tienePermisoVista) {
 
 $tienePermisoPlanificacion = tienePermiso('administracion_colaboradores_lideres', 'planificacion', $cargoOperario);
 $tienePermisoEditar = tienePermiso('administracion_colaboradores_lideres', 'editar_colaborador', $cargoOperario);
+$tienePermisoEditarSupervisor = tienePermiso('administracion_colaboradores_lideres', 'editar_supervisor', $cargoOperario);
 
 // Obtener cargo principal
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
@@ -368,7 +369,8 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
 
 <body data-tipo-semana="<?= htmlspecialchars($tipoSemana) ?>"
     data-tiene-permiso-editar="<?= $tienePermisoEditar ? '1' : '0' ?>"
-    data-tiene-permiso-planificacion="<?= $tienePermisoPlanificacion ? '1' : '0' ?>">
+    data-tiene-permiso-planificacion="<?= $tienePermisoPlanificacion ? '1' : '0' ?>"
+    data-tiene-permiso-editar-supervisor="<?= $tienePermisoEditarSupervisor ? '1' : '0' ?>">
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
@@ -492,16 +494,27 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                                 style="opacity: 0.8; display:none;">#<?= $sucursal['codigo'] ?></small>
                                                         </div>
                                                     </div>
-                                                    <?php if (!empty($sucursal['supervisores'])): ?>
-                                                        <div style="font-size: 0.8em; opacity: 0.9; margin-top: 4px; font-weight: normal;">
-                                                            <i class="fas fa-user-tie"></i> Supervisor<?= count($sucursal['supervisores']) > 1 ? 'es' : '' ?>:
-                                                            <?= htmlspecialchars(implode(', ', array_map(fn($s) => trim($s['Nombre'] . ' ' . $s['Apellido']), $sucursal['supervisores']))) ?>
+                                                    <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:4px;">
+                                                        <div style="font-size: 0.8em; opacity: 0.9; font-weight: normal; font-style: <?= empty($sucursal['supervisores']) ? 'italic' : 'normal' ?>;" class="supervisor-display" data-cod-sucursal="<?= $sucursal['codigo'] ?>">
+                                                            <i class="fas fa-user-tie"></i>
+                                                            <?php if (!empty($sucursal['supervisores'])): ?>
+                                                                Supervisor<?= count($sucursal['supervisores']) > 1 ? 'es' : '' ?>:
+                                                                <?= htmlspecialchars(implode(', ', array_map(fn($s) => trim($s['Nombre'] . ' ' . $s['Apellido']), $sucursal['supervisores']))) ?>
+                                                            <?php else: ?>
+                                                                Sin supervisor asignado
+                                                            <?php endif; ?>
                                                         </div>
-                                                    <?php else: ?>
-                                                        <div style="font-size: 0.8em; opacity: 0.9; margin-top: 4px; font-weight: normal; font-style: italic;">
-                                                            <i class="fas fa-user-tie"></i> Sin supervisor asignado
-                                                        </div>
-                                                    <?php endif; ?>
+                                                        <?php if ($tienePermisoEditarSupervisor): ?>
+                                                            <button type="button"
+                                                                class="btn-edit-supervisor"
+                                                                title="Editar supervisores"
+                                                                data-cod-sucursal="<?= $sucursal['codigo'] ?>"
+                                                                data-nombre-sucursal="<?= htmlspecialchars($sucursal['nombre']) ?>"
+                                                                data-supervisores='<?= htmlspecialchars(json_encode(array_map(fn($s) => ['id' => (int)$s['CodOperario'], 'nombre' => trim($s['Nombre'] . ' ' . $s['Apellido'])], $sucursal['supervisores'])), ENT_QUOTES) ?>'>
+                                                                <i class="fas fa-pencil-alt"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </div>
 
                                                 <div class="sucursal-body">
@@ -644,6 +657,225 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
 
                 // Ocultar la sección completa si ninguna tarjeta es visible
                 seccion.style.display = visibles === 0 ? 'none' : '';
+            });
+        });
+    })();
+    </script>
+
+    <!-- Modal para editar supervisores -->
+    <div id="modalSupervisor" class="modal-supervisor-overlay" style="display:none;">
+        <div class="modal-supervisor-box">
+            <div class="modal-supervisor-header">
+                <span><i class="fas fa-user-tie"></i> Supervisores: <strong id="modalSucursalNombre"></strong></span>
+                <button type="button" id="btnCerrarModalSupervisor" class="modal-supervisor-close">&times;</button>
+            </div>
+            <div class="modal-supervisor-body">
+                <!-- Chips de supervisores actuales -->
+                <div id="supervisoresChips" class="supervisores-chips-container"></div>
+
+                <!-- Buscador autocomplete -->
+                <div class="supervisor-search-wrap">
+                    <i class="fas fa-search supervisor-search-icon"></i>
+                    <input type="text" id="inputBuscarSupervisor" placeholder="Buscar colaborador por nombre…" autocomplete="off" class="supervisor-search-input">
+                    <ul id="supervisorDropdown" class="supervisor-dropdown"></ul>
+                </div>
+                <p class="supervisor-hint">Escribe un nombre para buscar. Haz clic en un resultado para agregar como supervisor.</p>
+            </div>
+            <div class="modal-supervisor-footer">
+                <button type="button" id="btnCancelarSupervisor" class="btn-modal-cancelar">Cancelar</button>
+                <button type="button" id="btnGuardarSupervisor" class="btn-modal-guardar">
+                    <i class="fas fa-save"></i> Guardar supervisores
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const tienePermisoEditarSupervisor = document.body.dataset.tienePermisoEditarSupervisor === '1';
+        if (!tienePermisoEditarSupervisor) return;
+
+        let currentCodSucursal = null;
+        let currentSupervisores = []; // [{id, nombre}]
+        let searchTimer = null;
+
+        const modal = document.getElementById('modalSupervisor');
+        const modalNombre = document.getElementById('modalSucursalNombre');
+        const chipsContainer = document.getElementById('supervisoresChips');
+        const inputBuscar = document.getElementById('inputBuscarSupervisor');
+        const dropdown = document.getElementById('supervisorDropdown');
+        const btnCerrar = document.getElementById('btnCerrarModalSupervisor');
+        const btnCancelar = document.getElementById('btnCancelarSupervisor');
+        const btnGuardar = document.getElementById('btnGuardarSupervisor');
+
+        // Abrir modal al hacer clic en el lápiz
+        document.querySelectorAll('.btn-edit-supervisor').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentCodSucursal = this.dataset.codSucursal;
+                modalNombre.textContent = this.dataset.nombreSucursal;
+                try {
+                    currentSupervisores = JSON.parse(this.dataset.supervisores) || [];
+                } catch(ex) {
+                    currentSupervisores = [];
+                }
+                renderChips();
+                inputBuscar.value = '';
+                dropdown.innerHTML = '';
+                dropdown.style.display = 'none';
+                modal.style.display = 'flex';
+                setTimeout(() => inputBuscar.focus(), 100);
+            });
+        });
+
+        function cerrarModal() {
+            modal.style.display = 'none';
+            currentCodSucursal = null;
+        }
+
+        btnCerrar.addEventListener('click', cerrarModal);
+        btnCancelar.addEventListener('click', cerrarModal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) cerrarModal();
+        });
+
+        // Renderizar chips
+        function renderChips() {
+            chipsContainer.innerHTML = '';
+            if (currentSupervisores.length === 0) {
+                chipsContainer.innerHTML = '<span class="supervisor-chip-empty">Sin supervisores asignados</span>';
+                return;
+            }
+            currentSupervisores.forEach(function(sup) {
+                const chip = document.createElement('span');
+                chip.className = 'supervisor-chip';
+                chip.dataset.id = sup.id;
+                chip.innerHTML = '<i class="fas fa-user-tie"></i> ' + escapeHtml(sup.nombre) +
+                    ' <button type="button" class="chip-remove" data-id="' + sup.id + '" title="Quitar">&times;</button>';
+                chipsContainer.appendChild(chip);
+            });
+
+            // Listeners para quitar
+            chipsContainer.querySelectorAll('.chip-remove').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.id);
+                    currentSupervisores = currentSupervisores.filter(s => s.id !== id);
+                    renderChips();
+                });
+            });
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // Autocomplete
+        inputBuscar.addEventListener('input', function() {
+            const query = this.value.trim();
+            clearTimeout(searchTimer);
+            if (query.length < 1) {
+                dropdown.innerHTML = '';
+                dropdown.style.display = 'none';
+                return;
+            }
+            searchTimer = setTimeout(() => buscarColaboradores(query), 250);
+        });
+
+        function buscarColaboradores(query) {
+            fetch('ajax/buscar_colaboradores.php?q=' + encodeURIComponent(query))
+                .then(r => r.json())
+                .then(function(data) {
+                    dropdown.innerHTML = '';
+                    if (!data.length) {
+                        dropdown.innerHTML = '<li class="supervisor-dropdown-empty">Sin resultados</li>';
+                        dropdown.style.display = 'block';
+                        return;
+                    }
+                    data.forEach(function(op) {
+                        const li = document.createElement('li');
+                        li.className = 'supervisor-dropdown-item';
+                        li.dataset.id = op.id;
+                        li.dataset.nombre = op.nombre;
+                        // Indicar si ya está agregado
+                        const yaAgregado = currentSupervisores.some(s => s.id === op.id);
+                        if (yaAgregado) li.classList.add('ya-agregado');
+                        li.innerHTML = '<i class="fas fa-user"></i> ' + escapeHtml(op.nombre) +
+                            (yaAgregado ? ' <span class="chip-ya">(ya agregado)</span>' : '');
+                        li.addEventListener('click', function() {
+                            if (yaAgregado) return;
+                            currentSupervisores.push({ id: op.id, nombre: op.nombre });
+                            renderChips();
+                            inputBuscar.value = '';
+                            dropdown.innerHTML = '';
+                            dropdown.style.display = 'none';
+                        });
+                        dropdown.appendChild(li);
+                    });
+                    dropdown.style.display = 'block';
+                })
+                .catch(() => {
+                    dropdown.innerHTML = '';
+                    dropdown.style.display = 'none';
+                });
+        }
+
+        // Cerrar dropdown al clic fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.supervisor-search-wrap')) {
+                dropdown.innerHTML = '';
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Guardar
+        btnGuardar.addEventListener('click', function() {
+            if (!currentCodSucursal) return;
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando…';
+
+            const ids = currentSupervisores.map(s => s.id);
+
+            fetch('ajax/guardar_supervisores.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cod_sucursal: currentCodSucursal, supervisores: ids })
+            })
+            .then(r => r.json())
+            .then(function(data) {
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = '<i class="fas fa-save"></i> Guardar supervisores';
+                if (data.success) {
+                    // Actualizar display en la tarjeta sin recargar
+                    const displayEl = document.querySelector('.supervisor-display[data-cod-sucursal="' + currentCodSucursal + '"]');
+                    if (displayEl) {
+                        if (currentSupervisores.length === 0) {
+                            displayEl.innerHTML = '<i class="fas fa-user-tie"></i> Sin supervisor asignado';
+                            displayEl.style.fontStyle = 'italic';
+                        } else {
+                            const label = currentSupervisores.length > 1 ? 'Supervisores' : 'Supervisor';
+                            const nombres = currentSupervisores.map(s => s.nombre).join(', ');
+                            displayEl.innerHTML = '<i class="fas fa-user-tie"></i> ' + label + ': ' + escapeHtml(nombres);
+                            displayEl.style.fontStyle = 'normal';
+                        }
+                    }
+                    // Actualizar el data del botón lápiz para reflejar el nuevo estado
+                    const btnEdit = document.querySelector('.btn-edit-supervisor[data-cod-sucursal="' + currentCodSucursal + '"]');
+                    if (btnEdit) {
+                        btnEdit.dataset.supervisores = JSON.stringify(currentSupervisores);
+                    }
+                    cerrarModal();
+                } else {
+                    alert(data.error || 'Error al guardar.');
+                }
+            })
+            .catch(function() {
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = '<i class="fas fa-save"></i> Guardar supervisores';
+                alert('Error de conexión.');
             });
         });
     })();

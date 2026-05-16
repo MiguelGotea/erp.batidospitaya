@@ -507,3 +507,226 @@
             align-items: center;
             gap: 8px;
         }
+
+        /* ── Botón lápiz editar supervisor ── */
+        .btn-edit-supervisor {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.5);
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            padding: 0;
+            flex-shrink: 0;
+            font-size: 11px !important;
+        }
+        .btn-edit-supervisor:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        /* ── Modal overlay ── */
+        .modal-supervisor-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-supervisor-box {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-supervisor-header {
+            background: #0E544C;
+            color: white;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 14px !important;
+        }
+        .modal-supervisor-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px !important;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+            opacity: 0.8;
+        }
+        .modal-supervisor-close:hover { opacity: 1; }
+
+        .modal-supervisor-body {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-supervisor-footer {
+            padding: 12px 18px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ── Chips ── */
+        .supervisores-chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 36px;
+            padding: 8px;
+            background: #f0faf9;
+            border: 1px dashed #51B8AC;
+            border-radius: 8px;
+        }
+        .supervisor-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #0E544C;
+            color: white;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 12px !important;
+            font-weight: 600;
+        }
+        .supervisor-chip i { font-size: 11px !important; }
+        .chip-remove {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.8);
+            cursor: pointer;
+            font-size: 16px !important;
+            line-height: 1;
+            padding: 0;
+            margin-left: 2px;
+        }
+        .chip-remove:hover { color: white; }
+        .supervisor-chip-empty {
+            color: #999;
+            font-style: italic;
+            font-size: 12px !important;
+        }
+
+        /* ── Buscador autocomplete ── */
+        .supervisor-search-wrap {
+            position: relative;
+        }
+        .supervisor-search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 13px !important;
+            pointer-events: none;
+        }
+        .supervisor-search-input {
+            width: 100%;
+            padding: 8px 12px 8px 32px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 13px !important;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .supervisor-search-input:focus {
+            border-color: #0E544C;
+            box-shadow: 0 0 0 3px rgba(14,84,76,.15);
+        }
+        .supervisor-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            list-style: none;
+            padding: 4px 0;
+            margin: 0;
+            z-index: 10001;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .supervisor-dropdown-item {
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 13px !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #333;
+            transition: background .15s;
+        }
+        .supervisor-dropdown-item:hover:not(.ya-agregado) {
+            background: #e7f6f4;
+            color: #0E544C;
+        }
+        .supervisor-dropdown-item.ya-agregado {
+            opacity: 0.5;
+            cursor: default;
+        }
+        .supervisor-dropdown-item i { color: #51B8AC; font-size: 12px !important; }
+        .chip-ya { font-size: 11px !important; color: #888; }
+        .supervisor-dropdown-empty {
+            padding: 10px 14px;
+            color: #999;
+            font-style: italic;
+            font-size: 12px !important;
+        }
+        .supervisor-hint {
+            font-size: 11px !important;
+            color: #888;
+            margin: 0;
+        }
+
+        /* ── Botones footer modal ── */
+        .btn-modal-cancelar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px !important;
+            transition: background .2s;
+        }
+        .btn-modal-cancelar:hover { background: #5a6268; }
+        .btn-modal-guardar {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px !important;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .2s;
+        }
+        .btn-modal-guardar:hover { background: #218838; }
+        .btn-modal-guardar:disabled { background: #ccc; cursor: not-allowed; }
