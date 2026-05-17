@@ -182,7 +182,7 @@ if ($puede_nuevo_todos) {
     $stmtSucursales = $conn->prepare("SELECT s.codigo as id, s.nombre as name, cs.monto_designado 
                                      FROM sucursales s
                                      LEFT JOIN caja_chica_sucursales cs ON s.codigo = cs.sucursal_id AND cs.activo = 1
-                                     WHERE s.activa = 1 AND s.codigo NOT IN (0, 14) AND JSON_CONTAINS(s.supervisor_asignado, CAST(? AS JSON))
+                                     WHERE s.activa = 1 AND s.codigo NOT IN (0, 14) AND JSON_VALID(COALESCE(NULLIF(s.supervisor_asignado, ''), '[]')) = 1 AND JSON_CONTAINS(COALESCE(NULLIF(s.supervisor_asignado, ''), '[]'), CAST(? AS JSON))
                                      ORDER BY s.nombre");
     $stmtSucursales->execute([$_SESSION['usuario_id']]);
 }
