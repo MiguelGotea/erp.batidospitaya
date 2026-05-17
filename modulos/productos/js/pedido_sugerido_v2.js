@@ -345,13 +345,15 @@ async function calcularPronosticoMasivo() {
     for (let i = 0; i < productos.length; i += LOTE) {
         const batch = productos.slice(i, i + LOTE);
         await Promise.all(batch.map(prod => {
-            // cons_proy_diario = suma real / (n_semanas_rango × 7)
-            // Igual que el Kardex: denominator = TODOS los días del rango (incluyendo
-            // semanas con consumo 0 que ventana_activa excluyó).
-            // Ejemplo: sems 537-541 (n=5), sum=221 → 221/35 = 6.314/día ← Kardex ✓
+            // cons_proy_diario: usa total_consumo_rango (suma bruta de TODAS las semanas del rango,
+            // sin filtro de ventana activa) dividido por los días totales del rango.
+            // Esto es idéntico al _promDiario del Kardex: misma fuente, mismo denominador.
             const nSemsRango = (semHasta - semDesde) + 1;
-            const totalConsRango = Object.values(prod.semanas_consumo ?? {})
-                .reduce((a, v) => a + v, 0);
+            // Preferir total_consumo_rango (enviado por calcular_v2 con ceros incluidos)
+            // para garantizar alineación exacta con el Kardex.
+            const totalConsRango = (prod.total_consumo_rango ?? null) !== null
+                ? prod.total_consumo_rango
+                : Object.values(prod.semanas_consumo ?? {}).reduce((a, v) => a + v, 0);
             const consProyDiario = (nSemsRango > 0 && totalConsRango > 0)
                 ? totalConsRango / (nSemsRango * 7)
                 : prod.cons_diario;
