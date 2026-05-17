@@ -42,6 +42,7 @@ if ($canFilterAll) {
 
 $todasSucursales = obtenerSucursalesFisicas(); // Para el selector de sucursal externa
 
+
 // Verificar restricción de edición según semana del sistema
 $semanaActual = obtenerSemanaActual();
 $hoyObj = new DateTime('now', new DateTimeZone('America/Managua'));
@@ -1769,11 +1770,11 @@ function obtenerCategoriasDesdeBD()
                         foreach ($todasCategorias as $categoria):
                             if (in_array($categoria['idCategoria'], $categoriasMostradas)):
                                 $colorFondo = obtenerColorCategoria($categoria['idCategoria']);
-                        ?>
+                                ?>
                                 <span class="leyenda-item" style="background-color: <?= $colorFondo ?>;">
                                     <?= htmlspecialchars($categoria['NombreCategoria']) ?> (<?= $categoria['Peso'] ?>)
                                 </span>
-                        <?php
+                                <?php
                             endif;
                         endforeach;
                         ?>
@@ -1794,7 +1795,8 @@ function obtenerCategoriasDesdeBD()
                                 <br><strong>Estado:</strong> <?= $periodoEdicion ? 'DENTRO del período' : 'FUERA del período' ?>
                             <?php else: ?>
                                 Período de edición para la semana <?= $semanaSiguiente['numero_semana'] ?>:
-                                <?= $sabadoSemanaActual->format('d-m-Y H:i') ?> a <?= $domingoSemanaActual->format('d-m-Y H:i') ?> (hora
+                                <?= $sabadoSemanaActual->format('d-m-Y H:i') ?> a <?= $domingoSemanaActual->format('d-m-Y H:i') ?>
+                                (hora
                                 Managua)
                                 <br><strong>Hora actual:</strong> <?= $hoyObj->format('d-m-Y H:i:s') ?> (hora Managua)
                                 <?php if ($horarioAutorizado): ?>
@@ -1817,8 +1819,8 @@ function obtenerCategoriasDesdeBD()
                     <!-- Filtro de semana -->
                     <div class="filter-item">
                         <label for="semana">No. Semana</label>
-                        <input type="number" id="semana" name="semana" min="1" max="1825" value="<?= $semanaSeleccionada ?>"
-                            placeholder="Ej: 495">
+                        <input type="number" id="semana" name="semana" min="1" max="1825"
+                            value="<?= $semanaSeleccionada ?>" placeholder="Ej: 495">
                     </div>
 
                     <!-- Filtro de sucursal con botón buscar -->
@@ -1840,13 +1842,13 @@ function obtenerCategoriasDesdeBD()
 
                     <!-- Botón de aprobación/desaprobación -->
                     <?php if ($canAuthorize): ?>
-                    <div class="filter-item">
-                        <label>&nbsp;</label>
-                        <button type="button" onclick="aprobarEdicionLider()" class="btn btn-warning">
-                            <i class="fas <?= $horarioAutorizado ? 'fa-lock' : 'fa-unlock' ?>"></i>
-                            <?= $horarioAutorizado ? 'Cerrar Edición Líder' : 'Liberar Edición Líder' ?>
-                        </button>
-                    </div>
+                        <div class="filter-item">
+                            <label>&nbsp;</label>
+                            <button type="button" onclick="aprobarEdicionLider()" class="btn btn-warning">
+                                <i class="fas <?= $horarioAutorizado ? 'fa-lock' : 'fa-unlock' ?>"></i>
+                                <?= $horarioAutorizado ? 'Cerrar Edición Líder' : 'Liberar Edición Líder' ?>
+                            </button>
+                        </div>
                     <?php endif; ?>
 
                     <!-- Formulario para agregar operarios adicionales -->
@@ -1881,20 +1883,20 @@ function obtenerCategoriasDesdeBD()
                                     }
 
                                     if (!$yaEnLista):
-                                ?>
+                                        ?>
                                         <option value="<?= $op['CodOperario'] ?>">
                                             <?= htmlspecialchars($op['Nombre'] . ' ' . $op['Apellido'] . ' ' . $op['Apellido2']) ?>
                                         </option>
-                                <?php
+                                        <?php
                                     endif;
                                 endforeach;
                                 ?>
                             </select>
 
                             <?php if ($canManage): ?>
-                            <button type="button" onclick="agregarOperario()" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Agregar
-                            </button>
+                                <button type="button" onclick="agregarOperario()" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Agregar
+                                </button>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -1913,13 +1915,14 @@ function obtenerCategoriasDesdeBD()
                             <i class="fas fa-exclamation-triangle"></i>
                             <strong>¡Atención!</strong> Se detectaron cambios en los horarios programados por los líderes
                             después de la última confirmación.
-                            <button type="button" onclick="mostrarDetallesCambios()" class="btn btn-sm btn-outline-dark ml-2">
+                            <button type="button" onclick="mostrarDetallesCambios()"
+                                class="btn btn-sm btn-outline-dark ml-2">
                                 <i class="fas fa-history"></i> Ver Cambios de Líderes
                             </button>
                             <?php if ($canManage): ?>
-                            <button type="button" onclick="actualizarDesdeLideres()" class="btn btn-sm btn-primary ml-2">
-                                <i class="fas fa-sync"></i> Sincronizar desde Líderes
-                            </button>
+                                <button type="button" onclick="actualizarDesdeLideres()" class="btn btn-sm btn-primary ml-2">
+                                    <i class="fas fa-sync"></i> Sincronizar desde Líderes
+                                </button>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -1929,7 +1932,8 @@ function obtenerCategoriasDesdeBD()
                     <?php if (empty($horariosLider)): ?>
                         <div class="alert alert-info">
                             No se ha registrado horario por parte del líder de la sucursal
-                            "<?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>" en la semana
+                            "<?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>" en
+                            la semana
                             seleccionada.
                         </div>
 
@@ -1937,7 +1941,8 @@ function obtenerCategoriasDesdeBD()
                         <div style="display:none; font-weight:bold;" class="subtitle">
                             Confirmando horarios para la semana <?= $semanaSeleccionada ?>
                             (<?= formatoFecha($semana['fecha_inicio']) ?> al <?= formatoFecha($semana['fecha_fin']) ?>)
-                            | Sucursal: <?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>
+                            | Sucursal:
+                            <?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>
                         </div>
 
                         <form method="post" id="horariosForm" onsubmit="return false;">
@@ -1980,7 +1985,7 @@ function obtenerCategoriasDesdeBD()
                                             $horarioOperaciones = obtenerHorarioOperaciones($operario['CodOperario'], $semana['id'], $sucursalSeleccionada);
 
                                             $horarioExistente = obtenerHorarioOperaciones($operario['CodOperario'], $semana['id'], $sucursalSeleccionada) !== false;
-                                        ?>
+                                            ?>
                                             <tr class="<?= obtenerClaseCategoria($operario['categoria']['NombreCategoria']) ?>"
                                                 data-existente="<?= $horarioExistente ? 'true' : 'false' ?>"
                                                 data-operario="<?= $operario['CodOperario'] ?>" <?= !$horarioLider ? 'data-sin-lider="true"' : '' ?>
@@ -1990,7 +1995,7 @@ function obtenerCategoriasDesdeBD()
                                                     <div style="margin-bottom: 5px; font-weight: bold;">
                                                         <?= htmlspecialchars($operario['Nombre'] . ' ' . $operario['Apellido'] . ' ' . $operario['Apellido2']) ?>
                                                         <? //= htmlspecialchars($operario['CodOperario']) 
-                                                        ?>
+                                                                    ?>
                                                         <?php if (!$horarioLider): ?>
                                                             <span style="color: #ffc107; font-size: 0.8rem; display: block;">
                                                                 <i class="fas fa-exclamation-triangle"></i> Sin horario del líder
@@ -2066,15 +2071,17 @@ function obtenerCategoriasDesdeBD()
                                                     $entradaLider = $horarioLider["{$dia}_entrada"] ?? '';
                                                     $salidaLider = $horarioLider["{$dia}_salida"] ?? '';
                                                     $horasDiaLider = $horarioLider["{$dia}_horas"] ?? 0;
-                                                ?>
+                                                    ?>
                                                     <td>
                                                         <div class="compact-cell">
                                                             <div class="status-comment-group">
-                                                                <select name="horarios[<?= $operario['CodOperario'] ?>][<?= $dia ?>_estado]"
+                                                                <select
+                                                                    name="horarios[<?= $operario['CodOperario'] ?>][<?= $dia ?>_estado]"
                                                                     class="status-select-compact"
                                                                     onchange="actualizarEstado(this, '<?= $dia ?>_<?= $operario['CodOperario'] ?>')"
                                                                     <?= !$puedeEditar ? 'disabled' : '' ?>>
-                                                                    <option value="Activo" <?= $estado == 'Activo' ? 'selected' : '' ?>>Activo
+                                                                    <option value="Activo" <?= $estado == 'Activo' ? 'selected' : '' ?>>
+                                                                        Activo
                                                                     </option>
                                                                     <option value="Vacaciones" <?= $estado == 'Vacaciones' ? 'selected' : '' ?>>
                                                                         Vacaciones</option>
@@ -2082,7 +2089,8 @@ function obtenerCategoriasDesdeBD()
                                                                         Subsidio</option>
                                                                     <option value="Libre" <?= $estado == 'Libre' ? 'selected' : '' ?>>Libre
                                                                     </option>
-                                                                    <option value="Feriado" <?= $estado == 'Feriado' ? 'selected' : '' ?>>Feriado
+                                                                    <option value="Feriado" <?= $estado == 'Feriado' ? 'selected' : '' ?>>
+                                                                        Feriado
                                                                     </option>
                                                                     <option value="Comp.Feriado" <?= $estado == 'Comp.Feriado' ? 'selected' : '' ?>>Comp. Feriado</option>
                                                                     <option value="Otra.Tienda" <?= $estado == 'Otra.Tienda' ? 'selected' : '' ?>>
@@ -2096,7 +2104,8 @@ function obtenerCategoriasDesdeBD()
                                                                     onclick="openCommentModal('<?= $dia ?>_<?= $operario['CodOperario'] ?>', '<?= htmlspecialchars($comentario) ?>', this)"
                                                                     title="<?= !empty($comentario) ? 'Editar comentario: ' . htmlspecialchars($comentario) : 'Agregar comentario' ?>"
                                                                     <?= !$puedeEditar ? 'disabled' : '' ?>>
-                                                                    <i class="fas fa-comment<?= !empty($comentario) ? '' : '-alt' ?>"></i>
+                                                                    <i
+                                                                        class="fas fa-comment<?= !empty($comentario) ? '' : '-alt' ?>"></i>
                                                                 </button>
 
                                                                 <input type="hidden"
@@ -2238,15 +2247,15 @@ function obtenerCategoriasDesdeBD()
                                                 <td style="text-align: center; display: none;">
                                                     <?php if ($puedeEditar): ?>
                                                         <button style="display:none;" type="button"
-                                                            onclick="guardarOperario(<?= $operario['CodOperario'] ?>)" class="btn btn-primary"
-                                                            style="padding: 5px 8px; margin-bottom: 5px;" title="Guardar este operario"
-                                                            <?= $semanaSeleccionada > $semanaPermitida ? 'disabled' : '' ?>>
+                                                            onclick="guardarOperario(<?= $operario['CodOperario'] ?>)"
+                                                            class="btn btn-primary" style="padding: 5px 8px; margin-bottom: 5px;"
+                                                            title="Guardar este operario" <?= $semanaSeleccionada > $semanaPermitida ? 'disabled' : '' ?>>
                                                             <i class="fas fa-save"></i>
                                                         </button>
                                                         <button type="button"
                                                             onclick="eliminarOperario(this, <?= $operario['CodOperario'] ?>, <?= $semana['id'] ?? 'null' ?>, '<?= $sucursalSeleccionada ?>')"
-                                                            class="btn btn-danger" style="padding: 5px 8px;" title="Eliminar este operario"
-                                                            <?= $semanaSeleccionada > $semanaPermitida ? 'disabled' : '' ?>>
+                                                            class="btn btn-danger" style="padding: 5px 8px;"
+                                                            title="Eliminar este operario" <?= $semanaSeleccionada > $semanaPermitida ? 'disabled' : '' ?>>
                                                             <i class="fas fa-trash-alt"></i>
                                                         </button>
                                                     <?php endif; ?>
@@ -2287,12 +2296,14 @@ function obtenerCategoriasDesdeBD()
 
                                     <!-- Selector de día (solo visible en modo diario) -->
                                     <div id="selectorDia" style="display: none; margin-bottom: 20px; text-align: center;">
-                                        <label for="selectDia" style="font-weight: bold; margin-right: 10px;">Seleccionar día:</label>
+                                        <label for="selectDia" style="font-weight: bold; margin-right: 10px;">Seleccionar
+                                            día:</label>
                                         <select id="selectDia" onchange="actualizarGraficoHoras()"
                                             style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
                                             <option value="lunes">Lunes (<?= formatoFecha($fechasSemana[0] ?? '') ?>)</option>
                                             <option value="martes">Martes (<?= formatoFecha($fechasSemana[1] ?? '') ?>)</option>
-                                            <option value="miercoles">Miércoles (<?= formatoFecha($fechasSemana[2] ?? '') ?>)</option>
+                                            <option value="miercoles">Miércoles (<?= formatoFecha($fechasSemana[2] ?? '') ?>)
+                                            </option>
                                             <option value="jueves">Jueves (<?= formatoFecha($fechasSemana[3] ?? '') ?>)</option>
                                             <option value="viernes">Viernes (<?= formatoFecha($fechasSemana[4] ?? '') ?>)</option>
                                             <option value="sabado">Sábado (<?= formatoFecha($fechasSemana[5] ?? '') ?>)</option>
@@ -2302,13 +2313,15 @@ function obtenerCategoriasDesdeBD()
 
                                     <!-- Selector de día para distribución por horarios (solo visible en modo horarios) -->
                                     <div id="selectorDiaHorarios" style="display: none; margin-bottom: 20px; text-align: center;">
-                                        <label for="selectDiaHorarios" style="font-weight: bold; margin-right: 10px;">Seleccionar día para
+                                        <label for="selectDiaHorarios" style="font-weight: bold; margin-right: 10px;">Seleccionar
+                                            día para
                                             distribución:</label>
                                         <select id="selectDiaHorarios" onchange="actualizarGraficoHoras()"
                                             style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
                                             <option value="lunes">Lunes (<?= formatoFecha($fechasSemana[0] ?? '') ?>)</option>
                                             <option value="martes">Martes (<?= formatoFecha($fechasSemana[1] ?? '') ?>)</option>
-                                            <option value="miercoles">Miércoles (<?= formatoFecha($fechasSemana[2] ?? '') ?>)</option>
+                                            <option value="miercoles">Miércoles (<?= formatoFecha($fechasSemana[2] ?? '') ?>)
+                                            </option>
                                             <option value="jueves">Jueves (<?= formatoFecha($fechasSemana[3] ?? '') ?>)</option>
                                             <option value="viernes">Viernes (<?= formatoFecha($fechasSemana[4] ?? '') ?>)</option>
                                             <option value="sabado">Sábado (<?= formatoFecha($fechasSemana[5] ?? '') ?>)</option>
@@ -2325,18 +2338,23 @@ function obtenerCategoriasDesdeBD()
                                     </div>
 
                                     <!-- Leyenda del gráfico -->
-                                    <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                                    <div
+                                        style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
                                         <div style="display: flex; align-items: center; gap: 5px;">
-                                            <div style="width: 15px; height: 15px; background-color: #51B8AC; border-radius: 3px;"></div>
+                                            <div style="width: 15px; height: 15px; background-color: #51B8AC; border-radius: 3px;">
+                                            </div>
                                             <span style="font-size: 0.85rem;">Horas Programadas</span>
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 5px;">
-                                            <div style="width: 15px; height: 15px; background-color: #0E544C; border-radius: 3px;"></div>
-                                            <span style="font-size: 0.85rem;" id="textoLeyendaLimite">Máximo Recomendado (48h)</span>
+                                            <div style="width: 15px; height: 15px; background-color: #0E544C; border-radius: 3px;">
+                                            </div>
+                                            <span style="font-size: 0.85rem;" id="textoLeyendaLimite">Máximo Recomendado
+                                                (48h)</span>
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 5px;" id="leyendaInactivo"
                                             style="display: none;">
-                                            <div style="width: 15px; height: 15px; background-color: #6c757d; border-radius: 3px;"></div>
+                                            <div style="width: 15px; height: 15px; background-color: #6c757d; border-radius: 3px;">
+                                            </div>
                                             <span style="font-size: 0.85rem;">Día Inactivo</span>
                                         </div>
                                     </div>
@@ -2890,32 +2908,32 @@ function obtenerCategoriasDesdeBD()
                                         background: #f5f5f5;
                                     }
                                 </style>
-            </div>
-        <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
 
-        <?php if ($puedeEditar): ?>
-            <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-                <?php if ($canManage): ?>
-                <button style="display:none;" type="button" onclick="guardarHorarios()" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Guardar Cambios
-                </button>
-                <button type="button" onclick="confirmarHorarios()" class="btn btn-success">
-                    <i class="fas fa-check"></i> Confirmar Horarios
-                </button>
+                    <?php if ($puedeEditar): ?>
+                        <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                            <?php if ($canManage): ?>
+                                <button style="display:none;" type="button" onclick="guardarHorarios()" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                                <button type="button" onclick="confirmarHorarios()" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Confirmar Horarios
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    </form>
                 <?php endif; ?>
-            </div>
-        <?php endif; ?>
-        </form>
-    <?php endif; ?>
-<?php elseif ($sucursalSeleccionada && !$semanaSeleccionada): ?>
-    <div style="text-align: center; padding: 20px; color: #666;">
-        Ingrese un número de semana para confirmar horarios
-    </div>
-<?php elseif ($semanaSeleccionada && !$semana): ?>
-    <div style="text-align: center; padding: 20px; color: #dc3545;">
-        La semana ingresada no existe en el sistema
-    </div>
-<?php endif; ?>
+            <?php elseif ($sucursalSeleccionada && !$semanaSeleccionada): ?>
+                <div style="text-align: center; padding: 20px; color: #666;">
+                    Ingrese un número de semana para confirmar horarios
+                </div>
+            <?php elseif ($semanaSeleccionada && !$semana): ?>
+                <div style="text-align: center; padding: 20px; color: #dc3545;">
+                    La semana ingresada no existe en el sistema
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Modal para comentarios -->
@@ -3215,7 +3233,7 @@ function obtenerCategoriasDesdeBD()
                 let diasExtendidos = 0;
                 const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
 
-                dias.forEach(function(dia) {
+                dias.forEach(function (dia) {
                     const selectEstado = document.querySelector(`select[name="horarios[${operarioId}][${dia}_estado]"]`);
                     if (!selectEstado) return;
 
@@ -3256,8 +3274,8 @@ function obtenerCategoriasDesdeBD()
             }
 
             // Modificar los event listeners para los inputs de tiempo
-            document.querySelectorAll('input[type="time"]').forEach(function(input) {
-                input.addEventListener('change', function() {
+            document.querySelectorAll('input[type="time"]').forEach(function (input) {
+                input.addEventListener('change', function () {
                     ajustarMinutos(this);
 
                     // Obtener el prefijo (día_operario) del nombre del input
@@ -3271,7 +3289,7 @@ function obtenerCategoriasDesdeBD()
             });
 
             // Prevenir envío del formulario al presionar Enter
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     return false;
@@ -3384,9 +3402,9 @@ function obtenerCategoriasDesdeBD()
 
                 // Enviar por AJAX
                 fetch('guardar_horario_operario.php', {
-                        method: 'POST',
-                        body: formData
-                    })
+                    method: 'POST',
+                    body: formData
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -3495,12 +3513,12 @@ function obtenerCategoriasDesdeBD()
                 // Enviar solicitud al servidor si existe en BD
                 if (existeEnBD && idSemana) {
                     fetch('eliminar_horario_operario.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `cod_operario=${codOperario}&id_semana=${idSemana}&cod_sucursal=${codSucursal}`
-                        })
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `cod_operario=${codOperario}&id_semana=${idSemana}&cod_sucursal=${codSucursal}`
+                    })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
@@ -3600,8 +3618,8 @@ function obtenerCategoriasDesdeBD()
                 const sucursal = document.getElementById('sucursal').value;
                 const accion = <?= $horarioAutorizado ? '0' : '1' ?>;
                 const accionTexto = <?= $horarioAutorizado ? "'CERRAR'" : "'ABRIR'"; ?>;
-                
-                console.log('Enviando aprobación:', {semana, sucursal, accion});
+
+                console.log('Enviando aprobación:', { semana, sucursal, accion });
 
                 if (!confirm(`¿Está seguro que desea ${accionTexto} la edición para la Semana ${semana} en la Sucursal ${sucursal}?`)) {
                     return;
@@ -3614,12 +3632,12 @@ function obtenerCategoriasDesdeBD()
                 btn.disabled = true;
 
                 fetch('aprobar_edicion_lider.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `semana=${semana}&sucursal=${sucursal}&aprobar=${accion}`
-                    })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `semana=${semana}&sucursal=${sucursal}&aprobar=${accion}`
+                })
                     .then(response => {
                         if (!response.ok) throw new Error('Error en la red');
                         return response.json();
@@ -3689,7 +3707,7 @@ function obtenerCategoriasDesdeBD()
             }
 
             // Calcular todos los totales al cargar la página
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 // Obtener todos los operarios que tienen filas en la tabla
                 const filasOperarios = document.querySelectorAll('tr[data-operario]');
 
@@ -3703,12 +3721,12 @@ function obtenerCategoriasDesdeBD()
             // Función para mostrar detalles de cambios
             function mostrarDetallesCambios() {
                 fetch('obtener_detalles_cambios.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>`
-                    })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>`
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -3741,12 +3759,12 @@ function obtenerCategoriasDesdeBD()
                 btn.disabled = true;
 
                 fetch('actualizar_desde_lideres.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>`
-                    })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>`
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -4340,10 +4358,10 @@ function obtenerCategoriasDesdeBD()
                 actualizarGraficoHoras();
 
                 // Observar cambios en los totales de horas y en los campos diarios
-                const observer = new MutationObserver(function(mutations) {
+                const observer = new MutationObserver(function (mutations) {
                     let debeActualizar = false;
 
-                    mutations.forEach(function(mutation) {
+                    mutations.forEach(function (mutation) {
                         if (mutation.type === 'characterData' || mutation.type === 'childList') {
                             if (mutation.target.textContent.match(/\d+\.?\d*/)) {
                                 debeActualizar = true;
@@ -4367,21 +4385,21 @@ function obtenerCategoriasDesdeBD()
 
                 // Observar cambios en selects de estado
                 document.querySelectorAll('select[name*="_estado"]').forEach(select => {
-                    select.addEventListener('change', function() {
+                    select.addEventListener('change', function () {
                         setTimeout(actualizarGraficoHoras, 200);
                     });
                 });
             }
 
             // Llamar a inicializarGrafico cuando el DOM esté listo
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 // Esperar un poco para que se calculen los totales iniciales
                 setTimeout(() => {
                     inicializarGrafico();
 
                     // También actualizar el gráfico cuando se modifiquen los horarios
                     document.querySelectorAll('input[type="time"]').forEach(elemento => {
-                        elemento.addEventListener('change', function() {
+                        elemento.addEventListener('change', function () {
                             setTimeout(actualizarGraficoHoras, 200);
                         });
                     });
@@ -4389,10 +4407,10 @@ function obtenerCategoriasDesdeBD()
             });
 
             // También actualizar el gráfico cuando se eliminen operarios
-            const observerEliminacion = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
+            const observerEliminacion = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
                     if (mutation.removedNodes) {
-                        mutation.removedNodes.forEach(function(node) {
+                        mutation.removedNodes.forEach(function (node) {
                             if (node.nodeType === 1 && node.matches('tr[data-operario]')) {
                                 setTimeout(actualizarGraficoHoras, 100);
                             }
@@ -4430,7 +4448,7 @@ function obtenerCategoriasDesdeBD()
             }
 
             // Ejecutar al cargar la página
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 setTimeout(() => {
                     limpiarSucursalesExternasInvalidas();
                 }, 100);
