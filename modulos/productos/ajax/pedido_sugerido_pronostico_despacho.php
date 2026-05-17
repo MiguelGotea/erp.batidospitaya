@@ -106,72 +106,124 @@ try {
     $allCods   = array_keys($codMapBalance);
     $sinCods   = empty($allCods);
 
-    // ── 3. Stock base: primero InventarioCotizacion de semAntCorte (= Kardex) ─
-    // Si no hay datos ahí, fallback a tabla inventario del semCorte
-    $stockDomingo   = null;
-    $domingoBase    = null; // Fecha real del snapshot
-    $fechaMovDesde  = null; // Primer día de movimientos a incluir
+    // ── 3. Stock base — ALINEADO CON KARDEX (después del fix de línea morada) ──────────────
+    // El Kardex ahora parte del ÚLTIMO DÍA DEL RANGO (semHasta fin) para proyectar.
+    // Aquí hacemos lo mismo: buscamos el inventario físico de semHasta como punto de arranque
+    // y proyectamos solo los días futuros (semHastaFin → D1).
+    //
+    // Flujo de prioridades:
+    //   1. InventarioCotizacion de semHasta  → stock al cierre del rango analizado (= fin línea verde)
+    //   2. InventarioCotizacion de semAntCorte + movimientos hasta semHastaFin (fallback)
+    //   3. Tabla inventario ERP (fallback final)
 
-    if (!$sinCods && $semAntCorte) {
-        $phC = implode(',', array_fill(0, count($allCods), '?'));
-        // InventarioCotizacion de la semana ANTERIOR al corte (igual que Kardex inv_inicial)
-        $stmtIC = $conn->prepare("SELECT k.CodCotizacion, k.Cantidad FROM msaccess_masivo_InventarioCotizacion k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phC) AND k.Sucursal = ?");
-        $stmtIC->execute(array_merge([$semAntCorte], $allCods, [$sucInt]));
-        $icRows = $stmtIC->fetchAll(PDO::FETCH_ASSOC);
-        if (!empty($icRows)) {
-            $stockDomingo = 0.0;
-            foreach ($icRows as $r) {
-                $info = $codMapBalance[(int)$r['CodCotizacion']] ?? null;
-                if ($info) $stockDomingo += (float)$r['Cantidad'] * $info['factor'];
+    $stockBase      = null;   // Stock en el punto de partida del pronóstico
+    $fechaBaseInv   = null;   // Fecha del domingo del snapshot de base
+    $fechaMovDesde  = null;   // Primer día DESPUÉS del snapshot (solo para fallback)
+    $sinInventario  = false;
+
+    $phC = !$sinCods ? implode(',', array_fill(0, count($allCods), '?')) : null;
+
+    // ── Opción 1: InventarioCotizacion de semHasta ───────────────────────────
+    // Esto es lo que el Kardex usa como "pronosticoStartVal": el inventario físico al fin del rango.
+    if (!$sinCods && $semHasta) {
+        $stmtSemH = $conn->prepare("SELECT fecha_fin FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
+        $stmtSemH->execute([$semHasta]);
+        $fechaFinSemHasta = $stmtSemH->fetchColumn() ?: null;
+
+        if ($fechaFinSemHasta) {
+            $stmtIH = $conn->prepare(
+                "SELECT k.CodCotizacion, k.Cantidad
+                 FROM msaccess_masivo_InventarioCotizacion k
+                 INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
+                 WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phC) AND k.Sucursal = ?"
+            );
+            $stmtIH->execute(array_merge([$semHasta], $allCods, [$sucInt]));
+            $ihRows = $stmtIH->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($ihRows)) {
+                $stockBase    = 0.0;
+                foreach ($ihRows as $r) {
+                    $info = $codMapBalance[(int)$r['CodCotizacion']] ?? null;
+                    if ($info) $stockBase += (float)$r['Cantidad'] * $info['factor'];
+                }
+                $fechaBaseInv  = $fechaFinSemHasta;  // domingo de semHasta
+                $fechaMovDesde = null;                // no se necesitan movimientos históricos
             }
-            $domingoBase   = $domingoAnt;       // domingo de semAntCorte
-            $fechaMovDesde = $fechaInicioSem;   // lunes de semCorte (primer día a proyectar)
         }
     }
 
-    // Fallback: tabla inventario del ERP para sem_corte
-    if ($stockDomingo === null) {
-        $stmtInv = $conn->prepare("SELECT cantidad FROM inventario WHERE cod_sucursal=? AND id_producto_presentacion=? AND fecha_inventario BETWEEN ? AND ? ORDER BY id DESC LIMIT 1");
+    // ── Opción 2: InventarioCotizacion de semAntCorte (fallback) ────────────
+    if ($stockBase === null && !$sinCods && $semAntCorte) {
+        $stmtIC = $conn->prepare(
+            "SELECT k.CodCotizacion, k.Cantidad
+             FROM msaccess_masivo_InventarioCotizacion k
+             INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
+             WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phC) AND k.Sucursal = ?"
+        );
+        $stmtIC->execute(array_merge([$semAntCorte], $allCods, [$sucInt]));
+        $icRows = $stmtIC->fetchAll(PDO::FETCH_ASSOC);
+        if (!empty($icRows)) {
+            $stockBase    = 0.0;
+            foreach ($icRows as $r) {
+                $info = $codMapBalance[(int)$r['CodCotizacion']] ?? null;
+                if ($info) $stockBase += (float)$r['Cantidad'] * $info['factor'];
+            }
+            $fechaBaseInv  = $domingoAnt;      // domingo de semAntCorte
+            $fechaMovDesde = $fechaInicioSem;  // lunes de semCorte
+        }
+    }
+
+    // ── Opción 3: tabla inventario ERP (fallback final) ─────────────────────
+    if ($stockBase === null) {
+        $stmtInv = $conn->prepare(
+            "SELECT cantidad FROM inventario
+             WHERE cod_sucursal=? AND id_producto_presentacion=?
+               AND fecha_inventario BETWEEN ? AND ?
+             ORDER BY id DESC LIMIT 1"
+        );
         $stmtInv->execute([$codSucursal, $idPP, $fechaInicioSem, $domingoCorte]);
         $invRow = $stmtInv->fetch(PDO::FETCH_ASSOC);
         if ($invRow) {
-            $stockDomingo  = (float)$invRow['cantidad'];
-            $domingoBase   = $domingoCorte;
+            $stockBase    = (float)$invRow['cantidad'];
+            $fechaBaseInv = $domingoCorte;
             $fechaMovDesde = date('Y-m-d', strtotime($domingoCorte . ' +1 day'));
         }
     }
 
-    $sinInventario = ($stockDomingo === null);
+    $sinInventario = ($stockBase === null);
 
-    // ── 4. Calcular fecha_D1 y días de proyección ─────────────────────────
+    // Alias para compatibilidad con la respuesta JSON (debug)
+    $stockDomingo = $stockBase;
+    $domingoBase  = $fechaBaseInv;
+
+    // ── 4. Calcular fecha_D1 ─────────────────────────────────────────────────
     $fechaD1 = date('Y-m-d', strtotime($fechaDespacho . ' -1 day'));
-    // fechaMovDesde ya viene del paso 3 (lunes semCorte o domingo+1)
-    if (!$fechaMovDesde) $fechaMovDesde = $fechaD1;
 
-    // Limitar fechaMovHasta al fin de sem_hasta (idéntico al Kardex).
-    // El Kardex solo consulta movimientos hasta el último sem analizado; los despachos de
-    // semanas futuras aún no están confirmados y generarían discrepancias.
-    $fechaMovHasta = $fechaD1;  // por defecto: hasta D-1
-    if ($semHasta) {
-        $stmtSH = $conn->prepare("SELECT fecha_fin FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
-        $stmtSH->execute([$semHasta]);
-        $fechaFinSemHasta = $stmtSH->fetchColumn();
-        if ($fechaFinSemHasta && $fechaFinSemHasta < $fechaD1) {
-            // El último sem analizado cierra antes de D-1 → usar ese tope para movimientos
-            $fechaMovHasta = $fechaFinSemHasta;
+    // fechaMovHasta: tope de movimientos reales = fin de semHasta (si aplica Opción 2/3)
+    $fechaMovHasta = $fechaD1;
+    if ($fechaMovDesde && $semHasta) {
+        $stmtSH2 = $conn->prepare("SELECT fecha_fin FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
+        $stmtSH2->execute([$semHasta]);
+        $fechaFinSH2 = $stmtSH2->fetchColumn();
+        if ($fechaFinSH2 && $fechaFinSH2 < $fechaD1) {
+            $fechaMovHasta = $fechaFinSH2;
         }
     }
 
+    // diasTranscurridos: días desde fechaBaseInv hasta D1
+    // En Opción 1 (semHasta): solo los días futuros (semHastaFin → D1) → alineado con línea morada del Kardex
+    // En Opción 2 (semAntCorte): incluye el rango histórico + días futuros
     $diasTranscurridos = 0;
-    if (!$sinInventario && $domingoBase) {
-        // Los días de proyección siguen siendo hasta D-1 (para el consumo proyectado)
-        $diasTranscurridos = max(0, (int)((strtotime($fechaD1) - strtotime($domingoBase)) / 86400));
+    if (!$sinInventario && $fechaBaseInv) {
+        $diasTranscurridos = max(0, (int)((strtotime($fechaD1) - strtotime($fechaBaseInv)) / 86400));
     }
 
-    // ── 5. Movimientos reales entre fechaMovDesde y fechaD1 ──────────────
+    // ── 5. Movimientos reales entre fechaMovDesde y fechaMovHasta ──────────
+    // SOLO aplica en fallback (Opción 2/3): cuando se usó semAntCorte como base,
+    // necesitamos los movimientos del rango histórico.
+    // En Opción 1 (semHasta como base), el inventario ya incluye esos movimientos.
     $movimientoNeto = 0.0;
 
-    if (!$sinInventario && !empty($allCods) && $fechaMovDesde <= $fechaMovHasta) {
+    if (!$sinInventario && !empty($allCods) && $fechaMovDesde && $fechaMovDesde <= $fechaMovHasta) {
         $phCods = implode(',', array_fill(0, count($allCods), '?'));
 
         // Helper para sumar movimientos al $movimientoNeto
@@ -270,15 +322,14 @@ try {
         'sin_inventario'               => $sinInventario,
         '_debug' => [
             'suc_int'           => $sucInt,
+            'stock_base_opcion' => $fechaMovDesde === null ? 'semHasta' : ($domingoBase === $domingoAnt ? 'semAntCorte' : 'ERP'),
+            'fecha_base_inv'    => $fechaBaseInv,
             'sem_ant_corte'     => $semAntCorte,
-            'sem_desde_hist'    => $semDesdeHist,   // ventana histórica para consumo (= modelo Kardex)
-            'sem_hasta_hist'    => $semHastaHist,
-            'domingo_base'      => $domingoBase,
-            'fecha_inicio_sem'  => $fechaInicioSem,
+            'sem_hasta'         => $semHasta,
             'fecha_mov_desde'   => $fechaMovDesde,
             'fecha_mov_hasta'   => $fechaMovHasta,
             'dias'              => $diasTranscurridos,
-            'stock_domingo_raw' => $sinInventario ? null : $stockDomingo,
+            'stock_base_raw'    => $sinInventario ? null : $stockBase,
             'mov_neto'          => $movimientoNeto,
             'cons_diario_recv'  => (float)($_POST['cons_diario']     ?? 0),
             'cons_proy_diario'  => round($consProyDiario, 6),
