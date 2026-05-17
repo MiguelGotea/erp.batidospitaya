@@ -33,11 +33,12 @@ $idPP          = isset($_POST['id_pp'])          ? (int)$_POST['id_pp']         
 $codSucursal   = trim($_POST['cod_sucursal']     ?? '');
 $semCorte      = isset($_POST['sem_corte'])      ? (int)$_POST['sem_corte']          : 0;
 $fechaDespacho = trim($_POST['fecha_despacho']   ?? '');
-$consDiario    = isset($_POST['cons_diario'])     ? (float)$_POST['cons_diario']     : null;
-$semDesde      = isset($_POST['sem_desde'])       ? (int)$_POST['sem_desde']         : null;
-$semHasta      = isset($_POST['sem_hasta'])       ? (int)$_POST['sem_hasta']         : null;
-$despFactor    = isset($_POST['despacho_factor']) ? (float)$_POST['despacho_factor'] : null;
-$stockMaxFinal = isset($_POST['stock_max_final']) ? (float)$_POST['stock_max_final'] : null;
+$consDiario      = isset($_POST['cons_diario'])      ? (float)$_POST['cons_diario']      : null;
+$consProyRecv    = isset($_POST['cons_proy_diario']) ? (float)$_POST['cons_proy_diario'] : null; // pre-calculado por JS
+$semDesde        = isset($_POST['sem_desde'])        ? (int)$_POST['sem_desde']          : null;
+$semHasta        = isset($_POST['sem_hasta'])        ? (int)$_POST['sem_hasta']          : null;
+$despFactor      = isset($_POST['despacho_factor'])  ? (float)$_POST['despacho_factor']  : null;
+$stockMaxFinal   = isset($_POST['stock_max_final'])  ? (float)$_POST['stock_max_final']  : null;
 
 if (!$idPP || !$codSucursal || !$semCorte || !$fechaDespacho) {
     echo json_encode(['ok' => false, 'msg' => 'Faltan parámetros requeridos.']);
@@ -204,59 +205,16 @@ try {
         $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
     }
 
-    // ── 5. Consumo proyección (modelo Kardex: media histórica ANTES del corte) ─────
-    // El Kardex calcula su baseline de consumo SOLO con semanas antes de semCorte.
-    // Usar semDesde..semAntCorte como ventana histórica y plain mean/7 (sin desv/ajuste).
-    // Esto replica el _promDiario del Kardex para el mismo período, dando coincidencia exacta.
-    $consProyDiario = null;
-    $semDesdeHist   = ($semDesde && $semDesde < $semAntCorte) ? $semDesde : ($semAntCorte - 4);
-    $semHastaHist   = $semAntCorte;  // semanas históricas: desde semDesde hasta sem ANTERIOR al corte
-    if ($semDesdeHist <= $semHastaHist) {
-        $stmtRng = $conn->prepare(
-            "SELECT MIN(fecha_inicio) AS f1, MAX(fecha_fin) AS f2 FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?"
-        );
-        $stmtRng->execute([$semDesdeHist, $semHastaHist]);
-        $rng = $stmtRng->fetch(PDO::FETCH_ASSOC);
-        if ($rng && $rng['f1']) {
-            // Suma de porciones teóricas por semana (igual que dashboard_consumo / balance_get_datos)
-            $stmtVen = $conn->prepare("
-                SELECT SUM(v.Cantidad * sr.Cantidad) AS total_cant
-                FROM VentasGlobalesAccessCSV v
-                INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
-                INNER JOIN diccionario_productos_legado d ON d.CodCotizacion = sr.codporcion
-                WHERE v.Anulado = 0
-                  AND v.local = ?
-                  AND v.Semana BETWEEN ? AND ?
-                  AND v.Fecha BETWEEN ? AND ?
-                  AND d.id_producto_presentacion = ?
-            ");
-            $stmtVen->execute([$codSucursal, $semDesdeHist, $semHastaHist, $rng['f1'], $rng['f2'], $idPP]);
-            $totalCant = (float)($stmtVen->fetchColumn() ?: 0);
-            $nSems     = max(1, $semHastaHist - $semDesdeHist + 1);
-            if ($totalCant > 0) {
-                $consProyDiario = ($totalCant / $nSems) / 7.0;  // plain mean diario
-            }
-        }
-    }
-    // Fallback: usar cons_diario estadístico si no hay datos de ventas
-    if ($consProyDiario === null || $consProyDiario <= 0) {
+    // ── 5. Consumo proyección (Kardex-aligned) ─────────────────────────────────
+    // El JS calcula cons_proy_diario = mean(semDesde..semCorte-1) / 7 usando semanas_consumo
+    // ya convertidas por calcular_v2. Esto replica exactamente el _promDiario del Kardex.
+    // Fallback: si no viene del JS, usar cons_diario estadístico.
+    $semDesdeHist = ($semDesde && $semDesde < $semAntCorte) ? $semDesde : ($semAntCorte - 4); // para _debug
+    $semHastaHist = $semAntCorte;
+    if ($consProyRecv !== null && $consProyRecv > 0) {
+        $consProyDiario = $consProyRecv;
+    } else {
         $consProyDiario = ($consDiario !== null && $consDiario > 0) ? $consDiario : 0.0;
-        // Fallback profundo: calcular cons_diario estadístico desde VentasGlobalesAccessCSV
-        if ($consProyDiario <= 0) {
-            $sfD = $semCorte - 5; $sfH = $semCorte - 1;
-            $stmtRng2 = $conn->prepare("SELECT MIN(fecha_inicio) as f1, MAX(fecha_fin) as f2 FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?");
-            $stmtRng2->execute([$sfD, $sfH]);
-            $rng2 = $stmtRng2->fetch(PDO::FETCH_ASSOC);
-            if ($rng2 && $rng2['f1']) {
-                $stmtV2 = $conn->prepare("SELECT v.Semana as sem, SUM(v.Cantidad*sr.Cantidad) as cant FROM VentasGlobalesAccessCSV v INNER JOIN SubReceta sr ON sr.CodBatido=v.CodProducto INNER JOIN diccionario_productos_legado d ON d.CodCotizacion=sr.codporcion WHERE v.Anulado=0 AND v.local=? AND v.Semana BETWEEN ? AND ? AND v.Fecha BETWEEN ? AND ? AND d.id_producto_presentacion=? GROUP BY v.Semana");
-                $stmtV2->execute([$codSucursal, $sfD, $sfH, $rng2['f1'], $rng2['f2'], $idPP]);
-                $vs = $stmtV2->fetchAll(PDO::FETCH_ASSOC);
-                if (!empty($vs)) {
-                    $vals = []; for ($s = $sfD; $s <= $sfH; $s++) { $f = array_filter($vs, fn($r) => (int)$r['sem'] === $s); $vals[] = $f ? (float)array_values($f)[0]['cant'] : 0.0; }
-                    if (array_sum($vals) > 0) { $mean = array_sum($vals)/count($vals); $consProyDiario = $mean / 7.0; }
-                }
-            }
-        }
     }
 
     // ── 6. Fallback despacho_factor ──────────────────────────────────────

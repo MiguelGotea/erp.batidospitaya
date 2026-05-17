@@ -339,42 +339,57 @@ async function calcularPronosticoMasivo() {
     const productos = datosResultado.filter(p => p.fecha_proximo_despacho);
     const LOTE = 5;
     let errores = 0;
+    const semDesde = parseInt($('#filtroSemanaDesde').val()) || semCorte;
+    const semHasta = parseInt($('#filtroSemanaHasta').val()) || semCorte;
 
     for (let i = 0; i < productos.length; i += LOTE) {
         const batch = productos.slice(i, i + LOTE);
-        await Promise.all(batch.map(prod => $.ajax({
-            url: 'ajax/pedido_sugerido_pronostico_despacho.php',
-            method: 'POST',
-            dataType: 'json',
-            data: {
-                id_pp: prod.id_pp,
-                cod_sucursal: codSucursalActual,
-                sem_corte: semCorte,
-                sem_desde: parseInt($('#filtroSemanaDesde').val()) || semCorte,
-                sem_hasta: parseInt($('#filtroSemanaHasta').val()) || semCorte,
-                fecha_despacho: prod.fecha_proximo_despacho,
-                cons_diario: prod.cons_diario,
-                despacho_factor: prod.despacho_factor ?? 1,
-                stock_max_final: prod.stock_max_final ?? 0
-            }
-        }).then(resp => {
-            const $d1 = $(`.pron-d1[data-idpp="${prod.id_pp}"]`);
-            const $desp = $(`.pron-desp[data-idpp="${prod.id_pp}"]`);
-            if (!resp || !resp.ok) { errores++; $d1.html('—'); $desp.html('—'); return; }
-
-            if (resp.sin_inventario) {
-                $d1.html('<span class="text-muted small">Sin datos</span>');
-                $desp.html('<span class="text-muted">—</span>');
-                return;
+        await Promise.all(batch.map(prod => {
+            // Consumo baseline = promedio histórico semDesde..semCorte-1 / 7
+            // Usa semanas_consumo ya convertidas por calcular_v2 → idéntico al _promDiario del Kardex
+            let consProyDiario = prod.cons_diario;   // fallback: cons_diario estadístico
+            const semsConsumidas = prod.semanas_consumo ?? {};
+            const semsHist = Object.entries(semsConsumidas)
+                .filter(([s]) => parseInt(s) >= semDesde && parseInt(s) < semCorte);
+            if (semsHist.length > 0) {
+                const totalHist = semsHist.reduce((acc, [, v]) => acc + v, 0);
+                consProyDiario = (totalHist / semsHist.length) / 7;
             }
 
-            const d1Val = Number(resp.stock_D1_paquetes ?? 0).toFixed(1);
-            $d1.html(`${d1Val} <br><small class="text-muted" style="font-size: 9px; font-weight: 600;">PAQ</small>`);
+            return $.ajax({
+                url: 'ajax/pedido_sugerido_pronostico_despacho.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    id_pp: prod.id_pp,
+                    cod_sucursal: codSucursalActual,
+                    sem_corte: semCorte,
+                    sem_hasta: semHasta,
+                    fecha_despacho: prod.fecha_proximo_despacho,
+                    cons_diario: prod.cons_diario,
+                    cons_proy_diario: consProyDiario,   // baseline histórico Kardex-aligned
+                    despacho_factor: prod.despacho_factor ?? 1,
+                    stock_max_final: prod.stock_max_final ?? 0
+                }
+            }).then(resp => {
+                const $d1   = $(`.pron-d1[data-idpp="${prod.id_pp}"]`);
+                const $desp = $(`.pron-desp[data-idpp="${prod.id_pp}"]`);
+                if (!resp || !resp.ok) { errores++; $d1.html('—'); $desp.html('—'); return; }
 
-            const dp = resp.despacho_sugerido_pronostico ?? 0;
-            const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
-            $desp.html(`<span class="${cls}">${dp}</span>`);
-        }).catch(() => { errores++; })));
+                if (resp.sin_inventario) {
+                    $d1.html('<span class="text-muted small">Sin datos</span>');
+                    $desp.html('<span class="text-muted">—</span>');
+                    return;
+                }
+
+                const d1Val = Number(resp.stock_D1_paquetes ?? 0).toFixed(1);
+                $d1.html(`${d1Val} <br><small class="text-muted" style="font-size: 9px; font-weight: 600;">PAQ</small>`);
+
+                const dp  = resp.despacho_sugerido_pronostico ?? 0;
+                const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
+                $desp.html(`<span class="${cls}">${dp}</span>`);
+            }).catch(() => { errores++; });
+        }));
     }
 
     const label = errores > 0
