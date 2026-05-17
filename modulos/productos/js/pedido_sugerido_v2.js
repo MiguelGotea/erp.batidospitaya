@@ -345,16 +345,12 @@ async function calcularPronosticoMasivo() {
     for (let i = 0; i < productos.length; i += LOTE) {
         const batch = productos.slice(i, i + LOTE);
         await Promise.all(batch.map(prod => {
-            // Consumo baseline = promedio histórico semDesde..semCorte-1 / 7
-            // Usa semanas_consumo ya convertidas por calcular_v2 → idéntico al _promDiario del Kardex
-            let consProyDiario = prod.cons_diario;   // fallback: cons_diario estadístico
-            const semsConsumidas = prod.semanas_consumo ?? {};
-            const semsHist = Object.entries(semsConsumidas)
-                .filter(([s]) => parseInt(s) >= semDesde && parseInt(s) < semCorte);
-            if (semsHist.length > 0) {
-                const totalHist = semsHist.reduce((acc, [, v]) => acc + v, 0);
-                consProyDiario = (totalHist / semsHist.length) / 7;
-            }
+            // cons_proy_diario = prom_consumo / 7 (misma base de datos que el Kardex,
+            // sin inflación estadística de desv ni ajuste_demanda).
+            // Es la mejor aproximación plana al _promDiario del Kardex.
+            const consProyDiario = prod.prom_consumo > 0
+                ? prod.prom_consumo / 7
+                : prod.cons_diario;
 
             return $.ajax({
                 url: 'ajax/pedido_sugerido_pronostico_despacho.php',
