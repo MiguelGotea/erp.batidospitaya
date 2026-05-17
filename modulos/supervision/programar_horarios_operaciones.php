@@ -1,6 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
@@ -34,8 +32,8 @@ if ($canFilterAll) {
     $sucursales = obtenerSucursalesFisicas();
 } elseif ($canFilterAssigned) {
     // Filtrar por sucursales donde el usuario es supervisor asignado
-    $stmt_suc = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal = 1 AND JSON_VALID(COALESCE(NULLIF(supervisor_asignado, ''), '[]')) = 1 AND (JSON_CONTAINS(COALESCE(NULLIF(supervisor_asignado, ''), '[]'), CAST(? AS JSON)) OR JSON_CONTAINS(COALESCE(NULLIF(supervisor_asignado, ''), '[]'), CONCAT('\"', ?, '\"'))) ORDER BY nombre");
-    $stmt_suc->execute([$_SESSION['usuario_id'], $_SESSION['usuario_id']]);
+    $stmt_suc = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal = 1 AND JSON_CONTAINS(supervisor_asignado, CAST(? AS JSON)) ORDER BY nombre");
+    $stmt_suc->execute([$_SESSION['usuario_id']]);
     $sucursales = $stmt_suc->fetchAll(PDO::FETCH_ASSOC);
 } else {
     // Si no tiene permisos de filtro amplios, el array queda vacío
@@ -1931,7 +1929,7 @@ function obtenerCategoriasDesdeBD()
                     <?php if (empty($horariosLider)): ?>
                         <div class="alert alert-info">
                             No se ha registrado horario por parte del líder de la sucursal
-                            "<?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada] ?? '') ?>" en la semana
+                            "<?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>" en la semana
                             seleccionada.
                         </div>
 
@@ -1939,7 +1937,7 @@ function obtenerCategoriasDesdeBD()
                         <div style="display:none; font-weight:bold;" class="subtitle">
                             Confirmando horarios para la semana <?= $semanaSeleccionada ?>
                             (<?= formatoFecha($semana['fecha_inicio']) ?> al <?= formatoFecha($semana['fecha_fin']) ?>)
-                            | Sucursal: <?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada] ?? '') ?>
+                            | Sucursal: <?= htmlspecialchars(array_column($sucursales, 'nombre', 'codigo')[$sucursalSeleccionada]) ?>
                         </div>
 
                         <form method="post" id="horariosForm" onsubmit="return false;">
