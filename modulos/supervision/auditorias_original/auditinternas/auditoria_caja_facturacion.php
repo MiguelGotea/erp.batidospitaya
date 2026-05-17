@@ -34,7 +34,7 @@ try {
     if ($puede_nuevo_todos) {
         $stmt = $db->query("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 ORDER BY nombre");
     } else {
-        $stmt = $db->prepare("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 AND JSON_VALID(COALESCE(NULLIF(supervisor_asignado, ''), '[]')) = 1 AND JSON_CONTAINS(COALESCE(NULLIF(supervisor_asignado, ''), '[]'), CAST(? AS JSON)) ORDER BY nombre");
+        $stmt = $db->prepare("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 AND JSON_CONTAINS(supervisor_asignado, CAST(? AS JSON)) ORDER BY nombre");
         $stmt->execute([$_SESSION['usuario_id']]);
     }
     $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);

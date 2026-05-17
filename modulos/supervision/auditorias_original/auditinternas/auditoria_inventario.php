@@ -363,7 +363,7 @@ try {
         $query = "SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 ORDER BY nombre";
         $result = $conn->query($query);
     } else {
-        $query = "SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 AND JSON_VALID(COALESCE(NULLIF(supervisor_asignado, ''), '[]')) = 1 AND JSON_CONTAINS(COALESCE(NULLIF(supervisor_asignado, ''), '[]'), CAST(? AS JSON)) ORDER BY nombre";
+        $query = "SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal=1 AND JSON_CONTAINS(supervisor_asignado, CAST(? AS JSON)) ORDER BY nombre";
         $stmt_suc = $conn->prepare($query);
         $stmt_suc->bind_param("i", $_SESSION['usuario_id']);
         $stmt_suc->execute();
