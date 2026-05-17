@@ -2385,34 +2385,26 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
 
     // ── Pronóstico de consumo (línea adicional, no modifica nada existente) ──
     if (fechaObjetivoPronostico) {
-        // Calcular promedios de consumo teórico por día de semana del historial
-        // (solo de días ANTES o en la semana de corte para no contaminar el pronóstico)
+        // Calcular promedios de consumo teórico usando TODO el rango analizado (semDesde→semHasta),
+        // sin filtrar por pivotDate. El punto de corte solo ancla el inventario; no afecta
+        // al consumo promedio. Esto alinea con prom_consumo / 7 de pedido_sugerido.
         const _cntDow = [0,0,0,0,0,0,0];
         const _sumDow = [0,0,0,0,0,0,0];
-        let _totalCons = 0, _totalDias = 0;
-        Object.entries(consTeoDiario).forEach(([f, v]) => {
-            // Solo usar días dentro del rango original del kardex para calcular el promedio
-            if (v > 0 && f < (pivotDate || f)) {
+        let _totalCons = 0;
+        const allDates = Object.keys(consTeoDiario);
+        allDates.forEach(f => {
+            const v = consTeoDiario[f] ?? 0;
+            if (v > 0) {
                 const dow = new Date(f + 'T12:00:00').getDay();
                 _sumDow[dow] += v;
                 _cntDow[dow]++;
-                _totalCons += v;
-                _totalDias++;
             }
+            _totalCons += v;
         });
-        // Si no hubo días antes del corte (corte en el inicio), usar todos los disponibles
-        if (_totalDias === 0) {
-            Object.entries(consTeoDiario).forEach(([f, v]) => {
-                if (v > 0) {
-                    const dow = new Date(f + 'T12:00:00').getDay();
-                    _sumDow[dow] += v;
-                    _cntDow[dow]++;
-                    _totalCons += v;
-                    _totalDias++;
-                }
-            });
-        }
-        const _promDiario = _totalDias > 0 ? _totalCons / _totalDias : 0;
+        // Denominador = días calendario totales del rango (= nSemanas × 7),
+        // igual que prom_consumo / 7 en calcular_v2.
+        const _totalDias = allDates.length > 0 ? allDates.length : 1;
+        const _promDiario = _totalCons / _totalDias;
         const _promDow = _sumDow.map((s, i) => _cntDow[i] > 0 ? s / _cntDow[i] : _promDiario);
 
         // Consumo SIEMPRE proyectado (estimado por DOW histórico) — nunca usa el real.
