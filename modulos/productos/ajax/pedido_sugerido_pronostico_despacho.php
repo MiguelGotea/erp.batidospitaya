@@ -234,17 +234,61 @@ try {
         $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
     }
 
-    // ── 5. Consumo proyección (Kardex-aligned) ─────────────────────────────────
-    // El JS calcula cons_proy_diario = mean(semDesde..semCorte-1) / 7 usando semanas_consumo
-    // ya convertidas por calcular_v2. Esto replica exactamente el _promDiario del Kardex.
-    // Fallback: si no viene del JS, usar cons_diario estadístico.
-    $semDesdeHist = ($semDesde && $semDesde < $semAntCorte) ? $semDesde : ($semAntCorte - 4); // para _debug
-    $semHastaHist = $semAntCorte;
-    if ($consProyRecv !== null && $consProyRecv > 0) {
-        $consProyDiario = $consProyRecv;
-    } else {
-        $consProyDiario = ($consDiario !== null && $consDiario > 0) ? $consDiario : 0.0;
+    // ── 5. Consumo proyectado — calculado directamente desde ventas (= Kardex _promDiario) ──
+    // PROBLEMA ENCONTRADO: calcular_v2 divide por pp_cant (cantidad de la presentación base),
+    // lo que produce valores con escala diferente al Kardex. La única forma de garantizar
+    // alineación exacta es calcular aquí desde la misma fuente que el Kardex:
+    //   VentasGlobalesAccessCSV × SubReceta → codMapBalance → suma total / días del rango.
+    //
+    // El valor enviado por el JS (cons_proy_diario) se conserva solo en _debug.
+    $consProyDiario  = 0.0;
+    $totalVentasCons = 0.0;
+    $totalDiasRango  = 0;
+
+    if ($semDesde && $semHasta && !$sinCods) {
+        // Fechas del rango completo semDesde→semHasta
+        $stmtRng = $conn->prepare(
+            "SELECT MIN(fecha_inicio) AS f1, MAX(fecha_fin) AS f2,
+                    COUNT(*) * 7 AS dias_totales
+             FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?"
+        );
+        $stmtRng->execute([$semDesde, $semHasta]);
+        $rngRow = $stmtRng->fetch(PDO::FETCH_ASSOC);
+        $fechaRngDesde = $rngRow['f1'] ?? null;
+        $fechaRngHasta = $rngRow['f2'] ?? null;
+        $totalDiasRango = (int)($rngRow['dias_totales'] ?? 0);
+
+        if ($fechaRngDesde && $fechaRngHasta && $totalDiasRango > 0 && !empty($allCods)) {
+            $phVentas = implode(',', array_fill(0, count($allCods), '?'));
+            // Mismo join que el Kardex: VentasGlobalesAccessCSV × SubReceta × codMapBalance
+            $stmtVen = $conn->prepare(
+                "SELECT sr.codporcion AS cod, SUM(v.Cantidad * sr.Cantidad) AS cant
+                 FROM VentasGlobalesAccessCSV v
+                 INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
+                 WHERE v.Anulado = 0
+                   AND v.local = ?
+                   AND v.Fecha BETWEEN ? AND ?
+                   AND sr.codporcion IN ($phVentas)
+                 GROUP BY sr.codporcion"
+            );
+            $stmtVen->execute(array_merge([$sucInt, $fechaRngDesde, $fechaRngHasta], $allCods));
+            foreach ($stmtVen->fetchAll(PDO::FETCH_ASSOC) as $vRow) {
+                $info = $codMapBalance[(int)$vRow['cod']] ?? null;
+                if ($info) $totalVentasCons += (float)$vRow['cant'] * $info['factor'];
+            }
+            $consProyDiario = $totalVentasCons / $totalDiasRango;
+        }
     }
+
+    // Fallback: si no hay semDesde/semHasta o no hubo ventas, usar cons_proy_diario del JS
+    if ($consProyDiario <= 0) {
+        if ($consProyRecv !== null && $consProyRecv > 0) {
+            $consProyDiario = $consProyRecv;
+        } else {
+            $consProyDiario = ($consDiario !== null && $consDiario > 0) ? $consDiario : 0.0;
+        }
+    }
+
 
     // ── 6. Fallback despacho_factor ──────────────────────────────────────
     if ($despFactor === null || $despFactor <= 0) {
@@ -298,20 +342,26 @@ try {
         'despacho_factor'              => round($dfSafe, 6),
         'sin_inventario'               => $sinInventario,
         '_debug' => [
-            'suc_int'           => $sucInt,
-            'stock_base_opcion' => $fechaMovDesde === null ? 'semHasta' : ($domingoBase === $domingoAnt ? 'semAntCorte' : 'ERP'),
-            'fecha_base_inv'    => $fechaBaseInv,
-            'sem_ant_corte'     => $semAntCorte,
-            'sem_hasta'         => $semHasta,
-            'fecha_mov_desde'   => $fechaMovDesde,
-            'fecha_mov_hasta'   => $fechaMovHasta,
-            'dias'              => $diasTranscurridos,
-            'stock_base_raw'    => $sinInventario ? null : $stockBase,
-            'mov_neto'          => $movimientoNeto,
-            'cons_diario_recv'  => (float)($_POST['cons_diario']     ?? 0),
-            'cons_proy_diario'  => round($consProyDiario, 6),
-            'desp_factor_recv'  => (float)($_POST['despacho_factor'] ?? 0),
-            'n_cods'            => count($allCods),
+            'suc_int'               => $sucInt,
+            'stock_base_opcion'     => 'semAntCorte',
+            'fecha_base_inv'        => $domingoBase,
+            'sem_ant_corte'         => $semAntCorte,
+            'sem_desde'             => $semDesde,
+            'sem_hasta'             => $semHasta,
+            'fecha_mov_desde'       => $fechaMovDesde,
+            'fecha_mov_hasta'       => $fechaMovHasta,
+            'dias'                  => $diasTranscurridos,
+            'stock_base_raw'        => $sinInventario ? null : $stockDomingo,
+            'mov_neto'              => $movimientoNeto,
+            // Consumo calculado directamente desde ventas (= _promDiario del Kardex)
+            'total_ventas_cons'     => round($totalVentasCons, 4),
+            'dias_rango'            => $totalDiasRango,
+            'cons_proy_calculado'   => round($consProyDiario, 6),
+            // Valor enviado por JS (para comparación — puede diferir por escala de calcular_v2)
+            'cons_proy_js_recv'     => round((float)($_POST['cons_proy_diario'] ?? 0), 6),
+            'cons_diario_recv'      => round((float)($_POST['cons_diario']       ?? 0), 6),
+            'desp_factor_recv'      => round((float)($_POST['despacho_factor']   ?? 0), 6),
+            'n_cods'                => count($allCods),
         ],
     ]);
 

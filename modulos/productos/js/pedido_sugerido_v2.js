@@ -366,10 +366,11 @@ async function calcularPronosticoMasivo() {
                     id_pp: prod.id_pp,
                     cod_sucursal: codSucursalActual,
                     sem_corte: semCorte,
+                    sem_desde: semDesde,   // ← necesario para calcular consProyDiario desde ventas
                     sem_hasta: semHasta,
                     fecha_despacho: prod.fecha_proximo_despacho,
                     cons_diario: prod.cons_diario,
-                    cons_proy_diario: consProyDiario,   // baseline histórico Kardex-aligned
+                    cons_proy_diario: consProyDiario,   // fallback si no hay datos de ventas
                     despacho_factor: prod.despacho_factor ?? 1,
                     stock_max_final: prod.stock_max_final ?? 0
                 }
