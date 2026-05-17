@@ -32,7 +32,7 @@ if ($canFilterAll) {
     $sucursales = obtenerSucursalesFisicas();
 } elseif ($canFilterAssigned) {
     // Filtrar por sucursales donde el usuario es supervisor asignado
-    $stmt_suc = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal = 1 AND JSON_CONTAINS(supervisor_asignado, CAST(? AS JSON)) ORDER BY nombre");
+    $stmt_suc = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE activa = 1 AND sucursal = 1 AND JSON_VALID(COALESCE(NULLIF(supervisor_asignado, ''), '[]')) = 1 AND JSON_CONTAINS(COALESCE(NULLIF(supervisor_asignado, ''), '[]'), CAST(? AS JSON)) ORDER BY nombre");
     $stmt_suc->execute([$_SESSION['usuario_id']]);
     $sucursales = $stmt_suc->fetchAll(PDO::FETCH_ASSOC);
 } else {
