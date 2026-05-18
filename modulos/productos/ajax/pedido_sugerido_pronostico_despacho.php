@@ -106,34 +106,16 @@ try {
     $allCods   = array_keys($codMapBalance);
     $sinCods   = empty($allCods);
 
-    // ── 3. Stock base — ALINEADO CON KARDEX ─────────────────────────────────────
-    // El Kardex usa invCorte (= InventarioCotizacion de semAntCorte) como ancla,
-    // luego aplica movimientos reales y consumo hacia adelante para calcular el
-    // stock teórico en cualquier fecha.
-    //
-    // La fórmula PHP es matemáticamente equivalente al Kardex (después del fix de línea morada):
-    //   Kardex: pronosticoStartVal = invCorte + movNeto(semCorte→semHasta) - consTeoDiario(semCorte→semHasta)
-    //           stockD1 = pronosticoStartVal - _getConsProy(semHasta+1→D1)
-    //   PHP:    stockD1 = invCorte + movNeto(semCorte→min(semHastaFin,D1))
-    //                     - consProyDiario × days(domingoAnt→D1)
-    //   Son iguales cuando consProyDiario == _promDiario (garantizado por el fix en calcular_v2 + pedido_sugerido_v2.js).
-    //
-    // Prioridad:
-    //   1. InventarioCotizacion de semAntCorte (idéntico al Kardex inv_inicial)
-    //   2. Tabla inventario ERP (fallback)
-
+    // ── 3. Stock base: primero InventarioCotizacion de semAntCorte (= Kardex) ─
+    // Si no hay datos ahí, fallback a tabla inventario del semCorte
     $stockDomingo   = null;
-    $domingoBase    = null;
-    $fechaMovDesde  = null;
+    $domingoBase    = null; // Fecha real del snapshot
+    $fechaMovDesde  = null; // Primer día de movimientos a incluir
 
     if (!$sinCods && $semAntCorte) {
         $phC = implode(',', array_fill(0, count($allCods), '?'));
-        $stmtIC = $conn->prepare(
-            "SELECT k.CodCotizacion, k.Cantidad
-             FROM msaccess_masivo_InventarioCotizacion k
-             INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
-             WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phC) AND k.Sucursal = ?"
-        );
+        // InventarioCotizacion de la semana ANTERIOR al corte (igual que Kardex inv_inicial)
+        $stmtIC = $conn->prepare("SELECT k.CodCotizacion, k.Cantidad FROM msaccess_masivo_InventarioCotizacion k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phC) AND k.Sucursal = ?");
         $stmtIC->execute(array_merge([$semAntCorte], $allCods, [$sucInt]));
         $icRows = $stmtIC->fetchAll(PDO::FETCH_ASSOC);
         if (!empty($icRows)) {
@@ -142,19 +124,14 @@ try {
                 $info = $codMapBalance[(int)$r['CodCotizacion']] ?? null;
                 if ($info) $stockDomingo += (float)$r['Cantidad'] * $info['factor'];
             }
-            $domingoBase   = $domingoAnt;      // domingo de semAntCorte (= invCorte del Kardex)
-            $fechaMovDesde = $fechaInicioSem;  // lunes de semCorte
+            $domingoBase   = $domingoAnt;       // domingo de semAntCorte
+            $fechaMovDesde = $fechaInicioSem;   // lunes de semCorte (primer día a proyectar)
         }
     }
 
-    // Fallback: tabla inventario ERP
+    // Fallback: tabla inventario del ERP para sem_corte
     if ($stockDomingo === null) {
-        $stmtInv = $conn->prepare(
-            "SELECT cantidad FROM inventario
-             WHERE cod_sucursal=? AND id_producto_presentacion=?
-               AND fecha_inventario BETWEEN ? AND ?
-             ORDER BY id DESC LIMIT 1"
-        );
+        $stmtInv = $conn->prepare("SELECT cantidad FROM inventario WHERE cod_sucursal=? AND id_producto_presentacion=? AND fecha_inventario BETWEEN ? AND ? ORDER BY id DESC LIMIT 1");
         $stmtInv->execute([$codSucursal, $idPP, $fechaInicioSem, $domingoCorte]);
         $invRow = $stmtInv->fetch(PDO::FETCH_ASSOC);
         if ($invRow) {
@@ -166,41 +143,35 @@ try {
 
     $sinInventario = ($stockDomingo === null);
 
-    // Alias para compatibilidad con debug
-    $stockBase    = $stockDomingo;
-    $fechaBaseInv = $domingoBase;
-
-    // ── 4. Calcular fecha_D1 ─────────────────────────────────────────────────
+    // ── 4. Calcular fecha_D1 y días de proyección ─────────────────────────
     $fechaD1 = date('Y-m-d', strtotime($fechaDespacho . ' -1 day'));
+    // fechaMovDesde ya viene del paso 3 (lunes semCorte o domingo+1)
     if (!$fechaMovDesde) $fechaMovDesde = $fechaD1;
 
-    // Tope de movimientos: fin de semHasta (igual que el Kardex solo incluye movimientos
-    // del rango analizado; movimientos futuros aún no están confirmados).
-    $fechaMovHasta = $fechaD1;
+    // Limitar fechaMovHasta al fin de sem_hasta (idéntico al Kardex).
+    // El Kardex solo consulta movimientos hasta el último sem analizado; los despachos de
+    // semanas futuras aún no están confirmados y generarían discrepancias.
+    $fechaMovHasta = $fechaD1;  // por defecto: hasta D-1
     if ($semHasta) {
         $stmtSH = $conn->prepare("SELECT fecha_fin FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
         $stmtSH->execute([$semHasta]);
         $fechaFinSemHasta = $stmtSH->fetchColumn();
         if ($fechaFinSemHasta && $fechaFinSemHasta < $fechaD1) {
+            // El último sem analizado cierra antes de D-1 → usar ese tope para movimientos
             $fechaMovHasta = $fechaFinSemHasta;
         }
     }
 
-    // diasTranscurridos: días desde domingoAnt (= invCorte anchor) hasta D1.
-    // El Kardex calcula stage1 (semCorte→semHasta) + stage2 (semHasta→D1) con el mismo
-    // consProyDiario, que equivale matemáticamente a consProyDiario × totalDays.
     $diasTranscurridos = 0;
     if (!$sinInventario && $domingoBase) {
+        // Los días de proyección siguen siendo hasta D-1 (para el consumo proyectado)
         $diasTranscurridos = max(0, (int)((strtotime($fechaD1) - strtotime($domingoBase)) / 86400));
     }
 
-    // ── 5. Movimientos reales entre fechaMovDesde y fechaMovHasta ──────────
-    // SOLO aplica en fallback (Opción 2/3): cuando se usó semAntCorte como base,
-    // necesitamos los movimientos del rango histórico.
-    // En Opción 1 (semHasta como base), el inventario ya incluye esos movimientos.
+    // ── 5. Movimientos reales entre fechaMovDesde y fechaD1 ──────────────
     $movimientoNeto = 0.0;
 
-    if (!$sinInventario && !empty($allCods) && $fechaMovDesde && $fechaMovDesde <= $fechaMovHasta) {
+    if (!$sinInventario && !empty($allCods) && $fechaMovDesde <= $fechaMovHasta) {
         $phCods = implode(',', array_fill(0, count($allCods), '?'));
 
         // Helper para sumar movimientos al $movimientoNeto
@@ -234,61 +205,17 @@ try {
         $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
     }
 
-    // ── 5. Consumo proyectado — calculado directamente desde ventas (= Kardex _promDiario) ──
-    // PROBLEMA ENCONTRADO: calcular_v2 divide por pp_cant (cantidad de la presentación base),
-    // lo que produce valores con escala diferente al Kardex. La única forma de garantizar
-    // alineación exacta es calcular aquí desde la misma fuente que el Kardex:
-    //   VentasGlobalesAccessCSV × SubReceta → codMapBalance → suma total / días del rango.
-    //
-    // El valor enviado por el JS (cons_proy_diario) se conserva solo en _debug.
-    $consProyDiario  = 0.0;
-    $totalVentasCons = 0.0;
-    $totalDiasRango  = 0;
-
-    if ($semDesde && $semHasta && !$sinCods) {
-        // Fechas del rango completo semDesde→semHasta
-        $stmtRng = $conn->prepare(
-            "SELECT MIN(fecha_inicio) AS f1, MAX(fecha_fin) AS f2,
-                    COUNT(*) * 7 AS dias_totales
-             FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?"
-        );
-        $stmtRng->execute([$semDesde, $semHasta]);
-        $rngRow = $stmtRng->fetch(PDO::FETCH_ASSOC);
-        $fechaRngDesde = $rngRow['f1'] ?? null;
-        $fechaRngHasta = $rngRow['f2'] ?? null;
-        $totalDiasRango = (int)($rngRow['dias_totales'] ?? 0);
-
-        if ($fechaRngDesde && $fechaRngHasta && $totalDiasRango > 0 && !empty($allCods)) {
-            $phVentas = implode(',', array_fill(0, count($allCods), '?'));
-            // Mismo join que el Kardex: VentasGlobalesAccessCSV × SubReceta × codMapBalance
-            $stmtVen = $conn->prepare(
-                "SELECT sr.codporcion AS cod, SUM(v.Cantidad * sr.Cantidad) AS cant
-                 FROM VentasGlobalesAccessCSV v
-                 INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
-                 WHERE v.Anulado = 0
-                   AND v.local = ?
-                   AND v.Fecha BETWEEN ? AND ?
-                   AND sr.codporcion IN ($phVentas)
-                 GROUP BY sr.codporcion"
-            );
-            $stmtVen->execute(array_merge([$sucInt, $fechaRngDesde, $fechaRngHasta], $allCods));
-            foreach ($stmtVen->fetchAll(PDO::FETCH_ASSOC) as $vRow) {
-                $info = $codMapBalance[(int)$vRow['cod']] ?? null;
-                if ($info) $totalVentasCons += (float)$vRow['cant'] * $info['factor'];
-            }
-            $consProyDiario = $totalVentasCons / $totalDiasRango;
-        }
+    // ── 5. Consumo proyección (Kardex-aligned) ─────────────────────────────────
+    // El JS calcula cons_proy_diario = mean(semDesde..semCorte-1) / 7 usando semanas_consumo
+    // ya convertidas por calcular_v2. Esto replica exactamente el _promDiario del Kardex.
+    // Fallback: si no viene del JS, usar cons_diario estadístico.
+    $semDesdeHist = ($semDesde && $semDesde < $semAntCorte) ? $semDesde : ($semAntCorte - 4); // para _debug
+    $semHastaHist = $semAntCorte;
+    if ($consProyRecv !== null && $consProyRecv > 0) {
+        $consProyDiario = $consProyRecv;
+    } else {
+        $consProyDiario = ($consDiario !== null && $consDiario > 0) ? $consDiario : 0.0;
     }
-
-    // Fallback: si no hay semDesde/semHasta o no hubo ventas, usar cons_proy_diario del JS
-    if ($consProyDiario <= 0) {
-        if ($consProyRecv !== null && $consProyRecv > 0) {
-            $consProyDiario = $consProyRecv;
-        } else {
-            $consProyDiario = ($consDiario !== null && $consDiario > 0) ? $consDiario : 0.0;
-        }
-    }
-
 
     // ── 6. Fallback despacho_factor ──────────────────────────────────────
     if ($despFactor === null || $despFactor <= 0) {
@@ -342,26 +269,21 @@ try {
         'despacho_factor'              => round($dfSafe, 6),
         'sin_inventario'               => $sinInventario,
         '_debug' => [
-            'suc_int'               => $sucInt,
-            'stock_base_opcion'     => 'semAntCorte',
-            'fecha_base_inv'        => $domingoBase,
-            'sem_ant_corte'         => $semAntCorte,
-            'sem_desde'             => $semDesde,
-            'sem_hasta'             => $semHasta,
-            'fecha_mov_desde'       => $fechaMovDesde,
-            'fecha_mov_hasta'       => $fechaMovHasta,
-            'dias'                  => $diasTranscurridos,
-            'stock_base_raw'        => $sinInventario ? null : $stockDomingo,
-            'mov_neto'              => $movimientoNeto,
-            // Consumo calculado directamente desde ventas (= _promDiario del Kardex)
-            'total_ventas_cons'     => round($totalVentasCons, 4),
-            'dias_rango'            => $totalDiasRango,
-            'cons_proy_calculado'   => round($consProyDiario, 6),
-            // Valor enviado por JS (para comparación — puede diferir por escala de calcular_v2)
-            'cons_proy_js_recv'     => round((float)($_POST['cons_proy_diario'] ?? 0), 6),
-            'cons_diario_recv'      => round((float)($_POST['cons_diario']       ?? 0), 6),
-            'desp_factor_recv'      => round((float)($_POST['despacho_factor']   ?? 0), 6),
-            'n_cods'                => count($allCods),
+            'suc_int'           => $sucInt,
+            'sem_ant_corte'     => $semAntCorte,
+            'sem_desde_hist'    => $semDesdeHist,   // ventana histórica para consumo (= modelo Kardex)
+            'sem_hasta_hist'    => $semHastaHist,
+            'domingo_base'      => $domingoBase,
+            'fecha_inicio_sem'  => $fechaInicioSem,
+            'fecha_mov_desde'   => $fechaMovDesde,
+            'fecha_mov_hasta'   => $fechaMovHasta,
+            'dias'              => $diasTranscurridos,
+            'stock_domingo_raw' => $sinInventario ? null : $stockDomingo,
+            'mov_neto'          => $movimientoNeto,
+            'cons_diario_recv'  => (float)($_POST['cons_diario']     ?? 0),
+            'cons_proy_diario'  => round($consProyDiario, 6),
+            'desp_factor_recv'  => (float)($_POST['despacho_factor'] ?? 0),
+            'n_cods'            => count($allCods),
         ],
     ]);
 

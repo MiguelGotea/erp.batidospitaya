@@ -517,11 +517,6 @@ try {
         for ($s = $numDesde; $s <= $numHasta; $s++)
             $vals[] = (float) ($sems[$s] ?? 0);
 
-        // Suma TOTAL del rango completo (igual que el Kardex: sin filtro de ventana activa).
-        // Esta es la referencia que el JS usa para calcular cons_proy_diario = totalCons / (nSems×7),
-        // alineada con _promDiario del Kardex.
-        $totalConsRangoRaw = array_sum($vals);
-
         // ── Ventana Activa con umbral relativo ───────────────────────────────
         // Paso 1: media de semanas con consumo estrictamente > 0
         $nonZeroVals = array_filter($vals, fn($v) => $v > 0);
@@ -581,12 +576,6 @@ try {
         $sems = $conAgg[$idP] ?? [];
         ksort($sems);   // garantizar orden por número de semana
 
-        // Reconstruir semanas_consumo con TODOS los valores del rango (incluye ceros).
-        // El JS necesita el rango completo para calcular el total exactamente igual que el Kardex.
-        $semsCompleto = [];
-        for ($s = $numDesde; $s <= $numHasta; $s++)
-            $semsCompleto[$s] = $sems[$s] ?? 0.0;
-
         $res[$idP] = [
             'id_pp' => $idP,
             'nombre' => $m['n'],
@@ -604,9 +593,7 @@ try {
             'stock_maximo' => round($sMax, 4),
             'stock_max_final' => null,
             'es_ajustado' => false,
-            // semanas_consumo: rango completo con ceros → JS divide por (nSems×7) = mismo que Kardex
-            'semanas_consumo' => $semsCompleto,
-            'total_consumo_rango' => round($totalConsRangoRaw, 4),  // suma bruta sin filtro ventana activa
+            'semanas_consumo' => $sems,   // porciones por semana (correctamente convertidas)
 
             'fecha_proximo_despacho' => $fechaProxDespacho,
             'dias_hasta_despacho'   => $diasHastaDespacho,

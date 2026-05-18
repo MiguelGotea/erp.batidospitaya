@@ -345,15 +345,13 @@ async function calcularPronosticoMasivo() {
     for (let i = 0; i < productos.length; i += LOTE) {
         const batch = productos.slice(i, i + LOTE);
         await Promise.all(batch.map(prod => {
-            // cons_proy_diario: usa total_consumo_rango (suma bruta de TODAS las semanas del rango,
-            // sin filtro de ventana activa) dividido por los días totales del rango.
-            // Esto es idéntico al _promDiario del Kardex: misma fuente, mismo denominador.
+            // cons_proy_diario = suma real / (n_semanas_rango × 7)
+            // Igual que el Kardex: denominator = TODOS los días del rango (incluyendo
+            // semanas con consumo 0 que ventana_activa excluyó).
+            // Ejemplo: sems 537-541 (n=5), sum=221 → 221/35 = 6.314/día ← Kardex ✓
             const nSemsRango = (semHasta - semDesde) + 1;
-            // Preferir total_consumo_rango (enviado por calcular_v2 con ceros incluidos)
-            // para garantizar alineación exacta con el Kardex.
-            const totalConsRango = (prod.total_consumo_rango ?? null) !== null
-                ? prod.total_consumo_rango
-                : Object.values(prod.semanas_consumo ?? {}).reduce((a, v) => a + v, 0);
+            const totalConsRango = Object.values(prod.semanas_consumo ?? {})
+                .reduce((a, v) => a + v, 0);
             const consProyDiario = (nSemsRango > 0 && totalConsRango > 0)
                 ? totalConsRango / (nSemsRango * 7)
                 : prod.cons_diario;
@@ -366,11 +364,10 @@ async function calcularPronosticoMasivo() {
                     id_pp: prod.id_pp,
                     cod_sucursal: codSucursalActual,
                     sem_corte: semCorte,
-                    sem_desde: semDesde,   // ← necesario para calcular consProyDiario desde ventas
                     sem_hasta: semHasta,
                     fecha_despacho: prod.fecha_proximo_despacho,
                     cons_diario: prod.cons_diario,
-                    cons_proy_diario: consProyDiario,   // fallback si no hay datos de ventas
+                    cons_proy_diario: consProyDiario,   // baseline histórico Kardex-aligned
                     despacho_factor: prod.despacho_factor ?? 1,
                     stock_max_final: prod.stock_max_final ?? 0
                 }
@@ -385,27 +382,12 @@ async function calcularPronosticoMasivo() {
                     return;
                 }
 
-                // ── Mostrar Stock D-1 en UNIDADES DE CONTROL (porciones) ───────────────
-                // Igual que el Kardex: sin conversión a paquetes.
-                const d1Uso = resp.stock_D1_uso ?? null;
-                const unitLabel = prod.unidad ? escHtml(prod.unidad) : 'u.';
-                if (d1Uso !== null) {
-                    $d1.html(`${Number(d1Uso).toFixed(1)} <br><small class="text-muted" style="font-size: 9px; font-weight: 600;">${unitLabel}</small>`);
-                } else {
-                    $d1.html('—');
-                }
+                const d1Val = Number(resp.stock_D1_paquetes ?? 0).toFixed(1);
+                $d1.html(`${d1Val} <br><small class="text-muted" style="font-size: 9px; font-weight: 600;">PAQ</small>`);
 
-                // ── Despacho pronóstico en UNIDADES DE CONTROL ─────────────────────────
-                // stock_max_final viene en paquetes → convertir a unidades de control
-                const dfactor = prod.despacho_factor ?? 1;
-                const stockMaxUso = (prod.stock_max_final ?? 0) * dfactor;
-                const dp = (d1Uso !== null) ? Math.max(0, Math.ceil(stockMaxUso - d1Uso)) : null;
-                if (dp !== null) {
-                    const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
-                    $desp.html(`<span class="${cls}">${dp}</span>`);
-                } else {
-                    $desp.html('—');
-                }
+                const dp  = resp.despacho_sugerido_pronostico ?? 0;
+                const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
+                $desp.html(`<span class="${cls}">${dp}</span>`);
             }).catch(() => { errores++; });
         }));
     }
