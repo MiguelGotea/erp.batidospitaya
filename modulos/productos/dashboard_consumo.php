@@ -506,6 +506,9 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                                 <th>Categoría</th>
                                                 <th class="text-end">Prom/Semana</th>
                                                 <th class="text-end">Proyec. 3 Sem.</th>
+                                                <th class="text-end" id="thPronostico" style="display:none">
+                                                    <i class="fas fa-magic me-1" style="color:#8e44ad"></i>Pronóstico
+                                                </th>
                                                 <th class="text-end">Stock Mín</th>
                                                 <th class="text-end">Stock Máx</th>
                                                 <th class="text-end">Semana Pico</th>

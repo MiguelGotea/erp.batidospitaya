@@ -1024,6 +1024,11 @@ function renderTablaHistorial(data) {
 }
 
 /* ── Tabla Proyección ─────────────────────────────────────── */
+// Almacena el valor de pronóstico del Kardex activo (actualizado al renderizar el chart)
+let _lastKardexForecastVal = null;
+let _lastKardexForecastDate = null;
+let _lastKardexForecastIdPP = null;
+
 function renderTablaProyeccion(data) {
     let html = '';
 
@@ -1036,8 +1041,13 @@ function renderTablaProyeccion(data) {
         : semanasNrosTbl;
     const ultimaSemTbl = semanasNrosTbl[semanasNrosTbl.length - 1];
 
+    // Fecha pronóstico activa (del input del Kardex)
+    const fechaPronActiva = ($('#kardexFechaPronostico').val() || '').trim();
+    const hayPronostico   = !!fechaPronActiva;
+
     if (data.consumo.length === 0) {
-        html = `<tr><td colspan="9" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
+        const cols = hayPronostico ? 10 : 9;
+        html = `<tr><td colspan="${cols}" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
     } else {
         data.consumo.forEach(item => {
             // Proyección 3 semanas con regresión lineal (misma lógica que gráfico/KPIs)
@@ -1070,7 +1080,6 @@ function renderTablaProyeccion(data) {
             }
 
             // Tendencia basada en la pendiente OLS (mismo criterio que el gráfico)
-            // ±5% del promedio por semana como umbral de "estable"
             const olsThreshold = promCalcTbl * 0.05;
             const trendOls = slTbl > olsThreshold
                 ? 'up'
@@ -1083,6 +1092,26 @@ function renderTablaProyeccion(data) {
                     ? `<span class="dc-trend-down"><i class="fas fa-arrow-down me-1"></i>Decreciente</span>`
                     : `<span class="dc-trend-flat"><i class="fas fa-minus me-1"></i>Estable</span>`;
 
+            // ── Columna Pronóstico (existencias) ────────────────────────────
+            // Calculada con el mismo consumo DOW promedio que el gráfico del Kardex.
+            // Disponible solo cuando hay fecha pronóstico y el insumo seleccionado en Kardex
+            // coincide con este item (se muestra '—' para los demás).
+            let pronosticoCell = '';
+            if (hayPronostico) {
+                const idSel = parseInt($('#chartInsumoSel').val()) || 0;
+                if (idSel === item.id && _lastKardexForecastVal !== null && _lastKardexForecastDate === fechaPronActiva) {
+                    const valFmt = parseFloat(_lastKardexForecastVal).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const colorFc = _lastKardexForecastVal >= 0 ? '#8e44ad' : '#c0392b';
+                    pronosticoCell = `
+                        <td class="text-end fw-bold" style="color:${colorFc}">
+                            ${valFmt}
+                            <div style="font-size:.65rem;font-weight:400;color:#888">${fechaPronActiva}</div>
+                        </td>`;
+                } else {
+                    pronosticoCell = `<td class="text-end text-muted" style="font-size:.75rem">—<div style="font-size:.62rem">sin Kardex</div></td>`;
+                }
+            }
+
             html += `
             <tr>
                 <td>
@@ -1092,6 +1121,7 @@ function renderTablaProyeccion(data) {
                 <td><span class="badge bg-light text-dark border" style="font-size:.7rem">${escHtml(item.categoria_insumo || '—')}</span></td>
                 <td class="text-end">${formatNum(item.prom_semana)}</td>
                 <td class="text-end fw-bold" style="color:#0E544C">${Math.round(proy3Tbl).toLocaleString('es-NI')}</td>
+                ${pronosticoCell}
                 <td class="text-end" style="color:#e67e22">${formatNum(item.stock_min)}</td>
                 <td class="text-end" style="color:#27ae60">${formatNum(item.stock_max)}</td>
                 <td class="text-end">
@@ -2385,9 +2415,9 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
 
     // ── Pronóstico de consumo (línea adicional, no modifica nada existente) ──
     if (fechaObjetivoPronostico) {
-        // Calcular promedios de consumo teórico usando TODO el rango analizado (semDesde→semHasta),
-        // sin filtrar por pivotDate. El punto de corte solo ancla el inventario; no afecta
-        // al consumo promedio. Esto alinea con prom_consumo / 7 de pedido_sugerido.
+        // ── Calcular promedios DOW usando TODO el rango semDesde→semHasta ──────
+        // La semana de corte solo ajusta verticalmente la línea verde;
+        // NO cambia el consumo promedio ni el origen del pronóstico.
         const _cntDow = [0,0,0,0,0,0,0];
         const _sumDow = [0,0,0,0,0,0,0];
         let _totalCons = 0;
@@ -2401,38 +2431,37 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             }
             _totalCons += v;
         });
-        // Denominador = días calendario totales del rango (= nSemanas × 7),
-        // igual que prom_consumo / 7 en calcular_v2.
         const _totalDias = allDates.length > 0 ? allDates.length : 1;
         const _promDiario = _totalCons / _totalDias;
         const _promDow = _sumDow.map((s, i) => _cntDow[i] > 0 ? s / _cntDow[i] : _promDiario);
 
-        // Consumo SIEMPRE proyectado (estimado por DOW histórico) — nunca usa el real.
-        // Esto es correcto: el pronóstico debe mostrar qué esperamos consumir,
-        // no lo que ya consumimos (eso ya lo muestra la línea de Stock Teórico).
         const _getConsProy = (fechaStr) => {
             const dow = new Date(fechaStr + 'T12:00:00').getDay();
             const pDow = _promDow[dow] > 0 ? _promDow[dow] : _promDiario;
             return 0.65 * pDow + 0.35 * _promDiario;
         };
 
-        // Construir línea de pronóstico desde la semana de corte:
-        //   - Consumo: SIEMPRE proyectado (nunca el real)
-        //   - Otros movimientos (despacho, compras, ajustes, merma): usa los REALES
-        //     del kardex cuando ya existen (no hay razón para ignorarlos — son hechos).
+        // ── El pronóstico NACE donde termina la línea verde ───────────────────
+        // La línea verde (Stock Teórico) termina en el índice (originalRangeLen - 1).
+        // Ese balance es el punto de partida real del pronóstico.
+        // La semana de corte solo sirvió para calibrar la línea verde; no define
+        // desde dónde se proyecta.
+        const _startFcIdx = originalRangeLen - 1;  // último día del rango real
+        const _startFcBal = stockTeoData[_startFcIdx] ?? invCorte;  // balance final de la línea verde
+        const _startFcDate = allDays[_startFcIdx];
+
+        // Solo proyectar si la fecha objetivo es posterior al fin del rango
         const forecastData = new Array(allDays.length).fill(null);
-        // Ancla visual: mismo punto que el triángulo de corte
-        forecastData[corteMarkerIdx] = invCorte;
-        // Avanzar desde pIdx aplicando movimientos reales + consumo proyectado
-        let _balFc = invCorte;
-        for (let i = pIdx; i < allDays.length; i++) {
+        // Ancla visual: conectar con el último punto de la línea verde
+        forecastData[_startFcIdx] = _startFcBal;
+
+        // Proyectar hacia adelante (días extendidos más allá del rango real)
+        // usando consumo promedio DOW — sin movimientos reales porque ya no existen.
+        let _balFc = _startFcBal;
+        for (let i = _startFcIdx + 1; i < allDays.length; i++) {
             if (allDays[i] > fechaObjetivoPronostico) break;
-            // Movimientos reales del kardex (despachos +, compras +, ajustes +/-, mermas -)
-            // ya están procesados en movsPorFecha con su signo correcto.
-            const movReal = movsPorFecha[allDays[i]] || 0;
-            // Consumo proyectado (nunca el real)
             const consProy = _getConsProy(allDays[i]);
-            _balFc = _balFc + movReal - consProy;
+            _balFc = _balFc - consProy;
             forecastData[i] = _balFc;
         }
 
@@ -2441,6 +2470,10 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
         const _finalPoint = new Array(allDays.length).fill(null);
         if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
+
+        // Guardar valor pronóstico para acceso externo (tabla Proyección)
+        window._kardexForecastValue = _valObj;
+        window._kardexForecastDate  = fechaObjetivoPronostico;
 
         datasets.push({
             label: `Pronóstico → ${fechaObjetivoPronostico}`,
@@ -2451,7 +2484,7 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             borderDash: [10, 5],
             fill: false,
             tension: 0.2,
-            pointRadius: 2,
+            pointRadius: allDays.map((_, i) => i === _startFcIdx ? 5 : 2),
             pointBackgroundColor: '#8e44ad',
             spanGaps: false,
         });
@@ -2499,6 +2532,27 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         }
     });
     document.getElementById('bdChartWrap').classList.remove('d-none');
+
+    // ── Sincronizar valor de pronóstico con la tabla de Proyección ──────────
+    // window._kardexForecastValue / _kardexForecastDate fueron escritos arriba
+    // si había fecha objetivo. Aquí los pasamos a las variables del módulo y
+    // actualizamos la tabla para que aparezca la columna morada.
+    if (fechaObjetivoPronostico) {
+        _lastKardexForecastVal  = window._kardexForecastValue ?? null;
+        _lastKardexForecastDate = window._kardexForecastDate  ?? null;
+        _lastKardexForecastIdPP = res.id_pp ?? null;
+        // Mostrar encabezado de columna Pronóstico en la tabla
+        $('#thPronostico').show();
+        // Re-renderizar tabla si hay datos cargados
+        if (datosActuales) renderTablaProyeccion(datosActuales);
+    } else {
+        // Sin fecha → limpiar pronóstico y ocultar columna
+        _lastKardexForecastVal  = null;
+        _lastKardexForecastDate = null;
+        _lastKardexForecastIdPP = null;
+        $('#thPronostico').hide();
+        if (datosActuales) renderTablaProyeccion(datosActuales);
+    }
 }
 
 function cargarStockMinMaxKardex(idPP, semAnalisis) {
