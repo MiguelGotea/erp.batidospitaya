@@ -53,7 +53,7 @@ $modulosPorCargo = [
     53 => 'marketing',               // Coordinación de Mercadeo
     54 => 'rh',                     // Analista de clima y cultura
     55 => 'operaciones',            // Líder General de Tiendas Managua
-    52 => 'auditor',            // Auditor de Tiendas
+    52 => 'supervision',            // Auditor de Tiendas
 ];
 
 // Si es admin o no tiene cargos definidos, redirigir al inicio
