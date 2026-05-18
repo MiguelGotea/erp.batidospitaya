@@ -385,12 +385,27 @@ async function calcularPronosticoMasivo() {
                     return;
                 }
 
-                const d1Val = Number(resp.stock_D1_paquetes ?? 0).toFixed(1);
-                $d1.html(`${d1Val} <br><small class="text-muted" style="font-size: 9px; font-weight: 600;">PAQ</small>`);
+                // ── Mostrar Stock D-1 en UNIDADES DE CONTROL (porciones) ───────────────
+                // Igual que el Kardex: sin conversión a paquetes.
+                const d1Uso = resp.stock_D1_uso ?? null;
+                const unitLabel = prod.unidad ? escHtml(prod.unidad) : 'u.';
+                if (d1Uso !== null) {
+                    $d1.html(`${Number(d1Uso).toFixed(1)} <br><small class="text-muted" style="font-size: 9px; font-weight: 600;">${unitLabel}</small>`);
+                } else {
+                    $d1.html('—');
+                }
 
-                const dp  = resp.despacho_sugerido_pronostico ?? 0;
-                const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
-                $desp.html(`<span class="${cls}">${dp}</span>`);
+                // ── Despacho pronóstico en UNIDADES DE CONTROL ─────────────────────────
+                // stock_max_final viene en paquetes → convertir a unidades de control
+                const dfactor = prod.despacho_factor ?? 1;
+                const stockMaxUso = (prod.stock_max_final ?? 0) * dfactor;
+                const dp = (d1Uso !== null) ? Math.max(0, Math.ceil(stockMaxUso - d1Uso)) : null;
+                if (dp !== null) {
+                    const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
+                    $desp.html(`<span class="${cls}">${dp}</span>`);
+                } else {
+                    $desp.html('—');
+                }
             }).catch(() => { errores++; });
         }));
     }
