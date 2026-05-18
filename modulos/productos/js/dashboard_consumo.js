@@ -268,10 +268,6 @@ function bindEventos() {
         if (idSel > 0) {
             const item = datosActuales.consumo.find(c => c.id == idSel);
             $('#panelAnalisisInsumo').removeClass('d-none');  // mostrar panel
-            $('#analisisInsumoBody').removeClass('collapsed'); // expandir automáticamente
-            $('#analisisInsumoToggle').removeClass('rotated'); // apuntar abajo
-            $('#kardexBody').removeClass('collapsed'); // expandir automáticamente
-            $('#kardexToggle').removeClass('rotated'); // apuntar abajo
             $('#chartPlaceholder').addClass('d-none');
             $('#chartWrap').removeClass('d-none');
             // Actualizar hint en el header del panel
