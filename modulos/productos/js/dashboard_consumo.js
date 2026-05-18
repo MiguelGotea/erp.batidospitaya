@@ -326,9 +326,17 @@ function bindEventos() {
         }
         if (datosActuales) renderTablaProyeccion(datosActuales);
     });
+    // Semana de Corte → limpiar entrada del mapa del producto actual
+    // La corte cambia el balance de arranque del pronóstico, por lo que el valor
+    // almacenado ya no es válido hasta que el usuario recargue el Kardex.
+    $('#kardexSemanaCorte').on('change', function () {
+        const idActual = parseInt($('#chartInsumoSel').val()) || 0;
+        if (idActual && _kardexForecastMap[idActual]) {
+            delete _kardexForecastMap[idActual];
+            if (datosActuales) renderTablaProyeccion(datosActuales);
+        }
+    });
 
-
-    // Panel alertas sobreconsumo: toggle (evitar sigma btns)
     $(document).on('click', '#alertasHeader', function (e) {
         if ($(e.target).closest('.dc-sigma-btns, .dc-sigma-btn').length) return;
         $('#alertasBody').toggleClass('collapsed');
@@ -2205,6 +2213,7 @@ function cargarKardex(idPP, item) {
                 $('#bdResumen').html(`<div class="bd-empty"><i class="fas fa-info-circle me-1"></i>${escHtml(res.msg || 'Sin datos de kardex')}</div>`).removeClass('d-none');
                 return;
             }
+            window._kardexCurrentIdPP = parseInt(idPP) || 0;  // clave real del insumo
             renderDetalleKardex(res);
             cargarStockMinMaxKardex(idPP, semHasta);
         })
@@ -2584,8 +2593,8 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     // si había fecha objetivo. Aquí los pasamos a las variables del módulo y
     // actualizamos la tabla para que aparezca la columna morada.
     if (fechaObjetivoPronostico) {
-        // Guardar en el mapa por producto — no sobreescribe otros productos
-        const _idPP = parseInt(res.id_pp) || 0;
+        // Usar la clave real del insumo (id del consumo list = id enviado al AJAX)
+        const _idPP = window._kardexCurrentIdPP || 0;
         if (_idPP) {
             _kardexForecastMap[_idPP] = {
                 val:  window._kardexForecastValue ?? null,
