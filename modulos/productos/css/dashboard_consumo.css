@@ -535,6 +535,14 @@ body {
     padding:          14px 22px;
     background:       linear-gradient(135deg, #0E544C 0%, #1a7a71 100%);
 }
+#analisisInsumoHeader {
+    cursor:           pointer;
+    user-select:      none;
+    transition:       filter .15s;
+}
+#analisisInsumoHeader:hover {
+    filter: brightness(1.07);
+}
 
 .dc-insumo-panel-title {
     font-size:      .82rem;
