@@ -257,9 +257,9 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <!-- BARRA DE CONTROL Y GRAFICOS ASOCIADOS                   -->
                 <!-- ═══════════════════════════════════════════════════════ -->
-                <div class="mb-2" style="overflow:visible">
-                    <div>
-                        <div class="row g-3 align-items-end mb-3">
+                <div class="dc-filtros-card card border-0 shadow-sm mb-3" style="overflow:visible">
+                    <div class="card-body py-2 px-3">
+                        <div class="row g-2 align-items-end">
 
                             <!-- Selector de Insumo -->
                             <div class="col-12 col-md-6 col-lg-5" style="position:relative">
@@ -312,6 +312,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             </div>
 
                         </div>
+                    </div>
+                </div>
 
                         <!-- ═══════════════════════════════════════════════════════ -->
                         <!-- PANEL INSUMO: KPIs + Gráfico de Tendencia              -->
@@ -449,8 +451,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+
 
 
                 <!-- ═══════════════════════════════════════════════════════ -->
