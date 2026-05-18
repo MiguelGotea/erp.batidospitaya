@@ -561,7 +561,7 @@ async function cargarDatos() {
         datosActuales._semHasta = semH;
 
         // Limpiar stock pronóstico anterior y pre-rellenar sem. corte
-        stocksPron = {};
+        stocksPronosticados = {};
         if (!$('#pronSemCorteGlobal').val()) $('#pronSemCorteGlobal').val(semD);
         $('#thStockPronFecha').text('');
 
