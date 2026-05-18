@@ -33,12 +33,10 @@ $idPP          = isset($_POST['id_pp'])          ? (int)$_POST['id_pp']         
 $codSucursal   = trim($_POST['cod_sucursal']     ?? '');
 $semCorte      = isset($_POST['sem_corte'])      ? (int)$_POST['sem_corte']          : 0;
 $fechaDespacho = trim($_POST['fecha_despacho']   ?? '');
-$consDiario      = isset($_POST['cons_diario'])      ? (float)$_POST['cons_diario']      : null;
-$consProyRecv    = isset($_POST['cons_proy_diario']) ? (float)$_POST['cons_proy_diario'] : null; // pre-calculado por JS
-$semDesde        = isset($_POST['sem_desde'])        ? (int)$_POST['sem_desde']          : null;
-$semHasta        = isset($_POST['sem_hasta'])        ? (int)$_POST['sem_hasta']          : null;
-$despFactor      = isset($_POST['despacho_factor'])  ? (float)$_POST['despacho_factor']  : null;
-$stockMaxFinal   = isset($_POST['stock_max_final'])  ? (float)$_POST['stock_max_final']  : null;
+$consDiario    = isset($_POST['cons_diario'])     ? (float)$_POST['cons_diario']     : null;
+$semHasta      = isset($_POST['sem_hasta'])       ? (int)$_POST['sem_hasta']         : null;
+$despFactor    = isset($_POST['despacho_factor']) ? (float)$_POST['despacho_factor'] : null;
+$stockMaxFinal = isset($_POST['stock_max_final']) ? (float)$_POST['stock_max_final'] : null;
 
 if (!$idPP || !$codSucursal || !$semCorte || !$fechaDespacho) {
     echo json_encode(['ok' => false, 'msg' => 'Faltan parámetros requeridos.']);
@@ -205,16 +203,36 @@ try {
         $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
     }
 
-    // ── 5. Consumo proyección (Kardex-aligned) ─────────────────────────────────
-    // El JS calcula cons_proy_diario = mean(semDesde..semCorte-1) / 7 usando semanas_consumo
-    // ya convertidas por calcular_v2. Esto replica exactamente el _promDiario del Kardex.
-    // Fallback: si no viene del JS, usar cons_diario estadístico.
-    $semDesdeHist = ($semDesde && $semDesde < $semAntCorte) ? $semDesde : ($semAntCorte - 4); // para _debug
-    $semHastaHist = $semAntCorte;
-    if ($consProyRecv !== null && $consProyRecv > 0) {
-        $consProyDiario = $consProyRecv;
-    } else {
-        $consProyDiario = ($consDiario !== null && $consDiario > 0) ? $consDiario : 0.0;
+    // ── 5. Fallback cons_diario ──────────────────────────────────────────
+    if ($consDiario === null || $consDiario <= 0) {
+        $semDesdeF = $semCorte - 5; $semHastaF = $semCorte - 1;
+        $stmtRng = $conn->prepare("SELECT MIN(fecha_inicio) as f1, MAX(fecha_fin) as f2 FROM SemanasSistema WHERE numero_semana BETWEEN ? AND ?");
+        $stmtRng->execute([$semDesdeF, $semHastaF]);
+        $rng = $stmtRng->fetch(PDO::FETCH_ASSOC);
+        if ($rng && $rng['f1']) {
+            $stmtVen = $conn->prepare("SELECT v.Semana as sem, SUM(v.Cantidad*sr.Cantidad) as cant FROM VentasGlobalesAccessCSV v INNER JOIN SubReceta sr ON sr.CodBatido=v.CodProducto INNER JOIN diccionario_productos_legado d ON d.CodCotizacion=sr.codporcion WHERE v.Anulado=0 AND v.local=? AND v.Semana BETWEEN ? AND ? AND v.Fecha BETWEEN ? AND ? AND d.id_producto_presentacion=? GROUP BY v.Semana");
+            $stmtVen->execute([$codSucursal, $semDesdeF, $semHastaF, $rng['f1'], $rng['f2'], $idPP]);
+            $ventasSem = $stmtVen->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($ventasSem)) {
+                $vals = [];
+                for ($s = $semDesdeF; $s <= $semHastaF; $s++) {
+                    $found = array_filter($ventasSem, fn($r) => (int)$r['sem'] === $s);
+                    $vals[] = $found ? (float)array_values($found)[0]['cant'] : 0.0;
+                }
+                $nonZero = array_filter($vals, fn($v) => $v > 0);
+                if (!empty($nonZero)) {
+                    $mean = array_sum($vals) / count($vals);
+                    $n    = count($vals);
+                    $desv = $n > 1 ? sqrt(array_sum(array_map(fn($v) => ($v - $mean)**2, $vals)) / ($n-1)) : 0;
+                    $semC = $mean + $desv;
+                    $stmtAdj = $conn->prepare("SELECT clp.ajuste_demanda FROM producto_presentacion pp LEFT JOIN configuracion_logistica_producto clp ON clp.codigo_insumo=pp.categoria_insumo AND clp.cod_sucursal=? WHERE pp.id=? LIMIT 1");
+                    $stmtAdj->execute([$codSucursal, $idPP]);
+                    $adj = (float)($stmtAdj->fetchColumn() ?: 0);
+                    $consDiario = ($semC * (1 + $adj)) / 7.0;
+                }
+            }
+        }
+        if ($consDiario === null) $consDiario = 0.0;
     }
 
     // ── 6. Fallback despacho_factor ──────────────────────────────────────
@@ -235,7 +253,13 @@ try {
     }
 
     // ── 7. Proyección D-1 ────────────────────────────────────────────────
-    // stock_D1 = stock_domingo + mov_neto_real - consProyDiario × dias
+    // Fórmula: stock_D1 = stock_domingo + mov_neto_real - cons_diario × dias
+    // Se usa cons_diario estadístico (= prom+desv+ajuste / 7) que en práctica iguala
+    // el promedio DOW-weighted que usa el Kardex, produciendo resultados equivalentes.
+    // Los movimientos se limitan al fin de sem_hasta (igual que el Kardex) para excluir
+    // despachos de semanas futuras aún no confirmados.
+    $consProyDiario = ($consDiario !== null && $consDiario > 0) ? $consDiario : 0.0;
+
     $stockD1Uso = $sinInventario
         ? null
         : max(0.0, $stockDomingo + $movimientoNeto - ($consProyDiario * $diasTranscurridos));
@@ -271,8 +295,7 @@ try {
         '_debug' => [
             'suc_int'           => $sucInt,
             'sem_ant_corte'     => $semAntCorte,
-            'sem_desde_hist'    => $semDesdeHist,   // ventana histórica para consumo (= modelo Kardex)
-            'sem_hasta_hist'    => $semHastaHist,
+            'domingo_ant'       => $domingoAnt,
             'domingo_base'      => $domingoBase,
             'fecha_inicio_sem'  => $fechaInicioSem,
             'fecha_mov_desde'   => $fechaMovDesde,
@@ -281,6 +304,7 @@ try {
             'stock_domingo_raw' => $sinInventario ? null : $stockDomingo,
             'mov_neto'          => $movimientoNeto,
             'cons_diario_recv'  => (float)($_POST['cons_diario']     ?? 0),
+            'prom_consumo_recv' => (float)($_POST['prom_consumo']    ?? 0),
             'cons_proy_diario'  => round($consProyDiario, 6),
             'desp_factor_recv'  => (float)($_POST['despacho_factor'] ?? 0),
             'n_cods'            => count($allCods),

@@ -573,9 +573,6 @@ try {
             ? max(0, (int)((strtotime($fechaProxDespacho) - strtotime('today')) / 86400))
             : null;
 
-        $sems = $conAgg[$idP] ?? [];
-        ksort($sems);   // garantizar orden por número de semana
-
         $res[$idP] = [
             'id_pp' => $idP,
             'nombre' => $m['n'],
@@ -593,7 +590,6 @@ try {
             'stock_maximo' => round($sMax, 4),
             'stock_max_final' => null,
             'es_ajustado' => false,
-            'semanas_consumo' => $sems,   // porciones por semana (correctamente convertidas)
 
             'fecha_proximo_despacho' => $fechaProxDespacho,
             'dias_hasta_despacho'   => $diasHastaDespacho,

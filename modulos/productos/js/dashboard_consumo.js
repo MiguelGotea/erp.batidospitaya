@@ -2385,26 +2385,34 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
 
     // ── Pronóstico de consumo (línea adicional, no modifica nada existente) ──
     if (fechaObjetivoPronostico) {
-        // Calcular promedios de consumo teórico usando TODO el rango analizado (semDesde→semHasta),
-        // sin filtrar por pivotDate. El punto de corte solo ancla el inventario; no afecta
-        // al consumo promedio. Esto alinea con prom_consumo / 7 de pedido_sugerido.
+        // Calcular promedios de consumo teórico por día de semana del historial
+        // (solo de días ANTES o en la semana de corte para no contaminar el pronóstico)
         const _cntDow = [0,0,0,0,0,0,0];
         const _sumDow = [0,0,0,0,0,0,0];
-        let _totalCons = 0;
-        const allDates = Object.keys(consTeoDiario);
-        allDates.forEach(f => {
-            const v = consTeoDiario[f] ?? 0;
-            if (v > 0) {
+        let _totalCons = 0, _totalDias = 0;
+        Object.entries(consTeoDiario).forEach(([f, v]) => {
+            // Solo usar días dentro del rango original del kardex para calcular el promedio
+            if (v > 0 && f < (pivotDate || f)) {
                 const dow = new Date(f + 'T12:00:00').getDay();
                 _sumDow[dow] += v;
                 _cntDow[dow]++;
+                _totalCons += v;
+                _totalDias++;
             }
-            _totalCons += v;
         });
-        // Denominador = días calendario totales del rango (= nSemanas × 7),
-        // igual que prom_consumo / 7 en calcular_v2.
-        const _totalDias = allDates.length > 0 ? allDates.length : 1;
-        const _promDiario = _totalCons / _totalDias;
+        // Si no hubo días antes del corte (corte en el inicio), usar todos los disponibles
+        if (_totalDias === 0) {
+            Object.entries(consTeoDiario).forEach(([f, v]) => {
+                if (v > 0) {
+                    const dow = new Date(f + 'T12:00:00').getDay();
+                    _sumDow[dow] += v;
+                    _cntDow[dow]++;
+                    _totalCons += v;
+                    _totalDias++;
+                }
+            });
+        }
+        const _promDiario = _totalDias > 0 ? _totalCons / _totalDias : 0;
         const _promDow = _sumDow.map((s, i) => _cntDow[i] > 0 ? s / _cntDow[i] : _promDiario);
 
         // Consumo SIEMPRE proyectado (estimado por DOW histórico) — nunca usa el real.
@@ -2416,31 +2424,19 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             return 0.65 * pDow + 0.35 * _promDiario;
         };
 
-        // Construir línea de pronóstico desde el ÚLTIMO DÍA DEL RANGO (semHasta):
-        //   - El pronóstico nace donde termina la línea verde, no en el triángulo de corte.
-        //   - La semana de corte solo ancla la línea verde (ajusta todo arriba/abajo para
-        //     que el domingo del corte coincida con el conteo físico); NO define dónde
-        //     empieza el pronóstico.
-        //   - Balance inicial = existencia al final del último día del rango analizado
-        //     (= último valor real de stockTeoData).
-        //   - El loop proyecta únicamente los días DESPUÉS del rango (índice >= originalRangeLen).
-        //   - Consumo: SIEMPRE proyectado por DOW (nunca el real).
-        //   - Otros movimientos: no hay movimientos kardex reales más allá del rango,
-        //     así que movReal será 0 para todos los días de la proyección.
+        // Construir línea de pronóstico desde la semana de corte:
+        //   - Consumo: SIEMPRE proyectado (nunca el real)
+        //   - Otros movimientos (despacho, compras, ajustes, merma): usa los REALES
+        //     del kardex cuando ya existen (no hay razón para ignorarlos — son hechos).
         const forecastData = new Array(allDays.length).fill(null);
-
-        // Punto de unión visual con la línea verde: último día del rango real
-        const pronosticoStartIdx = originalRangeLen - 1;
-        const pronosticoStartVal = stockTeoData[pronosticoStartIdx] ?? invCorte;
-        forecastData[pronosticoStartIdx] = pronosticoStartVal;
-
-        // Proyectar hacia adelante a partir del primer día FUERA del rango
-        let _balFc = pronosticoStartVal;
-        for (let i = originalRangeLen; i < allDays.length; i++) {
+        // Ancla visual: mismo punto que el triángulo de corte
+        forecastData[corteMarkerIdx] = invCorte;
+        // Avanzar desde pIdx aplicando movimientos reales + consumo proyectado
+        let _balFc = invCorte;
+        for (let i = pIdx; i < allDays.length; i++) {
             if (allDays[i] > fechaObjetivoPronostico) break;
             // Movimientos reales del kardex (despachos +, compras +, ajustes +/-, mermas -)
             // ya están procesados en movsPorFecha con su signo correcto.
-            // Para días fuera del rango no hay movimientos reales, movReal = 0.
             const movReal = movsPorFecha[allDays[i]] || 0;
             // Consumo proyectado (nunca el real)
             const consProy = _getConsProy(allDays[i]);
