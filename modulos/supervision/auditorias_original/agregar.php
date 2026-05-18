@@ -712,20 +712,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 const constraints = {
                     video: {
-                        deviceId: deviceId ? {
-                            exact: deviceId
-                        } : undefined,
-                        width: {
-                            ideal: 320
-                        },
-                        height: {
-                            ideal: 240
-                        }
+                        deviceId: deviceId ? { exact: deviceId } : undefined,
+                        facingMode: deviceId ? undefined : { ideal: 'environment' },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     }
                 };
 
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                };
                 video.play();
             } catch (error) {
                 console.error("Error al iniciar la cámara: ", error);
@@ -930,8 +929,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Iniciar la cámara al cargar la página
         (async function() {
-            await listarCamaras();
             await iniciarCamara();
+            await listarCamaras();
 
             // Verificar completitud cuando cambien los radios
             document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
