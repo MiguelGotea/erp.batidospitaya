@@ -237,7 +237,7 @@ function buildFila(p, cat) {
     if (p.stock_max_final !== null) {
         stockMaxFinalHtml = fmt2(p.stock_max_final);
         if (p.es_ajustado) {
-            stockMaxFinalHtml += ' <span class="badge-ajustado">Adj</span>';
+            stockMaxFinalHtml += '<br><span class="badge-ajustado">Ajustado</span>';
         }
     } else {
         stockMaxFinalHtml = '<span class="val-na">N/A</span>';
@@ -266,7 +266,7 @@ function buildFila(p, cat) {
             fechaDespFormat = `${dia}/${mes}/${año}`;
         }
 
-        cellFecha = `<div class="text-center" style="line-height: 1.1;"><span class="fw-bold text-dark">${sem} ${fechaDespFormat}</span> <small class="text-muted" style="font-size: 0.85em;">(${diasHasta}d)</small></div>`;
+        cellFecha = `<div class="d-flex flex-column align-items-center" style="line-height: 1.2;"><span class="fw-bold text-dark" style="font-size: 13px;">${sem} ${fechaDespFormat}</span><small class="text-muted" style="font-size: 10px;">en ${diasHasta}d</small></div>`;
     }
 
     // Label de unidad de despacho (aparece debajo del número)
@@ -277,27 +277,27 @@ function buildFila(p, cat) {
     return `
         <tr class="ps-fila-producto" data-id="${p.id_pp}">
             <td class="col-producto">
-                <div class="fw-bold text-dark">${escHtml(p.nombre)}</div>
+                <div class="fw-bold text-dark" style="font-size: 13px;">${escHtml(p.nombre)}</div>
             </td>
             <td class="col-presentacion">
-                <div class="text-muted" style="font-size: 0.9em;">${escHtml(p.unidad || '—')}</div>
+                <div class="text-muted" style="font-size: 11px;">${escHtml(p.unidad || '—')}</div>
             </td>
             
-            <td class="text-end num-cell bg-light-gray">${fmt2(p.prom_consumo)}</td>
-            <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 0.9em;">${fmt2(p.desv_estandar)}</td>
-            <td class="text-end num-cell fw-bold text-dark bg-light-gray">${fmt2(p.cons_semanal)}</td>
-            <td class="text-end num-cell text-muted bg-light-gray">${fmt(p.cons_diario, 3)}</td>
+            <td class="text-end num-cell bg-light-gray" style="font-size: 13px;">${fmt2(p.prom_consumo)}</td>
+            <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 12px;">${fmt2(p.desv_estandar)}</td>
+            <td class="text-end num-cell fw-bold text-dark bg-light-gray" style="font-size: 13px;">${fmt2(p.cons_semanal)}</td>
+            <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 13px;">${fmt(p.cons_diario, 3)}</td>
             
             <td class="text-end num-cell bg-mid-gray">
-                <div>${fmt2(p.stock_minimo)}</div>
+                <div style="font-size: 13px;">${fmt2(p.stock_minimo)}</div>
                 ${despTag}
             </td>
             <td class="text-end num-cell bg-mid-gray">
-                <div>${fmt2(p.stock_maximo)}</div>
+                <div style="font-size: 13px;">${fmt2(p.stock_maximo)}</div>
                 ${despTag}
             </td>
             <td class="text-end num-cell fw-bold text-dark bg-mid-gray">
-                <div>${stockMaxFinalHtml}</div>
+                <div style="font-size: 13px;">${stockMaxFinalHtml}</div>
                 ${despTag}
             </td>
 
@@ -305,10 +305,10 @@ function buildFila(p, cat) {
                 ${cellFecha}
             </td>
             <td class="text-end col-pronostico num-cell bg-pronostico align-middle">
-                <div class="pron-d1" data-idpp="${p.id_pp}">—</div>
+                <div class="pron-d1" data-idpp="${p.id_pp}" style="font-size: 13px;">—</div>
             </td>
             <td class="text-center col-pronostico num-cell bg-pronostico align-middle">
-                <div class="pron-desp fw-bold" data-idpp="${p.id_pp}" style="font-size: 1.1em;">—</div>
+                <div class="pron-desp" data-idpp="${p.id_pp}" style="font-size: 14px;">—</div>
             </td>
         </tr>
     `;
@@ -350,7 +350,6 @@ async function calcularPronosticoMasivo() {
                 id_pp: prod.id_pp,
                 cod_sucursal: codSucursalActual,
                 sem_corte: semCorte,
-                sem_hasta: parseInt($('#filtroSemanaHasta').val()) || semCorte,  // límite superior = último sem analizado
                 fecha_despacho: prod.fecha_proximo_despacho,
                 cons_diario: prod.cons_diario,
                 despacho_factor: prod.despacho_factor ?? 1,
