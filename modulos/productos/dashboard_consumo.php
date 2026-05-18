@@ -257,8 +257,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <!-- BARRA DE CONTROL Y GRAFICOS ASOCIADOS                   -->
                 <!-- ═══════════════════════════════════════════════════════ -->
-                <div class="dc-filtros-card card border-0 mb-3" style="overflow:visible">
-                    <div class="card-body py-3 px-4">
+                <div class="mb-2" style="overflow:visible">
+                    <div>
                         <div class="row g-3 align-items-end mb-3">
 
                             <!-- Selector de Insumo -->
