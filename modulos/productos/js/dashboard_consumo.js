@@ -314,15 +314,14 @@ function bindEventos() {
     $btnExportar.on('click', exportarCSV);
 
     // Fecha Pronóstico → actualizar tabla de Proyección inmediatamente para todos los productos
+    // Al cambiar la fecha, los valores del mapa Kardex ya no son válidos → limpiar mapa.
     $('#kardexFechaPronostico').on('change', function () {
         const fecha = ($(this).val() || '').trim();
+        // Vaciar el mapa siempre que cambie la fecha (los valores eran para otra fecha)
+        Object.keys(_kardexForecastMap).forEach(k => delete _kardexForecastMap[k]);
         if (fecha) {
             $('#thPronostico').show();
         } else {
-            // Sin fecha: limpiar Kardex forecast y ocultar columna
-            _lastKardexForecastVal  = null;
-            _lastKardexForecastDate = null;
-            _lastKardexForecastIdPP = null;
             $('#thPronostico').hide();
         }
         if (datosActuales) renderTablaProyeccion(datosActuales);
@@ -1038,10 +1037,10 @@ function renderTablaHistorial(data) {
 }
 
 
-// Almacena el valor de pronóstico del Kardex activo (actualizado al renderizar el chart)
-let _lastKardexForecastVal = null;
-let _lastKardexForecastDate = null;
-let _lastKardexForecastIdPP = null;
+// Mapa { idPP: { val, date } } que acumula valores de Kardex por producto.
+// Se llena conforme el usuario carga distintos productos en el Kardex.
+// Solo se vacía cuando cambia la fecha de pronóstico (los valores ya no serían válidos).
+const _kardexForecastMap = {};
 
 function renderTablaProyeccion(data) {
     let html = '';
@@ -1091,7 +1090,7 @@ function renderTablaProyeccion(data) {
             }
 
             let proy3Tbl = promCalcTbl * 3;
-            let slTbl = 0;  // pendiente OLS — usada también para Tendencia
+            let slTbl = 0;  // pendiente OLS
             if (semanasCalcTbl.length >= 2) {
                 const xV = semanasCalcTbl;
                 const yV = semanasCalcTbl.map(n => item.por_semana[n] || 0);
@@ -1111,23 +1110,19 @@ function renderTablaProyeccion(data) {
                 }
             }
 
-            // Tendencia basada en la pendiente OLS (mismo criterio que el gráfico)
+            // Tendencia basada en pendiente OLS
             const olsThreshold = promCalcTbl * 0.05;
-            const trendOls = slTbl > olsThreshold
-                ? 'up'
-                : slTbl < -olsThreshold
-                    ? 'down'
-                    : 'flat';
+            const trendOls = slTbl > olsThreshold ? 'up' : slTbl < -olsThreshold ? 'down' : 'flat';
             const trendIcon = trendOls === 'up'
                 ? `<span class="dc-trend-up"><i class="fas fa-arrow-up me-1"></i>Creciente</span>`
                 : trendOls === 'down'
                     ? `<span class="dc-trend-down"><i class="fas fa-arrow-down me-1"></i>Decreciente</span>`
                     : `<span class="dc-trend-flat"><i class="fas fa-minus me-1"></i>Estable</span>`;
 
-            // ── Columna Pronóstico: consumo proyectado para TODOS los productos ──
-            // Fórmula: prom_diario × días_hasta_fecha
-            // donde prom_diario = promCalcTbl / 7 (basado en semanas completas del rango)
-            // Para el producto con Kardex cargado también muestra las existencias proyectadas.
+            // ── Columna Pronóstico: para TODOS los productos ─────────────────
+            // consumo_proyectado = (prom_semana / 7) × días
+            // Si el producto tiene su Kardex en _kardexForecastMap se muestran
+            // las existencias exactas. El mapa persiste al cambiar de producto.
             let pronosticoCell = '';
             if (hayPronostico) {
                 const promDiario  = promCalcTbl / 7;
@@ -1137,29 +1132,27 @@ function renderTablaProyeccion(data) {
                 const colorCons   = esAlerta ? '#c0392b' : '#8e44ad';
                 const consumoFmt  = consumoPron.toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                // ¿Este item tiene también el stock exacto del Kardex?
-                const idSel = parseInt($('#chartInsumoSel').val()) || 0;
-                const tieneKardex = idSel === item.id
-                    && _lastKardexForecastVal !== null
-                    && _lastKardexForecastDate === fechaPronActiva;
+                // Consultar el mapa — no depende del producto seleccionado actualmente
+                const entrada = _kardexForecastMap[item.id];
+                const tieneKardex = entrada && entrada.date === fechaPronActiva && entrada.val !== null;
 
                 if (tieneKardex) {
-                    const existFmt   = parseFloat(_lastKardexForecastVal).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const colorExist = _lastKardexForecastVal >= 0 ? '#27ae60' : '#c0392b';
+                    const existFmt   = parseFloat(entrada.val).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const colorExist = entrada.val >= 0 ? '#27ae60' : '#c0392b';
                     pronosticoCell = `
                         <td class="text-end" style="line-height:1.3">
                             <span class="fw-bold" style="color:${colorExist}">${existFmt}</span>
                             <div style="font-size:.62rem;color:#888">Exist. al ${fechaPronActiva}</div>
-                            <div style="font-size:.62rem;color:${colorCons}">↓ cons. ${consumoFmt}</div>
+                            <div style="font-size:.62rem;color:${colorCons}">↓&nbsp;cons. ${consumoFmt}</div>
                         </td>`;
                 } else {
                     const alertaBadge = esAlerta
-                        ? `<span title="Supera el stock mínimo (${formatNum(stockMin)})" style="font-size:.58rem;background:#fde8e8;color:#c0392b;border-radius:3px;padding:1px 4px">⚠ Alerta</span>`
+                        ? `<span title="Supera stock mínimo (${formatNum(stockMin)})" style="font-size:.58rem;background:#fde8e8;color:#c0392b;border-radius:3px;padding:1px 4px">⚠ Alerta</span>`
                         : '';
                     pronosticoCell = `
                         <td class="text-end" style="line-height:1.3">
                             <span class="fw-bold" style="color:${colorCons}">${consumoFmt}</span>
-                            <div style="font-size:.62rem;color:#888">${_diasPron} días · ${escHtml(item.unidad)}</div>
+                            <div style="font-size:.62rem;color:#888">${_diasPron}&nbsp;días · ${escHtml(item.unidad)}</div>
                             ${alertaBadge}
                         </td>`;
                 }
@@ -2591,18 +2584,19 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     // si había fecha objetivo. Aquí los pasamos a las variables del módulo y
     // actualizamos la tabla para que aparezca la columna morada.
     if (fechaObjetivoPronostico) {
-        _lastKardexForecastVal  = window._kardexForecastValue ?? null;
-        _lastKardexForecastDate = window._kardexForecastDate  ?? null;
-        _lastKardexForecastIdPP = res.id_pp ?? null;
-        // Mostrar encabezado de columna Pronóstico en la tabla
+        // Guardar en el mapa por producto — no sobreescribe otros productos
+        const _idPP = parseInt(res.id_pp) || 0;
+        if (_idPP) {
+            _kardexForecastMap[_idPP] = {
+                val:  window._kardexForecastValue ?? null,
+                date: fechaObjetivoPronostico
+            };
+        }
         $('#thPronostico').show();
-        // Re-renderizar tabla si hay datos cargados
         if (datosActuales) renderTablaProyeccion(datosActuales);
     } else {
-        // Sin fecha → limpiar pronóstico y ocultar columna
-        _lastKardexForecastVal  = null;
-        _lastKardexForecastDate = null;
-        _lastKardexForecastIdPP = null;
+        // Sin fecha de pronóstico: vaciar el mapa y ocultar columna
+        Object.keys(_kardexForecastMap).forEach(k => delete _kardexForecastMap[k]);
         $('#thPronostico').hide();
         if (datosActuales) renderTablaProyeccion(datosActuales);
     }
