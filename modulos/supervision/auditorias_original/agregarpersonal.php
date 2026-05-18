@@ -2,7 +2,7 @@
 // Al inicio del archivo, verificar autenticación y acceso al módulo
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
 
 // Verificar acceso al módulo 'publico' (o el nombre que corresponda según tus permisos)
 //verificarAccesoModulo('supervision');
@@ -15,10 +15,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21]);
+verificarAccesoCargo([16, 21, 52]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([16, 21, 52]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -542,9 +542,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Configurar las opciones de la cámara
                 const constraints = {
                     video: {
-                        deviceId: deviceId ? { exact: deviceId } : undefined, // Usar la cámara seleccionada
-                        width: { ideal: 320 },
-                        height: { ideal: 240 }
+                        deviceId: deviceId ? {
+                            exact: deviceId
+                        } : undefined, // Usar la cámara seleccionada
+                        width: {
+                            ideal: 320
+                        },
+                        height: {
+                            ideal: 240
+                        }
                     }
                 };
 
@@ -567,7 +573,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         });
 
         // Capturar la foto
-        capturarBtn.addEventListener('click', function () {
+        capturarBtn.addEventListener('click', function() {
             // Dibujar la imagen actual del video en el canvas
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -582,7 +588,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         });
 
         // Iniciar la cámara por defecto al cargar la página
-        (async function () {
+        (async function() {
             await listarCamaras(); // Listar cámaras disponibles
             await iniciarCamara(); // Iniciar la cámara por defecto
         })();
@@ -617,7 +623,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $operarios_json = json_encode($operarios_autocomplete);
         ?>
         const operarios = <?php echo $operarios_json; ?>;
-        
+
         // Preparar datos para autocomplete
         const operariosAutocomplete = operarios.map(operario => ({
             label: operario.label_completo,
@@ -629,7 +635,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $('#persona_input').autocomplete({
                 source: function(request, response) {
                     const term = request.term.toLowerCase();
-                    const filtered = operariosAutocomplete.filter(op => 
+                    const filtered = operariosAutocomplete.filter(op =>
                         op.label.toLowerCase().includes(term)
                     );
                     response(filtered.slice(0, 15)); // Limitar a 15 resultados
@@ -664,7 +670,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 var groupName = radioInput.name;
                 var options = document.querySelectorAll('.radio-option input[name="' + groupName + '"]');
 
-                options.forEach(function (option) {
+                options.forEach(function(option) {
                     option.parentElement.style.backgroundColor = '';
                 });
 
@@ -681,7 +687,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             var countPersonal = 0;
             var radiosPersonal = document.querySelectorAll('input[type="radio"][name^="presentacion_personal_2_"]:checked');
 
-            radiosPersonal.forEach(function (radio) {
+            radiosPersonal.forEach(function(radio) {
                 var value = radio.value;
                 if (value !== "N/A") {
                     totalPersonal += parseInt(value);
@@ -701,7 +707,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Verificar preguntas de Presentación del Personal
             var radiosPersonal = document.querySelectorAll('input[type="radio"][name^="presentacion_personal_2_"]');
-            radiosPersonal.forEach(function (radio) {
+            radiosPersonal.forEach(function(radio) {
                 if (!grupos[radio.name]) {
                     grupos[radio.name] = false;
                 }
@@ -711,7 +717,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             });
 
             // Verificar si todos los grupos tienen una respuesta seleccionada
-            var todasCompletas = Object.values(grupos).every(function (completo) {
+            var todasCompletas = Object.values(grupos).every(function(completo) {
                 return completo;
             });
 
@@ -730,8 +736,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // Añadir event listeners a los botones de radio para calcular los promedios y verificar la completitud cuando cambien
-        document.querySelectorAll('input[type="radio"][name^="presentacion_personal_2_"]').forEach(function (radio) {
-            radio.addEventListener('change', function () {
+        document.querySelectorAll('input[type="radio"][name^="presentacion_personal_2_"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
                 calcularPromedios();
                 verificarCompletitud();
             });
@@ -759,21 +765,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // Al cargar la página, verificar el estado inicial
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             verificarCompletitud();
-            
+
             const codSucursalSelect = document.getElementById('cod_sucursal');
             const sucursalNombreInput = document.getElementById('sucursal_nombre');
 
             // Mapeo de códigos a nombres de sucursales
-            const sucursalesMap = <?php 
-                $map = [];
-                foreach ($sucursales as $s) { $map[$s['codigo']] = $s['nombre']; }
-                echo json_encode($map);
-            ?>;
+            const sucursalesMap = <?php
+                                    $map = [];
+                                    foreach ($sucursales as $s) {
+                                        $map[$s['codigo']] = $s['nombre'];
+                                    }
+                                    echo json_encode($map);
+                                    ?>;
 
             // Actualizar el campo oculto con el nombre de la sucursal cuando cambie la selección
-            codSucursalSelect.addEventListener('change', function () {
+            codSucursalSelect.addEventListener('change', function() {
                 const selectedCode = this.value;
                 if (selectedCode && sucursalesMap[selectedCode]) {
                     sucursalNombreInput.value = sucursalesMap[selectedCode];
