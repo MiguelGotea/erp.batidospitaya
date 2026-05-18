@@ -1023,7 +1023,7 @@ function renderTablaHistorial(data) {
     $('#labelResultados').text(total > 0 ? `${total} insumo(s) encontrado(s)` : '');
 }
 
-/* ── Tabla Proyección ─────────────────────────────────────── */
+
 // Almacena el valor de pronóstico del Kardex activo (actualizado al renderizar el chart)
 let _lastKardexForecastVal = null;
 let _lastKardexForecastDate = null;
@@ -1044,6 +1044,24 @@ function renderTablaProyeccion(data) {
     // Fecha pronóstico activa (del input del Kardex)
     const fechaPronActiva = ($('#kardexFechaPronostico').val() || '').trim();
     const hayPronostico   = !!fechaPronActiva;
+
+    // ── Pre-calcular días de pronóstico desde el fin de semHasta ────────────
+    // Se usa la fecha_fin de la última semana del rango como punto de partida.
+    // Para todos los productos el consumo diario = prom_semana / 7.
+    let _diasPron = 0;
+    let _finRango = null; // fecha string YYYY-MM-DD fin de semHasta
+    if (hayPronostico && data.semanas && data.semanas.length > 0) {
+        // Buscar la semana con el número más alto (= semHasta)
+        const semMaxObj = data.semanas.reduce((a, b) =>
+            b.numero_semana > a.numero_semana ? b : a, data.semanas[0]);
+        _finRango = semMaxObj.fecha_fin || null;
+        if (_finRango) {
+            const msPerDay = 86400000;
+            const tFin  = new Date(_finRango  + 'T12:00:00').getTime();
+            const tPron = new Date(fechaPronActiva + 'T12:00:00').getTime();
+            _diasPron = Math.max(0, Math.round((tPron - tFin) / msPerDay));
+        }
+    }
 
     if (data.consumo.length === 0) {
         const cols = hayPronostico ? 10 : 9;
