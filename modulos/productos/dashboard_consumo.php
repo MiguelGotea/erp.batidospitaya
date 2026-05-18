@@ -241,11 +241,11 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 </div>
 
                 <!-- ═══════════════════════════════════════════════════════ -->
-                <!-- BARRA DE CONTROL: Insumo + Sem. Corte + Refresh         -->
+                <!-- BARRA DE CONTROL Y GRAFICOS ASOCIADOS                   -->
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <div class="dc-filtros-card card border-0 mb-3" style="overflow:visible">
                     <div class="card-body py-3 px-4">
-                        <div class="row g-3 align-items-end">
+                        <div class="row g-3 align-items-end mb-3">
 
                             <!-- Selector de Insumo -->
                             <div class="col-12 col-md-6 col-lg-5" style="position:relative">
@@ -298,140 +298,140 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                             </div>
 
                         </div>
-                    </div>
-                </div>
 
-                <!-- ═══════════════════════════════════════════════════════ -->
-                <!-- PANEL INSUMO: KPIs + Gráfico de Tendencia              -->
-                <!-- ═══════════════════════════════════════════════════════ -->
-                <div class="dc-insumo-panel mb-3 d-none" id="panelAnalisisInsumo">
-                    <div class="dc-insumo-panel-header" id="analisisInsumoHeader">
-                        <div class="dc-insumo-panel-title">
-                            <i class="fas fa-chart-line me-2"></i>
-                            Análisis de Insumo
-                            <span class="dc-insumo-panel-hint" id="insumoNombreHint">— selecciona un insumo arriba para ver KPIs y tendencia</span>
-                        </div>
-                        <button class="dc-alertas-toggle" id="analisisInsumoToggle" title="Expandir / Contraer">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                    </div>
-
-                    <div class="dc-alertas-body" id="analisisInsumoBody">
-                        <!-- KPI Cards (controladas por el selector) -->
-                        <div class="dc-insumo-panel-body">
-
-                            <div class="row g-3 mb-3" id="kpiRow">
-                                <div class="col-6 col-lg-4">
-                                    <div class="dc-kpi-card" id="kpiTotal">
-                                        <div class="dc-kpi-icon" style="color:#51B8AC"><i class="fas fa-boxes"></i></div>
-                                        <div class="dc-kpi-label">Consumo Total (período)</div>
-                                        <div class="dc-kpi-valor" id="kpiTotalVal">—</div>
-                                        <div class="dc-kpi-sub" id="kpiTotalSub"></div>
-                                    </div>
+                        <!-- ═══════════════════════════════════════════════════════ -->
+                        <!-- PANEL INSUMO: KPIs + Gráfico de Tendencia              -->
+                        <!-- ═══════════════════════════════════════════════════════ -->
+                        <div class="dc-insumo-panel mb-3 d-none" id="panelAnalisisInsumo">
+                            <div class="dc-insumo-panel-header" id="analisisInsumoHeader">
+                                <div class="dc-insumo-panel-title">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Análisis de Insumo
+                                    <span class="dc-insumo-panel-hint" id="insumoNombreHint">— selecciona un insumo arriba para ver KPIs y tendencia</span>
                                 </div>
-                                <div class="col-6 col-lg-4">
-                                    <div class="dc-kpi-card" id="kpiPico">
-                                        <div class="dc-kpi-icon" style="color:#e67e22"><i class="fas fa-fire"></i></div>
-                                        <div class="dc-kpi-label">Semana de Mayor Consumo</div>
-                                        <div class="dc-kpi-valor" id="kpiPicoVal">—</div>
-                                        <div class="dc-kpi-sub" id="kpiPicoSub"></div>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-lg-4">
-                                    <div class="dc-kpi-card" id="kpiProy">
-                                        <div class="dc-kpi-icon" style="color:#27ae60"><i class="fas fa-chart-line"></i>
-                                        </div>
-                                        <div class="dc-kpi-label">Proyección · Próx. 3 Semanas</div>
-                                        <div class="dc-kpi-valor" id="kpiProyVal">—</div>
-                                        <div class="dc-kpi-sub" id="kpiProySub"></div>
-                                    </div>
-                                </div>
+                                <button class="dc-alertas-toggle" id="analisisInsumoToggle" title="Expandir / Contraer">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
                             </div>
 
-                            <!-- Gráfico de Tendencia -->
-                            <div class="card border-0" id="cardTendencia" style="background:transparent">
-                                <div class="card-body px-0 pb-0 pt-2">
-                                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                                        <h6 class="dc-seccion-titulo mb-0" id="tituloTendencia">
-                                            <i class="fas fa-chart-line me-2"></i>Tendencia
-                                        </h6>
-                                        <div class="d-flex gap-1 align-items-center flex-wrap">
-                                            <button class="btn btn-xs dc-chip active" id="chartModoBarras"
-                                                data-modo="barras">
-                                                <i class="fas fa-chart-bar me-1"></i>Barras
-                                            </button>
-                                            <button class="btn btn-xs dc-chip" id="chartModoLineaTotal"
-                                                data-modo="linea_total">
-                                                <i class="fas fa-chart-line me-1"></i>Línea Total
-                                            </button>
-                                            <button class="btn btn-xs dc-chip" id="chartModoLineaSuc" data-modo="linea_suc">
-                                                <i class="fas fa-store me-1"></i>Línea x Tienda
-                                            </button>
+                            <div class="dc-alertas-body" id="analisisInsumoBody">
+                                <!-- KPI Cards (controladas por el selector) -->
+                                <div class="dc-insumo-panel-body">
+
+                                    <div class="row g-3 mb-3" id="kpiRow">
+                                        <div class="col-6 col-lg-4">
+                                            <div class="dc-kpi-card" id="kpiTotal">
+                                                <div class="dc-kpi-icon" style="color:#51B8AC"><i class="fas fa-boxes"></i></div>
+                                                <div class="dc-kpi-label">Consumo Total (período)</div>
+                                                <div class="dc-kpi-valor" id="kpiTotalVal">—</div>
+                                                <div class="dc-kpi-sub" id="kpiTotalSub"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-lg-4">
+                                            <div class="dc-kpi-card" id="kpiPico">
+                                                <div class="dc-kpi-icon" style="color:#e67e22"><i class="fas fa-fire"></i></div>
+                                                <div class="dc-kpi-label">Semana de Mayor Consumo</div>
+                                                <div class="dc-kpi-valor" id="kpiPicoVal">—</div>
+                                                <div class="dc-kpi-sub" id="kpiPicoSub"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-lg-4">
+                                            <div class="dc-kpi-card" id="kpiProy">
+                                                <div class="dc-kpi-icon" style="color:#27ae60"><i class="fas fa-chart-line"></i>
+                                                </div>
+                                                <div class="dc-kpi-label">Proyección · Próx. 3 Semanas</div>
+                                                <div class="dc-kpi-valor" id="kpiProyVal">—</div>
+                                                <div class="dc-kpi-sub" id="kpiProySub"></div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div id="chartPlaceholder" class="text-center py-5" style="color:#b0c8c5">
-                                        <i class="fas fa-hand-point-up fa-2x mb-2 d-block"></i>
-                                        <span class="text-muted" style="font-size:.85rem">Selecciona un insumo para ver su
-                                            tendencia de consumo por semana.</span>
+
+                                    <!-- Gráfico de Tendencia -->
+                                    <div class="card border-0" id="cardTendencia" style="background:transparent">
+                                        <div class="card-body px-0 pb-0 pt-2">
+                                            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                                                <h6 class="dc-seccion-titulo mb-0" id="tituloTendencia">
+                                                    <i class="fas fa-chart-line me-2"></i>Tendencia
+                                                </h6>
+                                                <div class="d-flex gap-1 align-items-center flex-wrap">
+                                                    <button class="btn btn-xs dc-chip active" id="chartModoBarras"
+                                                        data-modo="barras">
+                                                        <i class="fas fa-chart-bar me-1"></i>Barras
+                                                    </button>
+                                                    <button class="btn btn-xs dc-chip" id="chartModoLineaTotal"
+                                                        data-modo="linea_total">
+                                                        <i class="fas fa-chart-line me-1"></i>Línea Total
+                                                    </button>
+                                                    <button class="btn btn-xs dc-chip" id="chartModoLineaSuc" data-modo="linea_suc">
+                                                        <i class="fas fa-store me-1"></i>Línea x Tienda
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div id="chartPlaceholder" class="text-center py-5" style="color:#b0c8c5">
+                                                <i class="fas fa-hand-point-up fa-2x mb-2 d-block"></i>
+                                                <span class="text-muted" style="font-size:.85rem">Selecciona un insumo para ver su
+                                                    tendencia de consumo por semana.</span>
+                                            </div>
+                                            <div class="dc-chart-wrap d-none" id="chartWrap">
+                                                <canvas id="chartTendencia"></canvas>
+                                                <!-- Botón reset posicionado en la zona de leyenda inferior del canvas -->
+                                                <button class="dc-legend-reset-btn" id="chartLegendReset" style="display:none"
+                                                    title="Mostrar todas las series">
+                                                    <i class="fas fa-eye me-1"></i>Mostrar todas
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="dc-chart-wrap d-none" id="chartWrap">
-                                        <canvas id="chartTendencia"></canvas>
-                                        <!-- Botón reset posicionado en la zona de leyenda inferior del canvas -->
-                                        <button class="dc-legend-reset-btn" id="chartLegendReset" style="display:none"
-                                            title="Mostrar todas las series">
-                                            <i class="fas fa-eye me-1"></i>Mostrar todas
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
 
-                        </div><!-- /dc-insumo-panel-body -->
-                    </div><!-- /analisisInsumoBody -->
-                </div><!-- /dc-insumo-panel -->
+                                </div><!-- /dc-insumo-panel-body -->
+                            </div><!-- /analisisInsumoBody -->
+                        </div><!-- /dc-insumo-panel -->
 
-                <!-- ═══════════════════════════════════════════════════════ -->
-                <!-- PANEL KARDEX (Traído de balance_inventario_detalle)   -->
-                <!-- ═══════════════════════════════════════════════════════ -->
-                <div id="panelKardex" class="dc-insumo-panel mb-3 d-none">
-                    <div class="dc-insumo-panel-header" id="kardexHeader">
-                        <div class="dc-insumo-panel-title">
-                            <i class="fas fa-exchange-alt me-2"></i>
-                            Movimiento de Existencia (Kardex)
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span id="bdKardexCorteTag" style="font-size:.7rem;background:rgba(255,255,255,.18);color:#fff;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35);"></span>
-                            <button class="dc-alertas-toggle" id="kardexToggle" title="Expandir / Contraer">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="dc-alertas-body" id="kardexBody">
-                        <div class="dc-insumo-panel-body">
-                            <!-- Loader -->
-                            <div id="bdLoaderKardex" class="text-center py-4">
-                                <div class="spinner-border text-success mb-3" role="status"></div>
-                                <div class="fw-bold">Consultando registros históricos…</div>
-                            </div>
-
-                            <!-- Resumen Neumorphic -->
-                            <div id="bdResumen" class="bd-resumen-card d-none"></div>
-
-                            <!-- Gráfico de Existencia -->
-                            <div id="bdChartWrap" class="bd-chart-card d-none">
-                                <div class="bd-section-title" style="box-shadow:none; padding:0; margin-bottom:1.5rem;">
-                                    <i class="fas fa-chart-line" style="color:#51B8AC"></i>
+                        <!-- ═══════════════════════════════════════════════════════ -->
+                        <!-- PANEL KARDEX (Traído de balance_inventario_detalle)   -->
+                        <!-- ═══════════════════════════════════════════════════════ -->
+                        <div id="panelKardex" class="dc-insumo-panel mb-1 d-none">
+                            <div class="dc-insumo-panel-header" id="kardexHeader">
+                                <div class="dc-insumo-panel-title">
+                                    <i class="fas fa-exchange-alt me-2"></i>
                                     Movimiento de Existencia (Kardex)
-                                    <span id="bdChartStockBadge"
-                                        style="display:none;margin-left:auto;font-size:.7rem;font-weight:600;color:#51B8AC"></span>
                                 </div>
-                                <div style="height:320px; position:relative;">
-                                    <canvas id="existenciaChart"></canvas>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="bdKardexCorteTag" style="font-size:.7rem;background:rgba(255,255,255,.18);color:#fff;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35);"></span>
+                                    <button class="dc-alertas-toggle" id="kardexToggle" title="Expandir / Contraer">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
                                 </div>
-                                <!-- Nota semanas retrocedidas -->
-                                <div id="bdChartNota"
-                                    style="display:none;margin-top:.8rem;padding:.55rem 1rem;border-radius:10px;background:#fffbf0;border-left:4px solid #f9a825;font-size:.74rem;color:#795548;">
-                                    <i class="fas fa-info-circle me-1" style="color:#f9a825"></i>
-                                    <span id="bdChartNotaText"></span>
+                            </div>
+                            <div class="dc-alertas-body" id="kardexBody">
+                                <div class="dc-insumo-panel-body">
+                                    <!-- Loader -->
+                                    <div id="bdLoaderKardex" class="text-center py-4">
+                                        <div class="spinner-border text-success mb-3" role="status"></div>
+                                        <div class="fw-bold">Consultando registros históricos…</div>
+                                    </div>
+
+                                    <!-- Resumen Neumorphic -->
+                                    <div id="bdResumen" class="bd-resumen-card d-none"></div>
+
+                                    <!-- Gráfico de Existencia -->
+                                    <div id="bdChartWrap" class="bd-chart-card d-none">
+                                        <div class="bd-section-title" style="box-shadow:none; padding:0; margin-bottom:1.5rem;">
+                                            <i class="fas fa-chart-line" style="color:#51B8AC"></i>
+                                            Movimiento de Existencia (Kardex)
+                                            <span id="bdChartStockBadge"
+                                                style="display:none;margin-left:auto;font-size:.7rem;font-weight:600;color:#51B8AC"></span>
+                                        </div>
+                                        <div style="height:320px; position:relative;">
+                                            <canvas id="existenciaChart"></canvas>
+                                        </div>
+                                        <!-- Nota semanas retrocedidas -->
+                                        <div id="bdChartNota"
+                                            style="display:none;margin-top:.8rem;padding:.55rem 1rem;border-radius:10px;background:#fffbf0;border-left:4px solid #f9a825;font-size:.74rem;color:#795548;">
+                                            <i class="fas fa-info-circle me-1" style="color:#f9a825"></i>
+                                            <span id="bdChartNotaText"></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
