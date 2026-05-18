@@ -299,10 +299,14 @@ function bindEventos() {
     });
 
 
-    // Buscar en tabla historial
+    // Buscar en tabla historial y proyección (filtro globalizado)
     $('#buscarHistorial').on('keyup', function () {
         const q = $(this).val().toLowerCase();
         $('#tbodyHistorial tr').each(function () {
+            const txt = $(this).text().toLowerCase();
+            $(this).toggle(txt.includes(q));
+        });
+        $('#tbodyProyeccion tr').each(function () {
             const txt = $(this).text().toLowerCase();
             $(this).toggle(txt.includes(q));
         });
@@ -480,6 +484,9 @@ async function cargarDatos() {
 
         renderDashboard(resp);
         mostrarEstado('datos');
+
+        // Re-aplicar el filtro de búsqueda global si tiene texto
+        $('#buscarHistorial').trigger('keyup');
 
         if (PUEDE_EXPORTAR) $btnExportar.prop('disabled', false);
 
@@ -1030,7 +1037,6 @@ function renderTablaHistorial(data) {
     }
 
     $('#tbodyHistorial').html(html);
-    $('#labelResultados').text(total > 0 ? `${total} insumo(s) encontrado(s)` : '');
 }
 
 /* ── Tabla Proyección ─────────────────────────────────────── */

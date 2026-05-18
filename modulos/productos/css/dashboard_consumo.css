@@ -436,8 +436,9 @@ body {
 }
 .dc-result-count { font-size: .78rem; color: var(--text-secondary); }
 
-/* Search input within toolbar — inset */
-.dc-tabla-toolbar .form-control {
+/* Search input within toolbar and global — inset */
+.dc-tabla-toolbar .form-control,
+.dc-search-input {
     background:    var(--neu-bg) !important;
     border:        none !important;
     border-radius: 50px !important;
@@ -446,10 +447,11 @@ body {
     box-shadow:
         inset 3px 3px 7px var(--neu-shadow-dark),
         inset -3px -3px 7px var(--neu-shadow-light) !important;
-    padding:       5px 14px !important;
+    padding:       6px 16px !important;
     transition:    box-shadow .2s;
 }
-.dc-tabla-toolbar .form-control:focus {
+.dc-tabla-toolbar .form-control:focus,
+.dc-search-input:focus {
     outline:    none !important;
     box-shadow:
         inset 3px 3px 7px var(--neu-shadow-dark),

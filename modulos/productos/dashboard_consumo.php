@@ -439,23 +439,32 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 </div>
 
 
-                <!-- Tab Bar -->
-                <ul class="nav dc-tabs mb-2" id="dashTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="dc-tab-btn active" id="tabHistorialBtn" data-bs-toggle="tab"
-                            data-bs-target="#tabHistorial" role="tab">
-                            <i class="fas fa-history me-1"></i>Historial de Consumo
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="dc-tab-btn" id="tabProyeccionBtn" data-bs-toggle="tab"
-                            data-bs-target="#tabProyeccion" role="tab">
-                            <i class="fas fa-chart-line me-1"></i>Proyección y Planificación
-                        </button>
-                    </li>
-
-
-                </ul>
+                <!-- Contenedor flex para la barra de pestañas y el input global -->
+                <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Input de Buscar Producto (Globalizado) a la izquierda -->
+                        <div class="position-relative">
+                            <input type="text" class="form-control form-control-sm dc-search-input" id="buscarHistorial"
+                                placeholder="Buscar insumo…" style="width: 220px;">
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Bar a la derecha -->
+                    <ul class="nav dc-tabs m-0" id="dashTabs" role="tablist" style="padding-top: 0;">
+                        <li class="nav-item" role="presentation">
+                            <button class="dc-tab-btn active" id="tabHistorialBtn" data-bs-toggle="tab"
+                                data-bs-target="#tabHistorial" role="tab">
+                                <i class="fas fa-history me-1"></i>Historial de Consumo
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="dc-tab-btn" id="tabProyeccionBtn" data-bs-toggle="tab"
+                                data-bs-target="#tabProyeccion" role="tab">
+                                <i class="fas fa-chart-line me-1"></i>Proyección y Planificación
+                            </button>
+                        </li>
+                    </ul>
+                </div>
 
                 <div class="tab-content" id="dashTabContent">
 
@@ -463,15 +472,6 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                     <div class="tab-pane fade show active" id="tabHistorial" role="tabpanel">
                         <div class="card border-0 shadow-sm">
                             <div class="card-body p-0">
-                                <div class="dc-tabla-toolbar px-3 py-2">
-                                    <div class="dc-tabla-toolbar-left">
-                                        <span id="labelResultados" class="dc-result-count"></span>
-                                    </div>
-                                    <div class="dc-tabla-toolbar-right">
-                                        <input type="text" class="form-control form-control-sm" id="buscarHistorial"
-                                            placeholder="Buscar insumo…" style="max-width:200px">
-                                    </div>
-                                </div>
                                 <div class="table-responsive">
                                     <table class="table table-hover dc-tabla mb-0" id="tablaHistorial">
                                         <thead>
