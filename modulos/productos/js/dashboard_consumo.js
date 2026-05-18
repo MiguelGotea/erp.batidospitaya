@@ -21,6 +21,8 @@ const $panelDatos = $('#panelDatos');
 let datosActuales = null;   // Respuesta completa del AJAX de datos
 let chartTendencia = null;   // Instancia Chart.js activa
 let modoGrafico = 'barras'; // 'barras' | 'linea_total' | 'linea_suc'
+let stocksPronosticados = {}; // { id_pp: float|null } — resultado del endpoint de pronóstico bulk
+
 
 /* ════════════════════════════════════════════════════════════
    INICIALIZACIÓN
@@ -317,6 +319,7 @@ function bindEventos() {
 
 
 
+
     // Panel alertas sobreconsumo: toggle (evitar sigma btns)
     $(document).on('click', '#alertasHeader', function (e) {
         if ($(e.target).closest('.dc-sigma-btns, .dc-sigma-btn').length) return;
@@ -368,6 +371,81 @@ function bindEventos() {
     $(document).on('click', '#kardexHeader', function (e) {
         $('#kardexBody').toggleClass('collapsed');
         $('#kardexToggle').toggleClass('rotated');
+    });
+
+    $('#btnCalcStockPron').on('click', calcularStockPronosticadoTabla);
+}
+
+async function calcularStockPronosticadoTabla() {
+    if (!datosActuales || !datosActuales.consumo || !datosActuales.consumo.length) {
+        Swal.fire({ icon:'info', title:'Sin datos', text:'Primero analiza un período.', confirmButtonColor:'#0E544C' }); return;
+    }
+    const semDesde    = datosActuales._semDesde;
+    const semHasta    = datosActuales._semHasta;
+    const semCorteVal = parseInt($('#pronSemCorteGlobal').val()) || semDesde;
+    const fechaPronVal = ($('#pronFechaGlobal').val() || '').trim();
+
+    if (!semCorteVal || semCorteVal < semDesde || semCorteVal > semHasta) {
+        Swal.fire({ icon:'warning', title:'Sem. Corte inválida', html:`Entre <strong>${semDesde}</strong> y <strong>${semHasta}</strong>.`, confirmButtonColor:'#0E544C' }); return;
+    }
+    if (!fechaPronVal) {
+        Swal.fire({ icon:'warning', title:'Fecha requerida', text:'Ingresa la Fecha de Pronóstico.', confirmButtonColor:'#0E544C' }); return;
+    }
+
+    const $btn     = $('#btnCalcStockPron');
+    const $status  = $('#pronStatusTxt');
+    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Calculando…');
+    $status.text(`Procesando ${datosActuales.consumo.length} insumos…`).show();
+
+    stocksPronosticados = {};
+    actualizarColumnasStockPronosticado(true);
+
+    const fd = new FormData();
+    datosActuales.consumo.forEach(c => fd.append('ids_pp[]', c.id));
+    fd.append('semana_desde', semDesde);
+    fd.append('semana_hasta', semHasta);
+    fd.append('semana_corte', semCorteVal);
+    fd.append('fecha_pronostico', fechaPronVal);
+    SucPicker.getSelected().forEach(s => fd.append('sucursales[]', s));
+
+    try {
+        const res  = await fetch('ajax/dashboard_consumo_get_stock_pronosticado.php', { method:'POST', body:fd });
+        const data = await res.json();
+        if (!data.ok) {
+            Swal.fire({ icon:'error', title:'Error', text: data.msg||'Error al calcular.', confirmButtonColor:'#0E544C' });
+            actualizarColumnasStockPronosticado(false);
+            $status.hide();
+            return;
+        }
+        stocksPronosticados = data.stocks || {};
+        actualizarColumnasStockPronosticado(false);
+        // Mostrar fecha en el encabezado de la columna
+        $('#thStockPronFecha').text(fechaPronVal);
+        $('#thStockPron').attr('title', `Sem.Corte:${semCorteVal} | Fecha:${fechaPronVal}`);
+        $status.text(`${datosActuales.consumo.length} insumos procesados.`);
+        setTimeout(() => $status.hide(), 3000);
+    } catch(err) {
+        console.error('Error calcularStockProy:', err);
+        Swal.fire({ icon:'error', title:'Error de conexión', text:'No se pudo conectar.', confirmButtonColor:'#0E544C' });
+        actualizarColumnasStockPronosticado(false);
+        $status.hide();
+    } finally {
+        $btn.prop('disabled', false).html('<i class="fas fa-calculator me-1"></i>Calcular Stock');
+    }
+}
+
+function actualizarColumnasStockPronosticado(cargando) {
+    $('#tbodyProyeccion tr[data-id-pp]').each(function() {
+        const idPP  = $(this).data('id-pp');
+        const $cell = $(this).find('.td-stock-pron');
+        if (!$cell.length) return;
+        if (cargando) { $cell.html('<i class="fas fa-spinner fa-spin text-muted" style="font-size:.75rem"></i>'); return; }
+        const val = stocksPronosticados[String(idPP)];
+        if (val !== undefined && val !== null) {
+            $cell.html(`<strong style="color:#8e44ad">${parseFloat(val).toLocaleString('es-NI',{minimumFractionDigits:2,maximumFractionDigits:2})}</strong>`);
+        } else {
+            $cell.html('<span class="text-muted" style="font-size:.75rem">—</span>');
+        }
     });
 }
 
@@ -481,6 +559,11 @@ async function cargarDatos() {
         // Guardar info de semanas para exportar
         datosActuales._semDesde = semD;
         datosActuales._semHasta = semH;
+
+        // Limpiar stock pronóstico anterior y pre-rellenar sem. corte
+        stocksPron = {};
+        if (!$('#pronSemCorteGlobal').val()) $('#pronSemCorteGlobal').val(semD);
+        $('#thStockPronFecha').text('');
 
         renderDashboard(resp);
         mostrarEstado('datos');
@@ -1053,7 +1136,7 @@ function renderTablaProyeccion(data) {
     const ultimaSemTbl = semanasNrosTbl[semanasNrosTbl.length - 1];
 
     if (data.consumo.length === 0) {
-        html = `<tr><td colspan="9" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
+        html = `<tr><td colspan="10" class="text-center text-muted py-4">Sin datos de proyección.</td></tr>`;
     } else {
         data.consumo.forEach(item => {
             // Proyección 3 semanas con regresión lineal (misma lógica que gráfico/KPIs)
@@ -1086,7 +1169,6 @@ function renderTablaProyeccion(data) {
             }
 
             // Tendencia basada en la pendiente OLS (mismo criterio que el gráfico)
-            // ±5% del promedio por semana como umbral de "estable"
             const olsThreshold = promCalcTbl * 0.05;
             const trendOls = slTbl > olsThreshold
                 ? 'up'
@@ -1100,7 +1182,7 @@ function renderTablaProyeccion(data) {
                     : `<span class="dc-trend-flat"><i class="fas fa-minus me-1"></i>Estable</span>`;
 
             html += `
-            <tr>
+            <tr data-id-pp="${item.id}">
                 <td>
                     <div class="fw-bold" style="font-size:.82rem">${escHtml(item.nombre)}</div>
                     <div class="text-muted" style="font-size:.72rem">${escHtml(item.maestro)}</div>
@@ -1117,11 +1199,124 @@ function renderTablaProyeccion(data) {
                     ${item.semana_low_num ? `<span class="dc-semana-badge">Sem ${item.semana_low_num}</span>` : '—'}
                 </td>
                 <td class="text-center">${trendIcon}</td>
+                <td class="text-end td-stock-pron">
+                    <span class="text-muted" style="font-size:.75rem">—</span>
+                </td>
             </tr>`;
         });
     }
 
     $('#tbodyProyeccion').html(html);
+    if (Object.keys(stocksPronosticados).length > 0) {
+        actualizarColumnasStockPronosticado(false);
+    }
+}
+
+/**
+ * Genera la celda <td> de Stock Pronóstico para una fila de la tabla Proyección.
+ */
+function renderCeldaStockPron(item) {
+    const key = String(item.id);
+    if (!Object.keys(stocksPron).length) {
+        // Sin calcular todavía
+        return '<td class="text-end text-muted" style="font-size:.75rem">&mdash;</td>';
+    }
+    if (!(key in stocksPron)) {
+        return '<td class="text-end text-muted" style="font-size:.75rem">N/A</td>';
+    }
+    const val = stocksPron[key];
+    if (val === null || val === undefined) {
+        return '<td class="text-end text-muted" style="font-size:.75rem">&mdash;</td>';
+    }
+    // Semáforo basado en Stock Mínimo
+    const min = item.stock_min || 0;
+    let color, icon;
+    if (val <= 0) {
+        color = '#c0392b'; icon = '<i class="fas fa-exclamation-triangle me-1"></i>';
+    } else if (min > 0 && val < min) {
+        color = '#e67e22'; icon = '<i class="fas fa-exclamation-circle me-1"></i>';
+    } else {
+        color = '#27ae60'; icon = '<i class="fas fa-check-circle me-1"></i>';
+    }
+    return `<td class="text-end fw-bold" style="color:${color}">${icon}${formatNum(val)}</td>`;
+}
+
+/* ── Calcular Stock Pronóstico (bulk) ─────────────────────── */
+async function calcularStockPron() {
+    if (!datosActuales || !datosActuales.consumo || !datosActuales.consumo.length) {
+        Swal.fire({ icon: 'warning', title: 'Sin datos', text: 'Primero aplica los filtros y analiza el consumo.', confirmButtonColor: '#0E544C' });
+        return;
+    }
+
+    const fechaPron = ($('#pronFechaGlobal').val() || '').trim();
+    if (!fechaPron) {
+        Swal.fire({ icon: 'warning', title: 'Fecha requerida', text: 'Ingresa la fecha de pronóstico antes de calcular.', confirmButtonColor: '#0E544C' });
+        return;
+    }
+
+    const semD = datosActuales._semDesde;
+    const semH = datosActuales._semHasta;
+    const semCorteRaw = parseInt($('#pronSemCorteGlobal').val()) || semD;
+
+    if (semCorteRaw < semD || semCorteRaw > semH) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sem. Corte fuera de rango',
+            html: `La semana de corte debe estar entre <strong>${semD}</strong> y <strong>${semH}</strong>.`,
+            confirmButtonColor: '#0E544C'
+        });
+        return;
+    }
+
+    // Recolectar todos los id_pp (presentaciones básicas de inventario)
+    const idsPP = datosActuales.consumo.map(c => c.id);
+
+    // UI feedback
+    const $btn = $('#btnCalcStockPron');
+    const $status = $('#pronStatusTxt');
+    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Calculando…');
+    $status.text(`Procesando ${idsPP.length} insumos…`).show();
+
+    try {
+        const fd = new FormData();
+        idsPP.forEach(id => fd.append('ids_pp[]', id));
+        fd.append('semana_desde', semD);
+        fd.append('semana_hasta', semH);
+        fd.append('semana_corte', semCorteRaw);
+        fd.append('fecha_pronostico', fechaPron);
+        SucPicker.getSelected().forEach(s => fd.append('sucursales[]', s));
+
+        const resp = await fetch('ajax/dashboard_consumo_get_stock_pronosticado.php', {
+            method: 'POST',
+            body: fd,
+        }).then(r => r.json());
+
+        if (!resp.ok) {
+            Swal.fire({ icon: 'error', title: 'Error', text: resp.msg || 'Error al calcular stock.', confirmButtonColor: '#0E544C' });
+            return;
+        }
+
+        stocksPron = resp.stocks || {};
+
+        // Actualizar subtexto del header de columna con la fecha
+        $('#thStockPronFecha').text(fechaPron);
+
+        // Re-renderizar tabla Proyección con los nuevos valores
+        renderTablaProyeccion(datosActuales);
+
+        // Re-aplicar filtro de búsqueda si hay texto
+        $('#buscarHistorial').trigger('keyup');
+
+        $status.text(`${idsPP.length} insumos procesados.`);
+        setTimeout(() => $status.hide(), 3000);
+
+    } catch (err) {
+        console.error('Error calculando stock pronóstico:', err);
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo calcular el stock.', confirmButtonColor: '#0E544C' });
+        $status.hide();
+    } finally {
+        $btn.prop('disabled', false).html('<i class="fas fa-calculator me-1"></i>Calcular Stock');
+    }
 }
 
 /* ── Selector de insumo en panel de análisis ────────────── */

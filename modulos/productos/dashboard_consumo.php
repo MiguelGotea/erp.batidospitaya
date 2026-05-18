@@ -463,11 +463,10 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
                 <!-- Contenedor flex para la barra de pestañas y el input global -->
                 <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <!-- Input de Buscar Producto (Globalizado) a la izquierda -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
                         <div class="position-relative">
                             <input type="text" class="form-control form-control-sm dc-search-input" id="buscarHistorial"
-                                placeholder="Buscar insumo…" style="width: 220px;">
+                                placeholder="Buscar insumo…" style="width: 200px;">
                         </div>
                     </div>
                     
@@ -523,6 +522,55 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
 
                     <!-- TAB 2: PROYECCIÓN -->
                     <div class="tab-pane fade" id="tabProyeccion" role="tabpanel">
+
+                        <!-- ── Panel de Pronóstico Global de Stock ── -->
+                        <div class="card border-0 shadow-sm mb-2" id="panelStockPron">
+                            <div class="card-body py-2 px-3">
+                                <div class="row g-2 align-items-end">
+
+                                    <!-- Fecha Pronóstico Global -->
+                                    <div class="col-6 col-md-3 col-lg-2">
+                                        <label class="dc-label" for="pronFechaGlobal">
+                                            <i class="fas fa-magic me-1" style="color:#8e44ad"></i>Fecha Pronóstico
+                                        </label>
+                                        <input type="date" id="pronFechaGlobal"
+                                            class="form-control form-control-sm"
+                                            title="Fecha objetivo para proyectar el stock de TODOS los insumos">
+                                    </div>
+
+                                    <!-- Semana de Corte Global -->
+                                    <div class="col-6 col-md-2 col-lg-2">
+                                        <label class="dc-label" for="pronSemCorteGlobal">
+                                            <i class="fas fa-cut me-1" style="color:#e67e22"></i>Sem. Corte
+                                        </label>
+                                        <input type="number" id="pronSemCorteGlobal"
+                                            class="form-control form-control-sm dc-input-semana"
+                                            min="1" max="9999" placeholder="Auto"
+                                            title="Semana de referencia del inventario (igual que el Kardex individual)">
+                                    </div>
+
+                                    <!-- Botón Calcular -->
+                                    <div class="col-auto d-flex align-items-end gap-2">
+                                        <button class="btn btn-sm dc-btn-primary" id="btnCalcStockPron"
+                                            title="Calcular stock proyectado para todos los insumos">
+                                            <i class="fas fa-calculator me-1"></i>Calcular Stock
+                                        </button>
+                                        <!-- Spinner / estado -->
+                                        <span id="pronStatusTxt" class="text-muted small" style="display:none"></span>
+                                    </div>
+
+                                    <!-- Info -->
+                                    <div class="col-12 col-md">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1 text-primary"></i>
+                                            Stock al llegar a la fecha de pronóstico usando el balance Kardex + consumo teórico proyectado por día de semana.
+                                        </small>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="card border-0 shadow-sm">
                             <div class="card-body p-0">
                                 <div class="dc-tabla-toolbar px-3 py-2">
@@ -545,11 +593,15 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                                 <th class="text-end">Semana Pico</th>
                                                 <th class="text-end">Semana Baja</th>
                                                 <th class="text-center">Tendencia</th>
+                                                <th class="text-end" id="thStockPron" style="color:#8e44ad;white-space:nowrap">
+                                                    <i class="fas fa-magic me-1"></i>Stock Pronóstico
+                                                    <span id="thStockPronFecha" class="d-block" style="font-size:.65rem;font-weight:400;color:#b39ddb"></span>
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody id="tbodyProyeccion">
                                             <tr>
-                                                <td colspan="9" class="text-center text-muted py-4">
+                                                <td colspan="10" class="text-center text-muted py-4">
                                                     Aplica los filtros para ver la proyección.
                                                 </td>
                                             </tr>
