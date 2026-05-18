@@ -170,6 +170,13 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
             <div id="panelDatos" class="d-none">
 
                 <!-- ═══════════════════════════════════════════════ -->
+                <!-- HEADER: ALERTAS                                -->
+                <!-- ═══════════════════════════════════════════════ -->
+                <h5 class="fw-bold mb-3 mt-1" style="color:#0E544C">
+                    <i class="fas fa-bell me-2" style="color:#e67e22"></i>Monitor de Alertas
+                </h5>
+
+                <!-- ═══════════════════════════════════════════════ -->
                 <!-- PANEL DE ALERTAS DE CRECIMIENTO SOSTENIDO      -->
                 <!-- ═══════════════════════════════════════════════ -->
                 <div id="panelCrecimiento" class="dc-crec-panel mb-3" style="display:none">
@@ -239,6 +246,13 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                         <div id="alertasContenido"></div>
                     </div>
                 </div>
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- HEADER: ANALISIS INDIVIDUAL                             -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <h5 class="fw-bold mb-3 mt-4" style="color:#0E544C">
+                    <i class="fas fa-search-plus me-2" style="color:#2980b9"></i>Análisis Individual de Insumos
+                </h5>
 
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <!-- BARRA DE CONTROL Y GRAFICOS ASOCIADOS                   -->
@@ -438,6 +452,13 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                     </div>
                 </div>
 
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- HEADER: ANALISIS GLOBAL                                 -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <h5 class="fw-bold mb-3 mt-4" style="color:#0E544C">
+                    <i class="fas fa-globe me-2" style="color:#27ae60"></i>Análisis Global y Planificación
+                </h5>
 
                 <!-- Contenedor flex para la barra de pestañas y el input global -->
                 <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
