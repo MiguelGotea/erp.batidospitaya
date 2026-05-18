@@ -535,12 +535,14 @@ body {
     padding:          14px 22px;
     background:       linear-gradient(135deg, #0E544C 0%, #1a7a71 100%);
 }
-#analisisInsumoHeader {
+#analisisInsumoHeader,
+#kardexHeader {
     cursor:           pointer;
     user-select:      none;
     transition:       filter .15s;
 }
-#analisisInsumoHeader:hover {
+#analisisInsumoHeader:hover,
+#kardexHeader:hover {
     filter: brightness(1.07);
 }
 

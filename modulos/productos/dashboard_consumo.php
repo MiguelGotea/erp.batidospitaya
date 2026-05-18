@@ -393,39 +393,46 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                 <!-- PANEL KARDEX (Traído de balance_inventario_detalle)   -->
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <div id="panelKardex" class="dc-insumo-panel mb-3 d-none">
-                    <div class="dc-insumo-panel-header">
+                    <div class="dc-insumo-panel-header" id="kardexHeader">
                         <div class="dc-insumo-panel-title">
                             <i class="fas fa-exchange-alt me-2"></i>
                             Movimiento de Existencia (Kardex)
                         </div>
-                        <span id="bdKardexCorteTag" style="font-size:.7rem;background:rgba(255,255,255,.18);color:#fff;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35);"></span>
-                    </div>
-                    <div class="dc-insumo-panel-body">
-                        <!-- Loader -->
-                        <div id="bdLoaderKardex" class="text-center py-4">
-                            <div class="spinner-border text-success mb-3" role="status"></div>
-                            <div class="fw-bold">Consultando registros históricos…</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="bdKardexCorteTag" style="font-size:.7rem;background:rgba(255,255,255,.18);color:#fff;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35);"></span>
+                            <button class="dc-alertas-toggle" id="kardexToggle" title="Expandir / Contraer">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
                         </div>
-
-                        <!-- Resumen Neumorphic -->
-                        <div id="bdResumen" class="bd-resumen-card d-none"></div>
-
-                        <!-- Gráfico de Existencia -->
-                        <div id="bdChartWrap" class="bd-chart-card d-none">
-                            <div class="bd-section-title" style="box-shadow:none; padding:0; margin-bottom:1.5rem;">
-                                <i class="fas fa-chart-line" style="color:#51B8AC"></i>
-                                Movimiento de Existencia (Kardex)
-                                <span id="bdChartStockBadge"
-                                    style="display:none;margin-left:auto;font-size:.7rem;font-weight:600;color:#51B8AC"></span>
+                    </div>
+                    <div class="dc-alertas-body" id="kardexBody">
+                        <div class="dc-insumo-panel-body">
+                            <!-- Loader -->
+                            <div id="bdLoaderKardex" class="text-center py-4">
+                                <div class="spinner-border text-success mb-3" role="status"></div>
+                                <div class="fw-bold">Consultando registros históricos…</div>
                             </div>
-                            <div style="height:320px; position:relative;">
-                                <canvas id="existenciaChart"></canvas>
-                            </div>
-                            <!-- Nota semanas retrocedidas -->
-                            <div id="bdChartNota"
-                                style="display:none;margin-top:.8rem;padding:.55rem 1rem;border-radius:10px;background:#fffbf0;border-left:4px solid #f9a825;font-size:.74rem;color:#795548;">
-                                <i class="fas fa-info-circle me-1" style="color:#f9a825"></i>
-                                <span id="bdChartNotaText"></span>
+
+                            <!-- Resumen Neumorphic -->
+                            <div id="bdResumen" class="bd-resumen-card d-none"></div>
+
+                            <!-- Gráfico de Existencia -->
+                            <div id="bdChartWrap" class="bd-chart-card d-none">
+                                <div class="bd-section-title" style="box-shadow:none; padding:0; margin-bottom:1.5rem;">
+                                    <i class="fas fa-chart-line" style="color:#51B8AC"></i>
+                                    Movimiento de Existencia (Kardex)
+                                    <span id="bdChartStockBadge"
+                                        style="display:none;margin-left:auto;font-size:.7rem;font-weight:600;color:#51B8AC"></span>
+                                </div>
+                                <div style="height:320px; position:relative;">
+                                    <canvas id="existenciaChart"></canvas>
+                                </div>
+                                <!-- Nota semanas retrocedidas -->
+                                <div id="bdChartNota"
+                                    style="display:none;margin-top:.8rem;padding:.55rem 1rem;border-radius:10px;background:#fffbf0;border-left:4px solid #f9a825;font-size:.74rem;color:#795548;">
+                                    <i class="fas fa-info-circle me-1" style="color:#f9a825"></i>
+                                    <span id="bdChartNotaText"></span>
+                                </div>
                             </div>
                         </div>
                     </div>

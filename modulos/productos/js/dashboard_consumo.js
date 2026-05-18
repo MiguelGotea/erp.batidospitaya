@@ -270,6 +270,8 @@ function bindEventos() {
             $('#panelAnalisisInsumo').removeClass('d-none');  // mostrar panel
             $('#analisisInsumoBody').removeClass('collapsed'); // expandir automáticamente
             $('#analisisInsumoToggle').removeClass('rotated'); // apuntar abajo
+            $('#kardexBody').removeClass('collapsed'); // expandir automáticamente
+            $('#kardexToggle').removeClass('rotated'); // apuntar abajo
             $('#chartPlaceholder').addClass('d-none');
             $('#chartWrap').removeClass('d-none');
             // Actualizar hint en el header del panel
@@ -362,6 +364,12 @@ function bindEventos() {
     $(document).on('click', '#analisisInsumoHeader', function (e) {
         $('#analisisInsumoBody').toggleClass('collapsed');
         $('#analisisInsumoToggle').toggleClass('rotated');
+    });
+
+    // Panel Kardex: toggle
+    $(document).on('click', '#kardexHeader', function (e) {
+        $('#kardexBody').toggleClass('collapsed');
+        $('#kardexToggle').toggleClass('rotated');
     });
 }
 
