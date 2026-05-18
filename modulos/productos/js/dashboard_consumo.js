@@ -278,8 +278,6 @@ function bindEventos() {
             $('#insumoNombreHint').text(item ? `— ${item.nombre}` : '');
             renderKPIs(datosActuales, item);
             renderGrafico(datosActuales);
-            // Limpiar corte al cambiar de insumo para que use el semDesde como default
-            $('#kardexSemanaCorte').val('');
             cargarKardex(idSel, item);
         } else {
             $('#panelAnalisisInsumo').addClass('d-none');  // ocultar panel
