@@ -313,6 +313,20 @@ function bindEventos() {
     // Exportar
     $btnExportar.on('click', exportarCSV);
 
+    // Fecha Pronóstico → actualizar tabla de Proyección inmediatamente para todos los productos
+    $('#kardexFechaPronostico').on('change', function () {
+        const fecha = ($(this).val() || '').trim();
+        if (fecha) {
+            $('#thPronostico').show();
+        } else {
+            // Sin fecha: limpiar Kardex forecast y ocultar columna
+            _lastKardexForecastVal  = null;
+            _lastKardexForecastDate = null;
+            _lastKardexForecastIdPP = null;
+            $('#thPronostico').hide();
+        }
+        if (datosActuales) renderTablaProyeccion(datosActuales);
+    });
 
 
     // Panel alertas sobreconsumo: toggle (evitar sigma btns)
@@ -1110,23 +1124,44 @@ function renderTablaProyeccion(data) {
                     ? `<span class="dc-trend-down"><i class="fas fa-arrow-down me-1"></i>Decreciente</span>`
                     : `<span class="dc-trend-flat"><i class="fas fa-minus me-1"></i>Estable</span>`;
 
-            // ── Columna Pronóstico (existencias) ────────────────────────────
-            // Calculada con el mismo consumo DOW promedio que el gráfico del Kardex.
-            // Disponible solo cuando hay fecha pronóstico y el insumo seleccionado en Kardex
-            // coincide con este item (se muestra '—' para los demás).
+            // ── Columna Pronóstico: consumo proyectado para TODOS los productos ──
+            // Fórmula: prom_diario × días_hasta_fecha
+            // donde prom_diario = promCalcTbl / 7 (basado en semanas completas del rango)
+            // Para el producto con Kardex cargado también muestra las existencias proyectadas.
             let pronosticoCell = '';
             if (hayPronostico) {
+                const promDiario  = promCalcTbl / 7;
+                const consumoPron = round2(promDiario * _diasPron);
+                const stockMin    = item.stock_min || 0;
+                const esAlerta    = stockMin > 0 && consumoPron > stockMin;
+                const colorCons   = esAlerta ? '#c0392b' : '#8e44ad';
+                const consumoFmt  = consumoPron.toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                // ¿Este item tiene también el stock exacto del Kardex?
                 const idSel = parseInt($('#chartInsumoSel').val()) || 0;
-                if (idSel === item.id && _lastKardexForecastVal !== null && _lastKardexForecastDate === fechaPronActiva) {
-                    const valFmt = parseFloat(_lastKardexForecastVal).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const colorFc = _lastKardexForecastVal >= 0 ? '#8e44ad' : '#c0392b';
+                const tieneKardex = idSel === item.id
+                    && _lastKardexForecastVal !== null
+                    && _lastKardexForecastDate === fechaPronActiva;
+
+                if (tieneKardex) {
+                    const existFmt   = parseFloat(_lastKardexForecastVal).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const colorExist = _lastKardexForecastVal >= 0 ? '#27ae60' : '#c0392b';
                     pronosticoCell = `
-                        <td class="text-end fw-bold" style="color:${colorFc}">
-                            ${valFmt}
-                            <div style="font-size:.65rem;font-weight:400;color:#888">${fechaPronActiva}</div>
+                        <td class="text-end" style="line-height:1.3">
+                            <span class="fw-bold" style="color:${colorExist}">${existFmt}</span>
+                            <div style="font-size:.62rem;color:#888">Exist. al ${fechaPronActiva}</div>
+                            <div style="font-size:.62rem;color:${colorCons}">↓ cons. ${consumoFmt}</div>
                         </td>`;
                 } else {
-                    pronosticoCell = `<td class="text-end text-muted" style="font-size:.75rem">—<div style="font-size:.62rem">sin Kardex</div></td>`;
+                    const alertaBadge = esAlerta
+                        ? `<span title="Supera el stock mínimo (${formatNum(stockMin)})" style="font-size:.58rem;background:#fde8e8;color:#c0392b;border-radius:3px;padding:1px 4px">⚠ Alerta</span>`
+                        : '';
+                    pronosticoCell = `
+                        <td class="text-end" style="line-height:1.3">
+                            <span class="fw-bold" style="color:${colorCons}">${consumoFmt}</span>
+                            <div style="font-size:.62rem;color:#888">${_diasPron} días · ${escHtml(item.unidad)}</div>
+                            ${alertaBadge}
+                        </td>`;
                 }
             }
 
