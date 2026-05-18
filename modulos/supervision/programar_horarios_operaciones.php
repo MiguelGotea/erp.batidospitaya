@@ -42,7 +42,6 @@ if ($canFilterAll) {
 
 $todasSucursales = obtenerSucursalesFisicas(); // Para el selector de sucursal externa
 
-
 // Verificar restricción de edición según semana del sistema
 $semanaActual = obtenerSemanaActual();
 $hoyObj = new DateTime('now', new DateTimeZone('America/Managua'));
