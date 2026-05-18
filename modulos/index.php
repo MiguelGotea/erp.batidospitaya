@@ -53,6 +53,7 @@ $modulosPorCargo = [
     53 => 'marketing',               // Coordinación de Mercadeo
     54 => 'rh',                     // Analista de clima y cultura
     55 => 'operaciones',            // Líder General de Tiendas Managua
+    52 => 'auditor',            // Auditor de Tiendas
 ];
 
 // Si es admin o no tiene cargos definidos, redirigir al inicio
@@ -62,7 +63,7 @@ if (empty($cargosUsuario)) {
 }
 
 // Ordenar los cargos para priorizar los que no son 2 (Operario)
-usort($cargosUsuario, function($a, $b) {
+usort($cargosUsuario, function ($a, $b) {
     // Si ambos son 2 o ambos no son 2, mantener el orden original
     if (($a == 2 && $b == 2) || ($a != 2 && $b != 2)) {
         return 0;
@@ -76,7 +77,7 @@ foreach ($cargosUsuario as $cargoCod) {
     if (array_key_exists($cargoCod, $modulosPorCargo)) {
         $modulo = $modulosPorCargo[$cargoCod];
         $rutaModulo = "/modulos/{$modulo}/index.php";
-        
+
         // Verificar que el archivo del módulo exista
         if (file_exists("../modulos/{$modulo}/index.php")) {
             header("Location: $rutaModulo");

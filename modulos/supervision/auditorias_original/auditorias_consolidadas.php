@@ -1,29 +1,40 @@
 <?php
-    require 'vendor/autoload.php';
+require 'vendor/autoload.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
-    
-    use PhpOffice\PhpSpreadsheet\Spreadsheet;
-    use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 // Establecer zona horaria
 date_default_timezone_set('America/Managua');
 
 // Función para formatear fecha en español (modificada)
-function formatFechaEspanol($fecha = 'now') {
+function formatFechaEspanol($fecha = 'now')
+{
     $meses = [
-        1 => 'ene', 2 => 'feb', 3 => 'mar', 4 => 'abr',
-        5 => 'may', 6 => 'jun', 7 => 'jul', 8 => 'ago',
-        9 => 'sep', 10 => 'oct', 11 => 'nov', 12 => 'dic'
+        1 => 'ene',
+        2 => 'feb',
+        3 => 'mar',
+        4 => 'abr',
+        5 => 'may',
+        6 => 'jun',
+        7 => 'jul',
+        8 => 'ago',
+        9 => 'sep',
+        10 => 'oct',
+        11 => 'nov',
+        12 => 'dic'
     ];
-    
+
     // Crear objeto DateTime con la zona horaria correcta
     $date = new DateTime($fecha, new DateTimeZone('America/Managua'));
-    
-    return $date->format('d').'-'.$meses[$date->format('n')].'-'.$date->format('y').' '.$date->format('h:i a');
+
+    return $date->format('d') . '-' . $meses[$date->format('n')] . '-' . $date->format('y') . ' ' . $date->format('h:i a');
 }
 
-function formatFechaReporte($fecha) {
+function formatFechaReporte($fecha)
+{
     $date = new DateTime($fecha);
     return $date->format('d/m/Y');
 }
@@ -41,10 +52,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo Operaciones (Código 11 para Jefe de Operaciones)
-verificarAccesoCargo([5, 8, 11, 21, 16]);
+verificarAccesoCargo([5, 8, 11, 21, 16, 52]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo(5, 8, 11, 21, 16) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo(5, 8, 11, 21, 16, 52) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../index.php');
     exit();
 }
@@ -57,7 +68,7 @@ try {
     $db = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-    
+
     // Crear e inicializar tabla de historial de estados
     $db->exec("CREATE TABLE IF NOT EXISTS historial_estados_personal (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -68,10 +79,10 @@ try {
                 creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (personal_id) REFERENCES personal(id) ON DELETE CASCADE
               )");
-    
+
     $db->exec("CREATE INDEX IF NOT EXISTS idx_historial_personal ON historial_estados_personal(personal_id)");
     $db->exec("CREATE INDEX IF NOT EXISTS idx_historial_fechas ON historial_estados_personal(fecha_inicio, fecha_fin)");
-    
+
     // Migración inicial de datos (solo ejecuta una vez)
     $resultado = $db->query("SELECT COUNT(*) FROM historial_estados_personal")->fetchColumn();
     if ($resultado == 0) {
@@ -82,30 +93,31 @@ try {
     die("Error de conexión: " . $e->getMessage());
 }
 
-function actualizarEstadoPersonal($db, $personal_id, $nuevo_estado, $fecha_cambio = null) {
+function actualizarEstadoPersonal($db, $personal_id, $nuevo_estado, $fecha_cambio = null)
+{
     if (!$fecha_cambio) {
         $fecha_cambio = date('Y-m-d');
     }
-    
+
     try {
         $db->beginTransaction();
-        
+
         // Cierra el estado anterior
         $db->prepare("UPDATE historial_estados_personal 
                      SET fecha_fin = DATE_SUB(?, INTERVAL 1 DAY)
                      WHERE personal_id = ? AND fecha_fin IS NULL")
-           ->execute([$fecha_cambio, $personal_id]);
-        
+            ->execute([$fecha_cambio, $personal_id]);
+
         // Inserta el nuevo estado
         $db->prepare("INSERT INTO historial_estados_personal 
                      (personal_id, estado, fecha_inicio, fecha_fin)
                      VALUES (?, ?, ?, NULL)")
-           ->execute([$personal_id, $nuevo_estado, $fecha_cambio]);
-        
+            ->execute([$personal_id, $nuevo_estado, $fecha_cambio]);
+
         // Actualiza el estado actual en la tabla personal
         $db->prepare("UPDATE personal SET activo = ? WHERE id = ?")
-           ->execute([$nuevo_estado, $personal_id]);
-        
+            ->execute([$nuevo_estado, $personal_id]);
+
         $db->commit();
         return true;
     } catch (Exception $e) {
@@ -116,10 +128,11 @@ function actualizarEstadoPersonal($db, $personal_id, $nuevo_estado, $fecha_cambi
 }
 
 // Función para generar reportes Excel
-function generarReporteExcel($db, $mes, $anio, $sucursal) {
+function generarReporteExcel($db, $mes, $anio, $sucursal)
+{
     $fecha_inicio = "$anio-$mes-01";
     $fecha_fin = date('Y-m-t', strtotime($fecha_inicio));
-    
+
     // Consulta para auditorías consolidadas (solo faltantes)
     $sql = "SELECT 
                 va.id,
@@ -137,20 +150,20 @@ function generarReporteExcel($db, $mes, $anio, $sucursal) {
             AND YEAR(va.fecha_hora) = :anio
             AND va.monto < 0
             AND va.tipo_auditoria != 'caja_chica'";
-    
+
     $params = [':mes' => $mes, ':anio' => $anio];
-    
+
     if (!empty($sucursal)) {
         $sql .= " AND va.sucursal = :sucursal";
         $params[':sucursal'] = $sucursal;
     }
-    
+
     $sql .= " ORDER BY va.fecha_hora DESC";
-    
+
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $auditorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Consulta para faltantes de inventario
     $sql_faltantes = "SELECT 
                         fi.id,
@@ -163,26 +176,26 @@ function generarReporteExcel($db, $mes, $anio, $sucursal) {
                       FROM faltante_inventario fi
                       WHERE MONTH(fi.fecha) = :mes 
                       AND YEAR(fi.fecha) = :anio";
-    
+
     $params_faltantes = [':mes' => $mes, ':anio' => $anio];
-    
+
     if (!empty($sucursal)) {
         $sql_faltantes .= " AND fi.sucursal = :sucursal";
         $params_faltantes[':sucursal'] = $sucursal;
     }
-    
+
     $sql_faltantes .= " ORDER BY fi.fecha DESC";
-    
+
     $stmt_faltantes = $db->prepare($sql_faltantes);
     $stmt_faltantes->execute($params_faltantes);
     $faltantes = $stmt_faltantes->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Combinar y ordenar resultados
     $registros = array_merge($auditorias, $faltantes);
-    usort($registros, function($a, $b) {
+    usort($registros, function ($a, $b) {
         return strtotime($b['fecha_hora']) - strtotime($a['fecha_hora']);
     });
-    
+
     // Obtener personal activo durante el período del reporte
     $personal_por_sucursal = [];
     $sql_personal = "SELECT b.name as sucursal, p.nombre, p.peso_porcentual 
@@ -197,7 +210,7 @@ function generarReporteExcel($db, $mes, $anio, $sucursal) {
                         GROUP BY h.personal_id
                     ) he ON p.id = he.personal_id
                     ORDER BY b.name, p.nombre";
-    
+
     $stmt_personal = $db->prepare($sql_personal);
     $stmt_personal->execute([':fecha_inicio' => $fecha_inicio, ':fecha_fin' => $fecha_fin]);
     while ($row = $stmt_personal->fetch(PDO::FETCH_ASSOC)) {
@@ -208,23 +221,23 @@ function generarReporteExcel($db, $mes, $anio, $sucursal) {
             ];
         }
     }
-    
+
     $reporte_data = [];
     $grupos_auditorias = [];
     $current_group_id = 0;
-    
+
     foreach ($registros as $registro) {
         $sucursal = $registro['sucursal'];
         $monto_total = $registro['monto_total'];
         $tipo_auditoria = $registro['tipo_auditoria'];
-        
+
         $grupos_auditorias[$current_group_id] = [
             'tipo' => $registro['tipo'],
             'sucursal' => $sucursal,
             'fecha' => formatFechaReporte($registro['fecha_hora']),
             'total' => $monto_total
         ];
-        
+
         if ($tipo_auditoria == 'facturacion') {
             $reporte_data[] = [
                 'fecha' => formatFechaReporte($registro['fecha_hora']),
@@ -236,16 +249,15 @@ function generarReporteExcel($db, $mes, $anio, $sucursal) {
                 'porcentaje' => '100.00%',
                 'group_id' => $current_group_id
             ];
-        } 
-        elseif ($tipo_auditoria == 'inventario' || $tipo_auditoria == 'faltante_inventario') {
+        } elseif ($tipo_auditoria == 'inventario' || $tipo_auditoria == 'faltante_inventario') {
             if (isset($personal_por_sucursal[$sucursal]) && !empty($personal_por_sucursal[$sucursal])) {
                 $total_porcentaje = array_sum(array_column($personal_por_sucursal[$sucursal], 'porcentaje'));
                 $porcentaje_ajustado = $total_porcentaje > 0 ? $total_porcentaje : 100;
-                
+
                 foreach ($personal_por_sucursal[$sucursal] as $participante) {
                     $porcentaje = $participante['porcentaje'] > 0 ? $participante['porcentaje'] : (100 / count($personal_por_sucursal[$sucursal]));
                     $monto_individual = $monto_total * ($porcentaje / 100);
-                    
+
                     $reporte_data[] = [
                         'fecha' => formatFechaReporte($registro['fecha_hora']),
                         'tipo' => $registro['tipo'],
@@ -270,15 +282,15 @@ function generarReporteExcel($db, $mes, $anio, $sucursal) {
                 ];
             }
         }
-        
+
         $current_group_id++;
         $reporte_data[] = [];
     }
-    
+
     // Generar el archivo Excel
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
-    
+
     $sheet->setCellValue('A1', 'FECHA');
     $sheet->setCellValue('B1', 'TIPO');
     $sheet->setCellValue('C1', 'SUCURSAL');
@@ -286,52 +298,52 @@ function generarReporteExcel($db, $mes, $anio, $sucursal) {
     $sheet->setCellValue('E1', 'MONTO TOTAL');
     $sheet->setCellValue('F1', 'MONTO INDIVIDUAL');
     $sheet->setCellValue('G1', 'PORCENTAJE');
-    
+
     $row = 2;
     $last_group = null;
-    
+
     foreach ($reporte_data as $index => $data) {
         if (empty($data)) {
-            if ($last_group !== null && (!isset($reporte_data[$index+1]) || (isset($reporte_data[$index+1]) && $reporte_data[$index+1]['group_id'] !== $last_group))) {
+            if ($last_group !== null && (!isset($reporte_data[$index + 1]) || (isset($reporte_data[$index + 1]) && $reporte_data[$index + 1]['group_id'] !== $last_group))) {
                 if (isset($grupos_auditorias[$last_group])) {
                     $grupo = $grupos_auditorias[$last_group];
-                    
-                    $sheet->setCellValue('A'.$row, 'TOTAL:');
-                    $sheet->mergeCells('A'.$row.':D'.$row);
-                    $sheet->setCellValue('E'.$row, number_format($grupo['total'], 2));
-                    $sheet->mergeCells('E'.$row.':G'.$row);
-                    
-                    $sheet->getStyle('A'.$row.':G'.$row)->applyFromArray([
+
+                    $sheet->setCellValue('A' . $row, 'TOTAL:');
+                    $sheet->mergeCells('A' . $row . ':D' . $row);
+                    $sheet->setCellValue('E' . $row, number_format($grupo['total'], 2));
+                    $sheet->mergeCells('E' . $row . ':G' . $row);
+
+                    $sheet->getStyle('A' . $row . ':G' . $row)->applyFromArray([
                         'font' => ['bold' => true],
                         'fill' => [
                             'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                             'startColor' => ['argb' => 'FFD9D9D9']
                         ]
                     ]);
-                    
+
                     $row++;
                 }
             }
             $row++;
             continue;
         }
-        
-        $sheet->setCellValue('A'.$row, $data['fecha']);
-        $sheet->setCellValue('B'.$row, $data['tipo']);
-        $sheet->setCellValue('C'.$row, $data['sucursal']);
-        $sheet->setCellValue('D'.$row, $data['participante']);
-        $sheet->setCellValue('E'.$row, $data['monto_total']);
-        $sheet->setCellValue('F'.$row, $data['monto_individual']);
-        $sheet->setCellValue('G'.$row, $data['porcentaje']);
-        
+
+        $sheet->setCellValue('A' . $row, $data['fecha']);
+        $sheet->setCellValue('B' . $row, $data['tipo']);
+        $sheet->setCellValue('C' . $row, $data['sucursal']);
+        $sheet->setCellValue('D' . $row, $data['participante']);
+        $sheet->setCellValue('E' . $row, $data['monto_total']);
+        $sheet->setCellValue('F' . $row, $data['monto_individual']);
+        $sheet->setCellValue('G' . $row, $data['porcentaje']);
+
         $last_group = $data['group_id'];
         $row++;
     }
-    
+
     foreach (range('A', 'G') as $col) {
         $sheet->getColumnDimension($col)->setAutoSize(true);
     }
-    
+
     $headerStyle = [
         'font' => ['bold' => true],
         'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
@@ -341,14 +353,14 @@ function generarReporteExcel($db, $mes, $anio, $sucursal) {
         ]
     ];
     $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
-    
-    $sheet->getStyle('E2:G'.$row)
-          ->getAlignment()
-          ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-    
+
+    $sheet->getStyle('E2:G' . $row)
+        ->getAlignment()
+        ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+
     $writer = new Xlsx($spreadsheet);
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment;filename="reporte_auditorias_'.date('Y-m-d').'.xlsx"');
+    header('Content-Disposition: attachment;filename="reporte_auditorias_' . date('Y-m-d') . '.xlsx"');
     $writer->save('php://output');
     exit;
 }
@@ -414,6 +426,7 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -422,27 +435,27 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        *{
+        * {
             font-size: clamp(11px, 2vw, 16px) !important;
         }
-    
+
         @font-face {
             font-family: 'Calibri';
             src: url('https://fonts.cdnfonts.com/css/calibri');
         }
-        
+
         body {
             font-family: 'Calibri', sans-serif;
             background-color: #F6F6F6;
             padding: 0;
             margin: 0;
         }
-        
+
         .container-fluid {
             padding: 0 5px;
             width: 100%;
         }
-        
+
         .card {
             border: none;
             border-radius: 10px;
@@ -450,18 +463,26 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
             width: 100%;
             margin: 0;
         }
-        
+
         .table thead th {
             background-color: #0E544C !important;
             color: white;
             vertical-align: middle;
             position: relative;
         }
-        
-        .badge-caja_chica { background-color: #3a7bd5; }
-        .badge-facturacion { background-color: #00d2ff; }
-        .badge-inventario { background-color: #f46b45; }
-        
+
+        .badge-caja_chica {
+            background-color: #3a7bd5;
+        }
+
+        .badge-facturacion {
+            background-color: #00d2ff;
+        }
+
+        .badge-inventario {
+            background-color: #f46b45;
+        }
+
         .header-logo {
             height: 40px;
             position: absolute;
@@ -469,13 +490,13 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
             left: 15px;
             z-index: 10;
         }
-        
+
         /* Estilos para filtros desplegables */
         .filtro-header {
             cursor: pointer;
             position: relative;
         }
-        
+
         .filtro-desplegable {
             display: none;
             position: absolute;
@@ -483,68 +504,68 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
             padding: 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             z-index: 100;
             width: 280px;
             top: 100%;
             left: 0;
         }
-        
+
         .filtro-header.active .filtro-desplegable {
             display: block;
         }
-        
+
         .filtro-desplegable .form-group {
             margin-bottom: 10px;
         }
-        
+
         .filtro-desplegable label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
         }
-        
+
         .filtro-acciones {
             display: flex;
             justify-content: space-between;
             margin-top: 10px;
         }
-        
+
         .filtro-icono {
             margin-left: 5px;
             transition: transform 0.3s;
         }
-        
+
         .filtro-header.active .filtro-icono {
             transform: rotate(180deg);
         }
-        
+
         .dropdown-reporte {
             position: relative;
             display: inline-block;
             width: 100%;
         }
-        
+
         .dropdown-contenido {
             display: none;
             position: absolute;
             background-color: #f9f9f9;
             min-width: 250px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
             padding: 12px;
             z-index: 1;
             right: 0;
             border-radius: 5px;
         }
-        
+
         .dropdown-reporte:hover .dropdown-contenido {
             display: block;
         }
-        
+
         .form-group-reporte {
             margin-bottom: 10px;
         }
-        
+
         .btn-reporte {
             background-color: #28a745;
             color: white;
@@ -554,46 +575,47 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
             cursor: pointer;
             width: 100%;
         }
-        
+
         .btn-reporte:hover {
             background-color: #218838;
         }
-        
+
         /* Estilos móviles */
         @media (max-width: 768px) {
             .btn {
                 padding: 8px 5px;
             }
-            
+
             .filtro-desplegable {
                 width: 250px;
                 left: -50px;
             }
-            
+
             .dropdown-contenido {
                 right: -50px;
                 width: 200px;
             }
-            
+
             .header-logo {
                 height: 30px;
                 top: 10px;
                 left: 10px;
             }
-            
-            .table td, .table th {
+
+            .table td,
+            .table th {
                 padding: 8px 5px;
             }
-            
+
             .botones-container {
                 margin-top: 50px;
             }
-            
+
             .col-md-2 {
                 padding: 0 3px;
             }
         }
-        
+
         .btn {
             padding: 8px 5px;
             transition: all 0.3s ease;
@@ -603,40 +625,41 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
+
         .btn:hover {
             background-color: #13866f !important;
             transform: scale(1.02);
         }
-        
+
         .rounded-0 {
             border-radius: 0 !important;
         }
-        
+
         .row.no-gutters {
             margin-right: 0;
             margin-left: 0;
         }
-        
-        .row.no-gutters > [class^="col-"] {
+
+        .row.no-gutters>[class^="col-"] {
             padding-right: 0;
             padding-left: 0;
         }
-        
+
         .botones-container {
             margin-top: 60px;
         }
-        
+
         /* Nuevos estilos añadidos */
         .header-container {
-            background-color: #ffffff; /* Cambiado a blanco */
+            background-color: #ffffff;
+            /* Cambiado a blanco */
             padding: 15px 0;
             margin-bottom: 20px;
             position: relative;
             width: 100%;
             border-bottom: 1px solid #e0e0e0;
         }
-        
+
         .no-results {
             padding: 20px;
             text-align: center;
@@ -649,35 +672,35 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
             margin-bottom: 10px;
             color: #6c757d;
         }
-        
+
         .table-responsive {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
-        
+
         /* Asegurar que la tabla ocupe el 100% en móviles */
         @media (max-width: 576px) {
             .container-fluid {
                 padding: 0;
             }
-            
+
             .card {
                 border-radius: 0;
             }
-            
+
             .table {
                 width: 100%;
                 margin-bottom: 0;
             }
-            
+
             .table thead th {
                 padding: 8px 5px;
             }
-            
+
             .table td {
                 padding: 8px 5px;
             }
-            
+
             .filtro-desplegable {
                 width: 200px;
                 left: -100px;
@@ -685,6 +708,7 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid mt-0">
         <div class="row">
@@ -693,65 +717,60 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
                     <!-- Contenedor con fondo blanco para logo y botones -->
                     <div class="header-container">
                         <img src="/core/assets/img/Logo.svg" alt="Logo" class="header-logo">
-                        
+
                         <div class="container botones-container">
                             <div class="row no-gutters">
                                 <!-- Botón Auditoría Caja Facturación -->
                                 <div class="col-md-2 col-6 mb-2 px-1">
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-block text-white" 
+                                    <button
+                                        type="button"
+                                        class="btn btn-block text-white"
                                         style="background-color: #16a085;"
-                                        onclick="window.location.href='auditoria_caja_facturacion.php'"
-                                    >
+                                        onclick="window.location.href='auditoria_caja_facturacion.php'">
                                         <i class="fas fa-file-invoice-dollar"></i> Caja Facturación
                                     </button>
                                 </div>
 
                                 <!-- Botón Auditoría Caja Chica -->
                                 <div class="col-md-2 col-6 mb-2 px-1">
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-block text-white" 
+                                    <button
+                                        type="button"
+                                        class="btn btn-block text-white"
                                         style="background-color: #16a085;"
-                                        onclick="window.location.href='auditoria_caja_chica.php'"
-                                    >
+                                        onclick="window.location.href='auditoria_caja_chica.php'">
                                         <i class="fas fa-money-bill-wave"></i> Caja Chica
                                     </button>
                                 </div>
 
                                 <!-- Botón Auditoría Inventario -->
                                 <div class="col-md-2 col-6 mb-2 px-1">
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-block text-white" 
+                                    <button
+                                        type="button"
+                                        class="btn btn-block text-white"
                                         style="background-color: #16a085;"
-                                        onclick="window.location.href='auditoria_inventario.php'"
-                                    >
+                                        onclick="window.location.href='auditoria_inventario.php'">
                                         <i class="fas fa-boxes"></i> Auditoria Inventario
                                     </button>
                                 </div>
 
                                 <!-- Botón Faltante Inventario -->
                                 <div class="col-md-2 col-6 mb-2 px-1">
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-block text-white" 
+                                    <button
+                                        type="button"
+                                        class="btn btn-block text-white"
                                         style="background-color: #16a085;"
-                                        onclick="window.location.href='faltante_inventario.php'"
-                                    >
+                                        onclick="window.location.href='faltante_inventario.php'">
                                         <i class="fas fa-exclamation-triangle"></i> Faltante Inventario.
                                     </button>
                                 </div>
 
                                 <!-- Botón Personal -->
                                 <div class="col-md-2 col-6 mb-2 px-1">
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-block text-white" 
+                                    <button
+                                        type="button"
+                                        class="btn btn-block text-white"
                                         style="background-color: #16a085;"
-                                        onclick="window.location.href='personal.php'"
-                                    >
+                                        onclick="window.location.href='personal.php'">
                                         <i class="fas fa-users"></i> Personal
                                     </button>
                                 </div>
@@ -808,7 +827,7 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
                             </div>
                         </div>
                     </div>
-                    
+
                     <form method="get">
                         <div class="table-responsive">
                             <table class="table table-hover table-striped mb-0">
@@ -924,7 +943,7 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
                             </table>
                         </div>
                     </form>
-                    
+
                     <!-- Paginación -->
                     <div class="card-footer d-flex justify-content-between align-items-center py-2">
                         <div class="text-muted small">
@@ -958,33 +977,33 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
         document.addEventListener('DOMContentLoaded', function() {
             // Manejar clic en los encabezados de filtro
             const filtroHeaders = document.querySelectorAll('.filtro-header');
-            
+
             filtroHeaders.forEach(header => {
                 header.addEventListener('click', function(e) {
                     // Evitar que se active cuando se hace clic en los elementos del filtro
                     if (e.target.closest('.filtro-desplegable, .cerrar-filtro, .btn')) {
                         return;
                     }
-                    
+
                     // Cerrar otros filtros abiertos
                     document.querySelectorAll('.filtro-header').forEach(h => {
                         if (h !== header) {
                             h.classList.remove('active');
                         }
                     });
-                    
+
                     // Alternar el filtro actual
                     header.classList.toggle('active');
                 });
             });
-            
+
             // Cerrar filtros al hacer clic en el botón Cerrar
             document.querySelectorAll('.cerrar-filtro').forEach(btn => {
                 btn.addEventListener('click', function() {
                     this.closest('.filtro-header').classList.remove('active');
                 });
             });
-            
+
             // Cerrar filtros al hacer clic fuera de ellos
             document.addEventListener('click', function(e) {
                 if (!e.target.closest('.filtro-header, .filtro-desplegable')) {
@@ -1001,7 +1020,7 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
                     this.closest('.filtro-header').classList.remove('active');
                 });
             });
-            
+
             // Ajustar tamaño de los filtros en móviles
             function adjustFiltersForMobile() {
                 if (window.innerWidth < 768) {
@@ -1018,11 +1037,12 @@ $anios = $db->query("SELECT DISTINCT YEAR(fecha_hora) as anio FROM (
                     });
                 }
             }
-            
+
             // Ejecutar al cargar y al redimensionar
             adjustFiltersForMobile();
             window.addEventListener('resize', adjustFiltersForMobile);
         });
     </script>
 </body>
+
 </html>

@@ -2,7 +2,7 @@
 // Al inicio del archivo, verificar autenticación y acceso al módulo
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
 
 // Verificar acceso al módulo 'publico' (o el nombre que corresponda según tus permisos)
 //verificarAccesoModulo('supervision');
@@ -15,10 +15,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21]);
+verificarAccesoCargo([16, 21, 52]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([16, 21, 52]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $sucursal = $_POST['sucursal'];
     $persona = $_POST['persona'];
     $comentarios = isset($_POST['comentarios']) ? $_POST['comentarios'] : null; // Nuevo campo comentarios
-    
+
     $cod_sucursal = $_POST['cod_sucursal']; // Nuevo campo para el código de sucursal
     $operario_id = isset($_POST['operario_id']) && !empty($_POST['operario_id']) ? (int)$_POST['operario_id'] : null;
 
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $limpieza_interior_1_2_12 = $_POST['limpieza_interior_1_2_12'];
     $limpieza_interior_1_2_13 = $_POST['limpieza_interior_1_2_13'];
     $limpieza_interior_1_2_14 = $_POST['limpieza_interior_1_2_14'];
-    
+
     // Limpieza de Equipos y Utensilios
     $limpieza_equipo_1_3_1 = $_POST['limpieza_equipo_1_3_1'];
     $limpieza_equipo_1_3_2 = $_POST['limpieza_equipo_1_3_2'];
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $limpieza_equipo_1_3_11 = $_POST['limpieza_equipo_1_3_11'];
     $limpieza_equipo_1_3_12 = $_POST['limpieza_equipo_1_3_12'];
     $limpieza_equipo_1_3_13 = $_POST['limpieza_equipo_1_3_13'];
-    
+
     // Manejo de Insumos
     $limpieza_insumos_1_4_1 = $_POST['limpieza_insumos_1_4_1'];
     $limpieza_insumos_1_4_2 = $_POST['limpieza_insumos_1_4_2'];
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $limpieza_insumos_1_4_4 = $_POST['limpieza_insumos_1_4_4'];
     $limpieza_insumos_1_4_5 = $_POST['limpieza_insumos_1_4_5'];
     $limpieza_insumos_1_4_6 = $_POST['limpieza_insumos_1_4_6'];
-    
+
     $promedio_exterior = $_POST['promedio_exterior'];
     $promedio_interior = $_POST['promedio_interior'];
     $promedio_equipo = $_POST['promedio_equipo'];
@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bindParam(':limpieza_interior_1_2_12', $limpieza_interior_1_2_12);
     $stmt->bindParam(':limpieza_interior_1_2_13', $limpieza_interior_1_2_13);
     $stmt->bindParam(':limpieza_interior_1_2_14', $limpieza_interior_1_2_14);
-    
+
     // Limpieza de Equipos
     $stmt->bindParam(':limpieza_equipo_1_3_1', $limpieza_equipo_1_3_1);
     $stmt->bindParam(':limpieza_equipo_1_3_2', $limpieza_equipo_1_3_2);
@@ -189,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bindParam(':limpieza_equipo_1_3_11', $limpieza_equipo_1_3_11);
     $stmt->bindParam(':limpieza_equipo_1_3_12', $limpieza_equipo_1_3_12);
     $stmt->bindParam(':limpieza_equipo_1_3_13', $limpieza_equipo_1_3_13);
-    
+
     // Manejo de Insumos
     $stmt->bindParam(':limpieza_insumos_1_4_1', $limpieza_insumos_1_4_1);
     $stmt->bindParam(':limpieza_insumos_1_4_2', $limpieza_insumos_1_4_2);
@@ -197,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bindParam(':limpieza_insumos_1_4_4', $limpieza_insumos_1_4_4);
     $stmt->bindParam(':limpieza_insumos_1_4_5', $limpieza_insumos_1_4_5);
     $stmt->bindParam(':limpieza_insumos_1_4_6', $limpieza_insumos_1_4_6);
-    
+
     $stmt->bindParam(':promedio_exterior', $promedio_exterior);
     $stmt->bindParam(':promedio_interior', $promedio_interior);
     $stmt->bindParam(':promedio_equipo', $promedio_equipo);
@@ -207,31 +207,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Ejecutar la consulta
     if ($stmt->execute()) {
         $auditoria_id = $conn->lastInsertId();
-        
+
         // Procesar las fotos si existen
         if (isset($_POST['fotos']) && !empty($_POST['fotos'])) {
             // Decodificar el JSON de fotos
             $fotos = json_decode($_POST['fotos'], true);
-            
+
             if (is_array($fotos)) {
                 foreach ($fotos as $fotoData) {
                     if (!empty($fotoData)) {
                         // Eliminar el prefijo "data:image/png;base64," de la cadena base64
                         $fotoData = str_replace('data:image/png;base64,', '', $fotoData);
                         $fotoData = str_replace(' ', '+', $fotoData);
-                        
+
                         // Decodificar la cadena base64
                         $fotoDecodificada = base64_decode($fotoData);
-                        
+
                         // Generar un nombre único para la imagen
                         $nombreArchivo = uniqid() . '.png';
                         $rutaArchivo = 'fotos/' . $nombreArchivo;
-                        
+
                         // Verificar si la carpeta fotos existe, si no, crearla
                         if (!file_exists('fotos')) {
                             mkdir('fotos', 0777, true);
                         }
-                        
+
                         // Guardar la imagen en la carpeta "fotos"
                         if (file_put_contents($rutaArchivo, $fotoDecodificada)) {
                             // Insertar la ruta de la foto en la base de datos
@@ -245,7 +245,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             }
         }
-        
+
         // Redirigir a la página de inicio después de agregar el registro
         header("Location: logout.php");
         exit();
@@ -257,6 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -269,6 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 </head>
+
 <body>
     <!-- Header con logo -->
     <header>
@@ -276,24 +278,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <img src="/core/assets/img/Logo.svg" alt="Logo de la empresa" class="logo" style="max-width:75px;">
         </a>
     </header>
-    
+
     <a href="logout.php" style="display:none;">Cerrar Sesión</a>
-    
+
     <form action="agregar.php" method="POST" onsubmit="return validarFormulario()">
         <?php
-            // Crear un objeto DateTime a partir de la fecha actual
-            $fecha = new DateTime();
-            // Formatear la fecha a 'd-M-y' (ejemplo: '17-mar-25')
-            $fechaFormateada = $fecha->format('d-M-y');
+        // Crear un objeto DateTime a partir de la fecha actual
+        $fecha = new DateTime();
+        // Formatear la fecha a 'd-M-y' (ejemplo: '17-mar-25')
+        $fechaFormateada = $fecha->format('d-M-y');
         ?>
-        
+
         <div style="display:none;">
             <label for="fecha">Fecha:</label>
             <input type="date" name="fecha" value="<?php echo date('Y-m-d'); ?>" readonly><br><br>
         </div>
-        
+
         <p><b>Fecha:</b> <?php echo $fechaFormateada; ?></p>
-    
+
         <label for="cod_sucursal">Sucursal:</label>
         <select name="cod_sucursal" id="cod_sucursal" required>
             <option value="" disabled selected>Seleccione una sucursal</option>
@@ -303,28 +305,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt_sucursales = $conn->prepare($query_sucursales);
             $stmt_sucursales->execute();
             $sucursales = $stmt_sucursales->fetchAll(PDO::FETCH_ASSOC);
-            
+
             foreach ($sucursales as $sucursal) {
                 echo '<option value="' . $sucursal['codigo'] . '">' . htmlspecialchars($sucursal['nombre']) . '</option>';
             }
             ?>
         </select>
         <input type="hidden" name="sucursal" id="sucursal_nombre"><br><br>
-    
+
         <label for="persona">Verificador(a):</label>
         <input type="text" name="persona" id="persona_input" placeholder="Buscar por nombre o código..." required>
         <input type="hidden" name="operario_id" id="operario_id">
         <br>
-        
+
         <div style="background:#F6F6F6; text-align:center;">
-            <strong><h3>Rango de Calificación:</h3></strong>
+            <strong>
+                <h3>Rango de Calificación:</h3>
+            </strong>
             <p>1 - Deficiente | 5 - Excelente | N/A - No Aplica</p>
         </div>
-        
+
         <div style="background:#51B8AC;">
-            <strong><h2>AUDITORÍA DE LIMPIEZA</h2></strong>
+            <strong>
+                <h2>AUDITORÍA DE LIMPIEZA</h2>
+            </strong>
         </div>
-    
+
         <!-- Limpieza en Exterior -->
         <div style="background:#F6F6F6;">
             <h3>1.1. Limpieza en Exterior</h3>
@@ -346,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             "Rótulos de Pitaya, limpio y sin manchas",
             "Sillas y mesas externas limpias"
         ];
-    
+
         foreach ($questions_exterior as $index => $question) {
             echo '<label for="limpieza_exterior_1_1_' . ($index + 1) . '">' . $question . ':</label><br>';
             echo '<div class="radio-group">';
@@ -363,7 +369,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             echo '</div><br>';
         }
         ?>
-    
+
         <!-- Limpieza de Interiores -->
         <div style="background:#F6F6F6;">
             <h3>1.2. Limpieza de Interiores</h3>
@@ -386,7 +392,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             "Productos de bodega clasificados y etiquetados.",
             "Baños limpios y sin mal olor"
         ];
-    
+
         foreach ($questions_interior as $index => $question) {
             echo '<label for="limpieza_interior_1_2_' . ($index + 1) . '">' . $question . ':</label><br>';
             echo '<div class="radio-group">';
@@ -403,7 +409,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             echo '</div><br>';
         }
         ?>
-    
+
         <!-- Limpieza de Equipos y Utensilios -->
         <div style="background:#F6F6F6;">
             <h3>1.3. Limpieza de Equipos y Utensilios</h3>
@@ -425,7 +431,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             "Piezas plásticas de extractor limpias y no están curtidas",
             "Menaje en buen estado y limpio"
         ];
-    
+
         foreach ($questions_equipment as $index => $question) {
             echo '<label for="limpieza_equipo_1_3_' . ($index + 1) . '">' . $question . ':</label><br>';
             echo '<div class="radio-group">';
@@ -442,7 +448,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             echo '</div>';
         }
         ?>
-        
+
         <!-- Limpieza de Insumos -->
         <div style="background:#F6F6F6;">
             <h3>1.4. Manejo de Insumos</h3>
@@ -457,7 +463,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             "Frutas sin dañar o deterioradas en cajillas",
             "Miel y azúcar con fecha de recepción"
         ];
-    
+
         foreach ($questions_insumos as $index => $question) {
             echo '<label for="limpieza_insumos_1_4_' . ($index + 1) . '">' . $question . ':</label><br>';
             echo '<div class="radio-group">';
@@ -474,44 +480,54 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             echo '</div>';
         }
         ?>
-        
+
         <div style="display:none;">
             <!-- Promedio de Limpieza en Exterior -->
             <div id="promedioExteriorContainer" style="background:#F6F6F6; padding:10px; margin-top:20px;">
-                <strong><h3>Promedio de Limpieza en Exterior:</h3></strong>
+                <strong>
+                    <h3>Promedio de Limpieza en Exterior:</h3>
+                </strong>
                 <p id="promedioExterior">0.00</p>
             </div>
-            
+
             <!-- Promedio de Limpieza de Interiores -->
             <div id="promedioInteriorContainer" style="background:#F6F6F6; padding:10px; margin-top:20px;">
-                <strong><h3>Promedio de Limpieza de Interiores:</h3></strong>
+                <strong>
+                    <h3>Promedio de Limpieza de Interiores:</h3>
+                </strong>
                 <p id="promedioInterior">0.00</p>
             </div>
-            
+
             <!-- Promedio de Limpieza de Equipos y Utensilios -->
             <div id="promedioEquipoContainer" style="background:#F6F6F6; padding:10px; margin-top:20px;">
-                <strong><h3>Promedio de Limpieza de Equipos y Utensilios:</h3></strong>
+                <strong>
+                    <h3>Promedio de Limpieza de Equipos y Utensilios:</h3>
+                </strong>
                 <p id="promedioEquipo">0.00</p>
             </div>
-            
+
             <!-- Promedio de Limpieza de Equipos y Utensilios -->
             <div id="promedioInsumosContainer" style="background:#F6F6F6; padding:10px; margin-top:20px;">
-                <strong><h3>Promedio de Limpieza de Insumos:</h3></strong>
+                <strong>
+                    <h3>Promedio de Limpieza de Insumos:</h3>
+                </strong>
                 <p id="promedioInsumos">0.00</p>
             </div>
-            
+
             <!-- Promedio General -->
             <div id="promedioGeneralContainer" style="background:#F6F6F6; padding:10px; margin-top:20px;">
-                <strong><h3>Promedio General:</h3></strong>
+                <strong>
+                    <h3>Promedio General:</h3>
+                </strong>
                 <p id="promedioGeneral">0.00</p>
             </div>
         </div>
-        
+
         <!-- En la parte del formulario HTML, agrega esto antes de la sección de fotos: -->
         <label for="comentarios">Comentarios (opcional):</label><br>
-        <textarea name="comentarios" id="comentarios" rows="4" cols="50" 
-                  style="width: 80%; max-width: 500px; text-align: left; text-align-last: left; resize: vertical; padding: 8px;"></textarea><br><br>
-        
+        <textarea name="comentarios" id="comentarios" rows="4" cols="50"
+            style="width: 80%; max-width: 500px; text-align: left; text-align-last: left; resize: vertical; padding: 8px;"></textarea><br><br>
+
         <!-- En el formulario, agregar la sección de captura de foto antes del botón Guardar -->
         <label>Capturar fotos (requerido):</label>
         <div>
@@ -527,21 +543,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <br>
         <!-- Elemento para mostrar la foto capturada -->
         <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
-        
+
         <!-- Galería de fotos capturadas -->
         <div id="gallery" class="gallery-container"></div>
-        
+
         <!-- Input oculto para enviar las fotos capturadas como JSON -->
         <input type="hidden" id="fotos" name="fotos" value="[]">
-        
+
         <br>
-        
+
         <div style="margin-bottom:13px;">
             <div id="estadoAuditoria" style="color: red; font-weight: bold; margin-bottom: 10px; display: none;">Esta Auditoría requiere registro fotográfico...<br> Auditoría Incompleta</div>
             <button type="submit" id="guardarBtn" disabled>Guardar</button>
             <a href="index.php">Cancelar</a>
         </div>
-        
+
         <!-- Agrega esto dentro del formulario, antes del botón de Guardar -->
         <input type="hidden" id="promedio_exterior" name="promedio_exterior" value="0.00">
         <input type="hidden" id="promedio_interior" name="promedio_interior" value="0.00">
@@ -549,7 +565,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <input type="hidden" id="promedio_insumos" name="promedio_insumos" value="0.00">
         <input type="hidden" id="promedio_general" name="promedio_general" value="0.00">
     </form>
-    
+
     <!-- JavaScript para manejar la selección y el color de fondo -->
     <script>
         <?php
@@ -582,7 +598,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $operarios_json = json_encode($operarios_autocomplete);
         ?>
         const operarios = <?php echo $operarios_json; ?>;
-        
+
         // Preparar datos para autocomplete
         const operariosAutocomplete = operarios.map(operario => ({
             label: operario.label_completo,
@@ -594,7 +610,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $('#persona_input').autocomplete({
                 source: function(request, response) {
                     const term = request.term.toLowerCase();
-                    const filtered = operariosAutocomplete.filter(op => 
+                    const filtered = operariosAutocomplete.filter(op =>
                         op.label.toLowerCase().includes(term)
                     );
                     response(filtered.slice(0, 15)); // Limitar a 15 resultados
@@ -624,26 +640,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         const selectorCamara = document.getElementById('selectorCamara');
         const gallery = document.getElementById('gallery');
         const fotosInput = document.getElementById('fotos');
-        
+
         let fotosArray = []; // Array para almacenar las fotos capturadas
         let stream; // Variable para almacenar el stream de la cámara
-        
+
         // Función para actualizar el input oculto con las fotos
         function actualizarFotosInput() {
             fotosInput.value = JSON.stringify(fotosArray);
         }
-        
+
         // Función para mostrar las fotos en la galería
         function actualizarGaleria() {
             gallery.innerHTML = '';
-            
+
             fotosArray.forEach((foto, index) => {
                 const photoContainer = document.createElement('div');
                 photoContainer.className = 'photo-thumbnail';
-                
+
                 const img = document.createElement('img');
                 img.src = foto;
-                
+
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-photo';
                 removeBtn.innerHTML = '×';
@@ -651,30 +667,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     e.preventDefault();
                     eliminarFoto(index);
                 };
-                
+
                 photoContainer.appendChild(img);
                 photoContainer.appendChild(removeBtn);
                 gallery.appendChild(photoContainer);
             });
-            
+
             actualizarFotosInput();
             verificarCompletitud();
         }
-        
+
         // Función para eliminar una foto
         function eliminarFoto(index) {
             fotosArray.splice(index, 1);
             actualizarGaleria();
         }
-        
+
         // Función para listar las cámaras disponibles
         async function listarCamaras() {
             try {
                 const dispositivos = await navigator.mediaDevices.enumerateDevices();
                 const camaras = dispositivos.filter(dispositivo => dispositivo.kind === 'videoinput');
-                
+
                 selectorCamara.innerHTML = '<option value="">Seleccionar cámara...</option>';
-                
+
                 camaras.forEach((camara, index) => {
                     const option = document.createElement('option');
                     option.value = camara.deviceId;
@@ -686,22 +702,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 alert("No se pudieron listar las cámaras disponibles.");
             }
         }
-        
+
         // Función para iniciar la cámara seleccionada
         async function iniciarCamara(deviceId) {
             try {
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                 }
-        
+
                 const constraints = {
                     video: {
-                        deviceId: deviceId ? { exact: deviceId } : undefined,
-                        width: { ideal: 320 },
-                        height: { ideal: 240 }
+                        deviceId: deviceId ? {
+                            exact: deviceId
+                        } : undefined,
+                        width: {
+                            ideal: 320
+                        },
+                        height: {
+                            ideal: 240
+                        }
                     }
                 };
-        
+
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
                 video.play();
@@ -710,7 +732,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 alert("No se pudo acceder a la cámara seleccionada.");
             }
         }
-        
+
         // Evento para cambiar de cámara
         selectorCamara.addEventListener('change', async () => {
             const deviceId = selectorCamara.value;
@@ -718,45 +740,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 await iniciarCamara(deviceId);
             }
         });
-        
+
         // Capturar la foto
         capturarBtn.addEventListener('click', function() {
             // Dibujar la imagen actual del video en el canvas
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            
+
             // Convertir la imagen del canvas a una URL en formato base64
             const fotoData = canvas.toDataURL('image/png');
-            
+
             // Agregar la foto al array
             fotosArray.push(fotoData);
-            
+
             // Actualizar la galería
             actualizarGaleria();
         });
-        
+
         // Función para verificar si todas las preguntas están completas y la foto ha sido capturada
         function verificarCompletitud() {
             var estadoAuditoria = document.getElementById('estadoAuditoria');
-            
+
             // Verificar preguntas de exterior
             var radiosExterior = document.querySelectorAll('input[type="radio"][name^="limpieza_exterior_1_1_"]:checked');
             var exteriorCompleto = radiosExterior.length >= <?php echo count($questions_exterior); ?>;
-            
+
             // Verificar preguntas de interior
             var radiosInterior = document.querySelectorAll('input[type="radio"][name^="limpieza_interior_1_2_"]:checked');
             var interiorCompleto = radiosInterior.length >= <?php echo count($questions_interior); ?>;
-            
+
             // Verificar preguntas de equipo
             var radiosEquipo = document.querySelectorAll('input[type="radio"][name^="limpieza_equipo_1_3_"]:checked');
             var equipoCompleto = radiosEquipo.length >= <?php echo count($questions_equipment); ?>;
-            
+
             // Verificar preguntas de insumos
             var radiosInsumos = document.querySelectorAll('input[type="radio"][name^="limpieza_insumos_1_4_"]:checked');
             var insumosCompleto = radiosInsumos.length >= <?php echo count($questions_insumos); ?>;
-            
+
             // Verificar que haya al menos una foto capturada
             var fotosCapturadas = fotosArray.length > 0;
-            
+
             // Habilitar el botón solo si todo está completo
             if (exteriorCompleto && interiorCompleto && equipoCompleto && insumosCompleto && fotosCapturadas) {
                 guardarBtn.disabled = false;
@@ -764,7 +786,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             } else {
                 guardarBtn.disabled = true;
                 estadoAuditoria.style.display = 'block';
-                
+
                 if (!fotosCapturadas) {
                     estadoAuditoria.textContent = "Esta Auditoría requiere registro fotográfico...\nAuditoría Incompleta";
                 } else {
@@ -780,26 +802,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 radioInput.checked = true; // Marca el radio button como seleccionado
                 var groupName = radioInput.name;
                 var options = document.querySelectorAll('.radio-option input[name="' + groupName + '"]');
-    
+
                 // Reiniciar el fondo de todas las opciones
                 options.forEach(function(option) {
                     option.parentElement.style.backgroundColor = ''; // Restablece el fondo de las opciones no seleccionadas
                 });
-    
+
                 // Cambiar el fondo de la opción seleccionada
                 clickedDiv.style.backgroundColor = '#51B8AC'; // El color que desees
             }
             calcularPromedios(); // Llama a la función para calcular los promedios
             verificarCompletitud(); // Agregar esta línea
         }
-    
+
         // Función para calcular los promedios
         function calcularPromedios() {
             // Calcular promedio de Limpieza en Exterior
             var totalExterior = 0;
             var countExterior = 0;
             var radiosExterior = document.querySelectorAll('input[type="radio"][name^="limpieza_exterior_1_1_"]:checked');
-        
+
             radiosExterior.forEach(function(radio) {
                 var value = radio.value;
                 if (value !== "N/A") {
@@ -807,16 +829,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     countExterior++;
                 }
             });
-        
+
             var promedioExterior = countExterior > 0 ? (totalExterior / countExterior).toFixed(2) : 0.00;
             document.getElementById('promedioExterior').textContent = promedioExterior;
             document.getElementById('promedio_exterior').value = promedioExterior; // Actualizar campo oculto
-        
+
             // Calcular promedio de Limpieza de Interiores
             var totalInterior = 0;
             var countInterior = 0;
             var radiosInterior = document.querySelectorAll('input[type="radio"][name^="limpieza_interior_1_2_"]:checked');
-        
+
             radiosInterior.forEach(function(radio) {
                 var value = radio.value;
                 if (value !== "N/A") {
@@ -824,16 +846,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     countInterior++;
                 }
             });
-        
+
             var promedioInterior = countInterior > 0 ? (totalInterior / countInterior).toFixed(2) : 0.00;
             document.getElementById('promedioInterior').textContent = promedioInterior;
             document.getElementById('promedio_interior').value = promedioInterior; // Actualizar campo oculto
-        
+
             // Calcular promedio de Limpieza de Equipos y Utensilios
             var totalEquipo = 0;
             var countEquipo = 0;
             var radiosEquipo = document.querySelectorAll('input[type="radio"][name^="limpieza_equipo_1_3_"]:checked');
-        
+
             radiosEquipo.forEach(function(radio) {
                 var value = radio.value;
                 if (value !== "N/A") {
@@ -841,16 +863,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     countEquipo++;
                 }
             });
-        
+
             var promedioEquipo = countEquipo > 0 ? (totalEquipo / countEquipo).toFixed(2) : 0.00;
             document.getElementById('promedioEquipo').textContent = promedioEquipo;
             document.getElementById('promedio_equipo').value = promedioEquipo; // Actualizar campo oculto
-            
+
             // Calcular promedio de Limpieza de Insumos
             var totalInsumos = 0;
             var countInsumos = 0;
             var radiosInsumos = document.querySelectorAll('input[type="radio"][name^="limpieza_insumos_1_4_"]:checked');
-        
+
             radiosInsumos.forEach(function(radio) {
                 var value = radio.value;
                 if (value !== "N/A") {
@@ -858,11 +880,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     countInsumos++;
                 }
             });
-        
+
             var promedioInsumos = countInsumos > 0 ? (totalInsumos / countInsumos).toFixed(2) : 0.00;
             document.getElementById('promedioInsumos').textContent = promedioInsumos;
             document.getElementById('promedio_insumos').value = promedioInsumos; // Actualizar campo oculto
-        
+
             // Calcular promedio general
             var totalGeneral = totalExterior + totalInterior + totalEquipo + totalInsumos;
             var countGeneral = countExterior + countInterior + countEquipo + countInsumos;
@@ -870,12 +892,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             document.getElementById('promedioGeneral').textContent = promedioGeneral;
             document.getElementById('promedio_general').value = promedioGeneral; // Actualizar campo oculto
         }
-    
+
         // Añadir event listeners a los botones de radio para calcular los promedios cuando cambien
         document.querySelectorAll('input[type="radio"][name^="limpieza_exterior_1_1_"], input[type="radio"][name^="limpieza_interior_1_2_"], input[type="radio"][name^="limpieza_equipo_1_3_"], input[type="radio"][name^="limpieza_insumos_1_4_"]').forEach(function(radio) {
             radio.addEventListener('change', calcularPromedios);
         });
-        
+
         // Función para validar el formulario antes de enviarlo
         function validarFormulario() {
             // Verificar que haya al menos una foto
@@ -883,13 +905,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 alert("Por favor, capture al menos una foto antes de guardar.");
                 return false;
             }
-            
+
             // Verificar que todos los grupos de botones de radio tengan al menos una opción seleccionada
             var radiosExterior = document.querySelectorAll('input[type="radio"][name^="limpieza_exterior_1_1_"]:checked');
             var radiosInterior = document.querySelectorAll('input[type="radio"][name^="limpieza_interior_1_2_"]:checked');
             var radiosEquipo = document.querySelectorAll('input[type="radio"][name^="limpieza_equipo_1_3_"]:checked');
             var radiosInsumos = document.querySelectorAll('input[type="radio"][name^="limpieza_insumos_1_4_"]:checked');
-        
+
             if (radiosExterior.length < <?php echo count($questions_exterior); ?> ||
                 radiosInterior.length < <?php echo count($questions_interior); ?> ||
                 radiosEquipo.length < <?php echo count($questions_equipment); ?> ||
@@ -897,41 +919,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 alert("Por favor, complete todas las preguntas antes de guardar.");
                 return false;
             }
-        
+
             // Mostrar mensaje de confirmación
             if (!confirm("¿Está seguro que desea guardar los datos? Esta acción no podrá deshacerse...")) {
                 return false;
             }
-        
+
             return true;
         }
-        
+
         // Iniciar la cámara al cargar la página
         (async function() {
             await listarCamaras();
             await iniciarCamara();
-            
+
             // Verificar completitud cuando cambien los radios
             document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
                 radio.addEventListener('change', verificarCompletitud);
             });
-            
+
             // Verificar estado inicial
             verificarCompletitud();
         })();
-        
+
         // Script para manejar el cambio de sucursal y mantener ambos valores (código y nombre)
         document.addEventListener('DOMContentLoaded', function() {
             const codSucursalSelect = document.getElementById('cod_sucursal');
             const sucursalNombreInput = document.getElementById('sucursal_nombre');
-            
+
             // Mapeo de códigos a nombres de sucursales
-            const sucursalesMap = <?php 
-                $map = [];
-                foreach ($sucursales as $s) { $map[$s['codigo']] = $s['nombre']; }
-                echo json_encode($map);
-            ?>;
-            
+            const sucursalesMap = <?php
+                                    $map = [];
+                                    foreach ($sucursales as $s) {
+                                        $map[$s['codigo']] = $s['nombre'];
+                                    }
+                                    echo json_encode($map);
+                                    ?>;
+
             // Actualizar el campo oculto con el nombre de la sucursal cuando cambie la selección
             codSucursalSelect.addEventListener('change', function() {
                 const selectedCode = this.value;
@@ -941,7 +965,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     sucursalNombreInput.value = '';
                 }
             });
-            
+
             // Inicializar el valor al cargar la página
             if (codSucursalSelect.value) {
                 sucursalNombreInput.value = sucursalesMap[codSucursalSelect.value] || '';
@@ -949,4 +973,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         });
     </script>
 </body>
+
 </html>

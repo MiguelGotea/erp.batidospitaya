@@ -2,7 +2,7 @@
 // Al inicio del archivo, verificar autenticación y acceso al módulo
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
 
 // Verificar acceso al módulo 'publico' (o el nombre que corresponda según tus permisos)
 //verificarAccesoModulo('supervision');
@@ -15,10 +15,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21, 49]);
+verificarAccesoCargo([16, 21, 49, 52]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([16, 21, 49, 52]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $sucursal = $_POST['sucursal'];
     $persona = $_POST['persona'];
     $comentarios = isset($_POST['comentarios']) ? $_POST['comentarios'] : null; // Nuevo campo comentarios
-    
+
     $cod_sucursal = $_POST['cod_sucursal']; // Nuevo campo para el código de sucursal
     $operario_id = isset($_POST['operario_id']) && !empty($_POST['operario_id']) ? (int)$_POST['operario_id'] : null;
 
@@ -107,31 +107,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Ejecutar la consulta
     if ($stmt->execute()) {
         $auditoria_id = $conn->lastInsertId();
-        
+
         // Procesar las fotos si existen
         if (isset($_POST['fotos']) && !empty($_POST['fotos'])) {
             // Decodificar el JSON de fotos
             $fotos = json_decode($_POST['fotos'], true);
-            
+
             if (is_array($fotos)) {
                 foreach ($fotos as $fotoData) {
                     if (!empty($fotoData)) {
                         // Eliminar el prefijo "data:image/png;base64," de la cadena base64
                         $fotoData = str_replace('data:image/png;base64,', '', $fotoData);
                         $fotoData = str_replace(' ', '+', $fotoData);
-                        
+
                         // Decodificar la cadena base64
                         $fotoDecodificada = base64_decode($fotoData);
-                        
+
                         // Generar un nombre único para la imagen
                         $nombreArchivo = uniqid() . '.png';
                         $rutaArchivo = 'fotos/' . $nombreArchivo;
-                        
+
                         // Verificar si la carpeta fotos existe, si no, crearla
                         if (!file_exists('fotos')) {
                             mkdir('fotos', 0777, true);
                         }
-                        
+
                         // Guardar la imagen en la carpeta "fotos"
                         if (file_put_contents($rutaArchivo, $fotoDecodificada)) {
                             // Insertar la ruta de la foto en la base de datos
@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             }
         }
-        
+
         // Redirigir a la página de inicio después de agregar el registro
         header("Location: logout.php");
         exit();
@@ -157,6 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -174,7 +175,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             align-content: center;
             align-items: center;
             justify-content: center;
-            font-size: clamp(11px, 2vw, 16px) !important; /* Tamaño mínimo de 11px, se adapta al viewport */
+            font-size: clamp(11px, 2vw, 16px) !important;
+            /* Tamaño mínimo de 11px, se adapta al viewport */
         }
 
         body {
@@ -186,10 +188,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             padding: 0;
         }
 
-        header, form {
+        header,
+        form {
             margin-top: 10px;
             width: 100%;
-            max-width: 800px; /* Ajusta este valor según tus necesidades */
+            max-width: 800px;
+            /* Ajusta este valor según tus necesidades */
         }
 
         .radio-option {
@@ -209,7 +213,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             background-color: #51B8AC;
         }
 
-        select, input {
+        select,
+        input {
             padding: 3px;
             border-radius: 5px;
             border: 1px solid #ccc;
@@ -235,12 +240,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .radio-option label {
             margin: 0;
         }
-        
+
         #guardarBtn:disabled {
             background-color: #ccc;
             cursor: not-allowed;
         }
-        
+
         /* Nuevos estilos para la galería de fotos */
         .gallery-container {
             display: flex;
@@ -249,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             margin-top: 10px;
             justify-content: center;
         }
-        
+
         .photo-thumbnail {
             position: relative;
             width: 100px;
@@ -258,13 +263,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-radius: 5px;
             overflow: hidden;
         }
-        
+
         .photo-thumbnail img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
+
         .remove-photo {
             position: absolute;
             top: 2px;
@@ -282,6 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     </style>
 </head>
+
 <body>
     <!-- Header con logo -->
     <header>
@@ -289,26 +295,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <img src="/core/assets/img/Logo.svg" alt="Logo de la empresa" class="logo" style="max-width:75px;">
         </a>
     </header>
-    
+
     <a href="logout.php" style="display:none;">Cerrar Sesión</a>
-    
+
     <h1>AUDITORÍA DE EVALUACIÓN DE SERVICIOS</h1>
-        
+
     <form action="agregarservicio.php" method="POST" onsubmit="return validarFormulario()">
         <?php
-            // Crear un objeto DateTime a partir de la fecha actual
-            $fecha = new DateTime();
-            // Formatear la fecha a 'd-M-y' (ejemplo: '17-mar-25')
-            $fechaFormateada = $fecha->format('d-M-y');
+        // Crear un objeto DateTime a partir de la fecha actual
+        $fecha = new DateTime();
+        // Formatear la fecha a 'd-M-y' (ejemplo: '17-mar-25')
+        $fechaFormateada = $fecha->format('d-M-y');
         ?>
-        
+
         <div style="display:none;">
             <label for="fecha">Fecha:</label>
             <input type="date" name="fecha" value="<?php echo date('Y-m-d'); ?>" readonly><br><br>
         </div>
-        
+
         <p><b>Fecha:</b> <?php echo $fechaFormateada; ?></p>
-    
+
         <label for="cod_sucursal">Sucursal:</label>
         <select name="cod_sucursal" id="cod_sucursal" required>
             <option value="" disabled selected>Seleccione una sucursal</option>
@@ -318,24 +324,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt_sucursales = $conn->prepare($query_sucursales);
             $stmt_sucursales->execute();
             $sucursales = $stmt_sucursales->fetchAll(PDO::FETCH_ASSOC);
-            
+
             foreach ($sucursales as $sucursal) {
                 echo '<option value="' . $sucursal['codigo'] . '">' . htmlspecialchars($sucursal['nombre']) . '</option>';
             }
             ?>
         </select>
         <input type="hidden" name="sucursal" id="sucursal_nombre"><br><br>
-    
+
         <label for="persona">Verificador(a):</label>
         <input type="text" name="persona" id="persona_input" placeholder="Buscar por nombre o código..." required>
         <input type="hidden" name="operario_id" id="operario_id">
         <br>
-        
+
         <div style="background:#F6F6F6; text-align:center;">
-            <strong><h3>Rango de Calificación:</h3></strong>
+            <strong>
+                <h3>Rango de Calificación:</h3>
+            </strong>
             <p>1 - Deficiente | 5 - Excelente | N/A - No Aplica</p>
         </div>
-        
+
         <!-- EVALUACIÓN DE SERVICIOS -->
         <div style="background:#51B8AC;">
             <h3>EVALUACIÓN DE SERVICIOS</h3>
@@ -379,16 +387,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <div style="display:none;">
             <div id="promedioContainer" style="background:#F6F6F6; padding:3px; margin-top:3px; margin-bottom:3px;">
-                <strong><h3>Promedio de Calificación:</h3></strong>
+                <strong>
+                    <h3>Promedio de Calificación:</h3>
+                </strong>
                 <p id="promedio">0.00</p>
             </div>
         </div>
-        
+
         <!-- En la parte del formulario HTML, agrega esto antes de la sección de fotos: -->
         <label for="comentarios">Comentarios (opcional):</label><br>
-        <textarea name="comentarios" id="comentarios" rows="4" cols="50" 
-                  style="width: 80%; max-width: 500px; text-align: left; text-align-last: left; resize: vertical; padding: 8px;"></textarea><br><br>
-        
+        <textarea name="comentarios" id="comentarios" rows="4" cols="50"
+            style="width: 80%; max-width: 500px; text-align: left; text-align-last: left; resize: vertical; padding: 8px;"></textarea><br><br>
+
         <!-- Sección de fotos modificada -->
         <label>Capturar fotos (opcional):</label>
         <div>
@@ -404,23 +414,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <br>
         <!-- Elemento para mostrar la foto capturada -->
         <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
-        
+
         <!-- Galería de fotos capturadas -->
         <div id="gallery" class="gallery-container"></div>
-        
+
         <!-- Input oculto para enviar las fotos capturadas como JSON -->
         <input type="hidden" id="fotos" name="fotos" value="[]">
-    
+
         <!-- Agrega esto dentro del formulario, antes del botón de Guardar -->
         <input type="hidden" id="promedio_calificacion" name="promedio_calificacion" value="0.00">
-    
+
         <div style="margin-bottom:13px;">
             <div id="estadoAuditoria" style="color: red; font-weight: bold; margin-bottom: 10px; display: none;">Auditoría Incompleta</div>
             <button type="submit" id="guardarBtn" disabled>Guardar</button>
             <a href="index.php">Cancelar</a>
         </div>
     </form>
-    
+
     <script>
         // Función para cambiar el color de fondo de la opción seleccionada
         function highlightSelection(clickedDiv) {
@@ -429,24 +439,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 radioInput.checked = true;
                 var groupName = radioInput.name;
                 var options = document.querySelectorAll('.radio-option input[name="' + groupName + '"]');
-    
+
                 options.forEach(function(option) {
                     option.parentElement.style.backgroundColor = '';
                 });
-    
+
                 clickedDiv.style.backgroundColor = '#51B8AC';
             }
             calcularPromedio();
             verificarCompletitud();
         }
-    
+
         // Función para calcular el promedio
         function calcularPromedio() {
             var total = 0;
             var count = 0;
-        
+
             var radios = document.querySelectorAll('input[type="radio"][name^="evaluacion_servicio_4_"]:checked');
-        
+
             radios.forEach(function(radio) {
                 var value = radio.value;
                 if (value !== "N/A") {
@@ -454,19 +464,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     count++;
                 }
             });
-        
+
             var promedio = count > 0 ? (total / count).toFixed(2) : 0.00;
             document.getElementById('promedio').textContent = promedio;
-        
+
             document.getElementById('promedio_calificacion').value = promedio;
         }
-    
+
         // Función para verificar si todas las preguntas están completas
         function verificarCompletitud() {
             var radios = document.querySelectorAll('input[type="radio"][name^="evaluacion_servicio_4_"]');
             var grupos = {};
             var estadoAuditoria = document.getElementById('estadoAuditoria');
-        
+
             // Verificar si todas las preguntas están completas
             radios.forEach(function(radio) {
                 if (!grupos[radio.name]) {
@@ -476,11 +486,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     grupos[radio.name] = true;
                 }
             });
-        
+
             var todasCompletas = Object.values(grupos).every(function(completo) {
                 return completo;
             });
-        
+
             // Habilitar el botón de Guardar solo si todas las preguntas están completas
             if (todasCompletas) {
                 document.getElementById('guardarBtn').disabled = false;
@@ -490,7 +500,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 estadoAuditoria.style.display = 'block';
             }
         }
-    
+
         // Añadir event listeners a los botones de radio para calcular el promedio y verificar la completitud cuando cambien
         document.querySelectorAll('input[type="radio"][name^="evaluacion_servicio_4_"]').forEach(function(radio) {
             radio.addEventListener('change', function() {
@@ -498,7 +508,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 verificarCompletitud();
             });
         });
-        
+
         // Elementos del DOM para fotos
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -506,26 +516,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         const selectorCamara = document.getElementById('selectorCamara');
         const gallery = document.getElementById('gallery');
         const fotosInput = document.getElementById('fotos');
-        
+
         let fotosArray = []; // Array para almacenar las fotos capturadas
         let stream; // Variable para almacenar el stream de la cámara
-    
+
         // Función para actualizar el input oculto con las fotos
         function actualizarFotosInput() {
             fotosInput.value = JSON.stringify(fotosArray);
         }
-        
+
         // Función para mostrar las fotos en la galería
         function actualizarGaleria() {
             gallery.innerHTML = '';
-            
+
             fotosArray.forEach((foto, index) => {
                 const photoContainer = document.createElement('div');
                 photoContainer.className = 'photo-thumbnail';
-                
+
                 const img = document.createElement('img');
                 img.src = foto;
-                
+
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-photo';
                 removeBtn.innerHTML = '×';
@@ -533,23 +543,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     e.preventDefault();
                     eliminarFoto(index);
                 };
-                
+
                 photoContainer.appendChild(img);
                 photoContainer.appendChild(removeBtn);
                 gallery.appendChild(photoContainer);
             });
-            
+
             actualizarFotosInput();
         }
-    
+
         // Función para listar las cámaras disponibles
         async function listarCamaras() {
             try {
                 const dispositivos = await navigator.mediaDevices.enumerateDevices();
                 const camaras = dispositivos.filter(dispositivo => dispositivo.kind === 'videoinput');
-                
+
                 selectorCamara.innerHTML = '<option value="">Seleccionar cámara...</option>';
-                
+
                 camaras.forEach((camara, index) => {
                     const option = document.createElement('option');
                     option.value = camara.deviceId;
@@ -561,22 +571,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 alert("No se pudieron listar las cámaras disponibles.");
             }
         }
-    
+
         // Función para iniciar la cámara seleccionada
         async function iniciarCamara(deviceId) {
             try {
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                 }
-                
+
                 const constraints = {
                     video: {
-                        deviceId: deviceId ? { exact: deviceId } : undefined,
-                        width: { ideal: 320 },
-                        height: { ideal: 240 }
+                        deviceId: deviceId ? {
+                            exact: deviceId
+                        } : undefined,
+                        width: {
+                            ideal: 320
+                        },
+                        height: {
+                            ideal: 240
+                        }
                     }
                 };
-                
+
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
                 video.play();
@@ -585,7 +601,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 alert("No se pudo acceder a la cámara seleccionada.");
             }
         }
-    
+
         // Evento para cambiar de cámara
         selectorCamara.addEventListener('change', async () => {
             const deviceId = selectorCamara.value;
@@ -593,28 +609,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 await iniciarCamara(deviceId);
             }
         });
-        
+
         // Función para eliminar una foto
         function eliminarFoto(index) {
             fotosArray.splice(index, 1);
             actualizarGaleria();
         }
-        
+
         // Capturar la foto (solo un event listener)
         capturarBtn.addEventListener('click', function() {
             // Dibujar la imagen actual del video en el canvas
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            
+
             // Convertir la imagen del canvas a una URL en formato base64
             const fotoData = canvas.toDataURL('image/png');
-            
+
             // Agregar la foto al array
             fotosArray.push(fotoData);
-            
+
             // Actualizar la galería
             actualizarGaleria();
         });
-    
+
         // Función para validar el formulario antes de enviarlo
         function validarFormulario() {
             var radios = document.querySelectorAll('input[type="radio"][name^="evaluacion_servicio_4_"]:checked');
@@ -629,13 +645,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             return true;
         }
-    
+
         // Iniciar la cámara por defecto al cargar la página
         (async function() {
             await listarCamaras();
             await iniciarCamara();
         })();
-        
+
         <?php
         // Obtener operarios para autocompletar
         $operarios_autocomplete = [];
@@ -666,7 +682,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $operarios_json = json_encode($operarios_autocomplete);
         ?>
         const operarios = <?php echo $operarios_json; ?>;
-        
+
         // Preparar datos para autocomplete
         const operariosAutocomplete = operarios.map(operario => ({
             label: operario.label_completo,
@@ -678,7 +694,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $('#persona_input').autocomplete({
                 source: function(request, response) {
                     const term = request.term.toLowerCase();
-                    const filtered = operariosAutocomplete.filter(op => 
+                    const filtered = operariosAutocomplete.filter(op =>
                         op.label.toLowerCase().includes(term)
                     );
                     response(filtered.slice(0, 15)); // Limitar a 15 resultados
@@ -703,17 +719,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Al cargar la página, verificar el estado inicial
         document.addEventListener('DOMContentLoaded', function() {
             verificarCompletitud();
-            
+
             const codSucursalSelect = document.getElementById('cod_sucursal');
             const sucursalNombreInput = document.getElementById('sucursal_nombre');
-            
+
             // Mapeo de códigos a nombres de sucursales
-            const sucursalesMap = <?php 
-                $map = [];
-                foreach ($sucursales as $s) { $map[$s['codigo']] = $s['nombre']; }
-                echo json_encode($map);
-            ?>;
-            
+            const sucursalesMap = <?php
+                                    $map = [];
+                                    foreach ($sucursales as $s) {
+                                        $map[$s['codigo']] = $s['nombre'];
+                                    }
+                                    echo json_encode($map);
+                                    ?>;
+
             // Actualizar el campo oculto con el nombre de la sucursal cuando cambie la selección
             codSucursalSelect.addEventListener('change', function() {
                 const selectedCode = this.value;
@@ -723,7 +741,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     sucursalNombreInput.value = '';
                 }
             });
-            
+
             // Inicializar el valor al cargar la página
             if (codSucursalSelect.value) {
                 sucursalNombreInput.value = sucursalesMap[codSucursalSelect.value] || '';
@@ -731,4 +749,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         });
     </script>
 </body>
+
 </html>

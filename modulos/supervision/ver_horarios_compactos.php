@@ -16,7 +16,7 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso
-if (!verificarAccesoCargo([21, 11, 5, 43, 27, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33])) {
+if (!verificarAccesoCargo([21, 11, 5, 43, 27, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 52])) {
     header('Location: ../index.php');
     exit();
 }
