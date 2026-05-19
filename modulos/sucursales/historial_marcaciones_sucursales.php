@@ -3,17 +3,19 @@
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
-require_once '../../core/auth/auth.php';
+require_once '../../auth.php';
+require_once '../../core/helpers/funciones.php';
+require_once '../../core/database/conexion.php';
 
 //******************************Estándar para header******************************
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 27, 13, 49]);
+verificarAccesoCargo([16, 27, 13]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 27, 13, 49])) {
+if (!verificarAccesoCargo([16, 27, 13])) {
     header('Location: ../../../index.php');
     exit();
 }
