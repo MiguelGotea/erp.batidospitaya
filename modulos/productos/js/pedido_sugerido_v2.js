@@ -147,7 +147,7 @@ function calcularPedido() {
 function renderizarResultados(res) {
     // KPIs
     $('#kpiNSemanas').text(res.n_semanas);
-    $('#kpiNProductos').text(res.productos.length);
+    $('#kpiDespachoCongelados').text('—');
 
     const capDisplay = res.capacidad_paquetes !== null && res.capacidad_paquetes !== undefined
         ? Number(res.capacidad_paquetes).toLocaleString('es-NI', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' paq.'
@@ -203,7 +203,13 @@ function renderizarResultados(res) {
             </span>`;
         }
 
-        html += `<tr class="fila-grupo-header"><td colspan="12">${catLabel} (${items.length})${headerInfo}</td></tr>`;
+        const totalsHtml = ` <span class="ms-3 small fw-normal text-white ps-cat-totals" data-cat="${cat}" style="font-size: 0.85em; display: none;">
+            <span class="mx-1">|</span>
+            <b title="Total Stock Pronóst. D-1 (solo positivos)">Stock D-1 (+):</b> <span class="cat-total-stock-d1">—</span> <span class="mx-1">|</span>
+            <b title="Total Despacho Pron. (paq)">Despacho Pron. (paq):</b> <span class="cat-total-despacho-pron">—</span>
+        </span>`;
+
+        html += `<tr class="fila-grupo-header" data-cat="${cat}"><td colspan="12">${catLabel} (${items.length})${headerInfo}${totalsHtml}</td></tr>`;
 
         items.forEach(p => {
             totalFilas++;
@@ -347,6 +353,11 @@ async function calcularPronosticoMasivo() {
     $('.pron-d1').html('<span class="text-muted small">…</span>');
     $('.pron-desp').html('<span class="text-muted small">…</span>');
 
+    // Ocultar y vaciar totales de categorías
+    $('.ps-cat-totals').hide();
+    $('.cat-total-stock-d1, .cat-total-despacho-pron').text('—');
+    $('#kpiDespachoCongelados').text('—');
+
     try {
         const fd = new FormData();
         fd.append('semana_desde',  semDesde);
@@ -386,6 +397,12 @@ async function calcularPronosticoMasivo() {
 
         const stocks = resp.stocks || {};
 
+        // Inicializar acumuladores de totales por categoría
+        const catTotals = {};
+        [...CAT_ORDER, '_sin_cat'].forEach(c => {
+            catTotals[c] = { stockD1: 0, despacho: 0, count: 0 };
+        });
+
         // Calcular paquetes y despacho sugerido en el cliente y actualizar DOM
         productos.forEach(p => {
             const key  = String(p.id_pp);
@@ -409,7 +426,37 @@ async function calcularPronosticoMasivo() {
 
             const cls = despSug > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
             $dep.html(`<span class="${cls}">${despSug}</span>`);
+
+            // Acumular totales
+            const cat = p.categoria_insumo || '_sin_cat';
+            if (!catTotals[cat]) {
+                catTotals[cat] = { stockD1: 0, despacho: 0, count: 0 };
+            }
+            if (stockPaq > 0) {
+                catTotals[cat].stockD1 += stockPaq;
+            }
+            catTotals[cat].despacho += despSug;
+            catTotals[cat].count++;
         });
+
+        // Actualizar los subencabezados con los totales calculados
+        Object.keys(catTotals).forEach(cat => {
+            const totals = catTotals[cat];
+            const $totalsSpan = $(`.ps-cat-totals[data-cat="${cat}"]`);
+            if (totals.count > 0) {
+                const stockD1Str = totals.stockD1.toLocaleString('es-NI', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+                const despStr = totals.despacho.toLocaleString('es-NI', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                $totalsSpan.find('.cat-total-stock-d1').text(stockD1Str + ' paq');
+                $totalsSpan.find('.cat-total-despacho-pron').text(despStr + ' paq');
+                $totalsSpan.show();
+            } else {
+                $totalsSpan.hide();
+            }
+        });
+
+        // Actualizar el KPI card de Despacho Pronóstico Congelados (Categoría B)
+        const totalDespachoB = catTotals['B'] ? catTotals['B'].despacho : 0;
+        $('#kpiDespachoCongelados').text(totalDespachoB.toLocaleString('es-NI', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' paq');
 
     } catch (err) {
         console.error('Error calculando pronóstico masivo:', err);

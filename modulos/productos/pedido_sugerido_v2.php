@@ -184,9 +184,9 @@ try {
                         </div>
                         <div class="col-6 col-lg-3">
                             <div class="ps-kpi-card">
-                                <div class="ps-kpi-icon" style="color:#3b82f6"><i class="fas fa-boxes"></i></div>
-                                <div class="ps-kpi-label">Productos</div>
-                                <div class="ps-kpi-valor" id="kpiNProductos">—</div>
+                                <div class="ps-kpi-icon" style="color:#3b82f6"><i class="bi bi-snow2"></i></div>
+                                <div class="ps-kpi-label">Despacho Pron. Congelados</div>
+                                <div class="ps-kpi-valor" id="kpiDespachoCongelados">—</div>
                             </div>
                         </div>
                         <div class="col-6 col-lg-3">
