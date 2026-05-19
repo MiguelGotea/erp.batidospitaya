@@ -1016,9 +1016,10 @@ function abrirModalFoto(btn) {
 
     // Rellenar encabezado del modal
     const tipoLabel = tipo === 'entrada' ? 'Entrada' : 'Salida';
-    $('#fotoModalTitulo').text(`Foto ${tipoLabel} DVR`);
-    $('#fotoModalSubtitulo').text(`${nombre}  ·  ${fecha}  ·  ${titulo}`);
-    $('#fotoModalMeta').empty();
+    $('#fotoModalTitulo').text(nombre);
+    const horaFormateada = hora ? `  ·  ${hora.substring(0, 5)}` : '';
+    $('#fotoModalSubtitulo').text(`Foto ${tipoLabel} DVR  ·  ${fecha}${horaFormateada}`);
+    $('#fotoModalMeta').css('margin-top', '0').empty();
     actualizarLabelOffset();   // mostrar "hora exacta"
     // Resetear controles de offset
     const inputOffset = document.getElementById('fotoOffsetInput');
@@ -1129,7 +1130,7 @@ function capturarFotoModal() {
             if (resp.success) {
                 mostrarImagenModal(resp.path);
                 // Actualizar meta info con chips estilo claro
-                $('#fotoModalMeta').html(
+                $('#fotoModalMeta').css('margin-top', '14px').html(
                     `<span style="display:inline-flex;align-items:center;gap:5px;
                                   background:#fff;border:1px solid #dee2e6;
                                   border-radius:20px;padding:4px 12px;
@@ -1192,7 +1193,7 @@ function cerrarModalFoto() {
                 Iniciando captura&hellip;
              </span>`
         );
-        $('#fotoModalMeta').empty();
+        $('#fotoModalMeta').css('margin-top', '0').empty();
     }, 300);
     
     fotoModalActual = { id: null, tipo: null, codSucursal: null, fecha: null, hora: null };

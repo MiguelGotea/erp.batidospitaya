@@ -2146,7 +2146,7 @@ function verificarTardanzaYaRegistrada(
     <!-- ── Modal Visor Foto Marcación DVR (Premium) ── -->
     <div class="modal fade" id="modalFotoMarcacion" tabindex="-1" data-bs-backdrop="false"
          aria-labelledby="fotoModalTituloLabel" aria-hidden="true">
-        <div class="modal-dialog" style="max-width:660px;">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:720px;">
             <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
 
                 <!-- Header premium verde -->
@@ -2157,10 +2157,10 @@ function verificarTardanzaYaRegistrada(
                             <i class="bi bi-camera-fill fs-5"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0" id="fotoModalTituloLabel">
-                                <span id="fotoModalTitulo">Foto DVR &mdash; Marcación</span>
+                            <h5 class="modal-title fw-bold mb-0 text-white" id="fotoModalTituloLabel" style="color: #ffffff !important;">
+                                <span id="fotoModalTitulo" class="text-white" style="color: #ffffff !important;">Foto DVR &mdash; Marcación</span>
                             </h5>
-                            <p class="small mb-0 opacity-75" id="fotoModalSubtitulo"></p>
+                            <p class="small mb-0 opacity-75 text-white-50" id="fotoModalSubtitulo" style="color: rgba(255, 255, 255, 0.75) !important;"></p>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white ms-auto"
@@ -2168,11 +2168,11 @@ function verificarTardanzaYaRegistrada(
                 </div>
 
                 <!-- Body -->
-                <div class="modal-body p-4" style="background:#f8f9fa;">
+                <div class="modal-body p-4 pb-0" style="background:#ffffff;">
 
                     <!-- Contenedor imagen -->
                     <div id="fotoModalContenedor"
-                         style="background:#ffffff; border:1px solid #dee2e6; border-radius:12px;
+                         style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:12px;
                                 min-height:260px; display:flex; align-items:center;
                                 justify-content:center; overflow:hidden;">
                         <span style="color:#adb5bd; font-size:.88rem; text-align:center;">
@@ -2227,11 +2227,11 @@ function verificarTardanzaYaRegistrada(
                     </div>
 
                     <!-- Meta info (KB, timestamp) -->
-                    <div id="fotoModalMeta" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;"></div>
+                    <div id="fotoModalMeta" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
                 </div>
 
                 <!-- Footer -->
-                <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-end">
+                <div class="modal-footer border-0 px-4 pt-2 pb-4 bg-white d-flex justify-content-end">
                     <button type="button" class="btn-modern btn-modern-secondary"
                             data-bs-dismiss="modal" onclick="cerrarModalFoto()">
                         Cerrar
