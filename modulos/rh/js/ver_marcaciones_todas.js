@@ -1051,13 +1051,13 @@ function capturarFotoModal() {
         return;
     }
 
-    // Construir fecha_hora con offset de -30 segundos.
-    // Ej: marca 16:44:32 → captura en 16:44:02
+    // Construir fecha_hora con offset de -60 segundos.
+    // Ej: marca 16:44:32 → captura en 16:43:32
     // hora viene como "HH:MM:SS" desde la BD
     let fechaHora;
     try {
         const dtBase  = new Date(`${fecha}T${hora}`);
-        dtBase.setSeconds(dtBase.getSeconds() - 30);
+        dtBase.setSeconds(dtBase.getSeconds() - 60);
         const pad     = n => String(n).padStart(2, '0');
         const hh      = pad(dtBase.getHours());
         const mm      = pad(dtBase.getMinutes());
