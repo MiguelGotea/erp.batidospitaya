@@ -1021,9 +1021,13 @@ function abrirModalFoto(btn) {
     $('#btnFotoAbrir').attr('href', path || '#').toggle(!!path);
     $('#fotoModalMeta').empty();
     actualizarLabelOffset();   // mostrar "hora exacta"
-    // Resetear input de offset
+    // Resetear controles de offset
     const inputOffset = document.getElementById('fotoOffsetInput');
     if (inputOffset) inputOffset.value = 0;
+    const radioAntes = document.getElementById('dirAntes');
+    if (radioAntes) radioAntes.checked = true;
+    // Ver original oculto hasta tener imagen
+    $('#btnFotoAbrir').hide();
     $('.btn-offset-foto').removeClass('offset-activo');
     $('.btn-offset-foto[data-delta="0"]').addClass('offset-activo');
 
@@ -1056,6 +1060,7 @@ function mostrarImagenModal(path) {
               style="width:100%;max-height:460px;object-fit:contain;display:block;"
               onerror="this.parentElement.innerHTML='<span style=\'color:#dc3545;padding:16px;\'>Error al cargar imagen</span>'">`
     );
+    // Mostrar botón Ver original
     $('#btnFotoAbrir').attr('href', path).show();
 }
 
@@ -1247,11 +1252,14 @@ $(document).on('keydown', function (e) {
 });
 
 /**
- * Lee el input de segundos, actualiza offsetSegundos y recaptura.
+ * Lee el toggle de dirección (Antes/Después) y los segundos del input,
+ * calcula el offset real y captura.
  */
 function aplicarOffsetFoto() {
-    const raw = parseInt(document.getElementById('fotoOffsetInput')?.value ?? '0', 10);
-    offsetSegundos = isNaN(raw) ? 0 : Math.min(3600, Math.max(-3600, raw));
+    const seg     = Math.abs(parseInt(document.getElementById('fotoOffsetInput')?.value ?? '0', 10) || 0);
+    const dirEl   = document.querySelector('input[name="fotoOffsetDir"]:checked');
+    const dir     = dirEl ? parseInt(dirEl.value, 10) : -1;  // -1 = antes, 1 = después
+    offsetSegundos = dir * Math.min(3600, seg);
     actualizarLabelOffset();
     capturarFotoModal();
 }

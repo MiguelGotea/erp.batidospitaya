@@ -2143,15 +2143,15 @@ function verificarTardanzaYaRegistrada(
 
     <!-- ── Modal Visor Foto Marcación DVR (Premium) ── -->
     <div class="modal fade" id="modalFotoMarcacion" tabindex="-1" data-bs-backdrop="false"
-        aria-labelledby="fotoModalTituloLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+         aria-labelledby="fotoModalTituloLabel" aria-hidden="true">
+        <div class="modal-dialog" style="max-width:660px;">
             <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
 
                 <!-- Header premium verde -->
                 <div class="modal-header border-0 py-3 px-4" style="background:#0E544C; color:#fff;">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
-                            style="width:40px; height:40px; flex-shrink:0;">
+                             style="width:40px; height:40px; flex-shrink:0;">
                             <i class="bi bi-camera-fill fs-5"></i>
                         </div>
                         <div>
@@ -2161,49 +2161,65 @@ function verificarTardanzaYaRegistrada(
                             <p class="small mb-0 opacity-75" id="fotoModalSubtitulo"></p>
                         </div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"
-                        onclick="cerrarModalFoto()" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-close-white ms-auto"
+                            data-bs-dismiss="modal" onclick="cerrarModalFoto()" aria-label="Cerrar"></button>
                 </div>
 
                 <!-- Body -->
                 <div class="modal-body p-4" style="background:#f8f9fa;">
 
                     <!-- Contenedor imagen -->
-                    <div id="fotoModalContenedor" style="background:#ffffff; border:1px solid #dee2e6; border-radius:12px;
-                                min-height:240px; display:flex; align-items:center;
+                    <div id="fotoModalContenedor"
+                         style="background:#ffffff; border:1px solid #dee2e6; border-radius:12px;
+                                min-height:260px; display:flex; align-items:center;
                                 justify-content:center; overflow:hidden;">
-                        <span style="color:#adb5bd; font-size:.88rem;">
-                            <i class="bi bi-camera"
-                                style="font-size:2rem; display:block; text-align:center; margin-bottom:8px; opacity:.4;"></i>
+                        <span style="color:#adb5bd; font-size:.88rem; text-align:center;">
+                            <i class="bi bi-camera" style="font-size:2.2rem; display:block; margin-bottom:8px; opacity:.35;"></i>
                             Iniciando captura&hellip;
                         </span>
                     </div>
 
-                    <!-- Controles de ajuste de tiempo -->
+                    <!-- Controles de tiempo -->
                     <div id="fotoOffsetControls" style="margin-top:16px;">
-                        <div class="text-center mb-2" style="font-size:.77rem; color:#6c757d;">
+
+                        <!-- Label estado actual -->
+                        <div class="text-center mb-3" style="font-size:.8rem; color:#6c757d;">
                             <i class="bi bi-clock-history" style="color:#0E544C;"></i>
                             &nbsp;Capturando en:&nbsp;<span id="fotoOffsetLabel"><strong>hora exacta</strong></span>
                         </div>
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                            <div class="input-group" style="max-width:220px;">
-                                <span class="input-group-text" style="font-size:.8rem; color:#6c757d;">
-                                    <i class="bi bi-clock"></i>
-                                </span>
+
+                        <!-- Controles en una línea -->
+                        <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+
+                            <!-- Toggle Antes / Después -->
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Dirección del offset">
+                                <input type="radio" class="btn-check" name="fotoOffsetDir" id="dirAntes" value="-1" checked>
+                                <label class="btn btn-outline-secondary" for="dirAntes" style="font-size:.8rem; padding:5px 14px;">
+                                    <i class="bi bi-skip-backward-fill"></i> Antes
+                                </label>
+                                <input type="radio" class="btn-check" name="fotoOffsetDir" id="dirDespues" value="1">
+                                <label class="btn btn-outline-secondary" for="dirDespues" style="font-size:.8rem; padding:5px 14px;">
+                                    Después <i class="bi bi-skip-forward-fill"></i>
+                                </label>
+                            </div>
+
+                            <!-- Input segundos -->
+                            <div class="input-group input-group-sm" style="max-width:130px;">
                                 <input type="number" id="fotoOffsetInput"
-                                    class="form-control form-control-sm text-center" value="0" min="-3600" max="3600"
-                                    placeholder="0" title="Segundos a ajustar (negativo = antes, positivo = después)"
-                                    onkeydown="if(event.key==='Enter') aplicarOffsetFoto()"
-                                    style="font-weight:600; font-size:.88rem;">
+                                       class="form-control text-center"
+                                       value="0" min="0" max="3600" placeholder="0"
+                                       onkeydown="if(event.key==='Enter') aplicarOffsetFoto()"
+                                       style="font-weight:700; font-size:.9rem;">
                                 <span class="input-group-text" style="font-size:.8rem; color:#6c757d;">seg</span>
                             </div>
-                            <button type="button" class="btn-modern btn-modern-primary" onclick="aplicarOffsetFoto()"
-                                style="padding:6px 16px; font-size:.8rem;">
-                                <i class="bi bi-camera"></i> Capturar
+
+                            <!-- Botón capturar -->
+                            <button type="button" class="btn-modern btn-modern-primary"
+                                    onclick="aplicarOffsetFoto()"
+                                    style="padding:7px 20px; font-size:.82rem;">
+                                <i class="bi bi-camera-fill"></i> Capturar
                             </button>
-                        </div>
-                        <div class="text-center mt-1" style="font-size:.7rem; color:#adb5bd;">
-                            Negativo = antes de la marca &nbsp;&bull;&nbsp; Positivo = después
+
                         </div>
                     </div>
 
@@ -2212,19 +2228,15 @@ function verificarTardanzaYaRegistrada(
                 </div>
 
                 <!-- Footer -->
-                <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-between">
-                    <div class="d-flex gap-2">
-                        <button id="btnFotoRetomar" type="button" class="btn-modern btn-modern-primary"
-                            onclick="retamarFotoModal()">
-                            <i class="bi bi-arrow-repeat"></i> Retomar foto
-                        </button>
-                        <a id="btnFotoAbrir" href="#" target="_blank" class="btn-modern btn-modern-secondary"
-                            style="text-decoration:none;">
-                            <i class="bi bi-box-arrow-up-right"></i> Ver original
-                        </a>
-                    </div>
-                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal"
-                        onclick="cerrarModalFoto()">
+                <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-between align-items-center">
+                    <a id="btnFotoAbrir" href="#" target="_blank"
+                       class="btn-modern btn-modern-secondary"
+                       style="text-decoration:none; display:none;">
+                        <i class="bi bi-box-arrow-up-right"></i> Ver original
+                    </a>
+                    <div style="flex:1;"></div>
+                    <button type="button" class="btn-modern btn-modern-secondary"
+                            data-bs-dismiss="modal" onclick="cerrarModalFoto()">
                         Cerrar
                     </button>
                 </div>
@@ -2233,6 +2245,7 @@ function verificarTardanzaYaRegistrada(
         </div>
     </div>
     <!-- /Modal Foto Marcación -->
+
 
     <style>
         /* Ajuste de z-index para evitar que el backdrop cubra el modal */
