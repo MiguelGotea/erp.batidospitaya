@@ -1025,16 +1025,6 @@ if ($faltasPendientes < 0)
                 <?= ($ultimaMarcacionHoy && !$ultimaMarcacionHoy['hora_salida']) ? 'Marcar Salida' : 'Marcar Entrada' ?>
             </button>
         </form>
-
-        <!-- Botón de test DVR (solo para diagnóstico, eliminar cuando no se necesite) -->
-        <div style="margin-top:8px;text-align:right;">
-            <button id="btnTestDVR" onclick="testCapturaDVR()" title="Test captura DVR silenciosa"
-                style="font-size:10px;padding:3px 8px;background:#e9ecef;border:1px solid #ccc;
-                       border-radius:3px;cursor:pointer;color:#666;opacity:0.7;"
-                type="button">
-                📷 Test DVR
-            </button>
-        </div>
         
         <!--Información de usuario y sucursal del usuario debajo del modal <?php if (isset($_SESSION['usuario_id'])): ?>
         <div class="info-operario">
@@ -1420,64 +1410,12 @@ if ($faltasPendientes < 0)
 
         // Disparar captura automática cuando hay marcación pendiente
         if (_dvrPendiente && _dvrPendiente.id_marcacion > 0) {
-            // Disparar inmediatamente (sin esperar a DOMContentLoaded)
             capturarDVRSilencioso(
                 _dvrPendiente.id_marcacion,
                 _dvrPendiente.tipo,
                 _dvrPendiente.cod_sucursal
             );
         }
-
-        /**
-         * Función de test: simula una captura de entrada para la sucursal actual.
-         * Usada por el botón #btnTestDVR. No espera resultado visible.
-         */
-        window.testCapturaDVR = function () {
-            var btn = document.getElementById('btnTestDVR');
-            if (btn) {
-                btn.textContent = '⏳ Enviando...';
-                btn.disabled = true;
-            }
-
-            // Obtener la última marcación del día (si hay) para usar su ID
-            // Si no hay, usamos id=0 para que el backend detecte el error silenciosamente
-            var idTest      = <?= json_encode($ultimaMarcacionHoy ? (int)$ultimaMarcacionHoy['id'] : 0) ?>;
-            var tipoTest    = 'entrada';
-            var sucTest     = <?= json_encode((int)$sucursalUsuario) ?>;
-
-            fetch('/modulos/sucursales/ajax/dvr_capturar_marcacion.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id_marcacion: idTest > 0 ? idTest : 1,  // fallback a 1 para test
-                    tipo:         tipoTest,
-                    cod_sucursal: sucTest
-                }),
-                keepalive: true
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (btn) {
-                    if (data.success) {
-                        btn.textContent = '✅ OK (' + (data.size_kb || '?') + ' KB)';
-                        btn.style.color = '#28a745';
-                        btn.style.borderColor = '#28a745';
-                    } else {
-                        btn.textContent = '❌ ' + (data.message || 'Error').substring(0, 30);
-                        btn.style.color = '#dc3545';
-                        btn.style.borderColor = '#dc3545';
-                    }
-                    btn.disabled = false;
-                }
-            })
-            .catch(function (e) {
-                if (btn) {
-                    btn.textContent = '❌ Error de red';
-                    btn.style.color = '#dc3545';
-                    btn.disabled = false;
-                }
-            });
-        };
     })();
     </script>
     

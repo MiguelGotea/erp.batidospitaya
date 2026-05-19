@@ -8,23 +8,22 @@
  *
  * ARQUITECTURA:
  *   marcacion.php (JS) → este endpoint → snapshot_server (VPS:8765/snapshot) → DVR via túnel SSH
- *   Intento 1: HTTP (ISAPI / en vivo) vía puerto_http_vps
- *   Intento 2 (fallback): RTSP playback vía snapshot-hora
+ *   Solo intento via HTTP (ISAPI Hikvision — imagen en vivo).
+ *   Si falla: no guarda nada, devuelve success=false silenciosamente.
  *
  * Guarda en: modulos/rh/uploads/marcaciones/marcacion_{id_marcacion}_{tipo}.jpg
- * Mismo naming que marcacion_capturar_foto_hora.php para compatibilidad con ver_marcaciones_todas_nuevo.
+ * Mismo naming que marcacion_capturar_foto_hora.php (compatible con ver_marcaciones_todas_nuevo).
  *
- * SILENCIOSO: siempre devuelve JSON (nunca lanza excepciones al cliente).
+ * SILENCIOSO: siempre devuelve JSON, nunca muestra errores al usuario final.
  */
 require_once '../../../core/auth/auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
 // ── Constantes del snapshot server ───────────────────────────────────────────
-define('DVR_SNAP_URL',      'http://198.211.97.243:8765/snapshot');
-define('DVR_SNAP_HORA_URL', 'http://198.211.97.243:8765/snapshot-hora');
-define('DVR_API_TOKEN',     'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50');
-define('DVR_VPS_LOCAL_IP',  '127.0.0.1');
+define('DVR_SNAP_URL',     'http://198.211.97.243:8765/snapshot');
+define('DVR_API_TOKEN',    'c5b155ba8f6877a2eefca0183ab18e37fe9a6accde340cf5c88af724822cbf50');
+define('DVR_VPS_LOCAL_IP', '127.0.0.1');
 
 // ── Sesión válida ─────────────────────────────────────────────────────────────
 $usuario = obtenerUsuarioActual();
@@ -36,9 +35,9 @@ if (!$usuario) {
 // ── Leer body JSON ────────────────────────────────────────────────────────────
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
-$idMarcacion     = isset($input['id_marcacion'])  ? intval($input['id_marcacion'])  : 0;
-$tipo            = trim($input['tipo']            ?? '');   // 'entrada' | 'salida'
-$codSucursalRaw  = isset($input['cod_sucursal'])  ? intval($input['cod_sucursal'])  : 0;
+$idMarcacion    = isset($input['id_marcacion'])  ? intval($input['id_marcacion'])  : 0;
+$tipo           = trim($input['tipo']            ?? '');   // 'entrada' | 'salida'
+$codSucursalRaw = isset($input['cod_sucursal'])  ? intval($input['cod_sucursal'])  : 0;
 
 if ($idMarcacion <= 0 || !in_array($tipo, ['entrada', 'salida'], true) || $codSucursalRaw <= 0) {
     echo json_encode(['success' => false, 'message' => 'Parametros invalidos.']);
@@ -73,14 +72,13 @@ if (!$usuario_dvr || !$clave) {
 }
 
 if (!$tunelActivo || !$puertoRtsp) {
-    echo json_encode(['success' => false, 'message' => 'Tunel SSH inactivo o sin puerto RTSP configurado.']);
+    echo json_encode(['success' => false, 'message' => 'Tunel SSH inactivo o sin puerto configurado.']);
     exit;
 }
 
-// ── INTENTO 1: Snapshot en vivo via HTTP (ISAPI) ──────────────────────────────
-$imageData = null;
-
-$payloadVivo = json_encode([
+// ── Snapshot en vivo via HTTP (ISAPI) ────────────────────────────────────────
+// Único intento. Si falla → no se guarda nada.
+$payload = json_encode([
     'usuario'     => $usuario_dvr,
     'clave'       => $clave,
     'puerto_rtsp' => $puertoRtsp,
@@ -93,7 +91,7 @@ $ch = curl_init(DVR_SNAP_URL);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => $payloadVivo,
+    CURLOPT_POSTFIELDS     => $payload,
     CURLOPT_HTTPHEADER     => [
         'Content-Type: application/json',
         'X-WSP-Token: ' . DVR_API_TOKEN,
@@ -102,63 +100,30 @@ curl_setopt_array($ch, [
     CURLOPT_CONNECTTIMEOUT => 5,
 ]);
 
-$resp1       = curl_exec($ch);
-$httpCode1   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlError1  = curl_error($ch);
-$contentType1 = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+$respuesta   = curl_exec($ch);
+$httpCode    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlError   = curl_error($ch);
+$contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 curl_close($ch);
 
-if (!$curlError1 && $httpCode1 === 200 && strpos($contentType1 ?? '', 'image/jpeg') !== false) {
-    if (substr($resp1, 0, 3) === "\xFF\xD8\xFF") {
-        $imageData = $resp1;
-    }
+// ── Si falla → no guardar nada ────────────────────────────────────────────────
+if ($curlError) {
+    echo json_encode(['success' => false, 'message' => 'Error de conexion al snapshot server.']);
+    exit;
 }
 
-// ── INTENTO 2: Snapshot por hora via RTSP (fallback) ─────────────────────────
-if ($imageData === null) {
-    // Usar hora actual menos 30 segundos como timestamp para el DVR
-    $tsCaptura        = time() - 30;
-    $fechaHoraFallback = date('Y-m-d H:i:s', $tsCaptura);
-
-    $payloadHora = json_encode([
-        'usuario'     => $usuario_dvr,
-        'clave'       => $clave,
-        'puerto_rtsp' => $puertoRtsp,
-        'puerto_http' => $puertoHttp,
-        'canal'       => $canal,
-        'vps_ip'      => DVR_VPS_LOCAL_IP,
-        'fecha_hora'  => $fechaHoraFallback,
-    ]);
-
-    $ch2 = curl_init(DVR_SNAP_HORA_URL);
-    curl_setopt_array($ch2, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => $payloadHora,
-        CURLOPT_HTTPHEADER     => [
-            'Content-Type: application/json',
-            'X-WSP-Token: ' . DVR_API_TOKEN,
-        ],
-        CURLOPT_TIMEOUT        => 30,
-        CURLOPT_CONNECTTIMEOUT => 5,
-    ]);
-
-    $resp2       = curl_exec($ch2);
-    $httpCode2   = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
-    $curlError2  = curl_error($ch2);
-    $contentType2 = curl_getinfo($ch2, CURLINFO_CONTENT_TYPE);
-    curl_close($ch2);
-
-    if (!$curlError2 && $httpCode2 === 200 && strpos($contentType2 ?? '', 'image/jpeg') !== false) {
-        if (substr($resp2, 0, 3) === "\xFF\xD8\xFF") {
-            $imageData = $resp2;
-        }
-    }
+if ($httpCode !== 200 || strpos($contentType ?? '', 'image/jpeg') === false) {
+    $errorData = json_decode($respuesta, true);
+    $msg = $errorData['message'] ?? "Snapshot server respondio HTTP {$httpCode}";
+    echo json_encode(['success' => false, 'message' => $msg]);
+    exit;
 }
 
-// ── Sin imagen → fallo silencioso ────────────────────────────────────────────
-if ($imageData === null) {
-    echo json_encode(['success' => false, 'message' => 'No fue posible obtener imagen del DVR.']);
+$imageData = $respuesta;
+
+// Verificar que sea JPEG válido
+if (substr($imageData, 0, 3) !== "\xFF\xD8\xFF") {
+    echo json_encode(['success' => false, 'message' => 'Respuesta no es imagen JPEG valida.']);
     exit;
 }
 
@@ -170,8 +135,8 @@ if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
-// Mismo naming que marcacion_capturar_foto_hora.php
-// → marcacion_{id_marcacion}_{tipo}.jpg
+// Mismo naming que marcacion_capturar_foto_hora.php:
+// marcacion_{id_marcacion}_{tipo}.jpg
 $filename  = 'marcacion_' . $idMarcacion . '_' . $tipo . '.jpg';
 $filepath  = $uploadDir . '/' . $filename;
 $publicUrl = '/modulos/rh/uploads/marcaciones/' . $filename;
