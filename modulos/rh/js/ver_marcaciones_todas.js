@@ -922,22 +922,35 @@ let ultimoDatosCargados = [];
 // ════════════════════════════════════════════════════════════════
 
 /**
- * Crea el botón de ícono de cámara compacto para entrada o salida.
- * Solo muestra el ícono + flecha (sin hora). Verde si ya existe foto, gris si no.
+ * Crea el botón de cámara premium para la columna Foto.
+ * Circular con gradiente cuando la foto existe; oscuro cuando está pendiente.
+ * Badge E/S indica entrada o salida.
  */
 function crearIconoFoto(row, tipo) {
-    const existe      = tipo === 'entrada' ? !!row.foto_entrada_existe : !!row.foto_salida_existe;
-    const path        = tipo === 'entrada' ? (row.foto_entrada_path || '') : (row.foto_salida_path || '');
-    const hora        = tipo === 'entrada' ? (row.hora_ingreso || '') : (row.hora_salida || '');
-    const colorBorder = existe ? '#238636' : '#30363d';
-    const colorBg     = existe ? 'rgba(35,134,54,.12)' : 'transparent';
-    const colorIcon   = existe ? '#3fb950' : '#6e7681';
-    const iconClass   = 'bi bi-camera-video' + (existe ? '-fill' : '');
-    const flecha      = tipo === 'entrada' ? '↑' : '↓';
-    const tituloBtn   = (tipo === 'entrada' ? 'Foto Entrada' : 'Foto Salida') + (hora ? ' ' + hora.substring(0,5) : '');
-    const nombre      = (row.nombre_completo || '').replace(/"/g, '&quot;');
+    const existe    = tipo === 'entrada' ? !!row.foto_entrada_existe : !!row.foto_salida_existe;
+    const path      = tipo === 'entrada' ? (row.foto_entrada_path || '') : (row.foto_salida_path || '');
+    const hora      = tipo === 'entrada' ? (row.hora_ingreso || '') : (row.hora_salida || '');
+    const nombre    = (row.nombre_completo || '').replace(/"/g, '&quot;');
+    const tituloBtn = (tipo === 'entrada' ? 'Foto Entrada' : 'Foto Salida') + (hora ? ' ' + hora.substring(0, 5) : '');
 
-    return `<button class="btn-foto-dvr"
+    // Paleta según tipo y estado
+    const gradiente = tipo === 'entrada'
+        ? 'linear-gradient(135deg,#2ea043 0%,#1a7f37 100%)'   // verde entrada
+        : 'linear-gradient(135deg,#388bfd 0%,#1158c7 100%)';  // azul salida
+
+    const bgExiste  = existe ? gradiente : '#1c2128';
+    const bgHover   = existe
+        ? (tipo === 'entrada' ? 'linear-gradient(135deg,#3fb950,#2ea043)' : 'linear-gradient(135deg,#58a6ff,#388bfd)')
+        : '#21262d';
+    const iconColor = existe ? '#ffffff' : '#484f58';
+    const badge     = tipo === 'entrada' ? 'E' : 'S';
+    const badgeColor = existe ? 'rgba(255,255,255,.85)' : '#6e7681';
+    const badgeBg    = existe ? 'rgba(0,0,0,.25)' : '#0d1117';
+    const shadow     = existe
+        ? (tipo === 'entrada' ? '0 2px 8px rgba(46,160,67,.45)' : '0 2px 8px rgba(56,139,253,.45)')
+        : 'none';
+
+    return `<button class="btn-foto-dvr btn-foto-${tipo}"
         onclick="abrirModalFoto(this)"
         data-id="${row.id}"
         data-tipo="${tipo}"
@@ -949,23 +962,37 @@ function crearIconoFoto(row, tipo) {
         data-nombre="${nombre}"
         data-titulo="${escHtml(tituloBtn)}"
         title="${escHtml(tituloBtn)}"
-        style="background:${colorBg};
-               border:1px solid ${colorBorder};
-               border-radius:50px;
-               width:30px; height:30px;
+        style="position:relative;
+               background:${bgExiste};
+               border:none;
+               border-radius:50%;
+               width:32px; height:32px;
                padding:0;
                cursor:pointer;
-               color:${colorIcon};
-               font-size:.78rem;
+               color:${iconColor};
                display:inline-flex;
                align-items:center;
                justify-content:center;
-               gap:2px;
-               transition:background .15s, border-color .15s, color .15s;
-               flex-shrink:0;">
-        <i class="${iconClass}" style="font-size:.7rem;"></i><span style="font-size:.62rem;font-weight:700;line-height:1;">${flecha}</span>
+               box-shadow:${shadow};
+               transition:background .18s, box-shadow .18s, transform .12s;
+               flex-shrink:0;"
+        onmouseenter="this.style.background='${bgHover}';this.style.transform='scale(1.12)';"
+        onmouseleave="this.style.background='${bgExiste}';this.style.transform='scale(1)';">
+        <i class="bi bi-camera-fill" style="font-size:.8rem;"></i>
+        <span style="position:absolute;
+                     bottom:-2px; right:-2px;
+                     background:${badgeBg};
+                     color:${badgeColor};
+                     font-size:.48rem;
+                     font-weight:800;
+                     border-radius:50%;
+                     width:11px; height:11px;
+                     display:flex; align-items:center; justify-content:center;
+                     line-height:1;
+                     border:1px solid ${existe ? 'rgba(255,255,255,.2)' : '#21262d'};">${badge}</span>
     </button>`;
 }
+
 
 /**
  * Abre el modal de foto para una marcación.
@@ -1163,16 +1190,28 @@ function actualizarIconoFotoEnTabla(id, tipo, path) {
     const $btn = $(`.btn-foto-dvr[data-id="${id}"][data-tipo="${tipo}"]`);
     if (!$btn.length) return;
 
-    $btn.css({
-        'border-color': '#238636',
-        'color': '#3fb950'
-    });
-    $btn.find('i')
-        .removeClass('bi-camera-video')
-        .addClass('bi-camera-video-fill');
+    // Aplicar gradiente premium según tipo
+    const gradiente = tipo === 'entrada'
+        ? 'linear-gradient(135deg,#2ea043 0%,#1a7f37 100%)'
+        : 'linear-gradient(135deg,#388bfd 0%,#1158c7 100%)';
+    const shadow = tipo === 'entrada'
+        ? '0 2px 8px rgba(46,160,67,.45)'
+        : '0 2px 8px rgba(56,139,253,.45)';
+
+    $btn.css({ 'background': gradiente, 'box-shadow': shadow, 'color': '#ffffff', 'border': 'none' });
+    $btn.find('i').attr('class', 'bi bi-camera-fill');
+    $btn.find('span').css({ 'background': 'rgba(0,0,0,.25)', 'color': 'rgba(255,255,255,.85)', 'border-color': 'rgba(255,255,255,.2)' });
     $btn.data('existe', '1').data('path', path)
         .attr('data-existe', '1').attr('data-path', path);
+
+    // Reasignar hover handlers con gradiente correcto
+    const bgHover = tipo === 'entrada'
+        ? 'linear-gradient(135deg,#3fb950,#2ea043)'
+        : 'linear-gradient(135deg,#58a6ff,#388bfd)';
+    $btn[0].onmouseenter = function() { this.style.background = bgHover; this.style.transform = 'scale(1.12)'; };
+    $btn[0].onmouseleave = function() { this.style.background = gradiente; this.style.transform = 'scale(1)'; };
 }
+
 
 /** Escapa HTML para uso seguro en atributos y contenido. */
 function escHtml(str) {
