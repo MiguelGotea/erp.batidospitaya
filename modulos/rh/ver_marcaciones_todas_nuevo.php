@@ -2066,7 +2066,7 @@ function verificarTardanzaYaRegistrada(
                     if (typeof filtrosActivos !== 'undefined') {
                         filtrosActivos['fecha'] = { desde: fechaInicio, hasta: fechaFin };
                         delete filtrosActivos['numero_semana']; // Mutuamente excluyentes
-                        
+
                         paginaActual = 1;
                         cargarDatos();
                     }
@@ -2077,11 +2077,11 @@ function verificarTardanzaYaRegistrada(
                     if (typeof filtrosActivos !== 'undefined') {
                         filtrosActivos = {};
                     }
-                    
+
                     <?php if ($esLider): ?>
                         // Para líderes
-                        if(document.getElementById('numero_semana')) document.getElementById('numero_semana').value = '';
-                        if(document.getElementById('operario_id')) document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
+                        if (document.getElementById('numero_semana')) document.getElementById('numero_semana').value = '';
+                        if (document.getElementById('operario_id')) document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
 
                         // Establecer fecha actual
                         const hoy = '<?= $fechaHoy ?>';
@@ -2092,13 +2092,13 @@ function verificarTardanzaYaRegistrada(
                             filtrosActivos['operario_id'] = '<?= $_SESSION['usuario_id'] ?>';
                             paginaActual = 1;
                             cargarDatos();
-                            if(typeof actualizarIndicadoresFiltros === 'function') actualizarIndicadoresFiltros();
+                            if (typeof actualizarIndicadoresFiltros === 'function') actualizarIndicadoresFiltros();
                         }
                     <?php else: ?>
                         // Para otros usuarios
-                        if(document.getElementById('sucursal')) document.getElementById('sucursal').value = 'todas';
-                        if(document.getElementById('operario')) document.getElementById('operario').value = 'Todos los colaboradores';
-                        if(document.getElementById('operario_id')) document.getElementById('operario_id').value = '0';
+                        if (document.getElementById('sucursal')) document.getElementById('sucursal').value = 'todas';
+                        if (document.getElementById('operario')) document.getElementById('operario').value = 'Todos los colaboradores';
+                        if (document.getElementById('operario_id')) document.getElementById('operario_id').value = '0';
 
                         // Establecer fecha actual
                         const hoy = '<?= $fechaHoy ?>';
@@ -2108,7 +2108,7 @@ function verificarTardanzaYaRegistrada(
                             filtrosActivos['fecha'] = { desde: primerDiaMes, hasta: hoy };
                             paginaActual = 1;
                             cargarDatos();
-                            if(typeof actualizarIndicadoresFiltros === 'function') actualizarIndicadoresFiltros();
+                            if (typeof actualizarIndicadoresFiltros === 'function') actualizarIndicadoresFiltros();
                         }
                     <?php endif; ?>
                 }
@@ -2140,10 +2140,10 @@ function verificarTardanzaYaRegistrada(
         <!-- sub-container -->
     </div> <!-- main-container -->
 
+
     <!-- ── Modal Visor Foto Marcación DVR (Premium) ── -->
-    <div class="modal fade" id="modalFotoMarcacion" tabindex="-1"
-         data-bs-backdrop="false"
-         aria-labelledby="fotoModalTituloLabel" aria-hidden="true">
+    <div class="modal fade" id="modalFotoMarcacion" tabindex="-1" data-bs-backdrop="false"
+        aria-labelledby="fotoModalTituloLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
 
@@ -2151,7 +2151,7 @@ function verificarTardanzaYaRegistrada(
                 <div class="modal-header border-0 py-3 px-4" style="background:#0E544C; color:#fff;">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
-                             style="width:40px; height:40px; flex-shrink:0;">
+                            style="width:40px; height:40px; flex-shrink:0;">
                             <i class="bi bi-camera-fill fs-5"></i>
                         </div>
                         <div>
@@ -2161,21 +2161,20 @@ function verificarTardanzaYaRegistrada(
                             <p class="small mb-0 opacity-75" id="fotoModalSubtitulo"></p>
                         </div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto"
-                            data-bs-dismiss="modal" onclick="cerrarModalFoto()"
-                            aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"
+                        onclick="cerrarModalFoto()" aria-label="Cerrar"></button>
                 </div>
 
                 <!-- Body -->
                 <div class="modal-body p-4" style="background:#f8f9fa;">
 
                     <!-- Contenedor imagen -->
-                    <div id="fotoModalContenedor"
-                         style="background:#ffffff; border:1px solid #dee2e6; border-radius:12px;
+                    <div id="fotoModalContenedor" style="background:#ffffff; border:1px solid #dee2e6; border-radius:12px;
                                 min-height:240px; display:flex; align-items:center;
                                 justify-content:center; overflow:hidden;">
                         <span style="color:#adb5bd; font-size:.88rem;">
-                            <i class="bi bi-camera" style="font-size:2rem; display:block; text-align:center; margin-bottom:8px; opacity:.4;"></i>
+                            <i class="bi bi-camera"
+                                style="font-size:2rem; display:block; text-align:center; margin-bottom:8px; opacity:.4;"></i>
                             Iniciando captura&hellip;
                         </span>
                     </div>
@@ -2192,17 +2191,14 @@ function verificarTardanzaYaRegistrada(
                                     <i class="bi bi-clock"></i>
                                 </span>
                                 <input type="number" id="fotoOffsetInput"
-                                       class="form-control form-control-sm text-center"
-                                       value="0" min="-3600" max="3600"
-                                       placeholder="0"
-                                       title="Segundos a ajustar (negativo = antes, positivo = después)"
-                                       onkeydown="if(event.key==='Enter') aplicarOffsetFoto()"
-                                       style="font-weight:600; font-size:.88rem;">
+                                    class="form-control form-control-sm text-center" value="0" min="-3600" max="3600"
+                                    placeholder="0" title="Segundos a ajustar (negativo = antes, positivo = después)"
+                                    onkeydown="if(event.key==='Enter') aplicarOffsetFoto()"
+                                    style="font-weight:600; font-size:.88rem;">
                                 <span class="input-group-text" style="font-size:.8rem; color:#6c757d;">seg</span>
                             </div>
-                            <button type="button" class="btn-modern btn-modern-primary"
-                                    onclick="aplicarOffsetFoto()"
-                                    style="padding:6px 16px; font-size:.8rem;">
+                            <button type="button" class="btn-modern btn-modern-primary" onclick="aplicarOffsetFoto()"
+                                style="padding:6px 16px; font-size:.8rem;">
                                 <i class="bi bi-camera"></i> Capturar
                             </button>
                         </div>
@@ -2218,19 +2214,17 @@ function verificarTardanzaYaRegistrada(
                 <!-- Footer -->
                 <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-between">
                     <div class="d-flex gap-2">
-                        <button id="btnFotoRetomar" type="button"
-                                class="btn-modern btn-modern-primary"
-                                onclick="retamarFotoModal()">
+                        <button id="btnFotoRetomar" type="button" class="btn-modern btn-modern-primary"
+                            onclick="retamarFotoModal()">
                             <i class="bi bi-arrow-repeat"></i> Retomar foto
                         </button>
-                        <a id="btnFotoAbrir" href="#" target="_blank"
-                           class="btn-modern btn-modern-secondary"
-                           style="text-decoration:none;">
+                        <a id="btnFotoAbrir" href="#" target="_blank" class="btn-modern btn-modern-secondary"
+                            style="text-decoration:none;">
                             <i class="bi bi-box-arrow-up-right"></i> Ver original
                         </a>
                     </div>
-                    <button type="button" class="btn-modern btn-modern-secondary"
-                            data-bs-dismiss="modal" onclick="cerrarModalFoto()">
+                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal"
+                        onclick="cerrarModalFoto()">
                         Cerrar
                     </button>
                 </div>
@@ -2256,7 +2250,6 @@ function verificarTardanzaYaRegistrada(
             backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
         }
-
     </style>
 
     <!-- Modal Guía de Reglas -->
