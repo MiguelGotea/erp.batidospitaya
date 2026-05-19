@@ -1051,9 +1051,26 @@ function capturarFotoModal() {
         return;
     }
 
-    // Construir fecha_hora: "YYYY-MM-DDTHH:MM:SS"
+    // Construir fecha_hora con offset de -30 segundos.
+    // Ej: marca 16:44:32 → captura en 16:44:02
     // hora viene como "HH:MM:SS" desde la BD
-    const fechaHora = fecha + 'T' + hora;
+    let fechaHora;
+    try {
+        const dtBase  = new Date(`${fecha}T${hora}`);
+        dtBase.setSeconds(dtBase.getSeconds() - 30);
+        const pad     = n => String(n).padStart(2, '0');
+        const hh      = pad(dtBase.getHours());
+        const mm      = pad(dtBase.getMinutes());
+        const ss      = pad(dtBase.getSeconds());
+        // Si el offset cruzó la medianoche, la fecha también cambia
+        const yyyy    = dtBase.getFullYear();
+        const mo      = pad(dtBase.getMonth() + 1);
+        const dd      = pad(dtBase.getDate());
+        fechaHora     = `${yyyy}-${mo}-${dd}T${hh}:${mm}:${ss}`;
+    } catch (_) {
+        // Fallback: usar hora original sin offset
+        fechaHora = fecha + 'T' + hora;
+    }
 
     const $btnRetomar = $('#btnFotoRetomar');
     $btnRetomar.prop('disabled', true)
