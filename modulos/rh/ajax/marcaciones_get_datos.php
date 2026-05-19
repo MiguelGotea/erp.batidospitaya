@@ -234,6 +234,9 @@ try {
     $resultado = [];
     $diasSemana = ['', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
 
+    // Ruta base para verificar existencia de fotos de marcación
+    $uploadMarcaciones = realpath(__DIR__ . '/../../../') . '/modulos/rh/uploads/marcaciones';
+
     foreach ($horariosProgramados as $horario) {
         $fechaInicio = new DateTime($horario['fecha_inicio']);
         $fechaFin = new DateTime($horario['fecha_fin']);
@@ -297,6 +300,11 @@ try {
                             }
                         }
 
+                        // Verificar existencia de fotos para esta marcación
+                        $_mId = $marcacion['id'];
+                        $_fotoEntradaExiste = $_mId && file_exists($uploadMarcaciones . '/marcacion_' . $_mId . '_entrada.jpg');
+                        $_fotoSalidaExiste  = $_mId && file_exists($uploadMarcaciones . '/marcacion_' . $_mId . '_salida.jpg');
+
                         $resultado[] = [
                             'id' => $marcacion['id'],
                             'fecha' => $fechaStr,
@@ -325,7 +333,12 @@ try {
                             'falta_data' => null,
                             // Información de la sucursal donde marcó realmente
                             'sucursal_marcacion_codigo' => $marcacion['sucursal_codigo'],
-                            'sucursal_marcacion_nombre' => $marcacion['nombre_sucursal']
+                            'sucursal_marcacion_nombre' => $marcacion['nombre_sucursal'],
+                            // Fotos DVR
+                            'foto_entrada_existe' => $_fotoEntradaExiste,
+                            'foto_salida_existe'  => $_fotoSalidaExiste,
+                            'foto_entrada_path'   => $_fotoEntradaExiste ? '/modulos/rh/uploads/marcaciones/marcacion_' . $_mId . '_entrada.jpg' : null,
+                            'foto_salida_path'    => $_fotoSalidaExiste  ? '/modulos/rh/uploads/marcaciones/marcacion_' . $_mId . '_salida.jpg'  : null,
                         ];
 
                         // Verificar si hay tardanza solicitada
@@ -371,7 +384,12 @@ try {
                         'tardanza_solicitada' => false,
                         'falta_solicitada' => false, // Se verificará después si existe registro en faltas_manual
                         'tardanza_data' => null,
-                        'falta_data' => null
+                        'falta_data' => null,
+                        // Sin marcación real → no hay fotos
+                        'foto_entrada_existe' => false,
+                        'foto_salida_existe'  => false,
+                        'foto_entrada_path'   => null,
+                        'foto_salida_path'    => null,
                     ];
 
                     // Verificar si hay falta solicitada

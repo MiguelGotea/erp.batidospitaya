@@ -12,6 +12,9 @@ let totalRegistros = 0;
 let scrollTopInicial = 0;
 let filtroIncidencias = 'todos'; // 'todos', 'con_incidencia', 'sin_incidencia'
 
+// Estado del modal de foto DVR
+let fotoModalActual = { id: null, tipo: null, codSucursal: null, fecha: null, hora: null };
+
 // Inicializar
 $(document).ready(function () {
     cargarDatos();
@@ -170,6 +173,24 @@ function renderizarTabla(datos) {
         }
         tr.append(`<td class="text-center">${horarioMarcado}</td>`);
 
+        // ── Foto DVR (SOLO SI TIENE PERMISO foto_marcacion) ──────────────
+        if (PERMISOS_USUARIO.esFotoMarcacion) {
+            let fotoHtml = '<span style="color:#484f58;">—</span>';
+
+            if (row.tiene_marcacion && row.id) {
+                const iconEntrada = crearIconoFoto(row, 'entrada');
+                const iconSalida  = row.hora_salida
+                    ? crearIconoFoto(row, 'salida')
+                    : '<span style="color:#484f58;font-size:.72rem;">sin salida</span>';
+
+                fotoHtml = `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+                    ${iconEntrada}
+                    ${iconSalida}
+                </div>`;
+            }
+            tr.append(`<td class="text-center" style="padding:6px 8px;">${fotoHtml}</td>`);
+        }
+
         // Horas Trabajadas (SOLO SI ES LÍDER)
         if (PERMISOS_USUARIO.esLider) {
             const horasTrabajadas = calcularHoras(row.hora_ingreso, row.hora_salida);
@@ -321,6 +342,7 @@ function calcularColspan() {
     let cols = 7; // Semana, Sucursal, Colaborador, Cargo, Fecha, Turno Programado, Horario Programado
     if (PERMISOS_USUARIO.esLider) cols += 2; // Horas Programadas, Horas Trabajadas
     cols += 1; // Horario Marcado
+    if (PERMISOS_USUARIO.esFotoMarcacion) cols += 1; // Foto DVR
     // Las columnas de Diferencia Entrada y Salida están ocultas por CSS, no se cuentan aquí.
     if (PERMISOS_USUARIO.esOperaciones) cols += 1; // Total Horas
     cols += 1; // Acciones
@@ -891,7 +913,265 @@ function setFiltroIncidencias(estado) {
     cargarDatos();
 }
 
-// Variable para cachear los últimos datos cargados y permitir filtrado local instantáneo
 // Variable para cachear los últimos datos cargados (opcional para futuras mejoras)
 let ultimoDatosCargados = [];
 
+
+// ════════════════════════════════════════════════════════════════
+// FOTO DVR — MARCACIONES
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Crea el botón de ícono de cámara para entrada o salida.
+ * Verde + relleno si ya existe foto; gris + contorno si no.
+ */
+function crearIconoFoto(row, tipo) {
+    const existe    = tipo === 'entrada' ? !!row.foto_entrada_existe : !!row.foto_salida_existe;
+    const path      = tipo === 'entrada' ? (row.foto_entrada_path || '') : (row.foto_salida_path || '');
+    const hora      = tipo === 'entrada' ? (row.hora_ingreso || '') : (row.hora_salida || '');
+    const horaLabel = hora ? hora.substring(0, 5) : '';
+    const colorBorder = existe ? '#238636' : '#30363d';
+    const colorIcon   = existe ? '#3fb950' : '#6e7681';
+    const iconClass   = 'bi bi-camera-video' + (existe ? '-fill' : '');
+    const flecha      = tipo === 'entrada' ? '↑' : '↓';
+    const tituloBtn   = (tipo === 'entrada' ? 'Foto Entrada' : 'Foto Salida') + (horaLabel ? ' ' + horaLabel : '');
+
+    // Escapamos los atributos data para evitar problemas con comillas
+    const nombre = (row.nombre_completo || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+
+    return `<button class="btn-foto-dvr"
+        onclick="abrirModalFoto(this)"
+        data-id="${row.id}"
+        data-tipo="${tipo}"
+        data-cod-sucursal="${row.sucursal_codigo}"
+        data-fecha="${row.fecha}"
+        data-hora="${hora}"
+        data-existe="${existe ? '1' : '0'}"
+        data-path="${escHtml(path)}"
+        data-nombre="${nombre}"
+        data-titulo="${escHtml(tituloBtn)}"
+        title="${escHtml(tituloBtn)}"
+        style="background:none;
+               border:1px solid ${colorBorder};
+               border-radius:6px;
+               padding:3px 9px;
+               cursor:pointer;
+               color:${colorIcon};
+               font-size:.74rem;
+               display:flex;
+               align-items:center;
+               gap:4px;
+               white-space:nowrap;
+               transition:border-color .15s,color .15s;">
+        <i class="${iconClass}"></i>
+        <span>${flecha} ${horaLabel}</span>
+    </button>`;
+}
+
+/**
+ * Abre el modal de foto para una marcación.
+ * Si ya existe foto la muestra; si no, la captura automáticamente.
+ */
+function abrirModalFoto(btn) {
+    const $btn     = $(btn);
+    const existe   = $btn.data('existe') === 1 || $btn.data('existe') === '1';
+    const path     = $btn.data('path')     || '';
+    const id       = $btn.data('id');
+    const tipo     = $btn.data('tipo');
+    const codSuc   = String($btn.data('cod-sucursal'));
+    const fecha    = $btn.data('fecha');
+    const hora     = $btn.data('hora')     || '';
+    const nombre   = $btn.data('nombre')   || '';
+    const titulo   = $btn.data('titulo')   || '';
+
+    // Guardar estado global
+    fotoModalActual = { id, tipo, codSucursal: codSuc, fecha, hora };
+
+    // Rellenar encabezado del modal
+    const tipoLabel = tipo === 'entrada' ? 'Entrada' : 'Salida';
+    $('#fotoModalTitulo').html(
+        `<i class="bi bi-camera-video-fill" style="color:#a371f7;"></i>
+         <span>Foto ${tipoLabel} DVR</span>`
+    );
+    $('#fotoModalSubtitulo').text(`${nombre}  ·  ${fecha}  ·  ${titulo}`);
+    $('#btnFotoAbrir').attr('href', path || '#').toggle(!!path);
+    $('#fotoModalMeta').empty();
+
+    // Mostrar modal
+    $('#modalFotoMarcacion').css('display', 'flex');
+
+    if (existe && path) {
+        mostrarImagenModal(path);
+    } else {
+        $('#fotoModalContenedor').html(
+            `<div style="text-align:center;color:#8b949e;padding:24px;">
+                <div style="width:28px;height:28px;border:3px solid rgba(163,113,247,.3);
+                            border-top-color:#a371f7;border-radius:50%;
+                            animation:spin .7s linear infinite;margin:0 auto 12px;"></div>
+                <div style="font-size:.85rem;">Solicitando foto al DVR…</div>
+             </div>`
+        );
+        capturarFotoModal();
+    }
+}
+
+/** Muestra la imagen ya descargada en el contenedor del modal. */
+function mostrarImagenModal(path) {
+    const ts = Date.now();
+    $('#fotoModalContenedor').html(
+        `<img src="${escHtml(path)}?t=${ts}"
+              alt="Foto DVR marcación"
+              style="width:100%;max-height:460px;object-fit:contain;display:block;"
+              onerror="this.parentElement.innerHTML='<span style=\'color:#f85149;padding:16px;\'>Error al cargar imagen</span>'">`
+    );
+    // Actualizar enlace "Abrir original"
+    $('#btnFotoAbrir').attr('href', path).show();
+}
+
+/** Botón Retomar foto: vuelve a capturar y sobreescribe. */
+function retamarFotoModal() {
+    $('#fotoModalContenedor').html(
+        `<div style="text-align:center;color:#8b949e;padding:24px;">
+            <div style="width:28px;height:28px;border:3px solid rgba(163,113,247,.3);
+                        border-top-color:#a371f7;border-radius:50%;
+                        animation:spin .7s linear infinite;margin:0 auto 12px;"></div>
+            <div style="font-size:.85rem;">Retomando foto del DVR…</div>
+         </div>`
+    );
+    capturarFotoModal();
+}
+
+/** Llama al endpoint AJAX para capturar la foto del DVR. */
+function capturarFotoModal() {
+    const { id, tipo, codSucursal, fecha, hora } = fotoModalActual;
+    if (!id || !hora) {
+        $('#fotoModalContenedor').html(
+            '<span style="color:#f85149;padding:16px;">Sin datos suficientes para capturar.</span>'
+        );
+        return;
+    }
+
+    // Construir fecha_hora: "YYYY-MM-DDTHH:MM:SS"
+    // hora viene como "HH:MM:SS" desde la BD
+    const fechaHora = fecha + 'T' + hora;
+
+    const $btnRetomar = $('#btnFotoRetomar');
+    $btnRetomar.prop('disabled', true)
+               .html('<i class="bi bi-arrow-repeat" style="display:inline-block;"></i> Capturando…');
+
+    $.ajax({
+        url: 'ajax/marcacion_capturar_foto_hora.php',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            id_marcacion: id,
+            tipo:         tipo,
+            cod_sucursal: codSucursal,
+            fecha_hora:   fechaHora
+        }),
+        dataType: 'json',
+        timeout: 40000,
+
+        success: function (resp) {
+            if (resp.success) {
+                mostrarImagenModal(resp.path);
+                // Actualizar meta info
+                $('#fotoModalMeta').html(
+                    `<span style="display:inline-flex;align-items:center;gap:5px;
+                                  background:#21262d;border:1px solid #30363d;
+                                  border-radius:6px;padding:4px 10px;
+                                  font-size:.74rem;color:#8b949e;">
+                        <i class="bi bi-file-earmark-image" style="color:#51b8ac;"></i>
+                        ${resp.size_kb} KB
+                     </span>
+                     <span style="display:inline-flex;align-items:center;gap:5px;
+                                  background:#21262d;border:1px solid #30363d;
+                                  border-radius:6px;padding:4px 10px;
+                                  font-size:.74rem;color:#8b949e;">
+                        <i class="bi bi-clock" style="color:#51b8ac;"></i>
+                        ${escHtml(resp.timestamp || '')}
+                     </span>`
+                );
+                // Actualizar ícono en la tabla sin recargar
+                actualizarIconoFotoEnTabla(id, tipo, resp.path);
+            } else {
+                $('#fotoModalContenedor').html(
+                    `<div style="text-align:center;padding:24px;">
+                        <i class="bi bi-exclamation-triangle-fill"
+                           style="font-size:2rem;color:#f85149;"></i>
+                        <div style="margin-top:10px;color:#f85149;font-weight:600;">No se pudo capturar</div>
+                        <div style="margin-top:6px;color:#8b949e;font-size:.82rem;">${escHtml(resp.message || 'Error desconocido')}</div>
+                        ${resp.debug ? `<div style="margin-top:8px;font-family:monospace;font-size:.7rem;color:#6e7681;background:#0d1117;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;">${escHtml(resp.debug)}</div>` : ''}
+                     </div>`
+                );
+            }
+        },
+
+        error: function (xhr, status) {
+            const msg = status === 'timeout'
+                ? 'Timeout: el DVR tardó más de 35 segundos en responder.'
+                : `Error de red (${status}). Verifica conectividad.`;
+            $('#fotoModalContenedor').html(
+                `<div style="text-align:center;padding:24px;color:#f85149;">
+                    <i class="bi bi-wifi-off" style="font-size:2rem;"></i>
+                    <div style="margin-top:10px;font-size:.85rem;">${escHtml(msg)}</div>
+                 </div>`
+            );
+        },
+
+        complete: function () {
+            $btnRetomar.prop('disabled', false)
+                       .html('<i class="bi bi-arrow-repeat"></i> Retomar foto');
+        }
+    });
+}
+
+/** Cierra el modal de foto y limpia el estado. */
+function cerrarModalFoto() {
+    $('#modalFotoMarcacion').hide();
+    $('#fotoModalContenedor').html('<span style="color:#484f58;">Iniciando captura…</span>');
+    $('#fotoModalMeta').empty();
+    fotoModalActual = { id: null, tipo: null, codSucursal: null, fecha: null, hora: null };
+}
+
+/**
+ * Actualiza el ícono del botón en la tabla al capturar exitosamente,
+ * sin necesidad de recargar todos los datos.
+ */
+function actualizarIconoFotoEnTabla(id, tipo, path) {
+    const $btn = $(`.btn-foto-dvr[data-id="${id}"][data-tipo="${tipo}"]`);
+    if (!$btn.length) return;
+
+    $btn.css({
+        'border-color': '#238636',
+        'color': '#3fb950'
+    });
+    $btn.find('i')
+        .removeClass('bi-camera-video')
+        .addClass('bi-camera-video-fill');
+    $btn.data('existe', '1').data('path', path)
+        .attr('data-existe', '1').attr('data-path', path);
+}
+
+/** Escapa HTML para uso seguro en atributos y contenido. */
+function escHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Cerrar modal al hacer clic en el backdrop
+$(document).on('click', '#modalFotoMarcacion', function (e) {
+    if (e.target === this) cerrarModalFoto();
+});
+
+// Cerrar modal con Escape
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape' && $('#modalFotoMarcacion').is(':visible')) {
+        cerrarModalFoto();
+    }
+});

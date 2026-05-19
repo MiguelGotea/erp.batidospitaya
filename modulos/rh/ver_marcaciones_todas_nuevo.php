@@ -14,6 +14,7 @@ $esLider = tienePermiso('historial_marcaciones_globales', 'permisoslider', $usua
 $esOperaciones = tienePermiso('historial_marcaciones_globales', 'permisosoperaciones', $usuario['CodNivelesCargos']);
 $esCDS = tienePermiso('historial_marcaciones_globales', 'permisoscds', $usuario['CodNivelesCargos']);
 $esContabilidad = tienePermiso('historial_marcaciones_globales', 'permisoscontabilidad', $usuario['CodNivelesCargos']);
+$esFotoMarcacion = tienePermiso('historial_marcaciones_globales', 'foto_marcacion', $usuario['CodNivelesCargos']);
 
 // Obtener operarios según el tipo de usuario
 if ($esLider) {
@@ -1539,6 +1540,11 @@ function verificarTardanzaYaRegistrada(
                                         <th style="text-align: center;">Horas Programadas</th>
                                     <?php endif; ?>
                                     <th style="text-align: center;">Horario Marcado</th>
+                                    <?php if ($esFotoMarcacion): ?>
+                                        <th style="text-align: center; min-width: 100px;">
+                                            <i class="bi bi-camera-video"></i> Foto
+                                        </th>
+                                    <?php endif; ?>
                                     <?php if ($esLider): ?>
                                         <th style="text-align: center;">Horas Trabajadas</th>
                                     <?php endif; ?>
@@ -2121,6 +2127,7 @@ function verificarTardanzaYaRegistrada(
                     esOperaciones: <?= $esOperaciones ? 'true' : 'false' ?>,
                     esCDS: <?= $esCDS ? 'true' : 'false' ?>,
                     esContabilidad: <?= $esContabilidad ? 'true' : 'false' ?>,
+                    esFotoMarcacion: <?= $esFotoMarcacion ? 'true' : 'false' ?>,
                     fechaHoy: '<?= $fechaHoy ?>'
                 };
             </script>
@@ -2132,6 +2139,69 @@ function verificarTardanzaYaRegistrada(
         </div>
         <!-- sub-container -->
     </div> <!-- main-container -->
+
+    <!-- ── Modal Visor Foto Marcación DVR ───────────────────────────────── -->
+    <div id="modalFotoMarcacion"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.78);
+                z-index:9999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#161b22; border:1px solid #30363d; border-radius:16px;
+                    max-width:720px; width:100%; padding:24px; position:relative;
+                    box-shadow:0 16px 64px rgba(0,0,0,.6); max-height:90vh; overflow-y:auto;">
+
+            <!-- Header modal -->
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;">
+                <div>
+                    <div id="fotoModalTitulo"
+                         style="color:#c9d1d9; font-weight:700; font-size:1rem; display:flex; align-items:center; gap:8px;">
+                        <i class="bi bi-camera-video-fill" style="color:#a371f7;"></i>
+                        <span>Foto DVR — Marcación</span>
+                    </div>
+                    <div id="fotoModalSubtitulo"
+                         style="font-size:.78rem; color:#8b949e; margin-top:4px;"></div>
+                </div>
+                <button onclick="cerrarModalFoto()"
+                        style="background:none; border:none; color:#8b949e; font-size:1.5rem;
+                               cursor:pointer; line-height:1; padding:0 4px;"
+                        title="Cerrar">✕</button>
+            </div>
+
+            <!-- Contenedor imagen -->
+            <div id="fotoModalContenedor"
+                 style="background:#0d1117; border:1px solid #21262d; border-radius:10px;
+                        min-height:220px; display:flex; align-items:center;
+                        justify-content:center; overflow:hidden; position:relative;">
+                <span style="color:#484f58; font-size:.85rem;">Iniciando captura…</span>
+            </div>
+
+            <!-- Meta info -->
+            <div id="fotoModalMeta" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;"></div>
+
+            <!-- Botones -->
+            <div style="display:flex; gap:10px; margin-top:18px; justify-content:flex-end; flex-wrap:wrap;">
+                <button id="btnFotoRetomar" onclick="retamarFotoModal()"
+                        style="padding:9px 20px;
+                               background:linear-gradient(135deg,#a371f7 0%,#7c3aed 100%);
+                               color:#fff; border:none; border-radius:8px; cursor:pointer;
+                               font-size:.88rem; font-weight:600;
+                               display:flex; align-items:center; gap:7px;">
+                    <i class="bi bi-arrow-repeat"></i> Retomar foto
+                </button>
+                <a id="btnFotoAbrir" href="#" target="_blank"
+                   style="padding:9px 18px; background:#21262d; color:#51b8ac;
+                          border:1px solid #30363d; border-radius:8px; font-size:.88rem;
+                          text-decoration:none; display:flex; align-items:center; gap:7px;">
+                    <i class="bi bi-box-arrow-up-right"></i> Abrir original
+                </a>
+                <button onclick="cerrarModalFoto()"
+                        style="padding:9px 18px; background:#21262d; color:#8b949e;
+                               border:1px solid #30363d; border-radius:8px; cursor:pointer;
+                               font-size:.88rem;">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- /Modal Foto Marcación -->
 
     <style>
         /* Ajuste de z-index para evitar que el backdrop cubra el modal */
