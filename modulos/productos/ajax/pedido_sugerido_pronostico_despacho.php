@@ -57,135 +57,133 @@ try {
         echo json_encode(['ok' => false, 'msg' => "Semana de corte {$semCorte} no encontrada."]);
         exit();
     }
-    $domingoCorte    = $semRow['fecha_fin'];
-    $fechaInicioSem  = $semRow['fecha_inicio'];  // lunes de la semana de corte
+    $domingoCorte    = $semRow['fecha_fin'];   // domingo (snapshot)
+    $fechaInicioSem  = $semRow['fecha_inicio'];
 
-    // Semana anterior al corte (fuente del inv_inicial, igual que el Kardex)
-    $stmtAnt = $conn->prepare(
-        "SELECT numero_semana, fecha_fin FROM SemanasSistema WHERE numero_semana < ? ORDER BY numero_semana DESC LIMIT 1"
-    );
-    $stmtAnt->execute([$semCorte]);
-    $semAntRow    = $stmtAnt->fetch(PDO::FETCH_ASSOC);
-    $semAntCorte  = $semAntRow ? (int)$semAntRow['numero_semana'] : null;
-    $domingoAnt   = $semAntRow ? $semAntRow['fecha_fin'] : null; // domingo de semAntCorte
-
-    // ── 2. Construir codMapBalance (necesario para el lookup de inventario legacy) ─
-    $sucInt = (int)$codSucursal;
-
-    // Conversiones
-    $convIndex = [];
-    $rConv = $conn->query("SELECT id_unidad_producto_inicio AS i,id_unidad_producto_final AS f,cantidad AS fac FROM conversion_unidad_producto");
-    foreach ($rConv->fetchAll(PDO::FETCH_ASSOC) as $c) { $convIndex[(int)$c['i']][(int)$c['f']]=(float)$c['fac']; $convIndex[(int)$c['f']][(int)$c['i']]=$c['fac']!=0?1/(float)$c['fac']:0; }
-
-    // maestroToBase
-    $rMB=$conn->query("SELECT id,id_unidad_producto AS unid,cantidad AS cant,id_producto_maestro AS mid FROM producto_presentacion WHERE presentacion_basica_inventario=1 AND Activo='SI'");
-    $maestroToBase=[];
-    foreach($rMB->fetchAll(PDO::FETCH_ASSOC) as $pm){$mid=(int)$pm['mid'];if($mid>0)$maestroToBase[$mid]=['base_pp_id'=>(int)$pm['id'],'base_unid'=>(int)$pm['unid'],'base_cant'=>max((float)$pm['cant'],0.001)];}
-
-    // cascadeMap
-    $rCas=$conn->query("SELECT pp_pkg.id AS pkg_id,crp.id_presentacion_producto AS base_id,crp.cantidad AS factor FROM producto_presentacion pp_pkg INNER JOIN componentes_receta_producto crp ON crp.id_receta_producto_global=pp_pkg.Id_receta_producto INNER JOIN producto_presentacion pp_base ON pp_base.id=crp.id_presentacion_producto AND pp_base.presentacion_basica_inventario=1 WHERE pp_pkg.presentacion_receta=1 AND pp_pkg.Activo='SI' AND (SELECT COUNT(DISTINCT id_presentacion_producto) FROM componentes_receta_producto WHERE id_receta_producto_global=pp_pkg.Id_receta_producto)=1");
-    $cascadeMap=[];
-    foreach($rCas->fetchAll(PDO::FETCH_ASSOC) as $row)$cascadeMap[(int)$row['pkg_id']]=['base_id'=>(int)$row['base_id'],'factor'=>(float)$row['factor']];
-
-    // diccionario
-    $rDic=$conn->query("SELECT d.CodCotizacion,pp.id AS pp_id,pp.presentacion_basica_inventario AS es_base,pp.presentacion_receta AS es_receta,pp.id_unidad_producto AS pp_unid,pp.cantidad AS pp_cant,pp.id_producto_maestro AS id_maestro FROM diccionario_productos_legado d INNER JOIN producto_presentacion pp ON pp.id=d.id_producto_presentacion WHERE pp.Activo='SI'");
-    $diccionario=[];
-    foreach($rDic->fetchAll(PDO::FETCH_ASSOC) as $d)$diccionario[(int)$d['CodCotizacion']]=$d;
-
-    // altMap
-    $altMap=[];
-    foreach($diccionario as $dic){$pp_id=(int)$dic['pp_id'];if($dic['es_base']||$dic['es_receta'])continue;if(isset($cascadeMap[$pp_id]))continue;$mid=(int)$dic['id_maestro'];if(!$mid||!isset($maestroToBase[$mid]))continue;$base=$maestroToBase[$mid];$altUnid=(int)$dic['pp_unid'];$basUnid=(int)$base['base_unid'];if($altUnid===$basUnid){$factor=(float)$dic['pp_cant']/$base['base_cant'];}elseif(isset($convIndex[$altUnid][$basUnid])){$factor=((float)$dic['pp_cant']*$convIndex[$altUnid][$basUnid])/$base['base_cant'];}else continue;$altMap[$pp_id]=['base_id'=>$base['base_pp_id'],'factor'=>$factor];}
-
-    // codMapBalance — solo entradas que resuelven a nuestro idPP
-    $codMapBalance=[];
-    foreach($diccionario as $cod=>$dic){$pp_id=(int)$dic['pp_id'];$resBid=null;$resFac=1.0;if(isset($cascadeMap[$pp_id])){$resBid=$cascadeMap[$pp_id]['base_id'];$resFac=$cascadeMap[$pp_id]['factor'];}elseif(isset($altMap[$pp_id])){$resBid=$altMap[$pp_id]['base_id'];$resFac=$altMap[$pp_id]['factor'];}elseif($dic['es_base']){$resBid=$pp_id;$resFac=1.0;}if($resBid===$idPP)$codMapBalance[$cod]=['factor'=>$resFac];}
-
-    $allCods   = array_keys($codMapBalance);
-    $sinCods   = empty($allCods);
-
-    // ── 3. Stock base: primero InventarioCotizacion de semAntCorte (= Kardex) ─
-    // Si no hay datos ahí, fallback a tabla inventario del semCorte
-    $stockDomingo   = null;
-    $domingoBase    = null; // Fecha real del snapshot
-    $fechaMovDesde  = null; // Primer día de movimientos a incluir
-
-    if (!$sinCods && $semAntCorte) {
-        $phC = implode(',', array_fill(0, count($allCods), '?'));
-        // InventarioCotizacion de la semana ANTERIOR al corte (igual que Kardex inv_inicial)
-        $stmtIC = $conn->prepare("SELECT k.CodCotizacion, k.Cantidad FROM msaccess_masivo_InventarioCotizacion k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phC) AND k.Sucursal = ?");
-        $stmtIC->execute(array_merge([$semAntCorte], $allCods, [$sucInt]));
-        $icRows = $stmtIC->fetchAll(PDO::FETCH_ASSOC);
-        if (!empty($icRows)) {
-            $stockDomingo = 0.0;
-            foreach ($icRows as $r) {
-                $info = $codMapBalance[(int)$r['CodCotizacion']] ?? null;
-                if ($info) $stockDomingo += (float)$r['Cantidad'] * $info['factor'];
-            }
-            $domingoBase   = $domingoAnt;       // domingo de semAntCorte
-            $fechaMovDesde = $fechaInicioSem;   // lunes de semCorte (primer día a proyectar)
-        }
-    }
-
-    // Fallback: tabla inventario del ERP para sem_corte
-    if ($stockDomingo === null) {
-        $stmtInv = $conn->prepare("SELECT cantidad FROM inventario WHERE cod_sucursal=? AND id_producto_presentacion=? AND fecha_inventario BETWEEN ? AND ? ORDER BY id DESC LIMIT 1");
-        $stmtInv->execute([$codSucursal, $idPP, $fechaInicioSem, $domingoCorte]);
-        $invRow = $stmtInv->fetch(PDO::FETCH_ASSOC);
-        if ($invRow) {
-            $stockDomingo  = (float)$invRow['cantidad'];
-            $domingoBase   = $domingoCorte;
-            $fechaMovDesde = date('Y-m-d', strtotime($domingoCorte . ' +1 day'));
-        }
-    }
-
+    // ── 2. Stock inventariado del domingo de corte ───────────────────────
+    $stmtInv = $conn->prepare("
+        SELECT cantidad FROM inventario
+        WHERE cod_sucursal             = ?
+          AND id_producto_presentacion = ?
+          AND fecha_inventario BETWEEN ? AND ?
+        ORDER BY id DESC LIMIT 1
+    ");
+    $stmtInv->execute([$codSucursal, $idPP, $fechaInicioSem, $domingoCorte]);
+    $invRow       = $stmtInv->fetch(PDO::FETCH_ASSOC);
+    $stockDomingo = $invRow ? (float)$invRow['cantidad'] : null;
     $sinInventario = ($stockDomingo === null);
 
-    // ── 4. Calcular fecha_D1 y días de proyección ─────────────────────────
-    $fechaD1           = date('Y-m-d', strtotime($fechaDespacho . ' -1 day'));
-    $fechaMovHasta     = $fechaD1;
-    // fechaMovDesde ya viene del paso 3 (lunes semCorte o domingo+1)
-    if (!$fechaMovDesde) $fechaMovDesde = $fechaD1;
+    // ── 3. Calcular fecha_D1 y rango de movimientos ──────────────────────
+    $fechaD1       = date('Y-m-d', strtotime($fechaDespacho . ' -1 day'));
+    $fechaMovDesde = date('Y-m-d', strtotime($domingoCorte  . ' +1 day')); // lunes post-corte
+    $fechaMovHasta = $fechaD1;
 
     $diasTranscurridos = 0;
-    if (!$sinInventario && $domingoBase) {
-        $diasTranscurridos = max(0, (int)((strtotime($fechaD1) - strtotime($domingoBase)) / 86400));
+    if (!$sinInventario) {
+        $diasTranscurridos = max(0, (int)((strtotime($fechaD1) - strtotime($domingoCorte)) / 86400));
     }
 
-    // ── 5. Movimientos reales entre fechaMovDesde y fechaD1 ──────────────
+    // ── 4. Movimientos reales entre domingoCorte+1 y fechaD1 ─────────────
+    // Replica la lógica de movsPorFecha de dashboard_consumo.js líneas 2227-2234.
+    // Solo si hay inventario base y hay días por proyectar.
     $movimientoNeto = 0.0;
 
-    if (!$sinInventario && !empty($allCods) && $fechaMovDesde <= $fechaMovHasta) {
-        $phCods = implode(',', array_fill(0, count($allCods), '?'));
+    if (!$sinInventario && $fechaMovDesde <= $fechaMovHasta) {
 
-        // Helper para sumar movimientos al $movimientoNeto
-        $sumarMovs = function(array $rows, bool $negativo) use (&$movimientoNeto, $codMapBalance) {
-            foreach ($rows as $r) {
-                $info = $codMapBalance[(int)$r['CodCotizacion']] ?? null;
-                if (!$info) continue;
-                $qty = (float)$r['Cantidad'] * $info['factor'];
-                $movimientoNeto += $negativo ? -$qty : $qty;
-            }
-        };
+        // 4a. Construir codMapBalance para este idPP
+        // (versión simplificada de balance_inventario_get_detalle.php)
+        $sucInt = (int)$codSucursal;
 
-        // Ajustes (+)
-        $s = $conn->prepare("SELECT CodCotizacion, Cantidad FROM msaccess_masivo_AjustesInventario WHERE Fecha BETWEEN ? AND ? AND CodCotizacion IN ($phCods) AND Sucursal = ?");
-        $s->execute(array_merge([$fechaMovDesde, $fechaMovHasta], $allCods, [$sucInt]));
-        $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
+        // Conversiones
+        $convIndex = [];
+        $rConv = $conn->query("SELECT id_unidad_producto_inicio AS i, id_unidad_producto_final AS f, cantidad AS fac FROM conversion_unidad_producto");
+        foreach ($rConv->fetchAll(PDO::FETCH_ASSOC) as $c) {
+            $convIndex[(int)$c['i']][(int)$c['f']] = (float)$c['fac'];
+            $convIndex[(int)$c['f']][(int)$c['i']] = $c['fac'] != 0 ? 1/(float)$c['fac'] : 0;
+        }
 
-        // Merma (-)
-        $s = $conn->prepare("SELECT CodCotizacion, Cantidad FROM msaccess_masivo_MermaCotizacion WHERE Fecha BETWEEN ? AND ? AND CodCotizacion IN ($phCods) AND Sucursal = ?");
-        $s->execute(array_merge([$fechaMovDesde, $fechaMovHasta], $allCods, [$sucInt]));
-        $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), true);
+        // maestroToBase
+        $rMB = $conn->query("SELECT id, id_unidad_producto AS unid, cantidad AS cant, id_producto_maestro AS mid FROM producto_presentacion WHERE presentacion_basica_inventario=1 AND Activo='SI'");
+        $maestroToBase = [];
+        foreach ($rMB->fetchAll(PDO::FETCH_ASSOC) as $pm) {
+            $mid = (int)$pm['mid'];
+            if ($mid > 0) $maestroToBase[$mid] = ['base_pp_id' => (int)$pm['id'], 'base_unid' => (int)$pm['unid'], 'base_cant' => max((float)$pm['cant'], 0.001)];
+        }
 
-        // Despachos (+)
-        $s = $conn->prepare("SELECT sub.CodCotizacion, sub.Cantidad FROM msaccess_masivo_SubPreIngresosPitaya sub INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya=sub.CodPreIngresoPitaya WHERE pre.Fecha BETWEEN ? AND ? AND sub.CodCotizacion IN ($phCods) AND pre.Destino REGEXP ?");
-        $s->execute(array_merge([$fechaMovDesde, $fechaMovHasta], $allCods, ["[Pp]itaya[[:space:]]+{$sucInt}([^0-9]|$)"]));
-        $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
+        // cascadeMap
+        $rCas = $conn->query("SELECT pp_pkg.id AS pkg_id, crp.id_presentacion_producto AS base_id, crp.cantidad AS factor FROM producto_presentacion pp_pkg INNER JOIN componentes_receta_producto crp ON crp.id_receta_producto_global = pp_pkg.Id_receta_producto INNER JOIN producto_presentacion pp_base ON pp_base.id = crp.id_presentacion_producto AND pp_base.presentacion_basica_inventario=1 WHERE pp_pkg.presentacion_receta=1 AND pp_pkg.Activo='SI' AND (SELECT COUNT(DISTINCT id_presentacion_producto) FROM componentes_receta_producto WHERE id_receta_producto_global=pp_pkg.Id_receta_producto)=1");
+        $cascadeMap = [];
+        foreach ($rCas->fetchAll(PDO::FETCH_ASSOC) as $row) $cascadeMap[(int)$row['pkg_id']] = ['base_id' => (int)$row['base_id'], 'factor' => (float)$row['factor']];
 
-        // Compras (+)
-        $s = $conn->prepare("SELECT CodCotizacion, Cantidad FROM msaccess_masivo_Compras WHERE Fecha BETWEEN ? AND ? AND CodCotizacion IN ($phCods) AND Sucursal = ?");
-        $s->execute(array_merge([$fechaMovDesde, $fechaMovHasta], $allCods, [$sucInt]));
-        $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
+        // diccionario
+        $rDic = $conn->query("SELECT d.CodCotizacion, pp.id AS pp_id, pp.presentacion_basica_inventario AS es_base, pp.presentacion_receta AS es_receta, pp.id_unidad_producto AS pp_unid, pp.cantidad AS pp_cant, pp.id_producto_maestro AS id_maestro FROM diccionario_productos_legado d INNER JOIN producto_presentacion pp ON pp.id=d.id_producto_presentacion WHERE pp.Activo='SI'");
+        $diccionario = [];
+        foreach ($rDic->fetchAll(PDO::FETCH_ASSOC) as $d) $diccionario[(int)$d['CodCotizacion']] = $d;
+
+        // altMap
+        $altMap = [];
+        foreach ($diccionario as $dic) {
+            $pp_id = (int)$dic['pp_id'];
+            if ($dic['es_base'] || $dic['es_receta']) continue;
+            if (isset($cascadeMap[$pp_id])) continue;
+            $mid = (int)$dic['id_maestro'];
+            if (!$mid || !isset($maestroToBase[$mid])) continue;
+            $base = $maestroToBase[$mid];
+            $altUnid = (int)$dic['pp_unid'];
+            $basUnid = (int)$base['base_unid'];
+            if ($altUnid === $basUnid) {
+                $factor = (float)$dic['pp_cant'] / $base['base_cant'];
+            } elseif (isset($convIndex[$altUnid][$basUnid])) {
+                $factor = ((float)$dic['pp_cant'] * $convIndex[$altUnid][$basUnid]) / $base['base_cant'];
+            } else continue;
+            $altMap[$pp_id] = ['base_id' => $base['base_pp_id'], 'factor' => $factor];
+        }
+
+        // codMapBalance — solo entradas que resuelven a nuestro idPP
+        $codMapBalance = [];
+        foreach ($diccionario as $cod => $dic) {
+            $pp_id = (int)$dic['pp_id'];
+            $resBid = null; $resFac = 1.0;
+            if      (isset($cascadeMap[$pp_id])) { $resBid = $cascadeMap[$pp_id]['base_id']; $resFac = $cascadeMap[$pp_id]['factor']; }
+            elseif  (isset($altMap[$pp_id]))      { $resBid = $altMap[$pp_id]['base_id'];     $resFac = $altMap[$pp_id]['factor']; }
+            elseif  ($dic['es_base'])              { $resBid = $pp_id; $resFac = 1.0; }
+            if ($resBid === $idPP) $codMapBalance[$cod] = ['factor' => $resFac];
+        }
+
+        if (!empty($codMapBalance)) {
+            $allCods  = array_keys($codMapBalance);
+            $phCods   = implode(',', array_fill(0, count($allCods), '?'));
+
+            // Helper para sumar movimientos de una tabla al $movimientoNeto
+            $sumarMovs = function(array $rows, bool $negativo) use (&$movimientoNeto, $codMapBalance) {
+                foreach ($rows as $r) {
+                    $info = $codMapBalance[(int)$r['CodCotizacion']] ?? null;
+                    if (!$info) continue;
+                    $qty = (float)$r['Cantidad'] * $info['factor'];
+                    $movimientoNeto += $negativo ? -$qty : $qty;
+                }
+            };
+
+            // Ajustes (+)
+            $s = $conn->prepare("SELECT CodCotizacion, Cantidad FROM msaccess_masivo_AjustesInventario WHERE Fecha BETWEEN ? AND ? AND CodCotizacion IN ($phCods) AND Sucursal = ?");
+            $s->execute(array_merge([$fechaMovDesde, $fechaMovHasta], $allCods, [$sucInt]));
+            $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
+
+            // Merma (-)
+            $s = $conn->prepare("SELECT CodCotizacion, Cantidad FROM msaccess_masivo_MermaCotizacion WHERE Fecha BETWEEN ? AND ? AND CodCotizacion IN ($phCods) AND Sucursal = ?");
+            $s->execute(array_merge([$fechaMovDesde, $fechaMovHasta], $allCods, [$sucInt]));
+            $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), true);
+
+            // Despachos (+) — filtrar por Destino = "Pitaya N"
+            $s = $conn->prepare("SELECT sub.CodCotizacion, sub.Cantidad FROM msaccess_masivo_SubPreIngresosPitaya sub INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya=sub.CodPreIngresoPitaya WHERE pre.Fecha BETWEEN ? AND ? AND sub.CodCotizacion IN ($phCods) AND pre.Destino REGEXP ?");
+            $s->execute(array_merge([$fechaMovDesde, $fechaMovHasta], $allCods, ["[Pp]itaya[[:space:]]+{$sucInt}([^0-9]|$)"]));
+            $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
+
+            // Compras (+)
+            $s = $conn->prepare("SELECT CodCotizacion, Cantidad FROM msaccess_masivo_Compras WHERE Fecha BETWEEN ? AND ? AND CodCotizacion IN ($phCods) AND Sucursal = ?");
+            $s->execute(array_merge([$fechaMovDesde, $fechaMovHasta], $allCods, [$sucInt]));
+            $sumarMovs($s->fetchAll(PDO::FETCH_ASSOC), false);
+        }
     }
 
     // ── 5. Fallback cons_diario ──────────────────────────────────────────
@@ -256,16 +254,15 @@ try {
         'ok'                          => true,
         'id_pp'                       => $idPP,
         'sem_corte'                   => $semCorte,
-        'domingo_corte'               => $domingoBase ?? $domingoCorte,
+        'domingo_corte'               => $domingoCorte,
         'stock_domingo'               => $sinInventario ? null : round($stockDomingo, 4),
         'movimiento_neto'             => round($movimientoNeto, 4),
         'cons_diario'                 => round($consDiario, 6),
         'fecha_despacho'              => $fechaDespacho,
         'fecha_D1'                    => $fechaD1,
-        'fecha_mov_desde'             => $fechaMovDesde,
         'dias_transcurridos'          => $diasTranscurridos,
-        'stock_D1_uso'                => $stockD1Uso     !== null ? round($stockD1Uso, 4)       : null,
-        'stock_D1_paquetes'           => $stockD1Paquetes !== null ? round($stockD1Paquetes, 4)  : null,
+        'stock_D1_uso'                => $stockD1Uso     !== null ? round($stockD1Uso, 4)      : null,
+        'stock_D1_paquetes'           => $stockD1Paquetes !== null ? round($stockD1Paquetes, 4) : null,
         'stock_max_final_paquetes'    => $stockMaxFinalPaq !== null ? round($stockMaxFinalPaq, 4) : null,
         'despacho_sugerido_pronostico' => $despachoPron,
         'despacho_factor'             => round($dfSafe, 6),
