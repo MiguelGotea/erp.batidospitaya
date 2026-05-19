@@ -516,6 +516,24 @@ function actualizarCalendarioUnico(columna) {
     $(calendarioId).html(html);
 }
 
+// Obtener clases para el día del calendario
+function obtenerClasesCalendario(fecha, columna) {
+    const fDesde = filtrosActivos[columna]?.desde;
+    const fHasta = filtrosActivos[columna]?.hasta;
+    let clases = [];
+
+    if (fDesde && fecha === fDesde) clases.push('selected');
+    if (fHasta && fecha === fHasta) clases.push('selected');
+
+    if (fDesde && fHasta) {
+        if (fecha > fDesde && fecha < fHasta) {
+            clases.push('in-range');
+        }
+    }
+    return clases.join(' ');
+}
+
+
 // Seleccionar fecha con lógica inteligente de actualización de rango
 function seleccionarFechaUnico(fecha, columna) {
     if (window.event) window.event.stopPropagation();

@@ -2026,38 +2026,21 @@ function verificarTardanzaYaRegistrada(
                     sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
                     modo = 'sucursal';
 
-                    const desde = document.getElementById('desde').value;
-                    const hasta = document.getElementById('hasta').value;
-                    const operario_id = document.getElementById('operario_id').value;
-                    const numeroSemana = document.getElementById('numero_semana').value;
-
-                    // Validar fechas
-                    if (new Date(desde) > new Date(hasta)) {
-                        alert('La fecha "Desde" no puede ser mayor a la fecha "Hasta"');
-                        return;
-                    }
+                    const operario_id = document.getElementById('operario_id') ? document.getElementById('operario_id').value : '';
+                    const numeroSemana = document.getElementById('numero_semana') ? document.getElementById('numero_semana').value : '';
 
                     // Aplicar filtros al sistema AJAX unificado
                     if (typeof filtrosActivos !== 'undefined') {
                         // Mapear los filtros manuales al sistema global de filtros
-                        filtrosActivos['fecha'] = { desde: desde, hasta: hasta };
-                        filtrosActivos['operario_id'] = operario_id;
-                        filtrosActivos['numero_semana'] = numeroSemana;
+                        if (operario_id) filtrosActivos['operario_id'] = operario_id;
+                        if (numeroSemana) {
+                            filtrosActivos['numero_semana'] = numeroSemana;
+                            delete filtrosActivos['fecha']; // Semana y fecha son mutuamente excluyentes
+                        }
 
                         // Reiniciar a la primera página y cargar
                         paginaActual = 1;
                         cargarDatos();
-                    } else {
-                        // Fallback por si el sistema AJAX no está cargado
-                        const params = new URLSearchParams();
-                        params.append('modo', modo);
-                        if (modo === 'sucursal') params.append('sucursal', sucursal);
-                        params.append('desde', desde);
-                        params.append('hasta', hasta);
-                        params.append('activo', '<?= $filtroActivo ?>');
-                        params.append('operario_id', operario_id);
-                        if (numeroSemana) params.append('numero_semana', numeroSemana);
-                        window.location.href = `ver_marcaciones_todas.php?${params.toString()}`;
                     }
                 }
 
@@ -2066,55 +2049,61 @@ function verificarTardanzaYaRegistrada(
                     if (!numeroSemana) return; // Si selecciona la opción vacía
 
                     const selectElement = document.getElementById('numero_semana');
+                    if (!selectElement) return;
                     const selectedOption = selectElement.options[selectElement.selectedIndex];
 
                     // Obtener fechas de inicio y fin de la semana seleccionada
                     const fechaInicio = selectedOption.getAttribute('data-fecha-inicio');
                     const fechaFin = selectedOption.getAttribute('data-fecha-fin');
 
-                    // Establecer las fechas en los campos
-                    document.getElementById('desde').value = fechaInicio;
-                    document.getElementById('hasta').value = fechaFin;
-
-                    // Aplicar filtros automáticamente
-                    if (typeof aplicarFiltrosLider === 'function') {
-                        aplicarFiltrosLider();
-                    } else {
-                        aplicarFiltros();
+                    // Establecer las fechas en los filtros AJAX
+                    if (typeof filtrosActivos !== 'undefined') {
+                        filtrosActivos['fecha'] = { desde: fechaInicio, hasta: fechaFin };
+                        delete filtrosActivos['numero_semana']; // Mutuamente excluyentes
+                        
+                        paginaActual = 1;
+                        cargarDatos();
                     }
                 }
 
                 // Función para limpiar todos los filtros
                 function limpiarTodosFiltros() {
+                    if (typeof filtrosActivos !== 'undefined') {
+                        filtrosActivos = {};
+                    }
+                    
                     <?php if ($esLider): ?>
                         // Para líderes
-                        document.getElementById('numero_semana').value = '';
-                        document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
+                        if(document.getElementById('numero_semana')) document.getElementById('numero_semana').value = '';
+                        if(document.getElementById('operario_id')) document.getElementById('operario_id').value = '<?= $_SESSION['usuario_id'] ?>';
 
                         // Establecer fecha actual
                         const hoy = '<?= $fechaHoy ?>';
                         const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                        document.getElementById('desde').value = primerDiaMes;
-                        document.getElementById('hasta').value = hoy;
-
-                        // Aplicar filtros
-                        aplicarFiltrosLider();
+                        if (typeof filtrosActivos !== 'undefined') {
+                            filtrosActivos['fecha'] = { desde: primerDiaMes, hasta: hoy };
+                            filtrosActivos['operario_id'] = '<?= $_SESSION['usuario_id'] ?>';
+                            paginaActual = 1;
+                            cargarDatos();
+                            if(typeof actualizarIndicadoresFiltros === 'function') actualizarIndicadoresFiltros();
+                        }
                     <?php else: ?>
                         // Para otros usuarios
-                        document.getElementById('sucursal').value = 'todas';
-                        document.getElementById('operario').value = 'Todos los colaboradores';
-                        document.getElementById('operario_id').value = '0';
+                        if(document.getElementById('sucursal')) document.getElementById('sucursal').value = 'todas';
+                        if(document.getElementById('operario')) document.getElementById('operario').value = 'Todos los colaboradores';
+                        if(document.getElementById('operario_id')) document.getElementById('operario_id').value = '0';
 
                         // Establecer fecha actual
                         const hoy = '<?= $fechaHoy ?>';
                         const primerDiaMes = hoy.substring(0, 8) + '01';
 
-                        document.getElementById('desde').value = primerDiaMes;
-                        document.getElementById('hasta').value = hoy;
-
-                        // Aplicar filtros
-                        aplicarFiltros();
+                        if (typeof filtrosActivos !== 'undefined') {
+                            filtrosActivos['fecha'] = { desde: primerDiaMes, hasta: hoy };
+                            paginaActual = 1;
+                            cargarDatos();
+                            if(typeof actualizarIndicadoresFiltros === 'function') actualizarIndicadoresFiltros();
+                        }
                     <?php endif; ?>
                 }
             </script>
