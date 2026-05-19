@@ -2231,13 +2231,7 @@ function verificarTardanzaYaRegistrada(
                 </div>
 
                 <!-- Footer -->
-                <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-between align-items-center">
-                    <a id="btnFotoAbrir" href="#" target="_blank"
-                       class="btn-modern btn-modern-secondary"
-                       style="text-decoration:none; display:none;">
-                        <i class="bi bi-box-arrow-up-right"></i> Ver original
-                    </a>
-                    <div style="flex:1;"></div>
+                <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-end">
                     <button type="button" class="btn-modern btn-modern-secondary"
                             data-bs-dismiss="modal" onclick="cerrarModalFoto()">
                         Cerrar

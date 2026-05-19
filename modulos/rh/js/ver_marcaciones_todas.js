@@ -1018,7 +1018,6 @@ function abrirModalFoto(btn) {
     const tipoLabel = tipo === 'entrada' ? 'Entrada' : 'Salida';
     $('#fotoModalTitulo').text(`Foto ${tipoLabel} DVR`);
     $('#fotoModalSubtitulo').text(`${nombre}  ·  ${fecha}  ·  ${titulo}`);
-    $('#btnFotoAbrir').attr('href', path || '#').toggle(!!path);
     $('#fotoModalMeta').empty();
     actualizarLabelOffset();   // mostrar "hora exacta"
     // Resetear controles de offset
@@ -1026,8 +1025,6 @@ function abrirModalFoto(btn) {
     if (inputOffset) inputOffset.value = 0;
     const radioAntes = document.getElementById('dirAntes');
     if (radioAntes) radioAntes.checked = true;
-    // Ver original oculto hasta tener imagen
-    $('#btnFotoAbrir').hide();
 
     // Abrir con Bootstrap Modal API
     const modalEl = document.getElementById('modalFotoMarcacion');
@@ -1067,8 +1064,6 @@ function mostrarImagenModal(path) {
               style="width:100%;max-height:460px;object-fit:contain;display:block;"
               onerror="this.parentElement.innerHTML='<span style=\'color:#dc3545;padding:16px;\'>Error al cargar imagen</span>'">`
     );
-    // Mostrar botón Ver original
-    $('#btnFotoAbrir').attr('href', path).show();
 }
 
 /** Botón Retomar foto: vuelve a capturar y sobreescribe. */
