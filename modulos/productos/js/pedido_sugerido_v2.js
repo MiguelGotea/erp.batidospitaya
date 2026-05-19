@@ -12,7 +12,7 @@ const CAT_LABELS = {
 const CAT_ORDER = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 // Estado global
-let datosResultado = [];     // Array completo de productos devuelto por el AJAX
+let datosResultado = [];      // Array completo de productos devuelto por el AJAX
 let codSucursalActual = null; // Sucursal activa al momento del último cálculo
 
 // ====================================================
@@ -37,7 +37,6 @@ $(document).ready(function () {
         const q = $(this).val().toLowerCase();
         $('#tbodyProductos tr.ps-fila-producto').each(function () {
             const txt = $(this).text().toLowerCase();
-            const idParent = $(this).data('id');
             if (txt.includes(q)) {
                 $(this).show();
             } else {
@@ -51,9 +50,6 @@ $(document).ready(function () {
             $(this).toggle(alguno);
         });
     });
-
-    // El botón de guardado ahora es flotante y se maneja por su selector directo o función onclick
-
 });
 
 // ====================================================
@@ -89,7 +85,7 @@ function cargarSemanaActual() {
                 // Ya se maneja desde el servidor en el render inicial
             }
         },
-        error: function () { /* silencioso — el badge simplemente no aparece */ }
+        error: function () { /* silencioso */ }
     });
 }
 
@@ -97,11 +93,10 @@ function cargarSemanaActual() {
 // Calcular pedido sugerido
 // ====================================================
 function calcularPedido() {
-    const desde = parseInt($('#filtroSemanaDesde').val());
-    const hasta = parseInt($('#filtroSemanaHasta').val());
+    const desde    = parseInt($('#filtroSemanaDesde').val());
+    const hasta    = parseInt($('#filtroSemanaHasta').val());
     const sucursal = $('#filtroSucursal').val();
 
-    // Validaciones
     if (!desde || !hasta) {
         return Swal.fire({ icon: 'warning', title: 'Filtros incompletos', text: 'Ingresa el rango de semanas.', confirmButtonColor: '#51B8AC' });
     }
@@ -131,7 +126,7 @@ function calcularPedido() {
                 $('#panelInicial').removeClass('d-none');
                 return Swal.fire({ icon: 'error', title: 'Error', text: res.msg, confirmButtonColor: '#51B8AC' });
             }
-            datosResultado = res.productos;
+            datosResultado    = res.productos;
             codSucursalActual = $('#filtroSucursal').val();
             // Habilitar pronóstico si ya hay semana de corte ingresada
             const _sc = parseInt($('#semCortePron').val());
@@ -150,11 +145,10 @@ function calcularPedido() {
 // Renderizar KPIs y tabla
 // ====================================================
 function renderizarResultados(res) {
-    // (Lógica de inventario removida)
     // KPIs
     $('#kpiNSemanas').text(res.n_semanas);
     $('#kpiNProductos').text(res.productos.length);
-    // KPI: Capacidad congelados (priorizar paquetes si está disponible)
+
     const capDisplay = res.capacidad_paquetes !== null && res.capacidad_paquetes !== undefined
         ? Number(res.capacidad_paquetes).toLocaleString('es-NI', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' paq.'
         : (res.capacidad_congelados !== null
@@ -166,12 +160,11 @@ function renderizarResultados(res) {
             ? Number(res.factor_congelados).toLocaleString('es-NI', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
             : '—'
     );
-    // Badge de plan de despacho (se agrega junto al label de semanas)
-    const usaPlan = res.usa_plan_despacho;
+
+    const usaPlan  = res.usa_plan_despacho;
     const planBadge = usaPlan
         ? '<span class="badge bg-success ms-2" title="Usando ciclo real del Plan de Despacho">Plan Activo</span>'
         : '<span class="badge bg-secondary ms-2" title="Usando configuración logística fija">Config. Fija</span>';
-    // Limpiar badge anterior y agregar el nuevo
     $('#kpiNSemanas').parent().find('.ps-kpi-label .badge').remove();
     $('#kpiNSemanas').parent().find('.ps-kpi-label').append(planBadge);
 
@@ -189,7 +182,6 @@ function renderizarResultados(res) {
     let totalFilas = 0;
     let html = '';
 
-    // Orden: categorías definidas + las sin cat al final
     [...CAT_ORDER, '_sin_cat'].forEach(cat => {
         const items = grupos[cat];
         if (!items || items.length === 0) return;
@@ -229,10 +221,9 @@ function renderizarResultados(res) {
 // Construir fila de la tabla
 // ====================================================
 function buildFila(p, cat) {
-    const fmt = (v, d = 4) => v !== null && v !== undefined ? Number(v).toLocaleString('es-NI', { minimumFractionDigits: d, maximumFractionDigits: d }) : '<span class="val-na">N/A</span>';
+    const fmt  = (v, d = 4) => v !== null && v !== undefined ? Number(v).toLocaleString('es-NI', { minimumFractionDigits: d, maximumFractionDigits: d }) : '<span class="val-na">N/A</span>';
     const fmt2 = (v) => fmt(v, 2);
 
-    // Stock max final con badge "Ajustado" para congelados (B)
     let stockMaxFinalHtml = '';
     if (p.stock_max_final !== null) {
         stockMaxFinalHtml = fmt2(p.stock_max_final);
@@ -243,9 +234,7 @@ function buildFila(p, cat) {
         stockMaxFinalHtml = '<span class="val-na">N/A</span>';
     }
 
-    // (Inventario y pedido sugerido removidos)
-
-    // Semáforo: fecha del próximo despacho
+    // Semáforo de fecha de próximo despacho
     const fechaDesp = p.fecha_proximo_despacho;
     const diasHasta = p.dias_hasta_despacho;
     let cellFecha = '—';
@@ -269,7 +258,6 @@ function buildFila(p, cat) {
         cellFecha = `<div class="d-flex flex-column align-items-center" style="line-height: 1.2;"><span class="fw-bold text-dark" style="font-size: 13px;">${sem} ${fechaDespFormat}</span><small class="text-muted" style="font-size: 10px;">en ${diasHasta}d</small></div>`;
     }
 
-    // Label de unidad de despacho (aparece debajo del número)
     const despTag = p.despacho_nombre
         ? `<div class="desp-unit-label" title="${escHtml(p.despacho_nombre)}">${escHtml(p.despacho_nombre)}</div>`
         : '';
@@ -282,12 +270,12 @@ function buildFila(p, cat) {
             <td class="col-presentacion">
                 <div class="text-muted" style="font-size: 11px;">${escHtml(p.unidad || '—')}</div>
             </td>
-            
+
             <td class="text-end num-cell bg-light-gray" style="font-size: 13px;">${fmt2(p.prom_consumo)}</td>
             <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 12px;">${fmt2(p.desv_estandar)}</td>
             <td class="text-end num-cell fw-bold text-dark bg-light-gray" style="font-size: 13px;">${fmt2(p.cons_semanal)}</td>
             <td class="text-end num-cell text-muted bg-light-gray" style="font-size: 13px;">${fmt(p.cons_diario, 3)}</td>
-            
+
             <td class="text-end num-cell bg-mid-gray">
                 <div style="font-size: 13px;">${fmt2(p.stock_minimo)}</div>
                 ${despTag}
@@ -314,12 +302,18 @@ function buildFila(p, cat) {
     `;
 }
 
-
 // ====================================================
-// Calcular pronóstico D-1 para todos los productos
+// Calcular pronóstico D-1 — llamada bulk al servidor
+// Matemática idéntica a la línea morada del dashboard_consumo:
+//   · Kardex como stock base
+//   · Balance diario (movimientos reales + consumo teórico) hasta fin del rango
+//   · Proyección DOW-ponderada: 0.65×pDow + 0.35×promDiario
 // ====================================================
 async function calcularPronosticoMasivo() {
     const semCorte = parseInt($('#semCortePron').val());
+    const semDesde = parseInt($('#filtroSemanaDesde').val());
+    const semHasta = parseInt($('#filtroSemanaHasta').val());
+
     if (!semCorte || !datosResultado.length || !codSucursalActual) {
         return Swal.fire({
             icon: 'warning', title: 'Datos incompletos',
@@ -328,57 +322,102 @@ async function calcularPronosticoMasivo() {
         });
     }
 
+    // semCorte debe estar dentro del rango de análisis
+    if (semCorte < semDesde || semCorte > semHasta) {
+        return Swal.fire({
+            icon: 'warning', title: 'Sem. Corte fuera de rango',
+            html: `La semana de corte debe estar entre <strong>${semDesde}</strong> y <strong>${semHasta}</strong>.`,
+            confirmButtonColor: '#51B8AC'
+        });
+    }
+
+    const productos = datosResultado.filter(p => p.fecha_proximo_despacho);
+    if (!productos.length) {
+        return Swal.fire({
+            icon: 'info', title: 'Sin despachos',
+            text: 'No hay productos con fecha de próximo despacho calculada.',
+            confirmButtonColor: '#51B8AC'
+        });
+    }
+
     const $btn = $('#btnCalcularPronostico');
     $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Calculando…');
 
-    // Limpiar resultados anteriores
+    // Indicador visual en cada fila
     $('.pron-d1').html('<span class="text-muted small">…</span>');
     $('.pron-desp').html('<span class="text-muted small">…</span>');
 
+    try {
+        const fd = new FormData();
+        fd.append('semana_desde',  semDesde);
+        fd.append('semana_hasta',  semHasta);
+        fd.append('semana_corte',  semCorte);
+        fd.append('cod_sucursal',  codSucursalActual);
 
-    const productos = datosResultado.filter(p => p.fecha_proximo_despacho);
-    const LOTE = 5;
-    let errores = 0;
+        // Mapa local: id_pp → { despFactor, stockMaxFinal }
+        const metaMap = {};
 
-    for (let i = 0; i < productos.length; i += LOTE) {
-        const batch = productos.slice(i, i + LOTE);
-        await Promise.all(batch.map(prod => $.ajax({
-            url: 'ajax/pedido_sugerido_pronostico_despacho.php',
+        productos.forEach(p => {
+            fd.append('ids_pp[]', p.id_pp);
+
+            // fecha_D1 = fecha_proximo_despacho − 1 día
+            const dObj = new Date(p.fecha_proximo_despacho + 'T12:00:00');
+            dObj.setDate(dObj.getDate() - 1);
+            const fechaD1 = dObj.toISOString().split('T')[0];
+            fd.append(`fechas_d1[${p.id_pp}]`, fechaD1);
+
+            metaMap[String(p.id_pp)] = {
+                despFactor:    p.despacho_factor > 0 ? p.despacho_factor : 1,
+                stockMaxFinal: p.stock_max_final ?? 0
+            };
+        });
+
+        // Una sola llamada al servidor para todos los productos
+        const resp = await fetch('ajax/pedido_sugerido_pronostico_v2.php', {
             method: 'POST',
-            dataType: 'json',
-            data: {
-                id_pp: prod.id_pp,
-                cod_sucursal: codSucursalActual,
-                sem_corte: semCorte,
-                fecha_despacho: prod.fecha_proximo_despacho,
-                cons_diario: prod.cons_diario,
-                despacho_factor: prod.despacho_factor ?? 1,
-                stock_max_final: prod.stock_max_final ?? 0
-            }
-        }).then(resp => {
-            const $d1 = $(`.pron-d1[data-idpp="${prod.id_pp}"]`);
-            const $desp = $(`.pron-desp[data-idpp="${prod.id_pp}"]`);
-            if (!resp || !resp.ok) { errores++; $d1.html('—'); $desp.html('—'); return; }
+            body: fd
+        }).then(r => r.json());
 
-            if (resp.sin_inventario) {
+        if (!resp.ok) {
+            Swal.fire({ icon: 'error', title: 'Error', text: resp.msg || 'Error al calcular pronóstico.', confirmButtonColor: '#51B8AC' });
+            $('.pron-d1, .pron-desp').html('<span class="text-muted">—</span>');
+            return;
+        }
+
+        const stocks = resp.stocks || {};
+
+        // Calcular paquetes y despacho sugerido en el cliente y actualizar DOM
+        productos.forEach(p => {
+            const key  = String(p.id_pp);
+            const $d1  = $(`.pron-d1[data-idpp="${p.id_pp}"]`);
+            const $dep = $(`.pron-desp[data-idpp="${p.id_pp}"]`);
+
+            const stockUso = stocks[key];   // unidades de uso (null = sin datos Kardex)
+
+            if (stockUso === null || stockUso === undefined) {
                 $d1.html('<span class="text-muted small">Sin datos</span>');
-                $desp.html('<span class="text-muted">—</span>');
+                $dep.html('<span class="text-muted">—</span>');
                 return;
             }
 
-            const d1Val = Number(resp.stock_D1_paquetes ?? 0).toFixed(1);
-            $d1.html(`${d1Val} <br><small class="text-muted" style="font-size: 9px; font-weight: 600;">PAQ</small>`);
+            const meta     = metaMap[key] || { despFactor: 1, stockMaxFinal: 0 };
+            const dfSafe   = meta.despFactor > 0 ? meta.despFactor : 1;
+            const stockPaq = stockUso / dfSafe;
+            const despSug  = Math.max(0, Math.ceil(meta.stockMaxFinal - stockPaq));
 
-            const dp = resp.despacho_sugerido_pronostico ?? 0;
-            const cls = dp > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
-            $desp.html(`<span class="${cls}">${dp}</span>`);
-        }).catch(() => { errores++; })));
+            $d1.html(`${stockPaq.toFixed(1)}<br><small class="text-muted" style="font-size:9px;font-weight:600">PAQ</small>`);
+
+            const cls = despSug > 0 ? 'fw-bold text-danger' : 'text-success fw-bold';
+            $dep.html(`<span class="${cls}">${despSug}</span>`);
+        });
+
+    } catch (err) {
+        console.error('Error calculando pronóstico masivo:', err);
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo calcular el pronóstico.', confirmButtonColor: '#51B8AC' });
+        $('.pron-d1, .pron-desp').html('<span class="text-muted">—</span>');
+    } finally {
+        $btn.prop('disabled', false).html('<i class="bi bi-graph-up-arrow me-1"></i> Recalcular');
     }
-
-    const label = errores > 0
-        ? `<i class="bi bi-graph-up-arrow me-1"></i> Recalcular (${errores} errores)`
-        : '<i class="bi bi-graph-up-arrow me-1"></i> Recalcular';
-    $btn.prop('disabled', false).html(label);
 }
 
 // ====================================================
