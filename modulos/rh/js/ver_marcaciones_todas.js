@@ -1016,29 +1016,27 @@ function abrirModalFoto(btn) {
 
     // Rellenar encabezado del modal
     const tipoLabel = tipo === 'entrada' ? 'Entrada' : 'Salida';
-    $('#fotoModalTitulo').html(
-        `<i class="bi bi-camera-video-fill" style="color:#a371f7;"></i>
-         <span>Foto ${tipoLabel} DVR</span>`
-    );
+    $('#fotoModalTitulo').text(`Foto ${tipoLabel} DVR`);
     $('#fotoModalSubtitulo').text(`${nombre}  ·  ${fecha}  ·  ${titulo}`);
     $('#btnFotoAbrir').attr('href', path || '#').toggle(!!path);
     $('#fotoModalMeta').empty();
     actualizarLabelOffset();   // mostrar "Hora exacta"
-
-    // Mostrar modal y controles de offset
-    $('#modalFotoMarcacion').css('display', 'flex');
-    $('#fotoOffsetControls').show();
-    $('.btn-offset-foto').removeClass('offset-activo');  // quitar activo previo
+    $('.btn-offset-foto').removeClass('offset-activo');
     $('.btn-offset-foto[data-delta="0"]').addClass('offset-activo');
+
+    // Abrir con Bootstrap Modal API
+    const modalEl = document.getElementById('modalFotoMarcacion');
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
     if (existe && path) {
         mostrarImagenModal(path);
     } else {
+        // Mostrar spinner tema claro mientras captura
         $('#fotoModalContenedor').html(
-            `<div style="text-align:center;color:#8b949e;padding:24px;">
-                <div style="width:28px;height:28px;border:3px solid rgba(163,113,247,.3);
-                            border-top-color:#a371f7;border-radius:50%;
-                            animation:spin .7s linear infinite;margin:0 auto 12px;"></div>
+            `<div style="text-align:center;color:#6c757d;padding:32px;">
+                <div style="width:32px;height:32px;border:3px solid rgba(14,84,76,.2);
+                            border-top-color:#0E544C;border-radius:50%;
+                            animation:spin .7s linear infinite;margin:0 auto 14px;"></div>
                 <div style="font-size:.85rem;">Solicitando foto al DVR…</div>
              </div>`
         );
@@ -1053,19 +1051,18 @@ function mostrarImagenModal(path) {
         `<img src="${escHtml(path)}?t=${ts}"
               alt="Foto DVR marcación"
               style="width:100%;max-height:460px;object-fit:contain;display:block;"
-              onerror="this.parentElement.innerHTML='<span style=\'color:#f85149;padding:16px;\'>Error al cargar imagen</span>'">`
+              onerror="this.parentElement.innerHTML='<span style=\'color:#dc3545;padding:16px;\'>Error al cargar imagen</span>'">`
     );
-    // Actualizar enlace "Abrir original"
     $('#btnFotoAbrir').attr('href', path).show();
 }
 
 /** Botón Retomar foto: vuelve a capturar y sobreescribe. */
 function retamarFotoModal() {
     $('#fotoModalContenedor').html(
-        `<div style="text-align:center;color:#8b949e;padding:24px;">
-            <div style="width:28px;height:28px;border:3px solid rgba(163,113,247,.3);
-                        border-top-color:#a371f7;border-radius:50%;
-                        animation:spin .7s linear infinite;margin:0 auto 12px;"></div>
+        `<div style="text-align:center;color:#6c757d;padding:32px;">
+            <div style="width:32px;height:32px;border:3px solid rgba(14,84,76,.2);
+                        border-top-color:#0E544C;border-radius:50%;
+                        animation:spin .7s linear infinite;margin:0 auto 14px;"></div>
             <div style="font-size:.85rem;">Retomando foto del DVR…</div>
          </div>`
     );
@@ -1121,20 +1118,20 @@ function capturarFotoModal() {
         success: function (resp) {
             if (resp.success) {
                 mostrarImagenModal(resp.path);
-                // Actualizar meta info
+                // Actualizar meta info con chips estilo claro
                 $('#fotoModalMeta').html(
                     `<span style="display:inline-flex;align-items:center;gap:5px;
-                                  background:#21262d;border:1px solid #30363d;
-                                  border-radius:6px;padding:4px 10px;
-                                  font-size:.74rem;color:#8b949e;">
-                        <i class="bi bi-file-earmark-image" style="color:#51b8ac;"></i>
+                                  background:#fff;border:1px solid #dee2e6;
+                                  border-radius:20px;padding:4px 12px;
+                                  font-size:.74rem;color:#495057;">
+                        <i class="bi bi-file-earmark-image" style="color:#0E544C;"></i>
                         ${resp.size_kb} KB
                      </span>
                      <span style="display:inline-flex;align-items:center;gap:5px;
-                                  background:#21262d;border:1px solid #30363d;
-                                  border-radius:6px;padding:4px 10px;
-                                  font-size:.74rem;color:#8b949e;">
-                        <i class="bi bi-clock" style="color:#51b8ac;"></i>
+                                  background:#fff;border:1px solid #dee2e6;
+                                  border-radius:20px;padding:4px 12px;
+                                  font-size:.74rem;color:#495057;">
+                        <i class="bi bi-clock" style="color:#0E544C;"></i>
                         ${escHtml(resp.timestamp || '')}
                      </span>`
                 );
@@ -1142,12 +1139,12 @@ function capturarFotoModal() {
                 actualizarIconoFotoEnTabla(id, tipo, resp.path);
             } else {
                 $('#fotoModalContenedor').html(
-                    `<div style="text-align:center;padding:24px;">
+                    `<div style="text-align:center;padding:32px;">
                         <i class="bi bi-exclamation-triangle-fill"
-                           style="font-size:2rem;color:#f85149;"></i>
-                        <div style="margin-top:10px;color:#f85149;font-weight:600;">No se pudo capturar</div>
-                        <div style="margin-top:6px;color:#8b949e;font-size:.82rem;">${escHtml(resp.message || 'Error desconocido')}</div>
-                        ${resp.debug ? `<div style="margin-top:8px;font-family:monospace;font-size:.7rem;color:#6e7681;background:#0d1117;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;">${escHtml(resp.debug)}</div>` : ''}
+                           style="font-size:2.5rem;color:#dc3545;"></i>
+                        <div style="margin-top:10px;color:#dc3545;font-weight:600;font-size:.95rem;">No se pudo capturar</div>
+                        <div style="margin-top:6px;color:#6c757d;font-size:.82rem;">${escHtml(resp.message || 'Error desconocido')}</div>
+                        ${resp.debug ? `<div style="margin-top:8px;font-family:monospace;font-size:.7rem;color:#6c757d;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-all;">${escHtml(resp.debug)}</div>` : ''}
                      </div>`
                 );
             }
@@ -1158,9 +1155,9 @@ function capturarFotoModal() {
                 ? 'Timeout: el DVR tardó más de 35 segundos en responder.'
                 : `Error de red (${status}). Verifica conectividad.`;
             $('#fotoModalContenedor').html(
-                `<div style="text-align:center;padding:24px;color:#f85149;">
-                    <i class="bi bi-wifi-off" style="font-size:2rem;"></i>
-                    <div style="margin-top:10px;font-size:.85rem;">${escHtml(msg)}</div>
+                `<div style="text-align:center;padding:32px;">
+                    <i class="bi bi-wifi-off" style="font-size:2.5rem;color:#dc3545;"></i>
+                    <div style="margin-top:12px;color:#dc3545;font-size:.9rem;font-weight:600;">${escHtml(msg)}</div>
                  </div>`
             );
         },
@@ -1174,10 +1171,20 @@ function capturarFotoModal() {
 
 /** Cierra el modal de foto y limpia el estado. */
 function cerrarModalFoto() {
-    $('#modalFotoMarcacion').hide();
-    $('#fotoOffsetControls').hide();
-    $('#fotoModalContenedor').html('<span style="color:#484f58;">Iniciando captura…</span>');
-    $('#fotoModalMeta').empty();
+    const modalEl = document.getElementById('modalFotoMarcacion');
+    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+    
+    // Limpiar contenido tras animación de cierre
+    setTimeout(() => {
+        $('#fotoModalContenedor').html(
+            `<span style="color:#adb5bd;font-size:.88rem;">
+                <i class="bi bi-camera" style="font-size:2rem;display:block;text-align:center;margin-bottom:8px;opacity:.4;"></i>
+                Iniciando captura&hellip;
+             </span>`
+        );
+        $('#fotoModalMeta').empty();
+    }, 300);
+    
     fotoModalActual = { id: null, tipo: null, codSucursal: null, fecha: null, hora: null };
     offsetSegundos  = 0;
 }

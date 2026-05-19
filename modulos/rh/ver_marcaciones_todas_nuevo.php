@@ -2140,88 +2140,86 @@ function verificarTardanzaYaRegistrada(
         <!-- sub-container -->
     </div> <!-- main-container -->
 
-    <!-- ── Modal Visor Foto Marcación DVR ───────────────────────────────── -->
-    <div id="modalFotoMarcacion"
-         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.78);
-                z-index:9999; align-items:center; justify-content:center; padding:16px;">
-        <div style="background:#161b22; border:1px solid #30363d; border-radius:16px;
-                    max-width:720px; width:100%; padding:24px; position:relative;
-                    box-shadow:0 16px 64px rgba(0,0,0,.6); max-height:90vh; overflow-y:auto;">
+    <!-- ── Modal Visor Foto Marcación DVR (Premium) ── -->
+    <div class="modal fade" id="modalFotoMarcacion" tabindex="-1"
+         aria-labelledby="fotoModalTituloLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
 
-            <!-- Header modal -->
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;">
-                <div>
-                    <div id="fotoModalTitulo"
-                         style="color:#c9d1d9; font-weight:700; font-size:1rem; display:flex; align-items:center; gap:8px;">
-                        <i class="bi bi-camera-video-fill" style="color:#a371f7;"></i>
-                        <span>Foto DVR — Marcación</span>
+                <!-- Header premium verde -->
+                <div class="modal-header border-0 py-3 px-4" style="background:#0E544C; color:#fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                             style="width:40px; height:40px; flex-shrink:0;">
+                            <i class="bi bi-camera-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="fotoModalTituloLabel">
+                                <span id="fotoModalTitulo">Foto DVR &mdash; Marcación</span>
+                            </h5>
+                            <p class="small mb-0 opacity-75" id="fotoModalSubtitulo"></p>
+                        </div>
                     </div>
-                    <div id="fotoModalSubtitulo"
-                         style="font-size:.78rem; color:#8b949e; margin-top:4px;"></div>
+                    <button type="button" class="btn-close btn-close-white ms-auto"
+                            data-bs-dismiss="modal" onclick="cerrarModalFoto()"
+                            aria-label="Cerrar"></button>
                 </div>
-                <button onclick="cerrarModalFoto()"
-                        style="background:none; border:none; color:#8b949e; font-size:1.5rem;
-                               cursor:pointer; line-height:1; padding:0 4px;"
-                        title="Cerrar">✕</button>
-            </div>
 
-            <!-- Contenedor imagen -->
-            <div id="fotoModalContenedor"
-                 style="background:#0d1117; border:1px solid #21262d; border-radius:10px;
-                        min-height:220px; display:flex; align-items:center;
-                        justify-content:center; overflow:hidden; position:relative;">
-                <span style="color:#484f58; font-size:.85rem;">Iniciando captura…</span>
-            </div>
+                <!-- Body -->
+                <div class="modal-body p-4" style="background:#f8f9fa;">
 
-            <!-- ── Controles de ajuste de tiempo ── -->
-            <div id="fotoOffsetControls" style="display:none; margin-top:14px;">
-                <div style="font-size:.74rem; color:#8b949e; text-align:center; margin-bottom:8px;">
-                    <i class="bi bi-clock-history" style="color:#a371f7;"></i>
-                    &nbsp;Ajustar captura:&nbsp;<span id="fotoOffsetLabel"><strong>Hora exacta</strong></span>
+                    <!-- Contenedor imagen -->
+                    <div id="fotoModalContenedor"
+                         style="background:#ffffff; border:1px solid #dee2e6; border-radius:12px;
+                                min-height:240px; display:flex; align-items:center;
+                                justify-content:center; overflow:hidden;">
+                        <span style="color:#adb5bd; font-size:.88rem;">
+                            <i class="bi bi-camera" style="font-size:2rem; display:block; text-align:center; margin-bottom:8px; opacity:.4;"></i>
+                            Iniciando captura&hellip;
+                        </span>
+                    </div>
+
+                    <!-- Controles de ajuste de tiempo -->
+                    <div id="fotoOffsetControls" style="margin-top:16px;">
+                        <div class="text-center mb-2" style="font-size:.77rem; color:#6c757d;">
+                            <i class="bi bi-clock-history" style="color:#0E544C;"></i>
+                            &nbsp;Ajustar captura:&nbsp;<span id="fotoOffsetLabel"><strong>Hora exacta</strong></span>
+                        </div>
+                        <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                            <button class="btn-offset-foto" data-delta="-60" onclick="ajustarOffsetFoto(-60)" title="60 seg antes">&minus;60s</button>
+                            <button class="btn-offset-foto" data-delta="-30" onclick="ajustarOffsetFoto(-30)" title="30 seg antes">&minus;30s</button>
+                            <button class="btn-offset-foto" data-delta="-15" onclick="ajustarOffsetFoto(-15)" title="15 seg antes">&minus;15s</button>
+                            <button class="btn-offset-foto offset-activo" data-delta="0"  onclick="ajustarOffsetFoto(0)"   title="Hora exacta">Exacta</button>
+                            <button class="btn-offset-foto" data-delta="15"  onclick="ajustarOffsetFoto(15)"  title="15 seg después">+15s</button>
+                            <button class="btn-offset-foto" data-delta="30"  onclick="ajustarOffsetFoto(30)"  title="30 seg después">+30s</button>
+                            <button class="btn-offset-foto" data-delta="60"  onclick="ajustarOffsetFoto(60)"  title="60 seg después">+60s</button>
+                        </div>
+                    </div>
+
+                    <!-- Meta info (KB, timestamp) -->
+                    <div id="fotoModalMeta" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;"></div>
                 </div>
-                <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
-                    <button class="btn-offset-foto" data-delta="-60" onclick="ajustarOffsetFoto(-60)"
-                            title="60 segundos antes">−60s</button>
-                    <button class="btn-offset-foto" data-delta="-30" onclick="ajustarOffsetFoto(-30)"
-                            title="30 segundos antes">−30s</button>
-                    <button class="btn-offset-foto" data-delta="-15" onclick="ajustarOffsetFoto(-15)"
-                            title="15 segundos antes">−15s</button>
-                    <button class="btn-offset-foto offset-activo" data-delta="0" onclick="ajustarOffsetFoto(0)"
-                            title="Hora exacta de la marcación">Exacta</button>
-                    <button class="btn-offset-foto" data-delta="15" onclick="ajustarOffsetFoto(15)"
-                            title="15 segundos después">+15s</button>
-                    <button class="btn-offset-foto" data-delta="30" onclick="ajustarOffsetFoto(30)"
-                            title="30 segundos después">+30s</button>
-                    <button class="btn-offset-foto" data-delta="60" onclick="ajustarOffsetFoto(60)"
-                            title="60 segundos después">+60s</button>
+
+                <!-- Footer -->
+                <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-between">
+                    <div class="d-flex gap-2">
+                        <button id="btnFotoRetomar" type="button"
+                                class="btn-modern btn-modern-primary"
+                                onclick="retamarFotoModal()">
+                            <i class="bi bi-arrow-repeat"></i> Retomar foto
+                        </button>
+                        <a id="btnFotoAbrir" href="#" target="_blank"
+                           class="btn-modern btn-modern-secondary"
+                           style="text-decoration:none;">
+                            <i class="bi bi-box-arrow-up-right"></i> Ver original
+                        </a>
+                    </div>
+                    <button type="button" class="btn-modern btn-modern-secondary"
+                            data-bs-dismiss="modal" onclick="cerrarModalFoto()">
+                        Cerrar
+                    </button>
                 </div>
-            </div>
 
-            <!-- Meta info -->
-            <div id="fotoModalMeta" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;"></div>
-
-            <!-- Botones -->
-            <div style="display:flex; gap:10px; margin-top:18px; justify-content:flex-end; flex-wrap:wrap;">
-                <button id="btnFotoRetomar" onclick="retamarFotoModal()"
-                        style="padding:9px 20px;
-                               background:linear-gradient(135deg,#a371f7 0%,#7c3aed 100%);
-                               color:#fff; border:none; border-radius:8px; cursor:pointer;
-                               font-size:.88rem; font-weight:600;
-                               display:flex; align-items:center; gap:7px;">
-                    <i class="bi bi-arrow-repeat"></i> Retomar foto
-                </button>
-                <a id="btnFotoAbrir" href="#" target="_blank"
-                   style="padding:9px 18px; background:#21262d; color:#51b8ac;
-                          border:1px solid #30363d; border-radius:8px; font-size:.88rem;
-                          text-decoration:none; display:flex; align-items:center; gap:7px;">
-                    <i class="bi bi-box-arrow-up-right"></i> Abrir original
-                </a>
-                <button onclick="cerrarModalFoto()"
-                        style="padding:9px 18px; background:#21262d; color:#8b949e;
-                               border:1px solid #30363d; border-radius:8px; cursor:pointer;
-                               font-size:.88rem;">
-                    Cerrar
-                </button>
             </div>
         </div>
     </div>
@@ -2237,28 +2235,29 @@ function verificarTardanzaYaRegistrada(
             z-index: 1050 !important;
         }
 
-        /* ── Botones de ajuste de offset de foto DVR ── */
+        /* ── Botones de ajuste de offset de foto DVR (tema claro) ── */
         .btn-offset-foto {
-            background: #21262d;
-            border: 1px solid #30363d;
+            background: #ffffff;
+            border: 1px solid #dee2e6;
             border-radius: 20px;
-            color: #8b949e;
+            color: #495057;
             cursor: pointer;
             font-size: .75rem;
             font-weight: 600;
-            padding: 4px 11px;
-            transition: background .15s, border-color .15s, color .15s;
+            padding: 5px 12px;
+            transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
             white-space: nowrap;
         }
         .btn-offset-foto:hover {
-            background: #2d333b;
-            border-color: #8b949e;
-            color: #c9d1d9;
+            background: #f0f0f0;
+            border-color: #adb5bd;
+            color: #212529;
         }
         .btn-offset-foto.offset-activo {
-            background: rgba(163, 113, 247, .18);
-            border-color: #a371f7;
-            color: #a371f7;
+            background: #0E544C;
+            border-color: #0E544C;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(14,84,76,.35);
         }
     </style>
 
