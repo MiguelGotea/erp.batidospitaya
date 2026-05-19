@@ -1020,7 +1020,10 @@ function abrirModalFoto(btn) {
     $('#fotoModalSubtitulo').text(`${nombre}  ·  ${fecha}  ·  ${titulo}`);
     $('#btnFotoAbrir').attr('href', path || '#').toggle(!!path);
     $('#fotoModalMeta').empty();
-    actualizarLabelOffset();   // mostrar "Hora exacta"
+    actualizarLabelOffset();   // mostrar "hora exacta"
+    // Resetear input de offset
+    const inputOffset = document.getElementById('fotoOffsetInput');
+    if (inputOffset) inputOffset.value = 0;
     $('.btn-offset-foto').removeClass('offset-activo');
     $('.btn-offset-foto[data-delta="0"]').addClass('offset-activo');
 
@@ -1244,27 +1247,35 @@ $(document).on('keydown', function (e) {
 });
 
 /**
- * Ajusta el offset de tiempo, marca el botón activo y recaptura.
- * delta: número de segundos respecto a la hora original (absoluto, no acumulativo).
+ * Lee el input de segundos, actualiza offsetSegundos y recaptura.
  */
-function ajustarOffsetFoto(delta) {
-    offsetSegundos = delta;
+function aplicarOffsetFoto() {
+    const raw = parseInt(document.getElementById('fotoOffsetInput')?.value ?? '0', 10);
+    offsetSegundos = isNaN(raw) ? 0 : Math.min(3600, Math.max(-3600, raw));
     actualizarLabelOffset();
-    // Marcar botón activo
-    $('.btn-offset-foto').removeClass('offset-activo');
-    $(`.btn-offset-foto[data-delta="${delta}"]`).addClass('offset-activo');
-    // Capturar con el nuevo offset
     capturarFotoModal();
 }
 
-/** Actualiza el label que muestra el offset aplicado. */
+/** Actualiza el label que muestra el offset aplicado como hora calculada. */
 function actualizarLabelOffset() {
-    let txt;
     if (offsetSegundos === 0) {
-        txt = '<strong>Hora exacta</strong>';
-    } else {
+        $('#fotoOffsetLabel').html('<strong>hora exacta</strong>');
+        return;
+    }
+    const { fecha, hora } = fotoModalActual;
+    let txt;
+    try {
+        const dt  = new Date(`${fecha}T${hora}`);
+        dt.setSeconds(dt.getSeconds() + offsetSegundos);
+        const pad = n => String(n).padStart(2, '0');
+        const hh  = pad(dt.getHours());
+        const mm  = pad(dt.getMinutes());
+        const ss  = pad(dt.getSeconds());
         const signo = offsetSegundos > 0 ? '+' : '';
-        txt = `offset <strong>${signo}${offsetSegundos}s</strong> sobre la hora marcada`;
+        txt = `<strong>${hh}:${mm}:${ss}</strong> <span style="color:#adb5bd;">(${signo}${offsetSegundos}s)</span>`;
+    } catch (_) {
+        const signo = offsetSegundos > 0 ? '+' : '';
+        txt = `<strong>${signo}${offsetSegundos}s</strong>`;
     }
     $('#fotoOffsetLabel').html(txt);
 }

@@ -2183,16 +2183,30 @@ function verificarTardanzaYaRegistrada(
                     <div id="fotoOffsetControls" style="margin-top:16px;">
                         <div class="text-center mb-2" style="font-size:.77rem; color:#6c757d;">
                             <i class="bi bi-clock-history" style="color:#0E544C;"></i>
-                            &nbsp;Ajustar captura:&nbsp;<span id="fotoOffsetLabel"><strong>Hora exacta</strong></span>
+                            &nbsp;Capturando en:&nbsp;<span id="fotoOffsetLabel"><strong>hora exacta</strong></span>
                         </div>
-                        <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
-                            <button class="btn-offset-foto" data-delta="-60" onclick="ajustarOffsetFoto(-60)" title="60 seg antes">&minus;60s</button>
-                            <button class="btn-offset-foto" data-delta="-30" onclick="ajustarOffsetFoto(-30)" title="30 seg antes">&minus;30s</button>
-                            <button class="btn-offset-foto" data-delta="-15" onclick="ajustarOffsetFoto(-15)" title="15 seg antes">&minus;15s</button>
-                            <button class="btn-offset-foto offset-activo" data-delta="0"  onclick="ajustarOffsetFoto(0)"   title="Hora exacta">Exacta</button>
-                            <button class="btn-offset-foto" data-delta="15"  onclick="ajustarOffsetFoto(15)"  title="15 seg después">+15s</button>
-                            <button class="btn-offset-foto" data-delta="30"  onclick="ajustarOffsetFoto(30)"  title="30 seg después">+30s</button>
-                            <button class="btn-offset-foto" data-delta="60"  onclick="ajustarOffsetFoto(60)"  title="60 seg después">+60s</button>
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <div class="input-group" style="max-width:220px;">
+                                <span class="input-group-text" style="font-size:.8rem; color:#6c757d;">
+                                    <i class="bi bi-clock"></i>
+                                </span>
+                                <input type="number" id="fotoOffsetInput"
+                                       class="form-control form-control-sm text-center"
+                                       value="0" min="-3600" max="3600"
+                                       placeholder="0"
+                                       title="Segundos a ajustar (negativo = antes, positivo = después)"
+                                       onkeydown="if(event.key==='Enter') aplicarOffsetFoto()"
+                                       style="font-weight:600; font-size:.88rem;">
+                                <span class="input-group-text" style="font-size:.8rem; color:#6c757d;">seg</span>
+                            </div>
+                            <button type="button" class="btn-modern btn-modern-primary"
+                                    onclick="aplicarOffsetFoto()"
+                                    style="padding:6px 16px; font-size:.8rem;">
+                                <i class="bi bi-camera"></i> Capturar
+                            </button>
+                        </div>
+                        <div class="text-center mt-1" style="font-size:.7rem; color:#adb5bd;">
+                            Negativo = antes de la marca &nbsp;&bull;&nbsp; Positivo = después
                         </div>
                     </div>
 
@@ -2235,30 +2249,7 @@ function verificarTardanzaYaRegistrada(
             z-index: 1050 !important;
         }
 
-        /* ── Botones de ajuste de offset de foto DVR (tema claro) ── */
-        .btn-offset-foto {
-            background: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 20px;
-            color: #495057;
-            cursor: pointer;
-            font-size: .75rem;
-            font-weight: 600;
-            padding: 5px 12px;
-            transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
-            white-space: nowrap;
-        }
-        .btn-offset-foto:hover {
-            background: #f0f0f0;
-            border-color: #adb5bd;
-            color: #212529;
-        }
-        .btn-offset-foto.offset-activo {
-            background: #0E544C;
-            border-color: #0E544C;
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(14,84,76,.35);
-        }
+
     </style>
 
     <!-- Modal Guía de Reglas -->
