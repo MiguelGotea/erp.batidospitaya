@@ -100,7 +100,7 @@ foreach ($todasSucursales as $s) {
             border: 1px solid #30363d;
             border-radius: 16px;
             width: 100%;
-            max-width: 680px;
+            max-width: 760px;
             overflow: hidden;
             box-shadow: 0 8px 48px rgba(0, 0, 0, .5);
         }
@@ -523,6 +523,145 @@ foreach ($todasSucursales as $s) {
             text-align: center;
             padding: 12px;
         }
+
+        /* ── Sección Descargar por Hora ────────────────────────── */
+        .hora-section {
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid #21262d;
+        }
+
+        .hora-section-title {
+            font-size: .8rem;
+            font-weight: 600;
+            color: #6e7681;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .hora-section-title i {
+            color: #a371f7;
+            font-size: .95rem;
+        }
+
+        .hora-inputs-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .hora-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .hora-field label {
+            font-size: .75rem;
+            color: #8b949e;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hora-field label i {
+            color: #a371f7;
+            font-size: .8rem;
+        }
+
+        .hora-input {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: .88rem;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            transition: border-color .2s, box-shadow .2s;
+            color-scheme: dark;
+        }
+
+        .hora-input:focus {
+            outline: none;
+            border-color: #a371f7;
+            box-shadow: 0 0 0 3px rgba(163, 113, 247, .15);
+        }
+
+        .btn-descargar-hora {
+            padding: 10px 22px;
+            background: linear-gradient(135deg, #a371f7 0%, #7c3aed 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: .88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity .2s, transform .1s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-descargar-hora:hover:not(:disabled) {
+            opacity: .88;
+            transform: translateY(-1px);
+        }
+
+        .btn-descargar-hora:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-descargar-hora:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .btn-descargar-hora .spinner-hora {
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(255,255,255,.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            display: none;
+        }
+
+        .btn-descargar-hora.loading-hora .spinner-hora {
+            display: block;
+        }
+
+        .btn-descargar-hora.loading-hora .btn-hora-icon {
+            display: none;
+        }
+
+        .hora-hint {
+            font-size: .74rem;
+            color: #484f58;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .hora-hint i {
+            color: #6e7681;
+        }
+
+        #resultadoHora {
+            margin-top: 14px;
+        }
     </style>
 </head>
 
@@ -589,6 +728,32 @@ foreach ($todasSucursales as $s) {
                     <i class="bi bi-image"></i>
                     <p>La imagen capturada del DVR aparecerá aquí</p>
                 </div>
+            </div>
+
+            <!-- ── Descargar Imagen por Hora ──────────────────── -->
+            <div class="hora-section">
+                <div class="hora-section-title">
+                    <i class="bi bi-clock-fill"></i>
+                    Descargar Imagen por Hora
+                </div>
+                <p class="hora-hint">
+                    <i class="bi bi-info-circle"></i>
+                    Selecciona una fecha y hora específica para obtener la imagen grabada por el DVR en ese momento.
+                </p>
+                <div class="hora-inputs-row">
+                    <div class="hora-field">
+                        <label for="inputFechaHora">
+                            <i class="bi bi-calendar-event"></i> Fecha y Hora
+                        </label>
+                        <input type="datetime-local" id="inputFechaHora" class="hora-input">
+                    </div>
+                    <button class="btn-descargar-hora" id="btnDescargaHora" onclick="capturarImagenHora()">
+                        <div class="spinner-hora" id="spinnerHora"></div>
+                        <i class="bi bi-cloud-download-fill btn-hora-icon" id="btnHoraIcon"></i>
+                        <span id="btnHoraTexto">Descargar Imagen</span>
+                    </button>
+                </div>
+                <div id="resultadoHora"></div>
             </div>
 
             <!-- Historial de capturas de esta sesión -->
@@ -821,9 +986,130 @@ foreach ($todasSucursales as $s) {
                 .replace(/"/g, '&quot;');
         }
 
+        // ── Descargar Imagen por Hora ─────────────────────────────────
+        function capturarImagenHora() {
+            const fechaHora = $('#inputFechaHora').val();
+            if (!fechaHora) {
+                alert('Por favor selecciona una fecha y hora.');
+                return;
+            }
+
+            const $opt = $('#selectSucursal option:selected');
+            const ok   = $opt.data('ok') === 1 || $opt.data('ok') === '1';
+            if (!ok) {
+                alert('La sucursal seleccionada no tiene DVR configurado.');
+                return;
+            }
+
+            const canal        = parseInt($('#inputCanal').val()) || 101;
+            const codSucursal  = $('#selectSucursal').val();
+            const $btn         = $('#btnDescargaHora');
+
+            $btn.prop('disabled', true).addClass('loading-hora');
+            $('#btnHoraTexto').text('Buscando...');
+            $('#resultadoHora').html(`
+                <div class="result-placeholder" style="border-style:solid; border-color:#30363d; padding:20px;">
+                    <div style="display:flex;align-items:center;justify-content:center;gap:12px;color:#a371f7;">
+                        <div style="width:22px;height:22px;border:2px solid rgba(163,113,247,.3);
+                                    border-top-color:#a371f7;border-radius:50%;
+                                    animation:spin .7s linear infinite;"></div>
+                        <span style="font-size:.85rem;color:#8b949e;">Recuperando imagen de ese momento...</span>
+                    </div>
+                </div>
+            `);
+
+            $.ajax({
+                url: 'ajax/dvr_capturar_imagen_hora.php',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    canal,
+                    cod_sucursal: codSucursal,
+                    fecha_hora:   fechaHora          // formato: "2026-05-18T14:30"
+                }),
+                dataType: 'json',
+                timeout: 35000,
+
+                success: function (resp) {
+                    $btn.prop('disabled', false).removeClass('loading-hora');
+                    $('#btnHoraTexto').text('Descargar Imagen');
+
+                    if (resp.success) {
+                        mostrarExitoHora(resp);
+                        agregarHistorial(resp);   // también aparece en el historial de sesión
+                    } else {
+                        mostrarErrorHora(resp.message || 'Error desconocido.', resp.debug || null);
+                    }
+                },
+
+                error: function (xhr, status) {
+                    $btn.prop('disabled', false).removeClass('loading-hora');
+                    $('#btnHoraTexto').text('Reintentar');
+                    const msg = status === 'timeout'
+                        ? 'Timeout: el DVR tardó demasiado en responder (>30s).'
+                        : `Error de red (${status}).`;
+                    mostrarErrorHora(msg, null);
+                }
+            });
+        }
+
+        function mostrarExitoHora(resp) {
+            const ts = resp.timestamp || '';
+            $('#resultadoHora').html(`
+                <div class="result-success">
+                    <div class="success-bar" style="border-color:rgba(163,113,247,.35);background:rgba(163,113,247,.08);color:#a371f7;">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Imagen obtenida para: <strong>${escHtml(resp.fecha_hora_solicitada || ts)}</strong>
+                        <span>${escHtml(ts)}</span>
+                    </div>
+                    <div class="img-wrap">
+                        <img src="${escHtml(resp.path)}"
+                             alt="Captura DVR hora específica"
+                             onload="this.style.opacity=1"
+                             style="opacity:0;">
+                    </div>
+                    <div class="img-meta">
+                        <span class="meta-tag"><i class="bi bi-hdd-network"></i> ${escHtml(resp.ip)}</span>
+                        <span class="meta-tag"><i class="bi bi-camera-video"></i> Canal ${resp.canal}</span>
+                        <span class="meta-tag"><i class="bi bi-building"></i> ${escHtml(resp.sucursal)}</span>
+                        <span class="meta-tag"><i class="bi bi-file-earmark-image"></i> ${resp.size_kb} KB</span>
+                        <a class="meta-tag" href="${escHtml(resp.path)}" download style="color:#a371f7;text-decoration:none;">
+                            <i class="bi bi-download"></i> Descargar
+                        </a>
+                        <a class="meta-tag" href="${escHtml(resp.path)}" target="_blank" style="color:#51b8ac;text-decoration:none;">
+                            <i class="bi bi-box-arrow-up-right"></i> Abrir original
+                        </a>
+                    </div>
+                </div>
+            `);
+        }
+
+        function mostrarErrorHora(mensaje, debug) {
+            let debugHtml = '';
+            if (debug) debugHtml = `<div class="err-debug">${escHtml(debug)}</div>`;
+            $('#resultadoHora').html(`
+                <div class="result-error">
+                    <div class="err-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    <div>
+                        <div class="err-title">No se pudo obtener la imagen</div>
+                        <div class="err-msg">${escHtml(mensaje)}</div>
+                        ${debugHtml}
+                    </div>
+                </div>
+            `);
+        }
+
         // Inicializar al cargar
         $(document).ready(function () {
             cambiarSucursal();
+
+            // Poner fecha/hora por defecto = ahora menos 1 hora
+            const ahora = new Date();
+            ahora.setHours(ahora.getHours() - 1);
+            ahora.setSeconds(0, 0);
+            const pad = n => String(n).padStart(2, '0');
+            const defaultDT = `${ahora.getFullYear()}-${pad(ahora.getMonth()+1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+            $('#inputFechaHora').val(defaultDT);
         });
 
         // Enter en canal dispara captura
