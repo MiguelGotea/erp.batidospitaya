@@ -2142,6 +2142,7 @@ function verificarTardanzaYaRegistrada(
 
     <!-- ── Modal Visor Foto Marcación DVR (Premium) ── -->
     <div class="modal fade" id="modalFotoMarcacion" tabindex="-1"
+         data-bs-backdrop="false"
          aria-labelledby="fotoModalTituloLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
@@ -2249,6 +2250,12 @@ function verificarTardanzaYaRegistrada(
             z-index: 1050 !important;
         }
 
+        /* Modal Foto DVR: backdrop propio integrado para evitar conflictos de z-index */
+        #modalFotoMarcacion {
+            background-color: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
 
     </style>
 
