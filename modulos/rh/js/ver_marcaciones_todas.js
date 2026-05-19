@@ -182,11 +182,10 @@ function renderizarTabla(datos) {
                 const iconEntrada = crearIconoFoto(row, 'entrada');
                 const iconSalida  = row.hora_salida
                     ? crearIconoFoto(row, 'salida')
-                    : '<span style="color:#484f58;font-size:.72rem;">sin salida</span>';
+                    : '<span style="color:#484f58;font-size:.7rem;" title="Sin salida"><i class="bi bi-box-arrow-right"></i></span>';
 
-                fotoHtml = `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
-                    ${iconEntrada}
-                    ${iconSalida}
+                fotoHtml = `<div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;">
+                    ${iconEntrada}${iconSalida}
                 </div>`;
             }
             tr.append(`<td class="text-center" style="padding:6px 8px;">${fotoHtml}</td>`);
@@ -923,22 +922,20 @@ let ultimoDatosCargados = [];
 // ════════════════════════════════════════════════════════════════
 
 /**
- * Crea el botón de ícono de cámara para entrada o salida.
- * Verde + relleno si ya existe foto; gris + contorno si no.
+ * Crea el botón de ícono de cámara compacto para entrada o salida.
+ * Solo muestra el ícono + flecha (sin hora). Verde si ya existe foto, gris si no.
  */
 function crearIconoFoto(row, tipo) {
-    const existe    = tipo === 'entrada' ? !!row.foto_entrada_existe : !!row.foto_salida_existe;
-    const path      = tipo === 'entrada' ? (row.foto_entrada_path || '') : (row.foto_salida_path || '');
-    const hora      = tipo === 'entrada' ? (row.hora_ingreso || '') : (row.hora_salida || '');
-    const horaLabel = hora ? hora.substring(0, 5) : '';
+    const existe      = tipo === 'entrada' ? !!row.foto_entrada_existe : !!row.foto_salida_existe;
+    const path        = tipo === 'entrada' ? (row.foto_entrada_path || '') : (row.foto_salida_path || '');
+    const hora        = tipo === 'entrada' ? (row.hora_ingreso || '') : (row.hora_salida || '');
     const colorBorder = existe ? '#238636' : '#30363d';
+    const colorBg     = existe ? 'rgba(35,134,54,.12)' : 'transparent';
     const colorIcon   = existe ? '#3fb950' : '#6e7681';
     const iconClass   = 'bi bi-camera-video' + (existe ? '-fill' : '');
     const flecha      = tipo === 'entrada' ? '↑' : '↓';
-    const tituloBtn   = (tipo === 'entrada' ? 'Foto Entrada' : 'Foto Salida') + (horaLabel ? ' ' + horaLabel : '');
-
-    // Escapamos los atributos data para evitar problemas con comillas
-    const nombre = (row.nombre_completo || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    const tituloBtn   = (tipo === 'entrada' ? 'Foto Entrada' : 'Foto Salida') + (hora ? ' ' + hora.substring(0,5) : '');
+    const nombre      = (row.nombre_completo || '').replace(/"/g, '&quot;');
 
     return `<button class="btn-foto-dvr"
         onclick="abrirModalFoto(this)"
@@ -952,20 +949,21 @@ function crearIconoFoto(row, tipo) {
         data-nombre="${nombre}"
         data-titulo="${escHtml(tituloBtn)}"
         title="${escHtml(tituloBtn)}"
-        style="background:none;
+        style="background:${colorBg};
                border:1px solid ${colorBorder};
-               border-radius:6px;
-               padding:3px 9px;
+               border-radius:50px;
+               width:30px; height:30px;
+               padding:0;
                cursor:pointer;
                color:${colorIcon};
-               font-size:.74rem;
-               display:flex;
+               font-size:.78rem;
+               display:inline-flex;
                align-items:center;
-               gap:4px;
-               white-space:nowrap;
-               transition:border-color .15s,color .15s;">
-        <i class="${iconClass}"></i>
-        <span>${flecha} ${horaLabel}</span>
+               justify-content:center;
+               gap:2px;
+               transition:background .15s, border-color .15s, color .15s;
+               flex-shrink:0;">
+        <i class="${iconClass}" style="font-size:.7rem;"></i><span style="font-size:.62rem;font-weight:700;line-height:1;">${flecha}</span>
     </button>`;
 }
 
