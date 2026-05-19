@@ -2173,6 +2173,30 @@ function verificarTardanzaYaRegistrada(
                 <span style="color:#484f58; font-size:.85rem;">Iniciando captura…</span>
             </div>
 
+            <!-- ── Controles de ajuste de tiempo ── -->
+            <div id="fotoOffsetControls" style="display:none; margin-top:14px;">
+                <div style="font-size:.74rem; color:#8b949e; text-align:center; margin-bottom:8px;">
+                    <i class="bi bi-clock-history" style="color:#a371f7;"></i>
+                    &nbsp;Ajustar captura:&nbsp;<span id="fotoOffsetLabel"><strong>Hora exacta</strong></span>
+                </div>
+                <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
+                    <button class="btn-offset-foto" data-delta="-60" onclick="ajustarOffsetFoto(-60)"
+                            title="60 segundos antes">−60s</button>
+                    <button class="btn-offset-foto" data-delta="-30" onclick="ajustarOffsetFoto(-30)"
+                            title="30 segundos antes">−30s</button>
+                    <button class="btn-offset-foto" data-delta="-15" onclick="ajustarOffsetFoto(-15)"
+                            title="15 segundos antes">−15s</button>
+                    <button class="btn-offset-foto offset-activo" data-delta="0" onclick="ajustarOffsetFoto(0)"
+                            title="Hora exacta de la marcación">Exacta</button>
+                    <button class="btn-offset-foto" data-delta="15" onclick="ajustarOffsetFoto(15)"
+                            title="15 segundos después">+15s</button>
+                    <button class="btn-offset-foto" data-delta="30" onclick="ajustarOffsetFoto(30)"
+                            title="30 segundos después">+30s</button>
+                    <button class="btn-offset-foto" data-delta="60" onclick="ajustarOffsetFoto(60)"
+                            title="60 segundos después">+60s</button>
+                </div>
+            </div>
+
             <!-- Meta info -->
             <div id="fotoModalMeta" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;"></div>
 
@@ -2211,6 +2235,30 @@ function verificarTardanzaYaRegistrada(
 
         .modal-backdrop {
             z-index: 1050 !important;
+        }
+
+        /* ── Botones de ajuste de offset de foto DVR ── */
+        .btn-offset-foto {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 20px;
+            color: #8b949e;
+            cursor: pointer;
+            font-size: .75rem;
+            font-weight: 600;
+            padding: 4px 11px;
+            transition: background .15s, border-color .15s, color .15s;
+            white-space: nowrap;
+        }
+        .btn-offset-foto:hover {
+            background: #2d333b;
+            border-color: #8b949e;
+            color: #c9d1d9;
+        }
+        .btn-offset-foto.offset-activo {
+            background: rgba(163, 113, 247, .18);
+            border-color: #a371f7;
+            color: #a371f7;
         }
     </style>
 

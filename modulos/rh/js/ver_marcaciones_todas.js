@@ -13,7 +13,8 @@ let scrollTopInicial = 0;
 let filtroIncidencias = 'todos'; // 'todos', 'con_incidencia', 'sin_incidencia'
 
 // Estado del modal de foto DVR
-let fotoModalActual = { id: null, tipo: null, codSucursal: null, fecha: null, hora: null };
+let fotoModalActual  = { id: null, tipo: null, codSucursal: null, fecha: null, hora: null };
+let offsetSegundos   = 0;   // offset aplicado sobre la hora exacta de marcación
 
 // Inicializar
 $(document).ready(function () {
@@ -986,6 +987,7 @@ function abrirModalFoto(btn) {
 
     // Guardar estado global
     fotoModalActual = { id, tipo, codSucursal: codSuc, fecha, hora };
+    offsetSegundos  = 0;   // resetear offset al abrir nuevo modal
 
     // Rellenar encabezado del modal
     const tipoLabel = tipo === 'entrada' ? 'Entrada' : 'Salida';
@@ -996,9 +998,13 @@ function abrirModalFoto(btn) {
     $('#fotoModalSubtitulo').text(`${nombre}  ·  ${fecha}  ·  ${titulo}`);
     $('#btnFotoAbrir').attr('href', path || '#').toggle(!!path);
     $('#fotoModalMeta').empty();
+    actualizarLabelOffset();   // mostrar "Hora exacta"
 
-    // Mostrar modal
+    // Mostrar modal y controles de offset
     $('#modalFotoMarcacion').css('display', 'flex');
+    $('#fotoOffsetControls').show();
+    $('.btn-offset-foto').removeClass('offset-activo');  // quitar activo previo
+    $('.btn-offset-foto[data-delta="0"]').addClass('offset-activo');
 
     if (existe && path) {
         mostrarImagenModal(path);
@@ -1051,24 +1057,22 @@ function capturarFotoModal() {
         return;
     }
 
-    // Construir fecha_hora con offset de -60 segundos.
-    // Ej: marca 16:44:32 → captura en 16:43:32
+    // Construir fecha_hora con el offset actual (default 0 = hora exacta).
+    // Ej: offset -60 y marca 16:44:32 → captura en 16:43:32
     // hora viene como "HH:MM:SS" desde la BD
     let fechaHora;
     try {
         const dtBase  = new Date(`${fecha}T${hora}`);
-        dtBase.setSeconds(dtBase.getSeconds() - 60);
+        dtBase.setSeconds(dtBase.getSeconds() + offsetSegundos);
         const pad     = n => String(n).padStart(2, '0');
         const hh      = pad(dtBase.getHours());
         const mm      = pad(dtBase.getMinutes());
         const ss      = pad(dtBase.getSeconds());
-        // Si el offset cruzó la medianoche, la fecha también cambia
         const yyyy    = dtBase.getFullYear();
         const mo      = pad(dtBase.getMonth() + 1);
         const dd      = pad(dtBase.getDate());
         fechaHora     = `${yyyy}-${mo}-${dd}T${hh}:${mm}:${ss}`;
     } catch (_) {
-        // Fallback: usar hora original sin offset
         fechaHora = fecha + 'T' + hora;
     }
 
@@ -1146,9 +1150,11 @@ function capturarFotoModal() {
 /** Cierra el modal de foto y limpia el estado. */
 function cerrarModalFoto() {
     $('#modalFotoMarcacion').hide();
+    $('#fotoOffsetControls').hide();
     $('#fotoModalContenedor').html('<span style="color:#484f58;">Iniciando captura…</span>');
     $('#fotoModalMeta').empty();
     fotoModalActual = { id: null, tipo: null, codSucursal: null, fecha: null, hora: null };
+    offsetSegundos  = 0;
 }
 
 /**
@@ -1192,3 +1198,29 @@ $(document).on('keydown', function (e) {
         cerrarModalFoto();
     }
 });
+
+/**
+ * Ajusta el offset de tiempo, marca el botón activo y recaptura.
+ * delta: número de segundos respecto a la hora original (absoluto, no acumulativo).
+ */
+function ajustarOffsetFoto(delta) {
+    offsetSegundos = delta;
+    actualizarLabelOffset();
+    // Marcar botón activo
+    $('.btn-offset-foto').removeClass('offset-activo');
+    $(`.btn-offset-foto[data-delta="${delta}"]`).addClass('offset-activo');
+    // Capturar con el nuevo offset
+    capturarFotoModal();
+}
+
+/** Actualiza el label que muestra el offset aplicado. */
+function actualizarLabelOffset() {
+    let txt;
+    if (offsetSegundos === 0) {
+        txt = '<strong>Hora exacta</strong>';
+    } else {
+        const signo = offsetSegundos > 0 ? '+' : '';
+        txt = `offset <strong>${signo}${offsetSegundos}s</strong> sobre la hora marcada`;
+    }
+    $('#fotoOffsetLabel').html(txt);
+}
