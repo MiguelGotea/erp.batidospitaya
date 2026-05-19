@@ -15,6 +15,7 @@ $esOperaciones = tienePermiso('historial_marcaciones_globales', 'permisosoperaci
 $esCDS = tienePermiso('historial_marcaciones_globales', 'permisoscds', $usuario['CodNivelesCargos']);
 $esContabilidad = tienePermiso('historial_marcaciones_globales', 'permisoscontabilidad', $usuario['CodNivelesCargos']);
 $esFotoMarcacion = tienePermiso('historial_marcaciones_globales', 'foto_marcacion', $usuario['CodNivelesCargos']);
+$esCambiarFotoMarcacion = tienePermiso('historial_marcaciones_globales', 'cambiar_foto_marcacion', $usuario['CodNivelesCargos']);
 
 // Obtener operarios según el tipo de usuario
 if ($esLider) {
@@ -2128,6 +2129,7 @@ function verificarTardanzaYaRegistrada(
                     esCDS: <?= $esCDS ? 'true' : 'false' ?>,
                     esContabilidad: <?= $esContabilidad ? 'true' : 'false' ?>,
                     esFotoMarcacion: <?= $esFotoMarcacion ? 'true' : 'false' ?>,
+                    esCambiarFotoMarcacion: <?= $esCambiarFotoMarcacion ? 'true' : 'false' ?>,
                     fechaHoy: '<?= $fechaHoy ?>'
                 };
             </script>
@@ -2180,7 +2182,8 @@ function verificarTardanzaYaRegistrada(
                     </div>
 
                     <!-- Controles de tiempo -->
-                    <div id="fotoOffsetControls" style="margin-top:16px;">
+                    <div id="fotoOffsetControls"
+                         style="margin-top:16px; <?= !$esCambiarFotoMarcacion ? 'display:none;' : '' ?>">
 
                         <!-- Label estado actual -->
                         <div class="text-center mb-3" style="font-size:.8rem; color:#6c757d;">

@@ -1028,26 +1028,33 @@ function abrirModalFoto(btn) {
     if (radioAntes) radioAntes.checked = true;
     // Ver original oculto hasta tener imagen
     $('#btnFotoAbrir').hide();
-    $('.btn-offset-foto').removeClass('offset-activo');
-    $('.btn-offset-foto[data-delta="0"]').addClass('offset-activo');
 
     // Abrir con Bootstrap Modal API
     const modalEl = document.getElementById('modalFotoMarcacion');
     bootstrap.Modal.getOrCreateInstance(modalEl).show();
 
     if (existe && path) {
+        // Ya hay foto: mostrarla
         mostrarImagenModal(path);
-    } else {
-        // Mostrar spinner tema claro mientras captura
+    } else if (PERMISOS_USUARIO.esCambiarFotoMarcacion) {
+        // Sin foto y tiene permiso de capturar: auto-capturar
         $('#fotoModalContenedor').html(
             `<div style="text-align:center;color:#6c757d;padding:32px;">
                 <div style="width:32px;height:32px;border:3px solid rgba(14,84,76,.2);
                             border-top-color:#0E544C;border-radius:50%;
                             animation:spin .7s linear infinite;margin:0 auto 14px;"></div>
-                <div style="font-size:.85rem;">Solicitando foto al DVR…</div>
+                <div style="font-size:.85rem;">Solicitando foto al DVR&hellip;</div>
              </div>`
         );
         capturarFotoModal();
+    } else {
+        // Sin foto y sin permiso de capturar: mostrar mensaje
+        $('#fotoModalContenedor').html(
+            `<div style="text-align:center;padding:32px;">
+                <i class="bi bi-camera-video-off" style="font-size:2.5rem;color:#adb5bd;"></i>
+                <div style="margin-top:12px;color:#6c757d;font-size:.88rem;">No hay foto disponible para esta marcaci&oacute;n.</div>
+             </div>`
+        );
     }
 }
 
