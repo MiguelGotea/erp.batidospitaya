@@ -931,7 +931,7 @@ function crearIconoFoto(row, tipo) {
     const path      = tipo === 'entrada' ? (row.foto_entrada_path || '') : (row.foto_salida_path || '');
     const hora      = tipo === 'entrada' ? (row.hora_ingreso || '') : (row.hora_salida || '');
     const nombre    = (row.nombre_completo || '').replace(/"/g, '&quot;');
-    const tituloBtn = (tipo === 'entrada' ? 'Foto Entrada' : 'Foto Salida') + (hora ? ' ' + hora.substring(0, 5) : '');
+    const tituloBtn = (tipo === 'entrada' ? 'Foto Entrada' : 'Foto Salida') + (hora ? ' ' + hora : '');
 
     // Paleta según tipo y estado
     const gradiente = tipo === 'entrada'
