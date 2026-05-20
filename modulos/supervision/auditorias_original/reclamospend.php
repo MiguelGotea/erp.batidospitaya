@@ -14,37 +14,51 @@ require_once '../../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo mediante el sistema de permisos (Herramienta: investigacion_reclamos, Acción: vista)
-verificarPermisoORedireccionar('investigacion_reclamos', 'vista', $cargoOperario);
+// Verificar si el usuario tiene el permiso de ver el historial completo (vista_total)
+$verHistorialCompleto = tienePermiso('investigacion_reclamos', 'vista_total', $cargoOperario);
+
+// Si no tiene vista_total, verificar si al menos tiene el permiso vista para pendientes
+if (!$verHistorialCompleto) {
+    verificarPermisoORedireccionar('investigacion_reclamos', 'vista', $cargoOperario);
+}
 
 // Configuración de zona horaria
 date_default_timezone_set('America/Managua');
 setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'es');
 
-// Obtener reclamos pendientes de investigación (sin reporte final)
+// Obtener reclamos según permisos (pendientes si es vista, todos si es vista_total)
 try {
-    $queryReclamosPendientes = "SELECT r.id, 
-                               DATE_FORMAT(r.fecha_evento, '%d-%b-%y') as fecha_evento_formatted,
-                               s.nombre as sucursal, 
-                               r.sucursal_codigo,
-                               r.descripcion,
-                               r.tipo_reclamo,
-                               rg.nombre as grupo_nombre,
-                               rt.nombre as tipo_nombre,
-                               r.medio_compra,
-                               r.fecha_evento
-                               FROM reclamos r 
-                               LEFT JOIN reportes_investigacion ri ON r.id = ri.reclamo_id 
-                               JOIN sucursales s ON r.sucursal_codigo = s.codigo
-                               LEFT JOIN reclamos_grupos rg ON r.grupo_id = rg.id
-                               LEFT JOIN reclamos_tipos rt ON r.tipo_reclamo_id = rt.id
-                               WHERE ri.id IS NULL 
-                               ORDER BY r.fecha_evento DESC";
-    $reclamosPendientes = $conn->query($queryReclamosPendientes)->fetchAll();
+    $whereClause = "";
+    if (!$verHistorialCompleto) {
+        $whereClause = "WHERE ri.id IS NULL";
+    }
+
+    $queryReclamos = "SELECT r.id, 
+                             DATE_FORMAT(r.fecha_evento, '%d-%b-%y') as fecha_evento_formatted,
+                             s.nombre as sucursal, 
+                             r.sucursal_codigo,
+                             r.descripcion,
+                             r.tipo_reclamo,
+                             rg.nombre as grupo_nombre,
+                             rt.nombre as tipo_nombre,
+                             r.medio_compra,
+                             r.fecha_evento,
+                             ri.id as reporte_id
+                      FROM reclamos r 
+                      LEFT JOIN reportes_investigacion ri ON r.id = ri.reclamo_id 
+                      JOIN sucursales s ON r.sucursal_codigo = s.codigo
+                      LEFT JOIN reclamos_grupos rg ON r.grupo_id = rg.id
+                      LEFT JOIN reclamos_tipos rt ON r.tipo_reclamo_id = rt.id
+                      $whereClause
+                      ORDER BY r.fecha_evento DESC";
+    $reclamosPendientes = $conn->query($queryReclamos)->fetchAll();
 } catch (PDOException $e) {
     $reclamosPendientes = [];
-    error_log("Error al obtener reclamos pendientes: " . $e->getMessage());
+    error_log("Error al obtener reclamos: " . $e->getMessage());
 }
+
+// Definir título dinámico para la página y encabezado
+$tituloPagina = $verHistorialCompleto ? 'Historial Completo de Reclamos' : 'Reclamos Pendientes de Investigación';
 
 // Verificar si hay parámetro de éxito en la URL
 $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
@@ -55,7 +69,7 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reclamos Pendientes de Investigación | Batidos Pitaya</title>
+    <title><?php echo $tituloPagina; ?> | Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -95,6 +109,16 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
             font-size: 0.8rem;
         }
 
+        .badge-resuelto {
+            background-color: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
         .btn-investigar {
             background-color: #51B8AC;
             color: white;
@@ -110,6 +134,23 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
             color: white;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(81, 184, 172, 0.3);
+        }
+
+        .btn-ver {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-ver:hover {
+            background-color: #1565C0;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
         }
 
         .no-data-card {
@@ -133,7 +174,7 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, 'Reclamos Pendientes de Investigación'); ?>
+            <?php echo renderHeader($usuario, $tituloPagina); ?>
 
             <div class="container-fluid p-4">
                 <?php if ($reporteExitoso): ?>
@@ -166,6 +207,7 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                     </thead>
                                     <tbody>
                                         <?php foreach ($reclamosPendientes as $reclamo): ?>
+                                            <?php $esPendiente = empty($reclamo['reporte_id']); ?>
                                             <tr>
                                                 <td class="text-center fw-bold text-muted">#<?php echo htmlspecialchars($reclamo['id']); ?></td>
                                                 <td>
@@ -182,12 +224,22 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                                     <span class="badge bg-light text-dark border"><?php echo htmlspecialchars($reclamo['medio_compra'] ?? '--'); ?></span>
                                                 </td>
                                                 <td class="text-center">
-                                                    <span class="badge-pendiente">Abierto</span>
+                                                    <?php if ($esPendiente): ?>
+                                                        <span class="badge-pendiente">Abierto</span>
+                                                    <?php else: ?>
+                                                        <span class="badge-resuelto">Cerrado</span>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td class="text-center">
-                                                    <a href="reportereclamo.php?reclamo_id=<?php echo $reclamo['id']; ?>" class="btn-investigar text-decoration-none">
-                                                        <i class="fas fa-search me-1"></i> Investigar
-                                                    </a>
+                                                    <?php if ($esPendiente): ?>
+                                                        <a href="reportereclamo.php?reclamo_id=<?php echo $reclamo['id']; ?>" class="btn-investigar text-decoration-none">
+                                                            <i class="fas fa-search me-1"></i> Investigar
+                                                        </a>
+                                                    <?php else: ?>
+                                                        <a href="ver_reclamo.php?id=<?php echo $reclamo['id']; ?>" class="btn-ver text-decoration-none">
+                                                            <i class="fas fa-eye me-1"></i> Ver Detalle
+                                                        </a>
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>

@@ -10,8 +10,10 @@ require_once '../../../core/permissions/permissions.php';
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-// Verificar acceso al módulo
-if (!tienePermiso('historial_reclamos', 'vista', $cargoOperario)) {
+// Verificar acceso al módulo (ya sea mediante historial_reclamos o investigacion_reclamos)
+if (!tienePermiso('historial_reclamos', 'vista', $cargoOperario) && 
+    !tienePermiso('investigacion_reclamos', 'vista', $cargoOperario) && 
+    !tienePermiso('investigacion_reclamos', 'vista_total', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
