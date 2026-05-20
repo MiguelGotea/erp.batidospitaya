@@ -1,0 +1,160 @@
+/* puntos_reglas.css */
+
+.puntos-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+.puntos-table thead th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 1rem;
+    border-bottom: 2px solid #dee2e6;
+    position: relative;
+    cursor: pointer;
+}
+
+.puntos-table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.95rem;
+}
+
+.filter-icon {
+    margin-left: 5px;
+    color: #adb5bd;
+    transition: color 0.2s ease;
+}
+
+.filter-icon:hover {
+    color: #0E544C;
+}
+
+.badge-grupo {
+    background-color: #e0e7ff;
+    color: #3730a3;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.badge-producto {
+    background-color: #fef08a;
+    color: #854d0e;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.badge-status-active {
+    background-color: #dcfce7;
+    color: #166534;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.badge-status-closed {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.puntos-monto {
+    font-family: monospace;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #eab308; /* Yellow/Gold for points */
+}
+
+/* Tabs modernas */
+.modern-tabs .nav-link {
+    color: #6b7280;
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-right: 0.5rem;
+}
+
+.modern-tabs .nav-link:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.modern-tabs .nav-link.active {
+    background-color: #0E544C;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(14, 84, 76, 0.2), 0 2px 4px -1px rgba(14, 84, 76, 0.1);
+}
+
+/* Modales Premium Extras */
+.modal-moderno .header-premium {
+    background: linear-gradient(135deg, #0E544C 0%, #116b60 100%);
+}
+
+.icon-circle {
+    background-color: rgba(255, 255, 255, 0.2);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-modern {
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-modern-primary {
+    background-color: #0E544C;
+    color: white;
+    border: none;
+}
+
+.btn-modern-primary:hover {
+    background-color: #0a3d37;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-modern-secondary {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+}
+
+.btn-modern-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #f3f4f6;
+    transform: translateY(-1px);
+}
