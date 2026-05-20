@@ -102,11 +102,21 @@ function renderizarTablaSucursales(datos) {
                 <span class="badge bg-info">${sucursal.vendedor_cubierto || 0}</span>
             </td>
             <td>
-                <div class="form-check form-switch d-flex justify-content-center">
-                    <input class="form-check-input" type="checkbox" 
-                           ${sucursal.vendedor_web == 1 ? 'checked' : ''}
-                           data-sucursal="${sucursal.codigo_sucursal}" data-tipo="vendedor_web"
-                           ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" 
+                               ${sucursal.vendedor_web == 1 ? 'checked' : ''}
+                               data-sucursal="${sucursal.codigo_sucursal}" data-tipo="vendedor_web"
+                               ${!puedeEditar ? 'disabled' : ''} onchange="toggleWebLink(this)">
+                    </div>
+                    ${sucursal.vendedor_id > 0 ? `
+                    <a href="https://talento.batidospitaya.com/postular.php?plaza=${sucursal.vendedor_id}&cargo=2&sucursal=${sucursal.codigo_sucursal}" 
+                       target="_blank" 
+                       class="btn btn-sm btn-outline-primary py-0 px-1 link-postulacion ${sucursal.vendedor_web == 1 ? '' : 'd-none'}" 
+                       title="Link de postulación">
+                        <i class="bi bi-link-45deg"></i>
+                    </a>
+                    ` : ''}
                 </div>
             </td>
             <td class="d-none">
@@ -142,11 +152,21 @@ function renderizarTablaSucursales(datos) {
                 <span class="badge bg-success">${sucursal.lider_cubierto || 0}</span>
             </td>
             <td>
-                <div class="form-check form-switch d-flex justify-content-center">
-                    <input class="form-check-input" type="checkbox" 
-                           ${sucursal.lider_web == 1 ? 'checked' : ''}
-                           data-sucursal="${sucursal.codigo_sucursal}" data-tipo="lider_web"
-                           ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" 
+                               ${sucursal.lider_web == 1 ? 'checked' : ''}
+                               data-sucursal="${sucursal.codigo_sucursal}" data-tipo="lider_web"
+                               ${!puedeEditar ? 'disabled' : ''} onchange="toggleWebLink(this)">
+                    </div>
+                    ${sucursal.lider_id > 0 ? `
+                    <a href="https://talento.batidospitaya.com/postular.php?plaza=${sucursal.lider_id}&cargo=5&sucursal=${sucursal.codigo_sucursal}" 
+                       target="_blank" 
+                       class="btn btn-sm btn-outline-primary py-0 px-1 link-postulacion ${sucursal.lider_web == 1 ? '' : 'd-none'}" 
+                       title="Link de postulación">
+                        <i class="bi bi-link-45deg"></i>
+                    </a>
+                    ` : ''}
                 </div>
             </td>
             <td class="d-none">
@@ -235,15 +255,25 @@ function renderizarTablaAdministrativo(datos) {
                 <span class="badge bg-secondary">${cargo.cantidad_cubierta || 0}</span>
             </td>
             <td>
-                <div class="form-check form-switch d-flex justify-content-center">
-                    <input class="form-check-input" 
-                           type="checkbox" 
-                           ${cargo.visible_web == 1 ? 'checked' : ''}
-                           data-cargo="${cargo.cod_cargo}"
-                           data-area="Administrativo"
-                           data-campo="visible_web"
-                           ${!puedeEditar ? 'disabled' : ''}
-                           onchange="marcarCambio(this)">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               ${cargo.visible_web == 1 ? 'checked' : ''}
+                               data-cargo="${cargo.cod_cargo}"
+                               data-area="Administrativo"
+                               data-campo="visible_web"
+                               ${!puedeEditar ? 'disabled' : ''}
+                               onchange="toggleWebLink(this)">
+                    </div>
+                    ${cargo.config_id > 0 ? `
+                    <a href="https://talento.batidospitaya.com/postular.php?plaza=${cargo.config_id}&cargo=${cargo.cod_cargo}&sucursal=18" 
+                       target="_blank" 
+                       class="btn btn-sm btn-outline-primary py-0 px-1 link-postulacion ${cargo.visible_web == 1 ? '' : 'd-none'}" 
+                       title="Link de postulación">
+                        <i class="bi bi-link-45deg"></i>
+                    </a>
+                    ` : ''}
                 </div>
             </td>
             <td>
@@ -341,16 +371,26 @@ function renderizarTablaProduccion(datos) {
                 <span class="badge bg-secondary">${cargo.cantidad_cubierta || 0}</span>
             </td>
             <td>
-                <div class="form-check form-switch d-flex justify-content-center">
-                    <input class="form-check-input" 
-                           type="checkbox" 
-                           ${cargo.visible_web == 1 ? 'checked' : ''}
-                           data-cargo="${cargo.cod_cargo}"
-                           data-area="Produccion"
-                           data-campo="visible_web"
-                           data-row="${cargo.cod_cargo}"
-                           ${!puedeEditar ? 'disabled' : ''}
-                           onchange="marcarCambio(this)">
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               ${cargo.visible_web == 1 ? 'checked' : ''}
+                               data-cargo="${cargo.cod_cargo}"
+                               data-area="Produccion"
+                               data-campo="visible_web"
+                               data-row="${cargo.cod_cargo}"
+                               ${!puedeEditar ? 'disabled' : ''}
+                               onchange="toggleWebLink(this)">
+                    </div>
+                    ${cargo.config_id > 0 ? `
+                    <a href="https://talento.batidospitaya.com/postular.php?plaza=${cargo.config_id}&cargo=${cargo.cod_cargo}&sucursal=${[17, 19, 12, 9, 10].includes(parseInt(cargo.cod_cargo)) ? 18 : 6}" 
+                       target="_blank" 
+                       class="btn btn-sm btn-outline-primary py-0 px-1 link-postulacion ${cargo.visible_web == 1 ? '' : 'd-none'}" 
+                       title="Link de postulación">
+                        <i class="bi bi-link-45deg"></i>
+                    </a>
+                    ` : ''}
                 </div>
             </td>
             <td>
@@ -377,6 +417,21 @@ let cambiosPendientes = false;
 function marcarCambio(element) {
     cambiosPendientes = true;
     element.classList.add('border-warning');
+}
+
+function toggleWebLink(checkbox) {
+    marcarCambio(checkbox);
+    const container = checkbox.closest('.d-flex');
+    if (container) {
+        const link = container.querySelector('.link-postulacion');
+        if (link) {
+            if (checkbox.checked) {
+                link.classList.remove('d-none');
+            } else {
+                link.classList.add('d-none');
+            }
+        }
+    }
 }
 
 async function guardarCambios() {
