@@ -63,16 +63,17 @@ function buildTabPane(suc, idx) {
     </div>`;
 }
 
-function buildDiaCheckboxes(cat, selected) {
+function buildDiaCheckboxes(cod, cat, selected) {
     return PDG.DIAS.map((d, i) => {
+        const uid = `dia-${cod}-${cat}-${i}`;
         const chk = Array.isArray(selected) && selected.includes(i) ? 'checked' : '';
-        return `<input type="checkbox" class="pdg-dia-check" id="dia-${cat}-${i}"
+        return `<input type="checkbox" class="pdg-dia-check" id="${uid}"
                     data-idx="${i}" ${chk}>
-                <label class="pdg-dia-label" for="dia-${cat}-${i}">${d.charAt(0)}</label>`;
+                <label class="pdg-dia-label" for="${uid}">${d.charAt(0)}</label>`;
     }).join('');
 }
 
-function buildCatRow(cat, cfg) {
+function buildCatRow(cod, cat, cfg) {
     const info      = PDG.CATEGORIAS[cat];
     const isNSem    = !cfg || cfg.tipo_frecuencia !== 'dias_semana';
     const tipo      = cfg ? cfg.tipo_frecuencia : 'n_semanas';
@@ -131,7 +132,7 @@ function buildCatRow(cat, cfg) {
             </div>
             <div class="pdg-dias-semana-fields ${!isNSem ? '' : 'd-none'}">
                 <div class="pdg-dias-group">
-                    ${buildDiaCheckboxes(cat, diasSel)}
+                    ${buildDiaCheckboxes(cod, cat, diasSel)}
                 </div>
             </div>
         </td>
@@ -213,7 +214,7 @@ function buildCongeladorSection(cap) {
 
 function buildContent(cod, data) {
     const { plan, capacidad_congelados } = data;
-    let rows = Object.keys(PDG.CATEGORIAS).map(cat => buildCatRow(cat, plan[cat] || null)).join('');
+    let rows = Object.keys(PDG.CATEGORIAS).map(cat => buildCatRow(cod, cat, plan[cat] || null)).join('');
 
     return `<div class="pdg-fade-in">
         <div class="table-responsive">
