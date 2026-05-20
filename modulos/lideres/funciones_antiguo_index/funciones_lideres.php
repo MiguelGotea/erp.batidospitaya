@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Funciones auxiliares para el módulo de líderes
  * Este archivo contiene todas las funciones de negocio para el dashboard de líderes
@@ -159,7 +160,6 @@ function obtenerTardanzasPendientesLider($codOperario)
             'sucursales' => $sucursalesCodigos,
             'detalles' => $detalles
         ];
-
     } catch (Exception $e) {
         error_log("Error obteniendo tardanzas pendientes: " . $e->getMessage());
 
@@ -358,7 +358,6 @@ function obtenerFaltasPendientesLider($codOperario)
             'sucursales' => $sucursalesCodigos,
             'detalles' => $detalles
         ];
-
     } catch (Exception $e) {
         error_log("Error obteniendo faltas pendientes: " . $e->getMessage());
 

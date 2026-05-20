@@ -702,7 +702,6 @@ function obtenerTardanzasPendientesRH()
             'sucursales' => $sucursalesCodigos,
             'detalles' => $detalles
         ];
-
     } catch (Exception $e) {
         error_log("Error obteniendo tardanzas pendientes RH: " . $e->getMessage());
 
@@ -898,7 +897,6 @@ function obtenerFaltasPendientesRH()
             'sucursales' => $sucursalesCodigos,
             'detalles' => $detalles
         ];
-
     } catch (Exception $e) {
         error_log("Error obteniendo faltas pendientes RH: " . $e->getMessage());
 
@@ -2058,7 +2056,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
         let contratosData = null;
 
         // Cargar indicadores al iniciar
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             cargarFaltasPendientes();
             cargarContratosProximos();
 
@@ -2066,7 +2064,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
             const faltasCard = document.querySelector('.indicator-container:has(#faltasCount)');
             if (faltasCard) {
                 faltasCard.style.cursor = 'pointer';
-                faltasCard.addEventListener('click', function (e) {
+                faltasCard.addEventListener('click', function(e) {
                     if (!e.target.classList.contains('btn-ver-detalles') &&
                         !e.target.closest('.btn-ver-detalles')) {
                         mostrarModalFaltas();
@@ -2078,7 +2076,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
             const contratosCard = document.querySelector('.indicator-container:has(#contratosCount)');
             if (contratosCard) {
                 contratosCard.style.cursor = 'pointer';
-                contratosCard.addEventListener('click', function (e) {
+                contratosCard.addEventListener('click', function(e) {
                     if (!e.target.classList.contains('btn-ver-detalles') &&
                         !e.target.closest('.btn-ver-detalles')) {
                         mostrarModalContratos();
@@ -2312,12 +2310,16 @@ function obtenerDetalleAusenciasColaboradoresModal()
         // Formatear fecha corta
         function formatoFechaCorta(fecha) {
             const fechaObj = new Date(fecha + 'T00:00:00');
-            const opciones = { day: '2-digit', month: 'short', year: 'numeric' };
+            const opciones = {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            };
             return fechaObj.toLocaleDateString('es-ES', opciones);
         }
 
         // Cerrar modal al hacer clic fuera
-        window.onclick = function (event) {
+        window.onclick = function(event) {
             const modalFaltas = document.getElementById('modalFaltas');
             const modalContratos = document.getElementById('modalContratos');
             const modalAusencias = document.getElementById('modalAusencias');
@@ -2351,7 +2353,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
         }
 
         // Actualizar el evento onclick para incluir los nuevos modales
-        window.onclick = function (event) {
+        window.onclick = function(event) {
             const modals = ['modalAusenciasColaboradores', 'modalTardanzasRH', 'modalFaltasRH', 'modalContratos'];
 
             modals.forEach(modalId => {
@@ -2366,7 +2368,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
         }
 
         // Cerrar modales con tecla ESC
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 cerrarModalTardanzasRH();
                 cerrarModalFaltasRH();
@@ -2379,7 +2381,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
         let ausenciasColabData = null;
 
         // Cargar ausencias colaboradores al iniciar
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             cargarAusenciasColaboradores();
         });
 

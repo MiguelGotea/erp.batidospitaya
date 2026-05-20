@@ -301,3 +301,211 @@ tr:nth-child(even) {
         padding: 15px;
     }
 }
+
+/* =====================================================
+   PAGINACIÓN — Estilo Pitaya ERP (igual a cupones)
+   ===================================================== */
+.paginacion-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#paginacion {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    min-width: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #f8f9fa;
+    border-color: #51B8AC;
+}
+
+.pagination-btn.active {
+    background-color: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+    font-weight: 600;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* =====================================================
+   Premium Status Badges for Unified Absence Types
+   ===================================================== */
+.badge-status {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.badge-pendiente {
+    background-color: #FFF3CD;
+    color: #856404;
+    border: 1px solid #FFEBAA;
+}
+
+.badge-vacaciones {
+    background-color: #D4EDDA;
+    color: #155724;
+    border: 1px solid #C3E6CB;
+}
+
+.badge-subsidio {
+    background-color: #CCE5FF;
+    color: #004085;
+    border: 1px solid #B8DAFF;
+}
+
+.badge-nopagado {
+    background-color: #F8D7DA;
+    color: #721C24;
+    border: 1px solid #F5C6CB;
+}
+
+.badge-permiso {
+    background-color: #E2E3E5;
+    color: #383D41;
+    border: 1px solid #D6D8DB;
+}
+
+.badge-compensacion {
+    background-color: #D1ECF1;
+    color: #0C5460;
+    border: 1px solid #BEE5EB;
+}
+
+/* Autocomplete Sugerencias */
+#operarios-sugerencias {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Hover rows for tables */
+#listaVacaciones tbody tr {
+    transition: background-color 0.2s ease;
+}
+#listaVacaciones tbody tr:hover {
+    background-color: rgba(81, 184, 172, 0.08) !important;
+}
+
+/* Modern inputs and labels inside Modals */
+.form-label.small.fw-bold {
+    letter-spacing: 0.5px;
+    color: #0E544C;
+}
+
+.btn-modern {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+    border: none;
+}
+
+.btn-modern-primary {
+    background: #0E544C;
+    color: white;
+}
+
+.btn-modern-primary:hover {
+    background: #093732;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-modern-secondary {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.btn-modern-secondary:hover {
+    background: #d6d8db;
+}
+
+.btn-modern-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-modern-danger:hover {
+    background: #bd2130;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Actions styling */
+.action-buttons-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-action-table {
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-action-edit {
+    background: #0E544C;
+    color: white;
+    border: 1px solid #0E544C;
+}
+.btn-action-edit:hover {
+    background: #093732;
+}
+
+.btn-action-delete {
+    background: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+}
+.btn-action-delete:hover {
+    background: #bd2130;
+}
+
