@@ -118,8 +118,23 @@ try {
         }
     }
 
-    // SQL base
-    $sqlBase = "
+    // Query de base (FROM y JOINs)
+    $sqlFrom = "
+        FROM reclamos r 
+        LEFT JOIN reportes_investigacion ri ON r.id = ri.reclamo_id 
+        JOIN sucursales s ON r.sucursal_codigo = s.codigo
+        LEFT JOIN reclamos_grupos rg ON r.grupo_id = rg.id
+        LEFT JOIN reclamos_tipos rt ON r.tipo_reclamo_id = rt.id
+    ";
+
+    // Conteo total
+    $sqlCount = "SELECT COUNT(*) as total $sqlFrom $whereClause";
+    $stmtCount = $conn->prepare($sqlCount);
+    $stmtCount->execute($params);
+    $totalRegistros = $stmtCount->fetch()['total'];
+
+    // Selección de campos
+    $sqlSelect = "
         SELECT r.id, 
                DATE_FORMAT(r.fecha_evento, '%d-%b-%y') as fecha_evento_formatted,
                DATE_FORMAT(r.fecha_reclamo, '%d-%b-%y') as fecha_reclamo_formatted,
@@ -134,21 +149,10 @@ try {
                r.fecha_evento,
                r.fecha_reclamo,
                ri.id as reporte_id
-        FROM reclamos r 
-        LEFT JOIN reportes_investigacion ri ON r.id = ri.reclamo_id 
-        JOIN sucursales s ON r.sucursal_codigo = s.codigo
-        LEFT JOIN reclamos_grupos rg ON r.grupo_id = rg.id
-        LEFT JOIN reclamos_tipos rt ON r.tipo_reclamo_id = rt.id
     ";
 
-    // Conteo total
-    $sqlCount = "SELECT COUNT(*) as total FROM ($sqlBase) AS subquery $whereClause";
-    $stmtCount = $conn->prepare($sqlCount);
-    $stmtCount->execute($params);
-    $totalRegistros = $stmtCount->fetch()['total'];
-
     // Consulta paginada
-    $sql = "SELECT * FROM ($sqlBase) AS subquery $whereClause $orderClause LIMIT :offset, :limit";
+    $sql = "$sqlSelect $sqlFrom $whereClause $orderClause LIMIT :offset, :limit";
     $stmt = $conn->prepare($sql);
     
     foreach ($params as $key => $value) {
