@@ -111,7 +111,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                             <tr>
                                                 <th style="width: 200px;">Grupo</th>
                                                 <th style="width: 100px;">Obligatorio</th>
-                                                <th style="width: 100px;">Plazas a Cubrir</th>
+                                                <th style="width: 100px;">Plaza Temporal</th>
                                                 <th style="width: 100px;">Personal Contratado</th>
                                                 <th style="width: 100px;">Web</th>
                                                 <th style="width: 150px;" class="d-none">Urgencia</th>
@@ -138,7 +138,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                             <tr>
                                                 <th>Cargo</th>
                                                 <th style="width: 100px;">Obligatorio</th>
-                                                <th style="width: 120px;">Plazas a Cubrir</th>
+                                                <th style="width: 120px;">Plaza Temporal</th>
                                                 <th style="width: 100px;">
                                                     <i class="bi bi-info-circle" data-bs-toggle="tooltip"
                                                         title="Plazas Activas Actuales"></i>
@@ -169,7 +169,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                             <tr>
                                                 <th>Cargo</th>
                                                 <th style="width: 100px;">Obligatorio</th>
-                                                <th style="width: 110px;">Plazas a Cubrir</th>
+                                                <th style="width: 110px;">Plaza Temporal</th>
                                                 <th style="width: 100px;">
                                                     <i class="bi bi-info-circle" data-bs-toggle="tooltip"
                                                         title="Plazas Activas Actuales"></i>
@@ -267,7 +267,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                     </h6>
                                     <p class="small text-muted mb-0">
                                         Gestiona los cargos de producción. <strong>Cantidad</strong> es la base
-                                        necesaria, <strong>Plazas a Cubrir</strong> permite abrir más plazas temporalmente, y
+                                        necesaria, <strong>Plaza Temporal</strong> permite abrir más plazas temporalmente, y
                                         <strong>Personal Contratado</strong> muestra cuántos están actualmente en el cargo.
                                     </p>
                                 </div>
