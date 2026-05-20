@@ -18,7 +18,7 @@ if (!$conn) {
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28, 49])) {
+if (!tienePermiso('registro_vacaciones', 'vista', $cargoOperario)) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -27,8 +27,8 @@ if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28, 49])) {
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
-$esLider = verificarAccesoCargo([5, 43, 49]);
-$esRH = verificarAccesoCargo([13, 8, 39, 30, 37, 28, 49]);
+$esLider = tienePermiso('registro_vacaciones', 'ver_sucursales_lider', $cargoOperario);
+$esRH = tienePermiso('registro_vacaciones', 'ver_todas_sucursales', $cargoOperario);
 
 /**
  * Obtiene el porcentaje de pago para un tipo de falta específico
@@ -507,6 +507,8 @@ function obtenerTiposFaltaConPorcentajes()
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="css/vacaciones.css?v=<?php echo mt_rand(1, 10000); ?>">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
@@ -540,7 +542,7 @@ function obtenerTiposFaltaConPorcentajes()
                 <!-- Filtros -->
                 <div class="filtros-container">
                     <form method="get" action="vacaciones.php" class="filtros-form">
-                        <?php if (!verificarAccesoCargo([2, 5])): ?>
+                        <?php if (tienePermiso('registro_vacaciones', 'ver_filtro_sucursal', $cargoOperario)): ?>
                             <div class="filtro-group">
                                 <label for="sucursal">Sucursal</label>
                                 <select id="sucursal" name="sucursal">
@@ -587,16 +589,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 <i class="fas fa-search"></i> Buscar
                             </button>
 
-                            <?php if (verificarAccesoCargo([5, 43, 13, 16, 39, 30, 37, 28, 49])): ?>
-                                <button type="button" onclick="mostrarModalNuevaVacacion()" class="btn btn-success">
-                                    Vacaciones
-                                </button>
-                                <button type="button" onclick="mostrarModalNuevoSubsidio()" class="btn btn-info">
-                                    Subsidio
-                                </button>
-                            <?php endif; ?>
-
-                            <?php if (verificarAccesoCargo([8, 16, 49])): ?>
+                            <?php if (tienePermiso('registro_vacaciones', 'exportar_excel', $cargoOperario)): ?>
                                 <a href="vacaciones.php?<?= http_build_query([
                                     'sucursal' => $sucursalSeleccionada ?? '',
                                     'desde' => $fechaDesde,
@@ -673,204 +666,207 @@ function obtenerTiposFaltaConPorcentajes()
     </div>
 
     <!-- Modal para nuevo subsidio por rango -->
-    <div class="modal" id="modalNuevoSubsidio">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Registrar Subsidio por Rango</h2>
-                <button class="modal-close" onclick="cerrarModalSubsidio()">&times;</button>
+    <div class="modal fade" id="modalNuevoSubsidio" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-notes-medical fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Registrar Subsidio</h5>
+                            <p class="small mb-0 opacity-75">Registro de subsidio por rango de fechas</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <form id="formNuevoSubsidio" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="registrar_vacaciones" value="1">
+                        
+                        <div class="mb-3">
+                            <label for="subsidio_sucursal" class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
+                            <select id="subsidio_sucursal" name="cod_sucursal" class="form-select" required>
+                                <?php if ($esRH): ?>
+                                    <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
+                                        <option value="<?= $sucursal['codigo'] ?>">
+                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <?php foreach (obtenerSucursalesLider($_SESSION['usuario_id']) as $sucursal): ?>
+                                        <option value="<?= $sucursal['codigo'] ?>">
+                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subsidio_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                            <select id="subsidio_operario" name="cod_operario" class="form-select" required>
+                                <option value="">Seleccione un colaborador</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subsidio_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de Subsidio:</label>
+                            <select id="subsidio_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeSubsidio(this.value)">
+                                <option value="Subsidio_3dias" data-porcentaje="100">Subsidio 3 días (Paga 100%)</option>
+                                <option value="Subsidio_INSS" data-porcentaje="0">Subsidio INSS (Paga 0%)</option>
+                            </select>
+                            <small id="info-porcentaje-subsidio" class="form-text text-muted mt-1 d-block">
+                                ✅ La empresa paga el 100% de este día
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="subsidio_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="subsidio_fecha_inicio" name="fecha_inicio" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="subsidio_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <input type="date" id="subsidio_fecha_fin" name="fecha_fin" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subsidio_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                            <textarea id="subsidio_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subsidio_foto" class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
+                            <input type="file" id="subsidio_foto" name="foto_falta" class="form-control" accept="image/*" capture="environment" required>
+                            <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx. 5MB)</small>
+                        </div>
+
+                        <div id="info-rango-subsidio" class="alert alert-info py-2" style="display: none;">
+                            <p class="mb-1"><strong>Resumen del rango seleccionado:</strong></p>
+                            <p class="mb-0 small" id="info-dias-totales-subsidio">Días totales en rango: 0</p>
+                            <p class="mb-0 small fw-bold" id="info-dias-subsidio">Días a registrar como subsidio: 0</p>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between">
+                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formNuevoSubsidio" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-save me-2"></i>Registrar Subsidio
+                    </button>
+                </div>
             </div>
-            <form id="formNuevoSubsidio" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="registrar_vacaciones" value="1">
-
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="subsidio_sucursal" class="form-label">Sucursal:</label>
-                        <select id="subsidio_sucursal" name="cod_sucursal" class="form-select" required>
-                            <?php if ($esRH): ?>
-                                <!-- Para RH, mostrar todas las sucursales -->
-                                <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
-                                    <option value="<?= $sucursal['codigo'] ?>">
-                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <!-- Para líderes, mostrar solo sus sucursales -->
-                                <?php foreach (obtenerSucursalesLider($_SESSION['usuario_id']) as $sucursal): ?>
-                                    <option value="<?= $sucursal['codigo'] ?>">
-                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="subsidio_operario" class="form-label">Colaborador:</label>
-                        <select id="subsidio_operario" name="cod_operario" class="form-select" required>
-                            <option value="">Seleccione un colaborador</option>
-                            <!-- Se llenará dinámicamente con JavaScript -->
-                        </select>
-                    </div>
-
-                    <!-- Tipo de subsidio -->
-                    <div class="form-group">
-                        <label for="subsidio_tipo" class="form-label">Tipo de Subsidio:</label>
-                        <select id="subsidio_tipo" name="tipo_falta" class="form-select" required
-                            onchange="actualizarPorcentajeSubsidio(this.value)">
-                            <option value="Subsidio_3dias" data-porcentaje="100">Subsidio 3 días (Paga 100%)</option>
-                            <option value="Subsidio_INSS" data-porcentaje="0">Subsidio INSS (Paga 0%)</option>
-                        </select>
-                        <small id="info-porcentaje-subsidio" class="form-text text-muted">
-                            ✅ La empresa paga el 100% de este día
-                        </small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="subsidio_fecha_inicio" class="form-label">Fecha Inicio:</label>
-                        <input type="date" id="subsidio_fecha_inicio" name="fecha_inicio" class="form-input" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="subsidio_fecha_fin" class="form-label">Fecha Fin:</label>
-                        <input type="date" id="subsidio_fecha_fin" name="fecha_fin" class="form-input" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="subsidio_observaciones" class="form-label">Observaciones:</label>
-                        <textarea id="subsidio_observaciones" name="observaciones" class="form-textarea"></textarea>
-                    </div>
-
-                    <!-- Campo para foto obligatoria -->
-                    <div class="form-group">
-                        <label for="subsidio_foto" class="form-label">Foto de Evidencia (Obligatoria):</label>
-                        <input type="file" id="subsidio_foto" name="foto_falta" class="form-input" accept="image/*"
-                            capture="environment" required>
-                        <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx.
-                            5MB)</small>
-                    </div>
-
-                    <!-- Información del rango seleccionado -->
-                    <div id="info-rango-subsidio" class="info-resumen" style="display: none;">
-                        <p><strong>Resumen del rango seleccionado:</strong></p>
-                        <p id="info-dias-totales-subsidio">Días totales en rango: 0</p>
-                        <p id="info-dias-subsidio">Días a registrar como subsidio: 0</p>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" onclick="cerrarModalSubsidio()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Registrar Subsidio</button>
-                </div>
-            </form>
         </div>
     </div>
 
     <!-- Modal para nueva vacación por rango -->
-    <div class="modal" id="modalNuevaVacacion">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Registrar Vacaciones por Rango</h2>
-                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+    <div class="modal fade" id="modalNuevaVacacion" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-umbrella-beach fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Registrar Vacaciones</h5>
+                            <p class="small mb-0 opacity-75">Registro de vacaciones por rango de fechas</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <form id="formNuevaVacacion" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="registrar_vacaciones" value="1">
+
+                        <div class="mb-3">
+                            <label for="nueva_sucursal" class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
+                            <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
+                                <?php if ($esRH): ?>
+                                    <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
+                                        <option value="<?= $sucursal['codigo'] ?>">
+                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <?php foreach (obtenerSucursalesLider($_SESSION['usuario_id']) as $sucursal): ?>
+                                        <option value="<?= $sucursal['codigo'] ?>">
+                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nueva_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                            <select id="nueva_operario" name="cod_operario" class="form-select" required>
+                                <option value="">Seleccione un colaborador</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nueva_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo:</label>
+                            <select id="nueva_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeVacaciones(this.value)">
+                                <?php
+                                $tiposFalta = obtenerTiposFaltaConPorcentajes();
+                                foreach ($tiposFalta as $tipo):
+                                    if ($tipo['codigo'] === 'Vacaciones'):
+                                        $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ? 'Deducción 100%' : 'Paga ' . $tipo['porcentaje_pago'] . '%';
+                                        ?>
+                                        <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>" selected>
+                                            <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
+                                        </option>
+                                        <?php
+                                    endif;
+                                endforeach;
+                                ?>
+                            </select>
+                            <small id="info-porcentaje-vacaciones" class="form-text text-muted mt-1 d-block" style="display: none;"></small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nueva_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="nueva_fecha_inicio" name="fecha_inicio" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nueva_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <input type="date" id="nueva_fecha_fin" name="fecha_fin" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nueva_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                            <textarea id="nueva_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nueva_foto" class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
+                            <input type="file" id="nueva_foto" name="foto_falta" class="form-control" accept="image/*" capture="environment" required>
+                            <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx. 5MB)</small>
+                        </div>
+
+                        <div id="info-rango" class="alert alert-info py-2" style="display: none;">
+                            <p class="mb-1"><strong>Resumen del rango seleccionado:</strong></p>
+                            <p class="mb-0 small" id="info-dias-totales">Días totales en rango: 0</p>
+                            <p id="info-dias-laborables" style="display:none;">Días laborables (L-V): 0</p>
+                            <p class="mb-0 small fw-bold" id="info-vacaciones">Días a registrar como vacaciones: 0</p>
+                            <p style="display:none;"><small><i>Nota: Se excluyen sábados y domingos</i></small></p>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between">
+                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formNuevaVacacion" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-save me-2"></i>Registrar Vacaciones
+                    </button>
+                </div>
             </div>
-            <form id="formNuevaVacacion" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="registrar_vacaciones" value="1">
-
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="nueva_sucursal" class="form-label">Sucursal:</label>
-                        <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
-                            <?php if ($esRH): ?>
-                                <!-- Para RH, mostrar todas las sucursales -->
-                                <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
-                                    <option value="<?= $sucursal['codigo'] ?>">
-                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <!-- Para líderes, mostrar solo sus sucursales -->
-                                <?php foreach (obtenerSucursalesLider($_SESSION['usuario_id']) as $sucursal): ?>
-                                    <option value="<?= $sucursal['codigo'] ?>">
-                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_operario" class="form-label">Colaborador:</label>
-                        <select id="nueva_operario" name="cod_operario" class="form-select" required>
-                            <option value="">Seleccione un colaborador</option>
-                            <!-- Se llenará dinámicamente con JavaScript -->
-                        </select>
-                    </div>
-
-                    <!-- NUEVO: Tipo de falta con porcentaje (aunque sea solo para vacaciones, se aplica la lógica) -->
-                    <div class="form-group">
-                        <label for="nueva_tipo" class="form-label">Tipo:</label>
-                        <select id="nueva_tipo" name="tipo_falta" class="form-select" required
-                            onchange="actualizarPorcentajeVacaciones(this.value)">
-                            <?php
-                            // Obtener solo el tipo "Vacaciones" de la base de datos
-                            $tiposFalta = obtenerTiposFaltaConPorcentajes();
-                            foreach ($tiposFalta as $tipo):
-                                if ($tipo['codigo'] === 'Vacaciones'): // Solo mostrar Vacaciones
-                                    $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ?
-                                        'Deducción 100%' :
-                                        'Paga ' . $tipo['porcentaje_pago'] . '%';
-                                    ?>
-                                    <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>"
-                                        selected>
-                                        <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
-                                    </option>
-                                    <?php
-                                endif;
-                            endforeach;
-                            ?>
-                        </select>
-                        <small id="info-porcentaje-vacaciones" class="form-text text-muted"
-                            style="display: none;"></small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_fecha_inicio" class="form-label">Fecha Inicio:</label>
-                        <input type="date" id="nueva_fecha_inicio" name="fecha_inicio" class="form-input" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_fecha_fin" class="form-label">Fecha Fin:</label>
-                        <input type="date" id="nueva_fecha_fin" name="fecha_fin" class="form-input" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_observaciones" class="form-label">Observaciones:</label>
-                        <textarea id="nueva_observaciones" name="observaciones" class="form-textarea"></textarea>
-                    </div>
-
-                    <!-- NUEVO: Campo para foto obligatoria -->
-                    <div class="form-group">
-                        <label for="nueva_foto" class="form-label">Foto de Evidencia (Obligatoria):</label>
-                        <input type="file" id="nueva_foto" name="foto_falta" class="form-input" accept="image/*"
-                            capture="environment" required>
-                        <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx.
-                            5MB)</small>
-                    </div>
-
-                    <!-- Información del rango seleccionado -->
-                    <div id="info-rango" class="info-resumen" style="display: none;">
-                        <p><strong>Resumen del rango seleccionado:</strong></p>
-                        <p id="info-dias-totales">Días totales en rango: 0</p>
-                        <p id="info-dias-laborables" style="display:none;">Días laborables (L-V): 0</p>
-                        <p id="info-vacaciones">Días a registrar como vacaciones: 0</p>
-                        <p style="display:none;"><small><i>Nota: Se excluyen sábados y domingos</i></small></p>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Registrar Vacaciones</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -972,7 +968,9 @@ function obtenerTiposFaltaConPorcentajes()
             // Ocultar información del rango inicialmente
             document.getElementById('info-rango-subsidio').style.display = 'none';
 
-            document.getElementById('modalNuevoSubsidio').style.display = 'flex';
+            const modalEl = document.getElementById('modalNuevoSubsidio');
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
 
             // Cargar los colaboradores inmediatamente después de mostrar el modal
             setTimeout(() => {
@@ -1000,7 +998,9 @@ function obtenerTiposFaltaConPorcentajes()
             // Ocultar información del rango inicialmente
             document.getElementById('info-rango').style.display = 'none';
 
-            document.getElementById('modalNuevaVacacion').style.display = 'flex';
+            const modalEl = document.getElementById('modalNuevaVacacion');
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
 
             // NUEVO: Cargar los colaboradores inmediatamente después de mostrar el modal
             setTimeout(() => {
@@ -1425,26 +1425,17 @@ function obtenerTiposFaltaConPorcentajes()
 
         // Cerrar modal de vacaciones
         function cerrarModal() {
-            document.getElementById('modalNuevaVacacion').style.display = 'none';
+            const modalEl = document.getElementById('modalNuevaVacacion');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
         }
 
         // Cerrar modal de subsidios
         function cerrarModalSubsidio() {
-            document.getElementById('modalNuevoSubsidio').style.display = 'none';
+            const modalEl = document.getElementById('modalNuevoSubsidio');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
         }
-
-        // Cerrar modal al hacer clic fuera
-        window.addEventListener('click', function (event) {
-            const modal = document.getElementById('modalNuevaVacacion');
-            if (event.target === modal) {
-                cerrarModal();
-            }
-
-            const modalSubsidio = document.getElementById('modalNuevoSubsidio');
-            if (event.target === modalSubsidio) {
-                cerrarModalSubsidio();
-            }
-        });
 
         // Inicializar DataTable
         $(document).ready(function () {
@@ -1531,6 +1522,83 @@ function obtenerTiposFaltaConPorcentajes()
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ===================== MODAL AYUDA ===================== -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-question fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Ayuda — Registro de Vacaciones</h5>
+                            <p class="small mb-0 opacity-75">Guía rápida de uso del módulo</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <h6 class="fw-bold text-success"><i class="fas fa-info-circle me-2"></i>¿Para qué sirve este módulo?</h6>
+                    <p>Este módulo permite registrar, visualizar y exportar las ausencias del personal, específicamente <strong>Vacaciones</strong> y <strong>Subsidios</strong>, ya sea para aplicarlos o deducirlos del cálculo de nómina.</p>
+
+                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-umbrella-beach me-2"></i>Registro de Vacaciones</h6>
+                    <ul class="mb-0">
+                        <li>Permite registrar vacaciones seleccionando un rango de fechas.</li>
+                        <li>El sistema calcula automáticamente los <strong>días laborables</strong> dentro del rango.</li>
+                        <li>Puedes indicar si el día se paga al 100%, 0% o si corresponde a una deducción.</li>
+                    </ul>
+
+                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-notes-medical me-2"></i>Registro de Subsidios</h6>
+                    <ul class="mb-0">
+                        <li><strong>Subsidio 3 días:</strong> Asume el pago al 100% por cuenta de la empresa.</li>
+                        <li><strong>Subsidio INSS:</strong> Asume el 0% por cuenta de la empresa (lo cubre el INSS).</li>
+                    </ul>
+
+                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-camera me-2"></i>Evidencias</h6>
+                    <p class="mb-0">Todo registro requiere de manera <strong>obligatoria</strong> adjuntar una foto (formato de salida, documento médico, etc.) para respaldar la autorización.</p>
+                </div>
+                <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-end">
+                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Flotante con opciones -->
+    <?php if (tienePermiso('registro_vacaciones', 'nuevo_registro', $cargoOperario)): ?>
+        <div class="fab-container" id="fabContainer">
+            <div class="fab-options">
+                <div class="fab-option" onclick="mostrarModalNuevaVacacion()">
+                    <span class="fab-label">Vacaciones</span>
+                    <div class="fab-icon-holder"><i class="fas fa-umbrella-beach"></i></div>
+                </div>
+                <div class="fab-option" onclick="mostrarModalNuevoSubsidio()">
+                    <span class="fab-label">Subsidio</span>
+                    <div class="fab-icon-holder"><i class="fas fa-notes-medical"></i></div>
+                </div>
+            </div>
+            <div class="btn-floating-pitaya" title="Opciones" onclick="toggleFab(event)">
+                <i class="fas fa-plus"></i>
+            </div>
+        </div>
+        <script>
+            function toggleFab(event) {
+                event.stopPropagation();
+                document.getElementById('fabContainer').classList.toggle('active');
+            }
+            
+            // Cerrar al hacer click fuera
+            document.addEventListener('click', function(event) {
+                const fab = document.getElementById('fabContainer');
+                if (fab && fab.classList.contains('active') && !fab.contains(event.target)) {
+                    fab.classList.remove('active');
+                }
+            });
+        </script>
+    <?php endif; ?>
 </body>
 
 </html>
