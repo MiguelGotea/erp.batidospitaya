@@ -72,7 +72,7 @@ function renderizarTablaSucursales(datos) {
         // Fila de Encabezado de Sucursal
         const headerRow = document.createElement('tr');
         headerRow.innerHTML = `
-            <th colspan="7" class="bg-light text-primary text-start ps-3">
+            <th colspan="6" class="bg-light text-primary text-start ps-3">
                 <i class="bi bi-shop me-2"></i>${sucursal.nombre_sucursal}
             </th>
         `;
@@ -81,7 +81,11 @@ function renderizarTablaSucursales(datos) {
         // Fila Vendedores
         const vRow = document.createElement('tr');
         vRow.innerHTML = `
-            <td class="text-start ps-4 fw-bold">Vendedores</td>
+            <td class="text-start ps-4 fw-bold">
+                Vendedores
+                <input type="hidden" value="${sucursal.vendedor_salario || 0}" 
+                       data-sucursal="${sucursal.codigo_sucursal}" data-tipo="vendedor_salario">
+            </td>
             <td>
                 <input type="number" class="form-control form-control-sm text-center" 
                        value="${sucursal.vendedor_oblig || 0}" min="0"
@@ -105,12 +109,6 @@ function renderizarTablaSucursales(datos) {
                            ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
                 </div>
             </td>
-            <td>
-                <input type="number" class="form-control form-control-sm text-center" 
-                       value="${sucursal.vendedor_salario || 0}" min="0" step="0.01"
-                       data-sucursal="${sucursal.codigo_sucursal}" data-tipo="vendedor_salario"
-                       ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
-            </td>
             <td class="d-none">
                 ${generarSelectUrgencia(4, sucursal.codigo_sucursal, 'vendedor_urgencia', 'Sucursales', true)}
             </td>
@@ -123,7 +121,11 @@ function renderizarTablaSucursales(datos) {
         // Fila Líderes
         const lRow = document.createElement('tr');
         lRow.innerHTML = `
-            <td class="text-start ps-4 fw-bold">Líderes</td>
+            <td class="text-start ps-4 fw-bold">
+                Líderes
+                <input type="hidden" value="${sucursal.lider_salario || 0}" 
+                       data-sucursal="${sucursal.codigo_sucursal}" data-tipo="lider_salario">
+            </td>
             <td>
                 <input type="number" class="form-control form-control-sm text-center" 
                        value="${sucursal.lider_oblig || 1}" min="0"
@@ -146,12 +148,6 @@ function renderizarTablaSucursales(datos) {
                            data-sucursal="${sucursal.codigo_sucursal}" data-tipo="lider_web"
                            ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
                 </div>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm text-center" 
-                       value="${sucursal.lider_salario || 0}" min="0" step="0.01"
-                       data-sucursal="${sucursal.codigo_sucursal}" data-tipo="lider_salario"
-                       ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
             </td>
             <td class="d-none">
                 ${generarSelectUrgencia(4, sucursal.codigo_sucursal, 'lider_urgencia', 'Sucursales', true)}
@@ -196,7 +192,7 @@ function renderizarTablaAdministrativo(datos) {
             areaActual = cargo.area_cargo;
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = `
-                <th colspan="9" class="bg-light text-secondary text-start ps-3 py-2">
+                <th colspan="8" class="bg-light text-secondary text-start ps-3 py-2">
                     <i class="bi bi-diagram-3 me-2"></i>Área: ${areaActual || 'Sin Área Definida'}
                 </th>
             `;
@@ -205,7 +201,14 @@ function renderizarTablaAdministrativo(datos) {
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="text-start fw-bold">${cargo.nombre_cargo}</td>
+            <td class="text-start fw-bold">
+                ${cargo.nombre_cargo}
+                <input type="hidden" 
+                       value="${cargo.salario_propuesto || 0}" 
+                       data-cargo="${cargo.cod_cargo}"
+                       data-area="Administrativo"
+                       data-campo="salario_propuesto">
+            </td>
             <td>
                 <input type="number" 
                        class="form-control form-control-sm" 
@@ -242,18 +245,6 @@ function renderizarTablaAdministrativo(datos) {
                            ${!puedeEditar ? 'disabled' : ''}
                            onchange="marcarCambio(this)">
                 </div>
-            </td>
-            <td>
-                <input type="number" 
-                       class="form-control form-control-sm text-center" 
-                       value="${cargo.salario_propuesto || 0}" 
-                       min="0"
-                       step="0.01"
-                       data-cargo="${cargo.cod_cargo}"
-                       data-area="Administrativo"
-                       data-campo="salario_propuesto"
-                       ${!puedeEditar ? 'disabled' : ''}
-                       onchange="marcarCambio(this)">
             </td>
             <td>
                 ${generarSelectUrgencia(cargo.nivel_urgencia || 1, cargo.cod_cargo, 'nivel_urgencia', 'Administrativo', false)}
@@ -301,7 +292,7 @@ function renderizarTablaProduccion(datos) {
             areaActual = cargo.area_cargo;
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = `
-                <th colspan="9" class="bg-light text-secondary text-start ps-3 py-2">
+                <th colspan="8" class="bg-light text-secondary text-start ps-3 py-2">
                     <i class="bi bi-diagram-3 me-2"></i>Área: ${areaActual || 'Sin Área Definida'}
                 </th>
             `;
@@ -314,7 +305,14 @@ function renderizarTablaProduccion(datos) {
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="text-start fw-bold">${cargo.nombre_cargo}</td>
+            <td class="text-start fw-bold">
+                ${cargo.nombre_cargo}
+                <input type="hidden" 
+                       value="${cargo.salario_propuesto || 0}" 
+                       data-cargo="${cargo.cod_cargo}"
+                       data-area="Produccion"
+                       data-campo="salario_propuesto">
+            </td>
             <td>
                 <input type="number" 
                        class="form-control form-control-sm cantidad-input" 
@@ -354,18 +352,6 @@ function renderizarTablaProduccion(datos) {
                            ${!puedeEditar ? 'disabled' : ''}
                            onchange="marcarCambio(this)">
                 </div>
-            </td>
-            <td>
-                <input type="number" 
-                       class="form-control form-control-sm text-center" 
-                       value="${cargo.salario_propuesto || 0}" 
-                       min="0"
-                       step="0.01"
-                       data-cargo="${cargo.cod_cargo}"
-                       data-area="Produccion"
-                       data-campo="salario_propuesto"
-                       ${!puedeEditar ? 'disabled' : ''}
-                       onchange="marcarCambio(this)">
             </td>
             <td>
                 ${generarSelectUrgencia(cargo.nivel_urgencia || 1, cargo.cod_cargo, 'nivel_urgencia', 'Produccion', false)}

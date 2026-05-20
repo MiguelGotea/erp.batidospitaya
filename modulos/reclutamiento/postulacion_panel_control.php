@@ -114,7 +114,6 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 100px;">Plazas a Cubrir</th>
                                                 <th style="width: 100px;">Personal Contratado</th>
                                                 <th style="width: 100px;">Web</th>
-                                                <th style="width: 120px;">Salario</th>
                                                 <th style="width: 150px;" class="d-none">Urgencia</th>
                                                 <th style="width: 80px;">Banner</th>
                                             </tr>
@@ -146,7 +145,6 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                     Personal Contratado
                                                 </th>
                                                 <th style="width: 120px;">Web</th>
-                                                <th style="width: 120px;">Salario</th>
                                                 <th style="width: 150px;">Urgencia</th>
                                                 <th style="width: 80px;">PDF</th>
                                                 <th style="width: 80px;">Banner</th>
@@ -178,7 +176,6 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                     Personal Contratado
                                                 </th>
                                                 <th style="width: 150px;">Web</th>
-                                                <th style="width: 120px;">Salario</th>
                                                 <th style="width: 150px;">Urgencia</th>
                                                 <th style="width: 80px;">PDF</th>
                                                 <th style="width: 80px;">Banner</th>
