@@ -5,7 +5,7 @@ require_once '../../core/layout/menu_lateral.php';
 
 
 $usuario = obtenerUsuarioActual();
-$cargoOperario = $usuario['CodNivelesCargos'];  
+$cargoOperario = $usuario['CodNivelesCargos'];
 //verificarAccesoModulo('operaciones');
 verificarAccesoCargo([11, 16, 36, 55]);
 
@@ -19,56 +19,58 @@ if (!verificarAccesoCargo([11, 16, 36, 55])) {
 $sucursales = obtenerTodasSucursales();
 
 // Funciones necesarias para calcular faltas pendientes (las mismas que en líderes)
-function obtenerTotalFaltasAutomaticas($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerTotalFaltasAutomaticas($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     // 1. Obtener todos los operarios asignados a la sucursal en el rango de fechas
     $operarios = obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta);
     $totalFaltas = 0;
-    
+
     foreach ($operarios as $operario) {
         // 2. Para cada operario, verificar días laborables en el rango
         $diasLaborables = obtenerDiasLaborablesOperario($operario['CodOperario'], $codSucursal, $fechaDesde, $fechaHasta);
-        
+
         foreach ($diasLaborables as $dia) {
             // Filtrar fechas anteriores al 14 de julio de 2025
             if (strtotime($dia['fecha']) < strtotime('2025-07-14')) {
                 continue;
             }
-            
+
             // 3. Verificar si hay marcación de entrada para ese día
             $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha']);
-            
+
             if (!$marcacion) {
                 $totalFaltas++;
             }
         }
     }
-    
+
     return $totalFaltas;
 }
 
 // Funciones necesarias para calcular tardanzas pendientes
-function obtenerTotalTardanzasAutomaticas($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerTotalTardanzasAutomaticas($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     // 1. Obtener todos los operarios asignados a la sucursal en el rango de fechas
     $operarios = obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta);
     $totalTardanzas = 0;
-    
+
     foreach ($operarios as $operario) {
         // 2. Para cada operario, verificar días laborables en el rango
         $diasLaborables = obtenerDiasLaborablesOperario($operario['CodOperario'], $codSucursal, $fechaDesde, $fechaHasta);
-        
+
         foreach ($diasLaborables as $dia) {
             // Filtrar fechas anteriores al 14 de julio de 2025
             if (strtotime($dia['fecha']) < strtotime('2025-07-14')) {
                 continue;
             }
-            
+
             // 3. Verificar si hay marcación de entrada para ese día
             $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha']);
-            
+
             if ($marcacion) {
                 // 4. Verificar si hay tardanza comparando con el horario programado
                 $tardanza = verificarTardanza($operario['CodOperario'], $codSucursal, $dia['fecha'], $marcacion['hora_ingreso']);
@@ -78,13 +80,14 @@ function obtenerTotalTardanzasAutomaticas($codSucursal, $fechaDesde, $fechaHasta
             }
         }
     }
-    
+
     return $totalTardanzas;
 }
 
-function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT DISTINCT o.CodOperario, o.Nombre, o.Apellido, s.nombre as sucursal_nombre
         FROM Operarios o
@@ -100,9 +103,10 @@ function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta)
     return $stmt->fetchAll();
 }
 
-function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     // Obtener todas las semanas que cubren el rango de fechas
     $stmt = $conn->prepare("
         SELECT * FROM SemanasSistema 
@@ -110,9 +114,9 @@ function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, 
     ");
     $stmt->execute([$fechaHasta, $fechaDesde]);
     $semanas = $stmt->fetchAll();
-    
+
     $diasLaborables = [];
-    
+
     foreach ($semanas as $semana) {
         // Obtener horario programado para esta semana
         $stmt = $conn->prepare("
@@ -124,23 +128,28 @@ function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, 
         ");
         $stmt->execute([$codOperario, $codSucursal, $semana['id']]);
         $horario = $stmt->fetch();
-        
+
         if ($horario) {
             // Verificar cada día de la semana
             $dias = [
-                'lunes' => 1, 'martes' => 2, 'miercoles' => 3, 
-                'jueves' => 4, 'viernes' => 5, 'sabado' => 6, 'domingo' => 7
+                'lunes' => 1,
+                'martes' => 2,
+                'miercoles' => 3,
+                'jueves' => 4,
+                'viernes' => 5,
+                'sabado' => 6,
+                'domingo' => 7
             ];
-            
+
             foreach ($dias as $dia => $diaNumero) {
                 $columnaEstado = $dia . '_estado';
                 $columnaEntrada = $dia . '_entrada';
                 $columnaSalida = $dia . '_salida';
-                
+
                 if ($horario[$columnaEstado] === 'Activo' && $horario[$columnaEntrada] !== null) {
                     // Calcular fecha del día específico
                     $fechaDia = date('Y-m-d', strtotime($semana['fecha_inicio'] . ' + ' . ($diaNumero - 1) . ' days'));
-                    
+
                     // Verificar si la fecha está dentro del rango solicitado
                     if ($fechaDia >= $fechaDesde && $fechaDia <= $fechaHasta) {
                         $diasLaborables[] = [
@@ -154,13 +163,14 @@ function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, 
             }
         }
     }
-    
+
     return $diasLaborables;
 }
 
-function obtenerMarcacionEntrada($codOperario, $fecha) {
+function obtenerMarcacionEntrada($codOperario, $fecha)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT * FROM marcaciones 
         WHERE CodOperario = ? 
@@ -172,9 +182,10 @@ function obtenerMarcacionEntrada($codOperario, $fecha) {
     return $stmt->fetch();
 }
 
-function obtenerTotalFaltasManuales($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerTotalFaltasManuales($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $stmt = $conn->prepare("
         SELECT COUNT(*) as total 
         FROM faltas_manual 
@@ -184,7 +195,7 @@ function obtenerTotalFaltasManuales($codSucursal, $fechaDesde, $fechaHasta) {
     ");
     $stmt->execute([$codSucursal, $fechaDesde, $fechaHasta]);
     $result = $stmt->fetch();
-    
+
     return $result['total'] ?? 0;
 }
 
@@ -195,12 +206,12 @@ if (!empty($sucursales)) {
     $hoy = new DateTime();
     $fechaDesde = $hoy->format('Y-m-01');
     $fechaHasta = $hoy->format('Y-m-t');
-    
+
     // Calcular para cada sucursal
     foreach ($sucursales as $sucursal) {
         $totalFaltasAuto = obtenerTotalFaltasAutomaticas($sucursal['codigo'], $fechaDesde, $fechaHasta);
         $totalFaltasManuales = obtenerTotalFaltasManuales($sucursal['codigo'], $fechaDesde, $fechaHasta);
-        
+
         $pendientes = $totalFaltasAuto - $totalFaltasManuales;
         if ($pendientes > 0) {
             $faltasPendientes += $pendientes;
@@ -208,48 +219,50 @@ if (!empty($sucursales)) {
     }
 }
 
-function verificarTardanza($codOperario, $codSucursal, $fecha, $horaMarcada) {
+function verificarTardanza($codOperario, $codSucursal, $fecha, $horaMarcada)
+{
     global $conn;
-    
+
     // Obtener la semana a la que pertenece esta fecha
     $semana = obtenerSemanaPorFecha($fecha);
     if (!$semana) return false;
-    
+
     // Obtener el horario programado para ese operario en esa semana y sucursal
     $horarioProgramado = obtenerHorarioOperacionesPorDia(
-        $codOperario, 
-        $semana['id'], 
+        $codOperario,
+        $semana['id'],
         $codSucursal,
         $fecha
     );
-    
+
     if ($horarioProgramado && $horarioProgramado['hora_entrada']) {
         // Calcular diferencia entre hora programada y hora marcada
         $horaProgramada = new DateTime($horarioProgramado['hora_entrada']);
         $horaMarcada = new DateTime($horaMarcada);
-        
+
         // Considerar como tardanza si la hora marcada es posterior a la programada
         return $horaMarcada > $horaProgramada;
     }
-    
+
     return false;
 }
 
-function obtenerTotalTardanzasManuales($codSucursal, $fechaDesde, $fechaHasta) {
+function obtenerTotalTardanzasManuales($codSucursal, $fechaDesde, $fechaHasta)
+{
     global $conn;
-    
+
     $sql = "SELECT COUNT(*) as total FROM TardanzasManuales WHERE fecha_tardanza BETWEEN ? AND ? AND fecha_tardanza >= '2025-07-14'";
     $params = [$fechaDesde, $fechaHasta];
-    
+
     if (!empty($codSucursal)) {
         $sql .= " AND cod_sucursal = ?";
         $params[] = $codSucursal;
     }
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $result = $stmt->fetch();
-    
+
     return $result['total'] ?? 0;
 }
 
@@ -258,14 +271,15 @@ function obtenerTotalTardanzasManuales($codSucursal, $fechaDesde, $fechaHasta) {
 /**
  * Obtiene el total de tardanzas pendientes de reportar para Operaciones (todas las sucursales)
  */
-function obtenerTardanzasPendientesOperaciones() {
+function obtenerTardanzasPendientesOperaciones()
+{
     global $conn;
-    
+
     // Determinar el periodo a revisar según el día del mes (misma lógica que líderes)
     $hoy = new DateTime();
     $diaMes = (int)$hoy->format('d');
     $diasRestantes = calcularDiasRestantesReporteOperaciones();
-    
+
     if ($diaMes <= 2) {
         // Días 1-2: revisar mes anterior
         $mesRevisar = new DateTime('first day of last month');
@@ -280,7 +294,7 @@ function obtenerTardanzasPendientesOperaciones() {
         $periodo = 'mes_actual';
         $mesNombre = obtenerMesEspanolOperaciones($hoy) . ' ' . $hoy->format('Y');
     }
-    
+
     // Obtener todas las sucursales para Operaciones
     $sucursales = obtenerTodasSucursales();
     if (empty($sucursales)) {
@@ -297,10 +311,10 @@ function obtenerTardanzasPendientesOperaciones() {
             'detalles' => []
         ];
     }
-    
+
     $sucursalesCodigos = array_column($sucursales, 'codigo');
     $placeholders = implode(',', array_fill(0, count($sucursalesCodigos), '?'));
-    
+
     // Consulta para obtener tardanzas reales no reportadas (misma que líderes)
     $sql = "
         SELECT 
@@ -368,17 +382,17 @@ function obtenerTardanzasPendientesOperaciones() {
         )
         ORDER BY m.fecha DESC, m.sucursal_codigo, nombre_completo
     ";
-    
+
     $params = array_merge($sucursalesCodigos, [$fechaDesde, $fechaHasta]);
-    
+
     try {
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
         $detalles = $stmt->fetchAll();
-        
+
         $totalTardanzas = count($detalles);
         $color = determinarColorTardanzasOperaciones($totalTardanzas, $diasRestantes);
-        
+
         // Construir URL con parámetros
         $urlTardanzas = "../lideres/tardanzas_manual.php?" . http_build_query([
             'fecha_desde' => $fechaDesde,
@@ -387,7 +401,7 @@ function obtenerTardanzasPendientesOperaciones() {
             'modo' => 'operaciones',
             'periodo' => $periodo
         ]);
-        
+
         return [
             'total' => $totalTardanzas,
             'color' => $color,
@@ -401,10 +415,9 @@ function obtenerTardanzasPendientesOperaciones() {
             'sucursales' => $sucursalesCodigos,
             'detalles' => $detalles
         ];
-        
     } catch (Exception $e) {
         error_log("Error obteniendo tardanzas pendientes Operaciones: " . $e->getMessage());
-        
+
         return [
             'total' => 0,
             'color' => 'verde',
@@ -423,14 +436,15 @@ function obtenerTardanzasPendientesOperaciones() {
 /**
  * Obtiene el total de faltas/ausencias pendientes de reportar para Operaciones (todas las sucursales)
  */
-function obtenerFaltasPendientesOperaciones() {
+function obtenerFaltasPendientesOperaciones()
+{
     global $conn;
-    
+
     // Determinar el periodo a revisar según el día del mes
     $hoy = new DateTime();
     $diaMes = (int)$hoy->format('d');
     $diasRestantes = calcularDiasRestantesReporteFaltasOperaciones();
-    
+
     if ($diaMes <= 1) {
         // Día 1: revisar mes anterior
         $mesRevisar = new DateTime('first day of last month');
@@ -445,7 +459,7 @@ function obtenerFaltasPendientesOperaciones() {
         $periodo = 'mes_actual';
         $mesNombre = obtenerMesEspanolOperaciones($hoy) . ' ' . $hoy->format('Y');
     }
-    
+
     // Obtener todas las sucursales para Operaciones
     $sucursales = obtenerTodasSucursales();
     if (empty($sucursales)) {
@@ -462,10 +476,10 @@ function obtenerFaltasPendientesOperaciones() {
             'detalles' => []
         ];
     }
-    
+
     $sucursalesCodigos = array_column($sucursales, 'codigo');
     $placeholders = implode(',', array_fill(0, count($sucursalesCodigos), '?'));
-    
+
     // Consulta para obtener ausencias reales no reportadas (misma que líderes)
     $sql = "
         SELECT 
@@ -551,21 +565,21 @@ function obtenerFaltasPendientesOperaciones() {
         )
         ORDER BY h.fecha DESC, hso.cod_sucursal, nombre_completo
     ";
-    
+
     $params = array_merge(
         [$fechaDesde, $fechaDesde, $fechaHasta],
         $sucursalesCodigos,
         [$fechaDesde, $fechaHasta]
     );
-    
+
     try {
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
         $detalles = $stmt->fetchAll();
-        
+
         $totalFaltas = count($detalles);
         $color = determinarColorFaltasOperaciones($totalFaltas, $diasRestantes);
-        
+
         // Construir URL con parámetros
         $urlFaltas = "../lideres/faltas_manual.php?" . http_build_query([
             'fecha_desde' => $fechaDesde,
@@ -574,7 +588,7 @@ function obtenerFaltasPendientesOperaciones() {
             'modo' => 'operaciones',
             'periodo' => $periodo
         ]);
-        
+
         return [
             'total' => $totalFaltas,
             'color' => $color,
@@ -588,10 +602,9 @@ function obtenerFaltasPendientesOperaciones() {
             'sucursales' => $sucursalesCodigos,
             'detalles' => $detalles
         ];
-        
     } catch (Exception $e) {
         error_log("Error obteniendo faltas pendientes Operaciones: " . $e->getMessage());
-        
+
         return [
             'total' => 0,
             'color' => 'verde',
@@ -608,10 +621,11 @@ function obtenerFaltasPendientesOperaciones() {
 }
 
 // Funciones auxiliares para Operaciones
-function calcularDiasRestantesReporteOperaciones() {
+function calcularDiasRestantesReporteOperaciones()
+{
     $hoy = new DateTime();
     $diaMes = (int)$hoy->format('d');
-    
+
     if ($diaMes <= 2) {
         return max(0, 2 - $diaMes);
     } else {
@@ -622,7 +636,8 @@ function calcularDiasRestantesReporteOperaciones() {
     }
 }
 
-function determinarColorTardanzasOperaciones($totalTardanzas, $diasRestantes) {
+function determinarColorTardanzasOperaciones($totalTardanzas, $diasRestantes)
+{
     if ($totalTardanzas == 0) return 'verde';
     if ($diasRestantes <= 0) return 'rojo';
     if ($diasRestantes <= 1) return 'rojo';
@@ -630,24 +645,27 @@ function determinarColorTardanzasOperaciones($totalTardanzas, $diasRestantes) {
     return 'verde';
 }
 
-function obtenerTextoIndicadorTardanzasOperaciones($totalTardanzas, $periodo, $mesNombre) {
+function obtenerTextoIndicadorTardanzasOperaciones($totalTardanzas, $periodo, $mesNombre)
+{
     if ($totalTardanzas == 0) return 'Sin tardanzas pendientes';
     $mesTexto = ($periodo === 'mes_anterior') ? 'del mes anterior' : 'del mes actual';
     return "$totalTardanzas tardanzas pendientes $mesTexto";
 }
 
-function calcularDiasRestantesReporteFaltasOperaciones() {
+function calcularDiasRestantesReporteFaltasOperaciones()
+{
     $hoy = new DateTime();
     $diaMes = (int)$hoy->format('d');
-    
+
     if ($diaMes <= 1) return 0;
-    
+
     $proximoMes = new DateTime('first day of next month');
     $diferencia = $hoy->diff($proximoMes);
     return $diferencia->days;
 }
 
-function determinarColorFaltasOperaciones($totalFaltas, $diasRestantes) {
+function determinarColorFaltasOperaciones($totalFaltas, $diasRestantes)
+{
     if ($totalFaltas == 0) return 'verde';
     if ($diasRestantes <= 0) return 'rojo';
     if ($diasRestantes <= 1) return 'rojo';
@@ -655,26 +673,39 @@ function determinarColorFaltasOperaciones($totalFaltas, $diasRestantes) {
     return 'verde';
 }
 
-function obtenerTextoIndicadorFaltasOperaciones($totalFaltas, $periodo, $mesNombre) {
+function obtenerTextoIndicadorFaltasOperaciones($totalFaltas, $periodo, $mesNombre)
+{
     if ($totalFaltas == 0) return 'Sin faltas pendientes';
     $mesTexto = ($periodo === 'mes_anterior') ? 'del mes anterior' : 'del mes actual';
     return "$totalFaltas faltas pendientes $mesTexto";
 }
 
-function obtenerMesEspanolOperaciones($fecha) {
+function obtenerMesEspanolOperaciones($fecha)
+{
     $meses = [
-        1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
-        5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
-        9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+        1 => 'Enero',
+        2 => 'Febrero',
+        3 => 'Marzo',
+        4 => 'Abril',
+        5 => 'Mayo',
+        6 => 'Junio',
+        7 => 'Julio',
+        8 => 'Agosto',
+        9 => 'Septiembre',
+        10 => 'Octubre',
+        11 => 'Noviembre',
+        12 => 'Diciembre'
     ];
     return $meses[(int)$fecha->format('m')];
 }
 
-function formatoFechaOperaciones($fecha) {
+function formatoFechaOperaciones($fecha)
+{
     return date('d/m/Y', strtotime($fecha));
 }
 
-function formatoHoraAmPmOperaciones($hora) {
+function formatoHoraAmPmOperaciones($hora)
+{
     return date('h:i A', strtotime($hora));
 }
 
@@ -689,12 +720,12 @@ if (!empty($sucursales)) {
     $hoy = new DateTime();
     $fechaDesde = $hoy->format('Y-m-01');
     $fechaHasta = $hoy->format('Y-m-t');
-    
+
     // Calcular para cada sucursal
     foreach ($sucursales as $sucursal) {
         $totalTardanzasAuto = obtenerTotalTardanzasAutomaticas($sucursal['codigo'], $fechaDesde, $fechaHasta);
         $totalTardanzasManuales = obtenerTotalTardanzasManuales($sucursal['codigo'], $fechaDesde, $fechaHasta);
-        
+
         $pendientes = $totalTardanzasAuto - $totalTardanzasManuales;
         if ($pendientes > 0) {
             $tardanzasPendientes += $pendientes;
@@ -704,12 +735,13 @@ if (!empty($sucursales)) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operaciones - Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="../../core/assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'].'/core/assets/css/indexmodulos.css') ?>"> <!-- CSS propio con manejo de versiones  evitar cache de buscador -->
+    <link rel="stylesheet" href="../../core/assets/css/indexmodulos.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/core/assets/css/indexmodulos.css') ?>"> <!-- CSS propio con manejo de versiones  evitar cache de buscador -->
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <style>
         * {
@@ -719,38 +751,38 @@ if (!empty($sucursales)) {
             font-family: 'Calibri', sans-serif;
             font-size: clamp(12px, 2vw, 18px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             margin: 0;
             padding: 0;
         }
-        
-        
+
+
         /* Estilos para los botones de acción */
         .btn-revisar.llamar {
             background: #007bff;
         }
-        
+
         .btn-revisar.llamar:hover {
             background: #0056b3;
         }
-        
+
         .status-alerta {
             color: #ffc107;
             font-weight: bold;
         }
-        
+
         .status-info {
             color: #17a2b8;
             font-weight: bold;
         }
-        
+
         .status-inactivo {
             color: #dc3545;
             font-weight: bold;
         }
-        
+
         .btn-ver-detalles {
             background: #51B8AC;
             border: 2px solid white;
@@ -761,230 +793,230 @@ if (!empty($sucursales)) {
             transition: all 0.3s ease;
             font-weight: bold;
         }
-        
+
         .btn-ver-detalles:hover {
             background: white;
             color: #667eea;
         }
 
 
-/* Estilos para modales */
-.modal-pendientes {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    backdrop-filter: blur(5px);
-}
+        /* Estilos para modales */
+        .modal-pendientes {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
 
-.modal-content-pendientes {
-    background-color: white;
-    margin: 5% auto;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 800px;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    animation: modalSlideIn 0.3s ease-out;
-}
+        .modal-content-pendientes {
+            background-color: white;
+            margin: 5% auto;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
 
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-50px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
 
-.modal-header-pendientes {
-    background: #0E544C;
-    color: white;
-    padding: 20px;
-    border-radius: 12px 12px 0 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-.modal-header-pendientes h3 {
-    margin: 0;
-    font-size: 1.4rem !important;
-}
+        .modal-header-pendientes {
+            background: #0E544C;
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.close-modal {
-    font-size: 2rem;
-    cursor: pointer;
-    transition: color 0.3s ease;
-    line-height: 1;
-}
+        .modal-header-pendientes h3 {
+            margin: 0;
+            font-size: 1.4rem !important;
+        }
 
-.close-modal:hover {
-    color: #ffeb3b;
-}
+        .close-modal {
+            font-size: 2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            line-height: 1;
+        }
 
-.modal-body-pendientes {
-    padding: 20px;
-    max-height: 60vh;
-    overflow-y: auto;
-}
+        .close-modal:hover {
+            color: #ffeb3b;
+        }
 
-/* Información de fecha límite */
-.info-fecha-limite {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border-left: 4px solid #007bff;
-}
+        .modal-body-pendientes {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
 
-.info-fecha-limite p {
-    margin: 5px 0;
-    color: #495057;
-}
+        /* Información de fecha límite */
+        .info-fecha-limite {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
 
-/* Lista de tardanzas pendientes */
-.lista-tardanzas {
-    display: grid;
-    gap: 15px;
-}
+        .info-fecha-limite p {
+            margin: 5px 0;
+            color: #495057;
+        }
 
-.item-tardanza {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.3s ease;
-}
+        /* Lista de tardanzas pendientes */
+        .lista-tardanzas {
+            display: grid;
+            gap: 15px;
+        }
 
-.item-tardanza:hover {
-    background: #e9ecef;
-    transform: translateX(5px);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
+        .item-tardanza {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
 
-.tardanza-info h4 {
-    margin: 0 0 8px 0;
-    color: #495057;
-    font-size: 1.1rem !important;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+        .item-tardanza:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
 
-.tardanza-info p {
-    margin: 0 0 5px 0;
-    font-size: 0.9rem;
-    color: #6c757d;
-}
+        .tardanza-info h4 {
+            margin: 0 0 8px 0;
+            color: #495057;
+            font-size: 1.1rem !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-.tardanza-info small {
-    color: #868e96;
-    font-size: 0.8rem;
-}
+        .tardanza-info p {
+            margin: 0 0 5px 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
 
-.btn-justificar {
-    background: #51B8AC;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: bold;
-    white-space: nowrap;
-    margin-left: 15px;
-    text-decoration: none;
-    display: inline-block;
-}
+        .tardanza-info small {
+            color: #868e96;
+            font-size: 0.8rem;
+        }
 
-.btn-justificar:hover {
-    background: #0E544C;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
+        .btn-justificar {
+            background: #51B8AC;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            white-space: nowrap;
+            margin-left: 15px;
+            text-decoration: none;
+            display: inline-block;
+        }
 
-/* Alertas */
-.alert {
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-}
+        .btn-justificar:hover {
+            background: #0E544C;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
 
-.alert-warning {
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
-    color: #856404;
-}
+        /* Alertas */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
 
-.alert-warning h4 {
-    color: #856404;
-    margin-bottom: 10px;
-}
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
 
-.alert-warning i {
-    color: #ffc107;
-    margin-bottom: 10px;
-}
+        .alert-warning h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .modal-content-pendientes {
-        margin: 10% auto;
-        width: 95%;
-    }
-    
-    .item-tardanza {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .btn-justificar {
-        margin-left: 0;
-        width: 100%;
-        text-align: center;
-    }
-    
-    .pendientes-content {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-    
-    .pendientes-info {
-        text-align: center;
-    }
-    
-    .pendientes-fecha {
-        font-size: 0.7rem !important;
-    }
-    
-    .indicadores-container {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .pendientes-container {
-        min-width: 100%;
-        max-width: 100%;
-    }
-}
+        .alert-warning i {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
 
+        /* Responsive */
+        @media (max-width: 768px) {
+            .modal-content-pendientes {
+                margin: 10% auto;
+                width: 95%;
+            }
 
+            .item-tardanza {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .btn-justificar {
+                margin-left: 0;
+                width: 100%;
+                text-align: center;
+            }
+
+            .pendientes-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .pendientes-info {
+                text-align: center;
+            }
+
+            .pendientes-fecha {
+                font-size: 0.7rem !important;
+            }
+
+            .indicadores-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .pendientes-container {
+                min-width: 100%;
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
     <div class="main-container">
@@ -1002,7 +1034,7 @@ if (!empty($sucursales)) {
             </h2>
             <!-- Contenedor para indicadores -->
             <div class="indicadores-container">
-                
+
                 <!-- Indicador de Anuncios Nuevos -->
                 <div class="indicator-container">
                     <div class="indicator-header">
@@ -1019,7 +1051,7 @@ if (!empty($sucursales)) {
                         <div class="indicator-meta">
                             <span id="anunciosContainer">
                                 <span class="indicator-status" id="anunciosFecha">
-                                    
+
                                 </span>
                             </span>
                             <span class="indicator-action">
@@ -1028,15 +1060,15 @@ if (!empty($sucursales)) {
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Indicador de Tardanzas Pendientes -->
-                <div class="indicator-container" style="Display: None">  
+                <div class="indicator-container" style="Display: None">
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-stopwatch"></i>
                         </div>
                     </div>
-                    
+
                     <div class="indicator-count" id="tardanzasCount">
                         0
                     </div>
@@ -1044,7 +1076,7 @@ if (!empty($sucursales)) {
                         <div class="indicator-titulo">
                             Tardanzas Pendientes de Inverstigacion
                         </div>
-                        
+
                         <div class="indicator-meta">
                             <span id="tardanzasContainer">
                                 <span class="indicator-status" id="tardanzasFecha">
@@ -1057,16 +1089,16 @@ if (!empty($sucursales)) {
                         </div>
                     </div>
                 </div>
-            
+
                 <!-- Indicador de Feriados Pendientes -->
-                <div class="indicator-container">  
-                
+                <div class="indicator-container">
+
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-stopwatch"></i>
                         </div>
                     </div>
-                    
+
                     <div class="indicator-count" id="feriadosCount">
                         0
                     </div>
@@ -1085,27 +1117,27 @@ if (!empty($sucursales)) {
                             </span>
                         </div>
                     </div>
-                
+
                 </div>
-                
+
                 <!-- Indicador de Reclamos Pendientes -->
-                <div class="indicator-container">  
-                
+                <div class="indicator-container">
+
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-stopwatch"></i>
                         </div>
                     </div>
-                    
+
                     <div class="indicator-count" id="reclamosCount">
                         0
                     </div>
-                    
+
                     <div class="indicator-info">
                         <div class="indicator-titulo">
                             Reclamos Pendientes
                         </div>
-                        
+
                         <div class="indicator-meta">
                             <span id="reclamosContainer">
                                 <span class="indicator-status" id="reclamosFecha">
@@ -1117,23 +1149,23 @@ if (!empty($sucursales)) {
                             </span>
                         </div>
                     </div>
-                
+
                 </div>
-                
+
                 <!-- Indicador de KPI Pendientes -->
-                <div class="indicator-container">                  
+                <div class="indicator-container">
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-stopwatch"></i>
                         </div>
-                    </div>                    
+                    </div>
                     <div class="indicator-count" id="kpiCount">
                         0
-                    </div>                    
+                    </div>
                     <div class="indicator-info">
                         <div class="indicator-titulo">
                             KPI Semanales Pendientes
-                        </div>                        
+                        </div>
                         <div class="indicator-meta">
                             <span id="kpiContainer">
                                 <span class="indicator-status" id="kpiFecha">
@@ -1144,61 +1176,61 @@ if (!empty($sucursales)) {
                                 <i class="fas fa-arrow-right"></i>
                             </span>
                         </div>
-                    </div>                
+                    </div>
                 </div>
-                
+
                 <!-- Indicadores de Tardanzas y Faltas Pendientes (como líderes) -->
-                <div class="indicator-container"  onclick="mostrarModalTardanzasOperaciones()" style="cursor: pointer;">                  
+                <div class="indicator-container" onclick="mostrarModalTardanzasOperaciones()" style="cursor: pointer;">
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-stopwatch"></i>
                         </div>
-                    </div>                    
+                    </div>
                     <div class="indicator-count">
                         <?= $tardanzasPendientesOperaciones['total'] ?>
-                    </div>                    
+                    </div>
                     <div class="indicator-info">
                         <div class="indicator-titulo">
                             Tardanzas No Reportadas + No Validas
-                        </div>                        
+                        </div>
                         <div class="indicator-meta">
                             <span class="indicator-status <?= $tardanzasPendientesOperaciones['color'] ?>" id="tardanzasFechaOperaciones">
-                                    <?php 
-                                    $diasRestantes = $tardanzasPendientesOperaciones['dias_restantes'];
-                                    if ($tardanzasPendientesOperaciones['total'] == 0) {
-                                        echo 'Al día';
-                                    } elseif ($diasRestantes < 0) {
-                                        echo 'Vencido hace ' . abs($diasRestantes) . ' días';
-                                    } elseif ($diasRestantes === 0) {
-                                        echo 'Vence hoy';
-                                    } else {
-                                        echo $diasRestantes . ' días restantes';
-                                    }
-                                    ?>
+                                <?php
+                                $diasRestantes = $tardanzasPendientesOperaciones['dias_restantes'];
+                                if ($tardanzasPendientesOperaciones['total'] == 0) {
+                                    echo 'Al día';
+                                } elseif ($diasRestantes < 0) {
+                                    echo 'Vencido hace ' . abs($diasRestantes) . ' días';
+                                } elseif ($diasRestantes === 0) {
+                                    echo 'Vence hoy';
+                                } else {
+                                    echo $diasRestantes . ' días restantes';
+                                }
+                                ?>
                             </span>
                             <span class="indicator-action">
                                 <i class="fas fa-arrow-right"></i>
                             </span>
                         </div>
-                    </div>                
+                    </div>
                 </div>
- 
-                 <div class="indicator-container" onclick="mostrarModalFaltasOperaciones()" style="cursor: pointer;">                  
+
+                <div class="indicator-container" onclick="mostrarModalFaltasOperaciones()" style="cursor: pointer;">
                     <div class="indicator-header">
                         <div class="indicator-icon">
                             <i class="fas fa-stopwatch"></i>
                         </div>
-                    </div>                    
+                    </div>
                     <div class="indicator-count">
                         <?= $faltasPendientesOperaciones['total'] ?>
-                    </div>                    
+                    </div>
                     <div class="indicator-info">
                         <div class="indicator-titulo">
-                            Faltas No Reportadas + No Validas 
-                        </div>                        
+                            Faltas No Reportadas + No Validas
+                        </div>
                         <div class="indicator-meta">
                             <span class="indicator-status <?= $faltasPendientesOperaciones['color'] ?>" id="faltasFechaOperaciones">
-                                <?php 
+                                <?php
                                 $diasRestantes = $faltasPendientesOperaciones['dias_restantes'];
                                 if ($faltasPendientesOperaciones['total'] == 0) {
                                     echo 'Al día';
@@ -1209,16 +1241,16 @@ if (!empty($sucursales)) {
                                 } else {
                                     echo $diasRestantes . ' días restantes';
                                 }
-                                ?>                                
+                                ?>
                             </span>
                             <span class="indicator-action">
                                 <i class="fas fa-arrow-right"></i>
                             </span>
                         </div>
-                    </div>                
-                </div>               
+                    </div>
+                </div>
             </div>
-            
+
             <!-- Modal para detalles de KPI pendientes -->
             <div id="modalKPI" class="modal-pendientes">
                 <div class="modal-content-pendientes">
@@ -1236,7 +1268,7 @@ if (!empty($sucursales)) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Modal de restricción para KPI -->
             <div id="modalRestriccionKPI" class="modal-pendientes">
                 <div class="modal-content-pendientes" style="max-width: 500px;">
@@ -1249,11 +1281,11 @@ if (!empty($sucursales)) {
                             <i class="fas fa-exclamation-triangle fa-3x" style="color: #dc3545; margin-bottom: 15px;"></i>
                             <h4 style="color: #dc3545; margin-bottom: 15px;">Acceso Restringido</h4>
                             <p style="color: #666; line-height: 1.5;">
-                                Tiene <strong style="color: #dc3545;" id="cantidadKPIRestriccion">0</strong> 
+                                Tiene <strong style="color: #dc3545;" id="cantidadKPIRestriccion">0</strong>
                                 sucursales pendientes de actualizar KPI.
                             </p>
                             <p style="color: #666; margin-top: 10px;">
-                                El porcentaje de completitud es del <strong id="porcentajeKPIRestriccion">0%</strong> 
+                                El porcentaje de completitud es del <strong id="porcentajeKPIRestriccion">0%</strong>
                                 (mínimo requerido: 70%).
                             </p>
                             <p style="color: #666; margin-top: 10px;">
@@ -1271,7 +1303,7 @@ if (!empty($sucursales)) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Modal de Detalles de Tardanzas Pendientes Operaciones -->
             <div id="modalTardanzasOperaciones" class="modal-pendientes">
                 <div class="modal-content-pendientes" style="max-width: 90%;">
@@ -1282,11 +1314,11 @@ if (!empty($sucursales)) {
                     <div class="modal-body-pendientes">
                         <div class="filtros-modal" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <div>
-                                <strong>Periodo:</strong> 
-                                <?= date('d/m/Y', strtotime($tardanzasPendientesOperaciones['fecha_desde'])) ?> - 
-                                <?= date('d/m/Y', strtotime($tardanzasPendientesOperaciones['fecha_hasta'])) ?> 
+                                <strong>Periodo:</strong>
+                                <?= date('d/m/Y', strtotime($tardanzasPendientesOperaciones['fecha_desde'])) ?> -
+                                <?= date('d/m/Y', strtotime($tardanzasPendientesOperaciones['fecha_hasta'])) ?>
                                 | <strong>Total:</strong> <?= $tardanzasPendientesOperaciones['total'] ?> tardanzas
-                                <?php 
+                                <?php
                                 $diasRestantes = $tardanzasPendientesOperaciones['dias_restantes'];
                                 if ($diasRestantes < 0) {
                                     echo "<span style='color: #dc3545;'> (Vencido hace " . abs($diasRestantes) . " días)</span>";
@@ -1301,7 +1333,7 @@ if (!empty($sucursales)) {
                                 <i class="fas fa-external-link-alt"></i> Ver Tardanzas
                             </a>
                         </div>
-                        
+
                         <?php if (empty($tardanzasPendientesOperaciones['detalles'])): ?>
                             <div style="text-align: center; padding: 40px; color: #666;">
                                 <i class="fas fa-check-circle" style="font-size: 3rem; color: #28a745; margin-bottom: 15px;"></i>
@@ -1354,7 +1386,7 @@ if (!empty($sucursales)) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Modal de Detalles de Faltas Pendientes Operaciones -->
             <div id="modalFaltasOperaciones" class="modal-pendientes">
                 <div class="modal-content-pendientes" style="max-width: 90%;">
@@ -1365,11 +1397,11 @@ if (!empty($sucursales)) {
                     <div class="modal-body-pendientes">
                         <div class="filtros-modal" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <div>
-                                <strong>Periodo:</strong> 
-                                <?= date('d/m/Y', strtotime($faltasPendientesOperaciones['fecha_desde'])) ?> - 
-                                <?= date('d/m/Y', strtotime($faltasPendientesOperaciones['fecha_hasta'])) ?> 
+                                <strong>Periodo:</strong>
+                                <?= date('d/m/Y', strtotime($faltasPendientesOperaciones['fecha_desde'])) ?> -
+                                <?= date('d/m/Y', strtotime($faltasPendientesOperaciones['fecha_hasta'])) ?>
                                 | <strong>Total:</strong> <?= $faltasPendientesOperaciones['total'] ?> faltas
-                                <?php 
+                                <?php
                                 $diasRestantes = $faltasPendientesOperaciones['dias_restantes'];
                                 if ($diasRestantes < 0) {
                                     echo "<span style='color: #dc3545;'> (Vencido hace " . abs($diasRestantes) . " días)</span>";
@@ -1383,7 +1415,7 @@ if (!empty($sucursales)) {
                                 <i class="fas fa-external-link-alt"></i> Ver Faltas
                             </a>
                         </div>
-                        
+
                         <?php if (empty($faltasPendientesOperaciones['detalles'])): ?>
                             <div style="text-align: center; padding: 40px; color: #666;">
                                 <i class="fas fa-check-circle" style="font-size: 3rem; color: #28a745; margin-bottom: 15px;"></i>
@@ -1416,7 +1448,7 @@ if (!empty($sucursales)) {
                                                     <?= formatoFechaOperaciones($falta['fecha']) ?>
                                                 </td>
                                                 <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
-                                                    <?= $falta['hora_entrada_programada'] ? formatoHoraAmPmOperaciones($falta['hora_entrada_programada']) : 'N/A' ?> - 
+                                                    <?= $falta['hora_entrada_programada'] ? formatoHoraAmPmOperaciones($falta['hora_entrada_programada']) : 'N/A' ?> -
                                                     <?= $falta['hora_salida_programada'] ? formatoHoraAmPmOperaciones($falta['hora_salida_programada']) : 'N/A' ?>
                                                 </td>
                                                 <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
@@ -1433,11 +1465,11 @@ if (!empty($sucursales)) {
                     </div>
                 </div>
             </div>
- 
+
             <h2 class="section-title">
                 <i class="fas fa-bolt"></i> Accesos Rápidos
-            </h2>          
-            
+            </h2>
+
             <div class="quick-access-grid">
                 <a href="horas_extras_manual.php" class="quick-access-card">
                     <div class="quick-access-icon">
@@ -1445,28 +1477,28 @@ if (!empty($sucursales)) {
                     </div>
                     <div class="quick-access-title">Horas Extras</div>
                 </a>
-                
+
                 <a href="feriados.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-clock"></i>
                     </div>
                     <div class="quick-access-title">Feriados</div>
                 </a>
-                
+
                 <a href="../supervision/auditorias_original/agregarAviso.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-search-dollar"></i>
                     </div>
                     <div class="quick-access-title">Nuevo Aviso</div>
                 </a>
-                
+
                 <a href="../supervision/auditorias_original/kpi.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-bullhorn"></i>
                     </div>
                     <div class="quick-access-title">Registrar KPIs</div>
                 </a>
-                
+
                 <a href="../supervision/auditorias_original/reclamospend.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-tools"></i>
@@ -1476,7 +1508,7 @@ if (!empty($sucursales)) {
             </div>
         </div>
     </div>
-    
+
     <script>
         // Variables globales para indicadores
         let anunciosData = null;
@@ -1484,7 +1516,7 @@ if (!empty($sucursales)) {
         let feriadosData = null;
         let reclamosData = null;
         let kpiData = null;
-        
+
         // Cargar indicadores al iniciar
         document.addEventListener('DOMContentLoaded', function() {
             cargarAnunciosNuevos();
@@ -1492,14 +1524,14 @@ if (!empty($sucursales)) {
             cargarFeriadosPendientes();
             cargarReclamosPendientes();
             cargarKPIPendientes();
-            
+
             // Hacer clickeables las tarjetas de indicadores
             const anunciosCard = document.querySelector('.indicator-container:has(#anunciosCount)');
             const tardanzasCard = document.querySelector('.indicator-container:has(#tardanzasCount)');
             const feriadosCard = document.querySelector('.indicator-container:has(#feriadosCount)');
             const reclamosCard = document.querySelector('.indicator-container:has(#reclamosCount)');
             const kpiCard = document.querySelector('.indicator-container:has(#kpiCount)');
-            
+
             // Anuncios: redirigir y marcar como leídos
             if (anunciosCard) {
                 anunciosCard.style.cursor = 'pointer';
@@ -1507,7 +1539,7 @@ if (!empty($sucursales)) {
                     irAAnuncios();
                 });
             }
-            
+
             // Tardanzas: redirigir directamente
             if (tardanzasCard) {
                 tardanzasCard.style.cursor = 'pointer';
@@ -1515,7 +1547,7 @@ if (!empty($sucursales)) {
                     irATardanzas();
                 });
             }
-            
+
             // Feriados: redirigir directamente
             if (feriadosCard) {
                 feriadosCard.style.cursor = 'pointer';
@@ -1523,7 +1555,7 @@ if (!empty($sucursales)) {
                     irAFeriados();
                 });
             }
-            
+
             // Reclamos: redirigir directamente
             if (reclamosCard) {
                 reclamosCard.style.cursor = 'pointer';
@@ -1531,21 +1563,21 @@ if (!empty($sucursales)) {
                     irAReclamos();
                 });
             }
-            
+
             // KPI: mantener modal
             if (kpiCard) {
                 kpiCard.style.cursor = 'pointer';
                 kpiCard.addEventListener('click', function(e) {
-                    if (!e.target.classList.contains('btn-ver-detalles') && 
+                    if (!e.target.classList.contains('btn-ver-detalles') &&
                         !e.target.closest('.btn-ver-detalles')) {
                         mostrarModalKPI();
                     }
                 });
             }
         });
-        
+
         // ========== FUNCIONES PARA ANUNCIOS NUEVOS ==========
-        
+
         // Cargar anuncios nuevos
         function cargarAnunciosNuevos() {
             // Usar los datos de PHP directamente
@@ -1556,17 +1588,17 @@ if (!empty($sucursales)) {
             };
             actualizarIndicadorAnuncios(anunciosData);
         }
-        
+
         // Actualizar indicador de anuncios
         function actualizarIndicadorAnuncios(data) {
             const container = document.getElementById('anunciosContainer');
             const countElement = document.getElementById('anunciosCount');
             const fechaElement = document.getElementById('anunciosFecha');
-            
+
             // MOSTRAR SIEMPRE, incluso si es cero
             container.style.display = 'block';
             countElement.textContent = data.total_pendientes;
-            
+
             // Actualizar texto según cantidad
             let fechaTexto = '';
             if (data.total_pendientes === 0) {
@@ -1576,14 +1608,14 @@ if (!empty($sucursales)) {
             } else {
                 fechaTexto = `(${data.total_pendientes} sin leer)`;
             }
-            
+
             fechaElement.textContent = fechaTexto;
-            
+
             // Aplicar clase de color
             let colorClase = data.color_indicador;
             container.className = 'indicator-status ' + colorClase;
         }
-        
+
         // Ir a la página de anuncios
         function irAAnuncios() {
             // Primero marcar todos como leídos
@@ -1604,9 +1636,9 @@ if (!empty($sucursales)) {
                     window.location.href = '../supervision/auditorias_original/index_avisos.php';
                 });
         }
-        
+
         // ========== FUNCIONES PARA TARDANZAS ==========
-        
+
         // Cargar tardanzas pendientes
         function cargarTardanzasPendientes() {
             fetch('ajax/obtener_tardanzas_pendientes.php')
@@ -1629,17 +1661,17 @@ if (!empty($sucursales)) {
                     document.getElementById('tardanzasContainer').style.display = 'block';
                 });
         }
-        
+
         // Actualizar indicador de tardanzas
         function actualizarIndicadorTardanzas(data) {
             const container = document.getElementById('tardanzasContainer');
             const countElement = document.getElementById('tardanzasCount');
             const fechaElement = document.getElementById('tardanzasFecha');
-            
+
             // MOSTRAR SIEMPRE, incluso si es cero
             container.style.display = 'block';
             countElement.textContent = data.total_pendientes;
-            
+
             // Actualizar fecha límite
             let fechaTexto = '';
             if (data.total_pendientes === 0) {
@@ -1651,14 +1683,14 @@ if (!empty($sucursales)) {
             } else {
                 fechaTexto = `(${data.dias_restantes} días restantes)`;
             }
-            
+
             fechaElement.textContent = fechaTexto;
-            
+
             // Aplicar clase de color
             let colorClase = data.color_indicador;
             container.className = 'indicator-status ' + colorClase;
         }
-        
+
         // Ir a la página de tardanzas con filtros aplicados
         function irATardanzas() {
             if (!tardanzasData || !tardanzasData.periodo_tardanzas) {
@@ -1666,13 +1698,16 @@ if (!empty($sucursales)) {
                 window.location.href = 'tardanzas_manual.php';
                 return;
             }
-            
-            const { inicio, fin } = tardanzasData.periodo_tardanzas;
+
+            const {
+                inicio,
+                fin
+            } = tardanzasData.periodo_tardanzas;
             window.location.href = `tardanzas_manual.php?desde=${inicio}&hasta=${fin}`;
         }
-        
+
         // ========== FUNCIONES PARA FERIADOS ==========
-        
+
         // Cargar feriados pendientes
         function cargarFeriadosPendientes() {
             fetch('ajax/obtener_feriados_pendientes.php')
@@ -1695,17 +1730,17 @@ if (!empty($sucursales)) {
                     document.getElementById('feriadosContainer').style.display = 'block';
                 });
         }
-        
+
         // Actualizar indicador de feriados
         function actualizarIndicadorFeriados(data) {
             const container = document.getElementById('feriadosContainer');
             const countElement = document.getElementById('feriadosCount');
             const fechaElement = document.getElementById('feriadosFecha');
-            
+
             // MOSTRAR SIEMPRE, incluso si es cero
             container.style.display = 'block';
             countElement.textContent = data.total_pendientes;
-            
+
             // Actualizar fecha límite
             let fechaTexto = '';
             if (data.total_pendientes === 0) {
@@ -1717,14 +1752,14 @@ if (!empty($sucursales)) {
             } else {
                 fechaTexto = `(${data.dias_restantes} días restantes)`;
             }
-            
+
             fechaElement.textContent = fechaTexto;
-            
+
             // Aplicar clase de color
             let colorClase = data.color_indicador;
             container.className = 'indicator-status ' + colorClase;
         }
-        
+
         // Ir a la página de feriados con filtros aplicados
         function irAFeriados() {
             if (!feriadosData || !feriadosData.periodo_actual) {
@@ -1732,13 +1767,16 @@ if (!empty($sucursales)) {
                 window.location.href = 'feriados.php';
                 return;
             }
-            
-            const { inicio, fin } = feriadosData.periodo_actual;
+
+            const {
+                inicio,
+                fin
+            } = feriadosData.periodo_actual;
             window.location.href = `feriados.php?desde=${inicio}&hasta=${fin}`;
         }
-        
+
         // ========== FUNCIONES PARA RECLAMOS ==========
-        
+
         // Cargar reclamos pendientes
         function cargarReclamosPendientes() {
             fetch('ajax/obtener_reclamos_pendientes.php')
@@ -1761,43 +1799,43 @@ if (!empty($sucursales)) {
                     document.getElementById('reclamosContainer').style.display = 'block';
                 });
         }
-        
+
         // Actualizar indicador de reclamos
         function actualizarIndicadorReclamos(data) {
             const container = document.getElementById('reclamosContainer');
             const countElement = document.getElementById('reclamosCount');
             const fechaElement = document.getElementById('reclamosFecha');
-            
+
             // MOSTRAR SIEMPRE, incluso si es cero
             container.style.display = 'block';
             countElement.textContent = data.total_pendientes;
-            
+
             // Actualizar información de tolerancia
             let fechaTexto = '(Tolerancia: 7 días)';
             if (data.total_pendientes > 0 && data.reclamos_pendientes && data.reclamos_pendientes.length > 0) {
                 const reclamoMasAntiguo = data.reclamos_pendientes.reduce((masAntiguo, reclamo) => {
                     return (!masAntiguo || reclamo.dias_pendiente > masAntiguo.dias_pendiente) ? reclamo : masAntiguo;
                 });
-                
+
                 if (reclamoMasAntiguo && reclamoMasAntiguo.dias_pendiente > 7) {
                     fechaTexto = `(Excedido por ${reclamoMasAntiguo.dias_pendiente - 7} días)`;
                 }
             }
-            
+
             fechaElement.textContent = fechaTexto;
-            
+
             // Aplicar clase de color
             let colorClase = data.color_indicador;
             container.className = 'indicator-status ' + colorClase;
         }
-        
+
         // Ir a la página de reclamos (sin filtros)
         function irAReclamos() {
             window.location.href = '../supervision/auditorias_original/reclamospend.php';
         }
-        
+
         // ========== FUNCIONES PARA KPI ==========
-        
+
         // Cargar KPI pendientes
         function cargarKPIPendientes() {
             fetch('ajax/obtener_kpi_pendientes.php')
@@ -1816,54 +1854,54 @@ if (!empty($sucursales)) {
                     document.getElementById('kpiContainer').style.display = 'none';
                 });
         }
-        
+
         // Actualizar indicador de KPI
         function actualizarIndicadorKPI(data) {
             const container = document.getElementById('kpiContainer');
             const countElement = document.getElementById('kpiCount');
             const fechaElement = document.getElementById('kpiFecha');
-            
+
             // Mostrar siempre el indicador, incluso si está al 100%
             container.style.display = 'block';
             countElement.textContent = data.sucursales_sin_kpi;
-            
+
             // Actualizar información del período
             let fechaTexto = '(Mes actual)';
             if (data.periodo_actual) {
                 fechaTexto = `(${data.periodo_actual.mes_nombre_es} ${data.periodo_actual.anio})`;
             }
-            
+
             fechaElement.textContent = fechaTexto;
-            
+
             // Aplicar clase de color
             let colorClase = data.color_indicador;
             container.className = 'indicator-status ' + colorClase;
         }
-        
+
         // Ir a la página de KPI
         function irAKPI() {
             if (!kpiData) return;
-            
+
             const mes = kpiData.periodo_actual.mes;
             const anio = kpiData.periodo_actual.anio;
-            
+
             window.location.href = `../supervision/auditorias_original/kpi.php?mes=${mes}&anio=${anio}`;
         }
-        
+
         // Mostrar modal de KPI pendientes
         function mostrarModalKPI() {
             if (!kpiData) {
                 alert('Cargando datos...');
                 return;
             }
-            
+
             const modal = document.getElementById('modalKPI');
             const lista = document.getElementById('listaKPIPendientes');
             const periodoInfo = document.getElementById('periodoKPIInfo');
             const completitudInfo = document.getElementById('completitudKPIInfo');
             const pendientesInfo = document.getElementById('pendientesKPIInfo');
             const totalInfo = document.getElementById('totalKPIInfo');
-            
+
             // Actualizar información con estado
             periodoInfo.textContent = `${kpiData.periodo_actual.mes_nombre_es} ${kpiData.periodo_actual.anio}`;
             let completitudTexto = `${kpiData.porcentaje_completitud}%`;
@@ -1877,23 +1915,23 @@ if (!empty($sucursales)) {
             completitudInfo.textContent = completitudTexto;
             pendientesInfo.textContent = kpiData.sucursales_sin_kpi;
             totalInfo.textContent = kpiData.total_sucursales;
-            
+
             // Construir lista de sucursales pendientes
             lista.innerHTML = construirListaKPI(kpiData.sucursales_pendientes);
-            
+
             modal.style.display = 'block';
         }
-        
+
         // Cerrar modal de KPI
         function cerrarModalKPI() {
             document.getElementById('modalKPI').style.display = 'none';
         }
-        
+
         // Cerrar modal de restricción KPI
         function cerrarModalRestriccionKPI() {
             document.getElementById('modalRestriccionKPI').style.display = 'none';
         }
-        
+
         // Construir lista de sucursales pendientes de KPI
         function construirListaKPI(sucursalesPendientes) {
             if (sucursalesPendientes.length === 0) {
@@ -1905,9 +1943,9 @@ if (!empty($sucursales)) {
                     </div>
                 `;
             }
-            
+
             let html = '<div class="lista-tardanzas">';
-            
+
             sucursalesPendientes.forEach(sucursal => {
                 html += `
                     <div class="item-tardanza">
@@ -1928,41 +1966,45 @@ if (!empty($sucursales)) {
                     </div>
                 `;
             });
-            
+
             html += '</div>';
             return html;
         }
-        
+
         // Funciones para los modales de Operaciones
         function mostrarModalTardanzasOperaciones() {
             document.getElementById('modalTardanzasOperaciones').style.display = 'block';
         }
-        
+
         function cerrarModalTardanzasOperaciones() {
             document.getElementById('modalTardanzasOperaciones').style.display = 'none';
         }
-        
+
         function mostrarModalFaltasOperaciones() {
             document.getElementById('modalFaltasOperaciones').style.display = 'block';
         }
-        
+
         function cerrarModalFaltasOperaciones() {
             document.getElementById('modalFaltasOperaciones').style.display = 'none';
         }
-        
+
         // ========== FUNCIONES UTILITARIAS ==========
-        
+
         // Formatear fecha corta
         function formatoFechaCorta(fecha) {
             const fechaObj = new Date(fecha + 'T00:00:00');
-            const opciones = { day: '2-digit', month: 'short', year: 'numeric' };
+            const opciones = {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            };
             return fechaObj.toLocaleDateString('es-ES', opciones);
         }
-        
+
         // Cerrar modales al hacer clic fuera (solo para KPI)
         window.onclick = function(event) {
             const modals = ['modalTardanzasOperaciones', 'modalFaltasOperaciones', 'modalKPI', 'modalRestriccionKPI'];
-            
+
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (event.target === modal) {
@@ -1973,7 +2015,7 @@ if (!empty($sucursales)) {
                 }
             });
         }
-        
+
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 cerrarModalTardanzasOperaciones();
@@ -1984,4 +2026,5 @@ if (!empty($sucursales)) {
         });
     </script>
 </body>
+
 </html>
