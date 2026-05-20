@@ -80,6 +80,7 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/fab_button.css">
+    <link rel="stylesheet" href="css/auditorias.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
         .reclamos-table {
             background-color: white;
@@ -196,89 +197,69 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
 
                 <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                     <div class="card-body p-0">
-                        <?php if (count($reclamosPendientes) > 0): ?>
+                        <!-- Contenedor de la Tabla y Paginación -->
+                        <div id="tablaReclamosContenedor">
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0 reclamos-table">
+                                <table class="table table-hover mb-0 reclamos-table" id="tablaReclamos">
                                     <thead>
                                         <tr>
-                                            <th class="text-center" style="width: 80px;">Codigo</th>
-                                            <th>Fecha Reclamo</th>
-                                            <th>Fecha Evento</th>
-                                            <th>Sucursal</th>
-                                            <th>Medio</th>
-                                            <th class="text-center">Estado</th>
+                                            <th class="text-center" style="width: 100px;" data-column="id" data-type="text">
+                                                Codigo
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                            <th data-column="fecha_reclamo" data-type="daterange">
+                                                Fecha Reclamo
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                            <th data-column="fecha_evento" data-type="daterange">
+                                                Fecha Evento
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                            <th data-column="sucursal" data-type="list">
+                                                Sucursal
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                            <th data-column="medio_compra" data-type="list">
+                                                Medio
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
+                                            <th class="text-center" data-column="estado" data-type="list">
+                                                Estado
+                                                <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                            </th>
                                             <th class="text-center" style="width: 100px;">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <?php foreach ($reclamosPendientes as $reclamo): ?>
-                                            <?php $esPendiente = empty($reclamo['reporte_id']); ?>
-                                            <tr>
-                                                <td class="text-center fw-bold text-muted">
-                                                    <?php echo htmlspecialchars($reclamo['id']); ?>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <i class="far fa-calendar-check me-2 text-success"></i>
-                                                        <?php echo traducirMes(htmlspecialchars($reclamo['fecha_reclamo_formatted'] ?? '--')); ?>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <i class="far fa-calendar-alt me-2 text-primary"></i>
-                                                        <?php echo traducirMes(htmlspecialchars($reclamo['fecha_evento_formatted'])); ?>
-                                                    </div>
-                                                    <?php if (!empty($reclamo['hora_evento'])): ?>
-                                                        <div class="text-muted small mt-1" style="padding-left: 24px;">
-                                                            <i class="far fa-clock me-1"></i>
-                                                            <?php echo htmlspecialchars(date('h:i A', strtotime($reclamo['hora_evento']))); ?>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <div class="fw-semibold text-dark">
-                                                        <?php echo htmlspecialchars($reclamo['sucursal']); ?>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        class="badge bg-light text-dark border"><?php echo htmlspecialchars($reclamo['medio_compra'] ?? '--'); ?></span>
-                                                </td>
-                                                <td class="text-center">
-                                                    <?php if ($esPendiente): ?>
-                                                        <span class="badge-pendiente">Abierto</span>
-                                                    <?php else: ?>
-                                                        <span class="badge-resuelto">Cerrado</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="text-center">
-                                                    <?php if ($esPendiente): ?>
-                                                        <a href="reportereclamo.php?reclamo_id=<?php echo $reclamo['id']; ?>"
-                                                            class="btn-action-icon btn-investigar-icon" title="Investigar Reclamo">
-                                                            <i class="fas fa-search"></i>
-                                                        </a>
-                                                    <?php else: ?>
-                                                        <a href="ver_reclamo.php?id=<?php echo $reclamo['id']; ?>"
-                                                            class="btn-action-icon btn-ver-icon" title="Ver Detalle del Reclamo">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                    <?php endif; ?>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
+                                    <tbody id="tablaReclamosBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">Cargando datos...</td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
-                        <?php else: ?>
-                            <div class="no-data-card">
-                                <div class="no-data-icon">
-                                    <i class="fas fa-clipboard-check"></i>
+
+                            <div class="pagination-container px-4 pb-4">
+                                <div class="pagination-info">
+                                    <label>Mostrar:</label>
+                                    <select id="registrosPorPagina" onchange="cambiarRegistrosPorPagina()">
+                                        <option value="25" selected>25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                    <span>registros</span>
                                 </div>
-                                <h4 class="fw-bold text-dark">¡Todo al día!</h4>
-                                <p class="text-muted">No se encontraron reclamos pendientes de investigación en este
-                                    momento.</p>
+                                <div id="paginacion"></div>
                             </div>
-                        <?php endif; ?>
+                        </div>
+
+                        <!-- Placeholder para cuando no hay registros -->
+                        <div class="no-data-card d-none" id="noDataPlaceholder">
+                            <div class="no-data-icon">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <h4 class="fw-bold text-dark">¡Todo al día!</h4>
+                            <p class="text-muted">No se encontraron reclamos en este momento.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -287,6 +268,7 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/reclamospend.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>
