@@ -131,7 +131,7 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
             border-radius: 50%;
             font-size: 1rem;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             color: white !important;
             text-decoration: none !important;
         }
@@ -181,7 +181,8 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
 
             <div class="container-fluid p-4">
                 <?php if ($reporteExitoso): ?>
-                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="border-radius: 12px; border-left: 5px solid #28a745 !important;">
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert"
+                        style="border-radius: 12px; border-left: 5px solid #28a745 !important;">
                         <div class="d-flex align-items-center">
                             <i class="fas fa-check-circle fs-4 me-3"></i>
                             <div>
@@ -200,7 +201,7 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                 <table class="table table-hover mb-0 reclamos-table">
                                     <thead>
                                         <tr>
-                                            <th class="text-center" style="width: 80px;">ID</th>
+                                            <th class="text-center" style="width: 80px;">Codigo</th>
                                             <th>Fecha Reclamo</th>
                                             <th>Fecha Evento</th>
                                             <th>Sucursal</th>
@@ -213,7 +214,9 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                         <?php foreach ($reclamosPendientes as $reclamo): ?>
                                             <?php $esPendiente = empty($reclamo['reporte_id']); ?>
                                             <tr>
-                                                <td class="text-center fw-bold text-muted">#<?php echo htmlspecialchars($reclamo['id']); ?></td>
+                                                <td class="text-center fw-bold text-muted">
+                                                    <?php echo htmlspecialchars($reclamo['id']); ?>
+                                                </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <i class="far fa-calendar-check me-2 text-success"></i>
@@ -227,15 +230,19 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                                     </div>
                                                     <?php if (!empty($reclamo['hora_evento'])): ?>
                                                         <div class="text-muted small mt-1" style="padding-left: 24px;">
-                                                            <i class="far fa-clock me-1"></i> <?php echo htmlspecialchars(date('h:i A', strtotime($reclamo['hora_evento']))); ?>
+                                                            <i class="far fa-clock me-1"></i>
+                                                            <?php echo htmlspecialchars(date('h:i A', strtotime($reclamo['hora_evento']))); ?>
                                                         </div>
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <div class="fw-semibold text-dark"><?php echo htmlspecialchars($reclamo['sucursal']); ?></div>
+                                                    <div class="fw-semibold text-dark">
+                                                        <?php echo htmlspecialchars($reclamo['sucursal']); ?>
+                                                    </div>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-light text-dark border"><?php echo htmlspecialchars($reclamo['medio_compra'] ?? '--'); ?></span>
+                                                    <span
+                                                        class="badge bg-light text-dark border"><?php echo htmlspecialchars($reclamo['medio_compra'] ?? '--'); ?></span>
                                                 </td>
                                                 <td class="text-center">
                                                     <?php if ($esPendiente): ?>
@@ -246,11 +253,13 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                                 </td>
                                                 <td class="text-center">
                                                     <?php if ($esPendiente): ?>
-                                                        <a href="reportereclamo.php?reclamo_id=<?php echo $reclamo['id']; ?>" class="btn-action-icon btn-investigar-icon" title="Investigar Reclamo">
+                                                        <a href="reportereclamo.php?reclamo_id=<?php echo $reclamo['id']; ?>"
+                                                            class="btn-action-icon btn-investigar-icon" title="Investigar Reclamo">
                                                             <i class="fas fa-search"></i>
                                                         </a>
                                                     <?php else: ?>
-                                                        <a href="ver_reclamo.php?id=<?php echo $reclamo['id']; ?>" class="btn-action-icon btn-ver-icon" title="Ver Detalle del Reclamo">
+                                                        <a href="ver_reclamo.php?id=<?php echo $reclamo['id']; ?>"
+                                                            class="btn-action-icon btn-ver-icon" title="Ver Detalle del Reclamo">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                     <?php endif; ?>
@@ -266,7 +275,8 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                     <i class="fas fa-clipboard-check"></i>
                                 </div>
                                 <h4 class="fw-bold text-dark">¡Todo al día!</h4>
-                                <p class="text-muted">No se encontraron reclamos pendientes de investigación en este momento.</p>
+                                <p class="text-muted">No se encontraron reclamos pendientes de investigación en este
+                                    momento.</p>
                             </div>
                         <?php endif; ?>
                     </div>
