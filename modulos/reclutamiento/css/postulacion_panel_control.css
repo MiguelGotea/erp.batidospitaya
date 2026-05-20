@@ -42,28 +42,63 @@
     border-bottom-color: var(--color-principal);
 }
 
-.table-header {
-    background-color: var(--color-header-tabla);
-    color: white;
+.panel-control-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: none;
+    margin-bottom: 0;
 }
 
-.table-header th {
+.panel-control-table thead {
+    background-color: var(--color-header-tabla) !important;
+    color: white !important;
+}
+
+.panel-control-table thead th {
     font-weight: 600;
-    font-size: 13px;
-    padding: 8px 6px;
+    padding: 12px 10px;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    white-space: nowrap;
+    font-size: 14px;
+    background-color: var(--color-header-tabla) !important;
+    color: white !important;
     text-align: center;
     vertical-align: middle;
 }
 
-.table-bordered td {
-    padding: 6px 6px;
-    text-align: center;
-    vertical-align: middle;
+.panel-control-table thead th:last-child {
+    border-right: none;
 }
 
-.table-bordered td:first-child {
-    text-align: left;
-    font-weight: 500;
+.panel-control-table tbody tr {
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+}
+
+.panel-control-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.panel-control-table tbody td {
+    padding: 10px;
+    vertical-align: middle;
+    font-size: 14px;
+    border-right: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.panel-control-table tbody td:last-child {
+    border-right: none;
+}
+
+.panel-control-table tbody th {
+    border-right: none;
+    border-bottom: 1px solid #e9ecef;
 }
 
 /* Fila de encabezado global (Vendedores / Líderes) */
@@ -93,16 +128,54 @@
     box-shadow: 0 0 0 0.25rem rgba(81, 184, 172, 0.25);
 }
 
-/* Input numérico */
-input[type="number"] {
-    text-align: center;
-    font-weight: 600;
-    max-width: 100px;
+/* Editable cell highlight and custom underline inputs */
+.cell-editable {
+    background-color: rgba(81, 184, 172, 0.04) !important;
+    transition: background-color 0.2s ease;
 }
 
-input[type="number"]:focus {
-    border-color: var(--color-principal);
-    box-shadow: 0 0 0 0.2rem rgba(81, 184, 172, 0.25);
+.cell-editable:hover {
+    background-color: rgba(81, 184, 172, 0.08) !important;
+}
+
+.editable-input {
+    border: none !important;
+    border-bottom: 2px solid rgba(81, 184, 172, 0.4) !important;
+    background-color: transparent !important;
+    border-radius: 0 !important;
+    font-weight: 600;
+    text-align: center;
+    max-width: 80px;
+    padding: 2px 4px !important;
+    transition: all 0.2s ease-in-out;
+    box-shadow: none !important;
+}
+
+.editable-input:hover:not(:disabled) {
+    border-bottom-color: var(--color-principal) !important;
+    background-color: rgba(81, 184, 172, 0.06) !important;
+}
+
+.editable-input:focus:not(:disabled) {
+    outline: none !important;
+    border-bottom-color: var(--color-principal-hover) !important;
+    background-color: rgba(81, 184, 172, 0.12) !important;
+    box-shadow: none !important;
+}
+
+.editable-input:disabled {
+    border-bottom: 1px dashed #ccc !important;
+    color: #8c8c8c !important;
+    background-color: transparent !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.editable-input.border-warning {
+    border: 1px solid #ffc107 !important;
+    border-bottom: 2px solid #ffc107 !important;
+    background-color: #fff3cd !important;
+    border-radius: 4px !important;
 }
 
 /* Readonly inputs */

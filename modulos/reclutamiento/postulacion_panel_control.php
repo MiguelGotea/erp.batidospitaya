@@ -106,7 +106,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                             <!-- Pestaña Sucursales -->
                             <div class="tab-pane fade show active" id="sucursales" role="tabpanel">
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover align-middle" id="tablaSucursales">
+                                    <table class="table table-hover panel-control-table align-middle" id="tablaSucursales">
                                         <thead class="table-header text-center">
                                             <tr>
                                                 <th style="width: 200px;">Grupo</th>
@@ -132,7 +132,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                             <!-- Pestaña Administrativo -->
                             <div class="tab-pane fade" id="administrativo" role="tabpanel">
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover align-middle"
+                                    <table class="table table-hover panel-control-table align-middle"
                                         id="tablaAdministrativo">
                                         <thead class="table-header">
                                             <tr>
@@ -164,7 +164,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                             <!-- Pestaña Producción -->
                             <div class="tab-pane fade" id="produccion" role="tabpanel">
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover align-middle" id="tablaProduccion">
+                                    <table class="table table-hover panel-control-table align-middle" id="tablaProduccion">
                                         <thead class="table-header">
                                             <tr>
                                                 <th>Cargo</th>

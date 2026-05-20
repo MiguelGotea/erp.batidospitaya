@@ -86,20 +86,20 @@ function renderizarTablaSucursales(datos) {
                 <input type="hidden" value="${sucursal.vendedor_salario || 0}" 
                        data-sucursal="${sucursal.codigo_sucursal}" data-tipo="vendedor_salario">
             </td>
-            <td>
-                <input type="number" class="form-control form-control-sm text-center" 
+            <td class="cell-editable">
+                <input type="number" class="form-control form-control-sm text-center editable-input" 
                        value="${sucursal.vendedor_oblig || 0}" min="0"
                        data-sucursal="${sucursal.codigo_sucursal}" data-tipo="vendedor_oblig"
                        ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
             </td>
-            <td>
-                <input type="number" class="form-control form-control-sm text-center" 
+            <td class="cell-editable">
+                <input type="number" class="form-control form-control-sm text-center editable-input" 
                        value="${sucursal.vendedor_adic || 0}" min="0"
                        data-sucursal="${sucursal.codigo_sucursal}" data-tipo="vendedor_adic"
                        ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
             </td>
             <td class="text-center">
-                <span class="badge bg-info">${sucursal.vendedor_cubierto || 0}</span>
+                <span class="fw-bold text-dark">${sucursal.vendedor_cubierto || 0}</span>
             </td>
             <td>
                 <div class="d-flex align-items-center justify-content-center gap-2">
@@ -136,20 +136,20 @@ function renderizarTablaSucursales(datos) {
                 <input type="hidden" value="${sucursal.lider_salario || 0}" 
                        data-sucursal="${sucursal.codigo_sucursal}" data-tipo="lider_salario">
             </td>
-            <td>
-                <input type="number" class="form-control form-control-sm text-center" 
+            <td class="cell-editable">
+                <input type="number" class="form-control form-control-sm text-center editable-input" 
                        value="${sucursal.lider_oblig || 1}" min="0"
                        data-sucursal="${sucursal.codigo_sucursal}" data-tipo="lider_oblig"
                        disabled>
             </td>
-            <td>
-                <input type="number" class="form-control form-control-sm text-center" 
+            <td class="cell-editable">
+                <input type="number" class="form-control form-control-sm text-center editable-input" 
                        value="${sucursal.lider_adic || 0}" min="0"
                        data-sucursal="${sucursal.codigo_sucursal}" data-tipo="lider_adic"
                        ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
             </td>
             <td class="text-center">
-                <span class="badge bg-success">${sucursal.lider_cubierto || 0}</span>
+                <span class="fw-bold text-dark">${sucursal.lider_cubierto || 0}</span>
             </td>
             <td>
                 <div class="d-flex align-items-center justify-content-center gap-2">
@@ -229,9 +229,9 @@ function renderizarTablaAdministrativo(datos) {
                        data-area="Administrativo"
                        data-campo="salario_propuesto">
             </td>
-            <td>
+            <td class="cell-editable">
                 <input type="number" 
-                       class="form-control form-control-sm" 
+                       class="form-control form-control-sm editable-input" 
                        value="${cargo.cantidad_real || 0}" 
                        min="0"
                        data-cargo="${cargo.cod_cargo}"
@@ -240,9 +240,9 @@ function renderizarTablaAdministrativo(datos) {
                        ${!puedeEditar ? 'disabled' : ''}
                        onchange="marcarCambio(this)">
             </td>
-            <td>
+            <td class="cell-editable">
                 <input type="number" 
-                       class="form-control form-control-sm" 
+                       class="form-control form-control-sm editable-input" 
                        value="${cargo.cantidad_adicional || 0}" 
                        min="0"
                        data-cargo="${cargo.cod_cargo}"
@@ -252,7 +252,7 @@ function renderizarTablaAdministrativo(datos) {
                        onchange="marcarCambio(this)">
             </td>
             <td>
-                <span class="badge bg-secondary">${cargo.cantidad_cubierta || 0}</span>
+                <span class="fw-bold text-dark">${cargo.cantidad_cubierta || 0}</span>
             </td>
             <td>
                 <div class="d-flex align-items-center justify-content-center gap-2">
@@ -343,9 +343,9 @@ function renderizarTablaProduccion(datos) {
                        data-area="Produccion"
                        data-campo="salario_propuesto">
             </td>
-            <td>
+            <td class="cell-editable">
                 <input type="number" 
-                       class="form-control form-control-sm cantidad-input" 
+                       class="form-control form-control-sm cantidad-input editable-input" 
                        value="${cantidadReal}" 
                        min="0"
                        data-cargo="${cargo.cod_cargo}"
@@ -355,9 +355,9 @@ function renderizarTablaProduccion(datos) {
                        ${!puedeEditar ? 'disabled' : ''}
                        onchange="marcarCambio(this)">
             </td>
-            <td>
+            <td class="cell-editable">
                 <input type="number" 
-                       class="form-control form-control-sm adicional-input" 
+                       class="form-control form-control-sm adicional-input editable-input" 
                        value="${cantidadAdicional}" 
                        min="0"
                        data-cargo="${cargo.cod_cargo}"
@@ -368,7 +368,7 @@ function renderizarTablaProduccion(datos) {
                        onchange="marcarCambio(this)">
             </td>
             <td class="text-center">
-                <span class="badge bg-secondary">${cargo.cantidad_cubierta || 0}</span>
+                <span class="fw-bold text-dark">${cargo.cantidad_cubierta || 0}</span>
             </td>
             <td>
                 <div class="d-flex align-items-center justify-content-center gap-2">
