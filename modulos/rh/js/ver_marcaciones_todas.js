@@ -1017,7 +1017,7 @@ function abrirModalFoto(btn) {
     // Rellenar encabezado del modal
     const tipoLabel = tipo === 'entrada' ? 'Entrada' : 'Salida';
     $('#fotoModalTitulo').text(nombre);
-    const horaFormateada = hora ? `  ·  ${hora.substring(0, 5)}` : '';
+    const horaFormateada = hora ? `  ·  ${hora}` : '';
     $('#fotoModalSubtitulo').text(`Foto ${tipoLabel} DVR  ·  ${fecha}${horaFormateada}`);
     $('#fotoModalMeta').css('margin-top', '0').empty();
     actualizarLabelOffset();   // mostrar "hora exacta"
