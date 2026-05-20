@@ -35,6 +35,8 @@ try {
 
     $queryReclamos = "SELECT r.id, 
                              DATE_FORMAT(r.fecha_evento, '%d-%b-%y') as fecha_evento_formatted,
+                             DATE_FORMAT(r.fecha_reclamo, '%d-%b-%y') as fecha_reclamo_formatted,
+                             r.hora_evento,
                              s.nombre as sucursal, 
                              r.sucursal_codigo,
                              r.descripcion,
@@ -43,6 +45,7 @@ try {
                              rt.nombre as tipo_nombre,
                              r.medio_compra,
                              r.fecha_evento,
+                             r.fecha_reclamo,
                              ri.id as reporte_id
                       FROM reclamos r 
                       LEFT JOIN reportes_investigacion ri ON r.id = ri.reclamo_id 
@@ -119,38 +122,38 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
             font-size: 0.8rem;
         }
 
-        .btn-investigar {
+        .btn-action-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: white !important;
+            text-decoration: none !important;
+        }
+
+        .btn-investigar-icon {
             background-color: #51B8AC;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s;
         }
 
-        .btn-investigar:hover {
+        .btn-investigar-icon:hover {
             background-color: #0E544C;
-            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(81, 184, 172, 0.3);
+            box-shadow: 0 4px 8px rgba(81, 184, 172, 0.4);
         }
 
-        .btn-ver {
+        .btn-ver-icon {
             background-color: #2196F3;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s;
         }
 
-        .btn-ver:hover {
+        .btn-ver-icon:hover {
             background-color: #1565C0;
-            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
         }
 
         .no-data-card {
@@ -198,11 +201,12 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                     <thead>
                                         <tr>
                                             <th class="text-center" style="width: 80px;">ID</th>
+                                            <th>Fecha Reclamo</th>
                                             <th>Fecha Evento</th>
                                             <th>Sucursal</th>
                                             <th>Medio</th>
                                             <th class="text-center">Estado</th>
-                                            <th class="text-center" style="width: 150px;">Acciones</th>
+                                            <th class="text-center" style="width: 100px;">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -212,13 +216,23 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                                 <td class="text-center fw-bold text-muted">#<?php echo htmlspecialchars($reclamo['id']); ?></td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <i class="far fa-calendar-alt me-2 text-primary"></i>
-                                                        <?php echo traducirMes(htmlspecialchars($reclamo['fecha_evento_formatted'])); ?>
+                                                        <i class="far fa-calendar-check me-2 text-success"></i>
+                                                        <?php echo traducirMes(htmlspecialchars($reclamo['fecha_reclamo_formatted'] ?? '--')); ?>
                                                     </div>
                                                 </td>
                                                 <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="far fa-calendar-alt me-2 text-primary"></i>
+                                                        <?php echo traducirMes(htmlspecialchars($reclamo['fecha_evento_formatted'])); ?>
+                                                    </div>
+                                                    <?php if (!empty($reclamo['hora_evento'])): ?>
+                                                        <div class="text-muted small mt-1" style="padding-left: 24px;">
+                                                            <i class="far fa-clock me-1"></i> <?php echo htmlspecialchars(date('h:i A', strtotime($reclamo['hora_evento']))); ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
                                                     <div class="fw-semibold text-dark"><?php echo htmlspecialchars($reclamo['sucursal']); ?></div>
-                                                    <small class="text-muted">Cod: <?php echo htmlspecialchars($reclamo['sucursal_codigo']); ?></small>
                                                 </td>
                                                 <td>
                                                     <span class="badge bg-light text-dark border"><?php echo htmlspecialchars($reclamo['medio_compra'] ?? '--'); ?></span>
@@ -232,12 +246,12 @@ $reporteExitoso = isset($_GET['exito']) && $_GET['exito'] == '1';
                                                 </td>
                                                 <td class="text-center">
                                                     <?php if ($esPendiente): ?>
-                                                        <a href="reportereclamo.php?reclamo_id=<?php echo $reclamo['id']; ?>" class="btn-investigar text-decoration-none">
-                                                            <i class="fas fa-search me-1"></i> Investigar
+                                                        <a href="reportereclamo.php?reclamo_id=<?php echo $reclamo['id']; ?>" class="btn-action-icon btn-investigar-icon" title="Investigar Reclamo">
+                                                            <i class="fas fa-search"></i>
                                                         </a>
                                                     <?php else: ?>
-                                                        <a href="ver_reclamo.php?id=<?php echo $reclamo['id']; ?>" class="btn-ver text-decoration-none">
-                                                            <i class="fas fa-eye me-1"></i> Ver Detalle
+                                                        <a href="ver_reclamo.php?id=<?php echo $reclamo['id']; ?>" class="btn-action-icon btn-ver-icon" title="Ver Detalle del Reclamo">
+                                                            <i class="fas fa-eye"></i>
                                                         </a>
                                                     <?php endif; ?>
                                                 </td>
