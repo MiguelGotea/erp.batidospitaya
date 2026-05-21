@@ -15,10 +15,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([11, 16, 21, 49]);
+verificarAccesoCargo([11, 16, 21, 49, 52]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 21, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([11, 16, 21, 49, 52]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -41,9 +41,18 @@ if (!in_array($tipo_auditoria, $tipos_validos)) {
 
 // Obtener nombre del mes
 $meses = [
-    1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
-    5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
-    9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+    1 => 'Enero',
+    2 => 'Febrero',
+    3 => 'Marzo',
+    4 => 'Abril',
+    5 => 'Mayo',
+    6 => 'Junio',
+    7 => 'Julio',
+    8 => 'Agosto',
+    9 => 'Septiembre',
+    10 => 'Octubre',
+    11 => 'Noviembre',
+    12 => 'Diciembre'
 ];
 $nombre_mes = $meses[$mes_seleccionado];
 
@@ -85,7 +94,8 @@ $stmt->execute($params);
 $auditorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Función para determinar el color según el promedio
-function getColorClass($promedio) {
+function getColorClass($promedio)
+{
     if ($promedio <= 4) return 'rojo';
     if ($promedio <= 4.5) return 'amarillo';
     return 'verde';
@@ -94,6 +104,7 @@ function getColorClass($promedio) {
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -152,7 +163,8 @@ function getColorClass($promedio) {
             background-color: white;
         }
 
-        th, td {
+        th,
+        td {
             padding: 10px;
             border: 1px solid #ddd;
         }
@@ -210,12 +222,12 @@ function getColorClass($promedio) {
             margin: 20px auto;
             flex-wrap: wrap;
         }
-        
+
         .logo-container {
             margin-right: 20px;
             flex-shrink: 0;
         }
-        
+
         .buttons-container {
             display: flex;
             gap: 10px;
@@ -223,21 +235,21 @@ function getColorClass($promedio) {
             justify-content: flex-end;
             flex-grow: 1;
         }
-        
+
         @media (max-width: 768px) {
             .header-container {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 15px;
             }
-            
+
             .buttons-container {
                 width: 100%;
                 justify-content: flex-start;
                 gap: 8px;
             }
         }
-        
+
         @media (max-width: 480px) {
             .btn-agregar {
                 flex-grow: 1;
@@ -275,12 +287,15 @@ function getColorClass($promedio) {
         .btn-regresar:hover {
             background-color: #5a6268;
         }
-        
-        table, th, td {
+
+        table,
+        th,
+        td {
             text-align: center;
         }
     </style>
 </head>
+
 <body>
     <!-- Header con logo -->
     <div class="header-container">
@@ -298,20 +313,20 @@ function getColorClass($promedio) {
             </a>
         </div>
     </div>
-    
+
     <div class="contenedor-principal">
         <h2 class="titulo-auditorias"><?php echo $titulo; ?></h2>
-        
+
         <?php if ($sucursal_seleccionada): ?>
             <h3 class="subtitulo-auditorias">Sucursal: <?php echo $sucursal_seleccionada; ?> - <?php echo $nombre_mes; ?> <?php echo $anio_seleccionado; ?></h3>
         <?php else: ?>
             <h3 class="subtitulo-auditorias">Todas las sucursales - <?php echo $nombre_mes; ?> <?php echo $anio_seleccionado; ?></h3>
         <?php endif; ?>
-        
+
         <a href="promedio.php?mes=<?php echo $mes_seleccionado; ?>&anio=<?php echo $anio_seleccionado; ?>" class="btn-regresar">
             <i class="fas fa-arrow-left"></i> Regresar a promedios
         </a>
-        
+
         <?php if (count($auditorias) > 0): ?>
             <table>
                 <thead>
@@ -322,33 +337,33 @@ function getColorClass($promedio) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($auditorias as $auditoria): 
+                    <?php foreach ($auditorias as $auditoria):
                         $color = getColorClass($auditoria[$campo_promedio]);
                         $fecha_formateada = date('d/m/Y', strtotime($auditoria['fecha']));
                     ?>
-                    <tr>
-                        <td><?php echo $fecha_formateada; ?></td>
-                        <td><?php echo $auditoria['sucursal']; ?></td>
-                        <td>
-                            <div style="display: flex; align-items: center; justify-content: center;">
-                                <span class="color-circle <?php echo $color; ?>"></span>
-                                <?php echo number_format($auditoria[$campo_promedio], 1); ?>
-                                <?php if ($tipo_auditoria == 'limpieza'): ?>
-                                    <a href="ver_publico.php?id=<?php echo $auditoria['id']; ?>&tipo=limpieza" style="color: #51B8AC; margin-left: 5px;">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                <?php elseif ($tipo_auditoria == 'personal'): ?>
-                                    <a href="verpersonal_publico.php?id=<?php echo $auditoria['id']; ?>&tipo=personal" style="color: #51B8AC; margin-left: 5px;">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                <?php elseif ($tipo_auditoria == 'servicio'): ?>
-                                    <a href="verservicios_publico.php?id=<?php echo $auditoria['id']; ?>&tipo=servicio" style="color: #51B8AC; margin-left: 5px;">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td><?php echo $fecha_formateada; ?></td>
+                            <td><?php echo $auditoria['sucursal']; ?></td>
+                            <td>
+                                <div style="display: flex; align-items: center; justify-content: center;">
+                                    <span class="color-circle <?php echo $color; ?>"></span>
+                                    <?php echo number_format($auditoria[$campo_promedio], 1); ?>
+                                    <?php if ($tipo_auditoria == 'limpieza'): ?>
+                                        <a href="ver_publico.php?id=<?php echo $auditoria['id']; ?>&tipo=limpieza" style="color: #51B8AC; margin-left: 5px;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    <?php elseif ($tipo_auditoria == 'personal'): ?>
+                                        <a href="verpersonal_publico.php?id=<?php echo $auditoria['id']; ?>&tipo=personal" style="color: #51B8AC; margin-left: 5px;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    <?php elseif ($tipo_auditoria == 'servicio'): ?>
+                                        <a href="verservicios_publico.php?id=<?php echo $auditoria['id']; ?>&tipo=servicio" style="color: #51B8AC; margin-left: 5px;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -357,4 +372,5 @@ function getColorClass($promedio) {
         <?php endif; ?>
     </div>
 </body>
+
 </html>

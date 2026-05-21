@@ -780,18 +780,24 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <div class="mb-3">
                             <label for="subsidio_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de Subsidio:</label>
-                            <select id="subsidio_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeSubsidio(this.value)">
-                                <?php
-                                $tiposSubsidio = ['Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Cuido_materno'];
-                                foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
-                                    if (in_array($tipo['codigo'], $tiposSubsidio)):
-                                        $pct = $tipo['porcentaje_pago'];
-                                        $label = $tipo['nombre'] . ' (Paga ' . $pct . '%)';
-                                ?>
-                                        <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>"><?= htmlspecialchars($label) ?></option>
-                                <?php endif;
-                                endforeach; ?>
-                            </select>
+                            <?php if ($puedeAprobar): ?>
+                                <select id="subsidio_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeSubsidio(this.value)">
+                                    <?php
+                                    $tiposSubsidio = ['Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Cuido_materno'];
+                                    foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
+                                        if (in_array($tipo['codigo'], $tiposSubsidio)):
+                                            $pct = $tipo['porcentaje_pago'];
+                                            $label = $tipo['nombre'] . ' (Paga ' . $pct . '%)';
+                                    ?>
+                                            <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>"><?= htmlspecialchars($label) ?></option>
+                                    <?php endif;
+                                    endforeach; ?>
+                                </select>
+                            <?php else: ?>
+                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly>
+                                <input type="hidden" id="subsidio_tipo" name="tipo_falta" value="Pendiente">
+                                <small class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
+                            <?php endif; ?>
                             <small id="info-porcentaje-subsidio" class="form-text text-muted mt-1 d-block"></small>
                         </div>
 
@@ -883,22 +889,28 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <div class="mb-3">
                             <label for="nueva_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo:</label>
-                            <select id="nueva_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeVacaciones(this.value)">
-                                <?php
-                                $tiposFalta = obtenerTiposFaltaConPorcentajes();
-                                foreach ($tiposFalta as $tipo):
-                                    if ($tipo['codigo'] === 'Vacaciones'):
-                                        $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ? 'Deducción 100%' : 'Paga ' . $tipo['porcentaje_pago'] . '%';
-                                ?>
-                                        <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>" selected>
-                                            <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
-                                        </option>
-                                <?php
-                                    endif;
-                                endforeach;
-                                ?>
-                            </select>
-                            <small id="info-porcentaje-vacaciones" class="form-text text-muted mt-1 d-block" style="display: none;"></small>
+                            <?php if ($puedeAprobar): ?>
+                                <select id="nueva_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeVacaciones(this.value)">
+                                    <?php
+                                    $tiposFalta = obtenerTiposFaltaConPorcentajes();
+                                    foreach ($tiposFalta as $tipo):
+                                        if ($tipo['codigo'] === 'Vacaciones'):
+                                            $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ? 'Deducción 100%' : 'Paga ' . $tipo['porcentaje_pago'] . '%';
+                                    ?>
+                                            <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>" selected>
+                                                <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
+                                            </option>
+                                    <?php
+                                        endif;
+                                    endforeach;
+                                    ?>
+                                </select>
+                                <small id="info-porcentaje-vacaciones" class="form-text text-muted mt-1 d-block" style="display: none;"></small>
+                            <?php else: ?>
+                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly>
+                                <input type="hidden" id="nueva_tipo" name="tipo_falta" value="Pendiente">
+                                <small class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
+                            <?php endif; ?>
                         </div>
 
                         <div class="row">

@@ -15,10 +15,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([5, 8, 11, 13, 16, 21, 27, 52, 49]);
+verificarAccesoCargo([5, 8, 11, 13, 16, 21, 27, 52, 49, 52]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([5, 8, 11, 13, 16, 21, 27, 52, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([5, 8, 11, 13, 16, 21, 27, 52, 49, 52]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -357,7 +357,7 @@ if (isset($_GET['id'])) {
 
                                 $hora = $fecha->format('H:i');
                                 $hora_formateada = ($hora == '00:00') ? '12:00 am' : (($fecha->format('H') < 12) ? $fecha->format('g:i a') : (($fecha->format('H') == 12) ? $fecha->format('g:i') . ' pm' :
-                                            $fecha->format('g:i') . ' pm')); // Se añadió el paréntesis que faltaba
+                                    $fecha->format('g:i') . ' pm')); // Se añadió el paréntesis que faltaba
 
                                 echo "$dia-$mes-$anio $hora_formateada";
                                 ?>
