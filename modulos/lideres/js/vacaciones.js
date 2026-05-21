@@ -593,7 +593,16 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
 
         // Preguntar confirmación antes de guardar
         const dias = calcularDiasLaborables(fechaInicio, fechaFin);
-        if (!confirm(`¿Está seguro de registrar este rango de ${dias} días de ausencias?`)) {
+        let textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de ausencias?`;
+        if (categoriaFalta === 'vacaciones') {
+            textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de vacaciones?`;
+        } else if (categoriaFalta === 'subsidio') {
+            textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de subsidio?`;
+        } else if (categoriaFalta === 'falta_permiso') {
+            textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de falta o permiso?`;
+        }
+
+        if (!confirm(textoConfirmacion)) {
             return false;
         }
 
@@ -602,10 +611,12 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
         formData.append('categoria_falta', categoriaFalta);
 
         // Mostrar loading
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-        submitBtn.disabled = true;
+        const submitBtn = form.querySelector('button[type="submit"]') || document.querySelector(`button[type="submit"][form="${formId}"]`);
+        const originalText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            submitBtn.disabled = true;
+        }
 
         fetch('ajax/vacaciones_ajax.php?action=guardar_registro', {
             method: 'POST',
@@ -618,15 +629,19 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
                 window.location.reload();
             } else {
                 alert('Error: ' + data.error);
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
             }
         })
         .catch(error => {
             console.error('Error:', error);
             alert('Error de conexión al guardar el registro. Intente nuevamente.');
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+            if (submitBtn) {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
         });
 
         return false;
@@ -712,10 +727,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 return false;
             }
 
-            const submitBtn = formEditar.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-            submitBtn.disabled = true;
+            const submitBtn = formEditar.querySelector('button[type="submit"]') || document.querySelector(`button[type="submit"][form="formEditarFalta"]`);
+            const originalText = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                submitBtn.disabled = true;
+            }
 
             const params = new URLSearchParams({
                 id: id,
@@ -735,15 +752,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.location.reload();
                 } else {
                     alert('Error: ' + data.error);
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
+                    if (submitBtn) {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error al actualizar el registro.');
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
             });
 
             return false;
