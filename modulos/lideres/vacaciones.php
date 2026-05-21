@@ -29,6 +29,7 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
 $esLider = tienePermiso('registro_vacaciones', 'ver_sucursales_lider', $cargoOperario);
 $esRH = tienePermiso('registro_vacaciones', 'ver_todas_sucursales', $cargoOperario);
+$puedeAprobar = tienePermiso('registro_vacaciones', 'aprobar', $cargoOperario);
 
 /**
  * Obtiene el porcentaje de pago para un tipo de falta específico
@@ -85,13 +86,16 @@ if (empty($fechaHasta))
 // Obtener operario seleccionado
 $operarioSeleccionado = isset($_GET['operario']) ? intval($_GET['operario']) : 0;
 
+// Filtro por tipo de ausencia
+$tipoFiltro = $_GET['tipo_filtro'] ?? 'todos';
+
 // Obtener operarios para el filtro
 $operarios = obtenerOperariosFiltro();
 
 // Determinar modo de vista basado en la selección de sucursal
 $modoVista = ($sucursalSeleccionada === 'todas') ? 'todas' : 'sucursal';
 
-// Obtener vacaciones si hay sucursal y fechas seleccionadas
+// Obtener registros si hay sucursal y fechas seleccionadas
 $vacaciones = [];
 if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHasta) {
     $vacaciones = obtenerVacaciones(
@@ -100,7 +104,8 @@ if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHa
         $fechaHasta,
         $esRH,
         $modoVista,
-        $operarioSeleccionado
+        $operarioSeleccionado,
+        $tipoFiltro
     );
 }
 
@@ -142,12 +147,10 @@ function recortarTexto($texto, $longitud = 50)
     return substr($texto, 0, $longitud) . '...';
 }
 
-// Función para obtener vacaciones (filtradas por tipo "Vacaciones")
-function obtenerVacaciones($codSucursal, $fechaDesde, $fechaHasta, $esRH = false, $modoVista = 'sucursal', $operarioId = 0)
+// Función unificada para obtener todos los tipos de ausencia de faltas_manual
+function obtenerVacaciones($codSucursal, $fechaDesde, $fechaHasta, $esRH = false, $modoVista = 'sucursal', $operarioId = 0, $tipoFiltro = 'todos')
 {
     global $conn;
-
-    error_log("Intentando obtener vacaciones para sucursal: $codSucursal, desde: $fechaDesde, hasta: $fechaHasta, operario: $operarioId");
 
     try {
         $sql = "
@@ -161,24 +164,36 @@ function obtenerVacaciones($codSucursal, $fechaDesde, $fechaHasta, $esRH = false
                 r.Apellido AS registrador_apellido,
                 fm.observaciones_rrhh,
                 fm.cod_contrato,
-                fm.fecha_registro
+                fm.fecha_registro,
+                fm.porcentaje_pago,
+                tf.nombre AS tipo_falta_nombre
             FROM faltas_manual fm
             JOIN Operarios o ON fm.cod_operario = o.CodOperario
             JOIN sucursales s ON fm.cod_sucursal = s.codigo
             JOIN Operarios r ON fm.registrado_por = r.CodOperario
-            WHERE fm.tipo_falta = 'Vacaciones'
-            AND fm.fecha_falta BETWEEN ? AND ?
+            LEFT JOIN tipos_falta tf ON fm.tipo_falta = tf.codigo
+            WHERE fm.fecha_falta BETWEEN ? AND ?
         ";
 
         $params = [$fechaDesde, $fechaHasta];
 
-        // CORRECCIÓN: Si no es 'todas' y no está vacío, filtrar por sucursal
+        // Filtrar por tipo de ausencia
+        if ($tipoFiltro === 'pendiente') {
+            $sql .= " AND fm.tipo_falta = 'Pendiente'";
+        } elseif ($tipoFiltro === 'vacaciones') {
+            $sql .= " AND fm.tipo_falta = 'Vacaciones'";
+        } elseif ($tipoFiltro === 'subsidio') {
+            $sql .= " AND fm.tipo_falta IN ('Subsidio_3dias','Subsidio_INSS','Subsidio_maternidad','Reposo_hasta_3dias')";
+        } elseif ($tipoFiltro === 'faltas_permisos') {
+            $sql .= " AND fm.tipo_falta NOT IN ('Vacaciones','Pendiente','Subsidio_3dias','Subsidio_INSS','Subsidio_maternidad','Reposo_hasta_3dias')";
+        }
+        // 'todos' no agrega filtro
+
         if ($modoVista !== 'todas' && !empty($codSucursal) && $codSucursal !== 'todas') {
             $sql .= " AND fm.cod_sucursal = ?";
             $params[] = $codSucursal;
         }
 
-        // Filtrar por operario si se seleccionó uno específico
         if ($operarioId > 0) {
             $sql .= " AND fm.cod_operario = ?";
             $params[] = $operarioId;
@@ -187,23 +202,13 @@ function obtenerVacaciones($codSucursal, $fechaDesde, $fechaHasta, $esRH = false
         $sql .= " ORDER BY fm.fecha_falta DESC, o.Nombre, o.Apellido";
 
         $stmt = $conn->prepare($sql);
-
-        if (!$stmt) {
-            error_log("Error al preparar la consulta: " . implode(" ", $conn->errorInfo()));
+        if (!$stmt || !$stmt->execute($params)) {
             return [];
         }
 
-        if (!$stmt->execute($params)) {
-            error_log("Error al ejecutar la consulta: " . implode(" ", $stmt->errorInfo()));
-            return [];
-        }
-
-        $resultados = $stmt->fetchAll();
-
-        error_log("Vacaciones encontradas: " . count($resultados));
-        return $resultados;
+        return $stmt->fetchAll();
     } catch (PDOException $e) {
-        error_log("Excepción al obtener vacaciones: " . $e->getMessage());
+        error_log("Excepción al obtener registros de ausencias: " . $e->getMessage());
         return [];
     }
 }
@@ -416,7 +421,6 @@ function procesarRegistroVacacionesRango()
             }
             throw new Exception("No se pudo registrar ningún día de vacaciones. Errores: " . implode(', ', $errores));
         }
-
     } catch (Exception $e) {
         // Eliminar la foto si hubo un error
         if (isset($rutaCompleta) && file_exists($rutaCompleta)) {
@@ -500,18 +504,16 @@ function obtenerTiposFaltaConPorcentajes()
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Vacaciones</title>
+    <title>Registro de Vacaciones/Faltas/Subsidios</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <link rel="stylesheet" href="css/vacaciones.css?v=<?php echo mt_rand(1, 10000); ?>">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
 </head>
 
@@ -520,7 +522,7 @@ function obtenerTiposFaltaConPorcentajes()
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, 'Registro de Vacaciones'); ?>
+            <?php echo renderHeader($usuario, 'Registro de Vacaciones/Faltas/Subsidios'); ?>
 
             <div class="container-fluid p-3">
                 <?php if (isset($_SESSION['exito'])): ?>
@@ -558,17 +560,17 @@ function obtenerTiposFaltaConPorcentajes()
                         <div class="filtro-group">
                             <label for="operario">Colaborador</label>
                             <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..." value="<?php
-                            if ($operarioSeleccionado > 0) {
-                                foreach ($operarios as $op) {
-                                    if ($op['CodOperario'] == $operarioSeleccionado) {
-                                        echo htmlspecialchars($op['nombre_completo']);
-                                        break;
-                                    }
-                                }
-                            } else {
-                                echo 'Todos los colaboradores';
-                            }
-                            ?>">
+                                                                                                                            if ($operarioSeleccionado > 0) {
+                                                                                                                                foreach ($operarios as $op) {
+                                                                                                                                    if ($op['CodOperario'] == $operarioSeleccionado) {
+                                                                                                                                        echo htmlspecialchars($op['nombre_completo']);
+                                                                                                                                        break;
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            } else {
+                                                                                                                                echo 'Todos los colaboradores';
+                                                                                                                            }
+                                                                                                                            ?>">
                             <input type="hidden" id="operario_id" name="operario"
                                 value="<?php echo $operarioSeleccionado; ?>">
                             <div id="operarios-sugerencias" style="display: none;"></div>
@@ -584,6 +586,17 @@ function obtenerTiposFaltaConPorcentajes()
                             <input type="date" id="hasta" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>">
                         </div>
 
+                        <div class="filtro-group">
+                            <label for="tipo_filtro">Tipo de Ausencia</label>
+                            <select id="tipo_filtro" name="tipo_filtro">
+                                <option value="todos" <?= $tipoFiltro === 'todos' ? 'selected' : '' ?>>Todos</option>
+                                <option value="pendiente" <?= $tipoFiltro === 'pendiente' ? 'selected' : '' ?>>Pendientes</option>
+                                <option value="vacaciones" <?= $tipoFiltro === 'vacaciones' ? 'selected' : '' ?>>Vacaciones</option>
+                                <option value="subsidio" <?= $tipoFiltro === 'subsidio' ? 'selected' : '' ?>>Subsidios</option>
+                                <option value="faltas_permisos" <?= $tipoFiltro === 'faltas_permisos' ? 'selected' : '' ?>>Faltas y Permisos</option>
+                            </select>
+                        </div>
+
                         <div class="filtro-buttons">
                             <button type="submit" class="btn-aplicar">
                                 <i class="fas fa-search"></i> Buscar
@@ -591,12 +604,13 @@ function obtenerTiposFaltaConPorcentajes()
 
                             <?php if (tienePermiso('registro_vacaciones', 'exportar_excel', $cargoOperario)): ?>
                                 <a href="vacaciones.php?<?= http_build_query([
-                                    'sucursal' => $sucursalSeleccionada ?? '',
-                                    'desde' => $fechaDesde,
-                                    'hasta' => $fechaHasta,
-                                    'operario' => $operarioSeleccionado,
-                                    'exportar_excel' => 1
-                                ]) ?>" class="btn-agregar"
+                                                            'sucursal' => $sucursalSeleccionada ?? '',
+                                                            'desde' => $fechaDesde,
+                                                            'hasta' => $fechaHasta,
+                                                            'operario' => $operarioSeleccionado,
+                                                            'tipo_filtro' => $tipoFiltro,
+                                                            'exportar_excel' => 1
+                                                        ]) ?>" class="btn-agregar"
                                     style="background-color: #28a745; border-color: #28a745; color: white;">
                                     <i class="fas fa-file-excel"></i> Exportar
                                 </a>
@@ -605,6 +619,18 @@ function obtenerTiposFaltaConPorcentajes()
                     </form>
                 </div>
 
+                <?php
+                // Helper: badge CSS class based on tipo_falta
+                function getBadgeClass($tipo)
+                {
+                    if ($tipo === 'Pendiente') return 'badge-status badge-pendiente';
+                    if ($tipo === 'Vacaciones') return 'badge-status badge-vacaciones';
+                    if (str_starts_with($tipo, 'Subsidio') || str_starts_with($tipo, 'Reposo')) return 'badge-status badge-subsidio';
+                    if (str_starts_with($tipo, 'No_Pagado')) return 'badge-status badge-nopagado';
+                    if (str_starts_with($tipo, 'Compensacion') || str_starts_with($tipo, 'Dia_mas')) return 'badge-status badge-compensacion';
+                    return 'badge-status badge-permiso';
+                }
+                ?>
                 <div class="table-container">
                     <?php if (!empty($vacaciones)): ?>
                         <table id="listaVacaciones">
@@ -612,35 +638,65 @@ function obtenerTiposFaltaConPorcentajes()
                                 <tr>
                                     <th>Colaborador</th>
                                     <th>Sucursal</th>
-                                    <th>Fecha Vacación</th>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>% Pago</th>
                                     <th>Observaciones</th>
+                                    <th>Obs. RRHH</th>
                                     <th>Registrado por</th>
-                                    <th>Fecha Registro</th>
                                     <th>Foto</th>
+                                    <?php if ($puedeAprobar): ?><th>Acciones</th><?php endif; ?>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($vacaciones as $vacacion): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($vacacion['operario_nombre'] . ' ' . $vacacion['operario_apellido'] . ' ' . $vacacion['operario_apellido2']) ?>
-                                        </td>
+                                        <td><?= htmlspecialchars(trim($vacacion['operario_nombre'] . ' ' . ($vacacion['operario_nombre2'] ?? '') . ' ' . $vacacion['operario_apellido'] . ' ' . ($vacacion['operario_apellido2'] ?? ''))) ?></td>
                                         <td><?= htmlspecialchars($vacacion['sucursal_nombre']) ?></td>
                                         <td><?= formatoFechaCorta($vacacion['fecha_falta']) ?></td>
+                                        <td>
+                                            <span class="<?= getBadgeClass($vacacion['tipo_falta']) ?>">
+                                                <?= htmlspecialchars($vacacion['tipo_falta_nombre'] ?? str_replace('_', ' ', $vacacion['tipo_falta'])) ?>
+                                            </span>
+                                        </td>
+                                        <td style="text-align:center;"><?= number_format($vacacion['porcentaje_pago'] ?? 0, 0) ?>%</td>
                                         <td title="<?= htmlspecialchars($vacacion['observaciones'] ?: '-') ?>">
-                                            <?= $vacacion['observaciones'] ? htmlspecialchars(recortarTexto($vacacion['observaciones'], 20)) : '-' ?>
+                                            <?= $vacacion['observaciones'] ? htmlspecialchars(recortarTexto($vacacion['observaciones'], 25)) : '-' ?>
                                         </td>
-                                        <td><?= htmlspecialchars($vacacion['registrador_nombre'] . ' ' . $vacacion['registrador_apellido']) ?>
+                                        <td title="<?= htmlspecialchars($vacacion['observaciones_rrhh'] ?: '-') ?>">
+                                            <?= $vacacion['observaciones_rrhh'] ? htmlspecialchars(recortarTexto($vacacion['observaciones_rrhh'], 25)) : '<span class="text-muted small">-</span>' ?>
                                         </td>
-                                        <td><?= formatoFechaCorta($vacacion['fecha_registro']) ?></td>
-                                        <td style="text-align:center;"> <!-- NUEVA CELDA -->
+                                        <td><?= htmlspecialchars($vacacion['registrador_nombre'] . ' ' . $vacacion['registrador_apellido']) ?></td>
+                                        <td style="text-align:center;">
                                             <?php if ($vacacion['foto_path']): ?>
-                                                <button type="button"
-                                                    onclick="mostrarFoto('<?= htmlspecialchars($vacacion['foto_path']) ?>')"
-                                                    class="btn btn-sm btn-foto">
+                                                <button type="button" onclick="mostrarFoto('<?= htmlspecialchars($vacacion['foto_path']) ?>')" class="btn btn-sm btn-foto">
                                                     <i class="fas fa-camera" style="color: #51B8AC; font-size: 18px;"></i>
                                                 </button>
                                             <?php endif; ?>
                                         </td>
+                                        <?php if ($puedeAprobar): ?>
+                                            <td>
+                                                <div class="action-buttons-cell">
+                                                    <button type="button" class="btn-action-table btn-action-edit"
+                                                        onclick="mostrarModalEditarAprobar(
+                                                        <?= $vacacion['id'] ?>,
+                                                        '<?= htmlspecialchars(addslashes(trim($vacacion['operario_nombre'] . ' ' . $vacacion['operario_apellido']))) ?>',
+                                                        '<?= htmlspecialchars(addslashes($vacacion['sucursal_nombre'])) ?>',
+                                                        '<?= $vacacion['fecha_falta'] ?>',
+                                                        '<?= $vacacion['tipo_falta'] ?>',
+                                                        '<?= htmlspecialchars(addslashes($vacacion['observaciones'] ?? '')) ?>',
+                                                        '<?= htmlspecialchars(addslashes($vacacion['observaciones_rrhh'] ?? '')) ?>',
+                                                        '<?= htmlspecialchars($vacacion['foto_path'] ?? '') ?>'
+                                                    )">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn-action-table btn-action-delete"
+                                                        onclick="eliminarSolicitud(<?= $vacacion['id'] ?>)">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        <?php endif; ?>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -648,16 +704,26 @@ function obtenerTiposFaltaConPorcentajes()
                     <?php else: ?>
                         <div class="alert alert-info">
                             <?php if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHasta): ?>
-                                No se encontraron registros de vacaciones
-                                <?php if ($modoVista === 'todas'): ?>
-                                    en todas las sucursales
-                                <?php else: ?>
-                                    para <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
-                                <?php endif; ?>
-                                entre <?= formatoFechaCorta($fechaDesde) ?> y <?= formatoFechaCorta($fechaHasta) ?>.
+                                No se encontraron registros para los filtros seleccionados.
                             <?php else: ?>
-                                Seleccione una sucursal y rango de fechas para buscar vacaciones.
+                                Seleccione una sucursal y rango de fechas para buscar registros.
                             <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Barra de paginación (idéntica a cupones) -->
+                    <?php if (!empty($vacaciones)): ?>
+                        <div class="paginacion-toolbar">
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="mb-0 small">Mostrar:</label>
+                                <select class="form-select form-select-sm" id="registrosPorPaginaVac" style="width: auto;" onchange="vacPaginaActual=1; vacRenderizar();">
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="mb-0 small text-muted" id="vacInfoRegistros"></span>
+                            </div>
+                            <div id="paginacion"></div>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -668,8 +734,8 @@ function obtenerTiposFaltaConPorcentajes()
     <!-- Modal para nuevo subsidio por rango -->
     <div class="modal fade" id="modalNuevoSubsidio" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+            <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
                             style="width: 40px; height: 40px;">
@@ -682,10 +748,10 @@ function obtenerTiposFaltaConPorcentajes()
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4 bg-light">
+                <div class="modal-body p-3 bg-light">
                     <form id="formNuevoSubsidio" method="post" enctype="multipart/form-data">
                         <input type="hidden" name="registrar_vacaciones" value="1">
-                        
+
                         <div class="mb-3">
                             <label for="subsidio_sucursal" class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
                             <select id="subsidio_sucursal" name="cod_sucursal" class="form-select" required>
@@ -715,12 +781,18 @@ function obtenerTiposFaltaConPorcentajes()
                         <div class="mb-3">
                             <label for="subsidio_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de Subsidio:</label>
                             <select id="subsidio_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeSubsidio(this.value)">
-                                <option value="Subsidio_3dias" data-porcentaje="100">Subsidio 3 días (Paga 100%)</option>
-                                <option value="Subsidio_INSS" data-porcentaje="0">Subsidio INSS (Paga 0%)</option>
+                                <?php
+                                $tiposSubsidio = ['Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Cuido_materno'];
+                                foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
+                                    if (in_array($tipo['codigo'], $tiposSubsidio)):
+                                        $pct = $tipo['porcentaje_pago'];
+                                        $label = $tipo['nombre'] . ' (Paga ' . $pct . '%)';
+                                ?>
+                                        <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>"><?= htmlspecialchars($label) ?></option>
+                                <?php endif;
+                                endforeach; ?>
                             </select>
-                            <small id="info-porcentaje-subsidio" class="form-text text-muted mt-1 d-block">
-                                ✅ La empresa paga el 100% de este día
-                            </small>
+                            <small id="info-porcentaje-subsidio" class="form-text text-muted mt-1 d-block"></small>
                         </div>
 
                         <div class="row">
@@ -752,7 +824,7 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between">
+                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
                     <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="formNuevoSubsidio" class="btn-modern btn-modern-primary">
                         <i class="fas fa-save me-2"></i>Registrar Subsidio
@@ -765,8 +837,8 @@ function obtenerTiposFaltaConPorcentajes()
     <!-- Modal para nueva vacación por rango -->
     <div class="modal fade" id="modalNuevaVacacion" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+            <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
                             style="width: 40px; height: 40px;">
@@ -779,7 +851,7 @@ function obtenerTiposFaltaConPorcentajes()
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4 bg-light">
+                <div class="modal-body p-3 bg-light">
                     <form id="formNuevaVacacion" method="post" enctype="multipart/form-data">
                         <input type="hidden" name="registrar_vacaciones" value="1">
 
@@ -817,11 +889,11 @@ function obtenerTiposFaltaConPorcentajes()
                                 foreach ($tiposFalta as $tipo):
                                     if ($tipo['codigo'] === 'Vacaciones'):
                                         $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ? 'Deducción 100%' : 'Paga ' . $tipo['porcentaje_pago'] . '%';
-                                        ?>
+                                ?>
                                         <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>" selected>
                                             <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
                                         </option>
-                                        <?php
+                                <?php
                                     endif;
                                 endforeach;
                                 ?>
@@ -860,7 +932,7 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between">
+                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
                     <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="formNuevaVacacion" class="btn-modern btn-modern-primary">
                         <i class="fas fa-save me-2"></i>Registrar Vacaciones
@@ -871,701 +943,261 @@ function obtenerTiposFaltaConPorcentajes()
     </div>
 
     <script>
-        // Datos de operarios para el autocompletado
-        const operariosData = [
-            { id: 0, nombre: 'Todos los colaboradores' },
-            <?php foreach ($operarios as $op): ?>
-                            { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
-            <?php endforeach; ?>
-        ];
-
-        // Función para buscar operarios
-        function buscarOperarios(texto) {
-            if (!texto) {
-                return operariosData;
-            }
-            return operariosData.filter(op =>
-                op.nombre.toLowerCase().includes(texto.toLowerCase())
-            );
-        }
-
-        // Manejar el input de operario
-        const operarioInput = document.getElementById('operario');
-        const operarioIdInput = document.getElementById('operario_id');
-        const sugerenciasDiv = document.getElementById('operarios-sugerencias');
-
-        operarioInput.addEventListener('input', function () {
-            const texto = this.value.trim();
-
-            if (texto === '') {
-                operarioIdInput.value = '0';
-                sugerenciasDiv.style.display = 'none';
-                return;
-            }
-
-            const resultados = buscarOperarios(texto);
-
-            sugerenciasDiv.innerHTML = '';
-
-            if (resultados.length > 0) {
-                resultados.forEach(op => {
-                    const div = document.createElement('div');
-                    div.textContent = op.nombre;
-                    div.style.padding = '8px';
-                    div.style.cursor = 'pointer';
-                    div.addEventListener('click', function () {
-                        operarioInput.value = op.nombre;
-                        operarioIdInput.value = op.id;
-                        sugerenciasDiv.style.display = 'none';
-                    });
-                    div.addEventListener('mouseover', function () {
-                        this.style.backgroundColor = '#f5f5f5';
-                    });
-                    div.addEventListener('mouseout', function () {
-                        this.style.backgroundColor = 'white';
-                    });
-                    sugerenciasDiv.appendChild(div);
-                });
-                sugerenciasDiv.style.display = 'block';
-            } else {
-                sugerenciasDiv.style.display = 'none';
-            }
-        });
-
-        document.addEventListener('click', function (e) {
-            if (e.target !== operarioInput) {
-                sugerenciasDiv.style.display = 'none';
-            }
-        });
-
-        operarioInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const texto = this.value.trim();
-                const resultados = buscarOperarios(texto);
-                if (resultados.length > 0) {
-                    this.value = resultados[0].nombre;
-                    operarioIdInput.value = resultados[0].id;
-                }
-                sugerenciasDiv.style.display = 'none';
-            }
-        });
-
-        // Función para mostrar modal de nuevo subsidio
-        function mostrarModalNuevoSubsidio() {
-            // Establecer fechas predeterminadas (hoy por defecto)
-            const hoy = new Date();
-            const fechaInicioInput = document.getElementById('subsidio_fecha_inicio');
-            const fechaFinInput = document.getElementById('subsidio_fecha_fin');
-
-            fechaInicioInput.valueAsDate = hoy;
-            fechaFinInput.valueAsDate = hoy;
-
-            // Limpiar selección de operario
-            const selectOperario = document.getElementById('subsidio_operario');
-            selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
-
-            // Ocultar información del rango inicialmente
-            document.getElementById('info-rango-subsidio').style.display = 'none';
-
-            const modalEl = document.getElementById('modalNuevoSubsidio');
-            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            modal.show();
-
-            // Cargar los colaboradores inmediatamente después de mostrar el modal
-            setTimeout(() => {
-                const selectSucursal = document.getElementById('subsidio_sucursal');
-                if (selectSucursal.value) {
-                    cargarOperariosSucursalSubsidio(selectSucursal.value);
-                }
-            }, 100);
-        }
-
-        // Función para mostrar modal de nueva vacación
-        function mostrarModalNuevaVacacion() {
-            // Establecer fechas predeterminadas (hoy por defecto)
-            const hoy = new Date();
-            const fechaInicioInput = document.getElementById('nueva_fecha_inicio');
-            const fechaFinInput = document.getElementById('nueva_fecha_fin');
-
-            fechaInicioInput.valueAsDate = hoy;
-            fechaFinInput.valueAsDate = hoy;
-
-            // Limpiar selección de operario
-            const selectOperario = document.getElementById('nueva_operario');
-            selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
-
-            // Ocultar información del rango inicialmente
-            document.getElementById('info-rango').style.display = 'none';
-
-            const modalEl = document.getElementById('modalNuevaVacacion');
-            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            modal.show();
-
-            // NUEVO: Cargar los colaboradores inmediatamente después de mostrar el modal
-            setTimeout(() => {
-                const selectSucursal = document.getElementById('nueva_sucursal');
-                if (selectSucursal.value) {
-                    cargarOperariosSucursal(selectSucursal.value);
-                }
-            }, 100);
-        }
-
-        // Función para calcular días laborables en un rango
-        function calcularDiasLaborables(fechaInicio, fechaFin) {
-            if (!fechaInicio || !fechaFin) return 0;
-
-            const inicio = new Date(fechaInicio);
-            const fin = new Date(fechaFin);
-
-            if (inicio > fin) return 0;
-
-            let diasLaborables = 0;
-            const fechaActual = new Date(inicio);
-
-            while (fechaActual <= fin) {
-                const diaSemana = fechaActual.getDay(); // 0=domingo, 1=lunes, ..., 6=sábado
-
-                // Si no es domingo (0) ni sábado (6), es laborable, pero ahora es cualquier día, pero lo dejamos comentado
-                //if (diaSemana !== 0 && diaSemana !== 6) {
-                diasLaborables++;
-                //}
-
-                fechaActual.setDate(fechaActual.getDate() + 1);
-            }
-
-            return diasLaborables;
-        }
-
-        // Función para actualizar información del rango
-        function actualizarInfoRango() {
-            const fechaInicio = document.getElementById('nueva_fecha_inicio').value;
-            const fechaFin = document.getElementById('nueva_fecha_fin').value;
-            const infoRango = document.getElementById('info-rango');
-
-            if (!fechaInicio || !fechaFin) {
-                infoRango.style.display = 'none';
-                return;
-            }
-
-            const inicio = new Date(fechaInicio);
-            const fin = new Date(fechaFin);
-
-            if (inicio > fin) {
-                infoRango.innerHTML = '<p style="color: #dc3545;"><strong>Error:</strong> La fecha de inicio no puede ser mayor que la fecha fin</p>';
-                infoRango.style.display = 'block';
-                return;
-            }
-
-            // Calcular días totales
-            const diffTime = Math.abs(fin - inicio);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-            // Calcular días laborables (excluye sábados y domingos)
-            const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
-
-            // Actualizar información
-            document.getElementById('info-dias-totales').textContent = `Días totales en rango: ${diffDays}`;
-            //document.getElementById('info-dias-laborables').textContent = `Días laborables (L-V): ${diasLaborables}`;
-            document.getElementById('info-vacaciones').textContent = `Días a registrar como vacaciones: ${diasLaborables}`;
-
-            infoRango.style.display = 'block';
-        }
-
-        // Escuchar cambios en las fechas
-        document.getElementById('nueva_fecha_inicio').addEventListener('change', function () {
-            actualizarInfoRango();
-        });
-
-        document.getElementById('nueva_fecha_fin').addEventListener('change', function () {
-            actualizarInfoRango();
-        });
-
-        // Función para cargar operarios de una sucursal (para subsidios)
-        function cargarOperariosSucursalSubsidio(codSucursal) {
-            const selectOperario = document.getElementById('subsidio_operario');
-
-            if (!codSucursal) {
-                selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
-                return;
-            }
-
-            selectOperario.innerHTML = '<option value="">Cargando colaboradores...</option>';
-
-            // Hacer petición AJAX para obtener operarios de la sucursal
-            fetch('ajax/obtener_operarios_sucursal_simple.php?sucursal=' + codSucursal)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    let options = '<option value="">Seleccione un colaborador</option>';
-
-                    if (data.length > 0) {
-                        data.forEach(operario => {
-                            const nombreCompleto = operario.Nombre + ' ' +
-                                (operario.Apellido || '') + ' ' +
-                                (operario.Apellido2 || '');
-                            options += `<option value="${operario.CodOperario}">${nombreCompleto.trim()}</option>`;
-                        });
-                    } else {
-                        options = '<option value="">No hay colaboradores disponibles</option>';
-                    }
-
-                    selectOperario.innerHTML = options;
-                })
-                .catch(error => {
-                    console.error('Error al cargar colaboradores:', error);
-                    selectOperario.innerHTML = '<option value="">Error al cargar colaboradores</option>';
-                });
-        }
-
-        // Función para cargar operarios de una sucursal
-        function cargarOperariosSucursal(codSucursal) {
-            const selectOperario = document.getElementById('nueva_operario');
-
-            if (!codSucursal) {
-                selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
-                return;
-            }
-
-            selectOperario.innerHTML = '<option value="">Cargando colaboradores...</option>';
-
-            // Hacer petición AJAX para obtener operarios de la sucursal
-            fetch('ajax/obtener_operarios_sucursal_simple.php?sucursal=' + codSucursal)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    let options = '<option value="">Seleccione un colaborador</option>';
-
-                    if (data.length > 0) {
-                        data.forEach(operario => {
-                            const nombreCompleto = operario.Nombre + ' ' +
-                                (operario.Apellido || '') + ' ' +
-                                (operario.Apellido2 || '');
-                            options += `<option value="${operario.CodOperario}">${nombreCompleto.trim()}</option>`;
-                        });
-                    } else {
-                        options = '<option value="">No hay colaboradores disponibles</option>';
-                    }
-
-                    selectOperario.innerHTML = options;
-                })
-                .catch(error => {
-                    console.error('Error al cargar colaboradores:', error);
-                    selectOperario.innerHTML = '<option value="">Error al cargar colaboradores</option>';
-                });
-        }
-
-        // Función para actualizar la información del porcentaje de subsidios
-        function actualizarPorcentajeSubsidio(tipoFalta) {
-            const select = document.getElementById('subsidio_tipo');
-            const option = select.querySelector(`option[value="${tipoFalta}"]`);
-            const infoElement = document.getElementById('info-porcentaje-subsidio');
-
-            if (option && option.dataset.porcentaje) {
-                const porcentaje = parseFloat(option.dataset.porcentaje);
-                let texto = '';
-
-                if (porcentaje === 0) {
-                    texto = 'ℹ️ La empresa NO paga este día (0%)';
-                    infoElement.style.color = '#ffc107';
-                } else if (porcentaje === 100) {
-                    texto = '✅ La empresa paga el 100% de este día';
-                    infoElement.style.color = '#28a745';
-                } else {
-                    texto = `📊 La empresa paga el ${porcentaje}% de este día`;
-                    infoElement.style.color = '#17a2b8';
-                }
-
-                infoElement.textContent = texto;
-                infoElement.style.display = 'block';
-            } else {
-                infoElement.style.display = 'none';
-            }
-        }
-
-        // Función para actualizar la información del porcentaje de vacaciones
-        function actualizarPorcentajeVacaciones(tipoFalta) {
-            const select = document.getElementById('nueva_tipo');
-            const option = select.querySelector(`option[value="${tipoFalta}"]`);
-            const infoElement = document.getElementById('info-porcentaje-vacaciones');
-
-            if (option && option.dataset.porcentaje) {
-                const porcentaje = parseFloat(option.dataset.porcentaje);
-                let texto = '';
-
-                if (porcentaje === -100) {
-                    texto = '⚠️ La empresa NO paga este día - se DEDUCE del salario';
-                    infoElement.style.color = '#dc3545';
-                } else if (porcentaje === 0) {
-                    texto = 'ℹ️ La empresa NO paga este día';
-                    infoElement.style.color = '#ffc107';
-                } else if (porcentaje === 100) {
-                    texto = '✅ La empresa paga el 100% de este día';
-                    infoElement.style.color = '#28a745';
-                } else {
-                    texto = `📊 La empresa paga el ${porcentaje}% de este día`;
-                    infoElement.style.color = '#17a2b8';
-                }
-
-                infoElement.textContent = texto;
-                infoElement.style.display = 'block';
-            } else {
-                infoElement.style.display = 'none';
-            }
-        }
-
-        // Mostrar el porcentaje cuando se carga el modal
-        document.addEventListener('DOMContentLoaded', function () {
-            const tipoSelect = document.getElementById('nueva_tipo');
-            if (tipoSelect) {
-                actualizarPorcentajeVacaciones(tipoSelect.value);
-            }
-        });
-
-        // Cargar operarios cuando cambia la sucursal
-        document.getElementById('nueva_sucursal').addEventListener('change', function () {
-            cargarOperariosSucursal(this.value);
-        });
-
-        // Cargar operarios cuando cambia la sucursal de subsidios
-        document.getElementById('subsidio_sucursal').addEventListener('change', function () {
-            cargarOperariosSucursalSubsidio(this.value);
-        });
-
-        // Función para actualizar información del rango de subsidios
-        function actualizarInfoRangoSubsidio() {
-            const fechaInicio = document.getElementById('subsidio_fecha_inicio').value;
-            const fechaFin = document.getElementById('subsidio_fecha_fin').value;
-            const infoRango = document.getElementById('info-rango-subsidio');
-
-            if (!fechaInicio || !fechaFin) {
-                infoRango.style.display = 'none';
-                return;
-            }
-
-            const inicio = new Date(fechaInicio);
-            const fin = new Date(fechaFin);
-
-            if (inicio > fin) {
-                infoRango.innerHTML = '<p style="color: #dc3545;"><strong>Error:</strong> La fecha de inicio no puede ser mayor que la fecha fin</p>';
-                infoRango.style.display = 'block';
-                return;
-            }
-
-            // Calcular días totales
-            const diffTime = Math.abs(fin - inicio);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-            // Calcular días laborables
-            const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
-
-            // Actualizar información
-            document.getElementById('info-dias-totales-subsidio').textContent = `Días totales en rango: ${diffDays}`;
-            document.getElementById('info-dias-subsidio').textContent = `Días a registrar como subsidio: ${diasLaborables}`;
-
-            infoRango.style.display = 'block';
-        }
-
-        // Escuchar cambios en las fechas de subsidio
-        document.getElementById('subsidio_fecha_inicio').addEventListener('change', function () {
-            actualizarInfoRangoSubsidio();
-        });
-
-        document.getElementById('subsidio_fecha_fin').addEventListener('change', function () {
-            actualizarInfoRangoSubsidio();
-        });
-
-        // Validar formulario de subsidio antes de enviar
-        document.getElementById('formNuevoSubsidio').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const fechaInicio = document.getElementById('subsidio_fecha_inicio').value;
-            const fechaFin = document.getElementById('subsidio_fecha_fin').value;
-            const codOperario = document.getElementById('subsidio_operario').value;
-            const fotoInput = document.getElementById('subsidio_foto');
-            const tipoSubsidio = document.getElementById('subsidio_tipo').value;
-
-            // Validaciones básicas
-            if (!fechaInicio || !fechaFin) {
-                alert('Debe seleccionar ambas fechas');
-                return false;
-            }
-
-            if (fechaInicio > fechaFin) {
-                alert('La fecha de inicio no puede ser mayor que la fecha fin');
-                return false;
-            }
-
-            if (!codOperario) {
-                alert('Debe seleccionar un colaborador');
-                return false;
-            }
-
-            // Validar que se haya seleccionado una foto
-            if (!fotoInput.files || fotoInput.files.length === 0) {
-                alert('Debe subir una foto como evidencia');
-                return false;
-            }
-
-            // Validar tamaño de foto (máximo 5MB)
-            const foto = fotoInput.files[0];
-            if (foto.size > 5 * 1024 * 1024) {
-                alert('La foto no debe exceder los 5MB');
-                return false;
-            }
-
-            // Validar tipo de archivo
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-            if (!allowedTypes.includes(foto.type)) {
-                alert('Solo se permiten imágenes JPEG, PNG o GIF');
-                return false;
-            }
-
-            // Calcular días laborables para confirmación
-            const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
-
-            if (diasLaborables === 0) {
-                alert('No hay días en el rango seleccionado');
-                return false;
-            }
-
-            // Obtener el porcentaje de pago del tipo seleccionado
-            const selectTipo = document.getElementById('subsidio_tipo');
-            const optionSeleccionada = selectTipo.querySelector(`option[value="${tipoSubsidio}"]`);
-            const porcentajePago = optionSeleccionada ? optionSeleccionada.dataset.porcentaje : '0';
-
-            // Mostrar confirmación
-            let mensaje = `¿Está seguro de registrar ${diasLaborables} días de subsidio (${tipoSubsidio}) para el colaborador seleccionado?\n\n`;
-            mensaje += `Rango: ${fechaInicio} al ${fechaFin}\n`;
-            mensaje += `Días: ${diasLaborables}\n`;
-            mensaje += `Porcentaje de pago: ${porcentajePago}%\n\n`;
-            mensaje += `IMPORTANTE: Se requiere foto de evidencia.`;
-
-            if (confirm(mensaje)) {
-                this.submit();
-            }
-
-            return false;
-        });
-
-        // Validar formulario antes de enviar
-        document.getElementById('formNuevaVacacion').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const fechaInicio = document.getElementById('nueva_fecha_inicio').value;
-            const fechaFin = document.getElementById('nueva_fecha_fin').value;
-            const codOperario = document.getElementById('nueva_operario').value;
-            const fotoInput = document.getElementById('nueva_foto');
-
-            // Validaciones básicas
-            if (!fechaInicio || !fechaFin) {
-                alert('Debe seleccionar ambas fechas');
-                return false;
-            }
-
-            if (fechaInicio > fechaFin) {
-                alert('La fecha de inicio no puede ser mayor que la fecha fin');
-                return false;
-            }
-
-            if (!codOperario) {
-                alert('Debe seleccionar un colaborador');
-                return false;
-            }
-
-            // Validar que se haya seleccionado una foto
-            if (!fotoInput.files || fotoInput.files.length === 0) {
-                alert('Debe subir una foto como evidencia');
-                return false;
-            }
-
-            // Validar tamaño de foto (máximo 5MB)
-            const foto = fotoInput.files[0];
-            if (foto.size > 5 * 1024 * 1024) {
-                alert('La foto no debe exceder los 5MB');
-                return false;
-            }
-
-            // Validar tipo de archivo
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-            if (!allowedTypes.includes(foto.type)) {
-                alert('Solo se permiten imágenes JPEG, PNG o GIF');
-                return false;
-            }
-
-            // Calcular días laborables para confirmación
-            const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
-
-            if (diasLaborables === 0) {
-                alert('No hay días laborables en el rango seleccionado');
-                return false;
-            }
-
-            // Mostrar confirmación
-            let mensaje = `¿Está seguro de registrar ${diasLaborables} días de vacaciones para el colaborador seleccionado?\n\n`;
-            mensaje += `Rango: ${fechaInicio} al ${fechaFin}\n`;
-            mensaje += `Días laborables: ${diasLaborables}\n\n`;
-            //mensaje += `NOTA: Se permiten fechas futuras para programar vacaciones con anticipación.\n\n`;
-            mensaje += `IMPORTANTE: Se requiere foto de evidencia.`;
-
-            if (confirm(mensaje)) {
-                this.submit();
-            }
-
-            return false;
-        });
-
-        // Cerrar modal de vacaciones
-        function cerrarModal() {
-            const modalEl = document.getElementById('modalNuevaVacacion');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-        }
-
-        // Cerrar modal de subsidios
-        function cerrarModalSubsidio() {
-            const modalEl = document.getElementById('modalNuevoSubsidio');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-        }
-
-        // Inicializar DataTable
-        $(document).ready(function () {
-            $('#listaVacaciones').DataTable({
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+        // CONFIG de datos para vacaciones.js
+        window.CONFIG_VACACIONES = {
+            operariosData: [{
+                    id: 0,
+                    nombre: 'Todos los colaboradores'
                 },
-                dom: '<"top"l>rt<"bottom"ip>',
-                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-                pageLength: 25,
-                order: [],
-                ordering: true,
-                orderMulti: true,
-                columnDefs: [{
-                    orderable: true,
-                    targets: '_all'
-                }]
-            });
-        });
-
-        // Función para mostrar foto en un modal
-        function mostrarFoto(rutaFoto) {
-            ampliarImagen(rutaFoto);
-        }
-
-        // Función para ampliar imagen (funciona sobre modales existentes)
-        function ampliarImagen(src) {
-            const modalAmpliar = document.createElement('div');
-            modalAmpliar.id = 'modalAmpliarImagen';
-            modalAmpliar.style.position = 'fixed';
-            modalAmpliar.style.top = '0';
-            modalAmpliar.style.left = '0';
-            modalAmpliar.style.width = '100%';
-            modalAmpliar.style.height = '100%';
-            modalAmpliar.style.backgroundColor = 'rgba(0,0,0,0.9)';
-            modalAmpliar.style.display = 'flex';
-            modalAmpliar.style.justifyContent = 'center';
-            modalAmpliar.style.alignItems = 'center';
-            modalAmpliar.style.zIndex = '3000'; // Mayor z-index para que esté sobre otros modales
-
-            const img = document.createElement('img');
-            img.src = src;
-            img.style.maxWidth = '90%';
-            img.style.maxHeight = '90%';
-            img.style.objectFit = 'contain';
-            img.style.boxShadow = '0 0 20px rgba(255,255,255,0.2)';
-
-            const closeBtn = document.createElement('button');
-            closeBtn.innerHTML = '&times;';
-            closeBtn.style.position = 'absolute';
-            closeBtn.style.top = '20px';
-            closeBtn.style.right = '20px';
-            closeBtn.style.fontSize = '2.5rem';
-            closeBtn.style.color = 'white';
-            closeBtn.style.background = 'none';
-            closeBtn.style.border = 'none';
-            closeBtn.style.cursor = 'pointer';
-            closeBtn.style.zIndex = '3001';
-
-            closeBtn.onclick = function () {
-                document.body.removeChild(modalAmpliar);
-            };
-
-            modalAmpliar.appendChild(img);
-            modalAmpliar.appendChild(closeBtn);
-            document.body.appendChild(modalAmpliar);
-
-            // Cerrar al hacer clic fuera de la imagen
-            modalAmpliar.onclick = function (e) {
-                if (e.target === modalAmpliar) {
-                    document.body.removeChild(modalAmpliar);
-                }
-            };
-
-            // Cerrar con tecla ESC
-            const closeOnEsc = function (e) {
-                if (e.key === 'Escape') {
-                    document.body.removeChild(modalAmpliar);
-                    document.removeEventListener('keydown', closeOnEsc);
-                }
-            };
-
-            document.addEventListener('keydown', closeOnEsc);
-        }
+                <?php foreach ($operarios as $op): ?> {
+                        id: <?php echo $op['CodOperario']; ?>,
+                        nombre: '<?php echo addslashes($op['nombre_completo']); ?>'
+                    },
+                <?php endforeach; ?>
+            ],
+            puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
+            esRH: <?= $esRH ? 'true' : 'false' ?>
+        };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="js/vacaciones.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
     <!-- ===================== MODAL AYUDA ===================== -->
     <div class="modal fade" id="pageHelpModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+            <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
-                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
-                            style="width: 40px; height: 40px;">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                             <i class="fas fa-question fs-4"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">Ayuda — Registro de Vacaciones</h5>
+                            <h5 class="modal-title fw-bold mb-0">Ayuda — Registro de Ausencias</h5>
                             <p class="small mb-0 opacity-75">Guía rápida de uso del módulo</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4 bg-light">
+                <div class="modal-body p-3 bg-light">
                     <h6 class="fw-bold text-success"><i class="fas fa-info-circle me-2"></i>¿Para qué sirve este módulo?</h6>
-                    <p>Este módulo permite registrar, visualizar y exportar las ausencias del personal, específicamente <strong>Vacaciones</strong> y <strong>Subsidios</strong>, ya sea para aplicarlos o deducirlos del cálculo de nómina.</p>
-
-                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-umbrella-beach me-2"></i>Registro de Vacaciones</h6>
+                    <p>Este módulo permite registrar, visualizar y exportar las ausencias del personal: <strong>Vacaciones</strong>, <strong>Subsidios</strong> y <strong>Faltas/Permisos</strong>, ya sea para aplicarlos o deducirlos del cálculo de nómina.</p>
+                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-umbrella-beach me-2"></i>Vacaciones</h6>
                     <ul class="mb-0">
                         <li>Permite registrar vacaciones seleccionando un rango de fechas.</li>
-                        <li>El sistema calcula automáticamente los <strong>días laborables</strong> dentro del rango.</li>
-                        <li>Puedes indicar si el día se paga al 100%, 0% o si corresponde a una deducción.</li>
+                        <li>Si eres líder, la solicitud queda como <strong>Pendiente</strong> hasta ser aprobada por RRHH.</li>
                     </ul>
-
-                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-notes-medical me-2"></i>Registro de Subsidios</h6>
+                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-notes-medical me-2"></i>Subsidios</h6>
                     <ul class="mb-0">
                         <li><strong>Subsidio 3 días:</strong> Asume el pago al 100% por cuenta de la empresa.</li>
                         <li><strong>Subsidio INSS:</strong> Asume el 0% por cuenta de la empresa (lo cubre el INSS).</li>
                     </ul>
-
+                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-exclamation-triangle me-2"></i>Faltas y Permisos</h6>
+                    <ul class="mb-0">
+                        <li>Solo se permiten fechas anteriores al día actual (no futuras).</li>
+                        <li>El sistema verifica que no existan marcaciones el día seleccionado.</li>
+                    </ul>
                     <h6 class="fw-bold text-success mt-4"><i class="fas fa-camera me-2"></i>Evidencias</h6>
-                    <p class="mb-0">Todo registro requiere de manera <strong>obligatoria</strong> adjuntar una foto (formato de salida, documento médico, etc.) para respaldar la autorización.</p>
+                    <p class="mb-0">Todo registro requiere de manera <strong>obligatoria</strong> adjuntar una foto de evidencia (máx. 5MB).</p>
                 </div>
-                <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-end">
+                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-end">
                     <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- ===================== MODAL NUEVA FALTA/PERMISO ===================== -->
+    <div class="modal fade" id="modalNuevaFalta" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-exclamation-triangle fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Registrar Falta o Permiso</h5>
+                            <p class="small mb-0 opacity-75">Registro por rango de fechas (no futuras)</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3 bg-light">
+                    <form id="formNuevaFalta" enctype="multipart/form-data">
+                        <input type="hidden" name="categoria_falta" value="falta_permiso">
+
+                        <div class="mb-3">
+                            <label for="falta_sucursal" class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
+                            <select id="falta_sucursal" name="cod_sucursal" class="form-select" required
+                                onchange="cargarOperariosSucursal(this.value, 'falta_operario')">
+                                <?php if ($esRH): ?>
+                                    <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
+                                        <option value="<?= $sucursal['codigo'] ?>"><?= htmlspecialchars($sucursal['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <?php foreach (obtenerSucursalesLider($_SESSION['usuario_id']) as $sucursal): ?>
+                                        <option value="<?= $sucursal['codigo'] ?>"><?= htmlspecialchars($sucursal['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="falta_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                            <select id="falta_operario" name="cod_operario" class="form-select" required>
+                                <option value="">Seleccione un colaborador</option>
+                            </select>
+                        </div>
+
+                        <?php if ($puedeAprobar): ?>
+                            <div class="mb-3">
+                                <label for="falta_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de Falta/Permiso:</label>
+                                <select id="falta_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeFaltaPermiso(this.value)">
+                                    <?php
+                                    $tiposExcluidos = ['Vacaciones', 'Pendiente', 'Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Cuido_materno'];
+                                    foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
+                                        if (!in_array($tipo['codigo'], $tiposExcluidos)):
+                                            $pct = $tipo['porcentaje_pago'];
+                                    ?>
+                                            <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>">
+                                                <?= htmlspecialchars($tipo['nombre']) ?> (Paga <?= $pct ?>%)
+                                            </option>
+                                    <?php endif;
+                                    endforeach; ?>
+                                </select>
+                                <small id="info-porcentaje-falta" class="form-text text-muted mt-1 d-block"></small>
+                            </div>
+                        <?php else: ?>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Tipo de Falta/Permiso:</label>
+                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly>
+                                <input type="hidden" id="falta_tipo" name="tipo_falta" value="Pendiente">
+                                <small id="info-porcentaje-falta" class="form-text text-muted mt-1 d-block">
+                                    ℹ️ El tipo de ausencia será determinado y clasificado por Recursos Humanos.
+                                </small>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="falta_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="falta_fecha_inicio" name="fecha_inicio" class="form-control" required
+                                    onchange="actualizarInfoRangoFaltaPermiso()">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="falta_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <input type="date" id="falta_fecha_fin" name="fecha_fin" class="form-control" required
+                                    onchange="actualizarInfoRangoFaltaPermiso()">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="falta_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                            <textarea id="falta_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="falta_foto" class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
+                            <input type="file" id="falta_foto" name="foto_falta" class="form-control" accept="image/*" capture="environment" required>
+                            <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx. 5MB)</small>
+                        </div>
+
+                        <div id="info-rango-falta" class="alert alert-info py-2" style="display: none;">
+                            <p class="mb-1"><strong>Resumen del rango seleccionado:</strong></p>
+                            <p class="mb-0 small" id="info-dias-totales-falta">Días totales en rango: 0</p>
+                            <p class="mb-0 small fw-bold" id="info-dias-falta">Días a registrar: 0</p>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap">
+                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formNuevaFalta" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-save me-2"></i>Registrar Falta/Permiso
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php if ($puedeAprobar): ?>
+        <!-- ===================== MODAL EDITAR/APROBAR (RRHH) ===================== -->
+        <div class="modal fade" id="modalEditarFalta" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                    <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-check-circle fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0">Editar / Aprobar Solicitud</h5>
+                                <p class="small mb-0 opacity-75">Modificación por parte de RRHH</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-3 bg-light">
+                        <form id="formEditarFalta">
+                            <input type="hidden" id="editar_id" name="id">
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                                <p class="form-control-plaintext fw-bold" id="editar_nombre">-</p>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
+                                    <p class="form-control-plaintext" id="editar_sucursal">-</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Fecha:</label>
+                                    <p class="form-control-plaintext" id="editar_fecha">-</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Observaciones del líder:</label>
+                                <p class="form-control-plaintext text-muted small" id="editar_observaciones_lider">-</p>
+                            </div>
+
+                            <div id="preview-container" class="mb-3" style="display: none;">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Foto de evidencia:</label>
+                                <div>
+                                    <img id="preview-image" src="" alt="Foto evidencia" style="max-height: 120px; border-radius: 8px; cursor: pointer;"
+                                        onclick="ampliarImagen(this.src)">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editar_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de Falta (Aprobación):</label>
+                                <select id="editar_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeEdicion(this.value)">
+                                    <?php foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
+                                        if ($tipo['codigo'] === 'Pendiente') continue;
+                                        $pct = $tipo['porcentaje_pago'];
+                                    ?>
+                                        <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>">
+                                            <?= htmlspecialchars($tipo['nombre']) ?> (<?= $pct ?>%)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small id="info-porcentaje-edicion" class="form-text mt-1 d-block"></small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editar_observaciones_rrhh" class="form-label small fw-bold text-muted text-uppercase">Observaciones RRHH (Obligatorio):</label>
+                                <textarea id="editar_observaciones_rrhh" name="observaciones_rrhh" class="form-control" rows="3" style="resize: none;" required></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
+                        <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" form="formEditarFalta" class="btn-modern btn-modern-primary">
+                            <i class="fas fa-check me-2"></i>Aprobar / Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <!-- Botón Flotante con opciones -->
     <?php if (tienePermiso('registro_vacaciones', 'nuevo_registro', $cargoOperario)): ?>
@@ -1579,8 +1211,12 @@ function obtenerTiposFaltaConPorcentajes()
                     <span class="fab-label">Subsidio</span>
                     <div class="fab-icon-holder"><i class="fas fa-notes-medical"></i></div>
                 </div>
+                <div class="fab-option" onclick="mostrarModalNuevaFaltaPermiso()">
+                    <span class="fab-label">Falta / Permiso</span>
+                    <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
+                </div>
             </div>
-            <div class="btn-floating-pitaya" title="Opciones" onclick="toggleFab(event)">
+            <div class="btn-floating-pitaya" title="Nuevo Registro" onclick="toggleFab(event)">
                 <i class="fas fa-plus"></i>
             </div>
         </div>
@@ -1589,8 +1225,6 @@ function obtenerTiposFaltaConPorcentajes()
                 event.stopPropagation();
                 document.getElementById('fabContainer').classList.toggle('active');
             }
-            
-            // Cerrar al hacer click fuera
             document.addEventListener('click', function(event) {
                 const fab = document.getElementById('fabContainer');
                 if (fab && fab.classList.contains('active') && !fab.contains(event.target)) {
