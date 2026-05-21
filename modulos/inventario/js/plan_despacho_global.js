@@ -7,15 +7,15 @@
 const PDG = {
     AJAX_BASE: 'ajax/',
     CATEGORIAS: {
-        A: { nombre: 'Frescos',              cls: 'pdg-cat-A', icon: 'bi-apple'         },
-        B: { nombre: 'Congelados',           cls: 'pdg-cat-B', icon: 'bi-snow2'         },
-        C: { nombre: 'Fresas',               cls: 'pdg-cat-C', icon: 'bi-heart-fill'    },
-        D: { nombre: 'Desechables',          cls: 'pdg-cat-D', icon: 'bi-trash3'        },
-        E: { nombre: 'Fijos',                cls: 'pdg-cat-E', icon: 'bi-box-seam'      },
-        F: { nombre: 'Secos y Preparación',  cls: 'pdg-cat-F', icon: 'bi-bucket'        },
-        G: { nombre: 'Prod. de Mostrador',   cls: 'pdg-cat-G', icon: 'bi-shop'          },
+        A: { nombre: 'Frescos', cls: 'pdg-cat-A', icon: 'bi-apple' },
+        B: { nombre: 'Congelados', cls: 'pdg-cat-B', icon: 'bi-snow2' },
+        C: { nombre: 'Fresas', cls: 'pdg-cat-C', icon: 'bi-heart-fill' },
+        D: { nombre: 'Desechables', cls: 'pdg-cat-D', icon: 'bi-trash3' },
+        E: { nombre: 'Fijos', cls: 'pdg-cat-E', icon: 'bi-box-seam' },
+        F: { nombre: 'Secos y Preparación', cls: 'pdg-cat-F', icon: 'bi-bucket' },
+        G: { nombre: 'Prod. de Mostrador', cls: 'pdg-cat-G', icon: 'bi-shop' },
     },
-    DIAS: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],
+    DIAS: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
     sucursales: [],
     configCache: {},
 };
@@ -29,12 +29,16 @@ function initTooltips(ctx) {
 
 /* ── Toast SweetAlert2 ── */
 function toastOk(msg) {
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: msg,
-        showConfirmButton: false, timer: 2800, timerProgressBar: true });
+    Swal.fire({
+        toast: true, position: 'top-end', icon: 'success', title: msg,
+        showConfirmButton: false, timer: 2800, timerProgressBar: true
+    });
 }
 function toastErr(msg) {
-    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: msg,
-        showConfirmButton: false, timer: 4000 });
+    Swal.fire({
+        toast: true, position: 'top-end', icon: 'error', title: msg,
+        showConfirmButton: false, timer: 4000
+    });
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -63,6 +67,7 @@ function buildTabPane(suc, idx) {
     </div>`;
 }
 
+
 function buildDiaCheckboxes(cod, cat, selected) {
     return PDG.DIAS.map((d, i) => {
         const uid = `dia-${cod}-${cat}-${i}`;
@@ -74,20 +79,20 @@ function buildDiaCheckboxes(cod, cat, selected) {
 }
 
 function buildCatRow(cod, cat, cfg) {
-    const info      = PDG.CATEGORIAS[cat];
-    const isNSem    = !cfg || cfg.tipo_frecuencia !== 'dias_semana';
-    const tipo      = cfg ? cfg.tipo_frecuencia : 'n_semanas';
+    const info = PDG.CATEGORIAS[cat];
+    const isNSem = !cfg || cfg.tipo_frecuencia !== 'dias_semana';
+    const tipo = cfg ? cfg.tipo_frecuencia : 'n_semanas';
     const intervalo = cfg ? cfg.intervalo_semanas : 1;
-    const dia       = cfg ? cfg.dia_despacho     : 1;
-    const ancla     = cfg && cfg.semana_ancla ? cfg.semana_ancla : '';
-    const prep      = cfg ? cfg.dias_preparacion : 1;
-    const activo    = cfg ? cfg.activo : 1;
-    const diasSel   = cfg ? (cfg.dias_semana || []) : [];
-    const metaTxt   = cfg && cfg.modificado_por_nombre
+    const dia = cfg ? cfg.dia_despacho : 1;
+    const ancla = cfg && cfg.semana_ancla ? cfg.semana_ancla : '';
+    const prep = cfg ? cfg.dias_preparacion : 1;
+    const activo = cfg ? cfg.activo : 1;
+    const diasSel = cfg ? (cfg.dias_semana || []) : [];
+    const metaTxt = cfg && cfg.modificado_por_nombre
         ? `<div class="pdg-meta-info"><i class="bi bi-person-check me-1"></i>${cfg.modificado_por_nombre}
-           <span class="ms-1">${cfg.fecha_actualizacion ? cfg.fecha_actualizacion.substring(0,16) : ''}</span></div>`
+           <span class="ms-1">${cfg.fecha_actualizacion ? cfg.fecha_actualizacion.substring(0, 16) : ''}</span></div>`
         : '';
-    const disabled  = PUEDE_EDITAR ? '' : 'disabled';
+    const disabled = PUEDE_EDITAR ? '' : 'disabled';
     const showAncla = isNSem && intervalo > 1;
 
     // Opcionalmente deshabilitar si inactivo
@@ -125,9 +130,9 @@ function buildCatRow(cod, cat, cfg) {
         <td style="min-width:220px;">
             <div class="pdg-n-semanas-fields ${isNSem ? '' : 'd-none'}">
                 <select class="form-select form-select-sm pdg-intervalo" ${disabled}>
-                    <option value="1" ${intervalo==1?'selected':''}>Cada semana</option>
-                    <option value="2" ${intervalo==2?'selected':''}>Quincenal</option>
-                    <option value="3" ${intervalo==3?'selected':''}>Cada 3 semanas</option>
+                    <option value="1" ${intervalo == 1 ? 'selected' : ''}>Cada semana</option>
+                    <option value="2" ${intervalo == 2 ? 'selected' : ''}>Quincenal</option>
+                    <option value="3" ${intervalo == 3 ? 'selected' : ''}>Cada 3 semanas</option>
                 </select>
             </div>
             <div class="pdg-dias-semana-fields ${!isNSem ? '' : 'd-none'}">
@@ -140,7 +145,7 @@ function buildCatRow(cod, cat, cfg) {
         <td style="min-width:110px;">
             <div class="pdg-n-semanas-fields ${isNSem ? '' : 'd-none'}">
                 <select class="form-select form-select-sm pdg-dia-despacho" ${disabled}>
-                    ${PDG.DIAS.map((d,i)=>`<option value="${i}" ${dia==i?'selected':''}>${d}</option>`).join('')}
+                    ${PDG.DIAS.map((d, i) => `<option value="${i}" ${dia == i ? 'selected' : ''}>${d}</option>`).join('')}
                 </select>
             </div>
             <span class="pdg-dias-semana-fields text-muted small ${!isNSem ? '' : 'd-none'}">—</span>
@@ -174,11 +179,11 @@ function buildCatRow(cod, cat, cfg) {
         <!-- Guardar -->
         <td style="text-align:center; white-space:nowrap;">
             ${PUEDE_EDITAR
-                ? `<button class="btn-pdg-save btn-save-row" data-cat="${cat}">
+            ? `<button class="btn-pdg-save btn-save-row" data-cat="${cat}">
                        <i class="bi bi-floppy me-1"></i>Guardar
                    </button>`
-                : '<span class="text-muted small">—</span>'
-            }
+            : '<span class="text-muted small">—</span>'
+        }
         </td>
     </tr>`;
 }
@@ -244,38 +249,38 @@ function buildContent(cod, data) {
    ══════════════════════════════════════════════════════════ */
 
 function getCurrentWeekNumber() {
-    const now  = new Date();
+    const now = new Date();
     const jan1 = new Date(now.getFullYear(), 0, 1);
     const days = Math.floor((now - jan1) / 86400000);
     return Math.ceil((days + jan1.getDay() + 1) / 7);
 }
 
 function renderCalendar(cod, plan) {
-    const today     = new Date();
-    today.setHours(0,0,0,0);
-    const weekNow   = getCurrentWeekNumber();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const weekNow = getCurrentWeekNumber();
     const daysLabel = [];
-    const datesArr  = [];
+    const datesArr = [];
 
     for (let i = 0; i < 14; i++) {
         const d = new Date(today);
         d.setDate(today.getDate() + i);
         const dow = (d.getDay() + 6) % 7; // 0=Lun
-        daysLabel.push({ dow, label: PDG.DIAS[dow].substring(0,2), date: d, isToday: i===0 });
-        datesArr.push({ d, dow, weekNum: weekNow + Math.floor(i/7) });
+        daysLabel.push({ dow, label: PDG.DIAS[dow].substring(0, 2), date: d, isToday: i === 0 });
+        datesArr.push({ d, dow, weekNum: weekNow + Math.floor(i / 7) });
     }
 
     // Header días
     let grid = `<div class="pdg-cal-header" style="text-align:right;">Cat</div>`;
     daysLabel.forEach((dl, i) => {
-        const sep   = dl.dow === 0 && i > 0 ? 'pdg-cal-week-sep' : '';
+        const sep = dl.dow === 0 && i > 0 ? 'pdg-cal-week-sep' : '';
         const today = dl.isToday ? 'pdg-cal-today' : '';
-        grid += `<div class="pdg-cal-header ${sep} ${today}">${dl.label}<br><span style="font-size:.6rem;">${dl.date.getDate()}/${dl.date.getMonth()+1}</span></div>`;
+        grid += `<div class="pdg-cal-header ${sep} ${today}">${dl.label}<br><span style="font-size:.6rem;">${dl.date.getDate()}/${dl.date.getMonth() + 1}</span></div>`;
     });
 
     // Filas por categoría
     Object.keys(PDG.CATEGORIAS).forEach(cat => {
-        const cfg  = plan[cat];
+        const cfg = plan[cat];
         const info = PDG.CATEGORIAS[cat];
         grid += `<div class="pdg-cal-cat-label"><span class="pdg-badge-cat ${info.cls}" style="font-size:.68rem;padding:.15em .5em;">${cat}</span></div>`;
 
@@ -326,9 +331,9 @@ function bindRowEvents(cod) {
 
     // Cambio de tipo (n_semanas ↔ dias_semana)
     $ctx.on('change', '.pdg-tipo-radio', function () {
-        const $tr     = $(this).closest('tr');
-        const tipo    = $(this).val();
-        const isNSem  = tipo === 'n_semanas';
+        const $tr = $(this).closest('tr');
+        const tipo = $(this).val();
+        const isNSem = tipo === 'n_semanas';
         $tr.find('.pdg-n-semanas-fields').toggleClass('d-none', !isNSem);
         $tr.find('.pdg-dias-semana-fields').toggleClass('d-none', isNSem);
         updateAnclaVisibility($tr);
@@ -352,23 +357,23 @@ function bindRowEvents(cod) {
 }
 
 function updateAnclaVisibility($tr) {
-    const tipo    = $tr.find('.pdg-tipo-radio:checked').val();
-    const interv  = parseInt($tr.find('.pdg-intervalo').val()) || 1;
+    const tipo = $tr.find('.pdg-tipo-radio:checked').val();
+    const interv = parseInt($tr.find('.pdg-intervalo').val()) || 1;
     const showAnc = tipo === 'n_semanas' && interv > 1;
     $tr.find('.pdg-ancla-wrap').toggleClass('d-none', !showAnc);
     $tr.find('.pdg-ancla-na').toggleClass('d-none', showAnc);
 }
 
 function collectRowData(cod, cat) {
-    const $tr  = $(`#tabla-${cod} tr[data-cat="${cat}"]`);
+    const $tr = $(`#tabla-${cod} tr[data-cat="${cat}"]`);
     const tipo = $tr.find('.pdg-tipo-radio:checked').val() || 'n_semanas';
     const data = { cod_sucursal: cod, categoria_insumo: cat, tipo_frecuencia: tipo };
 
     if (tipo === 'n_semanas') {
         data.intervalo_semanas = $tr.find('.pdg-intervalo').val();
-        data.dia_despacho      = $tr.find('.pdg-dia-despacho').val();
+        data.dia_despacho = $tr.find('.pdg-dia-despacho').val();
         const ancla = $tr.find('.pdg-semana-ancla').val();
-        data.semana_ancla      = ancla !== '' ? ancla : '';
+        data.semana_ancla = ancla !== '' ? ancla : '';
     } else {
         const dias = [];
         $tr.find('.pdg-dia-check:checked').each(function () {
@@ -378,12 +383,12 @@ function collectRowData(cod, cat) {
     }
 
     data.dias_preparacion = $tr.find('.pdg-prep').val();
-    data.activo           = $tr.find('.pdg-activo').is(':checked') ? 1 : 0;
+    data.activo = $tr.find('.pdg-activo').is(':checked') ? 1 : 0;
 
     // Cat B: capacidad congelador
     if (cat === 'B') {
         data.capacidad_congelados_paquetes = $('#capCongelados').val();
-        data.capacidad_congelados_obs      = $('#capCongeladosObs').val();
+        data.capacidad_congelados_obs = $('#capCongeladosObs').val();
     }
 
     return data;
@@ -406,7 +411,7 @@ function saveRow(cod, cat, $btn) {
                 const $tr = $(`#tabla-${cod} tr[data-cat="${cat}"]`);
                 const metaHtml = `<div class="pdg-meta-info">
                     <i class="bi bi-person-check me-1"></i>${res.meta.modificado_por_nombre}
-                    <span class="ms-1">${res.meta.fecha_actualizacion.substring(0,16)}</span>
+                    <span class="ms-1">${res.meta.fecha_actualizacion.substring(0, 16)}</span>
                 </div>`;
                 $tr.find('td:first .pdg-meta-info').remove();
                 $tr.find('td:first').append(metaHtml);
@@ -484,7 +489,7 @@ function loadSucursales() {
             return;
         }
         PDG.sucursales = res.data;
-        const $nav     = $('#sucursalesTabs');
+        const $nav = $('#sucursalesTabs');
         const $content = $('#sucursalesTabContent');
 
         res.data.forEach(function (suc, idx) {
