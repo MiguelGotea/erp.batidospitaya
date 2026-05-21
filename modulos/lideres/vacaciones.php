@@ -771,6 +771,17 @@ function obtenerTiposFaltaConPorcentajes()
                             </select>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="subsidio_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="subsidio_fecha_inicio" name="fecha_inicio" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="subsidio_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <input type="date" id="subsidio_fecha_fin" name="fecha_fin" class="form-control" required>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="subsidio_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
                             <select id="subsidio_operario" name="cod_operario" class="form-select" required>
@@ -799,17 +810,6 @@ function obtenerTiposFaltaConPorcentajes()
                                 <small class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
                             <?php endif; ?>
                             <small id="info-porcentaje-subsidio" class="form-text text-muted mt-1 d-block"></small>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="subsidio_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
-                                <input type="date" id="subsidio_fecha_inicio" name="fecha_inicio" class="form-control" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="subsidio_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
-                                <input type="date" id="subsidio_fecha_fin" name="fecha_fin" class="form-control" required>
-                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -880,6 +880,17 @@ function obtenerTiposFaltaConPorcentajes()
                             </select>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nueva_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="nueva_fecha_inicio" name="fecha_inicio" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nueva_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <input type="date" id="nueva_fecha_fin" name="fecha_fin" class="form-control" required>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="nueva_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
                             <select id="nueva_operario" name="cod_operario" class="form-select" required>
@@ -911,17 +922,6 @@ function obtenerTiposFaltaConPorcentajes()
                                 <input type="hidden" id="nueva_tipo" name="tipo_falta" value="Pendiente">
                                 <small class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
                             <?php endif; ?>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="nueva_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
-                                <input type="date" id="nueva_fecha_inicio" name="fecha_inicio" class="form-control" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="nueva_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
-                                <input type="date" id="nueva_fecha_fin" name="fecha_fin" class="form-control" required>
-                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -1053,6 +1053,19 @@ function obtenerTiposFaltaConPorcentajes()
                             </select>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="falta_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="falta_fecha_inicio" name="fecha_inicio" class="form-control" required
+                                    onchange="actualizarInfoRangoFaltaPermiso()">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="falta_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <input type="date" id="falta_fecha_fin" name="fecha_fin" class="form-control" required
+                                    onchange="actualizarInfoRangoFaltaPermiso()">
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="falta_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
                             <select id="falta_operario" name="cod_operario" class="form-select" required>
@@ -1088,19 +1101,6 @@ function obtenerTiposFaltaConPorcentajes()
                                 </small>
                             </div>
                         <?php endif; ?>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="falta_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
-                                <input type="date" id="falta_fecha_inicio" name="fecha_inicio" class="form-control" required
-                                    onchange="actualizarInfoRangoFaltaPermiso()">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="falta_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
-                                <input type="date" id="falta_fecha_fin" name="fecha_fin" class="form-control" required
-                                    onchange="actualizarInfoRangoFaltaPermiso()">
-                            </div>
-                        </div>
 
                         <div class="mb-3">
                             <label for="falta_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
