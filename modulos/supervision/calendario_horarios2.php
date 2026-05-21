@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -12,10 +12,10 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21]);
+verificarAccesoCargo([16, 21, 49]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21])) {
+if (!verificarAccesoCargo([16, 21, 49])) {
     header('Location: ../../../index.php');
     exit();
 }

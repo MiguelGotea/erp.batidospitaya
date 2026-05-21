@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // require_once '../../includes/auth.php';
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
@@ -6,7 +6,7 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 header('Content-Type: application/json');
 
 // Verificar autenticación y permisos
-if (!verificarAccesoCargo([16, 21])) {
+if (!verificarAccesoCargo([16, 21, 49])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }

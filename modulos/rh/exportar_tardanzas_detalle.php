@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // /public_html/modulos/rh/exportar_tardanzas_detalle.php
 
 // Limpiar cualquier output previo
@@ -10,9 +10,9 @@ require_once '../../core/auth/auth.php';
 
 
 // Verificar acceso (mismos permisos que ver_marcaciones_todas.php)
-$esLider = verificarAccesoCargo([5, 43]);
+$esLider = verificarAccesoCargo([5, 43, 49]);
 
-if (!verificarAccesoCargo([12, 13, 5, 43, 8, 11, 17, 19, 21, 22, 28, 39, 30, 37])) {
+if (!verificarAccesoCargo([12, 13, 5, 43, 8, 11, 17, 19, 21, 22, 28, 39, 30, 37, 49])) {
     header('Location: /index.php');
     exit();
 }

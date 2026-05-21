@@ -10,10 +10,10 @@ require_once '../../core/auth/auth.php';
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([5, 43, 16]);
+verificarAccesoCargo([5, 43, 16, 49]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([5, 43, 16])) {
+if (!verificarAccesoCargo([5, 43, 16, 49])) {
     header('Location: ../../../index.php');
     exit();
 }

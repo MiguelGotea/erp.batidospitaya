@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../../core/auth/auth.php';
 
 // Verificar autenticación
@@ -40,7 +40,7 @@ if (!$salario) {
 
 // Verificar permisos
 $usuarioId = $_SESSION['usuario_id'];
-if (!verificarAccesoCargo([13, 16])) {
+if (!verificarAccesoCargo([13, 16, 49])) {
     header('HTTP/1.1 403 Forbidden');
     echo json_encode(['error' => 'No tiene permisos para acceder a este recurso']);
     exit();

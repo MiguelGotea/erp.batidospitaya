@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -21,7 +21,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 $sucursalOperario = obtenerSucursalesLider($usuario['CodOperario']);
 
 // Verificar acceso al módulo de líderes (Código 5 para Líder de Sucursal)
-if (!verificarAccesoCargo([5, 43, 16])) {
+if (!verificarAccesoCargo([5, 43, 16, 49])) {
     header('Location: ../index.php');
     exit();
 }

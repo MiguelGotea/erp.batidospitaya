@@ -14,10 +14,10 @@ if (!isset($_SESSION['operarios_seleccionados'])) {
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([5, 43, 16]);
+verificarAccesoCargo([5, 43, 16, 49]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([5, 43, 16])) {
+if (!verificarAccesoCargo([5, 43, 16, 49])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -36,7 +36,7 @@ $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
 $todasSucursales = obtenerSucursalesFisicas();
 
 // Para cargo 5, siempre usar la primera sucursal asignada
-if (verificarAccesoCargo([5]) && !empty($sucursalesLider)) {
+if (verificarAccesoCargo([549]) && !empty($sucursalesLider)) {
     $sucursalSeleccionada = $sucursalesLider[0]['codigo'];
 } else {
     $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursalesLider[0]['codigo'] ?? null);
@@ -2616,7 +2616,7 @@ function obtenerCategoriaPorDefecto()
             </div>
 
             <!-- Filtro de sucursal - Oculto para cargo 5 -->
-            <?php if (!verificarAccesoCargo([5, 43])): ?>
+            <?php if (!verificarAccesoCargo([5, 43, 49])): ?>
                 <div class="filter-item">
                     <label for="sucursal">Sucursal</label>
                     <div class="filter-controls">

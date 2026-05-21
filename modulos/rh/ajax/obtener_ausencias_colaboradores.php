@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -226,7 +226,7 @@ try {
     // Verificar permisos
     if (
         !isset($_SESSION['usuario_id']) ||
-        (!verificarAccesoCargo([13, 16, 39, 30, 37]))
+        (!verificarAccesoCargo([13, 16, 39, 30, 37, 49]))
     ) {
         $response['message'] = 'Acceso no autorizado';
         echo json_encode($response);

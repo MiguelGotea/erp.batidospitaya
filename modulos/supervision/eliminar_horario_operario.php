@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // require_once '../../includes/auth.php';
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
@@ -30,7 +30,7 @@ if (!$codOperario || !$idSemana || !$codSucursal) {
 }
 
 // Verificar que el usuario tiene permisos (supervisor o admin)
-$esSupervisor = verificarAccesoCargo([21]);
+$esSupervisor = verificarAccesoCargo([2149]);
 
 if (!$esSupervisor) {
     echo json_encode(['success' => false, 'message' => 'No tiene permiso para esta acción']);

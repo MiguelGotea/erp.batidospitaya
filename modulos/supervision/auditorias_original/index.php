@@ -13,7 +13,7 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 21]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([11, 16, 21, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -108,7 +108,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
     </div>
 
     <!-- Botón Flotante con opciones (FAB) -->
-    <?php if (verificarAccesoCargo([16, 21])): ?>
+    <?php if (verificarAccesoCargo([16, 21, 49])): ?>
         <div class="fab-container">
             <div class="fab-options">
                 <a href="auditinternas/auditoria_promociones.php" class="fab-option">

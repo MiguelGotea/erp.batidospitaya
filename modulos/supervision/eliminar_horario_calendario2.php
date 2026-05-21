@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // require_once '../../includes/auth.php';
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Verificar permisos de supervisión
-if (!verificarAccesoCargo([21])) {
+if (!verificarAccesoCargo([2149])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }

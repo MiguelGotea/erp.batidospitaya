@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Incluir configuración y verificar autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../../core/layout/menu_lateral.php';
@@ -11,10 +11,10 @@ require_once '../../../../core/helpers/config.php';
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([8, 11, 16, 21]);
+verificarAccesoCargo([8, 11, 16, 21, 49]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 11, 16, 21])) {
+if (!verificarAccesoCargo([8, 11, 16, 21, 49])) {
     header('Location: ../../../index.php');
     exit();
 }

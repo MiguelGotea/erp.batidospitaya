@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/layout/menu_lateral.php';
@@ -8,7 +8,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([9, 16])) {
+if (!verificarAccesoCargo([9, 16, 49])) {
     header('Location: ../index.php');
     exit();
 }

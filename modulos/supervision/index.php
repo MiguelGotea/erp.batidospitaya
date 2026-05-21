@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -8,13 +8,13 @@ require_once '../../core/layout/header_universal.php';
 
 // Verificar acceso al módulo RH (Código 13 para Jefe de RH)
 //verificarAccesoModulo('supervision');
-verificarAccesoCargo([21, 52]);
+verificarAccesoCargo([21, 52, 49]);
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([21, 52])) {
+if (!verificarAccesoCargo([21, 52, 49])) {
     header('Location: ../index.php');
     exit();
 }

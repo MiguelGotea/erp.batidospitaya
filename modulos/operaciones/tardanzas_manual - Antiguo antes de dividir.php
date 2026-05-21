@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -272,9 +272,9 @@ function obtenerConteoTardanzasPorOperario($codSucursal, $fechaDesde, $fechaHast
     return $conteo;
 }
 
-$esLider = verificarAccesoCargo([5, 43, 46]);
+$esLider = verificarAccesoCargo([5, 43, 46, 49]);
 $esOperaciones = verificarAccesoCargo([11, 8, 28, 39, 30, 37, 13, 49]);
-$esSucursales = verificarAccesoCargo([27]);
+$esSucursales = verificarAccesoCargo([2749]);
 
 // AJAX Handler para obtener operarios dinámicamente
 if (isset($_GET['action']) && $_GET['action'] == 'obtener_operarios' && isset($_GET['sucursal'])) {
@@ -3216,7 +3216,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
 
             <div class="filters-container">
                 <div class="filters-form">
-                    <?php if (!verificarAccesoCargo([5, 43, 2, 46])): ?>
+                    <?php if (!verificarAccesoCargo([5, 43, 2, 46, 49])): ?>
                         <div class="filter-group">
                             <label for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
@@ -3291,7 +3291,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
                         <?php endif; ?>
                     </div>
 
-                    <?php if (verificarAccesoCargo([8, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 16, 49])): ?>
                         <div class="action-buttons">
                             <a style="display:none;" href="tardanzas_manual.php?<?= http_build_query([
                                 'sucursal' => $sucursalSeleccionada ?? '',

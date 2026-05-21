@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Configuración inicial y autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 // Antes llamaba a ../funciones.php de auditora
@@ -13,7 +13,7 @@ $db = $conn;
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo 'supervision'
-//verificarAccesoCargo([2, 5, 8, 11, 16, 13]);
+//verificarAccesoCargo([2, 5, 8, 11, 16, 13, 49]);
 
 // Verificar acceso al módulo
 if (!verificarAccesoCargo([2, 5, 8, 11, 16, 13, 49])) {
@@ -992,7 +992,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
                 </div>
 
                 <div class="buttons-container">
-                    <?php if (verificarAccesoCargo([11, 16, 21])): ?>
+                    <?php if (verificarAccesoCargo([11, 16, 21, 49])): ?>
                         <a href="auditorias_consolidadas.php"
                             class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Historial</span>
@@ -1004,14 +1004,14 @@ if (isset($_GET['exportar_faltante_caja'])) {
                         <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Deducciones</span>
                     </a>
 
-                    <?php if (verificarAccesoCargo([2, 5])): ?>
+                    <?php if (verificarAccesoCargo([2, 5, 49])): ?>
                         <a href="../../../contabilidad/boleta_pago.php"
                             class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'boleta_pago.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Boleta de Pago</span>
                         </a>
                     <?php endif; ?>
 
-                    <?php if (verificarAccesoCargo([8, 16])): ?>
+                    <?php if (verificarAccesoCargo([8, 16, 49])): ?>
                         <a href="faltante_caja.php"
                             class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_caja.php' ? 'activo' : '' ?>">
                             <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Faltante de Caja</span>
@@ -1170,7 +1170,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
                 <i class="fas fa-file-excel"></i> Exportar para Contabilidad
             </a>
 
-            <?php if (verificarAccesoCargo([8, 16])): ?>
+            <?php if (verificarAccesoCargo([8, 16, 49])): ?>
                 <!-- Nuevo botón para exportar solo faltantes de caja -->
                 <a style="display:none;" href="deducciones_total.php?<?php
                 echo http_build_query([
@@ -1237,7 +1237,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
                         <th class="encabezado">Colaborador</th>
                     <?php endif; ?>
                     <th class="encabezado">Fecha Evento</th>
-                    <?php if (verificarAccesoCargo([11]) && !$esOperarioOLider): ?>
+                    <?php if (verificarAccesoCargo([1149]) && !$esOperarioOLider): ?>
                         <!--<th class="encabezado">Fecha a Deducir</th> -->
                     <?php endif; ?>
                     <th class="encabezado">Sucursal</th>
@@ -1276,7 +1276,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
                                 }
                                 ?>
                             </td>
-                            <?php if (verificarAccesoCargo([11]) && !$esOperarioOLider): ?>
+                            <?php if (verificarAccesoCargo([1149]) && !$esOperarioOLider): ?>
                                 <!--<td>
                                  <?php
                                  /**if (!empty($registro['fecha_deduccion'])) {

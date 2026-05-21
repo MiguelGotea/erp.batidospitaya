@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 require_once '../../../core/auth/auth.php';
 
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['semana']) && $_POST['semana'] === 'siguiente') {
     // Verificar permisos para editar
-    if (!verificarAccesoCargo([13, 16])) {
+    if (!verificarAccesoCargo([13, 16, 49])) {
         echo json_encode(['success' => false, 'error' => 'No tiene permisos suficientes.']);
         exit();
     }

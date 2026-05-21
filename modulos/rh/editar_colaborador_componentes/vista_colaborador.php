@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <?php
 $imagenesParaCarrusel = [];
@@ -179,7 +179,7 @@ $imagenesParaCarrusel = [];
                             <a href="?id=<?= $codOperario ?>&pestaña=contrato"
                                 class="tab-button <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">Contrato</a>
                         <?php endif; ?>
-                        <?php if (verificarAccesoCargo([0])): ?>
+                        <?php if (verificarAccesoCargo([049])): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=salario"
                                 class="tab-button <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">Salario</a>
                         <?php endif; ?>
@@ -187,7 +187,7 @@ $imagenesParaCarrusel = [];
                             <a href="?id=<?= $codOperario ?>&pestaña=inss"
                                 class="tab-button <?= $pestaña_activa == 'inss' ? 'active' : '' ?>">INSS</a>
                         <?php endif; ?>
-                        <?php if (verificarAccesoCargo([0])): ?>
+                        <?php if (verificarAccesoCargo([049])): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=movimientos"
                                 class="tab-button <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">Movimientos</a>
                         <?php endif; ?>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // auditoria_promociones.php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 // Antes llamaba a ../funciones.php de auditora
@@ -14,10 +14,10 @@ $db = $conn;
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21]);
+verificarAccesoCargo([16, 21, 49]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21])) {
+if (!verificarAccesoCargo([16, 21, 49])) {
     header('Location: ../../../index.php');
     exit();
 }

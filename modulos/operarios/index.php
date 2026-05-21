@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
@@ -7,7 +7,7 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([2,44,45,46,47])) {
+if (!verificarAccesoCargo([2, 44, 45, 46, 47, 49])) {
     header('Location: ../index.php');
     exit();
 }
@@ -579,7 +579,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
             
             <!-- Módulos de Acceso Rápido -->
             <div class="modules">
-                <?php if (verificarAccesoCargo([5])): ?>
+                <?php if (verificarAccesoCargo([549])): ?>
                     <a href="../lideres/index.php" class="module-card">
                         <div class="module-icon">
                             <i class="fas fa-user-tie"></i>
@@ -588,7 +588,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
                     </a>
                 <?php endif; ?>
                 
-                <?php if (verificarAccesoCargo([22])): ?>
+                <?php if (verificarAccesoCargo([2249])): ?>
                     <a href="../atencioncliente/index.php" class="module-card">
                         <div class="module-icon">
                             <i class="fas fa-user-tie"></i>

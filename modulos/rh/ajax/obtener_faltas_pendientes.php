@@ -1,8 +1,8 @@
-<?php
+﻿<?php
 require_once '../../../core/auth/auth.php';
 
 // Verificar acceso
-verificarAccesoCargo([13, 16]);
+verificarAccesoCargo([13, 16, 49]);
 
 header('Content-Type: application/json');
 

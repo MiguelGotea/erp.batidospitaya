@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 // require_once '../../includes/auth.php';
 // require_once '../../includes/funciones.php';
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
 
 // Verificar acceso
-verificarAccesoCargo([21]);
+verificarAccesoCargo([2149]);
 
 header('Content-Type: application/json');
 

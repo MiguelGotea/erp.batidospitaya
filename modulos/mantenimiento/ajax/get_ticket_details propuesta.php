@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
 header('Expires: 0');
@@ -16,10 +16,10 @@ $fotos = $ticket_model->getFotos($_GET['id']);
 
 // Verificar permisos del usuario
 session_start();
-$puedeEditar = verificarAccesoCargo([14, 16, 35]);
-$esLider = verificarAccesoCargo([5]);
+$puedeEditar = verificarAccesoCargo([14, 16, 35, 49]);
+$esLider = verificarAccesoCargo([549]);
 
-if ($esLider && !verificarAccesoCargo([14, 16, 35])) {
+if ($esLider && !verificarAccesoCargo([14, 16, 35, 49])) {
     $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
     $codigosSucursales = array_column($sucursalesLider, 'codigo');
 

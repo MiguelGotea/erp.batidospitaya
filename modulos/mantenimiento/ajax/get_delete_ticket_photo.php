@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 header('Content-Type: application/json');
 session_start();
 
@@ -13,7 +13,7 @@ if (!isset($_SESSION['usuario_id'])) {
 }
 
 // Verificar permisos
-$puedeEditar = verificarAccesoCargo([14, 16, 35]);
+$puedeEditar = verificarAccesoCargo([14, 16, 35, 49]);
 
 if (!$puedeEditar) {
     echo json_encode(['success' => false, 'message' => 'No tienes permisos para eliminar fotos']);

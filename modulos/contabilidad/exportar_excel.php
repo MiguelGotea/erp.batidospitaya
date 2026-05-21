@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -16,7 +16,7 @@ if (!$conn) {
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 13, 16])) {
+if (!verificarAccesoCargo([8, 13, 16, 49])) {
     header('Location: ../../../index.php');
     exit();
 }

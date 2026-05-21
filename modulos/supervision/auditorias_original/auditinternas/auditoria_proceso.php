@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 // Antes llamaba a ../funciones.php de auditora
 // require_once 'config.php'; // Comentado por migración al core
@@ -11,10 +11,10 @@ $db = $conn;
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21]);
+verificarAccesoCargo([16, 21, 49]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21])) {
+if (!verificarAccesoCargo([16, 21, 49])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -226,7 +226,7 @@ $showSuccess = isset($_GET['success']);
                         <i class="fas fa-clipboard-check"></i> <span class="btn-text">Historial</span>
                     </a>
                     
-                    <?php if (verificarAccesoCargo([16])): ?>
+                    <?php if (verificarAccesoCargo([1649])): ?>
                         <a href="auditoria_caja_facturacion.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditoria_caja_facturacion.php' ? 'activo' : '' ?>"><i class="fas fa-cash-register"></i> Auditoría Caja Facturación</a>
                         <a href="auditoria_caja_chica.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditoria_caja_chica.php' ? 'activo' : '' ?>"><i class="fas fa-wallet"></i> Auditoría Caja Chica</a>
                         <a href="auditoria_inventario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditoria_inventario.php' ? 'activo' : '' ?>"><i class="fas fa-boxes"></i> Auditoría Inventario</a>

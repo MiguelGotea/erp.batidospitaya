@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require 'vendor/autoload.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
@@ -52,7 +52,7 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo Operaciones (Código 11 para Jefe de Operaciones)
-verificarAccesoCargo([5, 8, 11, 21, 16, 52]);
+verificarAccesoCargo([5, 8, 11, 21, 16, 52, 49]);
 
 // Verificar acceso al módulo
 if (!verificarAccesoCargo(5, 8, 11, 21, 16, 52) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {

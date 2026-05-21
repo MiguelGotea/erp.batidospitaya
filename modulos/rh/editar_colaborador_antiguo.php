@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
@@ -3566,7 +3566,7 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <a href="?id=<?= $codOperario ?>&pestaña=contrato"
                                 class="tab-button <?= $pestaña_activa == 'contrato' ? 'active' : '' ?>">Contrato</a>
                         <?php endif; ?>
-                        <?php if (verificarAccesoCargo([0])): ?>
+                        <?php if (verificarAccesoCargo([049])): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=salario"
                                 class="tab-button <?= $pestaña_activa == 'salario' ? 'active' : '' ?>">Salario</a>
                         <?php endif; ?>
@@ -3574,11 +3574,11 @@ if (isset($_POST['accion_liquidacion']) && $_POST['accion_liquidacion'] == 'asig
                             <a href="?id=<?= $codOperario ?>&pestaña=inss"
                                 class="tab-button <?= $pestaña_activa == 'inss' ? 'active' : '' ?>">INSS</a>
                         <?php endif; ?>
-                        <?php if (verificarAccesoCargo([0])): ?>
+                        <?php if (verificarAccesoCargo([049])): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=movimientos"
                                 class="tab-button <?= $pestaña_activa == 'movimientos' ? 'active' : '' ?>">Movimientos</a>
                         <?php endif; ?>
-                        <?php if (verificarAccesoCargo([0])): ?>
+                        <?php if (verificarAccesoCargo([049])): ?>
                             <a href="?id=<?= $codOperario ?>&pestaña=categoria"
                                 class="tab-button <?= $pestaña_activa == 'categoria' ? 'active' : '' ?>">Categoría</a>
                         <?php endif; ?>

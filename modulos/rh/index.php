@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -9,7 +9,7 @@ require_once '../../core/layout/menu_lateral.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo RH (Código 13 para Jefe de RH)
-if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28, 54])) {
+if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28, 54, 49])) {
     header('Location: ../index.php');
     exit();
 }
@@ -1775,7 +1775,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
                 </div>
 
                 <!-- NUEVO: Indicador de Ausencias Colaboradores (3+ días sin marcar con estado Activo/Otra.Tienda) -->
-                <?php if (verificarAccesoCargo([13, 16, 39, 30, 37])): ?>
+                <?php if (verificarAccesoCargo([13, 16, 39, 30, 37, 49])): ?>
                     <div class="indicator-container" onclick="mostrarModalAusenciasColaboradores()"
                         style="cursor: pointer;">
                         <div class="indicator-header">

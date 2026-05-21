@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -16,7 +16,7 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso
-if (!verificarAccesoCargo([21, 11, 5, 43, 27, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 52])) {
+if (!verificarAccesoCargo([21, 11, 5, 43, 27, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 52, 49])) {
     header('Location: ../index.php');
     exit();
 }
@@ -26,10 +26,10 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 // Obtener sucursales - lógica mejorada
-if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33])) {
+if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 49])) {
     // Admin y supervisores ven todas las sucursales
     $sucursales = obtenerSucursalesFisicas();
-} elseif (verificarAccesoCargo([5, 43, 27])) {
+} elseif (verificarAccesoCargo([5, 43, 27, 49])) {
     // Cargos 5 y 27 solo ven sus sucursales asignadas (sin selector)
     $sucursales = obtenerSucursalesUsuario($usuario['CodOperario']);
     // Para estos cargos, forzar la primera sucursal asignada
@@ -60,7 +60,7 @@ if ($semanaActual) {
 
     // 2. Determinar rango según cargo
     $rangoAnterior = 1; // Por defecto 1 para colaboradores/líderes
-    if (verificarAccesoCargo([21, 8, 13, 11, 39, 30, 37, 28, 42, 33])) {
+    if (verificarAccesoCargo([21, 8, 13, 11, 39, 30, 37, 28, 42, 33, 49])) {
         $rangoAnterior = 10; // Supervisores ven hasta 10 atrás
     }
 
@@ -78,7 +78,7 @@ if ($semanaActual) {
     }
 
     // 4. Buscar semana siguiente (si aplica según cargo)
-    if (verificarAccesoCargo([21, 8, 27, 5, 43, 13, 11, 39, 30, 37, 28, 42, 33])) {
+    if (verificarAccesoCargo([21, 8, 27, 5, 43, 13, 11, 39, 30, 37, 28, 42, 33, 49])) {
         $numSiguiente = $semanaActual['numero_semana'] + 1;
         $stmt = $conn->prepare("SELECT * FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
         $stmt->execute([$numSiguiente]);
@@ -532,10 +532,10 @@ function obtenerClaseCategoriaMejorada($nombreCategoria)
 
 // Determinar si mostrar botones de semana (para cargos 5 y 27)
 $mostrarBotonesSemana = false;
-if (verificarAccesoCargo([5, 43, 27])) {
+if (verificarAccesoCargo([5, 43, 27, 49])) {
     $mostrarBotonesSemana = true;
     // Si también tiene otros permisos de supervisión, no mostrar botones
-    if (verificarAccesoCargo([21, 8, 13, 11, 39, 30, 37, 28, 42])) {
+    if (verificarAccesoCargo([21, 8, 13, 11, 39, 30, 37, 28, 42, 49])) {
         $mostrarBotonesSemana = false;
     }
 }
@@ -1494,11 +1494,11 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
 
                     </div>
 
-                    <?php if (!verificarAccesoCargo([5, 43, 27])): ?>
+                    <?php if (!verificarAccesoCargo([5, 43, 27, 49])): ?>
                         <div class="filter-group">
                             <label style="display:none;" for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="cambiarSucursal()">
-                                <?php if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 33])): ?>
+                                <?php if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 33, 49])): ?>
                                     <option value="todas" <?= $mostrarTodas ? 'selected' : '' ?>>Todas las sucursales</option>
                                 <?php endif; ?>
                                 <?php foreach ($sucursales as $sucursal): ?>
@@ -1518,7 +1518,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                         <?php endif; ?>
                     </div>
 
-                    <?php if (verificarAccesoCargo([8, 16, 41])): ?>
+                    <?php if (verificarAccesoCargo([8, 16, 41, 49])): ?>
                         <div class="filter-group" style="flex-direction: row; align-items: flex-end;">
                             <a href="exportar_horarios_compactos.php?semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>"
                                 class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">

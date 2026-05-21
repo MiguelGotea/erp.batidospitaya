@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -851,7 +851,7 @@ $operariosSinCategoria = $conn->query("
                 <div class="section">
                     <h2 class="section-title">Categorías Disponibles</h2>
 
-                    <?php if (verificarAccesoCargo([16])): ?>
+                    <?php if (verificarAccesoCargo([1649])): ?>
                         <!-- Botón para abrir modal de nueva categoría -->
                         <button type="button" class="btn btn-nueva-categoria" onclick="abrirModalCategoria()">
                             <i class="fas fa-plus"></i> Nueva Categoría
@@ -866,7 +866,7 @@ $operariosSinCategoria = $conn->query("
                                     <th style="display:none;">ID</th>
                                     <th>Nombre</th>
                                     <th>Peso</th>
-                                    <?php if (verificarAccesoCargo([16])): ?>
+                                    <?php if (verificarAccesoCargo([1649])): ?>
                                         <th>Acciones</th>
                                     <?php endif; ?>
                                 </tr>
@@ -877,7 +877,7 @@ $operariosSinCategoria = $conn->query("
                                         <td style="display:none;"><?= $categoria['idCategoria'] ?></td>
                                         <td><?= htmlspecialchars($categoria['NombreCategoria']) ?></td>
                                         <td><?= $categoria['Peso'] ?></td>
-                                        <?php if (verificarAccesoCargo([16])): ?>
+                                        <?php if (verificarAccesoCargo([1649])): ?>
                                             <td class="actions">
                                                 <button class="btn"
                                                     onclick="editarCategoria(<?= $categoria['idCategoria'] ?>, '<?= htmlspecialchars($categoria['NombreCategoria']) ?>', <?= $categoria['Peso'] ?>)">

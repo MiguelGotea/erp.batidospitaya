@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -11,9 +11,9 @@ require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db 
 
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo Líderes (CodNivelesCargos 5) y Jefe de CDS (19)
-verificarAccesoCargo([14, 16]);
+verificarAccesoCargo([14, 16, 49]);
 
-if (!verificarAccesoCargo([14, 16])) {
+if (!verificarAccesoCargo([14, 16, 49])) {
     header('Location: ../index.php');
     exit();
 }
@@ -26,13 +26,13 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
 $sucursalesUsuario = [];
 $urlOdoo = "https://pitaya-mantenimiento.odoo.com/mobiliario"; // URL base
 
-if ((verificarAccesoCargo([5]) || verificarAccesoCargo([19]))) {
+if ((verificarAccesoCargo([549]) || verificarAccesoCargo([1949]))) {
     // Para líderes (código 5)
-    if (verificarAccesoCargo([5])) {
+    if (verificarAccesoCargo([549])) {
         $sucursalesUsuario = obtenerSucursalesLider($_SESSION['usuario_id']);
     }
     // Para jefe de CDS (código 19)
-    elseif (verificarAccesoCargo([19])) {
+    elseif (verificarAccesoCargo([1949])) {
         // Obtener la sucursal CDS (código 6)
         global $conn;
         $stmt = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE codigo = 6");
@@ -217,22 +217,22 @@ if ((verificarAccesoCargo([5]) || verificarAccesoCargo([19]))) {
                 </div>
                 
                 <div class="buttons-container">
-                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if (verificarAccesoCargo([5, 16, 19, 49])): ?>
                         <a href="pruebaodoo.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo.php' ? 'activo' : '' ?>">
                             <i class="fas fa-sticky-note"></i> <span class="btn-text">Solicitudes Pendientes</span>
                         </a>
                     <?php endif; ?>
-                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if (verificarAccesoCargo([5, 16, 19, 49])): ?>
                         <a href="pruebaodoo_mantenimiento.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo_mantenimiento.php' ? 'activo' : '' ?>">
                             <i class="fas fa-tools"></i> <span class="btn-text">Mantenimiento</span>
                         </a>
                     <?php endif; ?>
-                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if (verificarAccesoCargo([5, 16, 19, 49])): ?>
                         <a href="pruebaodoo_mobiliario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo_mobiliario.php' ? 'activo' : '' ?>">
                             <i class="fas fa-desktop"></i> <span class="btn-text">Equipos</span>
                         </a>
                     <?php endif; ?>
-                    <?php if (verificarAccesoCargo([5, 16, 19])): ?>
+                    <?php if (verificarAccesoCargo([5, 16, 19, 49])): ?>
                         <a href="pruebaodoo.php?finalizadas=1" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'pruebaodoo.php' ? 'activo' : '' ?>">
                             <i class="fas fa-check-circle"></i> <span class="btn-text">Solicitudes Finalizadas</span>
                         </a>
@@ -276,7 +276,7 @@ if ((verificarAccesoCargo([5]) || verificarAccesoCargo([19]))) {
             </div>
         <?php endif; ?>
         
-        <?php if (!empty($sucursalesUsuario) && (verificarAccesoCargo([5]) || verificarAccesoCargo([19]))): ?>
+        <?php if (!empty($sucursalesUsuario) && (verificarAccesoCargo([549]) || verificarAccesoCargo([1949]))): ?>
             <div style="text-align:center;" class="sucursal-info">
                 Sucursal: <?= htmlspecialchars($sucursalesUsuario[0]['nombre']) ?> <p style="display:none;">(Código: <?= $sucursalesUsuario[0]['codigo'] ?>)</p>
             </div>
