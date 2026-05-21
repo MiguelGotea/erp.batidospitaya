@@ -74,6 +74,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     poblarSucursalesNuevaAnulacion();
+
+    // Si el usuario solo tiene permiso 'vista' (sin ver_completo),
+    // ocultar el ícono de filtro de Fecha Pedido para que no pueda cambiar la fecha
+    if (!PUEDE_VER_COMPLETO) {
+        const thFecha = document.querySelector('th[data-column="FechaPedido"]');
+        if (thFecha) {
+            const icon = thFecha.querySelector('.filter-icon');
+            if (icon) icon.style.display = 'none';
+            // Añadir etiqueta visual indicando que solo se muestra el día de hoy
+            const hoyBadge = document.createElement('span');
+            hoyBadge.className = 'badge ms-1';
+            hoyBadge.style.cssText = 'background:#e8f5f3;color:#0E544C;font-size:10px;vertical-align:middle;';
+            hoyBadge.title = 'Solo se muestran pedidos de hoy';
+            hoyBadge.textContent = 'Hoy';
+            thFecha.appendChild(hoyBadge);
+        }
+    }
 });
 
 async function poblarSucursalesNuevaAnulacion() {
@@ -104,10 +121,11 @@ async function cargarDatos(page = paginaActual) {
         url: AJAX_GET,
         method: 'POST',
         data: {
-            pagina: paginaActual,
+            pagina:               paginaActual,
             registros_por_pagina: registrosPorPagina,
-            filtros: JSON.stringify(filtrosActivos),
-            orden: JSON.stringify(ordenActivo)
+            filtros:              JSON.stringify(filtrosActivos),
+            orden:                JSON.stringify(ordenActivo),
+            solo_hoy:             (!PUEDE_VER_COMPLETO).toString()
         },
         dataType: 'json',
         success: function (response) {

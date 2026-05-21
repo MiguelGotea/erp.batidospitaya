@@ -11,8 +11,9 @@ header('Content-Type: application/json; charset=utf-8');
 try {
     $pagina = isset($_POST['pagina']) ? (int)$_POST['pagina'] : (isset($_GET['page']) ? (int)$_GET['page'] : 1);
     $registros_por_pagina = isset($_POST['registros_por_pagina']) ? (int)$_POST['registros_por_pagina'] : (isset($_GET['limit']) ? (int)$_GET['limit'] : 25);
-    $filtros = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];
-    $orden = isset($_POST['orden']) ? json_decode($_POST['orden'], true) : ['columna' => null, 'direccion' => 'asc'];
+    $filtros  = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];
+    $orden    = isset($_POST['orden'])   ? json_decode($_POST['orden'], true)   : ['columna' => null, 'direccion' => 'asc'];
+    $soloHoy  = isset($_POST['solo_hoy']) && $_POST['solo_hoy'] === 'true';
     
     // Soporte para GET antiguo (compatibilidad)
     if (empty($filtros)) {
@@ -73,6 +74,16 @@ try {
                 }
             }
         }
+    }
+
+    // Si el usuario NO tiene permiso 'ver_completo', forzar filtro de FechaPedido = hoy
+    if ($soloHoy) {
+        $where[] = "(
+            SELECT MAX(Fecha)
+            FROM VentasGlobalesAccessCSV
+            WHERE CodPedido = a.CodPedido
+              AND (local = CAST(a.Sucursal AS CHAR) OR local = CONCAT('S', CAST(a.Sucursal AS CHAR)))
+        ) = CURDATE()";
     }
 
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';

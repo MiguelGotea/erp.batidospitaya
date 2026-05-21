@@ -13,7 +13,11 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-if (!tienePermiso('aprobacion_pedidos_access_host', 'vista', $cargoOperario)) {
+// Acceso: requiere 'vista' O 'ver_completo'
+$tieneVista      = tienePermiso('aprobacion_pedidos_access_host', 'vista',       $cargoOperario);
+$puedeVerCompleto = tienePermiso('aprobacion_pedidos_access_host', 'ver_completo', $cargoOperario);
+
+if (!$tieneVista && !$puedeVerCompleto) {
     header('Location: /login.php');
     exit();
 }
@@ -423,9 +427,9 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
                                         <i class="fas fa-shield-alt me-2"></i>Permisos
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        <strong>vista</strong>: Ver solicitudes.<br>
-                                        <strong>aprobar</strong>: Aprobar / Rechazar solicitudes y crear anulaciones
-                                        web.
+                                        <strong>vista</strong>: Solo ve solicitudes con <em>Fecha Pedido = hoy</em>.<br>
+                                        <strong>ver_completo</strong>: Ve todas las solicitudes sin restricción de fecha.<br>
+                                        <strong>aprobar</strong>: Aprobar / Rechazar solicitudes y crear anulaciones web.<br>
                                         Solo usuarios autorizados ven los botones de acción.
                                     </p>
                                 </div>
@@ -526,8 +530,9 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const PUEDE_APROBAR = <?php echo $puedeAprobar ? 'true' : 'false'; ?>;
-        const USUARIO_ACTUAL = '<?php echo htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']); ?>';
+        const PUEDE_APROBAR     = <?php echo $puedeAprobar     ? 'true' : 'false'; ?>;
+        const PUEDE_VER_COMPLETO = <?php echo $puedeVerCompleto ? 'true' : 'false'; ?>;
+        const USUARIO_ACTUAL     = '<?php echo htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']); ?>';
     </script>
     <script src="js/gestion_anulaciones.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 
