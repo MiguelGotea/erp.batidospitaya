@@ -364,163 +364,164 @@ function recargarOperariosModal(prefijo) {
 }
 
 // =====================================================
+// HELPER: CIERRA TODOS LOS MODALES BOOTSTRAP ABIERTOS
+// Garantiza que solo un modal esté visible a la vez
+// =====================================================
+function cerrarTodosLosModales(callback) {
+    const abiertos = document.querySelectorAll('.modal.show');
+    if (abiertos.length === 0) {
+        if (callback) callback();
+        return;
+    }
+    let pendientes = abiertos.length;
+    abiertos.forEach(function (modalEl) {
+        const instancia = bootstrap.Modal.getInstance(modalEl);
+        if (instancia) {
+            modalEl.addEventListener('hidden.bs.modal', function handler() {
+                modalEl.removeEventListener('hidden.bs.modal', handler);
+                pendientes--;
+                if (pendientes === 0 && callback) callback();
+            }, { once: true });
+            instancia.hide();
+        } else {
+            pendientes--;
+            if (pendientes === 0 && callback) callback();
+        }
+    });
+}
+
+// =====================================================
 // MOSTRAR U OCULTAR MODALES
 // =====================================================
 function mostrarModalNuevaVacacion() {
-    const modal = new bootstrap.Modal(document.getElementById('modalNuevaVacacion'));
-    modal.show();
-    
-    // Autocompletar con fecha actual
-    const hoyStr = new Date().toISOString().split('T')[0];
-    document.getElementById('nueva_fecha_inicio').value = hoyStr;
-    document.getElementById('nueva_fecha_fin').value = hoyStr;
-    
-    // Configurar cambios en sucursal y fechas
-    const sucSel = document.getElementById('nueva_sucursal');
-    if (sucSel) {
+    cerrarTodosLosModales(function () {
+        // Limpiar formulario antes de abrir
+        const form = document.getElementById('formNuevaVacacion');
+        if (form) form.reset();
+        const infoRango = document.getElementById('info-rango');
+        if (infoRango) infoRango.style.display = 'none';
+
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNuevaVacacion'));
+        modal.show();
+
+        // Autocompletar con fecha actual
+        const hoyStr = new Date().toISOString().split('T')[0];
+        document.getElementById('nueva_fecha_inicio').value = hoyStr;
+        document.getElementById('nueva_fecha_fin').value = hoyStr;
+
         recargarOperariosModal('nueva');
-        sucSel.addEventListener('change', () => recargarOperariosModal('nueva'));
-    }
-    
-    const fechaInicioInput = document.getElementById('nueva_fecha_inicio');
-    fechaInicioInput.addEventListener('change', function() {
         actualizarInfoRangoVacacion();
-        recargarOperariosModal('nueva');
+
+        const tipoSel = document.getElementById('nueva_tipo');
+        if (tipoSel) actualizarPorcentajeVacaciones(tipoSel.value);
     });
-    document.getElementById('nueva_fecha_fin').addEventListener('change', actualizarInfoRangoVacacion);
-    
-    const tipoSel = document.getElementById('nueva_tipo');
-    if (tipoSel) {
-        actualizarPorcentajeVacaciones(tipoSel.value);
-        tipoSel.addEventListener('change', function() {
-            actualizarPorcentajeVacaciones(this.value);
-        });
-    }
 }
 
 function mostrarModalNuevoSubsidio() {
-    const modal = new bootstrap.Modal(document.getElementById('modalNuevoSubsidio'));
-    modal.show();
-    
-    // Autocompletar con fecha actual
-    const hoyStr = new Date().toISOString().split('T')[0];
-    document.getElementById('subsidio_fecha_inicio').value = hoyStr;
-    document.getElementById('subsidio_fecha_fin').value = hoyStr;
-    
-    // Configurar cambios en sucursal y fechas
-    const sucSel = document.getElementById('subsidio_sucursal');
-    if (sucSel) {
+    cerrarTodosLosModales(function () {
+        // Limpiar formulario antes de abrir
+        const form = document.getElementById('formNuevoSubsidio');
+        if (form) form.reset();
+        const infoRango = document.getElementById('info-rango-subsidio');
+        if (infoRango) infoRango.style.display = 'none';
+
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNuevoSubsidio'));
+        modal.show();
+
+        // Autocompletar con fecha actual
+        const hoyStr = new Date().toISOString().split('T')[0];
+        document.getElementById('subsidio_fecha_inicio').value = hoyStr;
+        document.getElementById('subsidio_fecha_fin').value = hoyStr;
+
         recargarOperariosModal('subsidio');
-        sucSel.addEventListener('change', () => recargarOperariosModal('subsidio'));
-    }
-    
-    const fechaInicioInput = document.getElementById('subsidio_fecha_inicio');
-    fechaInicioInput.addEventListener('change', function() {
         actualizarInfoRangoSubsidio();
-        recargarOperariosModal('subsidio');
+
+        const tipoSel = document.getElementById('subsidio_tipo');
+        if (tipoSel) actualizarPorcentajeSubsidio(tipoSel.value);
     });
-    document.getElementById('subsidio_fecha_fin').addEventListener('change', actualizarInfoRangoSubsidio);
-    
-    const tipoSel = document.getElementById('subsidio_tipo');
-    if (tipoSel) {
-        actualizarPorcentajeSubsidio(tipoSel.value);
-        tipoSel.addEventListener('change', function() {
-            actualizarPorcentajeSubsidio(this.value);
-        });
-    }
 }
 
 function mostrarModalNuevaFaltaPermiso() {
-    const modal = new bootstrap.Modal(document.getElementById('modalNuevaFalta'));
-    modal.show();
-    // Determinar fecha predeterminada y máxima según permisos
-    const esRRHH = window.CONFIG_VACACIONES && (window.CONFIG_VACACIONES.esRH || window.CONFIG_VACACIONES.puedeAprobar);
-    
-    const hoyObj = new Date();
-    const hoyStr = hoyObj.toISOString().split('T')[0];
-    
-    const ayerObj = new Date();
-    ayerObj.setDate(ayerObj.getDate() - 1);
-    const ayerStr = ayerObj.toISOString().split('T')[0];
-    
-    const fechaInicioInput = document.getElementById('falta_fecha_inicio');
-    const fechaFinInput = document.getElementById('falta_fecha_fin');
-    
-    if (esRRHH) {
-        fechaInicioInput.value = hoyStr;
-        fechaFinInput.value = hoyStr;
-        fechaInicioInput.max = hoyStr;
-        fechaFinInput.max = hoyStr;
-    } else {
-        fechaInicioInput.value = ayerStr;
-        fechaFinInput.value = ayerStr;
-        fechaInicioInput.max = ayerStr;
-        fechaFinInput.max = ayerStr;
-    }
+    cerrarTodosLosModales(function () {
+        // Limpiar formulario antes de abrir
+        const form = document.getElementById('formNuevaFalta');
+        if (form) form.reset();
+        const infoRango = document.getElementById('info-rango-falta');
+        if (infoRango) infoRango.style.display = 'none';
 
-    // Configurar cambios en sucursal y fechas
-    const sucSel = document.getElementById('falta_sucursal');
-    if (sucSel) {
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNuevaFalta'));
+        modal.show();
+
+        // Determinar fecha predeterminada y máxima según permisos
+        const esRRHH = window.CONFIG_VACACIONES && (window.CONFIG_VACACIONES.esRH || window.CONFIG_VACACIONES.puedeAprobar);
+
+        const hoyStr = new Date().toISOString().split('T')[0];
+        const ayerObj = new Date();
+        ayerObj.setDate(ayerObj.getDate() - 1);
+        const ayerStr = ayerObj.toISOString().split('T')[0];
+
+        const fechaInicioInput = document.getElementById('falta_fecha_inicio');
+        const fechaFinInput   = document.getElementById('falta_fecha_fin');
+
+        if (esRRHH) {
+            fechaInicioInput.value = hoyStr;
+            fechaFinInput.value   = hoyStr;
+            fechaInicioInput.max  = hoyStr;
+            fechaFinInput.max     = hoyStr;
+        } else {
+            fechaInicioInput.value = ayerStr;
+            fechaFinInput.value   = ayerStr;
+            fechaInicioInput.max  = ayerStr;
+            fechaFinInput.max     = ayerStr;
+        }
+
         recargarOperariosModal('falta');
-        sucSel.addEventListener('change', () => recargarOperariosModal('falta'));
-    }
-    
-    fechaInicioInput.addEventListener('change', function() {
         actualizarInfoRangoFaltaPermiso();
-        recargarOperariosModal('falta');
+
+        const tipoSel = document.getElementById('falta_tipo');
+        if (tipoSel) actualizarPorcentajeFaltaPermiso(tipoSel.value);
     });
-    fechaFinInput.addEventListener('change', actualizarInfoRangoFaltaPermiso);
-    
-    const tipoSel = document.getElementById('falta_tipo');
-    if (tipoSel) {
-        actualizarPorcentajeFaltaPermiso(tipoSel.value);
-        tipoSel.addEventListener('change', function() {
-            actualizarPorcentajeFaltaPermiso(this.value);
-        });
-    }
-    actualizarInfoRangoFaltaPermiso();
 }
 
 function mostrarModalEditarAprobar(id, nombre, sucursal, fecha, tipoFalta, observaciones, observacionesRrhh, fotoPath) {
-    document.getElementById('editar_id').value = id;
-    document.getElementById('editar_nombre').textContent = nombre;
-    document.getElementById('editar_sucursal').textContent = sucursal;
-    
-    // Formatear fecha local
-    const fLocal = new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {
-        day: '2-digit', month: 'short', year: 'numeric'
-    });
-    document.getElementById('editar_fecha').textContent = fLocal;
-    document.getElementById('editar_observaciones_lider').textContent = observaciones || '(Sin observaciones)';
-    
-    const selectTipo = document.getElementById('editar_tipo');
-    if (selectTipo) {
-        selectTipo.value = tipoFalta;
-        actualizarPorcentajeEdicion(tipoFalta);
-        selectTipo.addEventListener('change', function() {
-            actualizarPorcentajeEdicion(this.value);
+    cerrarTodosLosModales(function () {
+        document.getElementById('editar_id').value = id;
+        document.getElementById('editar_nombre').textContent = nombre;
+        document.getElementById('editar_sucursal').textContent = sucursal;
+
+        // Formatear fecha local
+        const fLocal = new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {
+            day: '2-digit', month: 'short', year: 'numeric'
         });
-    }
-    
-    const obsRrhhInput = document.getElementById('editar_observaciones_rrhh');
-    if (obsRrhhInput) {
-        obsRrhhInput.value = observacionesRrhh || '';
-    }
+        document.getElementById('editar_fecha').textContent = fLocal;
+        document.getElementById('editar_observaciones_lider').textContent = observaciones || '(Sin observaciones)';
 
-    // Foto Preview
-    const previewContainer = document.getElementById('preview-container');
-    const previewImage = document.getElementById('preview-image');
-    if (previewContainer && previewImage) {
-        if (fotoPath) {
-            previewImage.src = '../..' + fotoPath;
-            previewContainer.style.display = 'block';
-        } else {
-            previewContainer.style.display = 'none';
+        const selectTipo = document.getElementById('editar_tipo');
+        if (selectTipo) {
+            selectTipo.value = tipoFalta;
+            actualizarPorcentajeEdicion(tipoFalta);
         }
-    }
 
-    const modal = new bootstrap.Modal(document.getElementById('modalEditarFalta'));
-    modal.show();
+        const obsRrhhInput = document.getElementById('editar_observaciones_rrhh');
+        if (obsRrhhInput) {
+            obsRrhhInput.value = observacionesRrhh || '';
+        }
+
+        // Foto Preview
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        if (previewContainer && previewImage) {
+            if (fotoPath) {
+                previewImage.src = '../..' + fotoPath;
+                previewContainer.style.display = 'block';
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        }
+
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarFalta'));
+        modal.show();
+    });
 }
 
 // =====================================================
@@ -620,13 +621,72 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
     });
 }
 
-// Configurar los submits al cargar el DOM
+// Configurar los submits y event listeners al cargar el DOM (una sola vez)
 document.addEventListener('DOMContentLoaded', function () {
     procesarEnvioHibrido('formNuevaVacacion', 'vacaciones');
     procesarEnvioHibrido('formNuevoSubsidio', 'subsidio');
     procesarEnvioHibrido('formNuevaFalta', 'falta_permiso');
 
-    // Procesar edición/aprobación por RRHH
+    // ── Event listeners modal Vacacion ──────────────────────────
+    const sucNueva = document.getElementById('nueva_sucursal');
+    if (sucNueva) sucNueva.addEventListener('change', () => recargarOperariosModal('nueva'));
+
+    const fechaInicioNueva = document.getElementById('nueva_fecha_inicio');
+    if (fechaInicioNueva) fechaInicioNueva.addEventListener('change', function () {
+        actualizarInfoRangoVacacion();
+        recargarOperariosModal('nueva');
+    });
+    const fechaFinNueva = document.getElementById('nueva_fecha_fin');
+    if (fechaFinNueva) fechaFinNueva.addEventListener('change', actualizarInfoRangoVacacion);
+
+    const tipoNueva = document.getElementById('nueva_tipo');
+    if (tipoNueva) tipoNueva.addEventListener('change', function () {
+        actualizarPorcentajeVacaciones(this.value);
+    });
+
+    // ── Event listeners modal Subsidio ───────────────────────────
+    const sucSubsidio = document.getElementById('subsidio_sucursal');
+    if (sucSubsidio) sucSubsidio.addEventListener('change', () => recargarOperariosModal('subsidio'));
+
+    const fechaInicioSubsidio = document.getElementById('subsidio_fecha_inicio');
+    if (fechaInicioSubsidio) fechaInicioSubsidio.addEventListener('change', function () {
+        actualizarInfoRangoSubsidio();
+        recargarOperariosModal('subsidio');
+    });
+    const fechaFinSubsidio = document.getElementById('subsidio_fecha_fin');
+    if (fechaFinSubsidio) fechaFinSubsidio.addEventListener('change', actualizarInfoRangoSubsidio);
+
+    const tipoSubsidio = document.getElementById('subsidio_tipo');
+    if (tipoSubsidio) tipoSubsidio.addEventListener('change', function () {
+        actualizarPorcentajeSubsidio(this.value);
+    });
+
+    // ── Event listeners modal Falta/Permiso ──────────────────────
+    const sucFalta = document.getElementById('falta_sucursal');
+    if (sucFalta) sucFalta.addEventListener('change', function () {
+        cargarOperariosSucursal(this.value, 'falta_operario');
+    });
+
+    const fechaInicioFalta = document.getElementById('falta_fecha_inicio');
+    if (fechaInicioFalta) fechaInicioFalta.addEventListener('change', function () {
+        actualizarInfoRangoFaltaPermiso();
+        recargarOperariosModal('falta');
+    });
+    const fechaFinFalta = document.getElementById('falta_fecha_fin');
+    if (fechaFinFalta) fechaFinFalta.addEventListener('change', actualizarInfoRangoFaltaPermiso);
+
+    const tipoFaltaSel = document.getElementById('falta_tipo');
+    if (tipoFaltaSel) tipoFaltaSel.addEventListener('change', function () {
+        actualizarPorcentajeFaltaPermiso(this.value);
+    });
+
+    // ── Event listeners modal Editar/Aprobar ─────────────────────
+    const selectTipoEditar = document.getElementById('editar_tipo');
+    if (selectTipoEditar) selectTipoEditar.addEventListener('change', function () {
+        actualizarPorcentajeEdicion(this.value);
+    });
+
+    // ── Procesar edición/aprobación por RRHH ─────────────────────
     const formEditar = document.getElementById('formEditarFalta');
     if (formEditar) {
         formEditar.addEventListener('submit', function (e) {

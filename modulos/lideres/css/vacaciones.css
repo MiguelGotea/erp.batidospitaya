@@ -170,13 +170,11 @@ tr:nth-child(even) {
 
 .modal-content {
     background: white;
-    padding: 20px;
+    padding: 0 !important;
+    /*Padding o espacio del modal para que el contenido no se achique*/
     border-radius: 8px;
-    max-width: 90%;
-    width: 100%;
     max-width: 600px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    margin: 20px auto;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
@@ -186,12 +184,8 @@ tr:nth-child(even) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #ddd;
     position: sticky;
     top: 0;
-    background: white;
     z-index: 10;
     border-radius: 8px 8px 0 0;
 }
@@ -211,7 +205,6 @@ tr:nth-child(even) {
 }
 
 .modal-body {
-    margin-bottom: 15px;
     max-height: calc(90vh - 150px);
     overflow-y: auto;
 }
@@ -220,11 +213,8 @@ tr:nth-child(even) {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    padding-top: 15px;
-    border-top: 1px solid #ddd;
     position: sticky;
     bottom: 0;
-    background: white;
     z-index: 10;
     border-radius: 0 0 8px 8px;
 }
@@ -416,13 +406,14 @@ tr:nth-child(even) {
     z-index: 1000;
     max-height: 200px;
     overflow-y: auto;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Hover rows for tables */
 #listaVacaciones tbody tr {
     transition: background-color 0.2s ease;
 }
+
 #listaVacaciones tbody tr:hover {
     background-color: rgba(81, 184, 172, 0.08) !important;
 }
@@ -450,7 +441,7 @@ tr:nth-child(even) {
 .btn-modern-primary:hover {
     background: #093732;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn-modern-secondary {
@@ -470,7 +461,7 @@ tr:nth-child(even) {
 .btn-modern-danger:hover {
     background: #bd2130;
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Actions styling */
@@ -496,6 +487,7 @@ tr:nth-child(even) {
     color: white;
     border: 1px solid #0E544C;
 }
+
 .btn-action-edit:hover {
     background: #093732;
 }
@@ -505,7 +497,7 @@ tr:nth-child(even) {
     color: white;
     border: 1px solid #dc3545;
 }
+
 .btn-action-delete:hover {
     background: #bd2130;
 }
-
