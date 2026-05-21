@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //session_start(); // Asegurar que la sesión esté iniciada
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
@@ -2399,8 +2399,7 @@ function obtenerCategoriaPorDefecto()
             transition: background 0.2s;
         }
 
-        .ts-min-toggle:hover,
-        .ts-ampm-toggle:hover {
+        .ts-min-toggle:hover, .ts-ampm-toggle:hover {
             background: #e0eae8;
         }
 
@@ -2832,14 +2831,14 @@ function obtenerCategoriaPorDefecto()
                                                         <div class="ts-premium-container" title="Hora de Entrada">
                                                             <div class="ts-unit">
                                                                 <i class="fas fa-chevron-up ts-arrow" onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada', 1)"></i>
-                                                                <?php
-                                                                $valEntrada = $entrada ?: '08:00';
-                                                                $h24e = (int)substr($valEntrada, 0, 2);
-                                                                $h12e = ($h24e % 12) ?: 12;
-                                                                $ampme = ($h24e < 12) ? 'AM' : 'PM';
+                                                                <?php 
+                                                                    $valEntrada = $entrada ?: '08:00';
+                                                                    $h24e = (int)substr($valEntrada, 0, 2);
+                                                                    $h12e = ($h24e % 12) ?: 12;
+                                                                    $ampme = ($h24e < 12) ? 'AM' : 'PM';
                                                                 ?>
-                                                                <input type="text" class="ts-input" id="ts-h-entrada-<?= $dia ?>_<?= $operario['CodOperario'] ?>" maxlength="2" value="<?= str_pad($h12e, 2, '0', STR_PAD_LEFT) ?>"
-                                                                    onfocus="this.select()"
+                                                                <input type="text" class="ts-input" id="ts-h-entrada-<?= $dia ?>_<?= $operario['CodOperario'] ?>" maxlength="2" value="<?= str_pad($h12e, 2, '0', STR_PAD_LEFT) ?>" 
+                                                                    onfocus="this.select()" 
                                                                     oninput="validarHoraManual(this, '<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada')"
                                                                     onblur="formatearHoraBlur(this)">
                                                                 <i class="fas fa-chevron-down ts-arrow" onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'entrada', -1)"></i>
@@ -2857,14 +2856,14 @@ function obtenerCategoriaPorDefecto()
                                                         <div class="ts-premium-container" title="Hora de Salida">
                                                             <div class="ts-unit">
                                                                 <i class="fas fa-chevron-up ts-arrow" onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida', 1)"></i>
-                                                                <?php
-                                                                $valSalida = $salida ?: '17:00';
-                                                                $h24s = (int)substr($valSalida, 0, 2);
-                                                                $h12s = ($h24s % 12) ?: 12;
-                                                                $ampms = ($h24s < 12) ? 'AM' : 'PM';
+                                                                <?php 
+                                                                    $valSalida = $salida ?: '17:00';
+                                                                    $h24s = (int)substr($valSalida, 0, 2);
+                                                                    $h12s = ($h24s % 12) ?: 12;
+                                                                    $ampms = ($h24s < 12) ? 'AM' : 'PM';
                                                                 ?>
-                                                                <input type="text" class="ts-input" id="ts-h-salida-<?= $dia ?>_<?= $operario['CodOperario'] ?>" maxlength="2" value="<?= str_pad($h12s, 2, '0', STR_PAD_LEFT) ?>"
-                                                                    onfocus="this.select()"
+                                                                <input type="text" class="ts-input" id="ts-h-salida-<?= $dia ?>_<?= $operario['CodOperario'] ?>" maxlength="2" value="<?= str_pad($h12s, 2, '0', STR_PAD_LEFT) ?>" 
+                                                                    onfocus="this.select()" 
                                                                     oninput="validarHoraManual(this, '<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida')"
                                                                     onblur="formatearHoraBlur(this)">
                                                                 <i class="fas fa-chevron-down ts-arrow" onclick="ajustarHoraPremium('<?= $dia ?>_<?= $operario['CodOperario'] ?>', 'salida', -1)"></i>
@@ -3277,21 +3276,19 @@ function obtenerCategoriaPorDefecto()
                 window.isValidatingTime = true;
 
                 alert('La hora de salida debe ser posterior a la de entrada');
-
+                
                 // Limpiar salida para forzar corrección
                 salida.value = '';
-
+                
                 // Actualizar displays
                 horasDisplay.textContent = '0.00';
                 const compactDisplay = document.getElementById('hours_compact_' + prefix);
                 if (compactDisplay) compactDisplay.textContent = '0.00';
-
+                
                 calcularTotalHoras(prefix.split('_')[1]);
-
+                
                 // Resetear flag con un pequeño delay
-                setTimeout(() => {
-                    window.isValidatingTime = false;
-                }, 300);
+                setTimeout(() => { window.isValidatingTime = false; }, 300);
                 return;
             }
 
@@ -4877,7 +4874,7 @@ function obtenerCategoriaPorDefecto()
         function validarHoraManual(input, prefix, type) {
             let val = input.value.replace(/\D/g, '');
             let h = parseInt(val);
-
+            
             // Si hay algo escrito, actualizamos. Si está vacío, esperamos.
             if (val.length > 0) {
                 if (h > 12) h = 12;
@@ -4904,12 +4901,12 @@ function obtenerCategoriaPorDefecto()
             const m = document.getElementById(`ts-m-${type}-${prefix}`).textContent;
             const ap = document.getElementById(`ts-ap-${type}-${prefix}`).textContent;
             const hiddenInput = document.querySelector(`.${type}_${prefix}`);
-
+            
             // Convert to 24h format for DB
             let h24 = h;
             if (ap === 'PM' && h < 12) h24 = h + 12;
             if (ap === 'AM' && h === 12) h24 = 0;
-
+            
             if (hiddenInput) {
                 hiddenInput.value = `${h24.toString().padStart(2, '0')}:${m}`;
                 // Trigger the original calculation

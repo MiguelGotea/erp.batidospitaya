@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Template: Modal de Faltas Pendientes
  * Variables disponibles: $modalData (datos del indicador)

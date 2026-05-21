@@ -688,7 +688,7 @@ function obtenerTiposFaltaConPorcentajes()
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones_rrhh'] ?? '')) ?>',
                                                         '<?= htmlspecialchars($vacacion['foto_path'] ?? '') ?>'
                                                     )">
-                                                        <i class="fas fa-edit"></i> Editar
+                                                        <i class="fas fa-edit"></i>
                                                     </button>
                                                     <button type="button" class="btn-action-table btn-action-delete"
                                                         onclick="eliminarSolicitud(<?= $vacacion['id'] ?>)">

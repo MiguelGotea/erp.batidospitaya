@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Indicador: Faltas Pendientes
  * Compartido por: Líderes, Operaciones, RH
@@ -194,6 +193,7 @@ class FaltasPendientesIndicator extends BaseIndicator
                 'url' => '../lideres/faltas_manual.php',
                 'detalles' => $detalles
             ];
+
         } catch (\Exception $e) {
             error_log("Error obteniendo faltas pendientes: " . $e->getMessage());
 

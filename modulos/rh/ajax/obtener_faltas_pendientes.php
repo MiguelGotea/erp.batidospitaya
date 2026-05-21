@@ -52,6 +52,7 @@ try {
         'fecha_limite_info' => obtenerFechaRevisiónInfo(),
         'url_faltas' => $urlFaltas
     ]);
+
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
@@ -72,3 +73,4 @@ function obtenerFechaRevisiónInfo()
         return "Próxima fecha límite: " . $proximoMes->format('d/m/Y');
     }
 }
+?>
