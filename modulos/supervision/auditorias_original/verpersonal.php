@@ -15,10 +15,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([11, 13, 16, 21, 49]);
+verificarAccesoCargo([11, 13, 16, 21, 49, 52]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 13, 16, 21, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([11, 13, 16, 21, 49, 52]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -332,34 +332,32 @@ if (isset($_GET['id'])) {
                     <br>
                     <p>No. Auditoría: <?php echo $registro['id']; ?></p>
                     <p>Fecha: <?php
-                    $meses = [
-                        1 => 'ene',
-                        2 => 'feb',
-                        3 => 'mar',
-                        4 => 'abr',
-                        5 => 'may',
-                        6 => 'jun',
-                        7 => 'jul',
-                        8 => 'ago',
-                        9 => 'sep',
-                        10 => 'oct',
-                        11 => 'nov',
-                        12 => 'dic'
-                    ];
+                                $meses = [
+                                    1 => 'ene',
+                                    2 => 'feb',
+                                    3 => 'mar',
+                                    4 => 'abr',
+                                    5 => 'may',
+                                    6 => 'jun',
+                                    7 => 'jul',
+                                    8 => 'ago',
+                                    9 => 'sep',
+                                    10 => 'oct',
+                                    11 => 'nov',
+                                    12 => 'dic'
+                                ];
 
-                    $fecha = new DateTime($registro['fecha_hora']);
-                    $dia = $fecha->format('d');
-                    $mes = $meses[(int) $fecha->format('m')];
-                    $anio = $fecha->format('y');
+                                $fecha = new DateTime($registro['fecha_hora']);
+                                $dia = $fecha->format('d');
+                                $mes = $meses[(int) $fecha->format('m')];
+                                $anio = $fecha->format('y');
 
-                    $hora = $fecha->format('H:i');
-                    $hora_formateada = ($hora == '00:00') ? '12:00 am' :
-                        (($fecha->format('H') < 12) ? $fecha->format('g:i a') :
-                            (($fecha->format('H') == 12) ? $fecha->format('g:i') . ' pm' :
-                                $fecha->format('g:i') . ' pm')); // Se añadió el paréntesis que faltaba
-                    
-                    echo "$dia-$mes-$anio $hora_formateada";
-                    ?>
+                                $hora = $fecha->format('H:i');
+                                $hora_formateada = ($hora == '00:00') ? '12:00 am' : (($fecha->format('H') < 12) ? $fecha->format('g:i a') : (($fecha->format('H') == 12) ? $fecha->format('g:i') . ' pm' :
+                                            $fecha->format('g:i') . ' pm')); // Se añadió el paréntesis que faltaba
+
+                                echo "$dia-$mes-$anio $hora_formateada";
+                                ?>
                     </p>
                     <p>Sucursal: <?php echo $registro['sucursal']; ?></p>
                     <p>Verificador(a): <?php echo $registro['persona_nombre']; ?></p>
@@ -580,7 +578,7 @@ if (isset($_GET['id'])) {
         }
 
         // Cerrar con la tecla ESC
-        document.addEventListener('keydown', function (e) {
+        document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeLightbox();
             } else if (e.key === 'ArrowLeft') {
@@ -591,7 +589,7 @@ if (isset($_GET['id'])) {
         });
 
         // Cerrar haciendo clic fuera de la imagen
-        document.getElementById('lightbox').addEventListener('click', function (e) {
+        document.getElementById('lightbox').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeLightbox();
             }

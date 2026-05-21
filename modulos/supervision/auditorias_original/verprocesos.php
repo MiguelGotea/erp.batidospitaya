@@ -11,10 +11,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([11, 16, 21, 49]);
+verificarAccesoCargo([11, 16, 21, 49, 52]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 21, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([11, 16, 21, 49, 52]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -35,11 +35,11 @@ try {
     $stmt = $conn->prepare("SELECT * FROM auditoria_procesos WHERE id = ?");
     $stmt->execute([$id]);
     $auditoria = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$auditoria) {
         die("Auditoría no encontrada");
     }
-    
+
     // Obtener el nombre del usuario que registró
     $stmt_usuario = $conn->prepare("
         SELECT CONCAT(Nombre, ' ', Apellido) as nombre_completo 
@@ -49,7 +49,6 @@ try {
     $stmt_usuario->execute([$auditoria['usuario_id']]);
     $usuario_registro = $stmt_usuario->fetch();
     $nombre_registrador = $usuario_registro['nombre_completo'] ?? 'Desconocido';
-    
 } catch (PDOException $e) {
     die("Error al obtener la auditoría: " . $e->getMessage());
 }
@@ -72,6 +71,7 @@ $items_nombres = [
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -83,13 +83,13 @@ $items_nombres = [
             font-family: 'Calibri', sans-serif;
             font-size: clamp(11px, 2vw, 16px) !important;
         }
-        
+
         body {
             background-color: #F6F6F6;
             margin: 0;
             padding: 0;
         }
-        
+
         .container {
             width: 100%;
             max-width: 100%;
@@ -99,7 +99,7 @@ $items_nombres = [
             min-height: 100vh;
             box-sizing: border-box;
         }
-        
+
         header {
             display: flex;
             justify-content: space-between;
@@ -202,14 +202,14 @@ $items_nombres = [
         .btn-logout:hover {
             background: #0E544C;
         }
-        
+
         h1 {
             color: black;
             margin: 20px 0;
             text-align: center;
             width: 100%;
         }
-        
+
         .info-box {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -217,25 +217,25 @@ $items_nombres = [
             padding: 20px;
             margin-bottom: 20px;
         }
-        
+
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
-        
+
         .info-item {
             display: flex;
             flex-direction: column;
         }
-        
+
         .info-label {
             font-weight: bold;
             color: #555;
             margin-bottom: 5px;
         }
-        
+
         .info-value {
             color: #333;
             padding: 8px;
@@ -243,18 +243,18 @@ $items_nombres = [
             border-radius: 4px;
             border: 1px solid #ddd;
         }
-        
+
         .items-container {
             margin: 20px 0;
         }
-        
+
         .items-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 10px;
             margin-top: 15px;
         }
-        
+
         .item-card {
             padding: 12px;
             border: 1px solid #ddd;
@@ -264,16 +264,16 @@ $items_nombres = [
             align-items: center;
             gap: 10px;
         }
-        
+
         .item-check {
             color: <?php echo $auditoria["item_1"] ? '#28a745' : '#dc3545'; ?>;
             font-size: 18px;
         }
-        
+
         .item-text {
             flex-grow: 1;
         }
-        
+
         .stats-box {
             background-color: #e9f7ef;
             border: 1px solid #d4edda;
@@ -282,14 +282,14 @@ $items_nombres = [
             margin: 20px 0;
             text-align: center;
         }
-        
+
         .percentage {
             font-size: 36px;
             font-weight: bold;
             color: #28a745;
             margin: 10px 0;
         }
-        
+
         .observations-box {
             background-color: #fff3cd;
             border: 1px solid #ffeaa7;
@@ -297,12 +297,12 @@ $items_nombres = [
             padding: 20px;
             margin: 20px 0;
         }
-        
+
         .observations-box h3 {
             color: #856404;
             margin-top: 0;
         }
-        
+
         .btn-volver {
             background-color: #0E544C;
             color: white;
@@ -315,18 +315,18 @@ $items_nombres = [
             margin-top: 20px;
             text-align: center;
         }
-        
+
         .btn-volver:hover {
             background-color: #0a3b36;
         }
-        
+
         @media (max-width: 768px) {
             .header-container {
                 flex-direction: row;
                 align-items: center;
                 gap: 10px;
             }
-            
+
             .buttons-container {
                 position: static;
                 transform: none;
@@ -335,26 +335,26 @@ $items_nombres = [
                 justify-content: center;
                 margin-top: 10px;
             }
-            
+
             .logo-container {
                 order: 1;
                 margin-right: 0;
             }
-            
+
             .user-info {
                 order: 2;
                 margin-left: auto;
             }
-            
+
             .info-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .items-grid {
                 grid-template-columns: 1fr;
             }
         }
-        
+
         @media (max-width: 480px) {
             .btn-agregar {
                 flex-grow: 1;
@@ -363,7 +363,7 @@ $items_nombres = [
                 text-align: center;
                 padding: 8px 5px;
             }
-            
+
             .user-info {
                 flex-direction: column;
                 align-items: flex-end;
@@ -371,6 +371,7 @@ $items_nombres = [
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -378,30 +379,30 @@ $items_nombres = [
                 <div class="logo-container">
                     <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
                 </div>
-                
+
                 <div class="buttons-container">
                     <a href="index.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'activo' : '' ?>">
                         <i class="fas fa-clipboard-check"></i> <span class="btn-text">Historial</span>
                     </a>
-                    
+
                     <?php if (verificarAccesoCargo([16, 49])): ?>
                         <a href="agregar.php" class="btn-agregar"><i class="fas fa-cash-register"></i> Auditoría Limpieza</a>
                         <a href="agregarpersonal.php" class="btn-agregar"><i class="fas fa-wallet"></i> Auditoría Personal</a>
                         <a href="agregarservicio.php" class="btn-agregar"><i class="fas fa-boxes"></i> Auditoría Servicio</a>
                     <?php endif; ?>
                 </div>
-                
+
                 <div class="user-info">
                     <div class="user-avatar">
-                        <?= $esAdmin ? 
-                            strtoupper(substr($usuario['nombre'], 0, 1)) : 
+                        <?= $esAdmin ?
+                            strtoupper(substr($usuario['nombre'], 0, 1)) :
                             strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
                     </div>
                     <div>
                         <div>
-                            <?= $esAdmin ? 
-                                htmlspecialchars($usuario['nombre']) : 
-                                htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
+                            <?= $esAdmin ?
+                                htmlspecialchars($usuario['nombre']) :
+                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
                         </div>
                         <small>
                             <?= htmlspecialchars($cargoUsuario) ?>
@@ -413,83 +414,83 @@ $items_nombres = [
                 </div>
             </div>
         </header>
-        
+
         <h1>Detalles de Auditoría de Procesos</h1>
-        
+
         <div class="info-box">
             <div class="info-grid">
                 <div class="info-item">
                     <div class="info-label">ID de Auditoría:</div>
                     <div class="info-value"><?php echo htmlspecialchars($auditoria['id']); ?></div>
                 </div>
-                
+
                 <div class="info-item">
                     <div class="info-label">Fecha:</div>
                     <div class="info-value"><?php echo date('d/m/Y', strtotime($auditoria['fecha'])); ?></div>
                 </div>
-                
+
                 <div class="info-item">
                     <div class="info-label">Sucursal:</div>
                     <div class="info-value"><?php echo htmlspecialchars($auditoria['sucursal_nombre']); ?></div>
                 </div>
-                
+
                 <div class="info-item">
                     <div class="info-label">Colaborador Evaluado:</div>
                     <div class="info-value"><?php echo htmlspecialchars($auditoria['operario_nombre']); ?></div>
                 </div>
-                
+
                 <div class="info-item">
                     <div class="info-label">Registrado por:</div>
                     <div class="info-value"><?php echo htmlspecialchars($nombre_registrador); ?></div>
                 </div>
-                
+
                 <div class="info-item">
                     <div class="info-label">Fecha de Registro:</div>
                     <div class="info-value"><?php echo date('d/m/Y H:i:s', strtotime($auditoria['created_at'])); ?></div>
                 </div>
             </div>
         </div>
-        
+
         <div class="stats-box">
             <h3>Porcentaje de Cumplimiento</h3>
             <div class="percentage"><?php echo $auditoria['porcentaje_cumplimiento']; ?>%</div>
-            <p><?php 
+            <p><?php
                 $items_cumplidos = 0;
                 for ($i = 1; $i <= 12; $i++) {
                     if ($auditoria["item_$i"]) $items_cumplidos++;
                 }
                 echo $items_cumplidos . ' de 12 items cumplidos';
-            ?></p>
+                ?></p>
         </div>
-        
+
         <div class="items-container">
             <h3>Items Evaluados</h3>
             <div class="items-grid">
                 <?php for ($i = 1; $i <= 12; $i++): ?>
-                <div class="item-card">
-                    <div class="item-check">
-                        <?php if ($auditoria["item_$i"]): ?>
-                            <i class="fas fa-check-circle"></i>
-                        <?php else: ?>
-                            <i class="fas fa-times-circle"></i>
-                        <?php endif; ?>
+                    <div class="item-card">
+                        <div class="item-check">
+                            <?php if ($auditoria["item_$i"]): ?>
+                                <i class="fas fa-check-circle"></i>
+                            <?php else: ?>
+                                <i class="fas fa-times-circle"></i>
+                            <?php endif; ?>
+                        </div>
+                        <div class="item-text">
+                            <strong>Item <?php echo $i; ?>:</strong><br>
+                            <?php echo htmlspecialchars($items_nombres[$i]); ?>
+                        </div>
                     </div>
-                    <div class="item-text">
-                        <strong>Item <?php echo $i; ?>:</strong><br>
-                        <?php echo htmlspecialchars($items_nombres[$i]); ?>
-                    </div>
-                </div>
                 <?php endfor; ?>
             </div>
         </div>
-        
+
         <?php if (!empty($auditoria['observaciones'])): ?>
-        <div class="observations-box">
-            <h3>Observaciones</h3>
-            <p><?php echo nl2br(htmlspecialchars($auditoria['observaciones'])); ?></p>
-        </div>
+            <div class="observations-box">
+                <h3>Observaciones</h3>
+                <p><?php echo nl2br(htmlspecialchars($auditoria['observaciones'])); ?></p>
+            </div>
         <?php endif; ?>
-        
+
         <div style="text-align: center;">
             <a href="index.php" class="btn-volver">
                 <i class="fas fa-arrow-left"></i> Volver al Historial
@@ -497,4 +498,5 @@ $items_nombres = [
         </div>
     </div>
 </body>
+
 </html>

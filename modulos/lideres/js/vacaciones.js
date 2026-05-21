@@ -166,8 +166,15 @@ function actualizarInfoRangoVacacion() {
 
     const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
     
-    document.getElementById('info-dias-totales-vacaciones').textContent = `Días totales en rango: ${diasLaborables}`;
-    document.getElementById('info-dias-vacaciones').textContent = `Días a registrar como vacaciones: ${diasLaborables}`;
+    const infoDiasTotales = document.getElementById('info-dias-totales');
+    if (infoDiasTotales) {
+        infoDiasTotales.textContent = `Días totales en rango: ${diasLaborables}`;
+    }
+    
+    const infoVacaciones = document.getElementById('info-vacaciones');
+    if (infoVacaciones) {
+        infoVacaciones.textContent = `Días a registrar como vacaciones: ${diasLaborables}`;
+    }
     
     if (infoRango) infoRango.style.display = 'block';
 }
@@ -368,6 +375,11 @@ function recargarOperariosModal(prefijo) {
 // Garantiza que solo un modal esté visible a la vez
 // =====================================================
 function cerrarTodosLosModales(callback) {
+    // Quitar el foco de cualquier elemento activo para evitar warnings de accesibilidad (aria-hidden)
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+    }
+
     const abiertos = document.querySelectorAll('.modal.show');
     if (abiertos.length === 0) {
         if (callback) callback();
