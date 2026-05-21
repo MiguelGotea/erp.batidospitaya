@@ -274,7 +274,7 @@ function obtenerConteoTardanzasPorOperario($codSucursal, $fechaDesde, $fechaHast
 
 $esLider = verificarAccesoCargo([5, 43, 46, 49]);
 $esOperaciones = verificarAccesoCargo([11, 8, 28, 39, 30, 37, 13, 49]);
-$esSucursales = verificarAccesoCargo([2749]);
+$esSucursales = verificarAccesoCargo([27, 49]);
 
 // AJAX Handler para obtener operarios dinámicamente
 if (isset($_GET['action']) && $_GET['action'] == 'obtener_operarios' && isset($_GET['sucursal'])) {

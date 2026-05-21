@@ -18,7 +18,7 @@ $fotos = $ticket_model->getFotos($_GET['id']);
 
 // Verificar permisos del usuario
 $puedeEditar = verificarAccesoCargo([14, 16, 35, 49]);
-$esLider = verificarAccesoCargo([549]);
+$esLider = verificarAccesoCargo([5, 49]);
 
 if ($esLider && !verificarAccesoCargo([14, 16, 35, 49])) {
     $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);

@@ -1237,7 +1237,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
                         <th class="encabezado">Colaborador</th>
                     <?php endif; ?>
                     <th class="encabezado">Fecha Evento</th>
-                    <?php if (verificarAccesoCargo([1149]) && !$esOperarioOLider): ?>
+                    <?php if (verificarAccesoCargo([11, 49]) && !$esOperarioOLider): ?>
                         <!--<th class="encabezado">Fecha a Deducir</th> -->
                     <?php endif; ?>
                     <th class="encabezado">Sucursal</th>
@@ -1276,7 +1276,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
                                 }
                                 ?>
                             </td>
-                            <?php if (verificarAccesoCargo([1149]) && !$esOperarioOLider): ?>
+                            <?php if (verificarAccesoCargo([11, 49]) && !$esOperarioOLider): ?>
                                 <!--<td>
                                  <?php
                                  /**if (!empty($registro['fecha_deduccion'])) {

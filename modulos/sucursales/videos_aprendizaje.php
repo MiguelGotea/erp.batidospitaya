@@ -1,7 +1,7 @@
 ﻿<?php
 require_once '../../core/auth/auth.php';
 // Verificar acceso al módulo
-verificarAccesoCargo([2749]);
+verificarAccesoCargo([27, 49]);
 
 $usuario = obtenerUsuarioActual();
 ?>

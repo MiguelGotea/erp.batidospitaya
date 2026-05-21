@@ -36,7 +36,7 @@ $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
 $todasSucursales = obtenerSucursalesFisicas();
 
 // Para cargo 5, siempre usar la primera sucursal asignada
-if (verificarAccesoCargo([549]) && !empty($sucursalesLider)) {
+if (verificarAccesoCargo([5, 49]) && !empty($sucursalesLider)) {
     $sucursalSeleccionada = $sucursalesLider[0]['codigo'];
 } else {
     $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursalesLider[0]['codigo'] ?? null);

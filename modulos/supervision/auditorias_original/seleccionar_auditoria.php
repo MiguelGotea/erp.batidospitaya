@@ -15,10 +15,10 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([1649]);
+verificarAccesoCargo([16, 49]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([1649]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!verificarAccesoCargo([16, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }

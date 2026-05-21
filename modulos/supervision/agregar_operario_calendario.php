@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Verificar permisos de supervisión
-if (!verificarAccesoCargo([2149])) {
+if (!verificarAccesoCargo([21, 49])) {
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit;
 }

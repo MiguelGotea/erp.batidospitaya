@@ -26,13 +26,13 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
 $sucursalesUsuario = [];
 $urlOdoo = "https://pitaya-mantenimiento.odoo.com/mantenimiento"; // URL base
 
-if ((verificarAccesoCargo([549]) || verificarAccesoCargo([1949]))) {
+if ((verificarAccesoCargo([5, 49]) || verificarAccesoCargo([19, 49]))) {
     // Para líderes (código 5)
-    if (verificarAccesoCargo([549])) {
+    if (verificarAccesoCargo([5, 49])) {
         $sucursalesUsuario = obtenerSucursalesLider($_SESSION['usuario_id']);
     }
     // Para jefe de CDS (código 19)
-    elseif (verificarAccesoCargo([1949])) {
+    elseif (verificarAccesoCargo([19, 49])) {
         // Obtener la sucursal CDS (código 6)
         global $conn;
         $stmt = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE codigo = 6");
@@ -276,7 +276,7 @@ if ((verificarAccesoCargo([549]) || verificarAccesoCargo([1949]))) {
             </div>
         <?php endif; ?>
         
-        <?php if (!empty($sucursalesUsuario) && (verificarAccesoCargo([549]) || verificarAccesoCargo([1949]))): ?>
+        <?php if (!empty($sucursalesUsuario) && (verificarAccesoCargo([5, 49]) || verificarAccesoCargo([19, 49]))): ?>
             <div style="text-align:center;" class="sucursal-info">
                 Sucursal: <?= htmlspecialchars($sucursalesUsuario[0]['nombre']) ?> <p style="display:none;">(Código: <?= $sucursalesUsuario[0]['codigo'] ?>) </p>
             </div>

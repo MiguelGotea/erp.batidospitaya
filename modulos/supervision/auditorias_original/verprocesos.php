@@ -384,7 +384,7 @@ $items_nombres = [
                         <i class="fas fa-clipboard-check"></i> <span class="btn-text">Historial</span>
                     </a>
                     
-                    <?php if (verificarAccesoCargo([1649])): ?>
+                    <?php if (verificarAccesoCargo([16, 49])): ?>
                         <a href="agregar.php" class="btn-agregar"><i class="fas fa-cash-register"></i> Auditoría Limpieza</a>
                         <a href="agregarpersonal.php" class="btn-agregar"><i class="fas fa-wallet"></i> Auditoría Personal</a>
                         <a href="agregarservicio.php" class="btn-agregar"><i class="fas fa-boxes"></i> Auditoría Servicio</a>

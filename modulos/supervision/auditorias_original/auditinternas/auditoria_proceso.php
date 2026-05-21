@@ -226,7 +226,7 @@ $showSuccess = isset($_GET['success']);
                         <i class="fas fa-clipboard-check"></i> <span class="btn-text">Historial</span>
                     </a>
                     
-                    <?php if (verificarAccesoCargo([1649])): ?>
+                    <?php if (verificarAccesoCargo([16, 49])): ?>
                         <a href="auditoria_caja_facturacion.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditoria_caja_facturacion.php' ? 'activo' : '' ?>"><i class="fas fa-cash-register"></i> Auditoría Caja Facturación</a>
                         <a href="auditoria_caja_chica.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditoria_caja_chica.php' ? 'activo' : '' ?>"><i class="fas fa-wallet"></i> Auditoría Caja Chica</a>
                         <a href="auditoria_inventario.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditoria_inventario.php' ? 'activo' : '' ?>"><i class="fas fa-boxes"></i> Auditoría Inventario</a>

@@ -3,7 +3,7 @@ require_once '../../../core/auth/auth.php';
 
 
 // Solo líderes pueden registrar tardanzas desde marcaciones
-if (!verificarAccesoCargo([549])) {
+if (!verificarAccesoCargo([5, 49])) {
     echo json_encode(['success' => false, 'message' => 'No tiene permiso para realizar esta acción']);
     exit();
 }

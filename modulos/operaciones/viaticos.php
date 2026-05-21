@@ -38,7 +38,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'buscar_operarios' && isset($_G
     exit();
 }
 
-$esOperaciones = verificarAccesoCargo([1149]); // Jefe de Operaciones
+$esOperaciones = verificarAccesoCargo([11, 49]); // Jefe de Operaciones
 
 /**
  * Obtiene la sucursal principal asignada a un operario
@@ -2044,7 +2044,7 @@ header {
                 </div>
                 
                 <div class="action-buttons">
-                    <?php if (verificarAccesoCargo([1649])): ?>
+                    <?php if (verificarAccesoCargo([16, 49])): ?>
                         <button type="button" onclick="mostrarModalNuevoViatico()" class="btn btn-success">
                             <i class="fas fa-plus"></i> Nuevo
                         </button>
@@ -2149,7 +2149,7 @@ header {
                                 </td>
                                 
                                 <td style="text-align: center; display:none;">
-                                    <?php if ($viatico['origen'] === 'Automático' && (verificarAccesoCargo([849]))): ?>
+                                    <?php if ($viatico['origen'] === 'Automático' && (verificarAccesoCargo([8, 49]))): ?>
                                         <button type="button" onclick="mostrarModalGuardarNocturno(
                                                 <?= $viatico['cod_operario'] ?>, 
                                                 '<?= htmlspecialchars($viatico['Nombre']) ?>', 
@@ -2165,7 +2165,7 @@ header {
                                             <i class="fas fa-save"></i>
                                         </button>
                                     <?php elseif ($viatico['origen'] === 'Manual'): ?>
-                                        <?php if (verificarAccesoCargo([1149])): ?>
+                                        <?php if (verificarAccesoCargo([11, 49])): ?>
                                             <button type="button" onclick="mostrarModalEditarViatico(
                                                     <?= (int)$viatico['id'] ?>, 
                                                     '<?= htmlspecialchars($viatico['Nombre'], ENT_QUOTES) ?>', 
@@ -2191,7 +2191,7 @@ header {
                                         <span class="badge badge-auto">Automático</span>
                                     <?php endif; ?>
                                     
-                                    <?php if ((verificarAccesoCargo([849])) && $viatico['tipo'] !== 'Nocturno'): ?>
+                                    <?php if ((verificarAccesoCargo([8, 49])) && $viatico['tipo'] !== 'Nocturno'): ?>
                                         <button type="button" onclick="mostrarModalFechaPago(
                                             <?= (int)$viatico['id'] ?>,
                                             '<?= htmlspecialchars($viatico['Nombre'] . ' ' . $viatico['Apellido'], ENT_QUOTES) ?>',

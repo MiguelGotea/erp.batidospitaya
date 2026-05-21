@@ -579,7 +579,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
             
             <!-- Módulos de Acceso Rápido -->
             <div class="modules">
-                <?php if (verificarAccesoCargo([549])): ?>
+                <?php if (verificarAccesoCargo([5, 49])): ?>
                     <a href="../lideres/index.php" class="module-card">
                         <div class="module-icon">
                             <i class="fas fa-user-tie"></i>
@@ -588,7 +588,7 @@ $cumpleanosInfo = verificarCumpleanosUsuario($_SESSION['usuario_id']);
                     </a>
                 <?php endif; ?>
                 
-                <?php if (verificarAccesoCargo([2249])): ?>
+                <?php if (verificarAccesoCargo([22, 49])): ?>
                     <a href="../atencioncliente/index.php" class="module-card">
                         <div class="module-icon">
                             <i class="fas fa-user-tie"></i>

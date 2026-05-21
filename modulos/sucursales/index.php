@@ -8,7 +8,7 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([2749])) {
+if (!verificarAccesoCargo([27, 49])) {
     header('Location: ../index.php');
     exit();
 }
@@ -666,7 +666,7 @@ foreach ($sucursalesUsuario as $sucursal) {
                     </div>
                     <div class="quick-access-title">Gestión de Ferias</div>
                 </a>
-                <?php if (verificarAccesoCargo([1649])): ?>
+                <?php if (verificarAccesoCargo([16, 49])): ?>
                 <a href="cierres.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-lock"></i>

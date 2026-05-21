@@ -26,13 +26,13 @@ $cargoUsuariocodigo = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']
 $sucursalesUsuario = [];
 $codOdooUsuario = null;
 
-if ((verificarAccesoCargo([549]) || verificarAccesoCargo([1949]))) {
+if ((verificarAccesoCargo([5, 49]) || verificarAccesoCargo([19, 49]))) {
     // Para líderes (código 5)
-    if (verificarAccesoCargo([549])) {
+    if (verificarAccesoCargo([5, 49])) {
         $sucursalesUsuario = obtenerSucursalesLider($_SESSION['usuario_id']);
     }
     // Para jefe de CDS (código 19)
-    elseif (verificarAccesoCargo([1949])) {
+    elseif (verificarAccesoCargo([19, 49])) {
         // Obtener la sucursal CDS (código 6)
         global $conn;
         $stmt = $conn->prepare("SELECT codigo, nombre FROM sucursales WHERE codigo = 6");
@@ -598,7 +598,7 @@ $sucursalesOdoo = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             </div>
         <?php endif; ?>
         
-        <?php if (!empty($sucursalesUsuario) && (verificarAccesoCargo([549]) || verificarAccesoCargo([1949]))): ?>
+        <?php if (!empty($sucursalesUsuario) && (verificarAccesoCargo([5, 49]) || verificarAccesoCargo([19, 49]))): ?>
             <div style="text-align:center;" class="sucursal-info">
                 Sucursal: <?= htmlspecialchars($sucursalesUsuario[0]['nombre']) ?> 
                 <p style="display:none;">(Código: <?= $sucursalesUsuario[0]['codigo'] ?>)</p>
@@ -612,7 +612,7 @@ $sucursalesOdoo = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
                     (<?= htmlspecialchars($sucursalesOdoo[$codOdooUsuario]) ?>)
                 <?php endif; ?>
             </div>
-        <?php elseif (verificarAccesoCargo([1649])): ?>
+        <?php elseif (verificarAccesoCargo([16, 49])): ?>
             <div class="filtro-info">
                 <strong>Vista administrativa:</strong> Mostrando todos los tickets (sin filtro por sucursal)
             </div>

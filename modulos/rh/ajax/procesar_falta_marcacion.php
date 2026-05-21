@@ -4,7 +4,7 @@ require_once '../../../core/auth/auth.php';
 // Verificar autenticación
 
 // Verificar que sea líder (cargo 5)
-if (!verificarAccesoCargo([549])) {
+if (!verificarAccesoCargo([5, 49])) {
     echo json_encode(['success' => false, 'message' => 'No tiene permisos para registrar faltas']);
     exit();
 }
