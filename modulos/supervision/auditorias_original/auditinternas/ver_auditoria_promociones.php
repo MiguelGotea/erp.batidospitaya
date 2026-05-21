@@ -12,7 +12,7 @@ $db = $conn;
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 21, 49])) {
+if (!verificarAccesoCargo([11, 16, 21, 49, 52])) {
     header('Location: ../../../index.php');
     exit();
 }
@@ -41,7 +41,7 @@ try {
     ");
     $stmt->execute([$id]);
     $auditoria = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$auditoria) {
         header('Location: ../index.php?error=no_encontrado');
         exit();
@@ -64,6 +64,7 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -72,6 +73,7 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="css/ver_auditoria_promociones.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -84,9 +86,9 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
                 </a>
             </div>
         </header>
-        
+
         <h1><i class="fas fa-tags"></i> Auditoría de Promociones Combos Pitaya</h1>
-        
+
         <!-- Información General -->
         <div class="info-card">
             <div class="info-grid">
@@ -105,7 +107,7 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
                 <div class="info-item">
                     <div class="info-label">Evaluador</div>
                     <div class="info-value">
-                        <?php 
+                        <?php
                         if ($auditoria['evaluador_nombre']) {
                             echo htmlspecialchars($auditoria['evaluador_nombre'] . ' ' . $auditoria['evaluador_apellido']);
                         } else {
@@ -116,13 +118,13 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
                 </div>
             </div>
         </div>
-        
+
         <!-- Estadísticas -->
         <div class="stats-box">
             <h3>PORCENTAJE DE CUMPLIMIENTO</h3>
             <div class="percentage-big"><?php echo $auditoria['porcentaje_cumplimiento']; ?>%</div>
             <div class="percentage-label">
-                <?php 
+                <?php
                 $respondidas = 0;
                 for ($i = 1; $i <= 5; $i++) {
                     if (!empty($auditoria['respuesta_' . $i])) $respondidas++;
@@ -131,40 +133,40 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
                 ?>
             </div>
         </div>
-        
+
         <!-- Preguntas y Respuestas -->
         <div class="preguntas-section">
             <h2><i class="fas fa-clipboard-list"></i> Preguntas y Respuestas</h2>
-            
+
             <?php foreach ($preguntas as $num => $preguntaTexto): ?>
-            <div class="pregunta-card">
-                <div class="pregunta-header">
-                    <span class="pregunta-numero"><?php echo $num; ?></span>
-                    <span class="pregunta-texto"><?php echo htmlspecialchars($preguntaTexto); ?></span>
+                <div class="pregunta-card">
+                    <div class="pregunta-header">
+                        <span class="pregunta-numero"><?php echo $num; ?></span>
+                        <span class="pregunta-texto"><?php echo htmlspecialchars($preguntaTexto); ?></span>
+                    </div>
+                    <div class="respuesta-container">
+                        <?php if (!empty($auditoria['respuesta_' . $num])): ?>
+                            <div class="respuesta-texto"><?php echo nl2br(htmlspecialchars($auditoria['respuesta_' . $num])); ?></div>
+                        <?php else: ?>
+                            <div class="sin-respuesta"><i class="fas fa-exclamation-circle"></i> Sin respuesta</div>
+                        <?php endif; ?>
+                    </div>
                 </div>
-                <div class="respuesta-container">
-                    <?php if (!empty($auditoria['respuesta_' . $num])): ?>
-                        <div class="respuesta-texto"><?php echo nl2br(htmlspecialchars($auditoria['respuesta_' . $num])); ?></div>
-                    <?php else: ?>
-                        <div class="sin-respuesta"><i class="fas fa-exclamation-circle"></i> Sin respuesta</div>
-                    <?php endif; ?>
-                </div>
-            </div>
             <?php endforeach; ?>
         </div>
-        
+
         <!-- Observaciones -->
         <?php if (!empty($auditoria['observaciones'])): ?>
-        <div class="observaciones-section">
-            <h3><i class="fas fa-sticky-note"></i> Observaciones Adicionales</h3>
-            <div class="observaciones-texto"><?php echo nl2br(htmlspecialchars($auditoria['observaciones'])); ?></div>
-        </div>
+            <div class="observaciones-section">
+                <h3><i class="fas fa-sticky-note"></i> Observaciones Adicionales</h3>
+                <div class="observaciones-texto"><?php echo nl2br(htmlspecialchars($auditoria['observaciones'])); ?></div>
+            </div>
         <?php endif; ?>
-        
+
         <!-- Footer -->
         <div class="footer-info">
             <p>
-                Auditoría #<?php echo $id; ?> | 
+                Auditoría #<?php echo $id; ?> |
                 Registrada: <?php echo date('d/m/Y H:i', strtotime($auditoria['created_at'])); ?>
             </p>
             <button onclick="window.print()" class="btn-volver" style="margin-top: 10px;">
@@ -173,4 +175,5 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
         </div>
     </div>
 </body>
+
 </html>

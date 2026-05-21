@@ -690,7 +690,7 @@ function obtenerTiposFaltaConPorcentajes()
                                                     )">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
-                                                    <button type="button" class="btn-action-table btn-action-delete"
+                                                    <button style="display: none;" type="button" class="btn-action-table btn-action-delete"
                                                         onclick="eliminarSolicitud(<?= $vacacion['id'] ?>)">
                                                         <i class="fas fa-times"></i>
                                                     </button>
