@@ -453,11 +453,11 @@ $puedeEliminar = tienePermiso('correos_corporativos', 'eliminar', $cargoOperario
                 if (res.success) {
                     catalogos = res;
                     
-                    // Llenar select de colaboradores
+                    // nombre_completo viene pre-construido desde PHP con CONCAT_WS,
+                    // garantizando que operarios sin Nombre2 o Apellido2 se muestren correctamente.
                     let opHtml = '<option value="">-- Sin asignar / Ninguno --</option>';
                     res.operarios.forEach(o => {
-                        const nom = [o.Nombre, o.Nombre2, o.Apellido, o.Apellido2].filter(Boolean).join(' ');
-                        opHtml += `<option value="${o.CodOperario}">${nom} (${o.CodOperario})</option>`;
+                        opHtml += `<option value="${o.CodOperario}">${o.nombre_completo}</option>`;
                     });
                     $('#modalAsignadoA').html(opHtml);
 

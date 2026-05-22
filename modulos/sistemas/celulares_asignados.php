@@ -266,11 +266,11 @@ $puedeEliminar= tienePermiso('celulares_asignados', 'eliminar',$cargoOperario);
             $('#modalCargo').html(cgOpts);
             areas.forEach(a => $('#filtroDepartamento').append(`<option value="${a}">${a}</option>`));
 
-            // Operarios
+            // nombre_completo viene pre-construido desde PHP con CONCAT_WS,
+            // garantizando que operarios sin Nombre2 o Apellido2 se muestren correctamente.
             let opOpts = '<option value="">-- Sin asignar --</option>';
             res.operarios.forEach(o => {
-                const nom = [o.Nombre, o.Nombre2, o.Apellido, o.Apellido2].filter(Boolean).join(' ');
-                opOpts += `<option value="${o.CodOperario}">${nom}</option>`;
+                opOpts += `<option value="${o.CodOperario}">${o.nombre_completo}</option>`;
             });
             $('#modalUsuarioUso').html(opOpts);
         } catch(e) { console.error('Error catálogos', e); }
