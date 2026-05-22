@@ -80,7 +80,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="6" class="text-center py-5 text-muted">No se encontraron reportes registrados</td></tr>');
+        tbody.append('<tr><td colspan="9" class="text-center py-5 text-muted">No se encontraron reportes registrados</td></tr>');
         return;
     }
 
@@ -144,6 +144,9 @@ function renderizarTabla(datos) {
                             </button>
                         ` : ''}
                     </div>
+                </td>
+                <td>
+                    <span class="fw-bold text-danger">C$${parseFloat(i.total_gastado).toFixed(2)}</span>
                 </td>
                 <td class="text-center">
                     ${i.compras_sin_reembolso == 0 

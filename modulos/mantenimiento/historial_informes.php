@@ -184,6 +184,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                                         <th>Sucursales</th>
                                         <th>KM Recorrido</th>
                                         <th>Caja Chica</th>
+                                        <th>Gastos</th>
                                         <th class="text-center">Reembolso</th>
                                         <th data-column="estado" data-type="list">
                                             Estado

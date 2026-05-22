@@ -98,6 +98,10 @@ try {
              FROM mtto_informe_compras c 
              JOIN mtto_informe_visitas v ON c.visita_id = v.id 
              WHERE v.informe_id = i.id) as total_compras,
+            (SELECT COALESCE(SUM(c.monto), 0)
+             FROM mtto_informe_compras c 
+             JOIN mtto_informe_visitas v ON c.visita_id = v.id 
+             WHERE v.informe_id = i.id) as total_gastado,
             (SELECT COUNT(*) 
              FROM mtto_informe_visitas v 
              WHERE v.informe_id = i.id 
