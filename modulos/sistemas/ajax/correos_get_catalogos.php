@@ -3,6 +3,9 @@
  * AJAX correos_get_catalogos.php
  * Módulo: sistemas
  * Retorna catálogos de Operarios activos y Niveles de Cargos en formato JSON
+ *
+ * Nota: se usa CONCAT_WS + NULLIF para que operarios sin Nombre2 o Apellido2
+ * aparezcan correctamente en los selectores (CONCAT_WS omite NULLs y cadenas vacías).
  */
 
 require_once '../../../core/auth/auth.php';
@@ -24,9 +27,17 @@ try {
     }
 
     // 1. Obtener Operarios activos
-    // Se filtran los operarios que no han finalizado contrato (Fin es NULL o en el futuro)
+    // CONCAT_WS omite NULLs automáticamente. NULLIF convierte cadenas vacías en NULL
+    // para que tampoco aparezcan como espacios extra en el nombre.
     $sqlOperarios = "
-        SELECT CodOperario, Nombre, Nombre2, Apellido, Apellido2
+        SELECT
+            CodOperario,
+            CONCAT_WS(' ',
+                NULLIF(TRIM(Nombre),   ''),
+                NULLIF(TRIM(Nombre2),  ''),
+                NULLIF(TRIM(Apellido), ''),
+                NULLIF(TRIM(Apellido2),'')
+            ) AS nombre_completo
         FROM Operarios
         WHERE Fin IS NULL OR Fin >= CURDATE()
         ORDER BY Nombre ASC, Apellido ASC
