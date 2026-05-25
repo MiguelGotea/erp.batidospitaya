@@ -108,7 +108,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
     </div>
 
     <!-- Botón Flotante con opciones (FAB) -->
-    <?php if (verificarAccesoCargo([16, 21, 49])): ?>
+    <?php if (verificarAccesoCargo([16, 21, 49, 52])): ?>
         <div class="fab-container">
             <div class="fab-options">
                 <a href="auditinternas/auditoria_promociones.php" class="fab-option">
