@@ -87,21 +87,23 @@ try {
     // Filtro de sucursal actual
     elseif ($columna === 'sucursal_actual_nombre') {
         $sql = "SELECT DISTINCT 
-                    COALESCE(s.nombre, 'Sin tienda') as sucursal_actual
+                    COALESCE(
+                        (SELECT s2.nombre 
+                         FROM AsignacionNivelesCargos anc2 
+                         JOIN sucursales s2 ON anc2.Sucursal = s2.codigo 
+                         WHERE anc2.CodOperario = o.CodOperario 
+                         AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE()) 
+                         ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC 
+                         LIMIT 1),
+                        (SELECT CONCAT(s2.nombre, ' (última tienda)') 
+                         FROM AsignacionNivelesCargos anc2 
+                         JOIN sucursales s2 ON anc2.Sucursal = s2.codigo 
+                         WHERE anc2.CodOperario = o.CodOperario 
+                         ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC 
+                         LIMIT 1),
+                        'Sin tienda'
+                    ) as sucursal_actual
                 FROM Operarios o
-                LEFT JOIN (
-                    SELECT anc1.CodOperario, anc1.Sucursal
-                    FROM AsignacionNivelesCargos anc1
-                    WHERE anc1.CodAsignacionNivelesCargos = (
-                        SELECT CodAsignacionNivelesCargos 
-                        FROM AsignacionNivelesCargos anc2 
-                        WHERE anc2.CodOperario = anc1.CodOperario 
-                        AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
-                        ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC 
-                        LIMIT 1
-                    )
-                ) asignacion_actual ON asignacion_actual.CodOperario = o.CodOperario
-                LEFT JOIN sucursales s ON asignacion_actual.Sucursal = s.codigo
                 ORDER BY sucursal_actual";
 
         $stmt = $conn->prepare($sql);
@@ -138,6 +140,52 @@ try {
             ['valor' => 'mas_1_año', 'texto' => 'Más de 1 año'],
             ['valor' => 'indefinido', 'texto' => 'Indefinido']
         ];
+    }
+
+    // Filtro de cantidad de hijos
+    elseif ($columna === 'cantidad_hijos') {
+        $sql = "SELECT DISTINCT COALESCE(o.cantidad_hijos, 0) as cantidad_hijos
+                FROM Operarios o
+                ORDER BY cantidad_hijos ASC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $resultados = $stmt->fetchAll();
+
+        foreach ($resultados as $row) {
+            $opciones[] = [
+                'valor' => $row['cantidad_hijos'],
+                'texto' => $row['cantidad_hijos'] == 0 ? 'Sin hijos / 0' : $row['cantidad_hijos']
+            ];
+        }
+    }
+
+    // Filtro de talla de camisa
+    elseif ($columna === 'talla_camisa') {
+        $sql = "SELECT DISTINCT o.talla_camisa
+                FROM Operarios o
+                ORDER BY 
+                    CASE COALESCE(o.talla_camisa, '')
+                        WHEN 'XS' THEN 1
+                        WHEN 'S' THEN 2
+                        WHEN 'M' THEN 3
+                        WHEN 'L' THEN 4
+                        WHEN 'XL' THEN 5
+                        WHEN 'XXL' THEN 6
+                        ELSE 7
+                    END ASC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $resultados = $stmt->fetchAll();
+
+        foreach ($resultados as $row) {
+            $talla = $row['talla_camisa'];
+            $opciones[] = [
+                'valor' => $talla !== null && $talla !== '' ? $talla : 'Sin talla',
+                'texto' => $talla !== null && $talla !== '' ? $talla : 'Sin especificar'
+            ];
+        }
     }
 
     echo json_encode([

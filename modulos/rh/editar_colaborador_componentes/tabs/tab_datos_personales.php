@@ -1,4 +1,4 @@
-﻿                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
+                        <?php if (tienePermiso('editar_colaborador', 'edicion', $cargoId)): ?>
                                 <div id="datos-personales"
                                     class="tab-pane <?= $pestaña_activa == 'datos-personales' ? 'active' : '' ?>">
                                     <!-- Sección de Documentos Obligatorios Faltantes -->
@@ -98,6 +98,31 @@
                                                         value="<?= !empty($colaborador['Cumpleanos']) ? date('Y-m-d', strtotime($colaborador['Cumpleanos'])) : '' ?>">
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <div class="form-col">
+                                                <div class="form-group">
+                                                    <label for="cantidad_hijos">Cantidad de hijos</label>
+                                                    <input type="number" id="cantidad_hijos" name="cantidad_hijos" class="form-control" min="0" step="1"
+                                                        value="<?= isset($colaborador['cantidad_hijos']) && $colaborador['cantidad_hijos'] !== '' ? htmlspecialchars($colaborador['cantidad_hijos']) : '' ?>" placeholder="Ej: 0, 1, 2...">
+                                                </div>
+                                            </div>
+                                            <div class="form-col">
+                                                <div class="form-group">
+                                                    <label for="talla_camisa">Talla camisa</label>
+                                                    <select id="talla_camisa" name="talla_camisa" class="form-control">
+                                                        <option value="">Seleccionar...</option>
+                                                        <option value="XS" <?= (isset($colaborador['talla_camisa']) && $colaborador['talla_camisa'] == 'XS') ? 'selected' : '' ?>>XS</option>
+                                                        <option value="S" <?= (isset($colaborador['talla_camisa']) && $colaborador['talla_camisa'] == 'S') ? 'selected' : '' ?>>S</option>
+                                                        <option value="M" <?= (isset($colaborador['talla_camisa']) && $colaborador['talla_camisa'] == 'M') ? 'selected' : '' ?>>M</option>
+                                                        <option value="L" <?= (isset($colaborador['talla_camisa']) && $colaborador['talla_camisa'] == 'L') ? 'selected' : '' ?>>L</option>
+                                                        <option value="XL" <?= (isset($colaborador['talla_camisa']) && $colaborador['talla_camisa'] == 'XL') ? 'selected' : '' ?>>XL</option>
+                                                        <option value="XXL" <?= (isset($colaborador['talla_camisa']) && $colaborador['talla_camisa'] == 'XXL') ? 'selected' : '' ?>>XXL</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-col"></div>
                                         </div>
 
                                         <div

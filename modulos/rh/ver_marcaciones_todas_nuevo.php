@@ -61,15 +61,23 @@ if ($esLider) { // Si es líder de sucursal
         exit();
     }
 
-    // Siempre usar la primera sucursal para líderes
-    $sucursalLider = $sucursalesLider[0]['codigo'];
-    $sucursalSeleccionada = $sucursalLider;
-
-    // Para mostrar en el filtro (aunque esté oculto)
-    $sucursales = [['codigo' => $sucursalLider, 'nombre' => $sucursalesLider[0]['nombre']]];
+    // Si el líder tiene más de una sucursal, permitir selección; si solo tiene una, forzar esa
+    if (count($sucursalesLider) > 1) {
+        // Multi-sucursal: respetar el GET si viene, sino la primera
+        $sucursalLider = $_GET['sucursal'] ?? $sucursalesLider[0]['codigo'];
+        $sucursalSeleccionada = $sucursalLider;
+        // Pasar todas para que el selector las muestre
+        $sucursales = $sucursalesLider;
+    } else {
+        // Una sola sucursal: siempre forzar
+        $sucursalLider = $sucursalesLider[0]['codigo'];
+        $sucursalSeleccionada = $sucursalLider;
+        $sucursales = [['codigo' => $sucursalLider, 'nombre' => $sucursalesLider[0]['nombre']]];
+    }
 
     // Guardar la sucursal del líder en una variable global para usar en las consultas
-    $sucursalAsignacionLider = $sucursalLider;
+    $sucursalAsignacionLider = $sucursalSeleccionada;
+    $mostrarSelectSucursalLider = count($sucursalesLider) > 1;
 } elseif ($esOperaciones) { // Si es de operaciones
     $sucursales = obtenerSucursalesFisicas(); // Solo sucursales físicas (sucursal = 1)
     $modoVista = 'sucursal'; // Forzar modo sucursal para operaciones
@@ -1451,6 +1459,22 @@ function verificarTardanzaYaRegistrada(
                     <?php unset($_SESSION['error']); ?>
                 <?php endif; ?>
 
+                <!-- Selector de sucursal para líderes multi-sucursal -->
+                <?php if (!empty($mostrarSelectSucursalLider) && $mostrarSelectSucursalLider): ?>
+                <div class="d-flex align-items-center gap-2 mb-3 p-2 bg-light rounded border">
+                    <i class="fas fa-store text-success"></i>
+                    <span class="fw-semibold small text-muted">Sucursal:</span>
+                    <select id="sucursal_lider_select" class="form-select form-select-sm" style="max-width:220px;"
+                        onchange="cambiarSucursalLider(this.value)">
+                        <?php foreach ($sucursales as $s): ?>
+                            <option value="<?= $s['codigo'] ?>" <?= $sucursalSeleccionada == $s['codigo'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($s['nombre']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
                 <!-- Toolbar de exportación (solo para perfiles con permisos de exportación) -->
                 <?php if ($esContabilidad || $esOperaciones): ?>
                     <div class="toolbar-container"
@@ -2029,9 +2053,10 @@ function verificarTardanzaYaRegistrada(
                 function aplicarFiltrosLider() {
                     let sucursal, modo;
 
-                    // Para líderes, usar la primera sucursal asignada
-                    sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
-                    modo = 'sucursal';
+                // Para líderes: usar el selector si existe (multi-sucursal), sino la asignada
+                const selectSucursal = document.getElementById('sucursal_lider_select');
+                sucursal = selectSucursal ? selectSucursal.value : '<?= $sucursalSeleccionada ?? ($sucursales[0]['codigo'] ?? '') ?>';
+                modo = 'sucursal';
 
                     const operario_id = document.getElementById('operario_id') ? document.getElementById('operario_id').value : '';
                     const numeroSemana = document.getElementById('numero_semana') ? document.getElementById('numero_semana').value : '';
@@ -2130,8 +2155,16 @@ function verificarTardanzaYaRegistrada(
                     esContabilidad: <?= $esContabilidad ? 'true' : 'false' ?>,
                     esFotoMarcacion: <?= $esFotoMarcacion ? 'true' : 'false' ?>,
                     esCambiarFotoMarcacion: <?= $esCambiarFotoMarcacion ? 'true' : 'false' ?>,
-                    fechaHoy: '<?= $fechaHoy ?>'
+                    fechaHoy: '<?= $fechaHoy ?>',
+                    sucursalLider: '<?= htmlspecialchars($sucursalAsignacionLider ?? '') ?>'
                 };
+
+                // Función para cambiar sucursal del líder (multi-sucursal)
+                function cambiarSucursalLider(codSucursal) {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('sucursal', codSucursal);
+                    window.location.href = 'ver_marcaciones_todas_nuevo.php?' + params.toString();
+                }
             </script>
 
 

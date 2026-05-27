@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 //session_start(); // Asegurar que la sesión esté iniciada
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
@@ -35,12 +35,15 @@ $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
 // Obtener todas las sucursales para el selector (para estado "Otra Tienda")
 $todasSucursales = obtenerSucursalesFisicas();
 
-// Para cargo 5, siempre usar la primera sucursal asignada
-if (verificarAccesoCargo([5, 49]) && !empty($sucursalesLider)) {
+// Para cargo 5/49: si solo tienen 1 sucursal, forzar esa; si tienen varias, respetar el GET
+if (verificarAccesoCargo([5, 49]) && !empty($sucursalesLider) && count($sucursalesLider) === 1) {
     $sucursalSeleccionada = $sucursalesLider[0]['codigo'];
 } else {
     $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursalesLider[0]['codigo'] ?? null);
 }
+
+// Mostrar selector de sucursal solo si el líder tiene más de una asignada
+$mostrarSelectSucursal = !verificarAccesoCargo([5, 43, 49]) || count($sucursalesLider) > 1;
 
 // Obtener semana actual y siguiente con zona horaria correcta
 $semanaActual = obtenerSemanaActual();
@@ -2615,12 +2618,12 @@ function obtenerCategoriaPorDefecto()
                 </div>
             </div>
 
-            <!-- Filtro de sucursal - Oculto para cargo 5 -->
-            <?php if (!verificarAccesoCargo([5, 43, 49])): ?>
+            <!-- Filtro de sucursal: visible si tiene más de una o no es cargo 5/43/49 -->
+            <?php if ($mostrarSelectSucursal): ?>
                 <div class="filter-item">
                     <label for="sucursal">Sucursal</label>
                     <div class="filter-controls">
-                        <select id="sucursal" name="sucursal">
+                        <select id="sucursal" name="sucursal" onchange="cambiarSucursal(this.value)">
                             <?php foreach ($sucursalesLider as $sucursal): ?>
                                 <option value="<?= $sucursal['codigo'] ?>" <?= $sucursalSeleccionada == $sucursal['codigo'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($sucursal['nombre']) ?>
@@ -2630,7 +2633,7 @@ function obtenerCategoriaPorDefecto()
                     </div>
                 </div>
             <?php else: ?>
-                <input type="hidden" id="sucursal" name="sucursal" value="<?= $sucursalSeleccionada ?>">
+                <input type="hidden" id="sucursal" name="sucursal" value="<?= htmlspecialchars($sucursalSeleccionada ?? '') ?>">
             <?php endif; ?>
 
             <!-- Botón para abrir modal de gestión de colaboradores -->

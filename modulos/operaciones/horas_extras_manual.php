@@ -135,6 +135,12 @@ if ($puedeVerTodo || $puedeFiltroAll) {
 
 // Determinar si se comporta como líder (restringido a su tienda)
 $esRestringido = !$puedeVerTodo && !$puedeFiltroAll;
+
+// Mostrar selector solo si: tiene acceso global O tiene más de 1 sucursal asignada
+$mostrarSelectSucursal = !$esRestringido || count($sucursales) > 1;
+
+// Para líderes con una sola sucursal, guardar el código para usarlo como valor fijo
+$sucursalFijada = ($esRestringido && count($sucursales) === 1) ? $sucursales[0]['codigo'] : null;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -159,18 +165,23 @@ $esRestringido = !$puedeVerTodo && !$puedeFiltroAll;
             <!-- Filtros -->
             <div class="card card-body mb-3 filters-container">
                 <div class="row g-3 align-items-end">
+                    <?php if ($mostrarSelectSucursal): ?>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold text-muted small">Sucursal</label>
-                        <select id="sucursal" class="form-select form-select-sm" <?= $esRestringido ? 'disabled' : '' ?>>
+                        <select id="sucursal" class="form-select form-select-sm">
                             <?php if (!$esRestringido): ?>
                                 <option value="">Todas</option>
                             <?php endif; ?>
                             <?php foreach ($sucursales as $s): ?>
-                                <option value="<?= $s['codigo'] ?>" <?= ($esRestringido && count($sucursales) > 0) ? 'selected' : '' ?>><?= $s['nombre'] ?>
+                                <option value="<?= $s['codigo'] ?>"><?= $s['nombre'] ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <?php else: ?>
+                        <!-- Líder con una sola sucursal: campo oculto para pasar el valor al JS -->
+                        <input type="hidden" id="sucursal" value="<?= htmlspecialchars($sucursalFijada ?? '') ?>">
+                    <?php endif; ?>
                     <div class="col-md-3">
                         <label class="form-label fw-semibold text-muted small">Colaborador</label>
                         <div class="position-relative">
@@ -370,6 +381,8 @@ $esRestringido = !$puedeVerTodo && !$puedeFiltroAll;
         window.puedeVerObs = <?= $puedeVerObs ? 'true' : 'false' ?>;
         window.usuarioId = <?= $_SESSION['usuario_id'] ?? 0 ?>;
         window.esRestringido = <?= $esRestringido ? 'true' : 'false' ?>;
+        window.mostrarSelectSucursal = <?= $mostrarSelectSucursal ? 'true' : 'false' ?>;
+        window.sucursalFijada = '<?= htmlspecialchars($sucursalFijada ?? '') ?>';
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

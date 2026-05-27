@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -30,9 +30,9 @@ if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 49, 52]
     // Admin y supervisores ven todas las sucursales
     $sucursales = obtenerSucursalesFisicas();
 } elseif (verificarAccesoCargo([5, 43, 27, 49])) {
-    // Cargos 5 y 27 solo ven sus sucursales asignadas (sin selector)
+    // Cargos 5 y 27 solo ven sus sucursales asignadas
     $sucursales = obtenerSucursalesUsuario($usuario['CodOperario']);
-    // Para estos cargos, forzar la primera sucursal asignada
+    // Para estos cargos, forzar la primera sucursal asignada solo si tienen una
     if (!empty($sucursales) && !isset($_GET['sucursal'])) {
         $sucursalSeleccionada = $sucursales[0]['codigo'];
         $mostrarTodas = false;
@@ -41,6 +41,12 @@ if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 49, 52]
     // Otros cargos ven sus sucursales asignadas pero con selector
     $sucursales = obtenerSucursalesUsuario($usuario['CodOperario']);
 }
+
+// Determinar si mostrar el selector de sucursal:
+// - Usuarios con acceso global SIEMPRE lo ven
+// - Líderes/cargos restringidos: solo si tienen MÁS de una sucursal asignada
+$esRestringidoSucursal = verificarAccesoCargo([5, 43, 27, 49]) && !verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 49, 52]);
+$mostrarSelectSucursal = !$esRestringidoSucursal || count($sucursales) > 1;
 
 // Si no hay sucursales asignadas
 if (empty($sucursales)) {
@@ -1494,7 +1500,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
 
                     </div>
 
-                    <?php if (!verificarAccesoCargo([5, 43, 27, 49])): ?>
+                    <?php if ($mostrarSelectSucursal): ?>
                         <div class="filter-group">
                             <label style="display:none;" for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="cambiarSucursal()">
@@ -1508,6 +1514,9 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                    <?php else: ?>
+                        <!-- Líder de una sola tienda: valor fijo sin selector -->
+                        <input type="hidden" id="sucursal" name="sucursal" value="<?= htmlspecialchars($sucursalSeleccionada ?? '') ?>">
                     <?php endif; ?>
 
                     <div class="filter-group">

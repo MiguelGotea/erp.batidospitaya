@@ -10,10 +10,6 @@ $usuario = obtenerUsuarioActual();
 // Obtener cargo del operario para el menú
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-$sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
-$codigo_sucursal_busqueda = $sucursales[0]['nombre'];
-
-
 if (!tienePermiso('historial_solicitudes_mantenimiento', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
@@ -21,10 +17,28 @@ if (!tienePermiso('historial_solicitudes_mantenimiento', 'vista', $cargoOperario
 
 $ticketModel = new Ticket();
 
-// Determinar si el filtro de sucursal está bloqueado (solo líderes ven su sucursal)
+// Obtener sucursales del líder ANTES del override
+$sucursalesLiderPropias = obtenerSucursalesLider($_SESSION['usuario_id']);
+
+// Determinar cuántas sucursales activas tiene como líder
+$esLiderMultiSucursal = count($sucursalesLiderPropias) > 1;
+
+// Para el filtro AJAX: si tiene 1, bloquear en esa; si tiene varias, no bloquear
+if (!empty($sucursalesLiderPropias)) {
+    // Nombre de la primera sucursal para compatibilidad con el filtro por defecto
+    $codigo_sucursal_busqueda = $sucursalesLiderPropias[0]['nombre'];
+} else {
+    $codigo_sucursal_busqueda = '';
+}
+
+// Determinar si el filtro de sucursal está bloqueado (solo líderes sin permiso especial)
 $filtro_sucursal_bloqueado = !tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario);
 
-// Obtener sucursales
+// Para líderes con múltiples sucursales: el filtro NO debe quedar bloqueado a solo 1
+// sino permitir ver todas las que administra
+$mostrarSelectorSucursal = $filtro_sucursal_bloqueado && count($sucursalesLiderPropias) > 1;
+
+// Obtener sucursales (todas para el panel de acceso rápido con permisos)
 $sucursales = $ticketModel->getSucursales();
 
 // Función para obtener color de urgencia
@@ -272,6 +286,7 @@ function getTextoUrgencia($nivel)
     <script>
         const filtroSucursalBloqueado = <?php echo $filtro_sucursal_bloqueado ? 'true' : 'false'; ?>;
         const codigoSucursalBusqueda = '<?php echo $codigo_sucursal_busqueda; ?>';
+        const sucursalesLiderPropias = <?php echo json_encode(array_column($sucursalesLiderPropias ?? [], 'nombre')); ?>;
         const cargoOperario = <?php echo $cargoOperario; ?>;
         const permisos = {
             'cambiar_urgencia': <?php echo tienePermiso('historial_solicitudes_mantenimiento', 'cambiar_urgencia', $cargoOperario) ? 'true' : 'false'; ?>,
@@ -286,11 +301,15 @@ function getTextoUrgencia($nivel)
 
         // Aplicar filtro de sucursal automáticamente si está bloqueado
         $(document).ready(function () {
-            if (filtroSucursalBloqueado && codigoSucursalBusqueda) {
+            if (filtroSucursalBloqueado) {
                 // Esperar a que el JS se cargue
                 setTimeout(function () {
                     if (typeof filtrosActivos !== 'undefined') {
-                        filtrosActivos['nombre_sucursal'] = [codigoSucursalBusqueda];
+                        if (Array.isArray(sucursalesLiderPropias) && sucursalesLiderPropias.length > 0) {
+                            filtrosActivos['nombre_sucursal'] = [...sucursalesLiderPropias];
+                        } else if (codigoSucursalBusqueda) {
+                            filtrosActivos['nombre_sucursal'] = [codigoSucursalBusqueda];
+                        }
                         cargarDatos();
                     }
                 }, 100);

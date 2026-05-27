@@ -194,8 +194,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </div>
 
                                         <div class="row">
-                                            <!-- Selector de Sucursal (solo para quienes ven todas) -->
-                                            <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
+                                            <!-- Selector de Sucursal: visible si tiene permiso de ver todas o si tiene más de una asignada -->
+                                            <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) || count($sucursalesPermitidas) > 1): ?>
                                                 <div class="col-md-6 mb-3">
                                                     <label for="selectSucursal" class="form-label">Sucursal del Equipo *</label>
                                                     <select id="selectSucursal" class="form-select" 
@@ -209,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </div>
                                             <?php endif; ?>
 
-                                            <div class="<?= tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) ? 'col-md-6' : 'col-12' ?> mb-3">
+                                            <div class="<?= (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) || count($sucursalesPermitidas) > 1) ? 'col-md-6' : 'col-12' ?> mb-3">
                                                 <label for="equipo" class="form-label">Tipo de Equipo *</label>
                                                 <select class="form-select" id="equipo" name="equipo" required>
                                                     <option value="">Seleccionar equipo</option>
