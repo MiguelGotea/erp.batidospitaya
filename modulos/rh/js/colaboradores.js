@@ -64,6 +64,8 @@ function cargarDatos() {
                 renderizarTabla(response.datos);
                 renderizarPaginacion(response.total_registros);
                 actualizarIndicadoresFiltros();
+                actualizarBadgeExportar();
+                actualizarVisibilidadFechaSalida();
             } else {
                 alert('Error: ' + response.message);
             }
@@ -80,7 +82,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="13" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="18" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
@@ -92,6 +94,12 @@ function renderizarTabla(datos) {
 
         // Nombre completo
         tr.append(`<td>${row.nombre_completo}</td>`);
+
+        // Cédula
+        tr.append(`<td>${row.Cedula || '<span style="color: #999;">-</span>'}</td>`);
+
+        // Seguro INSS
+        tr.append(`<td>${row.codigo_inss || '<span style="color: #999;">-</span>'}</td>`);
 
         // Cargo
         tr.append(`<td>${row.cargo_nombre}</td>`);
@@ -165,8 +173,18 @@ function renderizarTabla(datos) {
         // Último Día Marcado
         tr.append(`<td>${formatearFecha(row.ultima_fecha_laborada)}</td>`);
 
+        // Fecha de Salida (columna dinámica — visible solo con inactivos o todos)
+        const fechaSalidaTexto = formatearFecha(row.fecha_salida_ultimo);
+        tr.append(`<td class="col-fecha-salida" style="text-align:center; color:#c0392b; font-weight:600;">${fechaSalidaTexto !== '-' ? fechaSalidaTexto : '<span style="color:#999;">-</span>'}</td>`);
+
         // Tiempo Trabajado
         tr.append(`<td>${row.tiempo_trabajado_texto || '-'}</td>`);
+
+        // Cantidad de hijos
+        tr.append(`<td style="text-align: center;">${row.cantidad_hijos !== null && row.cantidad_hijos !== undefined && row.cantidad_hijos !== '' ? row.cantidad_hijos : '<span style="color: #999;">-</span>'}</td>`);
+
+        // Talla Camisa
+        tr.append(`<td style="text-align: center;">${row.talla_camisa || '<span style="color: #999;">-</span>'}</td>`);
 
         // Llenado (Compliance)
         const porcLlenado = row.porcentaje_llenado || 0;
@@ -717,7 +735,13 @@ function setEstadoFilter(state) {
         filtrosActivos['Operativo'] = [state];
     }
 
+    // Si se cambia de inactivos a activos/todos, limpiar el filtro de Fecha de Salida
+    if (state !== '0') {
+        delete filtrosActivos['fecha_salida_ultimo'];
+    }
+
     actualizarVisualToggle();
+    actualizarVisibilidadFechaSalida();
     paginaActual = 1;
     cargarDatos();
 }
@@ -796,3 +820,94 @@ $(document).ready(function () {
         });
     });
 });
+
+// ──────────────────────────────────────────────────────────────
+// Exportar a Excel
+// ──────────────────────────────────────────────────────────────
+function exportarExcel() {
+    if (typeof canExport !== 'undefined' && !canExport) {
+        alert('No tienes permiso para exportar.');
+        return;
+    }
+
+    const btn     = $('#btnExportarExcel');
+    const spinner = $('#exportarSpinner');
+
+    btn.prop('disabled', true);
+    spinner.show();
+
+    // Crear un iframe oculto para recibir la descarga (no navega fuera de la página)
+    const iframeId = 'exportIframe';
+    let $iframe = $('#' + iframeId);
+    if (!$iframe.length) {
+        $iframe = $('<iframe>', { id: iframeId, name: iframeId })
+            .css({ display: 'none', width: 0, height: 0, border: 'none' })
+            .appendTo('body');
+    }
+
+    // Crear formulario POST temporal apuntando al iframe
+    const $form = $('<form>', {
+        method: 'POST',
+        action: 'ajax/colaboradores_exportar_excel.php',
+        target: iframeId
+    });
+
+    $form.append($('<input>', {
+        type : 'hidden',
+        name : 'filtros',
+        value: JSON.stringify(filtrosActivos)
+    }));
+    $form.append($('<input>', {
+        type : 'hidden',
+        name : 'orden',
+        value: JSON.stringify(ordenActivo)
+    }));
+
+    $form.appendTo('body').submit().remove();
+
+    // Habilitar el botón tras un breve retraso (la descarga es asíncrona en el iframe)
+    setTimeout(function () {
+        btn.prop('disabled', false);
+        spinner.hide();
+    }, 2500);
+}
+
+// Actualizar badge de "Con filtros aplicados" al lado del botón de exportar y el botón de limpiar todo
+function actualizarBadgeExportar() {
+    // Hay filtros personalizados si hay alguna clave distinta de 'Operativo', o si 'Operativo' no es la vista por defecto (['1'])
+    const tieneFiltrosPersonalizados = Object.keys(filtrosActivos).some(k => k !== 'Operativo') || 
+                                       (filtrosActivos['Operativo'] && (filtrosActivos['Operativo'].length > 1 || filtrosActivos['Operativo'][0] !== '1'));
+    
+    const $label = $('#exportarFiltrosLabel');
+    if ($label.length) {
+        $label.toggle(tieneFiltrosPersonalizados);
+    }
+
+    const $btnLimpiar = $('#btnLimpiarTodo');
+    if ($btnLimpiar.length) {
+        $btnLimpiar.toggle(tieneFiltrosPersonalizados);
+    }
+}
+
+// Limpiar absolutamente todos los filtros aplicados y volver al estado por defecto (Activos)
+function limpiarTodosLosFiltros() {
+    filtrosActivos = { 'Operativo': ['1'] };
+    cerrarTodosFiltros();
+    actualizarVisualToggle();
+    actualizarVisibilidadFechaSalida();
+    paginaActual = 1;
+    cargarDatos();
+}
+
+// ── Columna dinámica Fecha de Salida ──────────────────────────
+// Visible cuando el filtro incluye inactivos o no filtra por estado.
+// Oculta cuando el filtro es exclusivamente "Activos".
+function actualizarVisibilidadFechaSalida() {
+    const filtroOp = filtrosActivos['Operativo'];
+    const soloActivos = filtroOp && filtroOp.length === 1 && filtroOp[0] === '1';
+    if (soloActivos) {
+        $('.col-fecha-salida').hide();
+    } else {
+        $('.col-fecha-salida').show();
+    }
+}

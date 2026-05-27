@@ -56,6 +56,18 @@ try {
         $params[":nombre_completo"] = '%' . $filtros['nombre_completo'] . '%';
     }
 
+    // Filtro de Cédula
+    if (isset($filtros['Cedula']) && $filtros['Cedula'] !== '') {
+        $where[] = "o.Cedula LIKE :cedula";
+        $params[":cedula"] = '%' . $filtros['Cedula'] . '%';
+    }
+
+    // Filtro de seguro INSS
+    if (isset($filtros['codigo_inss']) && $filtros['codigo_inss'] !== '') {
+        $where[] = "o.codigo_inss LIKE :codigo_inss";
+        $params[":codigo_inss"] = '%' . $filtros['codigo_inss'] . '%';
+    }
+
     // Filtro de teléfonos
     if (isset($filtros['telefonos']) && $filtros['telefonos'] !== '') {
         $where[] = "(o.Celular LIKE :telefonos OR o.telefono_corporativo LIKE :telefonos2)";
@@ -186,22 +198,23 @@ try {
     // Filtro de tiempo trabajado (lista con rangos)
     if (isset($filtros['tiempo_trabajado_dias']) && is_array($filtros['tiempo_trabajado_dias']) && count($filtros['tiempo_trabajado_dias']) > 0) {
         $condiciones = [];
+        $exprDias = "DATEDIFF(COALESCE(uc.fecha_salida, IF(uc.fin_contrato IS NOT NULL AND uc.fin_contrato < CURDATE(), uc.fin_contrato, CURDATE())), uc.inicio_contrato)";
         foreach ($filtros['tiempo_trabajado_dias'] as $rango) {
             switch ($rango) {
                 case 'menos_6_meses':
-                    $condiciones[] = "tiempo_trabajado_dias < 180";
+                    $condiciones[] = "$exprDias < 180";
                     break;
                 case '6_meses_1_año':
-                    $condiciones[] = "(tiempo_trabajado_dias >= 180 AND tiempo_trabajado_dias < 365)";
+                    $condiciones[] = "($exprDias >= 180 AND $exprDias < 365)";
                     break;
                 case '1_2_años':
-                    $condiciones[] = "(tiempo_trabajado_dias >= 365 AND tiempo_trabajado_dias < 730)";
+                    $condiciones[] = "($exprDias >= 365 AND $exprDias < 730)";
                     break;
                 case '2_5_años':
-                    $condiciones[] = "(tiempo_trabajado_dias >= 730 AND tiempo_trabajado_dias < 1825)";
+                    $condiciones[] = "($exprDias >= 730 AND $exprDias < 1825)";
                     break;
                 case 'mas_5_años':
-                    $condiciones[] = "tiempo_trabajado_dias >= 1825";
+                    $condiciones[] = "$exprDias >= 1825";
                     break;
             }
         }
@@ -243,6 +256,28 @@ try {
         }
     }
 
+    // Filtro de cantidad de hijos (lista)
+    if (isset($filtros['cantidad_hijos']) && is_array($filtros['cantidad_hijos']) && count($filtros['cantidad_hijos']) > 0) {
+        $placeholders = [];
+        foreach ($filtros['cantidad_hijos'] as $idx => $valor) {
+            $key = ":cant_hijos_$idx";
+            $placeholders[] = $key;
+            $params[$key] = $valor;
+        }
+        $where[] = "COALESCE(o.cantidad_hijos, 0) IN (" . implode(',', $placeholders) . ")";
+    }
+
+    // Filtro de talla camisa (lista)
+    if (isset($filtros['talla_camisa']) && is_array($filtros['talla_camisa']) && count($filtros['talla_camisa']) > 0) {
+        $placeholders = [];
+        foreach ($filtros['talla_camisa'] as $idx => $valor) {
+            $key = ":talla_cam_$idx";
+            $placeholders[] = $key;
+            $params[$key] = $valor;
+        }
+        $where[] = "COALESCE(o.talla_camisa, 'Sin talla') IN (" . implode(',', $placeholders) . ")";
+    }
+
     $whereClause = 'WHERE ' . implode(' AND ', $where);
 
     // Construir ORDER BY
@@ -251,6 +286,8 @@ try {
         $columnas_validas = [
             'CodOperario',
             'nombre_completo',
+            'Cedula',
+            'codigo_inss',
             'cargo_nombre',
             'telefonos',
             'Operativo',
@@ -258,7 +295,9 @@ try {
             'fecha_inicio_ultimo_contrato',
             'fecha_salida_ultimo',
             'tiempo_trabajado_dias',
-            'ultima_fecha_laborada'
+            'ultima_fecha_laborada',
+            'cantidad_hijos',
+            'talla_camisa'
         ];
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
@@ -308,11 +347,15 @@ try {
             } elseif ($orden['columna'] === 'fecha_inicio_ultimo_contrato') {
                 $orderClause = "ORDER BY uc.inicio_contrato $direccion";
             } elseif ($orden['columna'] === 'fecha_salida_ultimo') {
-                $orderClause = "ORDER BY uc.fecha_salida $direccion";
+                $orderClause = "ORDER BY (CASE WHEN uc.fecha_salida IS NULL OR uc.fecha_salida = '0000-00-00' THEN 1 ELSE 0 END) ASC, uc.fecha_salida $direccion";
             } elseif ($orden['columna'] === 'ultima_fecha_laborada') {
                 $orderClause = "ORDER BY m.fecha $direccion";
             } elseif ($orden['columna'] === 'tiempo_trabajado_dias') {
                 $orderClause = "ORDER BY tiempo_trabajado_dias $direccion";
+            } elseif ($orden['columna'] === 'Cedula') {
+                $orderClause = "ORDER BY o.Cedula $direccion";
+            } elseif ($orden['columna'] === 'codigo_inss') {
+                $orderClause = "ORDER BY o.codigo_inss $direccion";
             } else {
                 $orderClause = "ORDER BY {$orden['columna']} $direccion";
             }
@@ -359,6 +402,10 @@ try {
                 TRIM(o.Apellido), ' ',
                 IFNULL(TRIM(o.Apellido2), '')
             ) as nombre_completo,
+            o.Cedula,
+            o.codigo_inss,
+            o.cantidad_hijos,
+            o.talla_camisa,
             o.Celular,
             o.telefono_corporativo,
             -- Estado calculado basado en el último contrato
@@ -388,6 +435,12 @@ try {
                  JOIN sucursales s2 ON anc2.Sucursal = s2.codigo
                  WHERE anc2.CodOperario = o.CodOperario 
                  AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
+                 ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC
+                 LIMIT 1),
+                (SELECT CONCAT(s2.nombre, ' (última tienda)') 
+                 FROM AsignacionNivelesCargos anc2
+                 JOIN sucursales s2 ON anc2.Sucursal = s2.codigo
+                 WHERE anc2.CodOperario = o.CodOperario 
                  ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC
                  LIMIT 1),
                 'Sin tienda'

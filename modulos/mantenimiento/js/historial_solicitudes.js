@@ -55,14 +55,19 @@ function actualizarIndicadoresFiltros() {
 
 // Limpiar filtro específico
 function limpiarFiltro(columna) {
-    // Si es sucursal y está bloqueado, no permitir limpiar
+    // Si es sucursal y está bloqueado
     if (columna === 'nombre_sucursal' &&
         typeof filtroSucursalBloqueado !== 'undefined' &&
         filtroSucursalBloqueado) {
-        return;
+        if (typeof sucursalesLiderPropias !== 'undefined' && sucursalesLiderPropias.length > 1) {
+            // Restablecer a todas sus sucursales permitidas
+            filtrosActivos[columna] = [...sucursalesLiderPropias];
+        } else {
+            return;
+        }
+    } else {
+        delete filtrosActivos[columna];
     }
-
-    delete filtrosActivos[columna];
     cerrarTodosFiltros();
     paginaActual = 1;
     cargarDatos();
@@ -617,7 +622,10 @@ function cargarOpcionesFiltro(panel, columna, tipo) {
                     let disabledClass = '';
 
                     if (columna === 'nombre_sucursal' && filtroSucursalBloqueado) {
-                        if (opcion.texto !== codigoSucursalBusqueda) {
+                        const allowed = (typeof sucursalesLiderPropias !== 'undefined' && Array.isArray(sucursalesLiderPropias))
+                            ? sucursalesLiderPropias
+                            : [codigoSucursalBusqueda];
+                        if (!allowed.includes(opcion.texto)) {
                             disabled = 'disabled';
                             disabledClass = 'disabled';
                         }
@@ -635,10 +643,12 @@ function cargarOpcionesFiltro(panel, columna, tipo) {
                 html += '</div></div>';
                 panel.append(html);
 
-                // Si el filtro está bloqueado, marcar automáticamente la sucursal
-                if (columna === 'nombre_sucursal' && filtroSucursalBloqueado && codigoSucursalBusqueda) {
-                    if (!filtrosActivos[columna] || !filtrosActivos[columna].includes(codigoSucursalBusqueda)) {
-                        filtrosActivos[columna] = [codigoSucursalBusqueda];
+                // Si el filtro está bloqueado, marcar automáticamente la sucursal o sucursales permitidas
+                if (columna === 'nombre_sucursal' && filtroSucursalBloqueado) {
+                    if (!filtrosActivos[columna] || filtrosActivos[columna].length === 0) {
+                        filtrosActivos[columna] = (typeof sucursalesLiderPropias !== 'undefined' && sucursalesLiderPropias.length > 0)
+                            ? [...sucursalesLiderPropias]
+                            : [codigoSucursalBusqueda];
                         cargarDatos();
                     }
                 }

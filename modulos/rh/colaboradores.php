@@ -11,6 +11,7 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
+$puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperario);
 ?>
 
 <!DOCTYPE html>
@@ -34,7 +35,7 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, 'Lista de Colaboradores'); ?>
+            <?php echo renderHeader($usuario, 'Maestro de Colaboradores'); ?>
 
             <div class="container-fluid p-3">
                 <?php if (isset($_SESSION['exito'])): ?>
@@ -53,6 +54,23 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                     <?php unset($_SESSION['error']); ?>
                 <?php endif; ?>
 
+                <div class="export-toolbar">
+                    <?php if ($puedeExportar): ?>
+                    <button id="btnExportarExcel" class="btn-exportar-excel" onclick="exportarExcel()" title="Exportar colaboradores (con filtros activos) a Excel">
+                        <i class="fas fa-file-excel"></i>
+                        Exportar a Excel
+                        <span id="exportarSpinner" class="exportar-spinner" style="display:none;"></span>
+                    </button>
+                    <span id="exportarFiltrosLabel" class="exportar-filtros-label" style="display:none;">
+                        <i class="bi bi-funnel-fill"></i> Con filtros aplicados
+                    </span>
+                    <?php endif; ?>
+
+                    <button id="btnLimpiarTodo" class="btn-limpiar-todo" onclick="limpiarTodosLosFiltros()" style="display:none;" title="Limpiar todos los filtros y restaurar tabla original">
+                        <i class="fas fa-broom"></i> Limpiar Filtros
+                    </button>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-hover colaboradores-table" id="tablaColaboradores">
                         <thead>
@@ -63,6 +81,14 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                 </th>
                                 <th data-column="nombre_completo" data-type="text">
                                     Nombre Completo
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="Cedula" data-type="text">
+                                    Cédula
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="codigo_inss" data-type="text">
+                                    Seguro INSS
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="cargo_nombre" data-type="list">
@@ -102,8 +128,20 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
                                     Último Día<br>Marcado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="fecha_salida_ultimo" data-type="daterange" class="col-fecha-salida" style="white-space: nowrap;">
+                                    Fecha de Salida
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
                                 <th data-column="tiempo_trabajado_dias" data-type="list">
                                     Tiempo Trabajado
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="cantidad_hijos" data-type="list" style="width: 80px; text-align: center;">
+                                    Hijos
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="talla_camisa" data-type="list" style="width: 100px; text-align: center;">
+                                    Talla Camisa
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="porcentaje_llenado" data-type="numrange" style="width: 100px; text-align: center;">
@@ -243,7 +281,8 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const canFinalize = <?= tienePermiso('gestion_colaboradores', 'finalizar_contrato', $cargoOperario) ? 'true' : 'false' ?>;
+        const canFinalize  = <?= tienePermiso('gestion_colaboradores', 'finalizar_contrato', $cargoOperario) ? 'true' : 'false' ?>;
+        const canExport    = <?= $puedeExportar ? 'true' : 'false' ?>;
     </script>
     <script src="js/colaboradores.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>

@@ -247,7 +247,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <?php endif; ?>
                                             </div>
 
-                                            <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
+                                            <!-- Selector de Sucursal: visible si tiene permiso de ver todas o si tiene más de una asignada -->
+                                            <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) || count($sucursalesPermitidas) > 1): ?>
                                                 <div class="col-md-6 mb-3">
                                                     <label for="selectSucursal" class="form-label">Sucursal del Problema *</label>
                                                     <select id="selectSucursal" class="form-select" 
@@ -261,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </div>
                                             <?php endif; ?>
 
-                                            <div class="<?= tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) ? 'col-md-6' : 'col-12' ?> mb-3">
+                                            <div class="<?= (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) || count($sucursalesPermitidas) > 1) ? 'col-md-6' : 'col-12' ?> mb-3">
                                                 <label for="area" class="form-label">Área Física *</label>
                                                 <input type="text" class="form-control" id="area" name="area"
                                                     placeholder="Ej: Area de preparación, Almacén, Caja..." required>

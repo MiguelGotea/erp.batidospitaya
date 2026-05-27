@@ -390,6 +390,16 @@ function actualizarColaborador($codOperario, $datos, $pestaña)
                 $valores[] = $datos['cumpleanos'];
             }
 
+            if (isset($datos['cantidad_hijos'])) {
+                $campos[] = 'cantidad_hijos = ?';
+                $valores[] = ($datos['cantidad_hijos'] !== '') ? intval($datos['cantidad_hijos']) : null;
+            }
+
+            if (isset($datos['talla_camisa'])) {
+                $campos[] = 'talla_camisa = ?';
+                $valores[] = ($datos['talla_camisa'] !== '') ? $datos['talla_camisa'] : null;
+            }
+
             if (isset($datos['usuario'])) {
                 $campos[] = 'usuario = ?';
                 $valores[] = $datos['usuario'];
