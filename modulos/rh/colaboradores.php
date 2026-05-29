@@ -278,6 +278,92 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
         </div>
     </div>
 
+    <!-- Modal de Ayuda Universal -->
+    <div class="modal fade" id="pageHelpModal" tabindex="-1" aria-labelledby="pageHelpModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header text-white" style="background-color: #0E544C;">
+                    <h5 class="modal-title" id="pageHelpModalLabel">
+                        <i class="fas fa-info-circle me-2"></i> Guía del Maestro de Colaboradores
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <!-- Sección 1 -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="border-bottom pb-2 fw-bold" style="color: #0E544C;">
+                                        <i class="fas fa-users me-2"></i> Gestión de Colaboradores
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Permite administrar el listado general de personal de <strong>Batidos Pitaya</strong>. 
+                                        Aquí puedes consultar datos personales, INSS, cédulas, contactos, cargos, estado y tallas de camisa.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Sección 2 -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="border-bottom pb-2 fw-bold" style="color: #51B8AC;">
+                                        <i class="fas fa-filter me-2"></i> Filtros de Cabecera
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Cada columna posee un embudo <i class="bi bi-funnel"></i> para filtrados personalizados de forma simultánea. 
+                                        Si deseas restaurar la vista original rápidamente, haz clic en el botón naranja <strong>Limpiar Filtros</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Sección 3 -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="border-bottom pb-2 fw-bold" style="color: #ca6f1e;">
+                                        <i class="fas fa-store me-2"></i> Historial e Inactivos
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        Para colaboradores inactivos, el sistema rescata automáticamente su última sucursal de operaciones bajo el sufijo <strong>(última tienda)</strong>, manteniendo el contexto histórico de auditorías.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Sección 4 -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="border-bottom pb-2 fw-bold" style="color: #28a745;">
+                                        <i class="fas fa-file-excel me-2"></i> Exportar Reportes
+                                    </h6>
+                                    <p class="small text-muted mb-0">
+                                        El botón <strong>Exportar a Excel</strong> genera un reporte asíncrono respetando fielmente el ordenamiento, orden por nulos de salida y filtros que tengas aplicados en pantalla.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info py-2 px-3 small mt-2 mb-0">
+                        <strong><i class="fas fa-user-slash me-1"></i> Terminación de Contrato:</strong>
+                        Los usuarios con permisos asignados pueden finalizar la relación laboral directamente desde el botón "Terminar" de la columna *Estado/Contrato*, registrando el motivo y fecha formal de salida.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #pageHelpModal {
+            z-index: 1060 !important;
+        }
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+    </style>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
