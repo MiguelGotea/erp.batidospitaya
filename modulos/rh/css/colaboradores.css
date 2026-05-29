@@ -89,15 +89,25 @@ html {
 
 
 /* Tabla */
+.table-responsive {
+    max-height: calc(100vh - 240px);
+    min-height: 350px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: white;
+}
+
 .colaboradores-table {
     background: white;
     border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0 !important;
 }
 
 .colaboradores-table thead {
-    background-color: #0E544C !important;
     color: white !important;
 }
 
@@ -106,11 +116,14 @@ html {
     padding: 14px 12px;
     border: none;
     border-right: 1px solid rgba(255, 255, 255, 0.2);
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 10;
     white-space: nowrap;
     font-size: 14px;
     background-color: #0E544C !important;
     color: white !important;
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15); /* Línea divisoria premium en la base del header pegajoso */
 }
 
 .colaboradores-table thead th:last-child {

@@ -10,7 +10,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo Almacén (Código 17 para Jefe de Almacén, 23 para Auxiliar)
 // También permitimos admin
-if (!verificarAccesoCargo([17, 23, 49])) {
+if (!verificarAccesoCargo([17, 23, 49, 61])) {
     header('Location: ../index.php');
     exit();
 }
@@ -20,6 +20,7 @@ if (!verificarAccesoCargo([17, 23, 49])) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,20 +34,23 @@ if (!verificarAccesoCargo([17, 23, 49])) {
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             margin-bottom: 25px;
         }
+
         .stat-card {
             background: white;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             border-left: 5px solid #51B8AC;
             transition: transform 0.2s;
         }
+
         .stat-card:hover {
             transform: translateY(-5px);
         }
+
         .stat-icon {
             font-size: 2.5rem;
             color: #51B8AC;
@@ -54,13 +58,14 @@ if (!verificarAccesoCargo([17, 23, 49])) {
         }
     </style>
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
 
     <div class="main-container">
         <div class="sub-container">
             <?php echo renderHeader($usuario, 'Módulo de Almacén'); ?>
-            
+
             <div class="container-fluid p-4">
                 <div class="module-header">
                     <h2>Bienvenido al Módulo de Almacén</h2>
@@ -80,7 +85,7 @@ if (!verificarAccesoCargo([17, 23, 49])) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-3">
                         <div class="stat-card d-flex align-items-center justify-content-between" style="border-left-color: #0E544C;">
                             <div>
@@ -119,4 +124,5 @@ if (!verificarAccesoCargo([17, 23, 49])) {
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
