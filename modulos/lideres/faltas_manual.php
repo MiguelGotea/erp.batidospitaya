@@ -1775,7 +1775,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
                                 <th>Fecha Registro</th>
                                 <th>Foto</th>
                                 <?php if ($puedeAprobar): ?>
-                                    <th></th>
+                                    <th>Acciones</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>

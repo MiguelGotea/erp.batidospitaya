@@ -57,28 +57,21 @@ if ($modoSeleccionDirecta) {
 
         // Verificar si el cargo actual tiene permiso para investigar este reclamo
         $puedeInvestigar = false;
-        if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin') {
+        if ($esAdmin) {
             $puedeInvestigar = true;
-        } else {
-            // Obtenemos el CodNivelesCargos del usuario actual
-            $stmt_cargo_user = $conn->prepare("SELECT CodNivelesCargos FROM AsignacionNivelesCargos WHERE CodOperario = ? AND (Fin IS NULL OR Fin >= CURDATE()) LIMIT 1");
-            $stmt_cargo_user->execute([$_SESSION['usuario_id']]);
-            $codCargoUser = $stmt_cargo_user->fetchColumn();
-
-            if ($codCargoUser) {
-                // Verificar en la tabla de cargos responsables
-                $queryResponsable = "SELECT count(*) FROM reclamos_cargos_responsables 
-                                   WHERE cod_niveles_cargos = :cod_cargo 
-                                   AND (grupo_id = :grupo_id OR tipo_id = :tipo_id)";
-                $stmtResp = $conn->prepare($queryResponsable);
-                $stmtResp->execute([
-                    ':cod_cargo' => $codCargoUser,
-                    ':grupo_id' => $reclamoPreSeleccionado['grupo_id'],
-                    ':tipo_id' => $reclamoPreSeleccionado['tipo_reclamo_id']
-                ]);
-                if ($stmtResp->fetchColumn() > 0) {
-                    $puedeInvestigar = true;
-                }
+        } elseif ($cargoOperario) {
+            // Usar $cargoOperario ya obtenido al inicio del script (evita re-consulta redundante)
+            $queryResponsable = "SELECT count(*) FROM reclamos_cargos_responsables 
+                               WHERE cod_niveles_cargos = :cod_cargo 
+                               AND (grupo_id = :grupo_id OR tipo_id = :tipo_id)";
+            $stmtResp = $conn->prepare($queryResponsable);
+            $stmtResp->execute([
+                ':cod_cargo' => $cargoOperario,
+                ':grupo_id' => $reclamoPreSeleccionado['grupo_id'],
+                ':tipo_id' => $reclamoPreSeleccionado['tipo_reclamo_id']
+            ]);
+            if ($stmtResp->fetchColumn() > 0) {
+                $puedeInvestigar = true;
             }
         }
 
@@ -563,7 +556,7 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
                         <div class="colaboradores-container mb-3" id="colaboradoresContainer">
                             <!-- Los colaboradores se agregarán aquí dinámicamente -->
                         </div>
-                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3" id="btnAddColaborador">
+                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3" id="btnAddColaborador" <?php if ($modoSeleccionDirecta && !$puedeInvestigar) echo 'disabled'; ?>>
                             <i class="fas fa-plus me-1"></i> Agregar Colaborador
                         </button>
                         <input type="hidden" name="colaboradores" id="colaboradoresHidden"
@@ -572,7 +565,7 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
 
                     <div class="mb-4">
                         <label class="form-label fw-bold text-muted text-uppercase small">Tipo de Reclamo (Determinado por Operaciones)</label>
-                        <select name="tipo_reclamo_operaciones" class="form-select">
+                        <select name="tipo_reclamo_operaciones" class="form-select" <?php if ($modoSeleccionDirecta && !$puedeInvestigar) echo 'disabled'; ?>>
                             <option value="">Seleccione una opción (si difiere del original)</option>
                             <option value="Producto fuera de estándar" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto fuera de estándar' ? 'selected' : ''; ?>>Producto fuera de estándar</option>
                             <option value="Producto con contaminante" <?php echo ($datosFormulario['tipo_reclamo_operaciones'] ?? '') === 'Producto con contaminante' ? 'selected' : ''; ?>>Producto con contaminante</option>
@@ -587,7 +580,7 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
 
                     <div class="mb-4">
                         <label class="form-label fw-bold text-muted text-uppercase small required">Resolución</label>
-                        <select name="resolucion" class="form-select" required>
+                        <select name="resolucion" class="form-select" <?php if ($modoSeleccionDirecta && !$puedeInvestigar) echo 'disabled'; else echo 'required'; ?>>
                             <option value="">Seleccione una opción</option>
                             <option value="Empresa" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Empresa' ? 'selected' : ''; ?>>Empresa</option>
                             <option value="Equipo de Tienda" <?php echo ($datosFormulario['resolucion'] ?? '') === 'Equipo de Tienda' ? 'selected' : ''; ?>>Equipo de Tienda</option>
@@ -600,18 +593,22 @@ unset($_SESSION['datos_formulario'], $_SESSION['errores']);
                     <div class="mb-4">
                         <label class="form-label fw-bold text-muted text-uppercase small required">Investigación</label>
                         <textarea name="investigacion" class="form-control" rows="4"
-                            required><?php echo htmlspecialchars($datosFormulario['investigacion'] ?? ''); ?></textarea>
+                            <?php if ($modoSeleccionDirecta && !$puedeInvestigar) echo 'disabled'; else echo 'required'; ?>><?php echo htmlspecialchars($datosFormulario['investigacion'] ?? ''); ?></textarea>
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label fw-bold text-muted text-uppercase small required">Plan de acción</label>
                         <textarea name="plan_accion" class="form-control" rows="4"
-                            required><?php echo htmlspecialchars($datosFormulario['plan_accion'] ?? ''); ?></textarea>
+                            <?php if ($modoSeleccionDirecta && !$puedeInvestigar) echo 'disabled'; else echo 'required'; ?>><?php echo htmlspecialchars($datosFormulario['plan_accion'] ?? ''); ?></textarea>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 mt-5">
                         <button type="button" class="btn btn-light border px-4" onclick="confirmCancel()">Cancelar</button>
+                        <?php if (!$modoSeleccionDirecta || $puedeInvestigar): ?>
                         <button type="submit" class="btn btn-primary px-4 shadow-sm">Guardar Reporte</button>
+                        <?php else: ?>
+                        <a href="reclamospend.php" class="btn btn-secondary px-4"><i class="fas fa-arrow-left me-2"></i>Volver</a>
+                        <?php endif; ?>
                     </div>
                 </form>
             </div>
