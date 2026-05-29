@@ -49,11 +49,13 @@ $modulosPorCargo = [
     47 => 'operarios',              // Vendedor Experto
     36 => 'operaciones',            // Líder General de Tiendas Managua
     49 => 'gerencia',               //Gerencia General 2
-    50 => 'experienciadigital',      // Especialista en experiencia Digital del cliente
-    53 => 'marketing',               // Coordinación de Mercadeo
+    50 => 'experienciadigital',     // Especialista en experiencia Digital del cliente
+    53 => 'marketing',              // Coordinación de Mercadeo
     54 => 'rh',                     // Analista de clima y cultura
     55 => 'operaciones',            // Líder General de Tiendas Managua
     52 => 'supervision',            // Auditor de Tiendas
+    61 => ['almacen'],              // Supervisor de Almacén y Despacho
+    56 => ['mantenimiento']         // Técnico de Mantenimiento
 ];
 
 // Si es admin o no tiene cargos definidos, redirigir al inicio
