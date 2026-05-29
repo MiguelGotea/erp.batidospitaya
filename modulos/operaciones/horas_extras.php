@@ -9,11 +9,29 @@ require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoUsuarioId = $usuario['CodNivelesCargos'];
+
+// Verificar permiso de vista para horas extras
+if (!tienePermiso('horas_extras_manual', 'vista', $cargoUsuarioId)) {
+    header('Location: ../../../index.php');
+    exit();
+}
+
+$puedeGestionar = tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuarioId);
+
 // Obtener todas las sucursales (el jefe de operaciones puede ver todas)
 $sucursales = obtenerTodasSucursales();
 
 // Procesar aprobación/denegación de horas extras
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aprobar_horas'])) {
+    if (!$puedeGestionar) {
+        $_SESSION['error'] = 'No tiene permiso para realizar esta acción';
+        header('Location: horas_extras.php?' . http_build_query([
+            'sucursal' => $_GET['sucursal'] ?? '',
+            'desde' => $_GET['desde'] ?? '',
+            'hasta' => $_GET['hasta'] ?? ''
+        ]));
+        exit();
+    }
     procesarAprobacionHorasExtras();
 }
 
@@ -558,7 +576,9 @@ function procesarAprobacionHorasExtras()
                             <th>Horas Extras (Horas . minutos)</th>
                             <th>Status</th>
                             <th>Observaciones</th>
-                            <th>Acciones</th>
+                            <?php if ($puedeGestionar): ?>
+                                <th>Acciones</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
@@ -573,23 +593,25 @@ function procesarAprobacionHorasExtras()
                                     </span>
                                 </td>
                                 <td><?= $he['observaciones'] ? htmlspecialchars($he['observaciones']) : '-' ?></td>
-                                <td style="text-align: center;">
-                                    <button type="button" onclick="mostrarModalAprobacion(
-                                        <?= $he['id_marcacion'] ?>, 
-                                        '<?= htmlspecialchars($he['nombre_operario']) ?>', 
-                                        '<?= htmlspecialchars($he['sucursal_nombre']) ?>', 
-                                        '<?= $he['fecha'] ?>', 
-                                        '<?= $he['hora_salida_programada'] ?>', 
-                                        '<?= $he['hora_salida_marcada'] ?>', 
-                                        <?= $he['horas_extras'] ?>, 
-                                        '<?= $he['estado'] ?>', 
-                                        '<?= htmlspecialchars($he['observaciones'] ?? '') ?>',
-                                        <?= $he['cod_operario'] ?>
-                                    )" class="btn btn-info">
-                                        <i class="fas fa-edit"></i>
-                                        <?= $he['estado'] == 'Pendiente' ? 'Aprobar' : 'Modificar' ?>
-                                    </button>
-                                </td>
+                                <?php if ($puedeGestionar): ?>
+                                    <td style="text-align: center;">
+                                        <button type="button" onclick="mostrarModalAprobacion(
+                                            <?= $he['id_marcacion'] ?>, 
+                                            '<?= htmlspecialchars($he['nombre_operario']) ?>', 
+                                            '<?= htmlspecialchars($he['sucursal_nombre']) ?>', 
+                                            '<?= $he['fecha'] ?>', 
+                                            '<?= $he['hora_salida_programada'] ?>', 
+                                            '<?= $he['hora_salida_marcada'] ?>', 
+                                            <?= $he['horas_extras'] ?>, 
+                                            '<?= $he['estado'] ?>', 
+                                            '<?= htmlspecialchars($he['observaciones'] ?? '') ?>',
+                                            <?= $he['cod_operario'] ?>
+                                        )" class="btn btn-info">
+                                            <i class="fas fa-edit"></i>
+                                            <?= $he['estado'] == 'Pendiente' ? 'Aprobar' : 'Modificar' ?>
+                                        </button>
+                                    </td>
+                                <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

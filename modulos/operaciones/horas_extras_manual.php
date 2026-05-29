@@ -47,7 +47,8 @@ if (isset($_GET['exportar_excel']) && $puedeExportar) {
             o.Apellido,
             o.Apellido2,
             s.nombre  AS sucursal_nombre,
-            c.CodContrato
+            c.CodContrato,
+            (SELECT MAX(c2.CodContrato) FROM Contratos c2 WHERE c2.CodOperario = o.CodOperario) AS ultimo_contrato
         FROM horas_extras_manual hem
         JOIN Operarios o       ON hem.cod_operario  = o.CodOperario
         LEFT JOIN sucursales s ON hem.cod_sucursal  = s.codigo
@@ -88,8 +89,8 @@ if (isset($_GET['exportar_excel']) && $puedeExportar) {
 
     echo '<table border="1"><tr>
         <th>CODIGO</th>
-        <th>SUCURSAL</th>
         <th>PERSONA</th>
+        <th>SUCURSAL</th>
         <th>FECHA</th>
         <th>HORAS</th>
         <th>ESTADO</th>
@@ -107,14 +108,16 @@ if (isset($_GET['exportar_excel']) && $puedeExportar) {
         ], fn($p) => trim($p) !== '');
         $nombreCompleto = htmlspecialchars(implode(' ', $partes));
 
-        $sucursalNombre = htmlspecialchars($r['sucursal_nombre'] ?? '');
-        $motivo = htmlspecialchars($r['motivo_solicitud'] ?? '');
-        $obs = htmlspecialchars($r['observaciones'] ?? '');
+        $sucursalNombre  = htmlspecialchars($r['sucursal_nombre'] ?? '');
+        $motivo          = htmlspecialchars($r['motivo_solicitud'] ?? '');
+        $obs             = htmlspecialchars($r['observaciones'] ?? '');
+        $ultimoContrato  = $r['ultimo_contrato'] ?? '';
+        $personaCell     = trim($ultimoContrato . ' ' . $nombreCompleto);
 
         echo "<tr>
             <td>{$r['CodContrato']}</td>
+            <td>{$personaCell}</td>
             <td>{$sucursalNombre}</td>
-            <td>{$nombreCompleto}</td>
             <td>{$r['fecha']}</td>
             <td>{$r['horas_extras']}</td>
             <td>{$r['estado']}</td>
@@ -242,12 +245,14 @@ $sucursalFijada = ($esRestringido && count($sucursales) === 1) ? $sucursales[0][
                             <?php if ($puedeVerObs): ?>
                                 <th>Observaciones</th>
                             <?php endif; ?>
-                            <th>Acciones</th>
+                            <?php if ($puedeGestionar): ?>
+                                <th>Acciones</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody id="historialBody">
                         <tr>
-                            <td colspan="10" class="text-center py-4 text-muted">
+                            <td colspan="<?= 7 + ($puedeVerObs ? 1 : 0) + ($puedeGestionar ? 1 : 0) ?>" class="text-center py-4 text-muted">
                                 <i class="fas fa-spinner fa-spin me-2"></i>Cargando...
                             </td>
                         </tr>

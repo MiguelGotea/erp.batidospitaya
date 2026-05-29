@@ -206,7 +206,10 @@ window.cargarDatos = function () {
     params.append('exportar_excel', '1');
     $('#linkExport').attr('href', '?' + params.toString());
 
-    $('#historialBody').html(`<tr><td colspan="10" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Cargando...</td></tr>`);
+    const puedeGestionar = window.canApprove || window.canReject || window.canEdit;
+    const totalCols = 7 + (window.puedeVerObs ? 1 : 0) + (puedeGestionar ? 1 : 0);
+
+    $('#historialBody').html(`<tr><td colspan="${totalCols}" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Cargando...</td></tr>`);
 
     $.get('ajax/horas_extras_manual_get_datos.php', filters, function (res) {
         if (res.success) {
@@ -214,7 +217,7 @@ window.cargarDatos = function () {
             paginaActual = 1;
             renderTabla();
         } else {
-            $('#historialBody').html(`<tr><td colspan="10" class="text-center text-danger py-3">Error: ${res.message}</td></tr>`);
+            $('#historialBody').html(`<tr><td colspan="${totalCols}" class="text-center text-danger py-3">Error: ${res.message}</td></tr>`);
         }
     }, 'json');
 };
@@ -234,11 +237,13 @@ function renderTabla() {
     const canReject = window.canReject;
     const canEdit = window.canEdit;
     const puedeVerObs = window.puedeVerObs;
+    const puedeGestionar = canApprove || canReject || canEdit;
+    const totalCols = 7 + (puedeVerObs ? 1 : 0) + (puedeGestionar ? 1 : 0);
 
     let html = '';
 
     if (pagina.length === 0) {
-        html = `<tr><td colspan="10" class="text-center py-5 text-muted">
+        html = `<tr><td colspan="${totalCols}" class="text-center py-5 text-muted">
             <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>No hay registros con los filtros seleccionados.
         </td></tr>`;
     } else {
@@ -282,6 +287,10 @@ function renderTabla() {
                 ? `<td>${row.observaciones || '<span class="text-muted">—</span>'}</td>`
                 : '';
 
+            const accionesCell = puedeGestionar
+                ? `<td class="text-nowrap">${acciones || '<span class="text-muted small">—</span>'}</td>`
+                : '';
+
             html += `<tr>
                 <td><strong>${row.operario_nombre || ''}</strong></td>
                 <td>${row.sucursal_nombre || ''}</td>
@@ -296,7 +305,7 @@ function renderTabla() {
                 <td>${estadoBadge}</td>
                 <td>${row.motivo_solicitud || '<span class="text-muted">—</span>'}</td>
                 ${obsCell}
-                <td class="text-nowrap">${acciones || '<span class="text-muted small">—</span>'}</td>
+                ${accionesCell}
             </tr>`;
         });
     }
