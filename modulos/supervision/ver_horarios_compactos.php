@@ -15,8 +15,8 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso
-if (!verificarAccesoCargo([21, 11, 5, 43, 27, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 52, 49])) {
+// Verificar acceso con sistema de permisos tools ERP
+if (!tienePermiso('horarios_programados', 'vista', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }
@@ -26,11 +26,14 @@ $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 // Obtener sucursales - lógica mejorada
-if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 49, 52])) {
+$puedeVerTodasSucursales = tienePermiso('horarios_programados', 'ver_todas_sucursales', $cargoOperario);
+$esFiltroSucursalPropia  = tienePermiso('horarios_programados', 'filtro_sucursal_propia', $cargoOperario);
+
+if ($puedeVerTodasSucursales) {
     // Admin y supervisores ven todas las sucursales
     $sucursales = obtenerSucursalesFisicas();
-} elseif (verificarAccesoCargo([5, 43, 27, 49])) {
-    // Cargos 5 y 27 solo ven sus sucursales asignadas
+} elseif ($esFiltroSucursalPropia) {
+    // Líderes: solo ven sus sucursales asignadas
     $sucursales = obtenerSucursalesUsuario($usuario['CodOperario']);
     // Para estos cargos, forzar la primera sucursal asignada solo si tienen una
     if (!empty($sucursales) && !isset($_GET['sucursal'])) {
@@ -45,7 +48,7 @@ if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 49, 52]
 // Determinar si mostrar el selector de sucursal:
 // - Usuarios con acceso global SIEMPRE lo ven
 // - Líderes/cargos restringidos: solo si tienen MÁS de una sucursal asignada
-$esRestringidoSucursal = verificarAccesoCargo([5, 43, 27, 49]) && !verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 54, 42, 33, 49, 52]);
+$esRestringidoSucursal = $esFiltroSucursalPropia && !$puedeVerTodasSucursales;
 $mostrarSelectSucursal = !$esRestringidoSucursal || count($sucursales) > 1;
 
 // Si no hay sucursales asignadas
@@ -66,7 +69,7 @@ if ($semanaActual) {
 
     // 2. Determinar rango según cargo
     $rangoAnterior = 1; // Por defecto 1 para colaboradores/líderes
-    if (verificarAccesoCargo([21, 8, 13, 11, 39, 30, 37, 28, 42, 33, 49, 52])) {
+    if (tienePermiso('horarios_programados', 'ver_semanas_anteriores', $cargoOperario)) {
         $rangoAnterior = 10; // Supervisores ven hasta 10 atrás
     }
 
@@ -84,7 +87,7 @@ if ($semanaActual) {
     }
 
     // 4. Buscar semana siguiente (si aplica según cargo)
-    if (verificarAccesoCargo([21, 8, 27, 5, 43, 13, 11, 39, 30, 37, 28, 42, 33, 49, 52])) {
+    if (tienePermiso('horarios_programados', 'ver_semana_siguiente', $cargoOperario)) {
         $numSiguiente = $semanaActual['numero_semana'] + 1;
         $stmt = $conn->prepare("SELECT * FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
         $stmt->execute([$numSiguiente]);
@@ -292,7 +295,6 @@ function obtenerOperariosConHorario($codSucursal, $idSemana)
         JOIN HorariosSemanalesOperaciones hso ON o.CodOperario = hso.cod_operario
         WHERE hso.cod_sucursal = ?
         AND hso.id_semana_sistema = ?
-        AND o.Operativo = 1
         ORDER BY o.Nombre, o.Apellido, o.Apellido2
     ");
     $stmt->execute([$codSucursal, $idSemana]);
@@ -345,7 +347,6 @@ function obtenerOperariosConHorarioLider($codSucursal, $idSemana)
         JOIN HorariosSemanales hs ON o.CodOperario = hs.cod_operario
         WHERE hs.cod_sucursal = ?
         AND hs.id_semana_sistema = ?
-        AND o.Operativo = 1
         ORDER BY o.Nombre, o.Apellido, o.Apellido2
     ");
     $stmt->execute([$codSucursal, $idSemana]);
@@ -536,15 +537,9 @@ function obtenerClaseCategoriaMejorada($nombreCategoria)
     return $clases[$nombreCategoria] ?? 'tr-categoria-sin-categoria';
 }
 
-// Determinar si mostrar botones de semana (para cargos 5 y 27)
-$mostrarBotonesSemana = false;
-if (verificarAccesoCargo([5, 43, 27, 49])) {
-    $mostrarBotonesSemana = true;
-    // Si también tiene otros permisos de supervisión, no mostrar botones
-    if (verificarAccesoCargo([21, 8, 13, 11, 39, 30, 37, 28, 42, 49, 52])) {
-        $mostrarBotonesSemana = false;
-    }
-}
+// Determinar si mostrar botones de semana simplificados (para líderes)
+// Solo se muestran a cargos con filtro_sucursal_propia que NO tengan ver_todas_sucursales
+$mostrarBotonesSemana = $esFiltroSucursalPropia && !$puedeVerTodasSucursales;
 
 /**
  * Obtiene TODOS los operarios que trabajan en una sucursal (principal + externos)
@@ -564,8 +559,7 @@ function obtenerTodosOperariosEnSucursal($codSucursal, $idSemana, $buscarEnLider
         SELECT DISTINCT o.CodOperario, o.Nombre, o.Apellido, o.Apellido2
         FROM Operarios o
         JOIN $tabla h ON o.CodOperario = h.cod_operario
-        WHERE o.Operativo = 1
-        AND h.id_semana_sistema = ?
+        WHERE h.id_semana_sistema = ?
         AND (
             -- Sucursal principal del horario
             h.cod_sucursal = ?
@@ -1504,7 +1498,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                         <div class="filter-group">
                             <label style="display:none;" for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="cambiarSucursal()">
-                                <?php if (verificarAccesoCargo([21, 11, 8, 13, 39, 30, 37, 28, 42, 33, 49, 52])): ?>
+                                <?php if ($puedeVerTodasSucursales): ?>
                                     <option value="todas" <?= $mostrarTodas ? 'selected' : '' ?>>Todas las sucursales</option>
                                 <?php endif; ?>
                                 <?php foreach ($sucursales as $sucursal): ?>
@@ -1527,7 +1521,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                         <?php endif; ?>
                     </div>
 
-                    <?php if (verificarAccesoCargo([8, 16, 41, 49])): ?>
+                    <?php if (tienePermiso('horarios_programados', 'exportar', $cargoOperario)): ?>
                         <div class="filter-group" style="flex-direction: row; align-items: flex-end;">
                             <a href="exportar_horarios_compactos.php?semana=<?= $semanaSeleccionada ?>&sucursal=<?= $sucursalSeleccionada ?>"
                                 class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
@@ -1563,6 +1557,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                                         </div>
                                     <?php endif; ?>
 
+                                    <?php if (!$data['esDeLider']): ?>
                                     <div class="table-container">
                                         <table>
                                             <thead>
@@ -1703,6 +1698,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                                             </tbody>
                                         </table>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -1727,6 +1723,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                                 </div>
                             <?php endif; ?>
 
+                            <?php if (!$usarHorariosLideres): ?>
                             <div class="table-container">
                                 <table id="horariosProgramados">
                                     <thead>
@@ -1871,6 +1868,7 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
                                     </tbody>
                                 </table>
                             </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     <?php endif; ?>
                 <?php elseif ($sucursalSeleccionada && !$semanaSeleccionada): ?>

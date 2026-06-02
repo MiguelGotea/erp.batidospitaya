@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Incluir configuración y verificar autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../../core/layout/menu_lateral.php';
@@ -9,17 +9,14 @@ require_once '../../../../core/permissions/permissions.php';
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([8, 11, 16, 21, 49, 52]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 11, 16, 21, 49, 52])) {
+$puede_ver = tienePermiso('auditoria_efectivo', 'vista', $cargoOperario);
+if (!$puede_ver) {
     header('Location: ../../../index.php');
     exit();
 }
-
-// Obtenemos el cargo principal usando la función de funciones.php
-$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 // Establecer zona horaria
@@ -76,7 +73,7 @@ if ($auditoriaId) {
 
 function mostrarListadoAuditorias($conn)
 {
-    global $usuario;
+    global $usuario, $cargoOperario;
     // Paginación
     $pagina = $_GET['pagina'] ?? 1;
     $porPagina = 10;
@@ -114,7 +111,7 @@ function mostrarListadoAuditorias($conn)
     </head>
 
     <body>
-        <?php echo renderMenuLateral($usuario['CodNivelesCargos']); ?>
+        <?php echo renderMenuLateral($cargoOperario); ?>
 
         <div class="main-container">
             <div class="sub-container">
@@ -195,7 +192,7 @@ function mostrarListadoAuditorias($conn)
 
 function mostrarDetalleAuditoria($conn, $id)
 {
-    global $usuario;
+    global $usuario, $cargoOperario;
     // Obtener datos principales
     $stmt = $conn->prepare("SELECT a.*, s.nombre as sucursal_nombre, 
                            CONCAT(o.Nombre, ' ', o.Apellido) as nombre_lider,
@@ -237,7 +234,7 @@ function mostrarDetalleAuditoria($conn, $id)
     </head>
 
     <body>
-        <?php echo renderMenuLateral($usuario['CodNivelesCargos']); ?>
+        <?php echo renderMenuLateral($cargoOperario); ?>
 
         <div class="main-container">
             <div class="sub-container">

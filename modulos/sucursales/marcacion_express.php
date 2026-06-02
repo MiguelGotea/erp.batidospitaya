@@ -296,6 +296,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
         exit();
     }
 
+    // CONFIRMACIÓN DE MARCACIÓN RECIENTE
+    $confirmado = isset($_POST['confirmado']) && $_POST['confirmado'] == '1';
+
+    // Omitir confirmación en sucursales 6 y 18 durante el horario de almuerzo (11:25 AM a 1:35 PM)
+    $omitirPorAlmuerzo = false;
+    if (($sucursalUsuario == 6 || $sucursalUsuario == 18) &&
+        (date('H:i:s') >= '11:25:00' && date('H:i:s') <= '13:35:00')
+    ) {
+        $omitirPorAlmuerzo = true;
+    }
+
+    if (!$confirmado && !$omitirPorAlmuerzo) {
+        $sqlRecent = "SELECT * FROM marcaciones 
+                      WHERE CodOperario = ? 
+                      ORDER BY fecha DESC, id DESC 
+                      LIMIT 1";
+        $stmtRecent = ejecutarConsulta($sqlRecent, [$codOperario]);
+        $recentMarc = $stmtRecent ? $stmtRecent->fetch() : false;
+
+        if ($recentMarc && $recentMarc['fecha'] == date('Y-m-d')) {
+            $horaSalidaReciente = $recentMarc['hora_salida'];
+
+            if (empty($horaSalidaReciente)) {
+                // CASO 1: Tiene entrada abierta hoy (sin salida) → posible marcación accidental de salida
+                // Mostrar confirmación si la entrada fue hace menos de 8.5 horas (30,600 seg = turno completo)
+                $tsEntrada = strtotime($recentMarc['fecha'] . ' ' . $recentMarc['hora_ingreso']);
+                $diffSeg = time() - $tsEntrada;
+                if ($diffSeg >= 0 && $diffSeg < 30600) {
+                    $_SESSION['marcacion_pendiente'] = [
+                        'clave'         => $clave,
+                        'nombre'        => obtenerNombreCompletoOperario($operario),
+                        'caso'          => 'salida_pendiente',
+                        'reciente_hora' => date('g:i:s a', $tsEntrada),
+                    ];
+                    header('Location: marcacion_express.php');
+                    exit();
+                }
+            } else {
+                // CASO 2: Ya tiene jornada completa hoy → va a crear una nueva entrada
+                $_SESSION['marcacion_pendiente'] = [
+                    'clave'             => $clave,
+                    'nombre'            => obtenerNombreCompletoOperario($operario),
+                    'caso'              => 'nueva_entrada_hoy',
+                    'reciente_hora'     => date('g:i:s a', strtotime($recentMarc['fecha'] . ' ' . $recentMarc['hora_ingreso'])),
+                    'reciente_hora_sal' => date('g:i:s a', strtotime($recentMarc['fecha'] . ' ' . $horaSalidaReciente)),
+                ];
+                header('Location: marcacion_express.php');
+                exit();
+            }
+        }
+    }
+
     $horaActual = date('H:i:s');
     $fechaActual = date('Y-m-d');
     $nombreCompleto = obtenerNombreCompletoOperario($operario);
@@ -337,18 +389,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
 
     if ($ultimaMarcacion) {
         if ($ultimaMarcacion['fecha'] == $fechaActual && $ultimaMarcacion['hora_salida'] === null) {
-            $horaEntrada = strtotime($ultimaMarcacion['hora_ingreso']);
-            $horaActualTimestamp = strtotime($horaActual);
-            $diferenciaMinutos = ($horaActualTimestamp - $horaEntrada) / 60;
-
-            if ($diferenciaMinutos < 30) {
-                $_SESSION['error'] = "{$nombreCompleto} ya marcó entrada recientemente. 
-                                     Debe esperar al menos 30 minutos para registrar la salida. 
-                                     Tiempo transcurrido: " . floor($diferenciaMinutos) . " minutos.";
-                header('Location: marcacion_express.php');
-                exit();
-            }
-
             $registrarEntrada = false;
         }
     }
@@ -657,6 +697,7 @@ if ($dispositivoAutorizado) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -688,7 +729,7 @@ if ($dispositivoAutorizado) {
             padding: 0;
             font-family: 'Outfit', sans-serif;
         }
-        
+
         body {
             background: var(--background-gradient);
             color: var(--text-main);
@@ -708,11 +749,11 @@ if ($dispositivoAutorizado) {
             border-radius: 20px;
             padding: 40px 30px;
             text-align: center;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.6);
             animation: fadeIn 0.5s ease-out;
         }
-        
+
         .lock-icon {
             font-size: 4rem;
             color: var(--danger-color);
@@ -787,7 +828,7 @@ if ($dispositivoAutorizado) {
             text-align: center;
             margin-bottom: 25px;
         }
-        
+
         .header-info h1 {
             color: var(--primary-color);
             font-weight: 700;
@@ -901,7 +942,7 @@ if ($dispositivoAutorizado) {
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
             transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
             user-select: none;
         }
@@ -932,7 +973,7 @@ if ($dispositivoAutorizado) {
             background: #f9ebea;
             color: var(--danger-color);
         }
-        
+
         .key.action-clear:hover {
             background: var(--danger-color);
             color: white;
@@ -965,7 +1006,8 @@ if ($dispositivoAutorizado) {
         }
 
         .btn-marcar.salida {
-            background: #e67e22; /* Color naranja para salida */
+            background: #e67e22;
+            /* Color naranja para salida */
         }
 
         .btn-marcar:disabled {
@@ -1129,7 +1171,7 @@ if ($dispositivoAutorizado) {
             align-items: center;
             animation: fadeIn 0.3s;
         }
-        
+
         .modal-content {
             background: white;
             padding: 35px;
@@ -1138,17 +1180,17 @@ if ($dispositivoAutorizado) {
             max-width: 450px;
             width: 90%;
             box-shadow: 0 20px 50px rgba(14, 84, 76, 0.15);
-            border: 1px solid rgba(255,255,255,0.8);
+            border: 1px solid rgba(255, 255, 255, 0.8);
             position: relative;
             animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        
+
         .modal-icon {
             font-size: 3.5rem;
             color: var(--success-color);
             margin-bottom: 15px;
         }
-        
+
         .modal-title {
             color: var(--primary-color);
             font-size: 1.5rem;
@@ -1182,7 +1224,7 @@ if ($dispositivoAutorizado) {
             border-left: 4px solid var(--secondary-color);
             text-align: left;
         }
-        
+
         .info-operario p {
             margin: 6px 0;
             color: var(--primary-color);
@@ -1202,40 +1244,81 @@ if ($dispositivoAutorizado) {
             width: 100%;
             transition: all 0.3s;
         }
-        
+
         .btn-aceptar:hover {
             background: var(--primary-color);
         }
 
         /* Animations */
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes zoomIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
         }
 
         @keyframes pulse-dot {
-            0% { transform: scale(0.95); opacity: 0.5; }
-            50% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.95); opacity: 0.5; }
+            0% {
+                transform: scale(0.95);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.95);
+                opacity: 0.5;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <?php if (!$dispositivoAutorizado): ?>
@@ -1254,12 +1337,12 @@ if ($dispositivoAutorizado) {
         <div class="workspace">
             <div class="container">
                 <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                
+
                 <div class="header-info">
                     <div class="sucursal-badge">
                         <i class="fas fa-store"></i> <?= htmlspecialchars($sucursalNombre) ?>
                     </div>
-                    <h1>Marcación Express</h1>
+                    <h1>Marcación</h1>
                     <div class="live-clock" id="liveClock">Cargando fecha y hora...</div>
                 </div>
 
@@ -1273,8 +1356,8 @@ if ($dispositivoAutorizado) {
 
                 <form id="formMarcacion" method="POST" autocomplete="off">
                     <div class="password-display-wrapper">
-                        <input type="password" id="clave" name="clave" class="password-display" 
-                               placeholder="••••" readonly required>
+                        <input type="password" id="clave" name="clave" class="password-display"
+                            placeholder="••••" readonly required inputmode="none">
                         <button type="button" class="toggle-visibility" id="btnToggleVis" title="Mostrar/Ocultar">
                             <i class="fas fa-eye-slash" id="eyeIcon"></i>
                         </button>
@@ -1299,13 +1382,13 @@ if ($dispositivoAutorizado) {
                     <span><i class="fas fa-users"></i> En Turno</span>
                     <span class="count-badge"><?= $totalEnTurno ?> activos</span>
                 </h2>
-                
+
                 <div class="lista-turno">
                     <?php if ($totalEnTurno > 0): ?>
                         <?php foreach ($colaboradoresEnTurno as $colaborador):
                             $nombreCompleto = obtenerNombreCompletoOperario($colaborador);
                             $horaEntrada = formatoHoraAmigable($colaborador['hora_entrada_formateada']);
-                            ?>
+                        ?>
                             <div class="item-turno">
                                 <div class="colaborador-info">
                                     <div class="avatar-colaborador">
@@ -1356,17 +1439,127 @@ if ($dispositivoAutorizado) {
             </div>
         </div>
 
+        <!-- Modal de Pre-Confirmación por marcación reciente -->
+        <div class="modal" id="modalPreConfirmacion" style="display: none;">
+            <div class="modal-content" style="border-top: 5px solid #e67e22; max-width: 450px; position: relative;">
+                <button class="modal-close" id="btnCerrarPreConfirmacion">&times;</button>
+                <div class="modal-icon" style="color: #e67e22; font-size: 3.5rem; margin-bottom: 15px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="modal-title" style="color: #d35400; font-size: 1.5rem; font-weight: 700; margin-bottom: 15px;">
+                    ¡Marcación Reciente Detectada!
+                </div>
+                <div class="modal-mensaje" id="preConfirmacionMensaje" style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; color: var(--text-main); text-align: center;">
+                    <!-- Mensaje dinámico -->
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; width: 100%;">
+                    <button class="btn-aceptar" id="btnPreConfirmarAceptar" style="background: #e67e22; margin-top: 0; flex: 1; min-width: 120px;" disabled>Confirmar (3s)</button>
+                    <button class="btn-aceptar" id="btnPreConfirmarCancelar" style="background: #7f8c8d; margin-top: 0; flex: 1; min-width: 120px;">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <?php if (isset($_SESSION['marcacion_pendiente'])): ?>
+            <form id="formConfirmarPendiente" method="POST" style="display:none;">
+                <input type="hidden" name="clave" value="<?= htmlspecialchars($_SESSION['marcacion_pendiente']['clave']) ?>">
+                <input type="hidden" name="confirmado" value="1">
+            </form>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const modal = document.getElementById('modalPreConfirmacion');
+                    const mensaje = document.getElementById('preConfirmacionMensaje');
+                    const btnAceptar = document.getElementById('btnPreConfirmarAceptar');
+                    const btnCancelar = document.getElementById('btnPreConfirmarCancelar');
+                    const btnCerrar = document.getElementById('btnCerrarPreConfirmacion');
+
+                    const pendienteInfo = <?= json_encode($_SESSION['marcacion_pendiente']) ?>;
+                    const nombre = pendienteInfo.nombre;
+
+                    if (pendienteInfo.caso === 'nueva_entrada_hoy') {
+                        document.querySelector('#modalPreConfirmacion .modal-title').textContent = '¡Ya tienes jornada registrada hoy!';
+                        mensaje.innerHTML = `<strong>¡Atención, ${nombre}!</strong><br><br>` +
+                            `Ya tienes una jornada completa registrada hoy:<br>` +
+                            `<strong style="color:var(--primary-color);">Entrada:</strong> ${pendienteInfo.reciente_hora} &nbsp;|&nbsp; ` +
+                            `<strong style="color:#e67e22;">Salida:</strong> ${pendienteInfo.reciente_hora_sal}<br><br>` +
+                            `¿Deseas registrar una <strong style="color: #e67e22;">NUEVA ENTRADA</strong> para hoy?`;
+                    } else {
+                        mensaje.innerHTML = `<strong>¡Atención, ${nombre}!</strong><br><br>` +
+                            `Registraste tu <strong style="color:var(--primary-color);">ENTRADA</strong> a las <strong>${pendienteInfo.reciente_hora}</strong>.<br><br>` +
+                            `¿Estás seguro de que deseas registrar tu <strong style="color: #e67e22;">SALIDA</strong> ahora?`;
+                    }
+
+                    modal.style.display = 'flex';
+
+                    let countdown = 3;
+                    btnAceptar.disabled = true;
+                    btnAceptar.textContent = `Confirmar (${countdown}s)`;
+                    btnAceptar.style.opacity = '0.6';
+                    btnAceptar.style.cursor = 'not-allowed';
+
+                    const interval = setInterval(() => {
+                        countdown--;
+                        if (countdown > 0) {
+                            btnAceptar.textContent = `Confirmar (${countdown}s)`;
+                        } else {
+                            clearInterval(interval);
+                            btnAceptar.disabled = false;
+                            btnAceptar.style.opacity = '1';
+                            btnAceptar.style.cursor = 'pointer';
+                            btnAceptar.textContent = 'Confirmar';
+                        }
+                    }, 1000);
+
+                    btnAceptar.addEventListener('click', function() {
+                        modal.style.display = 'none';
+                        document.getElementById('formConfirmarPendiente').submit();
+                    });
+
+                    const closeAction = () => {
+                        clearInterval(interval);
+                        modal.style.display = 'none';
+                        // Limpiar campos del formulario original
+                        const keyInput = document.getElementById('clave');
+                        if (keyInput) keyInput.value = '';
+                        // Resetear botón de marcación original y matchedUser
+                        const btnMarcar = document.getElementById('btnMarcar');
+                        if (btnMarcar) {
+                            btnMarcar.textContent = 'Marcar Entrada/Salida';
+                            btnMarcar.className = 'btn-marcar';
+                            btnMarcar.disabled = true;
+                        }
+                        const matchedUser = document.getElementById('matchedUser');
+                        if (matchedUser) matchedUser.style.opacity = '0';
+                    };
+
+                    btnCancelar.addEventListener('click', closeAction);
+                    btnCerrar.addEventListener('click', closeAction);
+
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) {
+                            closeAction();
+                        }
+                    });
+                });
+            </script>
+            <?php unset($_SESSION['marcacion_pendiente']); ?>
+        <?php endif; ?>
+
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 // Reloj en tiempo real
                 function updateClock() {
                     const clockEl = document.getElementById('liveClock');
                     if (!clockEl) return;
-                    
+
                     const now = new Date();
-                    const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    const optionsDate = {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    };
                     const dateStr = now.toLocaleDateString('es-ES', optionsDate);
-                    
+
                     let hours = now.getHours();
                     const minutes = String(now.getMinutes()).padStart(2, '0');
                     const seconds = String(now.getSeconds()).padStart(2, '0');
@@ -1374,7 +1567,7 @@ if ($dispositivoAutorizado) {
                     hours = hours % 12;
                     hours = hours ? hours : 12; // 0 deberia ser 12
                     const timeStr = `${hours}:${minutes}:${seconds} ${ampm}`;
-                    
+
                     clockEl.textContent = `${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} | ${timeStr}`;
                 }
                 updateClock();
@@ -1426,12 +1619,12 @@ if ($dispositivoAutorizado) {
                     keysLayout.forEach(row => {
                         const rowDiv = document.createElement('div');
                         rowDiv.className = 'keyboard-row';
-                        
+
                         row.forEach(keyChar => {
                             const keyBtn = document.createElement('button');
                             keyBtn.type = 'button';
                             keyBtn.className = 'key';
-                            
+
                             // Estilizados y layouts especiales
                             if (keyChar === 'Shift') {
                                 keyBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
@@ -1500,10 +1693,11 @@ if ($dispositivoAutorizado) {
 
                 // Debounce e Identificación en tiempo real del operario
                 let checkTimeout;
+
                 function handlePasswordChange() {
                     clearTimeout(checkTimeout);
                     const val = passwordInput.value;
-                    
+
                     if (val.length < 3) {
                         matchedUserDiv.style.opacity = '0';
                         btnMarcar.textContent = 'Marcar Entrada/Salida';
@@ -1511,39 +1705,39 @@ if ($dispositivoAutorizado) {
                         btnMarcar.disabled = true;
                         return;
                     }
-                    
+
                     checkTimeout = setTimeout(() => {
                         const formData = new FormData();
                         formData.append('clave', val);
-                        
+
                         fetch('ajax/marcacion_express_verificar.php', {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                matchedUserDiv.innerHTML = `<i class="fas fa-user-check" style="margin-right: 6px; color: var(--success-color);"></i> ${data.nombre}`;
-                                matchedUserDiv.style.opacity = '1';
-                                
-                                if (data.tipoMarcacion === 'salida') {
-                                    btnMarcar.textContent = `Marcar Salida (${data.nombre})`;
-                                    btnMarcar.className = 'btn-marcar salida';
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    matchedUserDiv.innerHTML = `<i class="fas fa-user-check" style="margin-right: 6px; color: var(--success-color);"></i> ${data.nombre}`;
+                                    matchedUserDiv.style.opacity = '1';
+
+                                    if (data.tipoMarcacion === 'salida') {
+                                        btnMarcar.textContent = `Marcar Salida (${data.nombre})`;
+                                        btnMarcar.className = 'btn-marcar salida';
+                                    } else {
+                                        btnMarcar.textContent = `Marcar Entrada (${data.nombre})`;
+                                        btnMarcar.className = 'btn-marcar entrada';
+                                    }
+                                    btnMarcar.disabled = false;
                                 } else {
-                                    btnMarcar.textContent = `Marcar Entrada (${data.nombre})`;
-                                    btnMarcar.className = 'btn-marcar entrada';
+                                    matchedUserDiv.style.opacity = '0';
+                                    btnMarcar.textContent = 'Marcar Entrada/Salida';
+                                    btnMarcar.className = 'btn-marcar';
+                                    btnMarcar.disabled = true;
                                 }
-                                btnMarcar.disabled = false;
-                            } else {
-                                matchedUserDiv.style.opacity = '0';
-                                btnMarcar.textContent = 'Marcar Entrada/Salida';
-                                btnMarcar.className = 'btn-marcar';
-                                btnMarcar.disabled = true;
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Error verificando:', err);
-                        });
+                            })
+                            .catch(err => {
+                                console.error('Error verificando:', err);
+                            });
                     }, 250);
                 }
 
@@ -1578,16 +1772,16 @@ if ($dispositivoAutorizado) {
                     const modal = document.getElementById('modalConfirmacion');
                     const mensaje = document.getElementById('modalMensaje');
                     const infoOperario = document.getElementById('modalInfoOperario');
-                    
+
                     const marcacionInfo = <?= json_encode($_SESSION['marcacion_mensaje']) ?>;
-                    
+
                     let tipoTexto = marcacionInfo.tipo === 'entrada' ? 'ENTRADA' : 'SALIDA';
                     let statusColor = marcacionInfo.tipo === 'entrada' ? '#2ecc71' : '#e67e22';
 
                     let mensajeHTML = `<span style="font-weight: 700; font-size: 1.3rem; color: ${statusColor};">` +
-                                     `${tipoTexto} REGISTRADA</span><br>` +
-                                     `a las <strong style="font-size: 1.2rem; color: var(--primary-color);">${marcacionInfo.hora}</strong>`;
-                    
+                        `${tipoTexto} REGISTRADA</span><br>` +
+                        `a las <strong style="font-size: 1.2rem; color: var(--primary-color);">${marcacionInfo.hora}</strong>`;
+
                     // Tardanza o minuto de gracia
                     if (marcacionInfo.sucursal_codigo == 6 || marcacionInfo.sucursal_codigo == 18) {
                         if (marcacionInfo.tipo === 'entrada') {
@@ -1615,10 +1809,10 @@ if ($dispositivoAutorizado) {
 
                     // Resumen mensual
                     mensajeHTML += `<br><br><div style="border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; font-size: 0.9rem;">` +
-                                   `<strong>Resumen de Asistencia (Mes Actual):</strong><br>` +
-                                   `• Tardanzas: ${marcacionInfo.tardanzas_ejecutadas ?? 0}<br>` +
-                                   `• Omisiones: ${marcacionInfo.omisiones_mes ?? 0}<br>` +
-                                   `• Faltas: ${marcacionInfo.faltas_ejecutadas ?? 0}</div>`;
+                        `<strong>Resumen de Asistencia (Mes Actual):</strong><br>` +
+                        `• Tardanzas: ${marcacionInfo.tardanzas_ejecutadas ?? 0}<br>` +
+                        `• Omisiones: ${marcacionInfo.omisiones_mes ?? 0}<br>` +
+                        `• Faltas: ${marcacionInfo.faltas_ejecutadas ?? 0}</div>`;
 
                     mensaje.innerHTML = mensajeHTML;
 
@@ -1638,7 +1832,7 @@ if ($dispositivoAutorizado) {
 
                     document.getElementById('btnAceptar').addEventListener('click', closeActions);
                     document.getElementById('btnCerrarModal').addEventListener('click', closeActions);
-                    
+
                     // Auto-cerrar tras 8 segundos para que quede disponible para el siguiente
                     setTimeout(closeActions, 8000);
                 });
@@ -1646,28 +1840,36 @@ if ($dispositivoAutorizado) {
 
             <!-- Captura DVR silenciosa -->
             <script>
-                (function () {
+                (function() {
                     var _dvrPendiente = <?= json_encode($_SESSION['dvr_captura_pendiente'] ?? null) ?>;
                     if (_dvrPendiente && _dvrPendiente.id_marcacion > 0) {
                         try {
                             fetch('/modulos/sucursales/ajax/dvr_capturar_marcacion.php', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
                                 body: JSON.stringify({
                                     id_marcacion: _dvrPendiente.id_marcacion,
-                                    tipo:         _dvrPendiente.tipo,
+                                    tipo: _dvrPendiente.tipo,
                                     cod_sucursal: _dvrPendiente.cod_sucursal
                                 }),
                                 keepalive: true
-                            }).catch(function () { /* silencioso */ });
-                        } catch (e) { /* silencioso */ }
+                            }).catch(function() {
+                                /* silencioso */
+                            });
+                        } catch (e) {
+                            /* silencioso */
+                        }
                     }
                 })();
             </script>
-            <?php unset($_SESSION['marcacion_mensaje']); unset($_SESSION['dvr_captura_pendiente']); ?>
+            <?php unset($_SESSION['marcacion_mensaje']);
+            unset($_SESSION['dvr_captura_pendiente']); ?>
         <?php endif; ?>
 
     <?php endif; ?>
 
 </body>
+
 </html>

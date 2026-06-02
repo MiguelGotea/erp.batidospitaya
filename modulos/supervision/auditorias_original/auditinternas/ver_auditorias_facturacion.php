@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Incluir configuración y verificar autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 // Antes llamaba a ../funciones.php de auditora
@@ -8,17 +8,14 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: ant
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([8, 11, 16, 21, 49, 52]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 11, 16, 21, 49, 52])) {
+$puede_ver = tienePermiso('auditoria_efectivo', 'vista', $cargoOperario);
+if (!$puede_ver) {
     header('Location: ../../../index.php');
     exit();
 }
-
-// Obtenemos el cargo principal usando la función de funciones.php
-$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 //******************************Estándar para header, termina******************************
 
 // Configuración de zona horaria
