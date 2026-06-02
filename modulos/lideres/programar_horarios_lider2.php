@@ -5,6 +5,9 @@
 //error_reporting(E_ALL);
 
 require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 if (!isset($_SESSION['operarios_seleccionados'])) {
     $_SESSION['operarios_seleccionados'] = [];
 }
@@ -13,6 +16,7 @@ if (!isset($_SESSION['operarios_seleccionados'])) {
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo 'supervision'
 verificarAccesoCargo([5, 43, 16, 49]);
 
@@ -750,6 +754,11 @@ function obtenerCategoriaPorDefecto()
     <title>Programar Horarios - Líder de Sucursal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
     <style>
         /* Mantener el mismo CSS que el original */
         * {
@@ -2465,50 +2474,13 @@ function obtenerCategoriaPorDefecto()
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-                <div class="buttons-container">
-                    <a href="faltas_manual.php"
-                        class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltas_manual.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-user-times"></i> <span class="btn-text">Faltas/Ausencias</span>
-                    </a>
-                    <a href="../operaciones/tardanzas_manual.php"
-                        class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == '../operaciones/tardanzas_manual.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-user-clock"></i> <span class="btn-text">Tardanzas</span>
-                    </a>
-                    <a href="programar_horarios_lider2.php"
-                        class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'programar_horarios_lider2.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-user-clock"></i> <span class="btn-text">Generar Horarios</span>
-                    </a>
-                </div>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Programar Horarios'); ?>
 
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= false ?
-                            strtoupper(substr($usuario['nombre'], 0, 1)) :
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div style="display: flex; flex-direction: column; line-height: 1.2;">
-                        <div style="font-weight: bold;">
-                            <?= false ?
-                                htmlspecialchars($usuario['nombre']) :
-                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                        </div>
-                        <small style="color: #666;">
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="../../../index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+            <div class="container">
 
         <?php if (isset($_SESSION['exito'])): ?>
             <div class="alert alert-success">
@@ -3024,6 +2996,8 @@ function obtenerCategoriaPorDefecto()
             </div>
         <?php endif; ?>
     </div>
+        </div> <!-- Fin de sub-container -->
+    </div> <!-- Fin de main-container -->
 
     <!-- Agregar el modal para comentarios al final del body -->
     <div id="commentModal" class="comment-modal">
@@ -4971,6 +4945,8 @@ function obtenerCategoriaPorDefecto()
             actualizarHiddenInput(prefix, 'salida');
         }
     </script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

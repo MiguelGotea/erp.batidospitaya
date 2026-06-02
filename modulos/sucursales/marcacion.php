@@ -292,6 +292,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
+        // CONFIRMACIÓN DE MARCACIÓN RECIENTE
+        $confirmado = isset($_POST['confirmado']) && $_POST['confirmado'] == '1';
+
+        // Omitir confirmación en sucursales 6 y 18 durante el horario de almuerzo (11:25 AM a 1:35 PM)
+        $omitirPorAlmuerzo = false;
+        if (($sucursalUsuario == 6 || $sucursalUsuario == 18) &&
+            (date('H:i:s') >= '11:25:00' && date('H:i:s') <= '13:35:00')
+        ) {
+            $omitirPorAlmuerzo = true;
+        }
+
+        if (!$confirmado && !$omitirPorAlmuerzo) {
+            $sqlRecent = "SELECT * FROM marcaciones 
+                          WHERE CodOperario = ? 
+                          ORDER BY fecha DESC, id DESC 
+                          LIMIT 1";
+            $stmtRecent = ejecutarConsulta($sqlRecent, [$codOperario]);
+            $recentMarc = $stmtRecent ? $stmtRecent->fetch() : false;
+
+            if ($recentMarc && $recentMarc['fecha'] == date('Y-m-d')) {
+                $horaSalidaReciente = $recentMarc['hora_salida'];
+
+                if (empty($horaSalidaReciente)) {
+                    // CASO 1: Tiene entrada abierta hoy (sin salida) → posible marcación accidental de salida
+                    // Mostrar confirmación si la entrada fue hace menos de 8.5 horas (30,600 seg = turno completo)
+                    $tsEntrada = strtotime($recentMarc['fecha'] . ' ' . $recentMarc['hora_ingreso']);
+                    $diffSeg = time() - $tsEntrada;
+                    if ($diffSeg >= 0 && $diffSeg < 30600) {
+                        $_SESSION['marcacion_pendiente'] = [
+                            'usuario'       => $usuario,
+                            'clave'         => $clave,
+                            'nombre'        => $operario['Nombre'] . ' ' . $operario['Apellido'],
+                            'caso'          => 'salida_pendiente',
+                            'reciente_hora' => date('g:i:s a', $tsEntrada),
+                        ];
+                        header('Location: marcacion.php');
+                        exit();
+                    }
+                } else {
+                    // CASO 2: Ya tiene jornada completa hoy → va a crear una nueva entrada
+                    $_SESSION['marcacion_pendiente'] = [
+                        'usuario'           => $usuario,
+                        'clave'             => $clave,
+                        'nombre'            => $operario['Nombre'] . ' ' . $operario['Apellido'],
+                        'caso'              => 'nueva_entrada_hoy',
+                        'reciente_hora'     => date('g:i:s a', strtotime($recentMarc['fecha'] . ' ' . $recentMarc['hora_ingreso'])),
+                        'reciente_hora_sal' => date('g:i:s a', strtotime($recentMarc['fecha'] . ' ' . $horaSalidaReciente)),
+                    ];
+                    header('Location: marcacion.php');
+                    exit();
+                }
+            }
+        }
+
         $horaActual = date('H:i:s');
         $fechaActual = date('Y-m-d');
         $nombreCompleto = $operario['Nombre'] . ' ' . $operario['Apellido'];
@@ -333,18 +387,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($ultimaMarcacion) {
             if ($ultimaMarcacion['fecha'] == $fechaActual && $ultimaMarcacion['hora_salida'] === null) {
-                $horaEntrada = strtotime($ultimaMarcacion['hora_ingreso']);
-                $horaActualTimestamp = strtotime($horaActual);
-                $diferenciaMinutos = ($horaActualTimestamp - $horaEntrada) / 60;
-
-                if ($diferenciaMinutos < 30) {
-                    $_SESSION['error'] = "{$operario['Nombre']} {$operario['Apellido']} ya marcó entrada recientemente. 
-                                         Debe esperar al menos 30 minutos para registrar la salida. 
-                                         Tiempo transcurrido: " . floor($diferenciaMinutos) . " minutos.";
-                    header('Location: marcacion.php');
-                    exit();
-                }
-
                 $registrarEntrada = false;
             }
         }
@@ -689,6 +731,7 @@ if ($faltasPendientes < 0)
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -704,44 +747,44 @@ if ($faltasPendientes < 0)
             padding: 0;
             font-family: 'Calibri', sans-serif;
         }
-        
+
         body {
             background-color: #F6F6F6;
             color: #333;
         }
-        
+
         .container {
             max-width: 500px;
             margin: 50px auto;
             padding: 20px;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         .logo {
             height: 50px;
             display: block;
             margin: 0 auto 20px;
         }
-        
+
         h1 {
             text-align: center;
             color: #0E544C;
             margin-bottom: 30px;
         }
-        
+
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 8px;
             color: #0E544C;
             font-weight: bold;
         }
-        
+
         input[type="text"],
         input[type="password"] {
             width: 100%;
@@ -751,13 +794,13 @@ if ($faltasPendientes < 0)
             font-size: 16px;
             transition: border 0.3s;
         }
-        
+
         input[type="text"]:focus,
         input[type="password"]:focus {
             border-color: #51B8AC;
             outline: none;
         }
-        
+
         .btn-marcar {
             background: #51B8AC;
             color: white;
@@ -771,11 +814,11 @@ if ($faltasPendientes < 0)
             transition: background 0.3s;
             margin-top: 10px;
         }
-        
+
         .btn-marcar:hover {
             background: #0E544C;
         }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -783,12 +826,12 @@ if ($faltasPendientes < 0)
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             justify-content: center;
             align-items: center;
         }
-        
+
         .modal-content {
             background: white;
             padding: 30px;
@@ -796,21 +839,21 @@ if ($faltasPendientes < 0)
             text-align: center;
             max-width: 400px;
             width: 90%;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-        
+
         .modal-icon {
             font-size: 3rem;
             color: #51B8AC;
             margin-bottom: 20px;
         }
-        
+
         .modal-mensaje {
             font-size: 1.2rem;
             margin-bottom: 20px;
             color: #333;
         }
-        
+
         .btn-aceptar {
             background: #51B8AC;
             color: white;
@@ -821,11 +864,11 @@ if ($faltasPendientes < 0)
             cursor: pointer;
             transition: background 0.3s;
         }
-        
+
         .btn-aceptar:hover {
             background: #0E544C;
         }
-        
+
         .info-operario {
             background: #f0f9f8;
             padding: 15px;
@@ -833,12 +876,12 @@ if ($faltasPendientes < 0)
             margin-top: 20px;
             border-left: 4px solid #51B8AC;
         }
-        
+
         .info-operario p {
             margin: 5px 0;
             color: #0E544C;
         }
-        
+
         .error {
             background-color: #fff3e0;
             color: #e65100;
@@ -849,12 +892,12 @@ if ($faltasPendientes < 0)
             align-items: center;
             border-left: 4px solid #ff9800;
         }
-        
+
         .error i {
             margin-right: 10px;
             font-size: 1.2em;
         }
-        
+
         .modal-close {
             position: absolute;
             top: 10px;
@@ -865,7 +908,7 @@ if ($faltasPendientes < 0)
             cursor: pointer;
             color: #666;
         }
-        
+
         .btn-regresar {
             display: inline-block;
             background: #6c757d;
@@ -878,20 +921,20 @@ if ($faltasPendientes < 0)
             text-align: center;
             width: auto;
         }
-        
+
         .btn-regresar:hover {
             background: #5a6268;
             color: white;
         }
-        
+
         .btn-regresar i {
             margin-right: 5px;
         }
-        
+
         .oculto {
             display: none;
         }
-        
+
         .mensaje-gracia {
             color: #6f42c1 !important;
             font-weight: bold;
@@ -901,131 +944,140 @@ if ($faltasPendientes < 0)
             border-left: 4px solid #6f42c1;
             margin: 10px 0;
         }
-        
+
         .batido-icono {
             color: #e83e8c;
             margin-right: 5px;
         }
-        
+
         /* Estilos para la sección de turno */
-.seccion-turno {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    font-size: 13px !important;
-}
+        .seccion-turno {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            font-size: 13px !important;
+        }
 
-.lista-turno::-webkit-scrollbar {
-    width: 6px;
-}
+        .lista-turno::-webkit-scrollbar {
+            width: 6px;
+        }
 
-.lista-turno::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
+        .lista-turno::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
 
-.lista-turno::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
+        .lista-turno::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
 
-.lista-turno::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
-}
+        .lista-turno::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
 
-.item-turno {
-    transition: transform 0.2s, box-shadow 0.2s;
-    width: 400px;
-}
+        .item-turno {
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 400px;
+        }
 
-@media (max-width: 480px) {
-    .item-turno {
-        width: 285px;
-    }
-}
+        @media (max-width: 480px) {
+            .item-turno {
+                width: 285px;
+            }
+        }
 
-.item-turno:hover {
-    transform: translateX(5px);
-    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-}
+        .item-turno:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
 
-.badge-turno {
-    animation: pulse 2s infinite;
-}
+        .badge-turno {
+            animation: pulse 2s infinite;
+        }
 
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.8; }
-    100% { opacity: 1; }
-}
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
     </style>
-    
+
     <script>
         // Verificar tamaño de pantalla al cargar
         //function verificarPantalla() {
-          //  const anchoMinimo = 1024; // Ancho mínimo en píxeles para permitir acceso
-            
+        //  const anchoMinimo = 1024; // Ancho mínimo en píxeles para permitir acceso
+
         //    if (window.innerWidth < anchoMinimo) {
-            //    document.body.innerHTML = `
-          //          <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        //    document.body.innerHTML = `
+        //          <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
         //                <h1 style="color: #dc3545;">Acceso restringido</h1>
-          //              <a href="/modulos/sucursales/index.php" style="color: #0E544C; text-decoration: underline;">Volver al módulo</a>
-            //        </div>
-              //  `;
-                //document.body.style.backgroundColor = "#f8f9fa";
-                //throw new Error("Acceso restringido a dispositivos móviles");
-          //  }
+        //              <a href="/modulos/sucursales/index.php" style="color: #0E544C; text-decoration: underline;">Volver al módulo</a>
+        //        </div>
+        //  `;
+        //document.body.style.backgroundColor = "#f8f9fa";
+        //throw new Error("Acceso restringido a dispositivos móviles");
+        //  }
         //}
-        
+
         // Verificar también al cambiar el tamaño de la ventana
         //window.addEventListener('resize', verificarPantalla);
     </script>
 </head>
+
 <body onload="verificarPantalla()">
     <div class="container">
         <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
         <h1>Registro de Asistencia</h1>
-        
+
         <?php if (isset($_SESSION['error'])): ?>
-                                                        <div class="error" id="errorMessage" style="padding: 15px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
-                                                            <i class="fas fa-exclamation-circle" style="margin-right: 10px; color: #ff9800;"></i>
-                                                            <?= nl2br(htmlspecialchars($_SESSION['error'])) ?>
-                                                        </div>
-                                                        <?php unset($_SESSION['error']); ?>
-            
-                                                        <script>
-                                                            // Desaparecer después de 10 segundos
-                                                            document.addEventListener('DOMContentLoaded', function() {
-                                                                setTimeout(function() {
-                                                                    const errorDiv = document.getElementById('errorMessage');
-                                                                    if (errorDiv) {
-                                                                        errorDiv.style.transition = 'opacity 1s ease';
-                                                                        errorDiv.style.opacity = '0';
-                                                                        setTimeout(() => errorDiv.remove(), 1000);
-                                                                    }
-                                                                }, 10000); // 10mil son 10 segundos para ocultar el mensaje
-                                                            });
-                                                        </script>
+            <div class="error" id="errorMessage" style="padding: 15px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
+                <i class="fas fa-exclamation-circle" style="margin-right: 10px; color: #ff9800;"></i>
+                <?= nl2br(htmlspecialchars($_SESSION['error'])) ?>
+            </div>
+            <?php unset($_SESSION['error']); ?>
+
+            <script>
+                // Desaparecer después de 10 segundos
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(function() {
+                        const errorDiv = document.getElementById('errorMessage');
+                        if (errorDiv) {
+                            errorDiv.style.transition = 'opacity 1s ease';
+                            errorDiv.style.opacity = '0';
+                            setTimeout(() => errorDiv.remove(), 1000);
+                        }
+                    }, 10000); // 10mil son 10 segundos para ocultar el mensaje
+                });
+            </script>
         <?php endif; ?>
-        
+
         <form id="formMarcacion" method="POST" autocomplete="off">
             <div class="form-group">
                 <label for="usuario">Usuario</label>
-                <input type="text" id="usuario" name="usuario" placeholder="Ingrese su usuario" required 
-                       autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
+                <input type="text" id="usuario" name="usuario" placeholder="Ingrese su usuario" required
+                    autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
             </div>
-            
+
             <div class="form-group">
                 <label for="clave">Contraseña</label>
-                <input type="password" id="clave" name="clave" placeholder="Ingrese su contraseña" required 
-                       autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
+                <input type="password" id="clave" name="clave" placeholder="Ingrese su contraseña" required
+                    autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');">
             </div>
-            
+
             <button type="submit" class="btn-marcar" id="btnMarcar">
                 <?= ($ultimaMarcacionHoy && !$ultimaMarcacionHoy['hora_salida']) ? 'Marcar Salida' : 'Marcar Entrada' ?>
             </button>
         </form>
-        
+
         <!--Información de usuario y sucursal del usuario debajo del modal <?php if (isset($_SESSION['usuario_id'])): ?>
         <div class="info-operario">
             <p><strong>Sucursal actual:</strong> <?= htmlspecialchars($usuarioActual['sucursal_nombre'] ?? 'Sin sucursal asignada') ?></p>
@@ -1033,7 +1085,7 @@ if ($faltasPendientes < 0)
         </div>
         <?php endif; ?>
         -->
-        
+
         <!-- Sección de Colaboradores en Turno -->
         <div class="seccion-turno" style="margin-top: 30px; background: #f8f9fa; border-radius: 8px; padding: 20px;">
             <h3 style="color: #0E544C; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
@@ -1045,58 +1097,58 @@ if ($faltasPendientes < 0)
                     <?= $totalEnTurno ?> en turno
                 </span>
             </h3>
-            
+
             <?php if ($totalEnTurno > 0): ?>
-                                                            <div class="lista-turno" style="max-height: 300px; overflow-y: auto;">
-                                                                <?php foreach ($colaboradoresEnTurno as $colaborador):
-                                                                    $nombreCompleto = obtenerNombreCompletoOperario($colaborador);
-                                                                    $horaEntrada = formatoHoraAmigable($colaborador['hora_entrada_formateada']);
-                                                                    ?>
-                                                                                 <div class="item-turno" style="background: white; padding: 10px 15px; margin-bottom: 8px; border-radius: 6px; border-left: 4px solid #51B8AC; display: flex; justify-content: space-between; align-items: center;">
-                                                                                    <div style="display: flex; align-items: center;">
-                                                                                        <!-- Avatar/Foto del colaborador -->
-                                                                                        <div class="avatar-colaborador" style="width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 12px; background: #eee; display: flex; align-items: center; justify-content: center; border: 2px solid #51B8AC;">
-                                                                                            <?php if (!empty($colaborador['foto_perfil']) && file_exists($colaborador['foto_perfil'])): ?>
-                                                                                                <img src="<?= htmlspecialchars($colaborador['foto_perfil']) ?>" alt="Foto" style="width: 100%; height: 100%; object-fit: cover;">
-                                                                                            <?php else: ?>
-                                                                                                <i class="fas fa-user" style="color: #ccc; font-size: 20px;"></i>
-                                                                                            <?php endif; ?>
-                                                                                        </div>
-                                                                                        
-                                                                                        <div>
-                                                                                            <strong style="color: #333;"><?= htmlspecialchars($nombreCompleto) ?></strong>
-                                                                                            <div style="font-size: 13px; color: #666;">
-                                                                                                <i class="fas fa-sign-in-alt" style="margin-right: 5px;"></i>
-                                                                                                Entrada: <?= $horaEntrada ?>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div style="font-size: 12px; color: #28a745; display: flex; align-items: center;">
-                                                                                        <i class="fas fa-circle" style="font-size: 8px; margin-right: 5px;"></i>
-                                                                                        Activo
-                                                                                    </div>
-                                                                                </div>
-                                                                <?php endforeach; ?>
-                                                            </div>
+                <div class="lista-turno" style="max-height: 300px; overflow-y: auto;">
+                    <?php foreach ($colaboradoresEnTurno as $colaborador):
+                        $nombreCompleto = obtenerNombreCompletoOperario($colaborador);
+                        $horaEntrada = formatoHoraAmigable($colaborador['hora_entrada_formateada']);
+                    ?>
+                        <div class="item-turno" style="background: white; padding: 10px 15px; margin-bottom: 8px; border-radius: 6px; border-left: 4px solid #51B8AC; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center;">
+                                <!-- Avatar/Foto del colaborador -->
+                                <div class="avatar-colaborador" style="width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 12px; background: #eee; display: flex; align-items: center; justify-content: center; border: 2px solid #51B8AC;">
+                                    <?php if (!empty($colaborador['foto_perfil']) && file_exists($colaborador['foto_perfil'])): ?>
+                                        <img src="<?= htmlspecialchars($colaborador['foto_perfil']) ?>" alt="Foto" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <?php else: ?>
+                                        <i class="fas fa-user" style="color: #ccc; font-size: 20px;"></i>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div>
+                                    <strong style="color: #333;"><?= htmlspecialchars($nombreCompleto) ?></strong>
+                                    <div style="font-size: 13px; color: #666;">
+                                        <i class="fas fa-sign-in-alt" style="margin-right: 5px;"></i>
+                                        Entrada: <?= $horaEntrada ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="font-size: 12px; color: #28a745; display: flex; align-items: center;">
+                                <i class="fas fa-circle" style="font-size: 8px; margin-right: 5px;"></i>
+                                Activo
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             <?php else: ?>
-                                                            <div style="text-align: center; padding: 20px; color: #6c757d;">
-                                                                <i class="fas fa-user-clock" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
-                                                                <p>No hay colaboradores en turno actualmente</p>
-                                                            </div>
+                <div style="text-align: center; padding: 20px; color: #6c757d;">
+                    <i class="fas fa-user-clock" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                    <p>No hay colaboradores en turno actualmente</p>
+                </div>
             <?php endif; ?>
-            
+
             <div style="text-align: center; margin-top: 15px; font-size: 12px; color: #6c757d;">
                 <i class="fas fa-info-circle"></i>
                 Mostrando colaboradores que marcaron entrada hoy pero no han marcado salida
             </div>
         </div>
-        
+
         <!-- Botón de Regresar a Módulo -->
         <a href="/modulos/sucursales/index.php" class="btn-regresar">
             <i class="fas fa-arrow-left"></i> Regresar
         </a>
     </div>
-    
+
     <!-- Modal de confirmación -->
     <div class="modal" id="modalConfirmacion">
         <div class="modal-content">
@@ -1113,227 +1165,326 @@ if ($faltasPendientes < 0)
             <button class="btn-aceptar" id="btnAceptar">Aceptar</button>
         </div>
     </div>
-    
+
+    <!-- Modal de Pre-Confirmación por marcación reciente -->
+    <div class="modal" id="modalPreConfirmacion" style="display: none;">
+        <div class="modal-content" style="border-top: 5px solid #ff9800; max-width: 450px; position: relative;">
+            <button class="modal-close" id="btnCerrarPreConfirmacion">&times;</button>
+            <div class="modal-icon" style="color: #ff9800; font-size: 3rem; margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="modal-title" style="color: #0E544C; font-size: 1.5rem; font-weight: 700; margin-bottom: 15px;">
+                ¡Marcación Reciente Detectada!
+            </div>
+            <div class="modal-mensaje" id="preConfirmacionMensaje" style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; color: #333; text-align: center;">
+                <!-- Mensaje dinámico -->
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; width: 100%;">
+                <button class="btn-aceptar" id="btnPreConfirmarAceptar" style="background: #ff9800; flex: 1; min-width: 120px;" disabled>Confirmar (3s)</button>
+                <button class="btn-regresar" id="btnPreConfirmarCancelar" style="margin-top: 0; background: #6c757d; flex: 1; min-width: 120px; padding: 12px 20px; cursor: pointer; border: none; font-size: 16px; border-radius: 4px; color: white; font-weight: 600; text-align: center; display: inline-block;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <?php if (isset($_SESSION['marcacion_pendiente'])): ?>
+        <form id="formConfirmarPendiente" method="POST" style="display:none;">
+            <input type="hidden" name="usuario" value="<?= htmlspecialchars($_SESSION['marcacion_pendiente']['usuario']) ?>">
+            <input type="hidden" name="clave" value="<?= htmlspecialchars($_SESSION['marcacion_pendiente']['clave']) ?>">
+            <input type="hidden" name="confirmado" value="1">
+        </form>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const modal = document.getElementById('modalPreConfirmacion');
+                const mensaje = document.getElementById('preConfirmacionMensaje');
+                const btnAceptar = document.getElementById('btnPreConfirmarAceptar');
+                const btnCancelar = document.getElementById('btnPreConfirmarCancelar');
+                const btnCerrar = document.getElementById('btnCerrarPreConfirmacion');
+
+                const pendienteInfo = <?= json_encode($_SESSION['marcacion_pendiente']) ?>;
+                const nombre = pendienteInfo.nombre;
+
+                if (pendienteInfo.caso === 'nueva_entrada_hoy') {
+                    document.querySelector('#modalPreConfirmacion .modal-title').textContent = '¡Ya tienes jornada registrada hoy!';
+                    mensaje.innerHTML = `<strong>¡Atención, ${nombre}!</strong><br><br>` +
+                        `Ya tienes una jornada completa registrada hoy:<br>` +
+                        `<strong style="color:#0E544C;">Entrada:</strong> ${pendienteInfo.reciente_hora} &nbsp;|&nbsp; ` +
+                        `<strong style="color:#ff9800;">Salida:</strong> ${pendienteInfo.reciente_hora_sal}<br><br>` +
+                        `¿Deseas registrar una <strong style="color: #ff9800;">NUEVA ENTRADA</strong> para hoy?`;
+                } else {
+                    mensaje.innerHTML = `<strong>¡Atención, ${nombre}!</strong><br><br>` +
+                        `Registraste tu <strong style="color:#0E544C;">ENTRADA</strong> a las <strong>${pendienteInfo.reciente_hora}</strong>.<br><br>` +
+                        `¿Estás seguro de que deseas registrar tu <strong style="color: #ff9800;">SALIDA</strong> ahora?`;
+                }
+
+                modal.style.display = 'flex';
+
+                let countdown = 3;
+                btnAceptar.disabled = true;
+                btnAceptar.textContent = `Confirmar (${countdown}s)`;
+                btnAceptar.style.opacity = '0.6';
+                btnAceptar.style.cursor = 'not-allowed';
+
+                const interval = setInterval(() => {
+                    countdown--;
+                    if (countdown > 0) {
+                        btnAceptar.textContent = `Confirmar (${countdown}s)`;
+                    } else {
+                        clearInterval(interval);
+                        btnAceptar.disabled = false;
+                        btnAceptar.style.opacity = '1';
+                        btnAceptar.style.cursor = 'pointer';
+                        btnAceptar.textContent = 'Confirmar';
+                    }
+                }, 1000);
+
+                btnAceptar.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    document.getElementById('formConfirmarPendiente').submit();
+                });
+
+                const closeAction = () => {
+                    clearInterval(interval);
+                    modal.style.display = 'none';
+                    // Limpiar campos del formulario original si existen
+                    const userField = document.getElementById('usuario');
+                    const passField = document.getElementById('clave');
+                    if (userField) userField.value = '';
+                    if (passField) passField.value = '';
+                };
+
+                btnCancelar.addEventListener('click', closeAction);
+                btnCerrar.addEventListener('click', closeAction);
+
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeAction();
+                    }
+                });
+            });
+        </script>
+        <?php unset($_SESSION['marcacion_pendiente']); ?>
+    <?php endif; ?>
+
     <script>
         // Mostrar modal si hay mensaje de marcación
         <?php if (isset($_SESSION['marcacion_mensaje'])): ?>
-                                                        document.addEventListener('DOMContentLoaded', function() {
-                                                            // Limpiar cualquier dato almacenado en caché
-                                                            document.getElementById('usuario').value = '';
-                                                            document.getElementById('clave').value = '';
-                
-                                                            // Deshabilitar autocompletado de manera más agresiva
-                                                            setTimeout(function() {
-                                                                document.getElementById('formMarcacion').reset();
-                                                            }, 0);
-                
-                                                            // Prevenir el comportamiento por defecto del autocompletado
-                                                            document.getElementById('formMarcacion').addEventListener('submit', function(e) {
-                                                                const ultimaMarcacion = <?= $ultimaMarcacionHoy ? json_encode($ultimaMarcacionHoy) : 'null' ?>;
-                    
-                                                                if (ultimaMarcacion && !ultimaMarcacion.hora_salida) {
-                                                                    const horaEntrada = new Date(`2000-01-01T${ultimaMarcacion.hora_ingreso}`);
-                                                                    const ahora = new Date();
-                                                                    const diferenciaMinutos = (ahora - horaEntrada) / (1000 * 60);
-                        
-                                                                    if (diferenciaMinutos < 30) {
-                                                                        e.preventDefault();
-                            
-                                                                        // Mostrar modal de confirmación
-                                                                        const modal = document.getElementById('modalConfirmacion');
-                                                                        const modalMensaje = document.getElementById('modalMensaje');
-                            
-                                                                        modalMensaje.innerHTML = `
+            document.addEventListener('DOMContentLoaded', function() {
+                // Limpiar cualquier dato almacenado en caché
+                document.getElementById('usuario').value = '';
+                document.getElementById('clave').value = '';
+
+                // Deshabilitar autocompletado de manera más agresiva
+                setTimeout(function() {
+                    document.getElementById('formMarcacion').reset();
+                }, 0);
+
+                // Prevenir el comportamiento por defecto del autocompletado
+                document.getElementById('formMarcacion').addEventListener('submit', function(e) {
+                    const ultimaMarcacion = <?= $ultimaMarcacionHoy ? json_encode($ultimaMarcacionHoy) : 'null' ?>;
+
+                    if (ultimaMarcacion && !ultimaMarcacion.hora_salida) {
+                        const horaEntrada = new Date(`2000-01-01T${ultimaMarcacion.hora_ingreso}`);
+                        const ahora = new Date();
+                        const diferenciaMinutos = (ahora - horaEntrada) / (1000 * 60);
+
+                        if (diferenciaMinutos < 30) {
+                            e.preventDefault();
+
+                            // Mostrar modal de confirmación
+                            const modal = document.getElementById('modalConfirmacion');
+                            const modalMensaje = document.getElementById('modalMensaje');
+
+                            modalMensaje.innerHTML = `
                                 <p>Has marcado entrada recientemente a las ${ultimaMarcacion.hora_ingreso}.</p>
                                 <p>¿Estás seguro que deseas marcar salida ahora?</p>
                                 <p>Tiempo transcurrido: ${Math.floor(diferenciaMinutos)} minutos.</p>
                             `;
-                            
-                                                                        modal.style.display = 'flex';
-                            
-                                                                        // Configurar botón de aceptar
-                                                                        document.getElementById('btnAceptar').onclick = function() {
-                                                                            modal.style.display = 'none';
-                                                                            document.getElementById('formMarcacion').submit();
-                                                                        };
-                                                                    }
-                                                                }
-                                                            });
-                
-                                                            // Evitar que los navegadores guarden los datos
-                                                            document.getElementById('usuario').setAttribute('autocomplete', 'off');
-                                                            document.getElementById('clave').setAttribute('autocomplete', 'new-password');
-                
-                                                            const usuarioInput = document.getElementById('usuario');
-                                                            const claveInput = document.getElementById('clave');
-                                                            const btnMarcar = document.getElementById('btnMarcar');
-                
-                                                            // Cambio inicial del botón
-                                                            btnMarcar.textContent = 'Marcar Entrada/Salida';
-                
-                                                            // Verificar usuario al perder foco o cambiar
-                                                            usuarioInput.addEventListener('blur', verificarUsuario);
-                                                            usuarioInput.addEventListener('input', verificarUsuario);
-                
-                                                            function verificarUsuario() {
-                                                                if (usuarioInput.value.trim() === '') {
-                                                                    btnMarcar.textContent = 'Marcar Entrada/Salida';
-                                                                    return;
-                                                                }
-                    
-                                                                // Verificar con AJAX el estado del usuario
-                                                                fetch('verificar_marcacion.php', {
-                                                                    method: 'POST',
-                                                                    headers: {
-                                                                        'Content-Type': 'application/x-www-form-urlencoded',
-                                                                    },
-                                                                    body: `usuario=${encodeURIComponent(usuarioInput.value)}&sucursal=${encodeURIComponent('<?= $sucursalUsuario ?>')}`
-                                                                })
-                                                                .then(response => response.json())
-                                                                .then(data => {
-                                                                    if (data.success) {
-                                                                        btnMarcar.textContent = data.ultimaMarcacion && !data.ultimaMarcacion.hora_salida 
-                                                                            ? 'Marcar Salida' 
-                                                                            : 'Marcar Entrada';
-                                                                    } else {
-                                                                        btnMarcar.textContent = 'Marcar Entrada/Salida';
-                                                                    }
-                                                                })
-                                                                .catch(error => {
-                                                                    console.error('Error:', error);
-                                                                });
-                                                            }
-                                                        });
-        
-                                                        document.addEventListener('DOMContentLoaded', function() {
-                                                            const mensaje = document.getElementById('modalMensaje');
-                                                            const infoOperario = document.getElementById('modalInfoOperario');
-                                                            const modal = document.getElementById('modalConfirmacion');
-                
-                                                            // En el JavaScript que muestra el modal, actualizamos:
-                                                            let mensajeHTML = `<?= $_SESSION['marcacion_mensaje']['nombre'] ?> ha marcado <?= $_SESSION['marcacion_mensaje']['tipo'] ?> a las <?= $_SESSION['marcacion_mensaje']['hora'] ?>`;
-                
-                                                            <?php if ($_SESSION['marcacion_mensaje']['sucursal_codigo'] == 6 || $_SESSION['marcacion_mensaje']['sucursal_codigo'] == 18): ?>
-                                                                                                            <?php if ($_SESSION['marcacion_mensaje']['tipo'] === 'entrada'): ?>
-                                                                                                                                                            <?php if ($_SESSION['marcacion_mensaje']['hora'] >= '13:00' && $_SESSION['marcacion_mensaje']['hora'] <= '13:30'): ?>
-                                                                                                                                                                                                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
-                                                                                                                                                                                                            mensajeHTML += `<br><span style="color: #17a2b8; font-weight: bold;">¡Regreso de almuerzo!</span>`;
-                                                                                                                                                                                                            mensajeHTML += `<br>Hora de almuerzo: 12:00 PM a 1:00 PM`;
-                                                                                                                                                            <?php elseif ($_SESSION['marcacion_mensaje']['en_minuto_gracia']): ?>
-                                                                                                                                                                                                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
-                                                                                                                                                                                                            mensajeHTML += `<br><span style="color: #fd7e14; font-weight: bold;">¡Por poco!</span>`;
-                                                                                                                                                                                                            mensajeHTML += `<br>Has utilizado el minuto de tolerancia. Hora programada: 7:00 AM`;
-                                                                                                                                                                                                            mensajeHTML += `<br><span style="color: #6f42c1;">Intenta llegar justo a tiempo la próxima vez.</span>`;
-                                                                                                                                                            <?php elseif ($_SESSION['marcacion_mensaje']['tardanza_entrada']): ?>
-                                                                                                                                                                                                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
-                                                                                                                                                                                                            mensajeHTML += `<br><span style="color: #dc3545; font-weight: bold;">¡Has llegado tarde!</span>`;
-                                                                                                                                                                                                            mensajeHTML += `<br>Hora límite: 7:00 AM`;
-                                                                                                                                                            <?php else: ?>
-                                                                                                                                                                                                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
-                                                                                                                                                                                                            mensajeHTML += `<br><span style="color: #28a745; font-weight: bold;">¡Felicidades por tu puntualidad!</span>`;
-                                                                                                                                                                                                            mensajeHTML += `<br>Has marcado antes de las 7:00 AM.`;
-                                                                                                                                                            <?php endif; ?>
-                                                                                                            <?php else: ?>
-                                                                                                                                                            <?php if ($_SESSION['marcacion_mensaje']['hora'] >= '12:00' && $_SESSION['marcacion_mensaje']['hora'] <= '12:30'): ?>
-                                                                                                                                                                                                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
-                                                                                                                                                                                                            mensajeHTML += `<br><span style="color: #17a2b8; font-weight: bold;">¡Hora de almuerzo!</span>`;
-                                                                                                                                                                                                            mensajeHTML += `<br>Regresa a marcar entrada a la 1:00 PM`;
-                                                                                                                                                            <?php elseif ($_SESSION['marcacion_mensaje']['salida_tardia']): ?>
-                                                                                                                                                                                                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
-                                                                                                                                                                                                            mensajeHTML += `<br><span style="color: #dc3545; font-weight: bold;">¡Has salido después de tu hora!</span>`;
-                                                                                                                                                                                                            mensajeHTML += `<br>Hora programada: 5:30 PM`;
-                                                                                                                                                            <?php else: ?>
-                                                                                                                                                                                                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
-                                                                                                                                                                                                            mensajeHTML += `<br><span style="color: #28a745; font-weight: bold;">¡Gracias por tu trabajo hoy!</span>`;
-                                                                                                                                                                                                            mensajeHTML += `<br>Has salido a tiempo.`;
-                                                                                                                                                            <?php endif; ?>
-                                                                                                            <?php endif; ?>
-                                                            <?php else: ?>
-                                                                                                            <?php if ($_SESSION['marcacion_mensaje']['omision_dia_anterior']): ?>
-                                                                                                                                                            mensajeHTML += `<br><br><span style="color: #ffc107; font-weight: bold;">¡Atención!</span>`;
-                                                                                                                                                            mensajeHTML += `<br>Ayer hubo una omisión en tu marcación. Recuerda marcar siempre tu entrada y salida.`;
-                                                                                                            <?php elseif ($_SESSION['marcacion_mensaje']['solo_salida']): ?>
-                                                                                                                                                            mensajeHTML += `<br><br><span style="color: #17a2b8; font-weight: bold;">¡Registro especial!</span>`;
-                                                                                                                                                            mensajeHTML += `<br>Se ha registrado solo la salida (dentro del período de 30 minutos previos a la hora programada).`;
-                                                                                                            <?php elseif (!$_SESSION['marcacion_mensaje']['tiene_horario']): ?>
-                                                                                                                                                            mensajeHTML += `<br><br><span style="color: #ffc107; font-weight: bold;">¡Atención!</span>`;
-                                                                                                                                                            mensajeHTML += `<br>Has marcado en una fecha que no tienes horario programado.`;
-                                                                                                            <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'entrada' && $_SESSION['marcacion_mensaje']['en_minuto_gracia']): ?>
-                                                                                                                                                            mensajeHTML += `<br><br><span style="color: #17a2b8; font-weight: bold;">¡Minuto de tolerancia!</span>`;
-                                                                                                                                                            mensajeHTML += `<br>Has marcado dentro del minuto de gracia. Hora programada: <?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_entrada_programada'])) ?>`;
-                                                                                                                                                            mensajeHTML += `<br><span style="color: #6c757d; font-style: italic;">Recuerda que este minuto es una cortesía ocasional.</span>`;
-                                                                                                            <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'entrada' && $_SESSION['marcacion_mensaje']['tardanza_entrada']): ?>
-                                                                                                                                                            mensajeHTML += `<br><br><span style="color: #dc3545; font-weight: bold;">¡Has llegado tarde!</span>`;
-                                                                                                                                                            mensajeHTML += `<br>Hora programada: <?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_entrada_programada'])) ?>`;
-                                                                                                            <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'entrada'): ?>
-                                                                                                                                                            mensajeHTML += `<br><br><span style="color: #28a745; font-weight: bold;">¡Felicidades por tu puntualidad!</span>`;
-                                                                                                                                                            mensajeHTML += `<br>Has marcado a tiempo (<?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_entrada_programada'])) ?>).`;
-                                                                                                            <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'salida' && $_SESSION['marcacion_mensaje']['salida_tardia']): ?>
-                                                                                                                                                            mensajeHTML += `<br><br><span style="color: #dc3545; font-weight: bold;">¡Has salido después de tu hora!</span>`;
-                                                                                                                                                            mensajeHTML += `<br>Hora programada: <?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_salida_programada'])) ?>`;
-                                                                                                            <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'salida'): ?>
-                                                                                                                                                            mensajeHTML += `<br><br><span style="color: #28a745; font-weight: bold;">¡Gracias por tu trabajo hoy!</span>`;
-                                                                                                                                                            mensajeHTML += `<br>Has salido a tiempo (<?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_salida_programada'])) ?>).`;
-                                                                                                            <?php endif; ?>
-                    
-                                                                                                            // Mostrar resumen mensual (siempre visible)
-                                                                                                            mensajeHTML += `<br><br><strong>Resumen mensual:</strong>`;
-                                                                                                            mensajeHTML += `<div class="oculto">Tardanzas totales (sistema): <?= $_SESSION['marcacion_mensaje']['tardanzas_totales'] ?? 0 ?></div>`;
-                                                                                                            mensajeHTML += `<br>Tardanzas: <?= $_SESSION['marcacion_mensaje']['tardanzas_ejecutadas'] ?? 0 ?>`;
-                                                                                                            mensajeHTML += `<br>Omisiones de marcación: <?= $_SESSION['marcacion_mensaje']['omisiones_mes'] ?? 0 ?>`;
-                                                                                                            mensajeHTML += `<div class="oculto">Faltas totales (sistema): <?= $_SESSION['marcacion_mensaje']['faltas_totales'] ?? 0 ?></div>`;
-                                                                                                            mensajeHTML += `<br>Faltas: <?= $_SESSION['marcacion_mensaje']['faltas_ejecutadas'] ?? 0 ?>`;
-                                                            <?php endif; ?>
-                
-                                                            mensaje.innerHTML = mensajeHTML;
-                
-                                                            infoOperario.innerHTML = `
+
+                            modal.style.display = 'flex';
+
+                            // Configurar botón de aceptar
+                            document.getElementById('btnAceptar').onclick = function() {
+                                modal.style.display = 'none';
+                                document.getElementById('formMarcacion').submit();
+                            };
+                        }
+                    }
+                });
+
+                // Evitar que los navegadores guarden los datos
+                document.getElementById('usuario').setAttribute('autocomplete', 'off');
+                document.getElementById('clave').setAttribute('autocomplete', 'new-password');
+
+                const usuarioInput = document.getElementById('usuario');
+                const claveInput = document.getElementById('clave');
+                const btnMarcar = document.getElementById('btnMarcar');
+
+                // Cambio inicial del botón
+                btnMarcar.textContent = 'Marcar Entrada/Salida';
+
+                // Verificar usuario al perder foco o cambiar
+                usuarioInput.addEventListener('blur', verificarUsuario);
+                usuarioInput.addEventListener('input', verificarUsuario);
+
+                function verificarUsuario() {
+                    if (usuarioInput.value.trim() === '') {
+                        btnMarcar.textContent = 'Marcar Entrada/Salida';
+                        return;
+                    }
+
+                    // Verificar con AJAX el estado del usuario
+                    fetch('verificar_marcacion.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `usuario=${encodeURIComponent(usuarioInput.value)}&sucursal=${encodeURIComponent('<?= $sucursalUsuario ?>')}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                btnMarcar.textContent = data.ultimaMarcacion && !data.ultimaMarcacion.hora_salida ?
+                                    'Marcar Salida' :
+                                    'Marcar Entrada';
+                            } else {
+                                btnMarcar.textContent = 'Marcar Entrada/Salida';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const mensaje = document.getElementById('modalMensaje');
+                const infoOperario = document.getElementById('modalInfoOperario');
+                const modal = document.getElementById('modalConfirmacion');
+
+                // En el JavaScript que muestra el modal, actualizamos:
+                let mensajeHTML = `<?= $_SESSION['marcacion_mensaje']['nombre'] ?> ha marcado <?= $_SESSION['marcacion_mensaje']['tipo'] ?> a las <?= $_SESSION['marcacion_mensaje']['hora'] ?>`;
+
+                <?php if ($_SESSION['marcacion_mensaje']['sucursal_codigo'] == 6 || $_SESSION['marcacion_mensaje']['sucursal_codigo'] == 18): ?>
+                    <?php if ($_SESSION['marcacion_mensaje']['tipo'] === 'entrada'): ?>
+                        <?php if ($_SESSION['marcacion_mensaje']['hora'] >= '13:00' && $_SESSION['marcacion_mensaje']['hora'] <= '13:30'): ?>
+                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
+                            mensajeHTML += `<br><span style="color: #17a2b8; font-weight: bold;">¡Regreso de almuerzo!</span>`;
+                            mensajeHTML += `<br>Hora de almuerzo: 12:00 PM a 1:00 PM`;
+                        <?php elseif ($_SESSION['marcacion_mensaje']['en_minuto_gracia']): ?>
+                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
+                            mensajeHTML += `<br><span style="color: #fd7e14; font-weight: bold;">¡Por poco!</span>`;
+                            mensajeHTML += `<br>Has utilizado el minuto de tolerancia. Hora programada: 7:00 AM`;
+                            mensajeHTML += `<br><span style="color: #6f42c1;">Intenta llegar justo a tiempo la próxima vez.</span>`;
+                        <?php elseif ($_SESSION['marcacion_mensaje']['tardanza_entrada']): ?>
+                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
+                            mensajeHTML += `<br><span style="color: #dc3545; font-weight: bold;">¡Has llegado tarde!</span>`;
+                            mensajeHTML += `<br>Hora límite: 7:00 AM`;
+                        <?php else: ?>
+                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
+                            mensajeHTML += `<br><span style="color: #28a745; font-weight: bold;">¡Felicidades por tu puntualidad!</span>`;
+                            mensajeHTML += `<br>Has marcado antes de las 7:00 AM.`;
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <?php if ($_SESSION['marcacion_mensaje']['hora'] >= '12:00' && $_SESSION['marcacion_mensaje']['hora'] <= '12:30'): ?>
+                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
+                            mensajeHTML += `<br><span style="color: #17a2b8; font-weight: bold;">¡Hora de almuerzo!</span>`;
+                            mensajeHTML += `<br>Regresa a marcar entrada a la 1:00 PM`;
+                        <?php elseif ($_SESSION['marcacion_mensaje']['salida_tardia']): ?>
+                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
+                            mensajeHTML += `<br><span style="color: #dc3545; font-weight: bold;">¡Has salido después de tu hora!</span>`;
+                            mensajeHTML += `<br>Hora programada: 5:30 PM`;
+                        <?php else: ?>
+                            mensajeHTML += `<br><br><strong>Sucursal CDS/Administrativo</strong>`;
+                            mensajeHTML += `<br><span style="color: #28a745; font-weight: bold;">¡Gracias por tu trabajo hoy!</span>`;
+                            mensajeHTML += `<br>Has salido a tiempo.`;
+                        <?php endif; ?>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <?php if ($_SESSION['marcacion_mensaje']['omision_dia_anterior']): ?>
+                        mensajeHTML += `<br><br><span style="color: #ffc107; font-weight: bold;">¡Atención!</span>`;
+                        mensajeHTML += `<br>Ayer hubo una omisión en tu marcación. Recuerda marcar siempre tu entrada y salida.`;
+                    <?php elseif ($_SESSION['marcacion_mensaje']['solo_salida']): ?>
+                        mensajeHTML += `<br><br><span style="color: #17a2b8; font-weight: bold;">¡Registro especial!</span>`;
+                        mensajeHTML += `<br>Se ha registrado solo la salida (dentro del período de 30 minutos previos a la hora programada).`;
+                    <?php elseif (!$_SESSION['marcacion_mensaje']['tiene_horario']): ?>
+                        mensajeHTML += `<br><br><span style="color: #ffc107; font-weight: bold;">¡Atención!</span>`;
+                        mensajeHTML += `<br>Has marcado en una fecha que no tienes horario programado.`;
+                    <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'entrada' && $_SESSION['marcacion_mensaje']['en_minuto_gracia']): ?>
+                        mensajeHTML += `<br><br><span style="color: #17a2b8; font-weight: bold;">¡Minuto de tolerancia!</span>`;
+                        mensajeHTML += `<br>Has marcado dentro del minuto de gracia. Hora programada: <?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_entrada_programada'])) ?>`;
+                        mensajeHTML += `<br><span style="color: #6c757d; font-style: italic;">Recuerda que este minuto es una cortesía ocasional.</span>`;
+                    <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'entrada' && $_SESSION['marcacion_mensaje']['tardanza_entrada']): ?>
+                        mensajeHTML += `<br><br><span style="color: #dc3545; font-weight: bold;">¡Has llegado tarde!</span>`;
+                        mensajeHTML += `<br>Hora programada: <?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_entrada_programada'])) ?>`;
+                    <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'entrada'): ?>
+                        mensajeHTML += `<br><br><span style="color: #28a745; font-weight: bold;">¡Felicidades por tu puntualidad!</span>`;
+                        mensajeHTML += `<br>Has marcado a tiempo (<?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_entrada_programada'])) ?>).`;
+                    <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'salida' && $_SESSION['marcacion_mensaje']['salida_tardia']): ?>
+                        mensajeHTML += `<br><br><span style="color: #dc3545; font-weight: bold;">¡Has salido después de tu hora!</span>`;
+                        mensajeHTML += `<br>Hora programada: <?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_salida_programada'])) ?>`;
+                    <?php elseif ($_SESSION['marcacion_mensaje']['tipo'] === 'salida'): ?>
+                        mensajeHTML += `<br><br><span style="color: #28a745; font-weight: bold;">¡Gracias por tu trabajo hoy!</span>`;
+                        mensajeHTML += `<br>Has salido a tiempo (<?= date('h:i a', strtotime($_SESSION['marcacion_mensaje']['hora_salida_programada'])) ?>).`;
+                    <?php endif; ?>
+
+                    // Mostrar resumen mensual (siempre visible)
+                    mensajeHTML += `<br><br><strong>Resumen mensual:</strong>`;
+                    mensajeHTML += `<div class="oculto">Tardanzas totales (sistema): <?= $_SESSION['marcacion_mensaje']['tardanzas_totales'] ?? 0 ?></div>`;
+                    mensajeHTML += `<br>Tardanzas: <?= $_SESSION['marcacion_mensaje']['tardanzas_ejecutadas'] ?? 0 ?>`;
+                    mensajeHTML += `<br>Omisiones de marcación: <?= $_SESSION['marcacion_mensaje']['omisiones_mes'] ?? 0 ?>`;
+                    mensajeHTML += `<div class="oculto">Faltas totales (sistema): <?= $_SESSION['marcacion_mensaje']['faltas_totales'] ?? 0 ?></div>`;
+                    mensajeHTML += `<br>Faltas: <?= $_SESSION['marcacion_mensaje']['faltas_ejecutadas'] ?? 0 ?>`;
+                <?php endif; ?>
+
+                mensaje.innerHTML = mensajeHTML;
+
+                infoOperario.innerHTML = `
                     <p><strong>Colaborador/a:</strong> <?= $_SESSION['marcacion_mensaje']['nombre'] ?></p>
                     <p><strong>Cargo:</strong> <?= $_SESSION['marcacion_mensaje']['cargo'] ?? 'Sin cargo asignado' ?></p>
                     <p><strong>Sucursal:</strong> <?= $_SESSION['marcacion_mensaje']['sucursal'] ?? 'Sin sucursal asignada' ?></p>
                 `;
-                
-                                                            modal.style.display = 'flex';
-                
-                                                            // Cerrar modal al hacer clic en el botón aceptar o en la X
-                                                            document.getElementById('btnAceptar').addEventListener('click', function() {
-                                                                modal.style.display = 'none';
-                                                                window.location.href = 'index.php';
-                                                            });
-                
-                                                            document.getElementById('btnCerrarModal').addEventListener('click', function() {
-                                                                modal.style.display = 'none';
-                                                                window.location.href = 'index.php';
-                                                            });
-                
-                                                            modal.addEventListener('click', function(e) {
-                                                                if (e.target === modal) {
-                                                                    modal.style.display = 'none';
-                                                                    window.location.href = 'index.php';
-                                                                }
-                                                            });
-                                                        });
-            
-                                                        // Técnica adicional para Chrome
-                                                        if (window.chrome) {
-                                                            document.getElementById('usuario').autocomplete = 'new-password';
-                                                            document.getElementById('clave').autocomplete = 'new-password';
-                                                        }
-            
-                                                        <?php unset($_SESSION['marcacion_mensaje']); ?>
+
+                modal.style.display = 'flex';
+
+                // Cerrar modal al hacer clic en el botón aceptar o en la X
+                document.getElementById('btnAceptar').addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    window.location.href = 'index.php';
+                });
+
+                document.getElementById('btnCerrarModal').addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    window.location.href = 'index.php';
+                });
+
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        window.location.href = 'index.php';
+                    }
+                });
+            });
+
+            // Técnica adicional para Chrome
+            if (window.chrome) {
+                document.getElementById('usuario').autocomplete = 'new-password';
+                document.getElementById('clave').autocomplete = 'new-password';
+            }
+
+            <?php unset($_SESSION['marcacion_mensaje']); ?>
         <?php endif; ?>
-        
+
         // Evitar envío de formulario con tecla enter
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('formMarcacion');
             const btnMarcar = document.getElementById('btnMarcar');
             let formSubmitted = false;
-            
+
             // Prevenir Enter en cualquier parte del formulario
             form.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    
+
                     // Mostrar mensaje indicando que debe usar el botón
                     if (!document.getElementById('enter-message')) {
                         const message = document.createElement('div');
@@ -1343,7 +1494,7 @@ if ($faltasPendientes < 0)
                         message.style.fontSize = '0.9em';
                         message.textContent = 'Por favor, use el botón "Marcar Entrada/Salida"';
                         form.appendChild(message);
-                        
+
                         // Eliminar el mensaje después de 3 segundos
                         setTimeout(() => {
                             if (message.parentNode) {
@@ -1351,24 +1502,24 @@ if ($faltasPendientes < 0)
                             }
                         }, 3000);
                     }
-                    
+
                     return false;
                 }
             });
-            
+
             // Manejar el envío del formulario
             form.addEventListener('submit', function(e) {
                 if (formSubmitted) {
                     e.preventDefault();
                     return false;
                 }
-                
+
                 // Solo permitir envío mediante clic en el botón
                 if (!(e.submitter && e.submitter.id === 'btnMarcar')) {
                     e.preventDefault();
                     return false;
                 }
-                
+
                 formSubmitted = true;
                 btnMarcar.disabled = true;
                 btnMarcar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
@@ -1380,92 +1531,99 @@ if ($faltasPendientes < 0)
          CAPTURA DVR SILENCIOSA — Se dispara tras cada marcación
          ═══════════════════════════════════════════════════════ -->
     <script>
-    (function () {
-        // Datos inyectados por PHP tras una marcación exitosa
-        <?php if (isset($_SESSION['dvr_captura_pendiente'])): ?>
-        var _dvrPendiente = <?= json_encode($_SESSION['dvr_captura_pendiente']) ?>;
-        <?php unset($_SESSION['dvr_captura_pendiente']); ?>
-        <?php else: ?>
-        var _dvrPendiente = null;
-        <?php endif; ?>
+        (function() {
+            // Datos inyectados por PHP tras una marcación exitosa
+            <?php if (isset($_SESSION['dvr_captura_pendiente'])): ?>
+                var _dvrPendiente = <?= json_encode($_SESSION['dvr_captura_pendiente']) ?>;
+                <?php unset($_SESSION['dvr_captura_pendiente']); ?>
+            <?php else: ?>
+                var _dvrPendiente = null;
+            <?php endif; ?>
 
-        /**
-         * Captura silenciosa: fire-and-forget, nunca muestra errores al usuario.
-         */
-        function capturarDVRSilencioso(idMarcacion, tipo, codSucursal) {
-            if (!idMarcacion || !tipo || !codSucursal) return;
-            try {
-                fetch('/modulos/sucursales/ajax/dvr_capturar_marcacion.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id_marcacion: idMarcacion,
-                        tipo:         tipo,
-                        cod_sucursal: codSucursal
-                    }),
-                    keepalive: true
-                }).catch(function () { /* silencioso */ });
-            } catch (e) { /* silencioso */ }
-        }
+            /**
+             * Captura silenciosa: fire-and-forget, nunca muestra errores al usuario.
+             */
+            function capturarDVRSilencioso(idMarcacion, tipo, codSucursal) {
+                if (!idMarcacion || !tipo || !codSucursal) return;
+                try {
+                    fetch('/modulos/sucursales/ajax/dvr_capturar_marcacion.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id_marcacion: idMarcacion,
+                            tipo: tipo,
+                            cod_sucursal: codSucursal
+                        }),
+                        keepalive: true
+                    }).catch(function() {
+                        /* silencioso */
+                    });
+                } catch (e) {
+                    /* silencioso */
+                }
+            }
 
-        // Disparar captura automática cuando hay marcación pendiente
-        if (_dvrPendiente && _dvrPendiente.id_marcacion > 0) {
-            capturarDVRSilencioso(
-                _dvrPendiente.id_marcacion,
-                _dvrPendiente.tipo,
-                _dvrPendiente.cod_sucursal
-            );
-        }
-    })();
+            // Disparar captura automática cuando hay marcación pendiente
+            if (_dvrPendiente && _dvrPendiente.id_marcacion > 0) {
+                capturarDVRSilencioso(
+                    _dvrPendiente.id_marcacion,
+                    _dvrPendiente.tipo,
+                    _dvrPendiente.cod_sucursal
+                );
+            }
+        })();
     </script>
-    
+
     <script>
-    // Control de pestañas simultáneas mejorado
-    document.addEventListener('DOMContentLoaded', function() {
-        const PAGINA_MARCACION = 'marcacion';
-        const PAGINA_HISTORIAL = 'historial';
-        const TIMEOUT_REDIRECCION = 1000; // 1 segundo
-        
-        // Verificar si la página de historial está abierta
-        if (localStorage.getItem('pagina_activa') === PAGINA_HISTORIAL) {
-            alert('Error: No puedes abrir la página de marcación mientras tengas abierto el historial de marcaciones.\n\nPor favor, cierra la pestaña del historial primero.');
-            setTimeout(() => {
-                window.location.href = '/modulos/sucursales/index.php';
-            }, TIMEOUT_REDIRECCION);
-            return;
-        }
-        
-        // Marcar que esta página está abierta
-        localStorage.setItem('pagina_activa', PAGINA_MARCACION);
-        localStorage.setItem('timestamp_actividad', Date.now());
-        
-        // Limpiar al cerrar la pestaña
-        window.addEventListener('beforeunload', function() {
-            if (localStorage.getItem('pagina_activa') === PAGINA_MARCACION) {
-                localStorage.removeItem('pagina_activa');
-            }
-        });
-        
-        // Detectar cambios entre pestañas
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'pagina_activa' && e.newValue === PAGINA_HISTORIAL) {
-                alert('Atención: Se ha abierto el historial de marcaciones en otra pestaña.\n\nEsta página se cerrará automáticamente.');
-                setTimeout(() => {
-                    window.location.href = '/modulos/sucursales/index.php';
-                }, TIMEOUT_REDIRECCION);
-            }
-        });
-        
-        // Verificación periódica para casos donde el evento storage no se dispara
-        setInterval(() => {
+        // Control de pestañas simultáneas mejorado
+        document.addEventListener('DOMContentLoaded', function() {
+            const PAGINA_MARCACION = 'marcacion';
+            const PAGINA_HISTORIAL = 'historial';
+            const TIMEOUT_REDIRECCION = 1000; // 1 segundo
+
+            // Verificar si la página de historial está abierta
             if (localStorage.getItem('pagina_activa') === PAGINA_HISTORIAL) {
-                alert('Se detectó el historial de marcaciones abierto en otra pestaña.\n\nRedirigiendo...');
+                alert('Error: No puedes abrir la página de marcación mientras tengas abierto el historial de marcaciones.\n\nPor favor, cierra la pestaña del historial primero.');
                 setTimeout(() => {
                     window.location.href = '/modulos/sucursales/index.php';
                 }, TIMEOUT_REDIRECCION);
+                return;
             }
-        }, 3000); // Verificar cada 3 segundos
-    });
+
+            // Marcar que esta página está abierta
+            localStorage.setItem('pagina_activa', PAGINA_MARCACION);
+            localStorage.setItem('timestamp_actividad', Date.now());
+
+            // Limpiar al cerrar la pestaña
+            window.addEventListener('beforeunload', function() {
+                if (localStorage.getItem('pagina_activa') === PAGINA_MARCACION) {
+                    localStorage.removeItem('pagina_activa');
+                }
+            });
+
+            // Detectar cambios entre pestañas
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'pagina_activa' && e.newValue === PAGINA_HISTORIAL) {
+                    alert('Atención: Se ha abierto el historial de marcaciones en otra pestaña.\n\nEsta página se cerrará automáticamente.');
+                    setTimeout(() => {
+                        window.location.href = '/modulos/sucursales/index.php';
+                    }, TIMEOUT_REDIRECCION);
+                }
+            });
+
+            // Verificación periódica para casos donde el evento storage no se dispara
+            setInterval(() => {
+                if (localStorage.getItem('pagina_activa') === PAGINA_HISTORIAL) {
+                    alert('Se detectó el historial de marcaciones abierto en otra pestaña.\n\nRedirigiendo...');
+                    setTimeout(() => {
+                        window.location.href = '/modulos/sucursales/index.php';
+                    }, TIMEOUT_REDIRECCION);
+                }
+            }, 3000); // Verificar cada 3 segundos
+        });
     </script>
 </body>
+
 </html>

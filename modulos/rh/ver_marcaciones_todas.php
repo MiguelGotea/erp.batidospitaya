@@ -20,13 +20,17 @@ $semanasDisponibles = obtenerUltimasSemanas(10); // Obtener las últimas 10 sema
 
 // Obtener operarios según el tipo de usuario
 if ($esLider) {
-    // Para líderes: solo los operarios de su sucursal
+    // Para líderes: operarios de TODAS sus sucursales asignadas
     $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
+    $operariosFiltro = [];
     if (!empty($sucursalesLider)) {
-        $sucursalLider = $sucursalesLider[0]['codigo'];
-        $operariosFiltro = obtenerOperariosSucursalLider($sucursalLider, $_SESSION['usuario_id']);
-    } else {
-        $operariosFiltro = [];
+        foreach ($sucursalesLider as $suc) {
+            $opsSuc = obtenerOperariosSucursalLider($suc['codigo'], $_SESSION['usuario_id']);
+            foreach ($opsSuc as $op) {
+                $operariosFiltro[$op['CodOperario']] = $op; // evitar duplicados
+            }
+        }
+        $operariosFiltro = array_values($operariosFiltro);
     }
 } else {
     // Para otros usuarios (admin, RH, etc.): todos los operarios
@@ -64,15 +68,27 @@ if ($esLider) { // Si es líder de sucursal
         exit();
     }
 
-    // Siempre usar la primera sucursal para líderes
-    $sucursalLider = $sucursalesLider[0]['codigo'];
-    $sucursalSeleccionada = $sucursalLider;
-
-    // Para mostrar en el filtro (aunque esté oculto)
-    $sucursales = [['codigo' => $sucursalLider, 'nombre' => $sucursalesLider[0]['nombre']]];
+    // Multi-sucursal: si tiene más de una sucursal, mostrar selector
+    if (count($sucursalesLider) > 1) {
+        $sucursalLider = $_GET['sucursal'] ?? $sucursalesLider[0]['codigo'];
+        // Validar que la sucursal seleccionada pertenece al líder
+        $codigosValidos = array_column($sucursalesLider, 'codigo');
+        if (!in_array($sucursalLider, $codigosValidos)) {
+            $sucursalLider = $sucursalesLider[0]['codigo'];
+        }
+        $sucursalSeleccionada = $sucursalLider;
+        $sucursales = $sucursalesLider;
+        $mostrarSelectSucursalLider = true;
+    } else {
+        // Una sola sucursal: siempre forzar esa
+        $sucursalLider = $sucursalesLider[0]['codigo'];
+        $sucursalSeleccionada = $sucursalLider;
+        $sucursales = [['codigo' => $sucursalLider, 'nombre' => $sucursalesLider[0]['nombre']]];
+        $mostrarSelectSucursalLider = false;
+    }
 
     // Guardar la sucursal del líder en una variable global para usar en las consultas
-    $sucursalAsignacionLider = $sucursalLider;
+    $sucursalAsignacionLider = $sucursalSeleccionada;
 } elseif ($esOperaciones) { // Si es de operaciones
     $sucursales = obtenerSucursalesFisicas(); // Solo sucursales físicas (sucursal = 1)
     $modoVista = 'sucursal'; // Forzar modo sucursal para operaciones
@@ -94,9 +110,14 @@ if ($esLider) { // Si es líder de sucursal
 //}
 
 // Obtener parámetros de filtro
-$sucursalParam = $_GET['sucursal'] ?? 'todas';
-$modoVista = $sucursalParam === 'todas' ? 'todas' : 'sucursal';
-$sucursalSeleccionada = $sucursalParam !== 'todas' ? $sucursalParam : ($sucursales[0]['codigo'] ?? null);
+if ($esLider) {
+    $modoVista = 'sucursal';
+    // Mantener la sucursal seleccionada que ya se determinó arriba
+} else {
+    $sucursalParam = $_GET['sucursal'] ?? 'todas';
+    $modoVista = $sucursalParam === 'todas' ? 'todas' : 'sucursal';
+    $sucursalSeleccionada = $sucursalParam !== 'todas' ? $sucursalParam : ($sucursales[0]['codigo'] ?? null);
+}
 
 // LIMITAR FECHAS MÁXIMO AL DÍA ACTUAL
 $fechaHoy = date('Y-m-d');
@@ -232,13 +253,13 @@ foreach ($marcaciones as $marcacion) {
 // Validación adicional para líderes: si intentan ver "todas" las sucursales, forzar modo sucursal
 if ($esLider && ($modoVista === 'todas' || $sucursalParam === 'todas')) {
     $modoVista = 'sucursal';
-    $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
-    $sucursalParam = $sucursalesLider[0]['codigo'] ?? '';
-    $sucursalSeleccionada = $sucursalParam;
+    // Respetar la sucursal ya seleccionada (puede ser de multi-sucursal)
+    if (!isset($sucursalSeleccionada) || empty($sucursalSeleccionada)) {
+        $sucursalSeleccionada = $sucursalLider;
+    }
 
     // Mostrar mensaje informativo
-    $_SESSION['info'] = "Como líder de sucursal, puedes ver las marcaciones de los colaboradores asignados a tu
-    sucursal, incluso cuando marcan en otras ubicaciones.";
+    $_SESSION['info'] = "Como líder de sucursal, puedes ver las marcaciones de los colaboradores asignados a tu sucursal, incluso cuando marcan en otras ubicaciones.";
 }
 
 /**
@@ -327,23 +348,24 @@ function obtenerMarcacionesConHorariosProgramados(
         $paramsHorarios[] = $codSucursal;
     }
 
-    // Si es líder de sucursal, filtrar por colaboradores asignados a su sucursal
+    // Si es líder de sucursal, filtrar por colaboradores asignados a CUALQUIERA de sus sucursales
     if ($esLider) {
-        // Obtener la sucursal del líder (primera encontrada)
         $sucursalesLider = obtenerSucursalesLider($usuarioId);
-        $sucursalLider = $sucursalesLider[0]['codigo'] ?? null;
+        $codigosSucursalesLider = array_filter(array_column($sucursalesLider, 'codigo'));
 
-        if ($sucursalLider) {
-            // Filtrar por colaboradores que estén asignados a la sucursal del líder
-            // Esto permite ver sus marcaciones incluso en otras sucursales
+        if (!empty($codigosSucursalesLider)) {
+            $placeholders = implode(',', array_fill(0, count($codigosSucursalesLider), '?'));
+            // Filtrar por colaboradores asignados a CUALQUIERA de las sucursales del líder
             $sqlHorarios .= " AND EXISTS (
         SELECT 1 FROM AsignacionNivelesCargos anc_asig
         WHERE anc_asig.CodOperario = hso.cod_operario
-        AND anc_asig.Sucursal = ?
+        AND anc_asig.Sucursal IN ($placeholders)
         AND (anc_asig.Fin IS NULL OR anc_asig.Fin >= CURDATE())
         AND anc_asig.CodNivelesCargos != 27 -- Excluir cargo 27
         )";
-            $paramsHorarios[] = $sucursalLider;
+            foreach ($codigosSucursalesLider as $cod) {
+                $paramsHorarios[] = $cod;
+            }
         }
     }
 
@@ -452,22 +474,24 @@ function obtenerMarcacionesConHorariosProgramados(
         $paramsMarcaciones[] = $codSucursal;
     }
 
-    // Si es líder de sucursal, filtrar marcaciones por colaboradores asignados a su sucursal
+    // Si es líder de sucursal, filtrar marcaciones por colaboradores asignados a CUALQUIERA de sus sucursales
     if ($esLider) {
         $sucursalesLider = obtenerSucursalesLider($usuarioId);
-        $sucursalLider = $sucursalesLider[0]['codigo'] ?? null;
+        $codigosSucursalesLider = array_filter(array_column($sucursalesLider, 'codigo'));
 
-        if ($sucursalLider) {
-            // Filtrar por colaboradores asignados a la sucursal del líder
-            // Esto permite ver sus marcaciones incluso en otras sucursales
+        if (!empty($codigosSucursalesLider)) {
+            $placeholders = implode(',', array_fill(0, count($codigosSucursalesLider), '?'));
+            // Filtrar por colaboradores asignados a CUALQUIERA de las sucursales del líder
             $sqlMarcaciones .= " AND EXISTS (
         SELECT 1 FROM AsignacionNivelesCargos anc_asig
         WHERE anc_asig.CodOperario = m.CodOperario
-        AND anc_asig.Sucursal = ?
+        AND anc_asig.Sucursal IN ($placeholders)
         AND (anc_asig.Fin IS NULL OR anc_asig.Fin >= CURDATE())
         AND anc_asig.CodNivelesCargos != 27 -- Excluir cargo 27
         )";
-            $paramsMarcaciones[] = $sucursalLider;
+            foreach ($codigosSucursalesLider as $cod) {
+                $paramsMarcaciones[] = $cod;
+            }
         }
     }
 
@@ -1446,33 +1470,32 @@ function verificarTardanzaYaRegistrada(
                 <?php endif; ?>
 
                 <div class="filters">
-                    <?php if (!$esLider): // Solo mostrar filtro de sucursal si NO es líder 
-                    ?>
+                    <?php if ($esLider && ($mostrarSelectSucursalLider ?? false)): ?>
+                        <!-- Selector de sucursal visible para líderes con más de una sucursal -->
                         <div class="filter-group">
                             <label for="sucursal">Sucursal</label>
                             <select id="sucursal" name="sucursal" onchange="aplicarFiltros()">
-                                <!--Aquellos cargos que no pueden ver la opción de Todas las sucursales-->
-                                <?php if (!$esLider): ?>
-                                    <option value="todas" <?= $modoVista === 'todas' ? 'selected' : '' ?>>Todas las sucursales
-                                    </option>
-                                <?php endif; ?>
-                                <?php foreach ($sucursales as $sucursal): ?>
-                                    <option value="<?= $sucursal['codigo'] ?>" <?= ($modoVista === 'sucursal' && $sucursalSeleccionada == $sucursal['codigo']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                <?php foreach ($sucursales as $suc): ?>
+                                    <option value="<?= $suc['codigo'] ?>" <?= $sucursalSeleccionada == $suc['codigo'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($suc['nombre']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                    <?php else: // Para líderes, mostrar información de sucursal asignada 
-                    ?>
-                        <div class="filter-group" style="display:none;">
-                            <label>Sucursal Asignada</label>
-                            <div
-                                style="padding: 8px; background-color: #e9ecef; border-radius: 4px; border: 1px solid #ddd;">
-                                <?= htmlspecialchars($sucursales[0]['nombre'] ?? 'Sin sucursal asignada') ?>
-                            </div>
-                            <input type="hidden" id="sucursal" name="sucursal"
-                                value="<?= $sucursales[0]['codigo'] ?? '' ?>">
+                    <?php elseif ($esLider): ?>
+                        <!-- Una sola sucursal: campo oculto para mantener el valor en el filtro -->
+                        <input type="hidden" id="sucursal" name="sucursal" value="<?= htmlspecialchars($sucursalLider ?? '') ?>">
+                    <?php else: // No es líder: selector normal de sucursales ?>
+                        <div class="filter-group">
+                            <label for="sucursal">Sucursal</label>
+                            <select id="sucursal" name="sucursal" onchange="aplicarFiltros()">
+                                <option value="todas" <?= $modoVista === 'todas' ? 'selected' : '' ?>>Todas las sucursales</option>
+                                <?php foreach ($sucursales as $suc): ?>
+                                    <option value="<?= $suc['codigo'] ?>" <?= ($modoVista === 'sucursal' && $sucursalSeleccionada == $suc['codigo']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($suc['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                     <?php endif; ?>
 
@@ -2342,8 +2365,9 @@ function verificarTardanzaYaRegistrada(
                     let sucursal, modo;
 
                     <?php if ($esLider): ?>
-                        // Para líderes, usar la primera sucursal asignada
-                        sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
+                        // Para líderes: leer el select (o hidden) de sucursal
+                        const sucursalEl = document.getElementById('sucursal');
+                        sucursal = sucursalEl ? sucursalEl.value : '<?= htmlspecialchars($sucursalLider ?? '') ?>';
                         modo = 'sucursal';
                     <?php else: ?>
                         // Para otros usuarios, usar el valor del select
@@ -2401,8 +2425,9 @@ function verificarTardanzaYaRegistrada(
                     let sucursal, modo;
 
                     <?php if ($esLider): ?>
-                        // Para líderes, usar la primera sucursal asignada
-                        sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
+                        // Para líderes: leer el select (o hidden) de sucursal
+                        const sucursalElC = document.getElementById('sucursal');
+                        sucursal = sucursalElC ? sucursalElC.value : '<?= htmlspecialchars($sucursalLider ?? '') ?>';
                         modo = 'sucursal';
                     <?php else: ?>
                         // Para otros usuarios, usar el valor del select
@@ -2519,8 +2544,9 @@ function verificarTardanzaYaRegistrada(
                 function verTodosOperarios() {
                     let sucursal, modo;
 
-                    // Para líderes, usar la primera sucursal asignada
-                    sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
+                    // Para líderes: leer el select (o hidden) de sucursal
+                    const sucursalElV = document.getElementById('sucursal');
+                    sucursal = sucursalElV ? sucursalElV.value : '<?= htmlspecialchars($sucursalLider ?? '') ?>';
                     modo = 'sucursal';
 
                     const desde = document.getElementById('desde').value;
@@ -2828,8 +2854,9 @@ function verificarTardanzaYaRegistrada(
                 function aplicarFiltrosLider() {
                     let sucursal, modo;
 
-                    // Para líderes, usar la primera sucursal asignada
-                    sucursal = '<?= $sucursales[0]['codigo'] ?? '' ?>';
+                    // Para líderes: leer el select (o hidden) de sucursal
+                    const sucursalElL = document.getElementById('sucursal');
+                    sucursal = sucursalElL ? sucursalElL.value : '<?= htmlspecialchars($sucursalLider ?? '') ?>';
                     modo = 'sucursal';
 
                     const desde = document.getElementById('desde').value;

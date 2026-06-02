@@ -642,7 +642,7 @@ function obtenerTiposFaltaConPorcentajes()
                                     <th>Tipo</th>
                                     <th>% Pago</th>
                                     <th>Observaciones</th>
-                                    <th>Obs. RRHH</th>
+                                    <?php if ($puedeAprobar): ?><th>Obs. RRHH</th><?php endif; ?>
                                     <th>Registrado por</th>
                                     <th>Foto</th>
                                     <?php if ($puedeAprobar): ?><th>Acciones</th><?php endif; ?>
@@ -663,9 +663,11 @@ function obtenerTiposFaltaConPorcentajes()
                                         <td title="<?= htmlspecialchars($vacacion['observaciones'] ?: '-') ?>">
                                             <?= $vacacion['observaciones'] ? htmlspecialchars(recortarTexto($vacacion['observaciones'], 25)) : '-' ?>
                                         </td>
+                                        <?php if ($puedeAprobar): ?>
                                         <td title="<?= htmlspecialchars($vacacion['observaciones_rrhh'] ?: '-') ?>">
                                             <?= $vacacion['observaciones_rrhh'] ? htmlspecialchars(recortarTexto($vacacion['observaciones_rrhh'], 25)) : '<span class="text-muted small">-</span>' ?>
                                         </td>
+                                        <?php endif; ?>
                                         <td><?= htmlspecialchars($vacacion['registrador_nombre'] . ' ' . $vacacion['registrador_apellido']) ?></td>
                                         <td style="text-align:center;">
                                             <?php if ($vacacion['foto_path']): ?>

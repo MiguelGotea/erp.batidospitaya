@@ -97,9 +97,9 @@ if (isset($_GET['exportar_excel'])) {
     foreach ($datosJustificados as $item) {
         $nombreCompleto = trim(
             $item['operario_nombre'] . ' ' .
-            ($item['operario_nombre2'] ?? '') . ' ' .
-            $item['operario_apellido'] . ' ' .
-            ($item['operario_apellido2'] ?? '')
+                ($item['operario_nombre2'] ?? '') . ' ' .
+                $item['operario_apellido'] . ' ' .
+                ($item['operario_apellido2'] ?? '')
         );
 
         $codOperario = $item['cod_operario'];
@@ -388,7 +388,6 @@ function obtenerInformacionHorariosTardanza($codOperario, $fechaTardanza)
             $resultado['entrada_marcada'] = $marcacion['hora_ingreso'] ? formatoHoraCorta($marcacion['hora_ingreso']) : 'No marco';
             $resultado['salida_marcada'] = $marcacion['hora_salida'] ? formatoHoraCorta($marcacion['hora_salida']) : 'No marco';
         }
-
     } catch (PDOException $e) {
         error_log("Error al obtener horarios para tardanza: " . $e->getMessage());
     }
@@ -742,7 +741,6 @@ function obtenerTardanzasNoReportadas($codSucursal = null, $fechaDesde, $fechaHa
         }
 
         return $tardanzasNoReportadas;
-
     } catch (PDOException $e) {
         error_log("Error al obtener tardanzas no reportadas: " . $e->getMessage());
         return [];
@@ -990,9 +988,9 @@ function obtenerTodasTardanzasConOperarios($codSucursal, $fechaDesde, $fechaHast
             $codOperario = $operario['CodOperario'];
             $nombreCompleto = trim(
                 $operario['Nombre'] . ' ' .
-                ($operario['Nombre2'] ?? '') . ' ' .
-                $operario['Apellido'] . ' ' .
-                ($operario['Apellido2'] ?? '')
+                    ($operario['Nombre2'] ?? '') . ' ' .
+                    $operario['Apellido'] . ' ' .
+                    ($operario['Apellido2'] ?? '')
             );
 
             // Buscar tardanzas manuales para este operario
@@ -1205,9 +1203,9 @@ function obtenerTodasTardanzasParaContabilidad($codSucursal, $fechaDesde, $fecha
                 'cod_operario' => $codOperario,
                 'nombre_completo' => trim(
                     $operario['Nombre'] . ' ' .
-                    ($operario['Nombre2'] ?? '') . ' ' .
-                    $operario['Apellido'] . ' ' .
-                    ($operario['Apellido2'] ?? '')
+                        ($operario['Nombre2'] ?? '') . ' ' .
+                        $operario['Apellido'] . ' ' .
+                        ($operario['Apellido2'] ?? '')
                 ),
                 'sucursal' => $operario['sucursal_nombre'],
                 'total_tardanzas' => $tardanzasPendientes,
@@ -1839,7 +1837,6 @@ function obtenerTardanzasAgrupadasParaContabilidad($codSucursal, $fechaDesde, $f
         }
 
         return $resultado;
-
     } catch (PDOException $e) {
         error_log("Error al obtener tardanzas agrupadas: " . $e->getMessage());
         return [];
@@ -2069,479 +2066,483 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
     <div class="main-container">
         <div class="sub-container">
             <?php echo renderHeader($usuario, 'Registro de Tardanzas'); ?>
-            
+
             <div class="container-fluid p-3">
 
-            <?php if (isset($_SESSION['exito'])): ?>
-                <div class="alert alert-success">
-                    <?= $_SESSION['exito'] ?>
-                    <?php unset($_SESSION['exito']); ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert alert-danger">
-                    <?= $_SESSION['error'] ?>
-                    <?php unset($_SESSION['error']); ?>
-                </div>
-            <?php endif; ?>
-
-            <!-- Tarjeta de resumen de tardanzas -->
-            <div class="resumen-tardanzas">
-                <div style="display:none;" class="tarjeta">
-                    <h3>Total Tardanzas Automáticas</h3>
-                    <p class="tardanzas-auto"><?= $totalTardanzasAuto ?></p>
-                    <small>Tardanzas detectadas por el sistema</small>
-                </div>
-
-                <div style="display:none;" class="tarjeta">
-                    <h3>Tardanzas Registradas</h3>
-                    <p class="tardanzas-registradas"><?= $totalTardanzasManualesRegistradas ?></p>
-                    <small>Tardanzas registradas manualmente</small>
-                </div>
-
-                <div style="display:none;" class="tarjeta">
-                    <h3>Tardanzas Pendientes</h3>
-                    <p class="tardanzas-pendientes"><?= $tardanzasPendientes ?></p>
-                    <small>Tardanzas por registrar</small>
-                </div>
-            </div>
-
-            <div class="filters-container">
-                <div class="filters-form">
-                    <?php if ($mostrarSelectSucursal): ?>
-                        <div class="filter-group">
-                            <label for="sucursal">Sucursal</label>
-                            <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
-                                <?php if ($esOperaciones): ?>
-                                    <option value="todas" <?= (empty($sucursalSeleccionada) || $sucursalSeleccionada === 'todas') ? 'selected' : '' ?>>
-                                        Todas las sucursales
-                                    </option>
-                                <?php endif; ?>
-                                <?php foreach ($sucursales as $sucursal): ?>
-                                    <option value="<?= $sucursal['codigo'] ?>" <?= $sucursalSeleccionada == $sucursal['codigo'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($sucursal['nombre']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    <?php else: ?>
-                        <!-- Para usuarios con cargo 2, 5, 43, mantener un campo oculto con su sucursal -->
-                        <?php if (!empty($sucursalSeleccionada)): ?>
-                            <input type="hidden" id="sucursal" name="sucursal" value="<?= $sucursalSeleccionada ?>">
-                            <div class="filter-group" style="display:none;">
-                                <label>Sucursal</label>
-                                <div style="padding: 8px; background-color: #f5f5f5; border-radius: 4px;">
-                                    <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    <?php endif; ?>
-
-                    <div class="filter-group">
-                        <label for="operario">Colaborador</label>
-                        <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..." value="<?php
-                        if ($operarioSeleccionado > 0) {
-                            foreach ($operarios as $op) {
-                                if ($op['CodOperario'] == $operarioSeleccionado) {
-                                    echo htmlspecialchars($op['nombre_completo']);
-                                    break;
-                                }
-                            }
-                        } else {
-                            echo 'Todos los colaboradores';
-                        }
-                        ?>">
-                        <input type="hidden" id="operario_id" name="operario"
-                            value="<?php echo $operarioSeleccionado; ?>">
-                        <div id="operarios-sugerencias" style="display: none;"></div>
-                        <!-- Este div debe estar dentro del filter-group -->
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="desde">Desde</label>
-                        <input type="date" id="desde" name="desde" value="<?= htmlspecialchars($fechaDesde) ?>"
-                            onchange="actualizarFiltros()">
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="hasta">Hasta</label>
-                        <input type="date" id="hasta" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>"
-                            onchange="actualizarFiltros()">
-                    </div>
-
-                    <div class="filter-group">
-                        <button type="button" onclick="actualizarFiltros()" class="btn">
-                            <i class="fas fa-search"></i> Buscar
-                        </button>
-                    </div>
-
-                    <div class="action-buttons">
-                        <?php if ($puedeNuevoRegistro): ?>
-                            <button type="button" onclick="mostrarModalNuevaTardanza()" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Nuevo
-                            </button>
-                        <?php endif; ?>
-                    </div>
-
-                    <?php if ($puedeExportar): ?>
-                        <div class="action-buttons">
-                            <a style="display:none;" href="tardanzas_manual.php?<?= http_build_query([
-                                'sucursal' => $sucursalSeleccionada ?? '',
-                                'operario' => $operarioSeleccionado,
-                                'desde' => $fechaDesde,
-                                'hasta' => $fechaHasta,
-                                'exportar_excel' => 1
-                            ]) ?>" class="btn btn-primary">
-                                <i class="fas fa-file-excel"></i> Exportar
-                            </a>
-
-                            <a style="display:none;" href="tardanzas_manual.php?<?= http_build_query([
-                                'sucursal' => $sucursalSeleccionada ?? '',
-                                'operario' => $operarioSeleccionado,
-                                'desde' => $fechaDesde,
-                                'hasta' => $fechaHasta,
-                                'exportar_contabilidad' => 1
-                            ]) ?>" class="btn btn-contabilidad">
-                                <i class="fas fa-file-excel"></i> Contabilidad
-                            </a>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <?php if (!empty($tardanzasManuales) || ($verVistaCompleta && !empty($tardanzasNoReportadas))): ?>
-                    <table id="listaTardanzasMan">
-                        <thead>
-                            <tr>
-                                <th>Colaborador</th>
-                                <th>Sucursal</th>
-                                <th>Fecha Tardanza</th>
-                                <th>Horarios</th>
-                                <th>Tipo Justificación</th>
-                                <th>Estado</th>
-                                <th>Observaciones</th>
-                                <th>Registrado por</th>
-                                <th>Foto</th>
-                                <?php if ($puedeAprobar): ?>
-                                    <th style="text-align: center;">Acciones</th>
-                                <?php endif; ?>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- SECCIÓN 1: TARDANZAS YA REGISTRADAS -->
-                            <?php foreach ($tardanzasManuales as $tardanza): ?>
-                                <?php include 'includes/row_tardanza_registrada.php'; ?>
-                            <?php endforeach; ?>
-
-                            <!-- SECCIÓN 2: TARDANZAS NO REPORTADAS (solo para vista completa) -->
-                            <?php if ($verVistaCompleta && !empty($tardanzasNoReportadas)): ?>
-                                <tr class="separador-tardanzas">
-                                    <td colspan="<?= $puedeAprobar ? 10 : 9 ?>"
-                                        style="background-color: #f8f9fa; font-weight: bold; text-align: center; padding: 10px;">
-                                        <i class="fas fa-exclamation-triangle" style="color: #ffc107;"></i>
-                                        TARDANZAS NO REPORTADAS (DETECTADAS POR SISTEMA)
-                                        <i class="fas fa-exclamation-triangle" style="color: #ffc107;"></i>
-                                    </td>
-                                </tr>
-
-                                <?php foreach ($tardanzasNoReportadas as $tardanza): ?>
-                                    <?php include 'includes/row_tardanza_no_reportada.php'; ?>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                <?php else: ?>
-                    <div class="alert alert-info">
-                        <?php if ($fechaDesde && $fechaHasta): ?>
-                            <?php if (empty($sucursalSeleccionada)): ?>
-                                No se encontraron tardanzas entre <?= formatoFechaCorta($fechaDesde) ?> y
-                                <?= formatoFechaCorta($fechaHasta) ?>.
-                            <?php else: ?>
-                                No se encontraron tardanzas para
-                                <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
-                                entre <?= formatoFechaCorta($fechaDesde) ?> y <?= formatoFechaCorta($fechaHasta) ?>.
-                            <?php endif; ?>
-                        <?php else: ?>
-                            Seleccione un rango de fechas para buscar tardanzas.
-                        <?php endif; ?>
+                <?php if (isset($_SESSION['exito'])): ?>
+                    <div class="alert alert-success">
+                        <?= $_SESSION['exito'] ?>
+                        <?php unset($_SESSION['exito']); ?>
                     </div>
                 <?php endif; ?>
+
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger">
+                        <?= $_SESSION['error'] ?>
+                        <?php unset($_SESSION['error']); ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Tarjeta de resumen de tardanzas -->
+                <div class="resumen-tardanzas">
+                    <div style="display:none;" class="tarjeta">
+                        <h3>Total Tardanzas Automáticas</h3>
+                        <p class="tardanzas-auto"><?= $totalTardanzasAuto ?></p>
+                        <small>Tardanzas detectadas por el sistema</small>
+                    </div>
+
+                    <div style="display:none;" class="tarjeta">
+                        <h3>Tardanzas Registradas</h3>
+                        <p class="tardanzas-registradas"><?= $totalTardanzasManualesRegistradas ?></p>
+                        <small>Tardanzas registradas manualmente</small>
+                    </div>
+
+                    <div style="display:none;" class="tarjeta">
+                        <h3>Tardanzas Pendientes</h3>
+                        <p class="tardanzas-pendientes"><?= $tardanzasPendientes ?></p>
+                        <small>Tardanzas por registrar</small>
+                    </div>
+                </div>
+
+                <div class="filters-container">
+                    <div class="filters-form">
+                        <?php if ($mostrarSelectSucursal): ?>
+                            <div class="filter-group">
+                                <label for="sucursal">Sucursal</label>
+                                <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
+                                    <?php if ($esOperaciones): ?>
+                                        <option value="todas" <?= (empty($sucursalSeleccionada) || $sucursalSeleccionada === 'todas') ? 'selected' : '' ?>>
+                                            Todas las sucursales
+                                        </option>
+                                    <?php endif; ?>
+                                    <?php foreach ($sucursales as $sucursal): ?>
+                                        <option value="<?= $sucursal['codigo'] ?>" <?= $sucursalSeleccionada == $sucursal['codigo'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        <?php else: ?>
+                            <!-- Para usuarios con cargo 2, 5, 43, mantener un campo oculto con su sucursal -->
+                            <?php if (!empty($sucursalSeleccionada)): ?>
+                                <input type="hidden" id="sucursal" name="sucursal" value="<?= $sucursalSeleccionada ?>">
+                                <div class="filter-group" style="display:none;">
+                                    <label>Sucursal</label>
+                                    <div style="padding: 8px; background-color: #f5f5f5; border-radius: 4px;">
+                                        <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
+                        <div class="filter-group">
+                            <label for="operario">Colaborador</label>
+                            <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..." value="<?php
+                                                                                                                            if ($operarioSeleccionado > 0) {
+                                                                                                                                foreach ($operarios as $op) {
+                                                                                                                                    if ($op['CodOperario'] == $operarioSeleccionado) {
+                                                                                                                                        echo htmlspecialchars($op['nombre_completo']);
+                                                                                                                                        break;
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            } else {
+                                                                                                                                echo 'Todos los colaboradores';
+                                                                                                                            }
+                                                                                                                            ?>">
+                            <input type="hidden" id="operario_id" name="operario"
+                                value="<?php echo $operarioSeleccionado; ?>">
+                            <div id="operarios-sugerencias" style="display: none;"></div>
+                            <!-- Este div debe estar dentro del filter-group -->
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="desde">Desde</label>
+                            <input type="date" id="desde" name="desde" value="<?= htmlspecialchars($fechaDesde) ?>"
+                                onchange="actualizarFiltros()">
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="hasta">Hasta</label>
+                            <input type="date" id="hasta" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>"
+                                onchange="actualizarFiltros()">
+                        </div>
+
+                        <div class="filter-group">
+                            <button type="button" onclick="actualizarFiltros()" class="btn">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+
+                        <div class="action-buttons">
+                            <?php if ($puedeNuevoRegistro): ?>
+                                <button type="button" onclick="mostrarModalNuevaTardanza()" class="btn btn-success">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php if ($puedeExportar): ?>
+                            <div class="action-buttons">
+                                <a style="display:none;" href="tardanzas_manual.php?<?= http_build_query([
+                                                                                        'sucursal' => $sucursalSeleccionada ?? '',
+                                                                                        'operario' => $operarioSeleccionado,
+                                                                                        'desde' => $fechaDesde,
+                                                                                        'hasta' => $fechaHasta,
+                                                                                        'exportar_excel' => 1
+                                                                                    ]) ?>" class="btn btn-primary">
+                                    <i class="fas fa-file-excel"></i> Exportar
+                                </a>
+
+                                <a style="display:none;" href="tardanzas_manual.php?<?= http_build_query([
+                                                                                        'sucursal' => $sucursalSeleccionada ?? '',
+                                                                                        'operario' => $operarioSeleccionado,
+                                                                                        'desde' => $fechaDesde,
+                                                                                        'hasta' => $fechaHasta,
+                                                                                        'exportar_contabilidad' => 1
+                                                                                    ]) ?>" class="btn btn-contabilidad">
+                                    <i class="fas fa-file-excel"></i> Contabilidad
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <?php if (!empty($tardanzasManuales) || ($verVistaCompleta && !empty($tardanzasNoReportadas))): ?>
+                        <table id="listaTardanzasMan">
+                            <thead>
+                                <tr>
+                                    <th>Colaborador</th>
+                                    <th>Sucursal</th>
+                                    <th>Fecha Tardanza</th>
+                                    <th>Horarios</th>
+                                    <th>Tipo Justificación</th>
+                                    <th>Estado</th>
+                                    <th>Observaciones</th>
+                                    <th>Registrado por</th>
+                                    <th>Foto</th>
+                                    <?php if ($puedeAprobar): ?>
+                                        <th style="text-align: center;">Acciones</th>
+                                    <?php endif; ?>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- SECCIÓN 1: TARDANZAS YA REGISTRADAS -->
+                                <?php foreach ($tardanzasManuales as $tardanza): ?>
+                                    <?php include 'includes/row_tardanza_registrada.php'; ?>
+                                <?php endforeach; ?>
+
+                                <!-- SECCIÓN 2: TARDANZAS NO REPORTADAS (solo para vista completa) -->
+                                <?php if ($verVistaCompleta && !empty($tardanzasNoReportadas)): ?>
+                                    <tr class="separador-tardanzas">
+                                        <td colspan="<?= $puedeAprobar ? 10 : 9 ?>"
+                                            style="background-color: #f8f9fa; font-weight: bold; text-align: center; padding: 10px;">
+                                            <i class="fas fa-exclamation-triangle" style="color: #ffc107;"></i>
+                                            TARDANZAS NO REPORTADAS (DETECTADAS POR SISTEMA)
+                                            <i class="fas fa-exclamation-triangle" style="color: #ffc107;"></i>
+                                        </td>
+                                    </tr>
+
+                                    <?php foreach ($tardanzasNoReportadas as $tardanza): ?>
+                                        <?php include 'includes/row_tardanza_no_reportada.php'; ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <div class="alert alert-info">
+                            <?php if ($fechaDesde && $fechaHasta): ?>
+                                <?php if (empty($sucursalSeleccionada)): ?>
+                                    No se encontraron tardanzas entre <?= formatoFechaCorta($fechaDesde) ?> y
+                                    <?= formatoFechaCorta($fechaHasta) ?>.
+                                <?php else: ?>
+                                    No se encontraron tardanzas para
+                                    <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?>
+                                    entre <?= formatoFechaCorta($fechaDesde) ?> y <?= formatoFechaCorta($fechaHasta) ?>.
+                                <?php endif; ?>
+                            <?php else: ?>
+                                Seleccione un rango de fechas para buscar tardanzas.
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        // Variables para manejar el estado de edición
-        let editandoObservaciones = {};
-        let observacionesOriginales = {};
+        <script>
+            // Variables para manejar el estado de edición
+            let editandoObservaciones = {};
+            let observacionesOriginales = {};
 
-        // Datos de operarios para el autocompletado (generado por PHP)
-        const operariosData = [
-            { id: 0, nombre: 'Todos los colaboradores' },
-            <?php foreach ($operarios as $op): ?>
-                        { id: <?php echo $op['CodOperario']; ?>, nombre: '<?php echo addslashes($op['nombre_completo']); ?>' },
-            <?php endforeach; ?>
-        ];
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/tardanzas_manual.js?v=<?= time() ?>"></script>
+            // Datos de operarios para el autocompletado (generado por PHP)
+            const operariosData = [{
+                    id: 0,
+                    nombre: 'Todos los colaboradores'
+                },
+                <?php foreach ($operarios as $op): ?> {
+                        id: <?php echo $op['CodOperario']; ?>,
+                        nombre: '<?php echo addslashes($op['nombre_completo']); ?>'
+                    },
+                <?php endforeach; ?>
+            ];
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="js/tardanzas_manual.js?v=<?= time() ?>"></script>
 
-    <!-- Modal para nueva tardanza manual -->
-    <div class="modal-custom" id="modalNuevaTardanza">
-        <div class="modal-custom-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Registrar Tardanza Manual</h2>
-                <button class="modal-close" onclick="cerrarModal()">&times;</button>
-            </div>
-            <form id="formNuevaTardanza" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="registrar_tardanza" value="1">
+        <!-- Modal para nueva tardanza manual -->
+        <div class="modal-custom" id="modalNuevaTardanza">
+            <div class="modal-custom-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Registrar Tardanza Manual</h2>
+                    <button class="modal-close" onclick="cerrarModal()">&times;</button>
+                </div>
+                <form id="formNuevaTardanza" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="registrar_tardanza" value="1">
 
-                <div class="modal-body">
-                    <!-- NUEVO: Mensaje de advertencia para operarios sin contrato -->
-                    <div id="mensaje-advertencia-contrato-tardanza" style="display: none; 
+                    <div class="modal-body">
+                        <!-- NUEVO: Mensaje de advertencia para operarios sin contrato -->
+                        <div id="mensaje-advertencia-contrato-tardanza" style="display: none; 
                                 background-color: #fff3cd; 
                                 border: 1px solid #ffc107; 
                                 color: #856404; 
                                 padding: 10px; 
                                 border-radius: 4px; 
                                 margin-bottom: 15px;">
-                        <!-- El mensaje se llenará dinámicamente con JavaScript -->
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_sucursal" class="form-label">Sucursal:</label>
-                        <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
-                            <?php
-                            // Usar las sucursales ya filtradas por permisos al inicio del archivo
-                            foreach ($sucursales as $sucursal): ?>
-                                <option value="<?= $sucursal['codigo'] ?>" <?= ($sucursalSeleccionada == $sucursal['codigo']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($sucursal['nombre']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_fecha" class="form-label">Fecha de Tardanza:</label>
-                        <input type="date" id="nueva_fecha" name="fecha_tardanza" class="form-input" required
-                            max="<?= date('Y-m-d', strtotime('-1 day')) ?>">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_operario" class="form-label">Colaborador:</label>
-                        <select id="nueva_operario" name="cod_operario" class="form-select" required>
-                            <option value="">Seleccione un colaborador</option>
-                            <!-- Se llenará dinámicamente con JavaScript -->
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_tipo" class="form-label">Tipo de Justificación:</label>
-                        <select id="nueva_tipo" name="tipo_justificacion" class="form-select" required>
-                            <option value="llave">Problema con llave</option>
-                            <option value="error_sistema">Error del sistema</option>
-                            <option value="accidente">Accidente/tráfico</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_foto" class="form-label">Foto (obligatorio):</label>
-                        <input type="file" id="nueva_foto" name="foto" class="form-input" accept="image/*" required>
-                        <img id="nueva_foto_preview" class="photo-preview" src="#" alt="Vista previa de la foto">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nueva_observaciones" class="form-label">Observaciones:</label>
-                        <textarea id="nueva_observaciones" name="observaciones" class="form-textarea"></textarea>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal para fotos -->
-    <div class="modal fade" id="modalFotos" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header" style="background-color: #0E544C; color: white;">
-                    <h5 class="modal-title">Evidencia de la Tardanza</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="carouselFotos" class="carousel slide">
-                        <div class="carousel-inner" id="carouselFotosInner">
-                            <!-- Fotos cargadas vía JS -->
+                            <!-- El mensaje se llenará dinámicamente con JavaScript -->
                         </div>
-                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselFotos"
-                            data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carouselFotos"
-                            data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        </button>
+
+                        <div class="form-group">
+                            <label for="nueva_sucursal" class="form-label">Sucursal:</label>
+                            <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
+                                <?php
+                                // Usar las sucursales ya filtradas por permisos al inicio del archivo
+                                foreach ($sucursales as $sucursal): ?>
+                                    <option value="<?= $sucursal['codigo'] ?>" <?= ($sucursalSeleccionada == $sucursal['codigo']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nueva_fecha" class="form-label">Fecha de Tardanza:</label>
+                            <input type="date" id="nueva_fecha" name="fecha_tardanza" class="form-input" required
+                                max="<?= date('Y-m-d', strtotime('-1 day')) ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nueva_operario" class="form-label">Colaborador:</label>
+                            <select id="nueva_operario" name="cod_operario" class="form-select" required>
+                                <option value="">Seleccione un colaborador</option>
+                                <!-- Se llenará dinámicamente con JavaScript -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nueva_tipo" class="form-label">Tipo de Justificación:</label>
+                            <select id="nueva_tipo" name="tipo_justificacion" class="form-select" required>
+                                <option value="llave">Problema con llave</option>
+                                <option value="error_sistema">Error del sistema</option>
+                                <option value="accidente">Accidente/tráfico</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nueva_foto" class="form-label">Foto (obligatorio):</label>
+                            <input type="file" id="nueva_foto" name="foto" class="form-input" accept="image/*" required>
+                            <img id="nueva_foto_preview" class="photo-preview" src="#" alt="Vista previa de la foto">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nueva_observaciones" class="form-label">Observaciones:</label>
+                            <textarea id="nueva_observaciones" name="observaciones" class="form-textarea"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal para fotos -->
+        <div class="modal fade" id="modalFotos" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header" style="background-color: #0E544C; color: white;">
+                        <h5 class="modal-title">Evidencia de la Tardanza</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="carouselFotos" class="carousel slide">
+                            <div class="carousel-inner" id="carouselFotosInner">
+                                <!-- Fotos cargadas vía JS -->
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselFotos"
+                                data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselFotos"
+                                data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal para editar tardanza manual -->
-    <div class="modal-custom" id="modalEditarTardanza">
-        <div class="modal-custom-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Editar Tardanza Manual</h2>
-                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+        <!-- Modal para editar tardanza manual -->
+        <div class="modal-custom" id="modalEditarTardanza">
+            <div class="modal-custom-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Editar Tardanza Manual</h2>
+                    <button class="modal-close" onclick="cerrarModal()">&times;</button>
+                </div>
+                <form id="formEditarTardanza" method="post" action="editar_tardanza_manual.php">
+                    <input type="hidden" name="editar_tardanza" value="1">
+                    <input type="hidden" id="editar_id" name="id">
+                    <input type="hidden" id="editar_cod_operario" name="cod_operario">
+
+                    <!-- Campos ocultos para mantener los filtros -->
+                    <input type="hidden" name="sucursal" value="<?= htmlspecialchars($_GET['sucursal'] ?? '') ?>">
+                    <input type="hidden" name="desde" value="<?= htmlspecialchars($_GET['desde'] ?? '') ?>">
+                    <input type="hidden" name="hasta" value="<?= htmlspecialchars($_GET['hasta'] ?? '') ?>">
+
+                    <div class="modal-body">
+                        <div class="info-group">
+                            <span class="info-label">Colaborador:</span>
+                            <span class="info-value" id="editar_nombre"></span>
+                        </div>
+
+                        <div class="info-group">
+                            <span class="info-label">Sucursal:</span>
+                            <span class="info-value" id="editar_sucursal"></span>
+                        </div>
+
+                        <div class="info-group">
+                            <span class="info-label">Fecha de Tardanza:</span>
+                            <span class="info-value" id="editar_fecha"></span>
+                        </div>
+
+                        <!-- INFORMACIÓN DE HORARIOS (MANTENER) -->
+                        <div class="info-group">
+                            <span class="info-label">Horario Programado:</span>
+                            <span id="editar_entrada_programada">Cargando...</span> - <span
+                                id="editar_salida_programada">Cargando...</span>
+                        </div>
+
+                        <div class="info-group">
+                            <span class="info-label">Horario Marcado:</span>
+                            <span id="editar_entrada_marcada">Cargando...</span> - <span
+                                id="editar_salida_marcada">Cargando...</span>
+                        </div>
+
+                        <div class="info-group">
+                            <span class="info-label">Tipo de Justificación:</span>
+                            <span class="info-value" id="editar_tipo_justificacion"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editar_estado" class="form-label">Estado:</label>
+                            <select id="editar_estado" name="estado" class="form-select" required>
+                                <option value="Justificado">Justificado</option>
+                                <option value="No Válido">No Válido</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editar_observaciones" class="form-label">Observaciones:</label>
+                            <textarea id="editar_observaciones" name="observaciones" class="form-textarea"></textarea>
+                        </div>
+
+                        <div class="form-group" id="foto-container">
+                            <label class="form-label">Foto:</label>
+                            <img id="editar_foto_preview" class="photo-preview" src="#" alt="Foto de la tardanza"
+                                style="max-width: 100%; max-height: 200px; cursor: zoom-in;"
+                                onclick="mostrarFotoAmpliada(this.src)">
+                            <a href="#" id="editar_foto_link" style="display: none;"
+                                onclick="event.preventDefault(); mostrarFotoAmpliada(this.href);"></a>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </div>
+                </form>
             </div>
-            <form id="formEditarTardanza" method="post" action="editar_tardanza_manual.php">
-                <input type="hidden" name="editar_tardanza" value="1">
-                <input type="hidden" id="editar_id" name="id">
-                <input type="hidden" id="editar_cod_operario" name="cod_operario">
+        </div>
 
-                <!-- Campos ocultos para mantener los filtros -->
-                <input type="hidden" name="sucursal" value="<?= htmlspecialchars($_GET['sucursal'] ?? '') ?>">
-                <input type="hidden" name="desde" value="<?= htmlspecialchars($_GET['desde'] ?? '') ?>">
-                <input type="hidden" name="hasta" value="<?= htmlspecialchars($_GET['hasta'] ?? '') ?>">
-
+        <!-- Popup para consultar marcaciones -->
+        <div class="modal-custom" id="modalConsultarMarcaciones">
+            <div class="modal-custom-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h2 class="modal-title">Información de Marcaciones</h2>
+                    <button class="modal-close" onclick="cerrarModalConsultar()">&times;</button>
+                </div>
                 <div class="modal-body">
                     <div class="info-group">
                         <span class="info-label">Colaborador:</span>
-                        <span class="info-value" id="editar_nombre"></span>
+                        <span class="info-value" id="consulta_nombre"></span>
                     </div>
 
                     <div class="info-group">
                         <span class="info-label">Sucursal:</span>
-                        <span class="info-value" id="editar_sucursal"></span>
+                        <span class="info-value" id="consulta_sucursal"></span>
                     </div>
 
                     <div class="info-group">
-                        <span class="info-label">Fecha de Tardanza:</span>
-                        <span class="info-value" id="editar_fecha"></span>
+                        <span class="info-label">Fecha de la Tardanza registrada por Líder:</span>
+                        <span class="info-value" id="consulta_fecha_tardanza"></span>
                     </div>
 
-                    <!-- INFORMACIÓN DE HORARIOS (MANTENER) -->
-                    <div class="info-group">
-                        <span class="info-label">Horario Programado:</span>
-                        <span id="editar_entrada_programada">Cargando...</span> - <span
-                            id="editar_salida_programada">Cargando...</span>
-                    </div>
-
-                    <div class="info-group">
-                        <span class="info-label">Horario Marcado:</span>
-                        <span id="editar_entrada_marcada">Cargando...</span> - <span
-                            id="editar_salida_marcada">Cargando...</span>
+                    <div style="display:none;" class="info-group">
+                        <span class="info-label">Fecha utilizada en consulta:</span>
+                        <span class="info-value" id="consulta_fecha_utilizada"></span>
                     </div>
 
                     <div class="info-group">
-                        <span class="info-label">Tipo de Justificación:</span>
-                        <span class="info-value" id="editar_tipo_justificacion"></span>
+                        <span class="info-label">Hora Entrada Programada:</span>
+                        <span class="info-value" id="consulta_entrada_programada"></span>
+                        <small id="consulta_fecha_entrada_programada" style="color: #666; display: block;"></small>
                     </div>
 
-                    <div class="form-group">
-                        <label for="editar_estado" class="form-label">Estado:</label>
-                        <select id="editar_estado" name="estado" class="form-select" required>
-                            <option value="Justificado">Justificado</option>
-                            <option value="No Válido">No Válido</option>
-                        </select>
+                    <div class="info-group">
+                        <span class="info-label">Hora Entrada Marcada:</span>
+                        <span class="info-value" id="consulta_entrada_marcada"></span>
+                        <small id="consulta_fecha_entrada_marcada" style="color: #666; display: block;"></small>
                     </div>
 
-                    <div class="form-group">
-                        <label for="editar_observaciones" class="form-label">Observaciones:</label>
-                        <textarea id="editar_observaciones" name="observaciones" class="form-textarea"></textarea>
+                    <div style="display:none;" class="info-group">
+                        <span class="info-label">Hora Salida Programada:</span>
+                        <span class="info-value" id="consulta_salida_programada"></span>
+                        <small id="consulta_fecha_salida_programada" style="color: #666; display: block;"></small>
                     </div>
 
-                    <div class="form-group" id="foto-container">
-                        <label class="form-label">Foto:</label>
-                        <img id="editar_foto_preview" class="photo-preview" src="#" alt="Foto de la tardanza"
-                            style="max-width: 100%; max-height: 200px; cursor: zoom-in;"
-                            onclick="mostrarFotoAmpliada(this.src)">
-                        <a href="#" id="editar_foto_link" style="display: none;"
-                            onclick="event.preventDefault(); mostrarFotoAmpliada(this.href);"></a>
+                    <div style="display:none;" class="info-group">
+                        <span class="info-label">Hora Salida Marcada:</span>
+                        <span class="info-value" id="consulta_salida_marcada"></span>
+                        <small id="consulta_fecha_salida_marcada" style="color: #666; display: block;"></small>
+                    </div>
+
+                    <div style="display:none;" class="info-group">
+                        <span class="info-label">Minutos de Tardanza:</span>
+                        <span class="info-value" id="consulta_minutos_tardanza"></span>
+                    </div>
+
+                    <div style="display:none;" class="info-group">
+                        <span class="info-label">Información de Depuración:</span>
+                        <pre id="consulta_debug_info" style="background: #f5f5f5; padding: 10px; border-radius: 4px;"></pre>
                     </div>
                 </div>
-
                 <div class="modal-footer">
-                    <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <button type="button" onclick="cerrarModalConsultar()" class="btn btn-primary">Cerrar</button>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Popup para consultar marcaciones -->
-    <div class="modal-custom" id="modalConsultarMarcaciones">
-        <div class="modal-custom-content" style="max-width: 700px;">
-            <div class="modal-header">
-                <h2 class="modal-title">Información de Marcaciones</h2>
-                <button class="modal-close" onclick="cerrarModalConsultar()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="info-group">
-                    <span class="info-label">Colaborador:</span>
-                    <span class="info-value" id="consulta_nombre"></span>
-                </div>
-
-                <div class="info-group">
-                    <span class="info-label">Sucursal:</span>
-                    <span class="info-value" id="consulta_sucursal"></span>
-                </div>
-
-                <div class="info-group">
-                    <span class="info-label">Fecha de la Tardanza registrada por Líder:</span>
-                    <span class="info-value" id="consulta_fecha_tardanza"></span>
-                </div>
-
-                <div style="display:none;" class="info-group">
-                    <span class="info-label">Fecha utilizada en consulta:</span>
-                    <span class="info-value" id="consulta_fecha_utilizada"></span>
-                </div>
-
-                <div class="info-group">
-                    <span class="info-label">Hora Entrada Programada:</span>
-                    <span class="info-value" id="consulta_entrada_programada"></span>
-                    <small id="consulta_fecha_entrada_programada" style="color: #666; display: block;"></small>
-                </div>
-
-                <div class="info-group">
-                    <span class="info-label">Hora Entrada Marcada:</span>
-                    <span class="info-value" id="consulta_entrada_marcada"></span>
-                    <small id="consulta_fecha_entrada_marcada" style="color: #666; display: block;"></small>
-                </div>
-
-                <div style="display:none;" class="info-group">
-                    <span class="info-label">Hora Salida Programada:</span>
-                    <span class="info-value" id="consulta_salida_programada"></span>
-                    <small id="consulta_fecha_salida_programada" style="color: #666; display: block;"></small>
-                </div>
-
-                <div style="display:none;" class="info-group">
-                    <span class="info-label">Hora Salida Marcada:</span>
-                    <span class="info-value" id="consulta_salida_marcada"></span>
-                    <small id="consulta_fecha_salida_marcada" style="color: #666; display: block;"></small>
-                </div>
-
-                <div style="display:none;" class="info-group">
-                    <span class="info-label">Minutos de Tardanza:</span>
-                    <span class="info-value" id="consulta_minutos_tardanza"></span>
-                </div>
-
-                <div style="display:none;" class="info-group">
-                    <span class="info-label">Información de Depuración:</span>
-                    <pre id="consulta_debug_info" style="background: #f5f5f5; padding: 10px; border-radius: 4px;"></pre>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" onclick="cerrarModalConsultar()" class="btn btn-primary">Cerrar</button>
             </div>
         </div>
-    </div>
 </body>
 
 </html>

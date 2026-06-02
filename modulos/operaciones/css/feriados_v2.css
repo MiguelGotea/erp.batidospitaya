@@ -1,0 +1,462 @@
+/* Estilos para el módulo de Feriados V2 - Proceso de Solicitudes */
+
+.title {
+    color: #0E544C;
+    font-size: 1.5rem !important;
+}
+
+.filtros-container {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.filtros-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+
+.filtro-group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.filtro-group label {
+    margin-bottom: 5px;
+    text-align: left;
+    font-weight: bold;
+    color: #0E544C;
+    font-size: 0.9rem;
+}
+
+.filtro-group select,
+.filtro-group input {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.filtro-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.filtro-buttons button,
+.filtro-buttons a {
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-aplicar {
+    background-color: #51B8AC;
+    color: white;
+}
+
+.btn-aplicar:hover {
+    background-color: #0E544C;
+}
+
+.btn-limpiar {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.btn-limpiar:hover {
+    background-color: #ddd;
+}
+
+.btn-solicitar {
+    background-color: #0E544C;
+    color: white;
+}
+
+.btn-solicitar:hover {
+    background-color: #093732;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+table {
+    width: 100%;
+    min-width: 1000px;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+th {
+    background-color: #0E544C !important;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    padding: 12px;
+}
+
+tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(81, 184, 172, 0.06) !important;
+}
+
+/* Modales Premium */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 550px;
+    width: 100%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    margin: 5vh auto;
+    overflow: hidden;
+    position: relative;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    background-color: #0E544C;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: white;
+}
+
+.modal-body {
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+    color: #0E544C;
+    font-size: 0.9rem;
+}
+
+.form-select,
+.form-textarea,
+.form-input {
+    width: 100%;
+    padding: 9px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.form-select:focus,
+.form-textarea:focus,
+.form-input:focus {
+    border-color: #51B8AC;
+    outline: none;
+}
+
+.form-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Sugerencias de Autocompletado */
+.sugerencias-lista {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    z-index: 1050;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.sugerencia-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+    text-align: left;
+}
+
+.sugerencia-item:hover {
+    background-color: #f0fdfa;
+    color: #0E544C;
+    font-weight: 600;
+}
+
+/* Badges Premium para Estados */
+.badge-status {
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.badge-pendiente {
+    background-color: #FFF3CD;
+    color: #856404;
+    border: 1px solid #FFEBAA;
+}
+
+.badge-pagado {
+    background-color: #D4EDDA;
+    color: #155724;
+    border: 1px solid #C3E6CB;
+}
+
+.badge-descansado,
+.badge-compensado {
+    background-color: #CCE5FF;
+    color: #004085;
+    border: 1px solid #B8DAFF;
+}
+
+/* Botones de acción en tabla */
+.action-buttons-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-action-table {
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-action-edit {
+    background: #0E544C;
+    color: white;
+}
+
+.btn-action-edit:hover {
+    background: #093732;
+    transform: translateY(-1px);
+}
+
+.btn-action-delete {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-action-delete:hover {
+    background: #bd2130;
+    transform: translateY(-1px);
+}
+
+/* Paginación - Estilo Consistente */
+.paginacion-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.paginacion-info {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+#paginacion {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    min-width: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #f8f9fa;
+    border-color: #51B8AC;
+    color: #0E544C;
+}
+
+.pagination-btn.active {
+    background-color: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+    font-weight: bold;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Panel de Información del Modal */
+.info-resumen {
+    background-color: #f0fdfa;
+    border-left: 4px solid #51B8AC;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.info-resumen p {
+    margin: 4px 0;
+    font-size: 0.85rem;
+    color: #0c4a43;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .filtros-container {
+        padding: 12px;
+    }
+
+    .filtros-form {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .filtro-buttons {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .filtro-buttons button,
+    .filtro-buttons a {
+        flex: 1;
+        justify-content: center;
+        padding: 10px;
+    }
+
+    .modal-content {
+        max-width: 95%;
+        margin: 10px auto;
+    }
+
+    .paginacion-toolbar {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}

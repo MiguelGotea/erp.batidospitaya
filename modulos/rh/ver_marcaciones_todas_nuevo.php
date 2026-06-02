@@ -19,13 +19,17 @@ $esCambiarFotoMarcacion = tienePermiso('historial_marcaciones_globales', 'cambia
 
 // Obtener operarios según el tipo de usuario
 if ($esLider) {
-    // Para líderes: solo los operarios de su sucursal
+    // Para líderes: operarios de TODAS sus sucursales asignadas
     $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
+    $operariosFiltro = [];
     if (!empty($sucursalesLider)) {
-        $sucursalLider = $sucursalesLider[0]['codigo'];
-        $operariosFiltro = obtenerOperariosSucursalLider($sucursalLider, $_SESSION['usuario_id']);
-    } else {
-        $operariosFiltro = [];
+        foreach ($sucursalesLider as $suc) {
+            $opsSuc = obtenerOperariosSucursalLider($suc['codigo'], $_SESSION['usuario_id']);
+            foreach ($opsSuc as $op) {
+                $operariosFiltro[$op['CodOperario']] = $op; // evitar duplicados
+            }
+        }
+        $operariosFiltro = array_values($operariosFiltro);
     }
 } else {
     // Para otros usuarios (admin, RH, etc.): todos los operarios
@@ -61,23 +65,15 @@ if ($esLider) { // Si es líder de sucursal
         exit();
     }
 
-    // Si el líder tiene más de una sucursal, permitir selección; si solo tiene una, forzar esa
-    if (count($sucursalesLider) > 1) {
-        // Multi-sucursal: respetar el GET si viene, sino la primera
-        $sucursalLider = $_GET['sucursal'] ?? $sucursalesLider[0]['codigo'];
-        $sucursalSeleccionada = $sucursalLider;
-        // Pasar todas para que el selector las muestre
-        $sucursales = $sucursalesLider;
-    } else {
-        // Una sola sucursal: siempre forzar
-        $sucursalLider = $sucursalesLider[0]['codigo'];
-        $sucursalSeleccionada = $sucursalLider;
-        $sucursales = [['codigo' => $sucursalLider, 'nombre' => $sucursalesLider[0]['nombre']]];
-    }
+    // Para _nuevo.php: siempre cargar TODAS las sucursales del líder de una vez;
+    // el filtro de columna "Sucursal" de la tabla maneja el filtrado en el cliente.
+    $sucursalLider = $sucursalesLider[0]['codigo'];
+    $sucursalSeleccionada = null; // null = cargar todas las sucursales del líder
+    $sucursales = $sucursalesLider;
+    $mostrarSelectSucursalLider = false; // El selector superior NO es necesario en _nuevo.php
 
     // Guardar la sucursal del líder en una variable global para usar en las consultas
-    $sucursalAsignacionLider = $sucursalSeleccionada;
-    $mostrarSelectSucursalLider = count($sucursalesLider) > 1;
+    $sucursalAsignacionLider = $sucursalLider;
 } elseif ($esOperaciones) { // Si es de operaciones
     $sucursales = obtenerSucursalesFisicas(); // Solo sucursales físicas (sucursal = 1)
     $modoVista = 'sucursal'; // Forzar modo sucursal para operaciones
@@ -99,9 +95,14 @@ if ($esLider) { // Si es líder de sucursal
 //}
 
 // Obtener parámetros de filtro
-$sucursalParam = $_GET['sucursal'] ?? 'todas';
-$modoVista = $sucursalParam === 'todas' ? 'todas' : 'sucursal';
-$sucursalSeleccionada = $sucursalParam !== 'todas' ? $sucursalParam : ($sucursales[0]['codigo'] ?? null);
+if ($esLider) {
+    $modoVista = 'sucursal';
+    $sucursalSeleccionada = null; // null = cargar todas las sucursales del líder
+} else {
+    $sucursalParam = $_GET['sucursal'] ?? 'todas';
+    $modoVista = $sucursalParam === 'todas' ? 'todas' : 'sucursal';
+    $sucursalSeleccionada = $sucursalParam !== 'todas' ? $sucursalParam : ($sucursales[0]['codigo'] ?? null);
+}
 
 // LIMITAR FECHAS MÁXIMO AL DÍA ACTUAL
 $fechaHoy = date('Y-m-d');
@@ -178,7 +179,18 @@ $operarios = $conn->query($sql_operarios)->fetchAll();
 
 // Obtener marcaciones con horarios programados
 $marcaciones = [];
-if ($modoVista === 'sucursal' && $sucursalSeleccionada) {
+// Para líderes en _nuevo.php: $sucursalSeleccionada = null → cargar todas sus sucursales
+if ($esLider) {
+    $marcaciones = obtenerMarcacionesConHorariosProgramados(
+        null, // Cargar todas las sucursales del líder (el filtro de columna se encarga en cliente)
+        $fechaDesde,
+        $fechaHasta,
+        $filtroActivo,
+        $busqueda,
+        $operario_id,
+        'sucursal'
+    );
+} elseif ($modoVista === 'sucursal' && $sucursalSeleccionada) {
     $marcaciones = obtenerMarcacionesConHorariosProgramados(
         $sucursalSeleccionada,
         $fechaDesde,
@@ -234,16 +246,11 @@ foreach ($marcaciones as $marcacion) {
     }
 }
 
-// Validación adicional para líderes: si intentan ver "todas" las sucursales, forzar modo sucursal
-if ($esLider && ($modoVista === 'todas' || $sucursalParam === 'todas')) {
-    $modoVista = 'sucursal';
-    $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
-    $sucursalParam = $sucursalesLider[0]['codigo'] ?? '';
-    $sucursalSeleccionada = $sucursalParam;
-
-    // Mostrar mensaje informativo
-    $_SESSION['info'] = "Como líder de sucursal, puedes ver las marcaciones de los colaboradores asignados a tu
-    sucursal, incluso cuando marcan en otras ubicaciones.";
+// Validación adicional para líderes: el modo siempre es 'sucursal' pero $sucursalSeleccionada = null
+// para que la función cargue TODAS sus sucursales asignadas.
+if ($esLider) {
+    $modoVista = 'sucursal'; // Mantener modo sucursal
+    // sucursalSeleccionada ya fue establecida como null arriba para cargar todas las sucursales del líder
 }
 
 /**
@@ -332,23 +339,24 @@ function obtenerMarcacionesConHorariosProgramados(
         $paramsHorarios[] = $codSucursal;
     }
 
-    // Si es líder de sucursal, filtrar por colaboradores asignados a su sucursal
+    // Si es líder de sucursal, filtrar por colaboradores asignados a CUALQUIERA de sus sucursales
     if ($esLider) {
-        // Obtener la sucursal del líder (primera encontrada)
         $sucursalesLider = obtenerSucursalesLider($usuarioId);
-        $sucursalLider = $sucursalesLider[0]['codigo'] ?? null;
+        $codigosSucursalesLider = array_filter(array_column($sucursalesLider, 'codigo'));
 
-        if ($sucursalLider) {
-            // Filtrar por colaboradores que estén asignados a la sucursal del líder
-            // Esto permite ver sus marcaciones incluso en otras sucursales
+        if (!empty($codigosSucursalesLider)) {
+            $placeholders = implode(',', array_fill(0, count($codigosSucursalesLider), '?'));
+            // Filtrar por colaboradores asignados a CUALQUIERA de las sucursales del líder
             $sqlHorarios .= " AND EXISTS (
         SELECT 1 FROM AsignacionNivelesCargos anc_asig
         WHERE anc_asig.CodOperario = hso.cod_operario
-        AND anc_asig.Sucursal = ?
+        AND anc_asig.Sucursal IN ($placeholders)
         AND (anc_asig.Fin IS NULL OR anc_asig.Fin >= CURDATE())
         AND anc_asig.CodNivelesCargos != 27 -- Excluir cargo 27
         )";
-            $paramsHorarios[] = $sucursalLider;
+            foreach ($codigosSucursalesLider as $cod) {
+                $paramsHorarios[] = $cod;
+            }
         }
     }
 
@@ -457,22 +465,24 @@ function obtenerMarcacionesConHorariosProgramados(
         $paramsMarcaciones[] = $codSucursal;
     }
 
-    // Si es líder de sucursal, filtrar marcaciones por colaboradores asignados a su sucursal
+    // Si es líder de sucursal, filtrar marcaciones por colaboradores asignados a CUALQUIERA de sus sucursales
     if ($esLider) {
         $sucursalesLider = obtenerSucursalesLider($usuarioId);
-        $sucursalLider = $sucursalesLider[0]['codigo'] ?? null;
+        $codigosSucursalesLider = array_filter(array_column($sucursalesLider, 'codigo'));
 
-        if ($sucursalLider) {
-            // Filtrar por colaboradores asignados a la sucursal del líder
-            // Esto permite ver sus marcaciones incluso en otras sucursales
+        if (!empty($codigosSucursalesLider)) {
+            $placeholders = implode(',', array_fill(0, count($codigosSucursalesLider), '?'));
+            // Filtrar por colaboradores asignados a CUALQUIERA de las sucursales del líder
             $sqlMarcaciones .= " AND EXISTS (
         SELECT 1 FROM AsignacionNivelesCargos anc_asig
         WHERE anc_asig.CodOperario = m.CodOperario
-        AND anc_asig.Sucursal = ?
+        AND anc_asig.Sucursal IN ($placeholders)
         AND (anc_asig.Fin IS NULL OR anc_asig.Fin >= CURDATE())
         AND anc_asig.CodNivelesCargos != 27 -- Excluir cargo 27
         )";
-            $paramsMarcaciones[] = $sucursalLider;
+            foreach ($codigosSucursalesLider as $cod) {
+                $paramsMarcaciones[] = $cod;
+            }
         }
     }
 
@@ -1459,21 +1469,7 @@ function verificarTardanzaYaRegistrada(
                     <?php unset($_SESSION['error']); ?>
                 <?php endif; ?>
 
-                <!-- Selector de sucursal para líderes multi-sucursal -->
-                <?php if (!empty($mostrarSelectSucursalLider) && $mostrarSelectSucursalLider): ?>
-                <div class="d-flex align-items-center gap-2 mb-3 p-2 bg-light rounded border">
-                    <i class="fas fa-store text-success"></i>
-                    <span class="fw-semibold small text-muted">Sucursal:</span>
-                    <select id="sucursal_lider_select" class="form-select form-select-sm" style="max-width:220px;"
-                        onchange="cambiarSucursalLider(this.value)">
-                        <?php foreach ($sucursales as $s): ?>
-                            <option value="<?= $s['codigo'] ?>" <?= $sucursalSeleccionada == $s['codigo'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($s['nombre']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <?php endif; ?>
+                <!-- En _nuevo.php el filtro de la columna "Sucursal" de la tabla maneja la selección; el selector superior no es necesario -->
 
                 <!-- Toolbar de exportación (solo para perfiles con permisos de exportación) -->
                 <?php if ($esContabilidad || $esOperaciones): ?>

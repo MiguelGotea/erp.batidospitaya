@@ -1,0 +1,602 @@
+<?php
+require_once '../../core/auth/auth.php';
+require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
+
+// Verificar conexión
+if (!$conn) {
+    die("Error de conexión a la base de datos");
+}
+
+// Obtener información del usuario actual
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+// Verificar acceso a la herramienta
+if (!tienePermiso('feriados_v2', 'vista', $cargoOperario)) {
+    header('Location: ../index.php');
+    exit();
+}
+
+$puedeCrear = tienePermiso('feriados_v2', 'crear', $cargoOperario);
+$puedeAprobar = tienePermiso('feriados_v2', 'aprobar', $cargoOperario);
+$puedeExportar = tienePermiso('feriados_v2', 'exportar', $cargoOperario);
+
+$esRH = ($cargoOperario == 13 || $cargoOperario == 16 || $cargoOperario == 30 || $cargoOperario == 49);
+
+// Obtener sucursales según el cargo
+if ($esRH) {
+    $sucursales = obtenerTodasSucursales();
+    array_unshift($sucursales, ['codigo' => 'todas', 'nombre' => 'Todas las sucursales']);
+} else {
+    $sucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
+}
+
+// Sucursal seleccionada
+if (count($sucursales) === 1 && !isset($_GET['sucursal'])) {
+    $sucursalSeleccionada = $sucursales[0]['codigo'];
+} else {
+    $sucursalSeleccionada = $_GET['sucursal'] ?? ($sucursales[0]['codigo'] ?? null);
+}
+
+// Rango de fechas por defecto (mes actual)
+$hoy = new DateTime();
+$primerDiaMes = $hoy->format('Y-m-01');
+$ultimoDiaMes = $hoy->format('Y-m-t');
+
+$fechaDesde = $_GET['desde'] ?? $primerDiaMes;
+$fechaHasta = $_GET['hasta'] ?? $ultimoDiaMes;
+
+if (empty($fechaDesde)) $fechaDesde = $primerDiaMes;
+if (empty($fechaHasta)) $fechaHasta = $ultimoDiaMes;
+
+$operarioSeleccionado = isset($_GET['operario']) ? intval($_GET['operario']) : 0;
+$estadoSeleccionado = $_GET['estado'] ?? 'todos';
+
+// Obtener operarios para el filtro
+function obtenerTodosOperarios() {
+    global $conn;
+    $sql = "SELECT o.CodOperario, 
+                   CONCAT_WS(' ', 
+                       TRIM(o.Nombre), 
+                       NULLIF(TRIM(o.Nombre2), ''), 
+                       TRIM(o.Apellido), 
+                       NULLIF(TRIM(o.Apellido2), '')
+                   ) AS nombre_completo 
+            FROM Operarios o
+            LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
+            WHERE (anc.CodNivelesCargos IS NULL OR anc.CodNivelesCargos != 27)
+            AND o.Operativo = 1
+            GROUP BY o.CodOperario
+            ORDER BY nombre_completo";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+$operarios = obtenerTodosOperarios();
+
+// Construcción de filtros para queries SQL
+$where = " WHERE 1=1";
+$params = [];
+
+$where .= " AND fs.fecha_feriado BETWEEN ? AND ?";
+$params[] = $fechaDesde;
+$params[] = $fechaHasta;
+
+if ($esRH) {
+    if ($sucursalSeleccionada && $sucursalSeleccionada !== 'todas') {
+        $where .= " AND COALESCE(c.cod_sucursal_contrato, anc.Sucursal) = ?";
+        $params[] = $sucursalSeleccionada;
+    }
+} else {
+    $codigosSucursalesLider = array_map(function($suc) { return $suc['codigo']; }, $sucursales);
+    if (!empty($codigosSucursalesLider)) {
+        if ($sucursalSeleccionada && in_array($sucursalSeleccionada, $codigosSucursalesLider)) {
+            $where .= " AND COALESCE(c.cod_sucursal_contrato, anc.Sucursal) = ?";
+            $params[] = $sucursalSeleccionada;
+        } else {
+            $placeholders = implode(',', array_fill(0, count($codigosSucursalesLider), '?'));
+            $where .= " AND COALESCE(c.cod_sucursal_contrato, anc.Sucursal) IN ($placeholders)";
+            foreach ($codigosSucursalesLider as $cod) {
+                $params[] = $cod;
+            }
+        }
+    } else {
+        $where .= " AND 1=0";
+    }
+}
+
+if ($operarioSeleccionado > 0) {
+    $where .= " AND fs.cod_operario = ?";
+    $params[] = $operarioSeleccionado;
+}
+
+if ($estadoSeleccionado && $estadoSeleccionado !== 'todos') {
+    $where .= " AND fs.estado = ?";
+    $params[] = $estadoSeleccionado;
+}
+
+// EXCEL EXPORT LÓGICA
+if (isset($_GET['exportar_excel'])) {
+    if (!$puedeExportar) {
+        die("No tiene permisos para exportar.");
+    }
+    
+    // Obtener todos los registros sin paginación
+    $sqlExport = "
+        SELECT fs.id, fs.fecha_feriado, fs.horas_trabajadas, fs.estado, fs.observaciones, fs.fecha_creacion,
+               o.CodOperario,
+               c.CodContrato,
+               CONCAT_WS(' ',
+                   TRIM(o.Nombre),
+                   NULLIF(TRIM(o.Nombre2), ''),
+                   TRIM(o.Apellido),
+                   NULLIF(TRIM(o.Apellido2), '')
+               ) as nombre_completo,
+               COALESCE(s.nombre, s_actual.nombre, 'Sin sucursal') as sucursal_nombre,
+               CONCAT_WS(' ', TRIM(creado.Nombre), TRIM(creado.Apellido)) as creador_nombre,
+               CONCAT_WS(' ', TRIM(act.Nombre), TRIM(act.Apellido)) as actualizador_nombre,
+               fs.fecha_actualizacion
+        FROM FeriadosStatus fs
+        INNER JOIN Operarios o ON fs.cod_operario = o.CodOperario
+        LEFT JOIN Contratos c ON fs.cod_contrato = c.CodContrato
+        LEFT JOIN sucursales s ON c.cod_sucursal_contrato = s.codigo
+        LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario 
+            AND fs.fecha_feriado >= anc.Fecha 
+            AND (anc.Fin IS NULL OR anc.Fin = '0000-00-00' OR fs.fecha_feriado <= anc.Fin)
+        LEFT JOIN sucursales s_actual ON anc.Sucursal = s_actual.codigo
+        LEFT JOIN Operarios creado ON fs.creado_por = creado.CodOperario
+        LEFT JOIN Operarios act ON fs.actualizado_por = act.CodOperario
+        $where
+        GROUP BY fs.id
+        ORDER BY fs.fecha_feriado DESC, nombre_completo ASC
+    ";
+    
+    $stmtExport = $conn->prepare($sqlExport);
+    $stmtExport->execute($params);
+    $recordsExport = $stmtExport->fetchAll();
+
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
+    header('Content-Disposition: attachment; filename="solicitudes_feriados_' . $fechaDesde . '_a_' . $fechaHasta . '.xls"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+    echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>';
+    echo '<table border="1">';
+    echo '<tr style="background-color:#0E544C; color:white;">';
+    echo '<th>CÓDIGO OPERARIO</th>';
+    echo '<th>CÓDIGO CONTRATO</th>';
+    echo '<th>COLABORADOR</th>';
+    echo '<th>SUCURSAL</th>';
+    echo '<th>FECHA FERIADO</th>';
+    echo '<th>HORAS LABORADAS</th>';
+    echo '<th>ESTADO</th>';
+    echo '<th>OBSERVACIONES</th>';
+    echo '<th>CREADO POR</th>';
+    echo '<th>FECHA CREACIÓN</th>';
+    echo '<th>ACTUALIZADO POR</th>';
+    echo '<th>FECHA ACTUALIZACIÓN</th>';
+    echo '</tr>';
+
+    foreach ($recordsExport as $r) {
+        $fechaF = date('d-m-Y', strtotime($r['fecha_feriado']));
+        $fechaC = date('d-m-Y H:i', strtotime($r['fecha_creacion']));
+        $fechaA = $r['fecha_actualizacion'] ? date('d-m-Y H:i', strtotime($r['fecha_actualizacion'])) : '-';
+        
+        echo '<tr>';
+        echo '<td>' . htmlspecialchars($r['CodOperario']) . '</td>';
+        echo '<td>' . htmlspecialchars($r['CodContrato'] ?? '') . '</td>';
+        echo '<td>' . htmlspecialchars($r['nombre_completo']) . '</td>';
+        echo '<td>' . htmlspecialchars($r['sucursal_nombre']) . '</td>';
+        echo '<td>' . $fechaF . '</td>';
+        echo '<td>' . number_format($r['horas_trabajadas'], 2) . '</td>';
+        echo '<td>' . htmlspecialchars($r['estado']) . '</td>';
+        echo '<td>' . htmlspecialchars($r['observaciones'] ?? '-') . '</td>';
+        echo '<td>' . htmlspecialchars($r['creador_nombre'] ?? '-') . '</td>';
+        echo '<td>' . $fechaC . '</td>';
+        echo '<td>' . htmlspecialchars($r['actualizador_nombre'] ?? '-') . '</td>';
+        echo '<td>' . $fechaA . '</td>';
+        echo '</tr>';
+    }
+    echo '</table></body></html>';
+    exit;
+}
+
+// PAGINACIÓN LÓGICA
+$paginaActual = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
+$registrosPorPagina = 25;
+$offset = ($paginaActual - 1) * $registrosPorPagina;
+
+// Conteo total
+$sqlCount = "
+    SELECT COUNT(DISTINCT fs.id) as total
+    FROM FeriadosStatus fs
+    INNER JOIN Operarios o ON fs.cod_operario = o.CodOperario
+    LEFT JOIN Contratos c ON fs.cod_contrato = c.CodContrato
+    LEFT JOIN sucursales s ON c.cod_sucursal_contrato = s.codigo
+    LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario 
+        AND fs.fecha_feriado >= anc.Fecha 
+        AND (anc.Fin IS NULL OR anc.Fin = '0000-00-00' OR fs.fecha_feriado <= anc.Fin)
+    LEFT JOIN sucursales s_actual ON anc.Sucursal = s_actual.codigo
+    $where
+";
+$stmtCount = $conn->prepare($sqlCount);
+$stmtCount->execute($params);
+$totalRegistros = $stmtCount->fetchColumn();
+$totalPaginas = ceil($totalRegistros / $registrosPorPagina);
+
+// Obtener registros paginados
+$sqlList = "
+    SELECT fs.id, fs.fecha_feriado, fs.horas_trabajadas, fs.estado, fs.observaciones, fs.fecha_creacion,
+           o.CodOperario,
+           c.CodContrato,
+           CONCAT_WS(' ',
+               TRIM(o.Nombre),
+               NULLIF(TRIM(o.Nombre2), ''),
+               TRIM(o.Apellido),
+               NULLIF(TRIM(o.Apellido2), '')
+           ) as nombre_completo,
+           COALESCE(s.nombre, s_actual.nombre, 'Sin sucursal') as sucursal_nombre,
+           COALESCE(s.codigo, s_actual.codigo) as sucursal_codigo,
+           CONCAT_WS(' ', TRIM(creado.Nombre), TRIM(creado.Apellido)) as creador_nombre,
+           fs.creado_por
+    FROM FeriadosStatus fs
+    INNER JOIN Operarios o ON fs.cod_operario = o.CodOperario
+    LEFT JOIN Contratos c ON fs.cod_contrato = c.CodContrato
+    LEFT JOIN sucursales s ON c.cod_sucursal_contrato = s.codigo
+    LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario 
+        AND fs.fecha_feriado >= anc.Fecha 
+        AND (anc.Fin IS NULL OR anc.Fin = '0000-00-00' OR fs.fecha_feriado <= anc.Fin)
+    LEFT JOIN sucursales s_actual ON anc.Sucursal = s_actual.codigo
+    LEFT JOIN Operarios creado ON fs.creado_por = creado.CodOperario
+    $where
+    GROUP BY fs.id
+    ORDER BY fs.fecha_feriado DESC, nombre_completo ASC
+    LIMIT $registrosPorPagina OFFSET $offset
+";
+$stmtList = $conn->prepare($sqlList);
+$stmtList->execute($params);
+$records = $stmtList->fetchAll();
+
+// Formato de fechas amigable
+function formatoFechaLocal($fecha) {
+    if (empty($fecha)) return '-';
+    $d = new DateTime($fecha);
+    return $d->format('d-m-Y');
+}
+
+function getEstadoBadgeClass($estado) {
+    if ($estado === 'Pendiente') return 'badge-status badge-pendiente';
+    if ($estado === 'Pagado') return 'badge-status badge-pagado';
+    if ($estado === 'Descansado') return 'badge-status badge-descansado';
+    return 'badge-status';
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitudes de Feriados Trabajados V2</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="css/feriados_v2.css?v=<?php echo mt_rand(1, 10000); ?>">
+</head>
+<body>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Solicitudes de Feriados Trabajados'); ?>
+
+            <div class="container-fluid p-3">
+                
+                <!-- Buscador / Filtros -->
+                <div class="filtros-container">
+                    <div class="filtros-form">
+                        <div class="filtro-group">
+                            <label for="sucursal">Sucursal</label>
+                            <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
+                                <?php foreach ($sucursales as $suc): ?>
+                                    <option value="<?= $suc['codigo'] ?>" <?= $sucursalSeleccionada == $suc['codigo'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($suc['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="filtro-group">
+                            <label for="operario">Colaborador</label>
+                            <input type="text" id="operario" placeholder="Buscar colaborador..." autocomplete="off" value="<?php
+                                if ($operarioSeleccionado > 0) {
+                                    foreach ($operarios as $op) {
+                                        if ($op['CodOperario'] == $operarioSeleccionado) {
+                                            echo htmlspecialchars($op['nombre_completo']);
+                                            break;
+                                        }
+                                    }
+                                }
+                            ?>">
+                            <input type="hidden" id="operario_id" name="operario" value="<?= $operarioSeleccionado ?>">
+                            <div id="operarios-sugerencias" class="sugerencias-lista" style="display: none;"></div>
+                        </div>
+
+                        <div class="filtro-group">
+                            <label for="desde">Desde</label>
+                            <input type="date" id="desde" name="desde" value="<?= htmlspecialchars($fechaDesde) ?>" onchange="actualizarFiltros()">
+                        </div>
+
+                        <div class="filtro-group">
+                            <label for="hasta">Hasta</label>
+                            <input type="date" id="hasta" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>" onchange="actualizarFiltros()">
+                        </div>
+
+                        <div class="filtro-group">
+                            <label for="estado_filtro">Estado</label>
+                            <select id="estado_filtro" name="estado" onchange="actualizarFiltros()">
+                                <option value="todos" <?= $estadoSeleccionado === 'todos' ? 'selected' : '' ?>>Todos</option>
+                                <option value="Pendiente" <?= $estadoSeleccionado === 'Pendiente' ? 'selected' : '' ?>>Pendientes</option>
+                                <option value="Pagado" <?= $estadoSeleccionado === 'Pagado' ? 'selected' : '' ?>>Pagados</option>
+                                <option value="Descansado" <?= $estadoSeleccionado === 'Descansado' ? 'selected' : '' ?>>Compensados (Descanso)</option>
+                            </select>
+                        </div>
+
+                        <div class="filtro-buttons">
+                            <button type="button" class="btn-aplicar" onclick="actualizarFiltros()">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                            
+                            <button type="button" class="btn-limpiar" onclick="limpiarFiltros()">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+
+                            <?php if ($puedeExportar): ?>
+                                <a href="feriados_v2.php?<?= http_build_query([
+                                    'sucursal' => $sucursalSeleccionada ?? '',
+                                    'desde' => $fechaDesde,
+                                    'hasta' => $fechaHasta,
+                                    'operario' => $operarioSeleccionado,
+                                    'estado' => $estadoSeleccionado,
+                                    'exportar_excel' => 1
+                                ]) ?>" class="btn-aplicar" style="background-color: #28a745; color: white;">
+                                    <i class="fas fa-file-excel"></i> Exportar
+                                </a>
+                            <?php endif; ?>
+
+                            <?php if ($puedeCrear): ?>
+                                <button type="button" class="btn-solicitar" onclick="mostrarModalSolicitud()">
+                                    <i class="fas fa-plus"></i> Solicitar Feriado
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Resultados -->
+                <div class="table-container">
+                    <?php if (!empty($records)): ?>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cód. Operario</th>
+                                    <th>Cód. Contrato</th>
+                                    <th>Colaborador</th>
+                                    <th>Sucursal</th>
+                                    <th>Fecha Feriado</th>
+                                    <th>Horas Laboradas</th>
+                                    <th>Estado</th>
+                                    <th>Observaciones</th>
+                                    <th>Registrado por</th>
+                                    <?php if ($puedeAprobar || $puedeCrear): ?>
+                                        <th style="text-align: center;">Acciones</th>
+                                    <?php endif; ?>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($records as $r): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($r['CodOperario']) ?></td>
+                                        <td><?= htmlspecialchars($r['CodContrato'] ?? '-') ?></td>
+                                        <td><strong><?= htmlspecialchars($r['nombre_completo']) ?></strong></td>
+                                        <td><?= htmlspecialchars($r['sucursal_nombre']) ?></td>
+                                        <td><?= formatoFechaLocal($r['fecha_feriado']) ?></td>
+                                        <td><?= number_format($r['horas_trabajadas'], 2) ?> hrs</td>
+                                        <td>
+                                            <span class="<?= getEstadoBadgeClass($r['estado']) ?>">
+                                                <?= $r['estado'] === 'Descansado' ? 'COMPENSADO' : htmlspecialchars($r['estado']) ?>
+                                            </span>
+                                        </td>
+                                        <td title="<?= htmlspecialchars($r['observaciones'] ?? '') ?>">
+                                            <?= $r['observaciones'] ? htmlspecialchars(substr($r['observaciones'], 0, 40)) . (strlen($r['observaciones']) > 40 ? '...' : '') : '-' ?>
+                                        </td>
+                                        <td><?= htmlspecialchars($r['creador_nombre'] ?? 'Sistema') ?></td>
+                                        
+                                        <?php if ($puedeAprobar || $puedeCrear): ?>
+                                            <td>
+                                                <div class="action-buttons-cell">
+                                                    <?php if ($puedeAprobar): ?>
+                                                        <button type="button" class="btn-action-table btn-action-edit" title="Aprobar / Editar"
+                                                                onclick="mostrarModalAprobacion(
+                                                                    <?= $r['id'] ?>,
+                                                                    '<?= htmlspecialchars(addslashes($r['nombre_completo'])) ?>',
+                                                                    '<?= htmlspecialchars(addslashes($r['sucursal_nombre'])) ?>',
+                                                                    '<?= $r['fecha_feriado'] ?>',
+                                                                    '<?= $r['horas_trabajadas'] ?>',
+                                                                    '<?= $r['estado'] ?>',
+                                                                    '<?= htmlspecialchars(addslashes($r['observaciones'] ?? '')) ?>'
+                                                                )">
+                                                            <i class="fas fa-check-double"></i> Gestionar
+                                                        </button>
+                                                    <?php endif; ?>
+
+                                                    <?php 
+                                                    // Líderes solo pueden eliminar si sigue en estado "Pendiente" y ellos mismos lo crearon
+                                                    $puedeEliminar = false;
+                                                    if ($puedeAprobar) {
+                                                        $puedeEliminar = true;
+                                                    } else if ($puedeCrear && $r['estado'] === 'Pendiente' && $r['creado_por'] == $_SESSION['usuario_id']) {
+                                                        $puedeEliminar = true;
+                                                    }
+                                                    if ($puedeEliminar): 
+                                                    ?>
+                                                        <button type="button" class="btn-action-table btn-action-delete" title="Rechazar / Eliminar"
+                                                                onclick="eliminarSolicitud(<?= $r['id'] ?>)">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        <?php endif; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <div class="alert alert-info p-3 m-3">
+                            No se encontraron solicitudes registradas para los filtros seleccionados en este rango de fechas.
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Paginación -->
+                    <?php if ($totalPaginas > 1): ?>
+                        <div class="paginacion-toolbar px-3 pb-3">
+                            <div class="paginacion-info">
+                                Mostrando registros <?= $offset + 1 ?> al <?= min($offset + $registrosPorPagina, $totalRegistros) ?> de un total de <?= $totalRegistros ?>
+                            </div>
+                            <div id="paginacion">
+                                <button class="pagination-btn" <?= $paginaActual <= 1 ? 'disabled' : '' ?> onclick="window.location.href='feriados_v2.php?p=1&<?= http_build_query(array_merge($_GET, ['p' => 1])) ?>'">&laquo;</button>
+                                <button class="pagination-btn" <?= $paginaActual <= 1 ? 'disabled' : '' ?> onclick="window.location.href='feriados_v2.php?p=<?= $paginaActual - 1 ?>&<?= http_build_query(array_merge($_GET, ['p' => $paginaActual - 1])) ?>'">&lsaquo;</button>
+                                
+                                <?php
+                                $rangoPaginas = 2;
+                                for ($i = max(1, $paginaActual - $rangoPaginas); $i <= min($totalPaginas, $paginaActual + $rangoPaginas); $i++):
+                                ?>
+                                    <button class="pagination-btn <?= $paginaActual == $i ? 'active' : '' ?>" onclick="window.location.href='feriados_v2.php?p=<?= $i ?>&<?= http_build_query(array_merge($_GET, ['p' => $i])) ?>'"><?= $i ?></button>
+                                <?php endfor; ?>
+                                
+                                <button class="pagination-btn" <?= $paginaActual >= $totalPaginas ? 'disabled' : '' ?> onclick="window.location.href='feriados_v2.php?p=<?= $paginaActual + 1 ?>&<?= http_build_query(array_merge($_GET, ['p' => $paginaActual + 1])) ?>'">&rsaquo;</button>
+                                <button class="pagination-btn" <?= $paginaActual >= $totalPaginas ? 'disabled' : '' ?> onclick="window.location.href='feriados_v2.php?p=<?= $totalPaginas ?>&<?= http_build_query(array_merge($_GET, ['p' => $totalPaginas])) ?>'">&raquo;</button>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 1: REGISTRAR SOLICITUD (Líder / RH) -->
+    <?php if ($puedeCrear): ?>
+        <div class="modal" id="modalSolicitud">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Nueva Solicitud de Feriado</h5>
+                    <button class="modal-close" onclick="cerrarModalSolicitud()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNuevaSolicitud">
+                        <div class="form-group">
+                            <label class="form-label" for="solicitud_sucursal">Sucursal / Tienda:</label>
+                            <select id="solicitud_sucursal" name="cod_sucursal" class="form-select" required>
+                                <?php if ($esRH): ?>
+                                    <option value="">Seleccione una tienda</option>
+                                    <?php foreach (obtenerTodasSucursales() as $suc): ?>
+                                        <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <?php foreach ($sucursales as $suc): ?>
+                                        <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="solicitud_fecha">Fecha del Feriado Trabajado:</label>
+                            <input type="date" id="solicitud_fecha" name="fecha_feriado" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="solicitud_operario">Colaborador:</label>
+                            <select id="solicitud_operario" name="cod_operario" class="form-select" required>
+                                <option value="">Seleccione un colaborador</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="solicitud_observaciones">Observaciones / Justificación:</label>
+                            <textarea id="solicitud_observaciones" name="observaciones" class="form-textarea" placeholder="Escriba aquí los detalles..." required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-limpiar" onclick="cerrarModalSolicitud()">Cancelar</button>
+                    <button type="submit" form="formNuevaSolicitud" class="btn-solicitar">Registrar Solicitud</button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- MODAL 2: APROBAR / GESTIONAR (RH / Aprobadores) -->
+    <?php if ($puedeAprobar): ?>
+        <div class="modal" id="modalAprobacion">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #0E544C;">
+                    <h5 class="modal-title" style="color: white;"><i class="fas fa-check-double me-2"></i>Gestionar Solicitud de Feriado</h5>
+                    <button class="modal-close" style="color: white;" onclick="cerrarModalAprobacion()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="info-resumen">
+                        <p><strong>Colaborador:</strong> <span id="aprobacion_nombre">-</span></p>
+                        <p><strong>Sucursal:</strong> <span id="aprobacion_sucursal">-</span></p>
+                        <p><strong>Fecha Feriado:</strong> <span id="aprobacion_fecha">-</span></p>
+                        <p><strong>Horas Laboradas (Marcación):</strong> <span id="aprobacion_horas">0.00</span> hrs</p>
+                    </div>
+
+                    <form id="formAprobacionSolicitud">
+                        <input type="hidden" id="aprobacion_id" name="id">
+
+                        <div class="form-group">
+                            <label class="form-label" for="aprobacion_estado">Acción / Estado del Feriado:</label>
+                            <select id="aprobacion_estado" name="estado" class="form-select" required>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Pagado">Pagado (100% Recargo)</option>
+                                <option value="Descansado">Compensado (Día de descanso)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="aprobacion_observaciones">Observaciones / Comentario Aprobación:</label>
+                            <textarea id="aprobacion_observaciones" name="observaciones" class="form-textarea" placeholder="Escriba comentarios u observaciones..." required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-limpiar" onclick="cerrarModalAprobacion()">Cancelar</button>
+                    <button type="submit" form="formAprobacionSolicitud" class="btn-solicitar">Aplicar Cambios</button>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <script>
+        // Config de autocompletado para el buscador de filtros
+        window.CONFIG_FERIADOS = {
+            operariosData: [
+                <?php foreach ($operarios as $op): ?>
+                    { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
+                <?php endforeach; ?>
+            ],
+            puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
+            esRH: <?= $esRH ? 'true' : 'false' ?>
+        };
+    </script>
+    <script src="js/feriados_v2.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+</body>
+</html>
