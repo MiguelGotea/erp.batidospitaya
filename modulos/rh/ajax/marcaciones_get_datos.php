@@ -120,11 +120,14 @@ try {
     // Aplicar restricciones de permisos para horarios
     if ($esLider) {
         $sucursalesLider = obtenerSucursalesLider($usuario['CodOperario']);
-        if (!empty($sucursalesLider)) {
-            $sucursalLider = $sucursalesLider[0]['codigo'];
-            // Filtrar por la sucursal que define el equipo de trabajo (HSO)
-            $sqlHorarios .= " AND hso.cod_sucursal = ?";
-            $paramsHorarios[] = $sucursalLider;
+        $codigosSucursalesLider = array_filter(array_column($sucursalesLider, 'codigo'));
+
+        if (!empty($codigosSucursalesLider)) {
+            $placeholders = implode(',', array_fill(0, count($codigosSucursalesLider), '?'));
+            $sqlHorarios .= " AND hso.cod_sucursal IN ($placeholders)";
+            foreach ($codigosSucursalesLider as $cod) {
+                $paramsHorarios[] = $cod;
+            }
         }
     } elseif ($esCDS) {
         $sqlHorarios .= " AND hso.cod_sucursal = '6'";
