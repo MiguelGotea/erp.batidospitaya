@@ -54,10 +54,11 @@ try {
         case 'nombre_completo':
             // Obtener colaboradores según permisos
             if ($esLider) {
-                // Líderes solo ven colaboradores de su sucursal
+                // Líderes ven colaboradores de CUALQUIERA de sus sucursales asignadas
                 $sucursalesLider = obtenerSucursalesLider($usuario['CodOperario']);
-                if (!empty($sucursalesLider)) {
-                    $sucursalLider = $sucursalesLider[0]['codigo'];
+                $codigosSucursalesLider = array_filter(array_column($sucursalesLider, 'codigo'));
+                if (!empty($codigosSucursalesLider)) {
+                    $placeholders = implode(',', array_fill(0, count($codigosSucursalesLider), '?'));
                     $stmt = $conn->prepare("
                         SELECT DISTINCT
                             o.CodOperario as valor,
@@ -72,13 +73,13 @@ try {
                                 ORDER BY inicio_contrato DESC, CodContrato DESC
                                 LIMIT 1
                             )
-                        WHERE anc.Sucursal = ?
+                        WHERE anc.Sucursal IN ($placeholders)
                         AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
                         AND anc.CodNivelesCargos != 27
                         AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
                         ORDER BY o.Nombre, o.Apellido
                     ");
-                    $stmt->execute([$sucursalLider]);
+                    $stmt->execute($codigosSucursalesLider);
                     $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 }
             } elseif ($esCDS) {
@@ -133,9 +134,13 @@ try {
 
             if ($esLider) {
                 $sucursalesLider = obtenerSucursalesLider($usuario['CodOperario']);
-                if (!empty($sucursalesLider)) {
-                    $whereCargos = " AND anc.Sucursal = ? ";
-                    $paramsCargos[] = $sucursalesLider[0]['codigo'];
+                $codigosSucursalesLider = array_filter(array_column($sucursalesLider, 'codigo'));
+                if (!empty($codigosSucursalesLider)) {
+                    $placeholders = implode(',', array_fill(0, count($codigosSucursalesLider), '?'));
+                    $whereCargos = " AND anc.Sucursal IN ($placeholders) ";
+                    foreach ($codigosSucursalesLider as $cod) {
+                        $paramsCargos[] = $cod;
+                    }
                 }
             } elseif ($esCDS) {
                 $whereCargos = " AND anc.Sucursal = '6' AND anc.CodNivelesCargos IN (23, 20, 34) ";
