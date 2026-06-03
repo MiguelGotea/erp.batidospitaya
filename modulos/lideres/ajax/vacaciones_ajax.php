@@ -126,6 +126,14 @@ try {
             $observaciones = $_POST['observaciones'] ?? '';
             $categoriaFalta = $_POST['categoria_falta'] ?? 'vacaciones'; // 'vacaciones', 'subsidio', 'falta_permiso'
             $tipoFaltaOriginal = $_POST['tipo_falta'] ?? 'Vacaciones';
+
+            // Cantidad de días fraccional: solo aprobadores pueden enviar menos de 1
+            $cantidadDiasInput = isset($_POST['cantidad_dias']) ? (float)$_POST['cantidad_dias'] : 1.0;
+            if (!$puedeAprobar || $cantidadDiasInput <= 0 || $cantidadDiasInput > 1) {
+                $cantidadDias = 1.0;
+            } else {
+                $cantidadDias = round($cantidadDiasInput, 2);
+            }
             
             if (!$codOperario || !$codSucursal || !$fechaInicio || !$fechaFin) {
                 throw new Exception('Todos los campos son obligatorios');
@@ -236,15 +244,17 @@ try {
             $errores = [];
             
             foreach ($diasRango as $dia) {
-                // Verificar si ya existe un registro para este día
-                $stmt = $conn->prepare("
-                    SELECT id FROM faltas_manual 
+                // Verificar que la suma de ausencias para este día no supere 1.00
+                $stmtSum = $conn->prepare("
+                    SELECT COALESCE(SUM(cantidad_dias), 0) AS total_dias
+                    FROM faltas_manual
                     WHERE cod_operario = ? AND fecha_falta = ?
-                    LIMIT 1
                 ");
-                $stmt->execute([$codOperario, $dia]);
-                if ($stmt->fetch()) {
-                    $errores[] = "Ya existe un registro para el día " . formatoFechaCorta($dia);
+                $stmtSum->execute([$codOperario, $dia]);
+                $totalExistente = (float)$stmtSum->fetch()['total_dias'];
+
+                if ($totalExistente + $cantidadDias > 1.0) {
+                    $errores[] = "El día " . formatoFechaCorta($dia) . " ya tiene " . number_format($totalExistente, 2) . " día(s) registrado(s). Agregar " . number_format($cantidadDias, 2) . " día(s) superaría el límite de 1 día completo";
                     continue;
                 }
                 
@@ -263,8 +273,8 @@ try {
                 $stmt = $conn->prepare("
                     INSERT INTO faltas_manual (
                         cod_operario, fecha_falta, cod_sucursal, 
-                        tipo_falta, observaciones, observaciones_rrhh, foto_path, registrado_por, cod_contrato, porcentaje_pago
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        tipo_falta, observaciones, observaciones_rrhh, foto_path, registrado_por, cod_contrato, porcentaje_pago, cantidad_dias
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 
                 $ok = $stmt->execute([
@@ -277,7 +287,8 @@ try {
                     $rutaRelativa,
                     $_SESSION['usuario_id'],
                     $codContrato,
-                    $porcentajePago
+                    $porcentajePago,
+                    $cantidadDias
                 ]);
                 
                 if ($ok) {
@@ -335,12 +346,33 @@ try {
             }
             
             $porcentajePago = obtenerPorcentajePagoTipoFalta($tipoFalta);
-            
+
+            // Cantidad de días fraccional en edición (solo aprobadores)
+            $cantidadDiasEdit = isset($_POST['cantidad_dias']) ? (float)$_POST['cantidad_dias'] : 1.0;
+            if ($cantidadDiasEdit <= 0 || $cantidadDiasEdit > 1) {
+                $cantidadDiasEdit = 1.0;
+            } else {
+                $cantidadDiasEdit = round($cantidadDiasEdit, 2);
+            }
+
+            // Verificar que la suma de otros registros del mismo día no supere 1.00
+            $stmtSumEdit = $conn->prepare("
+                SELECT COALESCE(SUM(cantidad_dias), 0) AS total_dias
+                FROM faltas_manual
+                WHERE cod_operario = ? AND fecha_falta = ? AND id != ?
+            ");
+            $stmtSumEdit->execute([$falta['cod_operario'], $falta['fecha_falta'], $id]);
+            $totalOtros = (float)$stmtSumEdit->fetch()['total_dias'];
+            if ($totalOtros + $cantidadDiasEdit > 1.0) {
+                throw new Exception('La duración ingresada (' . number_format($cantidadDiasEdit, 2) . ' días) supera el límite: ya hay ' . number_format($totalOtros, 2) . ' día(s) registrado(s) en esa fecha para este colaborador');
+            }
+
             $stmt = $conn->prepare("
                 UPDATE faltas_manual 
                 SET tipo_falta = ?, 
                     observaciones_rrhh = ?,
                     porcentaje_pago = ?,
+                    cantidad_dias = ?,
                     actualizado_por = ?,
                     fecha_actualizacion = NOW()
                 WHERE id = ?
@@ -349,6 +381,7 @@ try {
                 $tipoFalta,
                 $observaciones_rrhh,
                 $porcentajePago,
+                $cantidadDiasEdit,
                 $_SESSION['usuario_id'],
                 $id
             ]);

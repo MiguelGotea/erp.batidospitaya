@@ -641,6 +641,7 @@ function obtenerTiposFaltaConPorcentajes()
                                     <th>Fecha</th>
                                     <th>Tipo</th>
                                     <th>% Pago</th>
+                                    <th>Días</th>
                                     <th>Observaciones</th>
                                     <?php if ($puedeAprobar): ?><th>Obs. RRHH</th><?php endif; ?>
                                     <th>Registrado por</th>
@@ -660,6 +661,12 @@ function obtenerTiposFaltaConPorcentajes()
                                             </span>
                                         </td>
                                         <td style="text-align:center;"><?= number_format($vacacion['porcentaje_pago'] ?? 0, 0) ?>%</td>
+                                        <td style="text-align:center;">
+                                            <?php
+                                            $cantDias = isset($vacacion['cantidad_dias']) ? (float)$vacacion['cantidad_dias'] : 1.0;
+                                            echo number_format($cantDias, 2);
+                                            ?>
+                                        </td>
                                         <td title="<?= htmlspecialchars($vacacion['observaciones'] ?: '-') ?>">
                                             <?= $vacacion['observaciones'] ? htmlspecialchars(recortarTexto($vacacion['observaciones'], 25)) : '-' ?>
                                         </td>
@@ -688,7 +695,8 @@ function obtenerTiposFaltaConPorcentajes()
                                                         '<?= $vacacion['tipo_falta'] ?>',
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones'] ?? '')) ?>',
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones_rrhh'] ?? '')) ?>',
-                                                        '<?= htmlspecialchars($vacacion['foto_path'] ?? '') ?>'
+                                                        '<?= htmlspecialchars($vacacion['foto_path'] ?? '') ?>',
+                                                        <?= number_format(isset($vacacion['cantidad_dias']) ? (float)$vacacion['cantidad_dias'] : 1.0, 2) ?>
                                                     )">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
@@ -814,6 +822,30 @@ function obtenerTiposFaltaConPorcentajes()
                             <small id="info-porcentaje-subsidio" class="form-text text-muted mt-1 d-block"></small>
                         </div>
 
+                        <?php if ($puedeAprobar): ?>
+                        <div class="mb-3">
+                            <label for="subsidio_cantidad_dias" class="form-label small fw-bold text-muted text-uppercase">Duración de la Ausencia:</label>
+                            <select id="subsidio_cantidad_dias" name="cantidad_dias" class="form-select" onchange="manejarCantidadDias(this, 'subsidio_custom_dias')">
+                                <option value="1.00">Día completo (8 h)</option>
+                                <option value="0.88">7 horas</option>
+                                <option value="0.75">6 horas</option>
+                                <option value="0.63">5 horas</option>
+                                <option value="0.50">4 horas (Media jornada)</option>
+                                <option value="0.38">3 horas</option>
+                                <option value="0.25">2 horas</option>
+                                <option value="0.13">1 hora</option>
+                                <option value="custom">Personalizado...</option>
+                            </select>
+                            <div id="subsidio_custom_dias" class="mt-2" style="display:none;">
+                                <input type="number" id="subsidio_custom_input" class="form-control" placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
+                                    oninput="actualizarCantidadPersonalizada(this, 'subsidio_cantidad_dias')">
+                                <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas ÷ 8)</small>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <input type="hidden" name="cantidad_dias" value="1.00">
+                        <?php endif; ?>
+
                         <div class="mb-3">
                             <label for="subsidio_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
                             <textarea id="subsidio_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;"></textarea>
@@ -925,6 +957,30 @@ function obtenerTiposFaltaConPorcentajes()
                                 <small class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
                             <?php endif; ?>
                         </div>
+
+                        <?php if ($puedeAprobar): ?>
+                        <div class="mb-3">
+                            <label for="nueva_cantidad_dias" class="form-label small fw-bold text-muted text-uppercase">Duración de la Ausencia:</label>
+                            <select id="nueva_cantidad_dias" name="cantidad_dias" class="form-select" onchange="manejarCantidadDias(this, 'nueva_custom_dias')">
+                                <option value="1.00">Día completo (8 h)</option>
+                                <option value="0.88">7 horas</option>
+                                <option value="0.75">6 horas</option>
+                                <option value="0.63">5 horas</option>
+                                <option value="0.50">4 horas (Media jornada)</option>
+                                <option value="0.38">3 horas</option>
+                                <option value="0.25">2 horas</option>
+                                <option value="0.13">1 hora</option>
+                                <option value="custom">Personalizado...</option>
+                            </select>
+                            <div id="nueva_custom_dias" class="mt-2" style="display:none;">
+                                <input type="number" id="nueva_custom_input" class="form-control" placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
+                                    oninput="actualizarCantidadPersonalizada(this, 'nueva_cantidad_dias')">
+                                <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas ÷ 8)</small>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <input type="hidden" name="cantidad_dias" value="1.00">
+                        <?php endif; ?>
 
                         <div class="mb-3">
                             <label for="nueva_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
@@ -1104,6 +1160,30 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
                         <?php endif; ?>
 
+                        <?php if ($puedeAprobar): ?>
+                        <div class="mb-3">
+                            <label for="falta_cantidad_dias" class="form-label small fw-bold text-muted text-uppercase">Duración de la Ausencia:</label>
+                            <select id="falta_cantidad_dias" name="cantidad_dias" class="form-select" onchange="manejarCantidadDias(this, 'falta_custom_dias')">
+                                <option value="1.00">Día completo (8 h)</option>
+                                <option value="0.88">7 horas</option>
+                                <option value="0.75">6 horas</option>
+                                <option value="0.63">5 horas</option>
+                                <option value="0.50">4 horas (Media jornada)</option>
+                                <option value="0.38">3 horas</option>
+                                <option value="0.25">2 horas</option>
+                                <option value="0.13">1 hora</option>
+                                <option value="custom">Personalizado...</option>
+                            </select>
+                            <div id="falta_custom_dias" class="mt-2" style="display:none;">
+                                <input type="number" id="falta_custom_input" class="form-control" placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
+                                    oninput="actualizarCantidadPersonalizada(this, 'falta_cantidad_dias')">
+                                <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas ÷ 8)</small>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <input type="hidden" name="cantidad_dias" value="1.00">
+                        <?php endif; ?>
+
                         <div class="mb-3">
                             <label for="falta_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
                             <textarea id="falta_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;"></textarea>
@@ -1194,6 +1274,26 @@ function obtenerTiposFaltaConPorcentajes()
                                     <?php endforeach; ?>
                                 </select>
                                 <small id="info-porcentaje-edicion" class="form-text mt-1 d-block"></small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editar_cantidad_dias" class="form-label small fw-bold text-muted text-uppercase">Duración de la Ausencia:</label>
+                                <select id="editar_cantidad_dias" name="cantidad_dias" class="form-select" onchange="manejarCantidadDias(this, 'editar_custom_dias')">
+                                    <option value="1.00">Día completo (8 h)</option>
+                                    <option value="0.88">7 horas</option>
+                                    <option value="0.75">6 horas</option>
+                                    <option value="0.63">5 horas</option>
+                                    <option value="0.50">4 horas (Media jornada)</option>
+                                    <option value="0.38">3 horas</option>
+                                    <option value="0.25">2 horas</option>
+                                    <option value="0.13">1 hora</option>
+                                    <option value="custom">Personalizado...</option>
+                                </select>
+                                <div id="editar_custom_dias" class="mt-2" style="display:none;">
+                                    <input type="number" id="editar_custom_input" class="form-control" placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
+                                        oninput="actualizarCantidadPersonalizada(this, 'editar_cantidad_dias')">
+                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas ÷ 8)</small>
+                                </div>
                             </div>
 
                             <div class="mb-3">

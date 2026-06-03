@@ -1,11 +1,12 @@
-﻿<?php
-// require_once '../../includes/auth.php';
-// require_once '../../includes/funciones.php';
+<?php
 require_once '../../core/auth/auth.php'; // Se centralizó el acceso a auth, db y funciones
+require_once '../../core/permissions/permissions.php';
 
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo y cargos específicos (8, 16, 41) o admin
-if (!verificarAccesoCargo([8, 16, 41, 49])) {
+// Verificar acceso con sistema de permisos tools ERP
+if (!tienePermiso('horarios_programados', 'exportar', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }
@@ -25,38 +26,208 @@ if (!$semana) {
 
 $mostrarTodas = ($sucursalSeleccionada === 'todas');
 
-// --- Funciones Locales Refactorizadas ---
+// --- Helper Functions ---
 
 /**
- * Obtiene los horarios de la tabla oficial para una semana y sucursal.
- * Evita duplicados al filtrar solo por la sucursal de origen del registro.
+ * Obtiene TODOS los operarios que trabajan en una sucursal (principal + externos)
+ * para una semana específica
  */
-function obtenerHorariosOficiales($idSemana, $codSucursal = null)
+function obtenerTodosOperariosEnSucursal($codSucursal, $idSemana, $buscarEnLideres = false)
 {
     global $conn;
 
-    $sql = "
-        SELECT h.*, o.Nombre, o.Apellido, o.Apellido2, s.nombre as sucursal_nombre
-        FROM HorariosSemanalesOperaciones h
-        JOIN Operarios o ON h.cod_operario = o.CodOperario
-        JOIN sucursales s ON h.cod_sucursal = s.codigo
-        WHERE h.id_semana_sistema = ?
-    ";
-
-    $params = [$idSemana];
-
-    if ($codSucursal && $codSucursal !== 'todas') {
-        $sql .= " AND h.cod_sucursal = ?";
-        $params[] = $codSucursal;
+    if ($buscarEnLideres) {
+        $tabla = 'HorariosSemanales';
+    } else {
+        $tabla = 'HorariosSemanalesOperaciones';
     }
 
-    $sql .= " ORDER BY s.nombre, o.Nombre, o.Apellido";
+    $stmt = $conn->prepare("
+        SELECT DISTINCT o.CodOperario, o.Nombre, o.Apellido, o.Apellido2
+        FROM Operarios o
+        JOIN $tabla h ON o.CodOperario = h.cod_operario
+        WHERE h.id_semana_sistema = ?
+        AND (
+            -- Sucursal principal del horario
+            h.cod_sucursal = ?
+            OR 
+            -- O es Otra.Tienda para esta sucursal en algún día
+            (h.lunes_estado = 'Otra.Tienda' AND h.lunes_sucursal_externa = ?)
+            OR (h.martes_estado = 'Otra.Tienda' AND h.martes_sucursal_externa = ?)
+            OR (h.miercoles_estado = 'Otra.Tienda' AND h.miercoles_sucursal_externa = ?)
+            OR (h.jueves_estado = 'Otra.Tienda' AND h.jueves_sucursal_externa = ?)
+            OR (h.viernes_estado = 'Otra.Tienda' AND h.viernes_sucursal_externa = ?)
+            OR (h.sabado_estado = 'Otra.Tienda' AND h.sabado_sucursal_externa = ?)
+            OR (h.domingo_estado = 'Otra.Tienda' AND h.domingo_sucursal_externa = ?)
+        )
+        ORDER BY o.Nombre, o.Apellido, o.Apellido2
+    ");
 
-    $stmt = $conn->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt->execute([
+        $idSemana,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal
+    ]);
+
+    $result = $stmt->fetchAll();
+
+    // Deduplicar por CodOperario
+    $vistos = [];
+    $deduplicados = [];
+    foreach ($result as $row) {
+        $cod = $row['CodOperario'];
+        if (!isset($vistos[$cod])) {
+            $vistos[$cod] = true;
+            $deduplicados[] = $row;
+        }
+    }
+    return $deduplicados;
 }
 
+/**
+ * Obtiene el horario FILTRADO para una sucursal específica
+ */
+function obtenerHorarioFiltradoPorSucursal($codOperario, $idSemana, $codSucursal, $buscarEnLideres = false)
+{
+    global $conn;
+
+    if ($buscarEnLideres) {
+        $tabla = 'HorariosSemanales';
+    } else {
+        $tabla = 'HorariosSemanalesOperaciones';
+    }
+
+    $stmt = $conn->prepare("
+        SELECT * FROM $tabla 
+        WHERE cod_operario = ? 
+        AND id_semana_sistema = ?
+        AND (
+            -- Sucursal principal
+            cod_sucursal = ?
+            OR 
+            -- O es Otra.Tienda para esta sucursal
+            (lunes_estado = 'Otra.Tienda' AND lunes_sucursal_externa = ?)
+            OR (martes_estado = 'Otra.Tienda' AND martes_sucursal_externa = ?)
+            OR (miercoles_estado = 'Otra.Tienda' AND miercoles_sucursal_externa = ?)
+            OR (jueves_estado = 'Otra.Tienda' AND jueves_sucursal_externa = ?)
+            OR (viernes_estado = 'Otra.Tienda' AND viernes_sucursal_externa = ?)
+            OR (sabado_estado = 'Otra.Tienda' AND sabado_sucursal_externa = ?)
+            OR (domingo_estado = 'Otra.Tienda' AND domingo_sucursal_externa = ?)
+        )
+        ORDER BY CASE WHEN cod_sucursal = ? THEN 0 ELSE 1 END
+        LIMIT 1
+    ");
+
+    $stmt->execute([
+        $codOperario,
+        $idSemana,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal,
+        $codSucursal  // para el ORDER BY CASE WHEN cod_sucursal = ?
+    ]);
+
+    $horario = $stmt->fetch();
+
+    if (!$horario) {
+        return null;
+    }
+
+    // Filtrar solo los días que aplican para esta sucursal
+    return filtrarHorarioPorSucursal($horario, $codSucursal);
+}
+
+/**
+ * Filtra un horario completo para mostrar solo días que aplican a una sucursal
+ */
+function filtrarHorarioPorSucursal($horario, $codSucursal)
+{
+    $dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+    $horarioFiltrado = $horario;
+    $sucursalPrincipal = (string)($horario['cod_sucursal'] ?? '');
+    $esSucursalPrincipal = ($sucursalPrincipal === (string)$codSucursal);
+
+    foreach ($dias as $dia) {
+        $estadoDia = $horario["{$dia}_estado"] ?? '';
+        $sucursalExternaDia = (string)($horario["{$dia}_sucursal_externa"] ?? '');
+        $codSucursalStr = (string)$codSucursal;
+
+        if ($esSucursalPrincipal) {
+            // No se filtra nada - todo aplica para la sucursal principal
+        } else {
+            // Solo mostrar los días donde está como Otra.Tienda para ESTA sucursal
+            $aplica = ($estadoDia === 'Otra.Tienda' && $sucursalExternaDia === $codSucursalStr);
+            if (!$aplica) {
+                $horarioFiltrado["{$dia}_estado"] = '';
+                $horarioFiltrado["{$dia}_entrada"] = null;
+                $horarioFiltrado["{$dia}_salida"] = null;
+                $horarioFiltrado["{$dia}_horas"] = 0;
+                $horarioFiltrado["{$dia}_comentario"] = null;
+                $horarioFiltrado["{$dia}_sucursal_externa"] = null;
+            }
+        }
+    }
+
+    return $horarioFiltrado;
+}
+
+/**
+ * Determina si un día aplica para una sucursal
+ */
+function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
+{
+    if (!$horario || !$codSucursal) {
+        return false;
+    }
+
+    $codSucursalBuscar = (string)$codSucursal;
+    $sucursalPrincipal = (string)($horario['cod_sucursal'] ?? '');
+    $estadoDia = $horario["{$dia}_estado"] ?? '';
+    $sucursalExterna = (string)($horario["{$dia}_sucursal_externa"] ?? '');
+
+    if ($sucursalPrincipal === $codSucursalBuscar) {
+        return true;
+    }
+
+    if ($estadoDia === 'Otra.Tienda' && $sucursalExterna === $codSucursalBuscar) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Obtiene el nombre de la sucursal externa si existe
+ */
+function obtenerNombreSucursalExterna($codSucursalExterna)
+{
+    global $conn;
+
+    if (empty($codSucursalExterna)) {
+        return null;
+    }
+
+    $stmt = $conn->prepare("SELECT nombre FROM sucursales WHERE codigo = ? LIMIT 1");
+    $stmt->execute([$codSucursalExterna]);
+    $result = $stmt->fetch();
+
+    return $result['nombre'] ?? null;
+}
+
+/**
+ * Obtiene las categorías vigentes de los operarios
+ */
 function obtenerCategoriasOperariosLocal($codigosOperarios)
 {
     global $conn;
@@ -81,34 +252,161 @@ function obtenerCategoriasOperariosLocal($codigosOperarios)
     return $resultados;
 }
 
-// Recolectar datos
-$todosHorarios = obtenerHorariosOficiales($semana['id'], $sucursalSeleccionada);
+// --- Carga de Sucursales según Cargo ---
+$puedeVerTodasSucursales = tienePermiso('horarios_programados', 'ver_todas_sucursales', $cargoOperario);
+$esFiltroSucursalPropia  = tienePermiso('horarios_programados', 'filtro_sucursal_propia', $cargoOperario);
 
-if (empty($todosHorarios)) {
-    die("No hay registros de horarios oficiales para esta selección.");
+if ($puedeVerTodasSucursales) {
+    $sucursales = obtenerSucursalesFisicas();
+} else {
+    $sucursales = obtenerSucursalesUsuario($usuario['CodOperario']);
 }
 
-$codigosOperarios = array_column($todosHorarios, 'cod_operario');
-$categorias = obtenerCategoriasOperariosLocal(array_unique($codigosOperarios));
+// Validar que no intente exportar "todas" si no tiene permiso
+if ($mostrarTodas && !$puedeVerTodasSucursales) {
+    if (!empty($sucursales)) {
+        $sucursalSeleccionada = $sucursales[0]['codigo'];
+        $mostrarTodas = false;
+    } else {
+        die("No tienes sucursales asignadas.");
+    }
+}
 
-// Agrupar por sucursal para el reporte
+if (empty($sucursales)) {
+    die("No tienes sucursales asignadas.");
+}
+
+// --- Recopilar datos ---
 $horariosPorSucursal = [];
-foreach ($todosHorarios as $h) {
-    $sucursalCod = $h['cod_sucursal'];
-    if (!isset($horariosPorSucursal[$sucursalCod])) {
-        $horariosPorSucursal[$sucursalCod] = [
-            'nombre' => $h['sucursal_nombre'],
-            'horarios' => []
-        ];
+
+if ($mostrarTodas) {
+    foreach ($sucursales as $sucursal) {
+        $usarLiderLocal = false;
+        $ops = obtenerTodosOperariosEnSucursal($sucursal['codigo'], $semana['id'], false);
+
+        // Fallback a Horarios de Líderes
+        if (empty($ops)) {
+            $ops = obtenerTodosOperariosEnSucursal($sucursal['codigo'], $semana['id'], true);
+            $usarLiderLocal = true;
+        }
+
+        if (!empty($ops)) {
+            $horariosFiltrados = [];
+            foreach ($ops as &$operario) {
+                $codOperario = $operario['CodOperario'];
+                $horario = obtenerHorarioFiltradoPorSucursal(
+                    $codOperario,
+                    $semana['id'],
+                    $sucursal['codigo'],
+                    $usarLiderLocal
+                );
+                if ($horario) {
+                    $horariosFiltrados[$codOperario] = $horario;
+                }
+            }
+            unset($operario);
+
+            $codigosOperarios = array_column($ops, 'CodOperario');
+            $categorias = obtenerCategoriasOperariosLocal($codigosOperarios);
+
+            foreach ($ops as &$operario) {
+                $codOperario = $operario['CodOperario'];
+                $operario['categoria'] = $categorias[$codOperario] ?? [
+                    'NombreCategoria' => 'Sin categoría',
+                    'Peso' => '-',
+                    'idCategoria' => 0
+                ];
+            }
+            unset($operario);
+
+            $horariosPorSucursal[$sucursal['codigo']] = [
+                'nombre' => $sucursal['nombre'],
+                'operarios' => $ops,
+                'horarios' => $horariosFiltrados,
+                'esDeLider' => $usarLiderLocal
+            ];
+        }
+    }
+} else {
+    // Verificar que la sucursal seleccionada sea válida para este usuario
+    $sucursalValida = false;
+    $nombreSucursal = '';
+    foreach ($sucursales as $suc) {
+        if ($suc['codigo'] == $sucursalSeleccionada) {
+            $sucursalValida = true;
+            $nombreSucursal = $suc['nombre'];
+            break;
+        }
     }
 
-    // Adjuntar categoría
-    $h['categoria'] = $categorias[$h['cod_operario']] ?? ['NombreCategoria' => 'Sin categoría', 'Peso' => '-', 'idCategoria' => 0];
-    $horariosPorSucursal[$sucursalCod]['horarios'][] = $h;
+    if (!$sucursalValida) {
+        die("No tienes acceso a la sucursal seleccionada o no existe.");
+    }
+
+    $usarLiderLocal = false;
+    $ops = obtenerTodosOperariosEnSucursal($sucursalSeleccionada, $semana['id'], false);
+
+    // Fallback a Horarios de Líderes
+    if (empty($ops)) {
+        $ops = obtenerTodosOperariosEnSucursal($sucursalSeleccionada, $semana['id'], true);
+        $usarLiderLocal = true;
+    }
+
+    if (!empty($ops)) {
+        $horariosFiltrados = [];
+        foreach ($ops as &$operario) {
+            $codOperario = $operario['CodOperario'];
+            $horario = obtenerHorarioFiltradoPorSucursal(
+                $codOperario,
+                $semana['id'],
+                $sucursalSeleccionada,
+                $usarLiderLocal
+            );
+            if ($horario) {
+                $horariosFiltrados[$codOperario] = $horario;
+            }
+        }
+        unset($operario);
+
+        $codigosOperarios = array_column($ops, 'CodOperario');
+        $categorias = obtenerCategoriasOperariosLocal($codigosOperarios);
+
+        foreach ($ops as &$operario) {
+            $codOperario = $operario['CodOperario'];
+            $operario['categoria'] = $categorias[$codOperario] ?? [
+                'NombreCategoria' => 'Sin categoría',
+                'Peso' => '-',
+                'idCategoria' => 0
+            ];
+        }
+        unset($operario);
+
+        $horariosPorSucursal[$sucursalSeleccionada] = [
+            'nombre' => $nombreSucursal,
+            'operarios' => $ops,
+            'horarios' => $horariosFiltrados,
+            'esDeLider' => $usarLiderLocal
+        ];
+    }
 }
 
-// Configurar Excel
-$nombreArchivo = "horarios_oficiales_semana_{$semanaSeleccionada}.xls";
+if (empty($horariosPorSucursal)) {
+    die("No hay registros de horarios para esta selección.");
+}
+
+// Configurar nombre de archivo dinámico y estado
+$contieneLider = false;
+foreach ($horariosPorSucursal as $sucData) {
+    if ($sucData['esDeLider']) {
+        $contieneLider = true;
+        break;
+    }
+}
+$tipoEstado = $contieneLider ? 'BORRADOR_LIDER' : 'OFICIAL';
+$marcaTiempo = date('Ymd_Hi');
+$sufijoSucursal = $mostrarTodas ? 'todas' : $sucursalSeleccionada;
+$nombreArchivo = "horarios_semana_{$semanaSeleccionada}_{$sufijoSucursal}_{$tipoEstado}_{$marcaTiempo}.xls";
+
 header('Content-Type: application/vnd.ms-excel; charset=utf-8');
 header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
 header('Pragma: no-cache');
@@ -122,11 +420,29 @@ echo '<!DOCTYPE html><html><head><meta charset="utf-8">
     td { border: 1px solid #ccc; padding: 5px; vertical-align: top; }
     h3 { color: #0E544C; margin-bottom: 5px; }
     .comentario { color: #555; font-size: 0.9em; font-style: italic; }
+    .nota-lider { color: #0c5460; background-color: #d1ecf1; padding: 8px; border: 1px solid #bee5eb; margin-bottom: 10px; font-weight: bold; }
+    .meta-table td { border: none !important; padding: 3px !important; }
 </style>
 </head><body>';
 
+// Renderizar encabezado de verificación de validez y control de cambios
+$nombreCompletoUsuario = trim($usuario['Nombre'] . ' ' . $usuario['Apellido'] . ' ' . ($usuario['Apellido2'] ?? ''));
+$nombreTiendaFiltro = $mostrarTodas ? 'Todas las sucursales' : ($nombreSucursal ?? obtenerNombreSucursalExterna($sucursalSeleccionada));
+
+echo '<table class="meta-table" style="border: none; margin-bottom: 20px; width: 100%;">';
+echo '<tr><td colspan="9" style="font-size: 14pt; font-weight: bold; color: #0E544C;">REPORTE DE HORARIOS - SEMANA ' . htmlspecialchars($semanaSeleccionada) . '</td></tr>';
+echo '<tr><td colspan="9"><b>Filtro de Tienda:</b> ' . htmlspecialchars($nombreTiendaFiltro) . '</td></tr>';
+echo '<tr><td colspan="9"><b>Generado por:</b> ' . htmlspecialchars($nombreCompletoUsuario) . '</td></tr>';
+echo '<tr><td colspan="9"><b>Fecha y Hora de Generación:</b> ' . date('d/m/Y h:i A') . '</td></tr>';
+echo '<tr><td colspan="9"><b>Estado del Reporte:</b> ' . ($tipoEstado === 'OFICIAL' ? '<span style="color: #27ae60; font-weight: bold; font-size: 11pt;">✔ OFICIAL (Confirmado por Operaciones)</span>' : '<span style="color: #d35400; font-weight: bold; font-size: 11pt;">⚠ PREVIO (Borrador de Líderes - Sujeto a confirmación)</span>') . '</td></tr>';
+echo '<tr><td colspan="9" style="font-size: 8.5pt; color: #7f8c8d; font-style: italic; border-top: 1px solid #ccc; padding-top: 5px !important;">Nota: Este documento representa una captura estática de la base de datos a la fecha y hora indicadas. Los horarios válidos y vigentes son únicamente los que se visualizan en tiempo real en la plataforma ERP Batidos Pitaya.</td></tr>';
+echo '</table><br>';
+
 foreach ($horariosPorSucursal as $codSucursal => $data) {
     echo "<h3>" . htmlspecialchars($data['nombre']) . "</h3>";
+    if ($data['esDeLider']) {
+        echo "<div class='nota-lider'>Horarios programados por líderes (no confirmados aún por operaciones)</div>";
+    }
 
     echo '<table border="1">';
     echo '<thead><tr>';
@@ -143,10 +459,13 @@ foreach ($horariosPorSucursal as $codSucursal => $data) {
     echo '</tr></thead>';
     echo '<tbody>';
 
-    foreach ($data['horarios'] as $horario) {
+    foreach ($data['operarios'] as $operario) {
+        $horario = $data['horarios'][$operario['CodOperario']] ?? null;
+        if (!$horario) continue;
+
         echo '<tr>';
-        echo '<td>' . htmlspecialchars($horario['Nombre'] . ' ' . $horario['Apellido'] . ' ' . $horario['Apellido2']) . '</td>';
-        echo '<td>' . htmlspecialchars($horario['categoria']['NombreCategoria']) . '</td>';
+        echo '<td>' . htmlspecialchars($operario['Nombre'] . ' ' . $operario['Apellido'] . ' ' . $operario['Apellido2']) . '</td>';
+        echo '<td>' . htmlspecialchars($operario['categoria']['NombreCategoria']) . '</td>';
 
         $totalHoras = 0;
         $diasStr = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
@@ -169,7 +488,7 @@ foreach ($horariosPorSucursal as $codSucursal => $data) {
                 } else {
                     echo htmlspecialchars($estado);
                     if ($esOtraTienda && $sucursalExt) {
-                        $nomExt = obtenerNombreSucursal($sucursalExt);
+                        $nomExt = obtenerNombreSucursalExterna($sucursalExt);
                         echo ": " . htmlspecialchars($nomExt);
                     }
                 }

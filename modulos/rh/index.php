@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -13,6 +13,10 @@ if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28, 54, 49])) {
     header('Location: ../index.php');
     exit();
 }
+
+// Horarios por Confirmar (componente core)
+require_once '../../core/components/indicators/horarios_confirmacion/horarios_confirmacion_functions.php';
+$hc_estadoConfirmacion = hc_obtenerEstadoHorariosPendientesConfirmacion($usuario['CodOperario'] ?? $_SESSION['usuario_id'] ?? null);
 
 // Obtener todas las sucursales
 $sucursales = obtenerTodasSucursales();
@@ -1610,6 +1614,7 @@ function obtenerDetalleAusenciasColaboradoresModal()
                 text-align: center;
             }
         }
+        <?php include '../../core/components/indicators/horarios_confirmacion/horarios_confirmacion_styles.php'; ?>
     </style>
 </head>
 
@@ -1626,6 +1631,9 @@ function obtenerDetalleAusenciasColaboradoresModal()
 
             <!-- Contenedor para indicadores -->
             <div class="indicadores-container">
+                <!-- Indicador: Horarios por Confirmar -->
+                <?php include '../../core/components/indicators/horarios_confirmacion/horarios_confirmacion_card.php'; ?>
+
                 <!-- Indicador de Contratos Próximos a Vencer -->
                 <div class="indicator-container" onclick="mostrarModalContratos()" style="cursor: pointer;">
                     <div class="indicator-header">
@@ -1808,6 +1816,9 @@ function obtenerDetalleAusenciasColaboradoresModal()
                 <?php endif; ?>
 
             </div>
+
+            <!-- Modal de Horarios por Confirmar -->
+            <?php include '../../core/components/indicators/horarios_confirmacion/horarios_confirmacion_modal.php'; ?>
 
             <!-- Modal para detalles de contratos próximos a vencer -->
             <div id="modalContratos" class="modal-pendientes">
@@ -2559,6 +2570,8 @@ function obtenerDetalleAusenciasColaboradoresModal()
             const año = fechaObj.getFullYear().toString().slice(-2);
             return `${dia}-${mes}-${año}`;
         }
+
+        <?php include '../../core/components/indicators/horarios_confirmacion/horarios_confirmacion_scripts.php'; ?>
     </script>
 </body>
 
