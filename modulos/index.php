@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // /public_html/modulos/index.php
 
 require_once '../core/auth/auth.php';
@@ -11,84 +11,104 @@ require_once '../core/auth/auth.php';
 // Obtener todos los cargos del usuario de la sesión (no solo uno)
 $cargosUsuario = obtenerCargosUsuario($_SESSION['usuario_id']);
 
-// Mapeo de cargos a rutas de módulos (debe coincidir con lo definido en funciones.php)
-$modulosPorCargo = [
-    2 => 'operarios',               // Operario
-    5 => 'lideres',                 // Líder de Sucursal
-    8 => 'contabilidad',            // Jefe de Contabilidad
-    9 => 'compras',                 // Jefe de Compras
-    10 => 'logistica',              // Jefe de Logística
-    11 => 'operaciones',            // Jefe de Operaciones
-    12 => 'produccion',             // Jefe de Producción
-    13 => 'rh',                     // Jefe de Recursos Humanos
-    14 => 'mantenimiento',          // Jefe de Mantenimiento
-    15 => 'sistemas',               // Jefe de Sistemas
-    16 => 'gerencia',               // Gerencia
-    17 => 'almacen',                // Jefe de Almacén
-    19 => 'cds',                    // Jefe de CDS
-    20 => 'chofer',                 // Chofer
-    21 => 'supervision',            // Supervisor de Sucursales
-    22 => 'atencioncliente',        // Atención al Cliente
-    23 => 'almacen',                // Auxiliar de Almacén
-    24 => 'motorizado',             // Motorizado
-    25 => 'diseno',                 // Diseñador
-    26 => 'marketing',              // Jefe de Marketing
-    27 => 'sucursales',             // Sucursales
-    35 => 'infraestructura',        // Líder de Infraestructura y Expansión Comercial
-    28 => 'rh',                     // Técnico de Desarrollo Humano
-    33 => 'desarrollo',             // Líder de Desarrollo
-    38 => 'auxiliaradministrativo', // Auxiliar Administrativo
-    39 => 'rh',                     // Responsable de Reclutamiento y Selección
-    30 => 'rh',                     // Coordinadora de Clima y Cultura
-    37 => 'rh',                     // Pasante de RRHH
-    42 => 'marketing',              // Gerente de Marketing y Ventas
-    43 => 'lideres',                // Líder Interino
-    44 => 'operarios',              // Vendedor Training
-    45 => 'operarios',              // Vendedor Junior
-    46 => 'operarios',              // Vendedor Asistente de Líder
-    47 => 'operarios',              // Vendedor Experto
-    36 => 'operaciones',            // Líder General de Tiendas Managua
-    49 => 'gerencia',               //Gerencia General 2
-    50 => 'experienciadigital',     // Especialista en experiencia Digital del cliente
-    53 => 'marketing',              // Coordinación de Mercadeo
-    54 => 'rh',                     // Analista de clima y cultura
-    55 => 'operaciones',            // Líder General de Tiendas Managua
-    52 => 'supervision',            // Auditor de Tiendas
-    61 => 'almacen',              // Supervisor de Almacén y Despacho
-    56 => 'mantenimiento',        // Técnico de Mantenimiento
-    63 => 'mantenimiento'         // Supervisor de Mantenimiento e Infraestructuras
-];
-
-// Si es admin o no tiene cargos definidos, redirigir al inicio
+// Obtener el módulo destino directamente desde la BD (NivelesCargos.modulo_ruta)
+// Prioriza cargos que no son Operario (CodNivelesCargos != 2), luego por mayor Peso
 if (empty($cargosUsuario)) {
     header("Location: /index.php");
     exit();
 }
 
-// Ordenar los cargos para priorizar los que no son 2 (Operario)
-usort($cargosUsuario, function ($a, $b) {
-    // Si ambos son 2 o ambos no son 2, mantener el orden original
-    if (($a == 2 && $b == 2) || ($a != 2 && $b != 2)) {
-        return 0;
-    }
-    // Priorizar el que no es 2
-    return ($a == 2) ? 1 : -1;
-});
+global $conn;
+$placeholders = implode(',', array_fill(0, count($cargosUsuario), '?'));
 
-// Buscar el primer cargo que tenga un módulo asignado
-foreach ($cargosUsuario as $cargoCod) {
-    if (array_key_exists($cargoCod, $modulosPorCargo)) {
-        $modulo = $modulosPorCargo[$cargoCod];
-        $rutaModulo = "/modulos/{$modulo}/index.php";
+$stmt = $conn->prepare("
+    SELECT nc.CodNivelesCargos, nc.Nombre, nc.modulo_ruta
+    FROM NivelesCargos nc
+    WHERE nc.CodNivelesCargos IN ($placeholders)
+      AND nc.modulo_ruta IS NOT NULL
+    ORDER BY
+        CASE WHEN nc.CodNivelesCargos = 2 THEN 1 ELSE 0 END ASC,
+        nc.Peso DESC
+    LIMIT 1
+");
+$stmt->execute($cargosUsuario);
+$destinoCargo = $stmt->fetch();
 
-        // Verificar que el archivo del módulo exista
-        if (file_exists("../modulos/{$modulo}/index.php")) {
-            header("Location: $rutaModulo");
-            exit();
-        }
-    }
+if ($destinoCargo && file_exists("../modulos/{$destinoCargo['modulo_ruta']}/index.php")) {
+    header("Location: /modulos/{$destinoCargo['modulo_ruta']}/index.php");
+    exit();
 }
 
-// Si no se encontró un módulo válido, redirigir al inicio
-header("Location: ../logout.php");
-exit();
+// Cargo del usuario no tiene un módulo configurado en el ERP
+$cargoNombre = $_SESSION['cargo_nombre'] ?? 'desconocido';
+
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso no configurado - Batidos Pitaya</title>
+    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Calibri', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #F6F6F6;
+            padding: 20px;
+            gap: 24px;
+        }
+        img.logo { max-width: 140px; height: auto; }
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            padding: 36px 32px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+        .icon { font-size: 48px; margin-bottom: 16px; }
+        h2 { color: #333; margin-bottom: 10px; font-size: 1.3rem; }
+        p { color: #666; line-height: 1.6; margin-bottom: 8px; }
+        .cargo-badge {
+            display: inline-block;
+            background: #f0f0f0;
+            color: #444;
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.9rem;
+            margin: 10px 0 20px;
+        }
+        a.btn-logout {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 10px 24px;
+            background-color: #51B8AC;
+            color: #fff;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: background-color 0.2s;
+        }
+        a.btn-logout:hover { background-color: #0E544C; }
+    </style>
+</head>
+<body>
+    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
+    <div class="card">
+        <div class="icon">⚙️</div>
+        <h2>Acceso pendiente de configuración</h2>
+        <p>Tu cuenta fue verificada correctamente, pero tu cargo aún no tiene un módulo asignado en el ERP.</p>
+        <span class="cargo-badge"><?php echo htmlspecialchars($cargoNombre); ?></span>
+        <p>Contacta al equipo de <strong>TI / Sistemas</strong> para que configuren tu acceso.</p>
+        <a href="/logout.php" class="btn-logout">Cerrar sesión</a>
+    </div>
+</body>
+</html>
+

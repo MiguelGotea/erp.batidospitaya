@@ -3,6 +3,89 @@
 // erp.batidospitaya - Recursos Humanos
 // =====================================================
 
+// ── Selector de Duración (cantidad_dias) ─────────────────────────────────
+/**
+ * Muestra/oculta el campo personalizado de cantidad de días cuando el usuario
+ * selecciona "Personalizado..." en el dropdown de duración.
+ * @param {HTMLSelectElement} selectEl - El elemento <select> de duración.
+ * @param {string} customContainerId - ID del <div> que contiene el input personalizado.
+ */
+function manejarCantidadDias(selectEl, customContainerId) {
+    const customContainer = document.getElementById(customContainerId);
+    if (!customContainer) return;
+    if (selectEl.value === 'custom') {
+        customContainer.style.display = 'block';
+    } else {
+        customContainer.style.display = 'none';
+    }
+}
+
+/**
+ * Actualiza el valor del <select> de duración cuando el usuario escribe un valor
+ * personalizado en el input numérico. Si el valor no coincide con ninguna opción
+ * predefinida, mantiene la opción "custom" seleccionada pero guarda el valor real
+ * en un data-attribute para que sea recogido en el submit.
+ * @param {HTMLInputElement} inputEl - El campo numérico personalizado.
+ * @param {string} selectId - ID del <select> de duración relacionado.
+ */
+function actualizarCantidadPersonalizada(inputEl, selectId) {
+    const selectEl = document.getElementById(selectId);
+    if (!selectEl) return;
+    const val = parseFloat(inputEl.value);
+    if (isNaN(val) || val <= 0 || val > 1) return;
+    // Guardar el valor en un data attribute del select para recuperarlo en el submit
+    selectEl.dataset.customValue = val.toFixed(2);
+}
+
+/**
+ * Obtiene el valor real de cantidad_dias de un elemento select de duración.
+ * Si el valor es 'custom', retorna el data-custom-value.
+ * @param {string} selectId - ID del <select> de duración.
+ * @returns {string} El valor decimal a enviar (ej. "0.50").
+ */
+function obtenerCantidadDias(selectId) {
+    const selectEl = document.getElementById(selectId);
+    if (!selectEl) return '1.00';
+    if (selectEl.value === 'custom') {
+        return selectEl.dataset.customValue || '1.00';
+    }
+    return selectEl.value;
+}
+
+/**
+ * Inicializa el selector de duración con un valor decimal dado.
+ * Si el valor no coincide con ninguna opción predefinida, selecciona "Personalizado"
+ * y rellena el campo numérico.
+ * @param {string} selectId - ID del select de duración.
+ * @param {string} customContainerId - ID del div contenedor del input personalizado.
+ * @param {string} customInputId - ID del input numérico personalizado.
+ * @param {number|string} valor - El valor decimal a inicializar (ej. 0.5 o "0.50").
+ */
+function inicializarSelectorDuracion(selectId, customContainerId, customInputId, valor) {
+    const selectEl = document.getElementById(selectId);
+    const customContainer = document.getElementById(customContainerId);
+    const customInput = document.getElementById(customInputId);
+    if (!selectEl) return;
+    const strVal = parseFloat(valor).toFixed(2);
+    // Verificar si existe la opción en el select
+    let encontrado = false;
+    for (const opt of selectEl.options) {
+        if (opt.value === strVal) {
+            selectEl.value = strVal;
+            encontrado = true;
+            break;
+        }
+    }
+    if (!encontrado) {
+        selectEl.value = 'custom';
+        selectEl.dataset.customValue = strVal;
+        if (customInput) customInput.value = strVal;
+        if (customContainer) customContainer.style.display = 'block';
+    } else {
+        if (customContainer) customContainer.style.display = 'none';
+    }
+}
+
 // Autocompletado de colaboradores para el buscador general
 const operariosData = window.CONFIG_VACACIONES ? window.CONFIG_VACACIONES.operariosData : [];
 
@@ -495,7 +578,7 @@ function mostrarModalNuevaFaltaPermiso() {
     });
 }
 
-function mostrarModalEditarAprobar(id, nombre, sucursal, fecha, tipoFalta, observaciones, observacionesRrhh, fotoPath) {
+function mostrarModalEditarAprobar(id, nombre, sucursal, fecha, tipoFalta, observaciones, observacionesRrhh, fotoPath, cantidadDias) {
     cerrarTodosLosModales(function () {
         document.getElementById('editar_id').value = id;
         document.getElementById('editar_nombre').textContent = nombre;
@@ -530,6 +613,14 @@ function mostrarModalEditarAprobar(id, nombre, sucursal, fecha, tipoFalta, obser
                 previewContainer.style.display = 'none';
             }
         }
+
+        // Inicializar el selector de duración con el valor actual
+        inicializarSelectorDuracion(
+            'editar_cantidad_dias',
+            'editar_custom_dias',
+            'editar_custom_input',
+            cantidadDias || 1.0
+        );
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarFalta'));
         modal.show();
@@ -760,7 +851,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const params = new URLSearchParams({
                 id: id,
                 tipo_falta: tipoFalta,
-                observaciones_rrhh: observacionesRrhh
+                observaciones_rrhh: observacionesRrhh,
+                cantidad_dias: obtenerCantidadDias('editar_cantidad_dias')
             });
 
             fetch('ajax/vacaciones_ajax.php?action=editar_aprobar', {
