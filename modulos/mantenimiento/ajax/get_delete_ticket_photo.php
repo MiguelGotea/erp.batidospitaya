@@ -1,4 +1,4 @@
-ï»¿<?php
+<?php
 header('Content-Type: application/json');
 session_start();
 
@@ -6,14 +6,14 @@ require_once '../models/Ticket.php';
 require_once '../../../core/auth/auth.php';
 
 
-// Verificar autenticaciÃ³n
+// Verificar autenticación
 if (!isset($_SESSION['usuario_id'])) {
     echo json_encode(['success' => false, 'message' => 'No autenticado']);
     exit;
 }
 
 // Verificar permisos
-$puedeEditar = verificarAccesoCargo([14, 16, 35, 49]);
+$puedeEditar = verificarAccesoCargo([14, 56, 63, 16, 35, 49]);
 
 if (!$puedeEditar) {
     echo json_encode(['success' => false, 'message' => 'No tienes permisos para eliminar fotos']);
@@ -21,14 +21,14 @@ if (!$puedeEditar) {
 }
 
 if (!isset($_POST['foto_id']) || !isset($_POST['ticket_id'])) {
-    echo json_encode(['success' => false, 'message' => 'ParÃ¡metros incompletos']);
+    echo json_encode(['success' => false, 'message' => 'Parámetros incompletos']);
     exit;
 }
 
 try {
     $ticket_model = new Ticket();
 
-    // Obtener informaciÃ³n de la foto antes de eliminarla
+    // Obtener información de la foto antes de eliminarla
     $fotos = $ticket_model->getFotos($_POST['ticket_id']);
     $fotoAEliminar = null;
 
@@ -44,7 +44,7 @@ try {
         exit;
     }
 
-    // Eliminar el archivo fÃ­sico
+    // Eliminar el archivo físico
     $rutaArchivo = __DIR__ . '/../uploads/tickets/' . $fotoAEliminar['foto'];
     if (file_exists($rutaArchivo)) {
         unlink($rutaArchivo);

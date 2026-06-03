@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // /public_html/modulos/index.php
 
 require_once '../core/auth/auth.php';
@@ -55,7 +55,8 @@ $modulosPorCargo = [
     55 => 'operaciones',            // Líder General de Tiendas Managua
     52 => 'supervision',            // Auditor de Tiendas
     61 => ['almacen'],              // Supervisor de Almacén y Despacho
-    56 => ['mantenimiento']         // Técnico de Mantenimiento
+    56 => ['mantenimiento'],        // Técnico de Mantenimiento
+    63 => ['mantenimiento']         // Supervisor de Mantenimiento e Infraestructura
 ];
 
 // Si es admin o no tiene cargos definidos, redirigir al inicio

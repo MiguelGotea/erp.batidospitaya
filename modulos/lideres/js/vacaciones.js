@@ -594,12 +594,35 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
         // Preguntar confirmación antes de guardar
         const dias = calcularDiasLaborables(fechaInicio, fechaFin);
         let textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de ausencias?`;
+
+        let tipoNombre = '';
+        const tipoFaltaEl = form.querySelector('[name="tipo_falta"]');
+        if (tipoFaltaEl) {
+            if (tipoFaltaEl.tagName === 'SELECT' && tipoFaltaEl.selectedIndex !== -1) {
+                const optText = tipoFaltaEl.options[tipoFaltaEl.selectedIndex].text;
+                // Remove the percentage/payment text like "(Paga 100%)", "(Pagas 100%)", etc.
+                tipoNombre = optText.replace(/\s*\(Pagas?\s*-?\d+%\)/gi, '').trim();
+            } else if (tipoFaltaEl.tagName === 'INPUT' && tipoFaltaEl.value !== 'Pendiente') {
+                tipoNombre = tipoFaltaEl.value;
+            }
+        }
+
         if (categoriaFalta === 'vacaciones') {
             textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de vacaciones?`;
         } else if (categoriaFalta === 'subsidio') {
-            textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de subsidio?`;
+            if (tipoNombre) {
+                const tipoLower = tipoNombre.toLowerCase();
+                textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de ${tipoLower}?`;
+            } else {
+                textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de subsidio?`;
+            }
         } else if (categoriaFalta === 'falta_permiso') {
-            textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de falta o permiso?`;
+            if (tipoNombre) {
+                const tipoLower = tipoNombre.toLowerCase();
+                textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de ${tipoLower}?`;
+            } else {
+                textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de falta o permiso?`;
+            }
         }
 
         if (!confirm(textoConfirmacion)) {

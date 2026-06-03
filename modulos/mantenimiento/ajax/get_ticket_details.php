@@ -1,4 +1,4 @@
-Ôªø<?php
+<?php
 
 header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
@@ -17,10 +17,10 @@ $tipos_casos = $ticket_model->getTiposCasos();
 $fotos = $ticket_model->getFotos($_GET['id']);
 
 // Verificar permisos del usuario
-$puedeEditar = verificarAccesoCargo([14, 16, 35, 49]);
+$puedeEditar = verificarAccesoCargo([14, 56, 63, 16, 35, 49]);
 $esLider = verificarAccesoCargo([5, 49]);
 
-if ($esLider && !verificarAccesoCargo([14, 16, 35, 49])) {
+if ($esLider && !verificarAccesoCargo([14, 56, 63, 16, 35, 49])) {
     $sucursalesLider = obtenerSucursalesLider($_SESSION['usuario_id']);
     $codigosSucursales = array_column($sucursalesLider, 'codigo');
 
@@ -62,7 +62,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
             </div>
 
             <div class="mb-3">
-                <label for="edit_titulo" class="form-label"><strong>T√≠tulo:</strong></label>
+                <label for="edit_titulo" class="form-label"><strong>TÌtulo:</strong></label>
                 <input type="text" class="form-control" id="edit_titulo" name="titulo"
                     value="<?= htmlspecialchars($ticket['titulo']) ?>" <?= !$puedeEditar ? 'readonly' : '' ?> required>
             </div>
@@ -82,7 +82,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
             </div>
 
             <div class="mb-3">
-                <label for="edit_areaequipo" class="form-label"><strong>√Årea/Equipo:</strong></label>
+                <label for="edit_areaequipo" class="form-label"><strong>¡rea/Equipo:</strong></label>
                 <input type="text" class="form-control" id="edit_areaequipo" name="area_equipo"
                     value="<?= htmlspecialchars($ticket['area_equipo']) ?>" <?= !$puedeEditar ? 'readonly' : '' ?>
                     required>
@@ -109,7 +109,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
                         </button>
                         <button type="button"
                             class="btn btn-sm urgency-compact urgency-level-4 <?= ($ticket['nivel_urgencia'] == 4) ? 'selected' : '' ?>"
-                            data-level="4" onclick="selectUrgency(4)" title="Cr√≠tica" <?= !$puedeEditar ? 'disabled' : '' ?>>
+                            data-level="4" onclick="selectUrgency(4)" title="CrÌtica" <?= !$puedeEditar ? 'disabled' : '' ?>>
                             <small>4</small>
                         </button>
                     </div>
@@ -137,7 +137,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
     </div>
 
     <div class="mb-3">
-        <label for="edit_descripcion" class="form-label"><strong>Descripci√≥n:</strong></label>
+        <label for="edit_descripcion" class="form-label"><strong>DescripciÛn:</strong></label>
         <textarea class="form-control" style="min-height: 100px; max-height: 150px; overflow-y: auto;"
             id="edit_descripcion" name="descripcion" <?= !$puedeEditar ? 'readonly' : '' ?>
             required><?= htmlspecialchars($ticket['descripcion']) ?></textarea>
@@ -145,7 +145,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
 
     <?php if (!empty($fotos)): ?>
         <div class="mb-3">
-            <label class="form-label"><strong>Evidencias Fotogr√°ficas (<?= count($fotos) ?>):</strong></label>
+            <label class="form-label"><strong>Evidencias Fotogr·ficas (<?= count($fotos) ?>):</strong></label>
             <div class="photos-grid-edit">
                 <?php foreach ($fotos as $index => $foto): ?>
                     <div class="photo-item-edit" data-foto-id="<?= $foto['id'] ?>">
@@ -166,7 +166,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
         </div>
     <?php else: ?>
         <div class="mb-3">
-            <p class="text-muted"><i class="fas fa-info-circle me-2"></i>No hay fotograf√≠as adjuntas a este ticket</p>
+            <p class="text-muted"><i class="fas fa-info-circle me-2"></i>No hay fotografÌas adjuntas a este ticket</p>
         </div>
     <?php endif; ?>
 
@@ -193,7 +193,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
             <div id="nuevasFotosPreview" style="display: none; margin-top: 10px;">
                 <div id="nuevasFotosList" class="photos-grid-edit"></div>
             </div>
-            <small class="text-muted">Puedes agregar m√°s fotos al ticket (m√°ximo 5 fotos nuevas)</small>
+            <small class="text-muted">Puedes agregar m·s fotos al ticket (m·ximo 5 fotos nuevas)</small>
         </div>
     <?php endif; ?>
 
@@ -348,7 +348,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
                 1: { text: 'Baja', badgeClass: 'bg-success' },
                 2: { text: 'Media', badgeClass: 'bg-warning' },
                 3: { text: 'Alta', badgeClass: 'bg-orange' },
-                4: { text: 'Cr√≠tica', badgeClass: 'bg-danger' }
+                4: { text: 'CrÌtica', badgeClass: 'bg-danger' }
             };
 
             const levelInfo = levels[window.currentUrgency];
@@ -406,7 +406,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
 
     document.getElementById('btnCameraEdit')?.addEventListener('click', function () {
         if (nuevasFotosSeleccionadas.length >= MAX_NUEVAS_FOTOS) {
-            alert(`Ya has alcanzado el l√≠mite de ${MAX_NUEVAS_FOTOS} fotos nuevas`);
+            alert(`Ya has alcanzado el lÌmite de ${MAX_NUEVAS_FOTOS} fotos nuevas`);
             return;
         }
 
@@ -436,13 +436,13 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
                 }
             })
             .catch(function (err) {
-                alert('Error al acceder a la c√°mara: ' + err.message);
+                alert('Error al acceder a la c·mara: ' + err.message);
             });
     }
 
     function capturePhotoEdit() {
         if (nuevasFotosSeleccionadas.length >= MAX_NUEVAS_FOTOS) {
-            alert(`Ya has alcanzado el l√≠mite de ${MAX_NUEVAS_FOTOS} fotos nuevas`);
+            alert(`Ya has alcanzado el lÌmite de ${MAX_NUEVAS_FOTOS} fotos nuevas`);
             stopCameraEdit();
             return;
         }
@@ -528,7 +528,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
     }
 
     function deletePhoto(fotoId, ticketId) {
-        if (!confirm('¬øEst√°s seguro de eliminar esta foto? Esta acci√≥n no se puede deshacer.')) {
+        if (!confirm('øEst·s seguro de eliminar esta foto? Esta acciÛn no se puede deshacer.')) {
             return;
         }
 
@@ -628,7 +628,7 @@ if ($ticket['tipo_formulario'] === 'mantenimiento_general') {
             },
             error: function (xhr, status, error) {
                 console.error('Error AJAX:', xhr.responseText);
-                alert('Error en la comunicaci√≥n con el servidor');
+                alert('Error en la comunicaciÛn con el servidor');
             }
         });
     }
