@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 //error_reporting(E_ALL);
 //ini_set('display_errors', 1);
 
@@ -546,9 +546,16 @@ function obtenerViaticosNocturnosAutomaticos($codSucursal, $fechaDesde, $fechaHa
                 )
             )
             AND (m.hora_ingreso IS NOT NULL OR m.hora_salida IS NOT NULL)
+            -- Excluir operarios cuya sucursal principal sea 6 o 18
+            AND m.CodOperario NOT IN (
+                SELECT DISTINCT anc_ex.CodOperario
+                FROM AsignacionNivelesCargos anc_ex
+                WHERE anc_ex.Sucursal IN (6, 18)
+                AND (anc_ex.Fin IS NULL OR anc_ex.Fin >= ?)
+            )
         ";
         
-        $params = [$fechaDesde, $fechaHasta];
+        $params = [$fechaDesde, $fechaHasta, $fechaDesde];
         
         if (!empty($codSucursal)) {
             $sql .= " AND m.sucursal_codigo = ?";
@@ -1056,9 +1063,16 @@ function obtenerMarcacionesNocturnasParaExcel($codSucursal, $fechaDesde, $fechaH
             )
             AND d.viatico_nocturno IS NOT NULL  -- Solo departamentos con viáticos
             AND (m.hora_ingreso IS NOT NULL OR m.hora_salida IS NOT NULL)
+            -- Excluir operarios cuya sucursal principal sea 6 o 18
+            AND m.CodOperario NOT IN (
+                SELECT DISTINCT anc_ex.CodOperario
+                FROM AsignacionNivelesCargos anc_ex
+                WHERE anc_ex.Sucursal IN (6, 18)
+                AND (anc_ex.Fin IS NULL OR anc_ex.Fin >= ?)
+            )
         ";
         
-        $params = [$fechaDesde, $fechaHasta];
+        $params = [$fechaDesde, $fechaHasta, $fechaDesde];
         
         if (!empty($codSucursal)) {
             $sql .= " AND m.sucursal_codigo = ?";
