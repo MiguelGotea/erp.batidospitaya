@@ -45,8 +45,12 @@ function obtenerColaboradoresEnTurno($codSucursal = null)
     $params = [$fechaActual];
 
     if ($codSucursal !== null) {
-        $sql .= " AND m.sucursal_codigo = ?";
-        $params[] = $codSucursal;
+        if ($codSucursal == 18) {
+            $sql .= " AND m.sucursal_codigo IN (6, 18)";
+        } else {
+            $sql .= " AND m.sucursal_codigo = ?";
+            $params[] = $codSucursal;
+        }
     }
 
     // Ordenar por hora de entrada (los que entraron más tarde primero)
@@ -159,12 +163,20 @@ function identificarSucursalPorToken()
 // Validación de dispositivo al cargar la página
 $validacion = identificarSucursalPorToken();
 $dispositivoAutorizado = $validacion['status'];
+$sucursalUsuarioReal = null;
 $sucursalUsuario = null;
 $sucursalNombre = null;
 
 if ($dispositivoAutorizado) {
-    $sucursalUsuario = $validacion['sucursal']['codigo'];
+    $sucursalUsuarioReal = $validacion['sucursal']['codigo'];
     $sucursalNombre = $validacion['sucursal']['nombre'];
+    
+    // Si la sucursal del dispositivo es 6 o 18, tratar como sucursal 18 para registrar marcación
+    if ($sucursalUsuarioReal == 6 || $sucursalUsuarioReal == 18) {
+        $sucursalUsuario = 18;
+    } else {
+        $sucursalUsuario = $sucursalUsuarioReal;
+    }
 }
 
 // Función para obtener el horario programado del operario (actualizada)
@@ -252,7 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
     // Primero obtenemos el departamento de la sucursal
     $codDepartamento = obtenerCodigoDepartamentoSucursal($sucursalUsuario);
 
-    // Validar credenciales buscando por contraseña en la sucursal autorizada
+    // Validar credenciales buscando por contraseña en la sucursal autorizada (combinando 6 y 18)
     $sql = "SELECT o.CodOperario, o.Nombre, o.Nombre2, o.Apellido, o.Apellido2, o.usuario, 
                    nc.Nombre as cargo_nombre, s.nombre as sucursal_nombre, 
                    s.codigo as sucursal_codigo, nc.CodNivelesCargos as cargo_codigo
@@ -263,10 +275,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
             JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
             JOIN sucursales s ON anc.Sucursal = s.codigo
             WHERE (o.clave = ? OR (o.clave_hash IS NOT NULL AND ? = o.clave_hash))
-            AND s.codigo = ?
+            AND (s.codigo = ? OR (? = 18 AND s.codigo = 6))
             AND o.Operativo = 1";
 
-    $stmt = ejecutarConsulta($sql, [$clave, $clave, $sucursalUsuario]);
+    $stmt = ejecutarConsulta($sql, [$clave, $clave, $sucursalUsuario, $sucursalUsuario]);
     $operarios = $stmt ? $stmt->fetchAll() : [];
 
     if (count($operarios) === 0) {
@@ -352,8 +364,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
     $fechaActual = date('Y-m-d');
     $nombreCompleto = obtenerNombreCompletoOperario($operario);
 
-    // Verificar omisión del día anterior
-    $omisionDiaAnterior = verificarOmisionDiaAnterior($codOperario, $sucursalUsuario);
+    // Verificar omisión del día anterior (combinando 6 y 18)
+    if ($sucursalUsuario == 18) {
+        $omisionDiaAnterior = verificarOmisionDiaAnterior($codOperario, 18) && verificarOmisionDiaAnterior($codOperario, 6);
+    } else {
+        $omisionDiaAnterior = verificarOmisionDiaAnterior($codOperario, $sucursalUsuario);
+    }
 
     // Obtener horario programado
     $horarioProgramado = obtenerHorarioProgramado($codOperario, $sucursalUsuario, $fechaActual);
@@ -379,10 +395,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
     // Verificar última marcación
     $sqlMarcacion = "SELECT * FROM marcaciones 
                          WHERE CodOperario = ? 
-                         AND sucursal_codigo = ?
+                         AND (sucursal_codigo = ? OR (? = 18 AND sucursal_codigo = 6))
                          ORDER BY fecha DESC, hora_ingreso DESC 
                          LIMIT 1";
-    $stmtMarcacion = ejecutarConsulta($sqlMarcacion, [$codOperario, $sucursalUsuario]);
+    $stmtMarcacion = ejecutarConsulta($sqlMarcacion, [$codOperario, $sucursalUsuario, $sucursalUsuario]);
     $ultimaMarcacion = $stmtMarcacion ? $stmtMarcacion->fetch() : false;
 
     $registrarEntrada = true;
@@ -416,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
                 $fechaActual,
                 $codOperario,
                 $codContrato,
-                $sucursalUsuario,
+                $operario['sucursal_codigo'],
                 $nombreCompleto,
                 $horarioProgramado['id'] ?? null,
                 $horarioProgramado['numero_semana'] ?? null
@@ -431,7 +447,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
                         WHERE id = ?";
             $params = [
                 $horaActual,
-                $sucursalUsuario,
+                $operario['sucursal_codigo'],
                 $horarioProgramado['id'] ?? null,
                 $horarioProgramado['numero_semana'] ?? null,
                 $codContrato,
@@ -454,7 +470,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
                     WHERE id = ?";
         $params = [
             $horaActual,
-            $sucursalUsuario,
+            $operario['sucursal_codigo'],
             $horarioProgramado['id'] ?? null,
             $horarioProgramado['numero_semana'] ?? null,
             $codContrato,
@@ -481,7 +497,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
             $fechaActual,
             $codOperario,
             $codContrato,
-            $sucursalUsuario,
+            $operario['sucursal_codigo'],
             $nombreCompleto,
             $horarioProgramado['id'] ?? null,
             $horarioProgramado['numero_semana'] ?? null
@@ -554,7 +570,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
     $_SESSION['dvr_captura_pendiente'] = [
         'id_marcacion' => (int)$idMarcacionNueva,
         'tipo'         => $tipo,
-        'cod_sucursal' => (int)$sucursalUsuario,
+        'cod_sucursal' => (int)$sucursalUsuarioReal,
     ];
 
     // Consulta de tardanzas actualizada
@@ -664,7 +680,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
         'nombre' => $nombreCompleto,
         'cargo' => $operario['cargo_nombre'],
         'sucursal' => $operario['sucursal_nombre'],
-        'sucursal_codigo' => $sucursalUsuario,
+        'sucursal_codigo' => $operario['sucursal_codigo'],
         'tipo' => $tipo,
         'hora' => date('h:i a', strtotime($horaActual)),
         'tardanza_entrada' => $tardanzaEntrada,
@@ -1357,7 +1373,7 @@ if ($dispositivoAutorizado) {
                 <form id="formMarcacion" method="POST" autocomplete="off">
                     <div class="password-display-wrapper">
                         <input type="password" id="clave" name="clave" class="password-display"
-                            placeholder="••••" readonly required inputmode="none">
+                            readonly required inputmode="none">
                         <button type="button" class="toggle-visibility" id="btnToggleVis" title="Mostrar/Ocultar">
                             <i class="fas fa-eye-slash" id="eyeIcon"></i>
                         </button>

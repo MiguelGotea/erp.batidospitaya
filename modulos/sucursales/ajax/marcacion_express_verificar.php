@@ -23,7 +23,8 @@ try {
         exit();
     }
 
-    $codSucursal = $sucursal['codigo'];
+    $codSucursalReal = $sucursal['codigo'];
+    $codSucursal = ($codSucursalReal == 6 || $codSucursalReal == 18) ? 18 : $codSucursalReal;
 
     // 2. Obtener clave del POST
     $clave = isset($_POST['clave']) ? trim($_POST['clave']) : '';
@@ -32,7 +33,7 @@ try {
         exit();
     }
 
-    // 3. Buscar al operario por clave en esta sucursal
+    // 3. Buscar al operario por clave en esta sucursal (combinando 6 y 18)
     // El operario debe estar operativo (Operativo = 1) y tener una asignación activa en esta sucursal
     $sql = "SELECT o.CodOperario, o.Nombre, o.Apellido
             FROM Operarios o
@@ -40,11 +41,11 @@ try {
                 AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
                 AND anc.Fecha <= CURDATE()
             WHERE (o.clave = ? OR (o.clave_hash IS NOT NULL AND ? = o.clave_hash))
-            AND anc.Sucursal = ?
+            AND (anc.Sucursal = ? OR (? = 18 AND anc.Sucursal = 6))
             AND o.Operativo = 1";
 
     $stmtOperario = $conn->prepare($sql);
-    $stmtOperario->execute([$clave, $clave, $codSucursal]);
+    $stmtOperario->execute([$clave, $clave, $codSucursal, $codSucursal]);
     $operarios = $stmtOperario->fetchAll();
 
     if (count($operarios) === 0) {
@@ -65,12 +66,12 @@ try {
     $fechaActual = date('Y-m-d');
     $sqlMarcacion = "SELECT * FROM marcaciones 
                      WHERE CodOperario = ? 
-                     AND sucursal_codigo = ?
+                     AND (sucursal_codigo = ? OR (? = 18 AND sucursal_codigo = 6))
                      AND fecha = ?
                      ORDER BY hora_ingreso DESC 
                      LIMIT 1";
     $stmtMarc = $conn->prepare($sqlMarcacion);
-    $stmtMarc->execute([$codOperario, $codSucursal, $fechaActual]);
+    $stmtMarc->execute([$codOperario, $codSucursal, $codSucursal, $fechaActual]);
     $ultimaMarcacion = $stmtMarc->fetch();
 
     $tipoMarc = 'entrada';
