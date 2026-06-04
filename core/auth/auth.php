@@ -46,54 +46,43 @@ function verificarAccesoModulo($modulo)
 {
     verificarAutenticacion();
 
-    $usuario = obtenerUsuarioActual();
-
     // Admin tiene acceso a todo
     if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin') {
         return;
     }
 
-    // Definir qué cargos pueden acceder a qué módulos
-    $permisosPorCargo = [
-        2 => ['operario'],
-        5 => ['lideres'],
-        8 => ['contabilidad'],
-        9 => ['compras'],
-        10 => ['logistica'],
-        11 => ['operaciones'],
-        12 => ['produccion'],
-        13 => ['rh'],
-        14 => ['mantenimiento'],
-        15 => ['sistema'],
-        16 => ['gerencia'],
-        17 => ['almacen'],
-        19 => ['cds'],
-        20 => ['chofer'],
-        21 => ['supervision'],
-        22 => ['atencioncliente'],
-        23 => ['almacen'],
-        24 => ['motorizado'],
-        25 => ['diseno'],
-        26 => ['marketing'],
-        27 => ['sucursales'],
-        35 => ['infraestructura'],
-        38 => ['auxiliaradministrativo'],
-        39 => ['rh'],
-        30 => ['rh'],
-        37 => ['rh'],
-        42 => ['marketing'],
-        43 => ['lideres'],
-        44 => ['operarios'],
-        45 => ['operarios'],
-        46 => ['operarios'],
-        47 => ['operarios'],
-        49 => ['gerencia'],
-        36 => ['operaciones']
-    ];
+    $cargosUsuario = obtenerCargosUsuario($_SESSION['usuario_id']);
+    if (empty($cargosUsuario)) {
+        header('Location: /index.php');
+        exit();
+    }
 
-    $cargo = $_SESSION['cargo_cod'] ?? null;
+    // Normalizar nombres de módulos comunes (singular/plural)
+    $moduloBuscado = trim(strtolower($modulo));
+    if ($moduloBuscado === 'operario') $moduloBuscado = 'operarios';
+    if ($moduloBuscado === 'sistema') $moduloBuscado = 'sistemas';
 
-    if (!in_array($modulo, $permisosPorCargo[$cargo] ?? [])) {
+    global $conn;
+    $placeholders = implode(',', array_fill(0, count($cargosUsuario), '?'));
+
+    try {
+        $stmt = $conn->prepare("
+            SELECT COUNT(*) 
+            FROM NivelesCargos 
+            WHERE CodNivelesCargos IN ($placeholders) 
+              AND modulo_ruta = ?
+        ");
+        
+        $params = array_merge($cargosUsuario, [$moduloBuscado]);
+        $stmt->execute($params);
+        $tieneAcceso = $stmt->fetchColumn() > 0;
+
+        if (!$tieneAcceso) {
+            header('Location: /index.php');
+            exit();
+        }
+    } catch (PDOException $e) {
+        error_log("Error en verificarAccesoModulo: " . $e->getMessage());
         header('Location: /index.php');
         exit();
     }

@@ -55,7 +55,7 @@ try {
 
     if (count($operarios) > 1) {
         // En caso de que compartan contraseña en la misma sucursal
-        echo json_encode(['success' => false, 'message' => 'Múltiples colaboradores coinciden con esta clave. Favor cambiar su contraseña con Sistemas.']);
+        echo json_encode(['success' => false, 'message' => 'Múltiples colaboradores coinciden con esta clave. Favor cambiar su contraseña con Recursos Humanos.']);
         exit();
     }
 
