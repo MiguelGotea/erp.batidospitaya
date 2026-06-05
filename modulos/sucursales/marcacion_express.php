@@ -773,6 +773,8 @@ if ($dispositivoAutorizado) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+    <script src="js/offline_marcacion.js"></script>
     <meta name="autocomplete" content="off">
     <meta name="safari-auto-fill" content="off">
     <style>
@@ -1417,6 +1419,29 @@ if ($dispositivoAutorizado) {
                 opacity: 0;
             }
         }
+
+        /* ── Offline Banner ───────────────────────── */
+        .offline-banner {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 9000;
+            padding: 10px 20px;
+            text-align: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .offline-banner.mode-offline      { background: linear-gradient(90deg,#e67e22,#d35400); color:#fff; display:block; }
+        .offline-banner.mode-syncing      { background: linear-gradient(90deg,#2980b9,#1a6a99); color:#fff; display:block; }
+        .offline-banner.mode-sync-ok      { background: linear-gradient(90deg,#27ae60,#1e8449); color:#fff; display:block; }
+        .offline-banner.mode-token-expired{ background: linear-gradient(90deg,#c0392b,#922b21); color:#fff; display:block; }
+        .offline-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(0,0,0,0.15); border-radius: 50px;
+            padding: 2px 12px; margin-left: 10px; font-size: 0.85rem;
+        }
     </style>
 </head>
 
@@ -1434,6 +1459,9 @@ if ($dispositivoAutorizado) {
             </a>
         </div>
     <?php else: ?>
+
+        <!-- Banner Offline (oculto por defecto, JS lo muestra/oculta) -->
+        <div id="offlineBanner" class="offline-banner" style="display:none;"></div>
 
         <div class="workspace">
             <div class="container">
@@ -1807,38 +1835,51 @@ if ($dispositivoAutorizado) {
                         return;
                     }
 
-                    checkTimeout = setTimeout(() => {
-                        const formData = new FormData();
-                        formData.append('clave', val);
-
-                        fetch('ajax/marcacion_express_verificar.php', {
-                                method: 'POST',
-                                body: formData
-                            })
-                            .then(res => res.json())
-                            .then(data => {
+                    checkTimeout = setTimeout(async () => {
+                        if (navigator.onLine) {
+                            // ── Online: verificar en servidor ─────────────
+                            const formData = new FormData();
+                            formData.append('clave', val);
+                            try {
+                                const res  = await fetch('ajax/marcacion_express_verificar.php', { method: 'POST', body: formData });
+                                const data = await res.json();
                                 if (data.success) {
-                                    matchedUserDiv.innerHTML = `<i class="fas fa-user-check" style="margin-right: 6px; color: var(--success-color);"></i> ${data.nombre}`;
+                                    matchedUserDiv.innerHTML = `<i class="fas fa-user-check" style="margin-right:6px;color:var(--success-color);"></i> ${data.nombre}`;
                                     matchedUserDiv.style.opacity = '1';
-
-                                    if (data.tipoMarcacion === 'salida') {
-                                        btnMarcar.textContent = `Marcar Salida (${data.nombre})`;
-                                        btnMarcar.className = 'btn-marcar salida';
-                                    } else {
-                                        btnMarcar.textContent = `Marcar Entrada (${data.nombre})`;
-                                        btnMarcar.className = 'btn-marcar entrada';
-                                    }
-                                    btnMarcar.disabled = false;
+                                    btnMarcar.textContent = data.tipoMarcacion === 'salida' ? `Marcar Salida (${data.nombre})` : `Marcar Entrada (${data.nombre})`;
+                                    btnMarcar.className   = 'btn-marcar ' + (data.tipoMarcacion === 'salida' ? 'salida' : 'entrada');
+                                    btnMarcar.disabled    = false;
+                                    btnMarcar.dataset.offlineNombre      = '';
+                                    btnMarcar.dataset.offlineCodOperario = '';
                                 } else {
                                     matchedUserDiv.style.opacity = '0';
                                     btnMarcar.textContent = 'Marcar Entrada/Salida';
-                                    btnMarcar.className = 'btn-marcar';
-                                    btnMarcar.disabled = true;
+                                    btnMarcar.className   = 'btn-marcar';
+                                    btnMarcar.disabled    = true;
                                 }
-                            })
-                            .catch(err => {
+                            } catch (err) {
                                 console.error('Error verificando:', err);
-                            });
+                            }
+                        } else {
+                            // ── Offline: validar localmente con bcrypt ────
+                            if (!window.PitayaOffline) return;
+                            const result = await PitayaOffline.checkPasswordOffline(val);
+                            if (result.found) {
+                                matchedUserDiv.innerHTML = `<i class="fas fa-user-check" style="margin-right:6px;color:var(--success-color);"></i> ${result.nombre} <span style="font-size:0.75rem;color:#e67e22;">(offline)</span>`;
+                                matchedUserDiv.style.opacity = '1';
+                                btnMarcar.textContent = `Marcar Offline (${result.nombre})`;
+                                btnMarcar.className   = 'btn-marcar entrada';
+                                btnMarcar.disabled    = false;
+                                // Guardar datos para el submit offline
+                                btnMarcar.dataset.offlineNombre      = result.nombre;
+                                btnMarcar.dataset.offlineCodOperario = result.CodOperario;
+                            } else {
+                                matchedUserDiv.style.opacity = '0';
+                                btnMarcar.textContent = 'Marcar Entrada/Salida';
+                                btnMarcar.className   = 'btn-marcar';
+                                btnMarcar.disabled    = true;
+                            }
+                        }
                     }, 250);
                 }
 
@@ -1852,17 +1893,58 @@ if ($dispositivoAutorizado) {
                     }
                 });
 
-                // Manejo de confirmación de envío (Prevenir doble envío)
+                // Manejo de confirmación de envío (online/offline)
                 let formSubmitted = false;
-                document.getElementById('formMarcacion').addEventListener('submit', function(e) {
-                    if (formSubmitted) {
+                document.getElementById('formMarcacion').addEventListener('submit', async function(e) {
+                    if (formSubmitted) { e.preventDefault(); return false; }
+
+                    if (!navigator.onLine && window.PitayaOffline) {
+                        // ── MODO OFFLINE: guardar en cola ─────────────────
                         e.preventDefault();
-                        return false;
+                        const nombre      = btnMarcar.dataset.offlineNombre      || '?';
+                        const codOperario = parseInt(btnMarcar.dataset.offlineCodOperario) || 0;
+                        const clave       = passwordInput.value;
+                        if (!codOperario || !clave) return;
+
+                        formSubmitted = true;
+                        btnMarcar.disabled = true;
+                        btnMarcar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando offline...';
+
+                        const item = await PitayaOffline.enqueue(clave, codOperario, nombre);
+
+                        // Mostrar confirmación offline
+                        const modal   = document.getElementById('modalConfirmacion');
+                        const msgEl   = document.getElementById('modalMensaje');
+                        const infoEl  = document.getElementById('modalInfoOperario');
+                        const now     = new Date();
+                        const hora    = now.toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit'});
+                        if (modal && msgEl && infoEl) {
+                            document.querySelector('#modalConfirmacion .modal-icon i').className = 'fas fa-clock';
+                            document.querySelector('#modalConfirmacion .modal-icon').style.color = '#e67e22';
+                            document.querySelector('#modalConfirmacion .modal-title').textContent = 'Marcación Guardada Offline';
+                            msgEl.innerHTML = `<span style="font-weight:700;font-size:1.2rem;color:#e67e22;">GUARDADA OFFLINE</span><br>a las <strong>${hora}</strong><br><br><span style="color:#888;font-size:0.9rem;">Se sincronizará automáticamente al recuperar conexión.</span>`;
+                            infoEl.innerHTML = `<p><strong>Colaborador:</strong> ${nombre}</p><p><strong>Estado:</strong> En cola offline</p>`;
+                            modal.style.display = 'flex';
+                            setTimeout(() => {
+                                modal.style.display = 'none';
+                                passwordInput.value = '';
+                                btnMarcar.textContent = 'Marcar Entrada/Salida';
+                                btnMarcar.className   = 'btn-marcar';
+                                btnMarcar.disabled    = true;
+                                matchedUserDiv.style.opacity = '0';
+                                formSubmitted = false;
+                            }, 5000);
+                        }
+                        return;
                     }
+
+                    // ── MODO ONLINE: envío normal ─────────────────────────
                     formSubmitted = true;
                     btnMarcar.disabled = true;
                     btnMarcar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando marcación...';
                 });
+                // Inicializar módulo offline
+                if (window.PitayaOffline) PitayaOffline.init();
             });
         </script>
 
