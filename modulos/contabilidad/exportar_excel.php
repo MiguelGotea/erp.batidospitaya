@@ -1,12 +1,12 @@
-﻿<?php
+<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
 require_once '../../core/auth/auth.php';
+require_once '../../core/permissions/permissions.php';
 
 // Verificar conexión
-
 if (!$conn) {
     die("Error de conexión a la base de datos");
 }
@@ -15,14 +15,21 @@ if (!$conn) {
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 13, 16, 49])) {
-    header('Location: ../../../index.php');
-    exit();
-}
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+// Verificar acceso mediante sistema de permisos Tools ERP
+verificarPermisoORedireccionar('exportaciones_rrhh_contabilidad', 'vista', $cargoOperario, '/modulos/index.php');
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
+
+// Constantes de permisos para uso en exportaciones y botones HTML
+$puedeExportarFaltasSeptimo     = tienePermiso('exportaciones_rrhh_contabilidad', 'exportar_faltas_septimo',      $cargoOperario);
+$puedeExportarPermisos          = tienePermiso('exportaciones_rrhh_contabilidad', 'exportar_permisos',            $cargoOperario);
+$puedeExportarVacaciones        = tienePermiso('exportaciones_rrhh_contabilidad', 'exportar_vacaciones',          $cargoOperario);
+$puedeExportarTardanzas         = tienePermiso('exportaciones_rrhh_contabilidad', 'exportar_tardanzas',           $cargoOperario);
+$puedeExportarFeriadosTrabajados= tienePermiso('exportaciones_rrhh_contabilidad', 'exportar_feriados_trabajados', $cargoOperario);
+$puedeExportarHorasExtras       = tienePermiso('exportaciones_rrhh_contabilidad', 'exportar_horas_extras',        $cargoOperario);
 //******************************Estándar para header, termina******************************
 
 // Establecer fechas por defecto (mes actual)
@@ -1067,26 +1074,32 @@ function obtenerHorasExtrasManualesParaContabilidad($codSucursal, $fechaDesde, $
 
 // Procesar exportaciones
 if (isset($_GET['exportar_faltas_auto_septimo'])) {
+    if (!$puedeExportarFaltasSeptimo) { header('Location: exportar_excel.php'); exit(); }
     exportarFaltasAutoSeptimo('todas', $fechaDesde, $fechaHasta);
 }
 
 if (isset($_GET['exportar_permisos'])) {
+    if (!$puedeExportarPermisos) { header('Location: exportar_excel.php'); exit(); }
     exportarPermisos('todas', $fechaDesde, $fechaHasta);
 }
 
 if (isset($_GET['exportar_vacaciones'])) {
+    if (!$puedeExportarVacaciones) { header('Location: exportar_excel.php'); exit(); }
     exportarVacaciones('todas', $fechaDesde, $fechaHasta);
 }
 
 if (isset($_GET['exportar_tardanzas'])) {
+    if (!$puedeExportarTardanzas) { header('Location: exportar_excel.php'); exit(); }
     exportarTardanzas('todas', $fechaDesde, $fechaHasta);
 }
 
 if (isset($_GET['exportar_feriados'])) {
+    if (!$puedeExportarFeriadosTrabajados) { header('Location: exportar_excel.php'); exit(); }
     exportarFeriados('todas', $fechaDesde, $fechaHasta);
 }
 
 if (isset($_GET['exportar_horas_extras'])) {
+    if (!$puedeExportarHorasExtras) { header('Location: exportar_excel.php'); exit(); }
     exportarHorasExtras('todas', $fechaDesde, $fechaHasta);
 }
 ?>
@@ -1442,8 +1455,10 @@ if (isset($_GET['exportar_horas_extras'])) {
             </div>
         </div>
         
-        <!-- Grid de exportaciones -->
+        <!-- Grid de exportaciones (botones visibles según permisos Tools ERP) -->
         <div class="exportaciones-grid">
+
+            <?php if ($puedeExportarFaltasSeptimo): ?>
             <!-- Fila 1: No Reportadas + 7mo -->
             <div class="exportacion-item">
                 <div class="exportacion-info">
@@ -1459,7 +1474,9 @@ if (isset($_GET['exportar_horas_extras'])) {
                     <i class="fas fa-file-excel"></i>
                 </a>
             </div>
-            
+            <?php endif; ?>
+
+            <?php if ($puedeExportarPermisos): ?>
             <!-- Fila 2: Permisos -->
             <div class="exportacion-item">
                 <div class="exportacion-info">
@@ -1475,7 +1492,9 @@ if (isset($_GET['exportar_horas_extras'])) {
                     <i class="fas fa-file-excel"></i>
                 </a>
             </div>
-            
+            <?php endif; ?>
+
+            <?php if ($puedeExportarVacaciones): ?>
             <!-- Fila 3: Vacaciones -->
             <div class="exportacion-item">
                 <div class="exportacion-info">
@@ -1491,8 +1510,10 @@ if (isset($_GET['exportar_horas_extras'])) {
                     <i class="fas fa-file-excel"></i>
                 </a>
             </div>
-            
-            <!-- Fila 4: TARDANZAS -->
+            <?php endif; ?>
+
+            <?php if ($puedeExportarTardanzas): ?>
+            <!-- Fila 4: Tardanzas -->
             <div class="exportacion-item">
                 <div class="exportacion-info">
                     <h3>Tardanzas</h3>
@@ -1507,8 +1528,10 @@ if (isset($_GET['exportar_horas_extras'])) {
                     <i class="fas fa-file-excel"></i>
                 </a>
             </div>
-            
-            <!-- Fila 5: FERIADOS -->
+            <?php endif; ?>
+
+            <?php if ($puedeExportarFeriadosTrabajados): ?>
+            <!-- Fila 5: Feriados -->
             <div class="exportacion-item">
                 <div class="exportacion-info">
                     <h3>Feriados Trabajados</h3>
@@ -1523,8 +1546,10 @@ if (isset($_GET['exportar_horas_extras'])) {
                     <i class="fas fa-file-excel"></i>
                 </a>
             </div>
-            
-            <!-- Fila 6: HORAS EXTRAS (NUEVA) -->
+            <?php endif; ?>
+
+            <?php if ($puedeExportarHorasExtras): ?>
+            <!-- Fila 6: Horas Extras -->
             <div class="exportacion-item">
                 <div class="exportacion-info">
                     <h3>Horas Extras</h3>
@@ -1539,6 +1564,8 @@ if (isset($_GET['exportar_horas_extras'])) {
                     <i class="fas fa-file-excel"></i>
                 </a>
             </div>
+            <?php endif; ?>
+
         </div>
         
         <!-- Información adicional -->

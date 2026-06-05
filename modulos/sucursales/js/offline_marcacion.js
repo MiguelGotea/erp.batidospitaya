@@ -78,14 +78,27 @@
     }
 
     // ── Validación offline (bcrypt local) ────────────────────────────────
+    let lastSearchId = 0;
     async function checkPasswordOffline(clave) {
         const bc = getBcrypt();
         if (!bc || !db) return { found: false };
+
+        lastSearchId++;
+        const searchId = lastSearchId;
+
         const operarios = await idbGetAll('operarios_cache');
         for (const op of operarios) {
+            // Abortar si ya se inició una nueva búsqueda de clave
+            if (searchId !== lastSearchId) return { found: false, aborted: true };
+
             try {
-                if (bc.compareSync(clave, op.hash_clave))
+                const isMatch = await new Promise(resolve => {
+                    bc.compare(clave, op.hash_clave, (err, res) => resolve(!err && res));
+                });
+                if (isMatch) {
+                    if (searchId !== lastSearchId) return { found: false, aborted: true };
                     return { found: true, CodOperario: op.CodOperario, nombre: op.nombre_completo };
+                }
             } catch (e) { /* hash inválido, omitir */ }
         }
         return { found: false };
@@ -118,7 +131,21 @@
             pingFd.append('clave', '_ping_');
             const ping = await fetch('ajax/marcacion_express_verificar.php', { method: 'POST', body: pingFd });
 
-            if (ping.status === 401) {
+            let tokenExpirado = (ping.status === 401);
+            if (ping.ok) {
+                try {
+                    const pingData = await ping.clone().json();
+                    if (!pingData.success && (
+                        pingData.message.includes('Dispositivo no autorizado') || 
+                        pingData.message.includes('token inválido') || 
+                        pingData.message.includes('no configurado')
+                    )) {
+                        tokenExpirado = true;
+                    }
+                } catch (e) {}
+            }
+
+            if (tokenExpirado) {
                 await idbPut('config', { key: 'token_estado', value: 'expirado' });
                 const n = await updateBannerCount();
                 showBanner('token-expired',
@@ -152,11 +179,16 @@
                 }
             }
             await refreshCache();
-            const msg = ok > 0
-                ? `✅ ${ok} marcación${ok>1?'es':''} sincronizada${ok>1?'s':''}`+ (err ? ` — ${err} con error (preservada${err>1?'s':''})` : '')
-                : `⚠️ No se pudo sincronizar ${err} marcación${err>1?'es':''} (preservada${err>1?'s':''})`;
-            showBanner('sync-ok', msg);
-            setTimeout(hideBanner, 6000);
+            if (ok > 0) {
+                const msg = `✅ ${ok} marcación${ok>1?'es':''} sincronizada${ok>1?'s':''}` + (err ? ` — ${err} con error (preservada${err>1?'s':''})` : '');
+                showBanner('sync-ok', msg);
+                // Recargar la página después de 2.5 segundos para reflejar los operarios "En Turno" en el panel lateral
+                setTimeout(() => location.reload(), 2500);
+            } else {
+                const msg = `⚠️ No se pudo sincronizar ${err} marcación${err>1?'es':''} (preservada${err>1?'s':''})`;
+                showBanner('sync-ok', msg);
+                setTimeout(hideBanner, 6000);
+            }
         } catch (e) {
             console.warn('[PitayaOffline] Error sync:', e.message);
             showBanner('offline', '⚡ Sin conexión — <strong class="offline-queue-count">?</strong> marcaciones en espera');
@@ -180,9 +212,20 @@
             const n = await updateBannerCount();
             showBanner('offline', `⚡ Sin conexión — <strong class="offline-queue-count">${n}</strong> marcaciones en espera`);
         } else {
-            setTimeout(refreshCache, 2000);
+            setTimeout(() => { syncQueue(); }, 2000);
             setInterval(refreshCache, 600000);
         }
+
+        // Bucle de auto-recuperación: verificar la cola cada 10 segundos y sincronizar si estamos online
+        setInterval(async () => {
+            if (navigator.onLine && db) {
+                const all = await idbGetAll('marcaciones_queue');
+                const pending = all.filter(i => i.status === 'pending');
+                if (pending.length > 0) {
+                    syncQueue();
+                }
+            }
+        }, 10000);
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/modulos/sucursales/sw_marcacion.js', {
