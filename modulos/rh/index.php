@@ -5,14 +5,13 @@
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/layout/menu_lateral.php';
+require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-// Verificar acceso al módulo RH (Código 13 para Jefe de RH)
-if (!verificarAccesoCargo([13, 16, 39, 30, 37, 28, 54, 49])) {
-    header('Location: ../index.php');
-    exit();
-}
+
+// Verificar acceso al módulo (gestionado dinámicamente desde el panel de permisos)
+verificarPermisoORedireccionar('index_rh', 'vista', $cargoOperario, '../index.php');
 
 // Horarios por Confirmar (componente core)
 require_once '../../core/components/indicators/horarios_confirmacion/horarios_confirmacion_functions.php';

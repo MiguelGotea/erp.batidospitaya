@@ -26,6 +26,10 @@ function obtenerUsuarioActual()
         return null;
     }
 
+    if (isset($_SESSION['datos_usuario_actual'])) {
+        return $_SESSION['datos_usuario_actual'];
+    }
+
     global $conn;
     $stmt = $conn->prepare("
         SELECT o.*, nc.Nombre as cargo_nombre, nc.CodNivelesCargos, anc.Sucursal as sucursal_codigo
@@ -38,7 +42,13 @@ function obtenerUsuarioActual()
         LIMIT 1
     ");
     $stmt->execute([$_SESSION['usuario_id']]);
-    return $stmt->fetch();
+    $usuario = $stmt->fetch();
+
+    if ($usuario) {
+        $_SESSION['datos_usuario_actual'] = $usuario;
+    }
+
+    return $usuario;
 }
 
 // Verificar acceso a módulo
@@ -51,38 +61,37 @@ function verificarAccesoModulo($modulo)
         return;
     }
 
-    $cargosUsuario = obtenerCargosUsuario($_SESSION['usuario_id']);
-    if (empty($cargosUsuario)) {
-        header('Location: /index.php');
-        exit();
-    }
-
     // Normalizar nombres de módulos comunes (singular/plural)
     $moduloBuscado = trim(strtolower($modulo));
     if ($moduloBuscado === 'operario') $moduloBuscado = 'operarios';
     if ($moduloBuscado === 'sistema') $moduloBuscado = 'sistemas';
 
-    global $conn;
-    $placeholders = implode(',', array_fill(0, count($cargosUsuario), '?'));
-
-    try {
-        $stmt = $conn->prepare("
-            SELECT COUNT(*) 
-            FROM NivelesCargos 
-            WHERE CodNivelesCargos IN ($placeholders) 
-              AND modulo_ruta = ?
-        ");
-        
-        $params = array_merge($cargosUsuario, [$moduloBuscado]);
-        $stmt->execute($params);
-        $tieneAcceso = $stmt->fetchColumn() > 0;
-
-        if (!$tieneAcceso) {
-            header('Location: /index.php');
-            exit();
+    if (!isset($_SESSION['modulos_permitidos'])) {
+        $cargosUsuario = obtenerCargosUsuario($_SESSION['usuario_id']);
+        if (empty($cargosUsuario)) {
+            $_SESSION['modulos_permitidos'] = [];
+        } else {
+            global $conn;
+            $placeholders = implode(',', array_fill(0, count($cargosUsuario), '?'));
+            try {
+                $stmt = $conn->prepare("
+                    SELECT DISTINCT modulo_ruta 
+                    FROM NivelesCargos 
+                    WHERE CodNivelesCargos IN ($placeholders) 
+                      AND modulo_ruta IS NOT NULL
+                ");
+                $stmt->execute($cargosUsuario);
+                $_SESSION['modulos_permitidos'] = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            } catch (PDOException $e) {
+                error_log("Error al cargar modulos_permitidos: " . $e->getMessage());
+                $_SESSION['modulos_permitidos'] = [];
+            }
         }
-    } catch (PDOException $e) {
-        error_log("Error en verificarAccesoModulo: " . $e->getMessage());
+    }
+
+    $tieneAcceso = in_array($moduloBuscado, $_SESSION['modulos_permitidos']);
+
+    if (!$tieneAcceso) {
         header('Location: /index.php');
         exit();
     }

@@ -103,6 +103,13 @@ try {
     // Confirmar transacción
     $conn->commit();
     
+    // Limpiar caché de sesión del usuario actual para aplicar cambios de inmediato
+    unset($_SESSION['permisos_tools_erp']);
+    unset($_SESSION['modulos_permitidos']);
+    unset($_SESSION['modulo_ruta']);
+    unset($_SESSION['datos_usuario_actual']);
+    unset($_SESSION['cargos_usuario']);
+    
     echo json_encode([
         'success' => true,
         'message' => "Permisos guardados correctamente",

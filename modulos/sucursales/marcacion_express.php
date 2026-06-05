@@ -130,70 +130,15 @@ function obtenerFechaInicioContinua($codOperario) {
     
     try {
         $stmt = $conn->prepare("
-            SELECT inicio_contrato, fin_contrato 
+            SELECT MIN(inicio_contrato) as fecha_inicio 
             FROM Contratos 
             WHERE cod_operario = ? 
-            ORDER BY inicio_contrato ASC
+            AND inicio_contrato IS NOT NULL 
+            AND inicio_contrato != '0000-00-00'
         ");
         $stmt->execute([$codOperario]);
-        $contratos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        if (empty($contratos)) {
-            return null;
-        }
-        
-        $cadenas = [];
-        $cadenaActual = null;
-        
-        foreach ($contratos as $contrato) {
-            $inicio = $contrato['inicio_contrato'];
-            $fin = $contrato['fin_contrato'];
-            
-            if ($inicio === null || $inicio === '0000-00-00') {
-                continue;
-            }
-            
-            if ($cadenaActual === null) {
-                $cadenaActual = [
-                    'inicio' => $inicio,
-                    'fin' => $fin
-                ];
-            } else {
-                if ($cadenaActual['fin'] === null || $cadenaActual['fin'] === '0000-00-00') {
-                    // Si el contrato anterior no tiene fin, se asume que sigue activo.
-                    // Pero si hay otro contrato posterior registrado, se inicia una nueva cadena.
-                    $cadenas[] = $cadenaActual;
-                    $cadenaActual = [
-                        'inicio' => $inicio,
-                        'fin' => $fin
-                    ];
-                } else {
-                    $fechaFinPrevio = new DateTime($cadenaActual['fin']);
-                    $fechaInicioNuevo = new DateTime($inicio);
-                    
-                    $intervalo = $fechaFinPrevio->diff($fechaInicioNuevo);
-                    $diferenciaDias = $intervalo->days;
-                    
-                    // Si la diferencia es <= 2 días y el nuevo empieza después o el mismo día
-                    if ($diferenciaDias <= 2 && $fechaInicioNuevo >= $fechaFinPrevio) {
-                        $cadenaActual['fin'] = $fin;
-                    } else {
-                        $cadenas[] = $cadenaActual;
-                        $cadenaActual = [
-                            'inicio' => $inicio,
-                            'fin' => $fin
-                        ];
-                    }
-                }
-            }
-        }
-        
-        if ($cadenaActual !== null) {
-            $cadenas[] = $cadenaActual;
-        }
-        
-        $cadenaMasReciente = end($cadenas);
-        return $cadenaMasReciente ? $cadenaMasReciente['inicio'] : null;
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? $row['fecha_inicio'] : null;
         
     } catch (Exception $e) {
         error_log("Error en obtenerFechaInicioContinua para operario $codOperario: " . $e->getMessage());

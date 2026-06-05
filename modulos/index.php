@@ -11,35 +11,43 @@ require_once '../core/auth/auth.php';
 // Obtener todos los cargos del usuario de la sesión (no solo uno)
 $cargosUsuario = obtenerCargosUsuario($_SESSION['usuario_id']);
 
-// Obtener el módulo destino directamente desde la BD (NivelesCargos.modulo_ruta)
-// Prioriza cargos que no son Operario (CodNivelesCargos != 2), luego por mayor Peso
+// Obtener el módulo destino (desde la sesión si ya está cacheado, o desde la BD)
 if (empty($cargosUsuario)) {
     header("Location: /index.php");
     exit();
 }
 
-global $conn;
-$placeholders = implode(',', array_fill(0, count($cargosUsuario), '?'));
+$moduloDestino = '';
 
-$stmt = $conn->prepare("
-    SELECT nc.CodNivelesCargos, nc.Nombre, nc.modulo_ruta
-    FROM NivelesCargos nc
-    WHERE nc.CodNivelesCargos IN ($placeholders)
-      AND nc.modulo_ruta IS NOT NULL
-    ORDER BY
-        CASE WHEN nc.CodNivelesCargos = 2 THEN 1 ELSE 0 END ASC,
-        nc.Peso DESC
-    LIMIT 1
-");
-$stmt->execute($cargosUsuario);
-$destinoCargo = $stmt->fetch();
+if (isset($_SESSION['modulo_ruta']) && !empty($_SESSION['modulo_ruta'])) {
+    $moduloDestino = $_SESSION['modulo_ruta'];
+} else {
+    global $conn;
+    $placeholders = implode(',', array_fill(0, count($cargosUsuario), '?'));
+
+    $stmt = $conn->prepare("
+        SELECT nc.CodNivelesCargos, nc.Nombre, nc.modulo_ruta
+        FROM NivelesCargos nc
+        WHERE nc.CodNivelesCargos IN ($placeholders)
+          AND nc.modulo_ruta IS NOT NULL
+        ORDER BY
+            CASE WHEN nc.CodNivelesCargos = 2 THEN 1 ELSE 0 END ASC,
+            nc.Peso DESC
+        LIMIT 1
+    ");
+    $stmt->execute($cargosUsuario);
+    $destinoCargo = $stmt->fetch();
+
+    if ($destinoCargo) {
+        $moduloDestino = $destinoCargo['modulo_ruta'];
+        $_SESSION['modulo_ruta'] = $moduloDestino;
+    }
+}
 
 $loopDetected = false;
 $moduloRechazado = '';
 
-if ($destinoCargo) {
-    $moduloDestino = $destinoCargo['modulo_ruta'];
-    
+if (!empty($moduloDestino)) {
     // Si acabamos de intentar redirigir a este módulo hace menos de 3 segundos y volvimos aquí, es un bucle
     if (isset($_SESSION['last_redirect_module']) && 
         $_SESSION['last_redirect_module'] === $moduloDestino && 

@@ -2,7 +2,7 @@
 // Al inicio del archivo, verificar autenticación y acceso al módulo
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
+require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
 
 // Verificar acceso al módulo 'publico' (o el nombre que corresponda según tus permisos)
 //verificarAccesoModulo('supervision');
@@ -38,6 +38,7 @@ unset($_SESSION['reclamo_exitoso'], $_SESSION['reclamo_id']);
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,10 +46,10 @@ unset($_SESSION['reclamo_exitoso'], $_SESSION['reclamo_id']);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <style>
-        *{
+        * {
             font-size: clamp(11px, 2vw, 16px) !important;
         }
-        
+
         body {
             font-family: 'Calibri', sans-serif;
             background-color: #F6F6F6;
@@ -59,21 +60,21 @@ unset($_SESSION['reclamo_exitoso'], $_SESSION['reclamo_id']);
             margin: 0;
             padding: 20px;
         }
-        
+
         .main-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        
+
         .logo-container {
             margin-bottom: 20px;
         }
-        
+
         .logo {
             max-width: 120px;
         }
-        
+
         .container {
             background-color: white;
             padding: 30px;
@@ -83,25 +84,25 @@ unset($_SESSION['reclamo_exitoso'], $_SESSION['reclamo_id']);
             max-width: 500px;
             width: 100%;
         }
-        
+
         .success-icon {
             color: #06D6A0;
             font-size: 50px !important;
             margin-bottom: 20px;
         }
-        
+
         h1 {
             color: #0E544C;
             margin-bottom: 20px;
         }
-        
+
         .reclamo-id {
             font-size: 24px !important;
             font-weight: bold;
             color: #51B8AC;
             margin: 20px 0;
         }
-        
+
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -112,12 +113,13 @@ unset($_SESSION['reclamo_exitoso'], $_SESSION['reclamo_id']);
             margin-top: 20px;
             transition: background-color 0.3s;
         }
-        
+
         .btn:hover {
             background-color: #0E544C;
         }
     </style>
 </head>
+
 <body>
     <div class="main-wrapper">
         <div class="logo-container">
@@ -140,4 +142,5 @@ unset($_SESSION['reclamo_exitoso'], $_SESSION['reclamo_id']);
         </div>
     </div>
 </body>
+
 </html>

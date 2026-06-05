@@ -4,14 +4,11 @@ require_once '../../core/layout/header_universal.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/permissions/permissions.php';
 
-
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
-// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([27, 49])) {
-    header('Location: ../index.php');
-    exit();
-}
+
+// Verificar acceso al módulo (gestionado dinámicamente desde el panel de permisos)
+verificarPermisoORedireccionar('index_sucursales', 'vista', $cargoOperario, '../index.php');
 
 // Obtener todas las sucursales
 $sucursales = obtenerTodasSucursales();
@@ -66,7 +63,8 @@ function obtenerCumpleanerosHoySucursal($codSucursal) {
 }
 
 /**
- * Obtiene las sucursales asignadas al usuario actual (para usuarios con cargo 27)
+ * Obtiene las sucursales donde el usuario actual tiene asignación activa.
+ * Si está activo en más de una sucursal, aparecen todas.
  */
 function obtenerSucursalesUsuarioActual() {
     global $conn;
@@ -104,70 +102,15 @@ function obtenerFechaInicioContinua($codOperario) {
     
     try {
         $stmt = $conn->prepare("
-            SELECT inicio_contrato, fin_contrato 
+            SELECT MIN(inicio_contrato) as fecha_inicio 
             FROM Contratos 
             WHERE cod_operario = ? 
-            ORDER BY inicio_contrato ASC
+            AND inicio_contrato IS NOT NULL 
+            AND inicio_contrato != '0000-00-00'
         ");
         $stmt->execute([$codOperario]);
-        $contratos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        if (empty($contratos)) {
-            return null;
-        }
-        
-        $cadenas = [];
-        $cadenaActual = null;
-        
-        foreach ($contratos as $contrato) {
-            $inicio = $contrato['inicio_contrato'];
-            $fin = $contrato['fin_contrato'];
-            
-            if ($inicio === null || $inicio === '0000-00-00') {
-                continue;
-            }
-            
-            if ($cadenaActual === null) {
-                $cadenaActual = [
-                    'inicio' => $inicio,
-                    'fin' => $fin
-                ];
-            } else {
-                if ($cadenaActual['fin'] === null || $cadenaActual['fin'] === '0000-00-00') {
-                    // Si el contrato anterior no tiene fin, se asume que sigue activo.
-                    // Pero si hay otro contrato posterior registrado, se inicia una nueva cadena.
-                    $cadenas[] = $cadenaActual;
-                    $cadenaActual = [
-                        'inicio' => $inicio,
-                        'fin' => $fin
-                    ];
-                } else {
-                    $fechaFinPrevio = new DateTime($cadenaActual['fin']);
-                    $fechaInicioNuevo = new DateTime($inicio);
-                    
-                    $intervalo = $fechaFinPrevio->diff($fechaInicioNuevo);
-                    $diferenciaDias = $intervalo->days;
-                    
-                    // Si la diferencia es <= 2 días y el nuevo empieza después o el mismo día
-                    if ($diferenciaDias <= 2 && $fechaInicioNuevo >= $fechaFinPrevio) {
-                        $cadenaActual['fin'] = $fin;
-                    } else {
-                        $cadenas[] = $cadenaActual;
-                        $cadenaActual = [
-                            'inicio' => $inicio,
-                            'fin' => $fin
-                        ];
-                    }
-                }
-            }
-        }
-        
-        if ($cadenaActual !== null) {
-            $cadenas[] = $cadenaActual;
-        }
-        
-        $cadenaMasReciente = end($cadenas);
-        return $cadenaMasReciente ? $cadenaMasReciente['inicio'] : null;
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? $row['fecha_inicio'] : null;
         
     } catch (Exception $e) {
         error_log("Error en obtenerFechaInicioContinua para operario $codOperario: " . $e->getMessage());
@@ -405,6 +348,7 @@ foreach ($sucursalesUsuario as $sucursal) {
     background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
     transform: rotate(45deg);
     animation: cardShine 4s infinite;
+    z-index: 1;
 }
 
 @keyframes cardShine {
@@ -483,6 +427,7 @@ foreach ($sucursalesUsuario as $sucursal) {
     background: linear-gradient(45deg, transparent, rgba(255,107,107,0.05), transparent);
     transform: rotate(45deg);
     animation: itemShine 5s infinite;
+    z-index: 1;
 }
 
 @keyframes itemShine {
@@ -567,12 +512,14 @@ foreach ($sucursalesUsuario as $sucursal) {
     align-items: center;
     gap: 10px;
     position: relative;
-    z-index: 2;
+    z-index: 3;
 }
 
 .mi-colaborador-confetti {
     font-size: 1.6rem !important;
     animation: spin 3s linear infinite;
+    position: relative;
+    z-index: 3;
 }
 
 @keyframes spin {
@@ -636,7 +583,7 @@ foreach ($sucursalesUsuario as $sucursal) {
     right: 25px;
     font-size: 2rem;
     opacity: 0.6;
-    z-index: 1;
+    z-index: 3;
     animation: confettiFloat 4s ease-in-out infinite;
 }
 
@@ -864,6 +811,8 @@ foreach ($sucursalesUsuario as $sucursal) {
     border-radius: 12px;
     transition: all 0.3s ease;
     border: 1px solid rgba(123, 44, 191, 0.1);
+    position: relative;
+    overflow: hidden;
 }
 
 .mi-colaborador-aniversario-item:hover {
@@ -886,7 +835,7 @@ foreach ($sucursalesUsuario as $sucursal) {
     flex-shrink: 0;
     box-shadow: 0 5px 15px rgba(123, 44, 191, 0.3);
     position: relative;
-    z-index: 2;
+    z-index: 3;
 }
 
 .mi-colaborador-nombre-aniv {
@@ -950,7 +899,7 @@ foreach ($sucursalesUsuario as $sucursal) {
     right: 25px;
     font-size: 2rem;
     opacity: 0.6;
-    z-index: 1;
+    z-index: 3;
     animation: starsFloat 4s ease-in-out infinite;
 }
 
