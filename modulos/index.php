@@ -11,37 +11,69 @@ require_once '../core/auth/auth.php';
 // Obtener todos los cargos del usuario de la sesión (no solo uno)
 $cargosUsuario = obtenerCargosUsuario($_SESSION['usuario_id']);
 
-// Obtener el módulo destino directamente desde la BD (NivelesCargos.modulo_ruta)
-// Prioriza cargos que no son Operario (CodNivelesCargos != 2), luego por mayor Peso
+// Obtener el módulo destino (desde la sesión si ya está cacheado, o desde la BD)
 if (empty($cargosUsuario)) {
     header("Location: /index.php");
     exit();
 }
 
-global $conn;
-$placeholders = implode(',', array_fill(0, count($cargosUsuario), '?'));
+$moduloDestino = '';
 
-$stmt = $conn->prepare("
-    SELECT nc.CodNivelesCargos, nc.Nombre, nc.modulo_ruta
-    FROM NivelesCargos nc
-    WHERE nc.CodNivelesCargos IN ($placeholders)
-      AND nc.modulo_ruta IS NOT NULL
-    ORDER BY
-        CASE WHEN nc.CodNivelesCargos = 2 THEN 1 ELSE 0 END ASC,
-        nc.Peso DESC
-    LIMIT 1
-");
-$stmt->execute($cargosUsuario);
-$destinoCargo = $stmt->fetch();
+if (isset($_SESSION['modulo_ruta']) && !empty($_SESSION['modulo_ruta'])) {
+    $moduloDestino = $_SESSION['modulo_ruta'];
+} else {
+    global $conn;
+    $placeholders = implode(',', array_fill(0, count($cargosUsuario), '?'));
 
-if ($destinoCargo && file_exists("../modulos/{$destinoCargo['modulo_ruta']}/index.php")) {
-    header("Location: /modulos/{$destinoCargo['modulo_ruta']}/index.php");
-    exit();
+    $stmt = $conn->prepare("
+        SELECT nc.CodNivelesCargos, nc.Nombre, nc.modulo_ruta
+        FROM NivelesCargos nc
+        WHERE nc.CodNivelesCargos IN ($placeholders)
+          AND nc.modulo_ruta IS NOT NULL
+        ORDER BY
+            CASE WHEN nc.CodNivelesCargos = 2 THEN 1 ELSE 0 END ASC,
+            nc.Peso DESC
+        LIMIT 1
+    ");
+    $stmt->execute($cargosUsuario);
+    $destinoCargo = $stmt->fetch();
+
+    if ($destinoCargo) {
+        $moduloDestino = $destinoCargo['modulo_ruta'];
+        $_SESSION['modulo_ruta'] = $moduloDestino;
+    }
+}
+
+$loopDetected = false;
+$moduloRechazado = '';
+
+if (!empty($moduloDestino)) {
+    // Si acabamos de intentar redirigir a este módulo hace menos de 3 segundos y volvimos aquí, es un bucle
+    if (isset($_SESSION['last_redirect_module']) && 
+        $_SESSION['last_redirect_module'] === $moduloDestino && 
+        isset($_SESSION['last_redirect_time']) && 
+        (time() - $_SESSION['last_redirect_time']) < 3) {
+        
+        $loopDetected = true;
+        $moduloRechazado = $moduloDestino;
+        
+        // Limpiamos para evitar quedar atrapados si el usuario refresca manualmente
+        unset($_SESSION['last_redirect_module']);
+        unset($_SESSION['last_redirect_time']);
+    } else {
+        if (file_exists("../modulos/{$moduloDestino}/index.php")) {
+            // Registrar el intento de redirección solo si realmente vamos a redirigir
+            $_SESSION['last_redirect_module'] = $moduloDestino;
+            $_SESSION['last_redirect_time'] = time();
+            
+            header("Location: /modulos/{$moduloDestino}/index.php");
+            exit();
+        }
+    }
 }
 
 // Cargo del usuario no tiene un módulo configurado en el ERP
 $cargoNombre = $_SESSION['cargo_nombre'] ?? 'desconocido';
-
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -102,11 +134,19 @@ $cargoNombre = $_SESSION['cargo_nombre'] ?? 'desconocido';
 <body>
     <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
     <div class="card">
-        <div class="icon">⚙️</div>
-        <h2>Acceso pendiente de configuración</h2>
-        <p>Tu cuenta fue verificada correctamente, pero tu cargo aún no tiene un módulo asignado en el ERP.</p>
-        <span class="cargo-badge"><?php echo htmlspecialchars($cargoNombre); ?></span>
-        <p>Contacta al equipo de <strong>TI / Sistemas</strong> para que configuren tu acceso.</p>
+        <?php if ($loopDetected): ?>
+            <div class="icon">🔒</div>
+            <h2>Acceso restringido al módulo</h2>
+            <p>Tu cargo está asignado al módulo <strong><?php echo htmlspecialchars(ucfirst($moduloRechazado)); ?></strong>, pero tu usuario no cuenta con los permisos de acceso requeridos en el sistema.</p>
+            <span class="cargo-badge"><?php echo htmlspecialchars($cargoNombre); ?></span>
+            <p>Contacta al equipo de <strong>TI / Sistemas</strong> para que te habiliten los permisos correspondientes en la gestión de accesos.</p>
+        <?php else: ?>
+            <div class="icon">⚙️</div>
+            <h2>Acceso pendiente de configuración</h2>
+            <p>Tu cuenta fue verificada correctamente, pero tu cargo aún no tiene un módulo asignado en el ERP o la ruta no existe.</p>
+            <span class="cargo-badge"><?php echo htmlspecialchars($cargoNombre); ?></span>
+            <p>Contacta al equipo de <strong>TI / Sistemas</strong> para que configuren tu acceso.</p>
+        <?php endif; ?>
         <a href="/logout.php" class="btn-logout">Cerrar sesión</a>
     </div>
 </body>

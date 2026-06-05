@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // /public_html/modulos/almacen/index.php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/header_universal.php';
@@ -8,15 +8,10 @@ require_once '../../core/permissions/permissions.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo Almacén (Código 17 para Jefe de Almacén, 23 para Auxiliar)
-// También permitimos admin
-if (!verificarAccesoCargo([17, 23, 49, 61])) {
-    header('Location: ../index.php');
-    exit();
-}
+// Verificar acceso al módulo Almacén (gestionado dinámicamente desde el panel de permisos)
+verificarPermisoORedireccionar('index_almacen', 'vista', $cargoOperario, '../index.php');
 
-// Para el sistema de permisos de "tools"
-// registrarPermisoVista('almacen', $cargoOperario); // Esto se hace en la BD
+
 ?>
 <!DOCTYPE html>
 <html lang="es">

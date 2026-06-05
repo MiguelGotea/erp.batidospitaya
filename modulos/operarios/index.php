@@ -1,16 +1,14 @@
-﻿<?php
+<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
+require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([2, 44, 45, 46, 47, 49])) {
-    header('Location: ../index.php');
-    exit();
-}
+// Verificar acceso al módulo (gestionado dinámicamente desde el panel de permisos)
+verificarPermisoORedireccionar('index_operarios', 'vista', $cargoOperario, '../index.php');
 
 /**
  * Obtiene información relevante para el operario

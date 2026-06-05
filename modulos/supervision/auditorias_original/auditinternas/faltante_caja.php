@@ -1,24 +1,16 @@
-﻿<?php
+<?php
 // Incluir configuración y verificar autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
-// Antes llamaba a ../funciones.php de auditora
-// require_once 'config.php'; // Comentado por migración al core
-
-// Verificar acceso al módulo 'supervision'
-//verificarAccesoModulo('supervision');
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 
 //******************************Estándar para header******************************
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([8, 16, 49]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 16, 49])) {
-    header('Location: ../../../index.php');
-    exit();
-}
+// Verificar acceso al módulo usando el sistema de permisos de Tools ERP
+verificarPermisoORedireccionar('faltante_caja', 'nuevo', $cargoOperario);
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
@@ -292,8 +284,8 @@ $sucursales_json = json_encode($sucursales);
                         <thead>
                             <tr>
                                 <th>Fecha</th>
-                                <th>Sucursal</th>
                                 <th>Colaborador</th>
+                                <th>Sucursal</th>
                                 <th>Monto (C$)</th>
                                 <th>Comentarios</th>
                                 <th>Acción</th>
@@ -305,6 +297,10 @@ $sucursales_json = json_encode($sucursales);
                                     <input type="date" name="colaboradores[0][fecha]" class="fecha" value="<?php echo date('Y-m-d'); ?>" required>
                                 </td>
                                 <td>
+                                    <input type="text" name="colaboradores[0][nombre_completo]" class="colaborador-input" required>
+                                    <input type="hidden" name="colaboradores[0][operario_id]" class="operario-id">
+                                </td>
+                                <td>
                                     <select name="colaboradores[0][sucursal_id]" class="sucursal-select" required>
                                         <option value="">Seleccione...</option>
                                         <?php foreach ($sucursales as $sucursal): ?>
@@ -313,10 +309,7 @@ $sucursales_json = json_encode($sucursales);
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
-                                </td>
-                                <td>
-                                    <input type="text" name="colaboradores[0][nombre_completo]" class="colaborador-input" required>
-                                    <input type="hidden" name="colaboradores[0][operario_id]" class="operario-id">
+                                    <div class="marcacion-info" style="font-size: 0.85em; margin-top: 4px; display: none;"></div>
                                 </td>
                                 <td><input type="number" name="colaboradores[0][monto]" class="monto" min="1" step="1" required></td>
                                 <td><textarea name="colaboradores[0][comentarios]" class="comentarios-fila" rows="2" placeholder="Comentarios específicos..."></textarea></td>
@@ -408,14 +401,15 @@ $sucursales_json = json_encode($sucursales);
                         <input type="date" name="colaboradores[${rowCount}][fecha]" class="fecha" value="<?php echo date('Y-m-d'); ?>" required>
                     </td>
                     <td>
+                        <input type="text" name="colaboradores[${rowCount}][nombre_completo]" class="colaborador-input" required>
+                        <input type="hidden" name="colaboradores[${rowCount}][operario_id]" class="operario-id">
+                    </td>
+                    <td>
                         <select name="colaboradores[${rowCount}][sucursal_id]" class="sucursal-select" required>
                             <option value="">Seleccione...</option>
                             ${sucursales.map(s => `<option value="${s.codigo}">${s.nombre}</option>`).join('')}
                         </select>
-                    </td>
-                    <td>
-                        <input type="text" name="colaboradores[${rowCount}][nombre_completo]" class="colaborador-input" required>
-                        <input type="hidden" name="colaboradores[${rowCount}][operario_id]" class="operario-id">
+                        <div class="marcacion-info" style="font-size: 0.85em; margin-top: 4px; display: none;"></div>
                     </td>
                     <td><input type="number" name="colaboradores[${rowCount}][monto]" class="monto" min="1" step="1" required></td>
                     <td><textarea name="colaboradores[${rowCount}][comentarios]" class="comentarios-fila" rows="2" placeholder="Comentarios específicos..."></textarea></td>
@@ -436,6 +430,43 @@ $sucursales_json = json_encode($sucursales);
                 });
             });
             
+            function actualizarSucursalPorMarcacion(row) {
+                const operarioId = row.querySelector('.operario-id').value;
+                const fecha = row.querySelector('.fecha').value;
+                const sucursalSelect = row.querySelector('.sucursal-select');
+                const infoDiv = row.querySelector('.marcacion-info');
+                
+                if (operarioId && fecha) {
+                    infoDiv.style.display = 'block';
+                    infoDiv.innerHTML = '<span style="color: #666;"><i class="fas fa-spinner fa-spin"></i> Buscando marcación...</span>';
+                    
+                    $.ajax({
+                        url: 'ajax/obtener_sucursal_marcacion.php',
+                        type: 'GET',
+                        data: {
+                            operario_id: operarioId,
+                            fecha: fecha
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success && response.sucursal_codigo) {
+                                sucursalSelect.value = response.sucursal_codigo;
+                                infoDiv.innerHTML = '<span style="color: #27ae60; font-weight: bold;"><i class="fas fa-check-circle"></i> Marcación detectada</span>';
+                            } else {
+                                infoDiv.innerHTML = '<span style="color: #7f8c8d;"><i class="fas fa-exclamation-circle"></i> Sin marcación (seleccionar manual)</span>';
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error al obtener sucursal por marcación:", error);
+                            infoDiv.innerHTML = '<span style="color: #e74c3c;"><i class="fas fa-times-circle"></i> Error al consultar marcación</span>';
+                        }
+                    });
+                } else {
+                    infoDiv.style.display = 'none';
+                    infoDiv.innerHTML = '';
+                }
+            }
+
             function setupAutocomplete(row) {
                 const colaboradorInput = row.querySelector('.colaborador-input');
                 const operarioIdInput = row.querySelector('.operario-id');
@@ -447,19 +478,33 @@ $sucursales_json = json_encode($sucursales);
                         $(this).val(ui.item.value);
                         operarioIdInput.value = ui.item.id;
                         $(this).removeClass('invalid');
+                        actualizarSucursalPorMarcacion(row);
                         return false;
+                    }
+                });
+
+                // Si borran el nombre, limpiar el ID y ocultar info
+                colaboradorInput.addEventListener('input', function() {
+                    if (!this.value.trim()) {
+                        operarioIdInput.value = '';
+                        const infoDiv = row.querySelector('.marcacion-info');
+                        infoDiv.style.display = 'none';
+                        infoDiv.innerHTML = '';
                     }
                 });
             }
             
             function addRowEvents(row) {
                 const montoInput = row.querySelector('.monto');
+                const fechaInput = row.querySelector('.fecha');
                 
-                function calcularTotal() {
+                montoInput.addEventListener('input', function() {
                     calcularTotales();
-                }
-                
-                montoInput.addEventListener('input', calcularTotal);
+                });
+
+                fechaInput.addEventListener('change', function() {
+                    actualizarSucursalPorMarcacion(row);
+                });
             }
             
             function calcularTotales() {

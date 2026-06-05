@@ -12,7 +12,7 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
-$puede_ver = tienePermiso('auditoria_efectivo', 'vista', $cargoOperario);
+$puede_ver = tienePermiso('faltante_caja', 'vista', $cargoOperario);
 if (!$puede_ver) {
     header('Location: ../../../index.php');
     exit();

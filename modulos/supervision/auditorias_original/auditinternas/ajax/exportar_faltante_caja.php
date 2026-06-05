@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
@@ -6,10 +6,12 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 
 $db = $conn;
 
-if (!verificarAccesoCargo([8, 11, 16, 21, 49])) {
-    header('Location: /index.php');
-    exit();
-}
+// Obtener información del usuario actual
+$usuario = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+// Verificar acceso usando permisos de Tools ERP
+verificarPermisoORedireccionar('faltante_caja', 'exportar', $cargoOperario);
 
 // Obtener parámetros de los filtros
 $operario_id = isset($_GET['operario'])    ? intval($_GET['operario'])  : 0;

@@ -120,6 +120,32 @@ function puedeMarcarOperario($codOperario)
     return true;
 }
 
+/**
+ * Calcula la fecha de inicio del período continuo actual de contrato de un colaborador.
+ * Une contratos si el nuevo inicia inmediatamente (hasta 2 días de diferencia para cubrir fin de semana/feriado)
+ * después de que finaliza el anterior.
+ */
+function obtenerFechaInicioContinua($codOperario) {
+    global $conn;
+    
+    try {
+        $stmt = $conn->prepare("
+            SELECT MIN(inicio_contrato) as fecha_inicio 
+            FROM Contratos 
+            WHERE cod_operario = ? 
+            AND inicio_contrato IS NOT NULL 
+            AND inicio_contrato != '0000-00-00'
+        ");
+        $stmt->execute([$codOperario]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? $row['fecha_inicio'] : null;
+        
+    } catch (Exception $e) {
+        error_log("Error en obtenerFechaInicioContinua para operario $codOperario: " . $e->getMessage());
+        return null;
+    }
+}
+
 // Identificar sucursal por la cookie de token
 function identificarSucursalPorToken()
 {
@@ -265,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
     $codDepartamento = obtenerCodigoDepartamentoSucursal($sucursalUsuario);
 
     // Validar credenciales buscando por contraseña en la sucursal autorizada (combinando 6 y 18)
-    $sql = "SELECT o.CodOperario, o.Nombre, o.Nombre2, o.Apellido, o.Apellido2, o.usuario, 
+    $sql = "SELECT o.CodOperario, o.Nombre, o.Nombre2, o.Apellido, o.Apellido2, o.usuario, o.Cumpleanos, 
                    nc.Nombre as cargo_nombre, s.nombre as sucursal_nombre, 
                    s.codigo as sucursal_codigo, nc.CodNivelesCargos as cargo_codigo
             FROM Operarios o
@@ -311,11 +337,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
     // CONFIRMACIÓN DE MARCACIÓN RECIENTE
     $confirmado = isset($_POST['confirmado']) && $_POST['confirmado'] == '1';
 
-    // Omitir confirmación en sucursales 6 y 18 durante el horario de almuerzo (11:25 AM a 1:35 PM)
+    // Omitir confirmación de marcación reciente en sucursales 6 y 18 por completo (marcan entrada/salida de almuerzo a horas variables)
     $omitirPorAlmuerzo = false;
-    if (($sucursalUsuario == 6 || $sucursalUsuario == 18) &&
-        (date('H:i:s') >= '11:25:00' && date('H:i:s') <= '13:35:00')
-    ) {
+    if ($sucursalUsuario == 6 || $sucursalUsuario == 18 || $sucursalUsuarioReal == 6 || $sucursalUsuarioReal == 18) {
         $omitirPorAlmuerzo = true;
     }
 
@@ -675,6 +699,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
     if ($faltasEjecutadas < 0)
         $faltasEjecutadas = 0;
 
+    // Verificar si hoy es su cumpleaños
+    $esCumpleanosHoy = false;
+    if (!empty($operario['Cumpleanos']) && $operario['Cumpleanos'] !== '0000-00-00 00:00:00') {
+        $cumpleMD = date('m-d', strtotime($operario['Cumpleanos']));
+        if ($cumpleMD === date('m-d')) {
+            $esCumpleanosHoy = true;
+        }
+    }
+
+    // Verificar si hoy es su aniversario de contrato
+    $esAniversarioHoy = false;
+    $aniosAniversario = 0;
+    $fechaInicioContinua = obtenerFechaInicioContinua($codOperario);
+    if ($fechaInicioContinua) {
+        $inicioMD = date('m-d', strtotime($fechaInicioContinua));
+        if ($inicioMD === date('m-d')) {
+            $hoyAnio = (int)date('Y');
+            $inicioAnio = (int)date('Y', strtotime($fechaInicioContinua));
+            $aniosAniversario = $hoyAnio - $inicioAnio;
+            if ($aniosAniversario > 0) {
+                $esAniversarioHoy = true;
+            }
+        }
+    }
+
     // Mensaje de confirmación
     $_SESSION['marcacion_mensaje'] = [
         'nombre' => $nombreCompleto,
@@ -697,7 +746,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dispositivoAutorizado) {
         'solo_salida' => $registrarSoloSalida,
         'numero_semana' => $horarioProgramado['numero_semana'] ?? null,
         'omision_dia_anterior' => $omisionDiaAnterior,
-        'faltas_pendientes' => $faltasEjecutadas
+        'faltas_pendientes' => $faltasEjecutadas,
+        'es_cumpleanos' => $esCumpleanosHoy,
+        'es_aniversario' => $esAniversarioHoy,
+        'anios_aniversario' => $aniosAniversario
     ];
 
     header('Location: marcacion_express.php');
@@ -1332,6 +1384,39 @@ if ($dispositivoAutorizado) {
                 opacity: 0.5;
             }
         }
+
+        /* Animaciones para cumpleaños y aniversarios en marcaciones */
+        @keyframes pulseAniversario {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes confetiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.85;
+            }
+            100% {
+                transform: translateY(105vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes estrellaFall {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0.8);
+                opacity: 0.85;
+            }
+            50% {
+                transform: translateY(50vh) rotate(180deg) scale(1.2);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateY(105vh) rotate(360deg) scale(0.8);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
@@ -1798,6 +1883,19 @@ if ($dispositivoAutorizado) {
                         `${tipoTexto} REGISTRADA</span><br>` +
                         `a las <strong style="font-size: 1.2rem; color: var(--primary-color);">${marcacionInfo.hora}</strong>`;
 
+                    // Banner de cumpleaños / aniversario (corto y elegante)
+                    if (marcacionInfo.es_cumpleanos) {
+                        mensajeHTML += `<div style="margin-top: 12px; background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: white; padding: 10px; border-radius: 10px; font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(255, 107, 107, 0.25); animation: pulseAniversario 2s infinite;">` +
+                            `🎉 ¡Feliz Cumpleaños! 🎂🎈</div>`;
+                        setTimeout(lanzarConfetiModal, 300);
+                    }
+                    if (marcacionInfo.es_aniversario) {
+                        const aniosTexto = marcacionInfo.anios_aniversario === 1 ? '1 año' : `${marcacionInfo.anios_aniversario} años`;
+                        mensajeHTML += `<div style="margin-top: 12px; background: linear-gradient(135deg, #7B2CBF, #9D4EDD); color: white; padding: 10px; border-radius: 10px; font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(123, 44, 191, 0.25); animation: pulseAniversario 2s infinite;">` +
+                            `🏆 ¡Feliz Aniversario de ${aniosTexto}! ✨🎖️</div>`;
+                        setTimeout(lanzarEstrellasModal, 300);
+                    }
+
                     // Tardanza o minuto de gracia
                     if (marcacionInfo.sucursal_codigo == 6 || marcacionInfo.sucursal_codigo == 18) {
                         if (marcacionInfo.tipo === 'entrada') {
@@ -1837,6 +1935,47 @@ if ($dispositivoAutorizado) {
                         <p><strong>Puesto:</strong> ${marcacionInfo.cargo || 'Sin cargo'}</p>
                         <p><strong>Sucursal:</strong> ${marcacionInfo.sucursal || 'Sin sucursal'}</p>
                     `;
+
+                    // Funciones para efectos en modal
+                    function lanzarConfetiModal() {
+                        const emojis = ['🎉', '🎊', '🎂', '🥳', '✨', '🎈'];
+                        for (let i = 0; i < 20; i++) {
+                            setTimeout(() => {
+                                const p = document.createElement('div');
+                                p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                                p.style.position = 'fixed';
+                                p.style.fontSize = '1.8rem';
+                                p.style.opacity = '0.85';
+                                p.style.zIndex = '9999';
+                                p.style.left = (10 + Math.random() * 80) + 'vw';
+                                p.style.top = '-40px';
+                                p.style.pointerEvents = 'none';
+                                p.style.animation = `confetiFall ${2.5 + Math.random() * 2}s linear forwards`;
+                                document.body.appendChild(p);
+                                setTimeout(() => p.remove(), 4500);
+                            }, i * 150);
+                        }
+                    }
+
+                    function lanzarEstrellasModal() {
+                        const emojis = ['🏆', '✨', '🎖️', '👏', '⭐', '🌟'];
+                        for (let i = 0; i < 20; i++) {
+                            setTimeout(() => {
+                                const p = document.createElement('div');
+                                p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                                p.style.position = 'fixed';
+                                p.style.fontSize = '1.8rem';
+                                p.style.opacity = '0.85';
+                                p.style.zIndex = '9999';
+                                p.style.left = (10 + Math.random() * 80) + 'vw';
+                                p.style.top = '-40px';
+                                p.style.pointerEvents = 'none';
+                                p.style.animation = `estrellaFall ${2.5 + Math.random() * 2}s linear forwards`;
+                                document.body.appendChild(p);
+                                setTimeout(() => p.remove(), 4500);
+                            }, i * 150);
+                        }
+                    }
 
                     modal.style.display = 'flex';
 

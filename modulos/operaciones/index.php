@@ -1,19 +1,14 @@
-﻿<?php
+<?php
 require_once '../../core/auth/auth.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/layout/menu_lateral.php';
-
+require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
-$cargoOperario = $usuario['CodNivelesCargos'];  
-//verificarAccesoModulo('operaciones');
-verificarAccesoCargo([11, 16, 36, 55, 49]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo (cargos con permiso para ver marcaciones)
-if (!verificarAccesoCargo([11, 16, 36, 55, 49])) {
-    header('Location: ../index.php');
-    exit();
-}
+// Verificar acceso al módulo (gestionado dinámicamente desde el panel de permisos)
+verificarPermisoORedireccionar('index_operaciones', 'vista', $cargoOperario, '../index.php');
 
 // Obtener todas las sucursales
 $sucursales = obtenerTodasSucursales();
