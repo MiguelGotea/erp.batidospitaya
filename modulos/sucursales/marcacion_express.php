@@ -791,6 +791,121 @@ if ($dispositivoAutorizado) {
             --warning-color: #f1c40f;
             --shadow-light: 0 8px 32px 0 rgba(14, 84, 76, 0.06);
             --shadow-btn: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --transition-speed: 0.3s;
+        }
+
+        body.dark-mode {
+            --background-gradient: linear-gradient(135deg, #07231f 0%, #030d0b 100%);
+            --card-background: rgba(14, 30, 27, 0.95);
+            --text-main: #eef7f6;
+            --text-muted: #a3bda8;
+            --shadow-light: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            --shadow-btn: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body, .container, .sidebar, .password-display, .unauthorized-card, .modal-content, .key, .item-turno {
+            transition: background var(--transition-speed) ease, 
+                        background-color var(--transition-speed) ease, 
+                        border-color var(--transition-speed) ease, 
+                        color var(--transition-speed) ease, 
+                        box-shadow var(--transition-speed) ease,
+                        transform 0.2s ease;
+        }
+
+        /* Estilos de Teclado y Botones en Modo Oscuro */
+        body.dark-mode .key {
+            background: #11312b;
+            color: #51B8AC;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        body.dark-mode .key:hover {
+            background: #1a443c;
+        }
+        body.dark-mode .key:active {
+            background: #0d2621;
+        }
+        body.dark-mode .key.wide {
+            background: #193f38;
+        }
+        body.dark-mode .key.action-clear {
+            background: #3a1a1a;
+            color: #ec7063;
+        }
+        body.dark-mode .key.action-clear:hover {
+            background: #c0392b;
+            color: white;
+        }
+        
+        /* Tecla Especial Marcar */
+        .key.action-confirm {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #3f9b90 100%) !important;
+            color: white !important;
+        }
+        .key.action-confirm:hover {
+            background: linear-gradient(135deg, #5fcbbd 0%, var(--secondary-color) 100%) !important;
+            color: white !important;
+        }
+        .key.action-confirm:active {
+            background: #34847b !important;
+        }
+        body.dark-mode .key.action-confirm {
+            background: linear-gradient(135deg, #1b7367 0%, #0e544c 100%) !important;
+            color: white !important;
+        }
+
+        body.dark-mode .password-display {
+            background: #0d211e;
+            border-color: #214d45;
+            color: var(--secondary-color);
+        }
+
+        body.dark-mode .item-turno {
+            background: #0f2b26;
+            border-left-color: var(--secondary-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        body.dark-mode .item-turno:hover {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        body.dark-mode .colaborador-nombre {
+            color: #eef7f6;
+        }
+        body.dark-mode .avatar-colaborador {
+            border-color: var(--secondary-color);
+            background: #0e201d;
+        }
+
+        body.dark-mode .modal-content {
+            background: #0e201d;
+            border: 1px solid rgba(81, 184, 172, 0.2);
+            color: #eef7f6;
+        }
+        body.dark-mode .modal-title {
+            color: #eef7f6;
+        }
+        body.dark-mode .modal-mensaje {
+            color: #eef7f6;
+        }
+        body.dark-mode .info-operario {
+            background: rgba(81, 184, 172, 0.05);
+            border-left-color: var(--secondary-color);
+        }
+        body.dark-mode .info-operario p {
+            color: #dbeee8;
+        }
+        body.dark-mode .modal-close {
+            color: var(--text-muted);
+        }
+
+        body.dark-mode .keyboard {
+            background: rgba(81, 184, 172, 0.03);
+            border-color: rgba(81, 184, 172, 0.08);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        body.dark-mode .unauthorized-card {
+            border-color: rgba(81, 184, 172, 0.15);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
         }
 
         * {
@@ -917,10 +1032,206 @@ if ($dispositivoAutorizado) {
             margin-bottom: 10px;
         }
 
-        .live-clock {
-            font-size: 1.1rem;
-            color: var(--text-muted);
+        /* Reloj Rediseñado */
+        .clock-widget {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #06312c 100%);
+            color: #ffffff;
+            border-radius: 16px;
+            padding: 18px 25px;
+            margin: 15px auto 25px;
+            max-width: 450px;
+            box-shadow: 0 10px 25px rgba(14, 84, 76, 0.15), 
+                        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(81, 184, 172, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .clock-widget::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(81, 184, 172, 0.15) 0%, transparent 75%);
+            pointer-events: none;
+        }
+
+        .clock-display {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            z-index: 2;
+        }
+
+        .clock-time {
+            font-size: 3.4rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            background: linear-gradient(to bottom, #ffffff 60%, #e0f2f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .clock-ampm {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            letter-spacing: 0.5px;
+        }
+
+        .clock-date {
+            font-size: 0.95rem;
             font-weight: 500;
+            color: #dbeee8;
+            letter-spacing: 0.8px;
+            text-transform: capitalize;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 8px;
+            width: 100%;
+            text-align: center;
+            z-index: 2;
+        }
+
+        /* Botón Pantalla Completa Floating */
+        .fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-background);
+            border: 1px solid rgba(14, 84, 76, 0.15);
+            color: var(--primary-color);
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .fullscreen-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(14, 84, 76, 0.18);
+        }
+
+        .fullscreen-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Botón de Tema Floating */
+        .theme-btn {
+            position: fixed;
+            top: 20px;
+            right: 76px;
+            background: var(--card-background);
+            border: 1px solid rgba(14, 84, 76, 0.15);
+            color: var(--primary-color);
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .theme-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(14, 84, 76, 0.18);
+        }
+
+        .theme-btn:active {
+            transform: scale(0.95);
+        }
+
+        body.dark-mode .theme-btn {
+            color: var(--secondary-color);
+            border-color: rgba(81, 184, 172, 0.2);
+        }
+        
+        body.dark-mode .theme-btn:hover {
+            background: var(--secondary-color);
+            color: #0e201d;
+        }
+
+        body.dark-mode .fullscreen-btn {
+            color: var(--secondary-color);
+            border-color: rgba(81, 184, 172, 0.2);
+        }
+
+        body.dark-mode .fullscreen-btn:hover {
+            background: var(--secondary-color);
+            color: #0e201d;
+        }
+
+        /* Indicador de Conexión */
+        .connection-status-dot {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            margin-left: 10px;
+            vertical-align: middle;
+            transition: all 0.3s ease;
+        }
+
+        .connection-status-dot.online {
+            background-color: var(--success-color);
+            box-shadow: 0 0 8px var(--success-color);
+            animation: pulse-dot-green 2s infinite;
+        }
+
+        .connection-status-dot.offline {
+            background-color: var(--danger-color);
+            box-shadow: 0 0 8px var(--danger-color);
+            animation: pulse-dot-red 2s infinite;
+        }
+
+        @keyframes pulse-dot-green {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        @keyframes pulse-dot-red {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        /* Separadores pulsantes del reloj */
+        .clock-colon {
+            animation: pulse-colon 1s infinite;
+            display: inline-block;
+            transition: opacity 0.2s;
+        }
+
+        @keyframes pulse-colon {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
         }
 
         /* Password Input Display */
@@ -1463,6 +1774,16 @@ if ($dispositivoAutorizado) {
         <!-- Banner Offline (oculto por defecto, JS lo muestra/oculta) -->
         <div id="offlineBanner" class="offline-banner" style="display:none;"></div>
 
+        <!-- Botón Cambiar Tema (Claro/Oscuro) -->
+        <button type="button" class="theme-btn" id="btnTheme" title="Cambiar tema">
+            <i class="fas fa-moon"></i>
+        </button>
+
+        <!-- Botón Pantalla Completa -->
+        <button type="button" class="fullscreen-btn" id="btnFullscreen" title="Pantalla completa">
+            <i class="fas fa-expand"></i>
+        </button>
+
         <div class="workspace">
             <div class="container">
                 <img src="../../core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
@@ -1470,9 +1791,16 @@ if ($dispositivoAutorizado) {
                 <div class="header-info">
                     <div class="sucursal-badge">
                         <i class="fas fa-store"></i> <?= htmlspecialchars($sucursalNombre) ?>
+                        <span class="connection-status-dot" id="connectionStatusDot" title="Estado de la conexión"></span>
                     </div>
-                    <h1>Marcación</h1>
-                    <div class="live-clock" id="liveClock">Cargando fecha y hora...</div>
+                    <h1 style="font-size: 1.6rem; margin-bottom: 15px;">Marcación</h1>
+                    <div class="clock-widget">
+                        <div class="clock-display">
+                            <span class="clock-time" id="clockTime">00<span class="clock-colon">:</span>00<span class="clock-colon">:</span>00</span>
+                            <span class="clock-ampm" id="clockAmPm">--</span>
+                        </div>
+                        <div class="clock-date" id="clockDate">Cargando fecha...</div>
+                    </div>
                 </div>
 
                 <?php if (isset($_SESSION['error'])): ?>
@@ -1675,10 +2003,12 @@ if ($dispositivoAutorizado) {
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Reloj en tiempo real
+                // Reloj en tiempo real rediseñado con separadores pulsantes
                 function updateClock() {
-                    const clockEl = document.getElementById('liveClock');
-                    if (!clockEl) return;
+                    const timeEl = document.getElementById('clockTime');
+                    const ampmEl = document.getElementById('clockAmPm');
+                    const dateEl = document.getElementById('clockDate');
+                    if (!timeEl || !ampmEl || !dateEl) return;
 
                     const now = new Date();
                     const optionsDate = {
@@ -1687,7 +2017,8 @@ if ($dispositivoAutorizado) {
                         month: 'long',
                         day: 'numeric'
                     };
-                    const dateStr = now.toLocaleDateString('es-ES', optionsDate);
+                    let dateStr = now.toLocaleDateString('es-ES', optionsDate);
+                    dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
 
                     let hours = now.getHours();
                     const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -1695,12 +2026,98 @@ if ($dispositivoAutorizado) {
                     const ampm = hours >= 12 ? 'PM' : 'AM';
                     hours = hours % 12;
                     hours = hours ? hours : 12; // 0 deberia ser 12
-                    const timeStr = `${hours}:${minutes}:${seconds} ${ampm}`;
 
-                    clockEl.textContent = `${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} | ${timeStr}`;
+                    timeEl.innerHTML = `${hours}<span class="clock-colon">:</span>${minutes}<span class="clock-colon">:</span>${seconds}`;
+                    ampmEl.textContent = ampm;
+                    dateEl.textContent = dateStr;
                 }
                 updateClock();
                 setInterval(updateClock, 1000);
+
+                // Control de Pantalla Completa (Fullscreen)
+                const fullscreenBtn = document.getElementById('btnFullscreen');
+                if (fullscreenBtn) {
+                    fullscreenBtn.addEventListener('click', () => {
+                        if (!document.fullscreenElement) {
+                            document.documentElement.requestFullscreen().catch(err => {
+                                console.error(`Error al intentar pantalla completa: ${err.message}`);
+                            });
+                        } else {
+                            document.exitFullscreen();
+                        }
+                    });
+
+                    document.addEventListener('fullscreenchange', () => {
+                        const icon = fullscreenBtn.querySelector('i');
+                        if (document.fullscreenElement) {
+                            if (icon) {
+                                icon.className = 'fas fa-compress';
+                            }
+                            fullscreenBtn.setAttribute('title', 'Salir de pantalla completa');
+                        } else {
+                            if (icon) {
+                                icon.className = 'fas fa-expand';
+                            }
+                            fullscreenBtn.setAttribute('title', 'Pantalla completa');
+                        }
+                    });
+                }
+
+                // Control de Tema (Modo Oscuro / Claro)
+                const themeBtn = document.getElementById('btnTheme');
+                
+                function getSystemThemePreference() {
+                    const now = new Date();
+                    const hour = now.getHours();
+                    // Auto dark mode: antes de 7:00 AM o después de 6:00 PM (18:00)
+                    return (hour < 7 || hour >= 18) ? 'dark' : 'light';
+                }
+
+                function applyTheme(theme) {
+                    if (!themeBtn) return;
+                    const icon = themeBtn.querySelector('i');
+                    if (theme === 'dark') {
+                        document.body.classList.add('dark-mode');
+                        if (icon) icon.className = 'fas fa-sun';
+                        themeBtn.setAttribute('title', 'Cambiar a modo claro');
+                    } else {
+                        document.body.classList.remove('dark-mode');
+                        if (icon) icon.className = 'fas fa-moon';
+                        themeBtn.setAttribute('title', 'Cambiar a modo oscuro');
+                    }
+                }
+
+                // Cargar tema inicial (preferencia o automático)
+                let savedTheme = localStorage.getItem('pitaya_theme');
+                if (!savedTheme) {
+                    savedTheme = getSystemThemePreference();
+                }
+                applyTheme(savedTheme);
+
+                if (themeBtn) {
+                    themeBtn.addEventListener('click', () => {
+                        const isDark = document.body.classList.contains('dark-mode');
+                        const newTheme = isDark ? 'light' : 'dark';
+                        localStorage.setItem('pitaya_theme', newTheme);
+                        applyTheme(newTheme);
+                    });
+                }
+
+                // Indicador de Estado de Conexión (Online/Offline)
+                function updateConnectionStatus() {
+                    const dot = document.getElementById('connectionStatusDot');
+                    if (!dot) return;
+                    if (navigator.onLine) {
+                        dot.className = 'connection-status-dot online';
+                        dot.setAttribute('title', 'Conectado al servidor (Online)');
+                    } else {
+                        dot.className = 'connection-status-dot offline';
+                        dot.setAttribute('title', 'Sin conexión (Trabajando localmente)');
+                    }
+                }
+                updateConnectionStatus();
+                window.addEventListener('online', updateConnectionStatus);
+                window.addEventListener('offline', updateConnectionStatus);
 
                 // Ocultar mensaje de error tras 8 segundos
                 const errorAlert = document.getElementById('errorMessage');
@@ -1770,9 +2187,7 @@ if ($dispositivoAutorizado) {
                                 keyBtn.classList.add('action-clear');
                             } else if (keyChar === 'Marcar') {
                                 keyBtn.textContent = '✓';
-                                keyBtn.classList.add('wide');
-                                keyBtn.style.background = 'var(--secondary-color)';
-                                keyBtn.style.color = 'white';
+                                keyBtn.classList.add('wide', 'action-confirm');
                             } else {
                                 keyBtn.textContent = isUppercase ? keyChar.toUpperCase() : keyChar.toLowerCase();
                             }
@@ -1811,7 +2226,15 @@ if ($dispositivoAutorizado) {
                         handlePasswordChange();
                     } else if (key === 'Marcar') {
                         if (!btnMarcar.disabled) {
-                            document.getElementById('formMarcacion').submit();
+                            const form = document.getElementById('formMarcacion');
+                            if (typeof form.requestSubmit === 'function') {
+                                form.requestSubmit();
+                            } else {
+                                const event = new Event('submit', { cancelable: true, bubbles: true });
+                                if (form.dispatchEvent(event)) {
+                                    form.submit();
+                                }
+                            }
                         }
                     } else {
                         const finalChar = isUppercase ? key.toUpperCase() : key.toLowerCase();
@@ -1880,7 +2303,7 @@ if ($dispositivoAutorizado) {
                                 btnMarcar.disabled    = true;
                             }
                         }
-                    }, 250);
+                    }, navigator.onLine ? 250 : 450);
                 }
 
                 renderKeyboard();

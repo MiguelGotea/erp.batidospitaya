@@ -32,10 +32,10 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
     const req = event.request;
-    const url = new URL(req.url);
 
-    // AJAX POST: network-only, respuesta offline JSON si falla
-    if (url.pathname.includes('/ajax/') && req.method === 'POST') {
+    // Solo se permite cachear peticiones GET (requisito de la Cache API del navegador).
+    // Las peticiones POST (como la verificación online y sincronización) van directo a la red.
+    if (req.method !== 'GET') {
         event.respondWith(
             fetch(req).catch(() =>
                 new Response(
@@ -46,6 +46,8 @@ self.addEventListener('fetch', event => {
         );
         return;
     }
+
+    const url = new URL(req.url);
 
     // Página principal: network-first + cache fallback
     if (url.pathname.includes('marcacion_express.php')) {

@@ -1,35 +1,43 @@
-﻿<?php
+<?php
 // Configuración inicial y autenticación
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
-// Antes llamaba a ../funciones.php de auditora
-// require_once 'config.php'; // Comentado por migración al core
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
 
 // Establecer conexión a la base de datos
-// $db = conectarDB();
 $db = $conn;
 
 //******************************Estándar para header******************************
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo 'supervision'
-//verificarAccesoCargo([2, 5, 8, 11, 16, 13, 49]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([2, 5, 8, 11, 16, 13, 49])) {
-    header('Location: ../../../index.php');
-    exit();
-}
+// Verificar acceso al módulo mediante sistema de permisos Tools ERP
+verificarPermisoORedireccionar('deducciones_total', 'vista', $cargoOperario, '/modulos/index.php');
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
 
-$cargoUsuarioCod = obtenerCargoCodigoPrincipalUsuario($_SESSION['usuario_id']);
-$esOperarioOLider = in_array($cargoUsuarioCod, [2, 5]);
+// Determinar si el usuario tiene vista completa (todos los colaboradores) o solo la propia
+$tieneVistaCompleta = tienePermiso('deducciones_total', 'vista_completa', $cargoOperario);
+$esOperarioOLider   = !$tieneVistaCompleta; // Compatibilidad con lógica existente
+
+// Constantes de permisos para uso en el HTML
+$puedeExportar            = tienePermiso('deducciones_total', 'exportar',               $cargoOperario);
+$puedeExportarContabilidad= tienePermiso('deducciones_total', 'exportar_contabilidad',  $cargoOperario);
+$puedeExportarFaltanteCaja= tienePermiso('deducciones_total', 'exportar_faltante_caja', $cargoOperario);
+$puedeAsignarFecha        = tienePermiso('deducciones_total', 'asignar_fecha',           $cargoOperario);
 //******************************Estándar para header, termina******************************
 
 // Procesar asignación de fecha de deducción si se envió el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_fecha'])) {
+    // Verificar permiso antes de procesar
+    if (!tienePermiso('deducciones_total', 'asignar_fecha', $cargoOperario)) {
+        header('Location: deducciones_total.php');
+        exit();
+    }
     $tipo = $_POST['tipo'];
     $id_referencia = $_POST['id_referencia'];
     $fecha_deduccion = $_POST['fecha_deduccion'];
@@ -420,6 +428,10 @@ try {
 
 // Verificar si se solicitó la exportación a Excel
 if (isset($_GET['exportar_excel'])) {
+    if (!tienePermiso('deducciones_total', 'exportar', $cargoOperario)) {
+        header('Location: deducciones_total.php');
+        exit();
+    }
     // Reconstruir la consulta completa con el filtro de monto
     $sql_export = "
         SELECT * FROM (
@@ -616,6 +628,10 @@ if (isset($_GET['exportar_excel'])) {
 
 // Verificar si se solicitó la exportación a Excel para contabilidad
 if (isset($_GET['exportar_contabilidad'])) {
+    if (!tienePermiso('deducciones_total', 'exportar_contabilidad', $cargoOperario)) {
+        header('Location: deducciones_total.php');
+        exit();
+    }
     // Reconstruir la consulta completa con el filtro de monto distinto de cero
     $sql_export = "
         SELECT * FROM (
@@ -844,6 +860,10 @@ function obtenerFechasQuincenaActual()
 
 // Verificar si se solicitó la exportación a Excel solo para faltantes de caja
 if (isset($_GET['exportar_faltante_caja'])) {
+    if (!tienePermiso('deducciones_total', 'exportar_faltante_caja', $cargoOperario)) {
+        header('Location: deducciones_total.php');
+        exit();
+    }
     // Consulta específica para faltantes de caja
     $sql_export = "
         SELECT 
@@ -974,73 +994,21 @@ if (isset($_GET['exportar_faltante_caja'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deducciones de Operarios</title>
-    <link rel="stylesheet" href="../styles.css">
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <link rel="stylesheet" href="css/deducciones_total.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
 <body>
-    <div class="contenedor-principal">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-                <div class="buttons-container">
-                    <?php if (verificarAccesoCargo([11, 16, 21, 49])): ?>
-                        <a href="auditorias_consolidadas.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'auditorias_consolidadas.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Historial</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <a href="deducciones_total.php"
-                        class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'deducciones_total.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Deducciones</span>
-                    </a>
-
-                    <?php if (verificarAccesoCargo([2, 5, 49])): ?>
-                        <a href="../../../contabilidad/boleta_pago.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'boleta_pago.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Boleta de Pago</span>
-                        </a>
-                    <?php endif; ?>
-
-                    <?php if (verificarAccesoCargo([8, 16, 49])): ?>
-                        <a href="faltante_caja.php"
-                            class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_caja.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Faltante de Caja</span>
-                        </a>
-                    <?php endif; ?>
-                </div>
-
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= false ?
-                            strtoupper(substr($usuario['nombre'], 0, 1)) :
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= false ?
-                                htmlspecialchars($usuario['nombre']) :
-                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="../../../index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Deducciones de Operarios'); ?>
 
         <?php if (!$esOperarioOLider): ?>
             <!-- Filtros - Solo visible para cargos diferentes a 2 y 5 -->
@@ -1136,7 +1104,7 @@ if (isset($_GET['exportar_faltante_caja'])) {
             </div>
         <?php endif; ?>
 
-        <!-- Botón de exportar a Excel -->
+        <!-- Botones de exportación (visibles según permisos Tools ERP) -->
         <div style="text-align: right; margin-bottom: 10px;">
             <h3 style="margin: 0; color: #333; display:none;">
                 Total de Deducciones:
@@ -1145,37 +1113,41 @@ if (isset($_GET['exportar_faltante_caja'])) {
                 </span>
             </h3>
 
-            <a style="display:none;" href="deducciones_total.php?<?php
-            echo http_build_query([
-                'operario' => $operario_id,
-                'sucursal' => $sucursal_id,
-                'fecha_desde' => $fecha_desde,
-                'fecha_hasta' => $fecha_hasta,
-                'exportar_excel' => 1
-            ]);
-            ?>" class="btn-agregar excel">
-                <i class="fas fa-file-excel"></i> Exportar
-            </a>
-
-            <!-- Nuevo botón para exportar para contabilidad -->
-            <a style="display:none;" href="deducciones_total.php?<?php
-            echo http_build_query([
-                'operario' => $operario_id,
-                'sucursal' => $sucursal_id,
-                'fecha_desde' => $fecha_desde,
-                'fecha_hasta' => $fecha_hasta,
-                'exportar_contabilidad' => 1
-            ]);
-            ?>" class="btn-agregar excel-contabilidad" style="background-color: #6f42c1; border-color: #6f42c1;">
-                <i class="fas fa-file-excel"></i> Exportar para Contabilidad
-            </a>
-
-            <?php if (verificarAccesoCargo([8, 16, 49])): ?>
-                <!-- Nuevo botón para exportar solo faltantes de caja -->
+            <?php if ($puedeExportar): ?>
                 <a style="display:none;" href="deducciones_total.php?<?php
                 echo http_build_query([
-                    'operario' => $operario_id,
-                    'sucursal' => $sucursal_id,
+                    'operario'    => $operario_id,
+                    'sucursal'    => $sucursal_id,
+                    'fecha_desde' => $fecha_desde,
+                    'fecha_hasta' => $fecha_hasta,
+                    'exportar_excel' => 1
+                ]);
+                ?>" class="btn-agregar excel">
+                    <i class="fas fa-file-excel"></i> Exportar
+                </a>
+            <?php endif; ?>
+
+            <?php if ($puedeExportarContabilidad): ?>
+                <!-- Botón exportar para Contabilidad -->
+                <a style="display:none;" href="deducciones_total.php?<?php
+                echo http_build_query([
+                    'operario'    => $operario_id,
+                    'sucursal'    => $sucursal_id,
+                    'fecha_desde' => $fecha_desde,
+                    'fecha_hasta' => $fecha_hasta,
+                    'exportar_contabilidad' => 1
+                ]);
+                ?>" class="btn-agregar excel-contabilidad" style="background-color: #6f42c1; border-color: #6f42c1;">
+                    <i class="fas fa-file-excel"></i> Exportar para Contabilidad
+                </a>
+            <?php endif; ?>
+
+            <?php if ($puedeExportarFaltanteCaja): ?>
+                <!-- Botón exportar solo faltantes de caja -->
+                <a style="display:none;" href="deducciones_total.php?<?php
+                echo http_build_query([
+                    'operario'    => $operario_id,
+                    'sucursal'    => $sucursal_id,
                     'fecha_desde' => $fecha_desde,
                     'fecha_hasta' => $fecha_hasta,
                     'exportar_faltante_caja' => 1
@@ -1617,6 +1589,8 @@ if (isset($_GET['exportar_faltante_caja'])) {
             });
         });
     </script>
+        </div><!-- /.sub-container -->
+    </div><!-- /.main-container -->
 </body>
 
 </html>

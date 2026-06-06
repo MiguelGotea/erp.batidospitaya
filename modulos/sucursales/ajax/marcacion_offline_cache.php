@@ -65,8 +65,8 @@ try {
         WHERE o.Operativo = 1
           AND nc.CodNivelesCargos != 27
           AND (
-              anc.Sucursal = :suc
-              OR (:suc = 18 AND anc.Sucursal = 6)
+              anc.Sucursal = :suc1
+              OR (:suc2 = 18 AND anc.Sucursal = 6)
           )
           AND NOT EXISTS (
               SELECT 1 FROM Contratos c
@@ -83,7 +83,7 @@ try {
     ";
 
     $stmt = $conn->prepare($sql);
-    $stmt->execute([':suc' => $codSucursal]);
+    $stmt->execute([':suc1' => $codSucursal, ':suc2' => $codSucursal]);
     $operarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 4. Construir respuesta con hashes bcrypt ────────────────────────────
@@ -102,7 +102,7 @@ try {
             // Ya tiene hash bcrypt → usar directo
             $hash = $op['clave_hash'];
 
-        } elseif (!empty($op['clave']) && !str_starts_with($op['clave'], '$2y$')) {
+        } elseif (!empty($op['clave']) && strncmp($op['clave'], '$2y$', 4) !== 0) {
             // Solo tiene clave texto plano → generar bcrypt y guardarlo (auto-migración)
             $hash = password_hash($op['clave'], PASSWORD_BCRYPT, ['cost' => 10]);
             $stmtUpdateHash->execute([$hash, $codOp]);

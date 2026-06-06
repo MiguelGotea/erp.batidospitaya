@@ -2,6 +2,8 @@
 // Incluir configuración y verificar autenticación
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
 
 //******************************Estándar para header******************************
 
@@ -213,57 +215,22 @@ $sucursales_json = json_encode($sucursales);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Registro de Faltante de Caja</title>
-    <link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="css/faltante_caja.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <header>
-                <div class="header-container">
-                    <div class="logo-container">
-                        <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                    </div>
-                    
-                    <div class="buttons-container">
-                        <a href="deducciones_total.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'deducciones_total.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Deducciones</span>
-                        </a>
-                        <a href="faltante_caja.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'faltante_caja.php' ? 'activo' : '' ?>">
-                            <i class="fas fa-money-bill-wave"></i> <span class="btn-text">Faltante de Caja</span>
-                        </a>
-                    </div>
-                    
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            <?= false ? 
-                                strtoupper(substr($usuario['nombre'], 0, 1)) : 
-                                strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                        </div>
-                        <div>
-                            <div>
-                                <?= false ? 
-                                    htmlspecialchars($usuario['nombre']) : 
-                                    htmlspecialchars($usuario['Nombre'].' '.$usuario['Apellido']) ?>
-                            </div>
-                            <small>
-                                <?= htmlspecialchars($cargoUsuario) ?>
-                            </small>
-                        </div>
-                        <a href="auditorias_consolidadas.php" class="btn-logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </a>
-                    </div>
-                </div>
-            </header>
-            
-            <h1 style="text-align:center;">Registro de Faltante de Caja</h1>
-        </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Registro de Faltante de Caja'); ?>
+
+            <div class="container">
         
         <?php if (isset($_SESSION['success_message'])): ?>
             <div class="message success"><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></div>
@@ -615,5 +582,8 @@ $sucursales_json = json_encode($sucursales);
             return errores;
         }
     </script>
+            </div><!-- /.container -->
+        </div><!-- /.sub-container -->
+    </div><!-- /.main-container -->
 </body>
 </html>
