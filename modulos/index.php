@@ -48,24 +48,42 @@ $loopDetected = false;
 $moduloRechazado = '';
 
 if (!empty($moduloDestino)) {
-    // Si acabamos de intentar redirigir a este módulo hace menos de 3 segundos y volvimos aquí, es un bucle
+    $currentTime = time();
+    $isFastRedirect = false;
+    
+    // Si acabamos de intentar redirigir a este módulo hace menos de 2 segundos, consideramos que es un reintento rápido
     if (isset($_SESSION['last_redirect_module']) && 
         $_SESSION['last_redirect_module'] === $moduloDestino && 
         isset($_SESSION['last_redirect_time']) && 
-        (time() - $_SESSION['last_redirect_time']) < 3) {
+        ($currentTime - $_SESSION['last_redirect_time']) < 2) {
         
-        $loopDetected = true;
-        $moduloRechazado = $moduloDestino;
+        $isFastRedirect = true;
+    }
+    
+    if ($isFastRedirect) {
+        $_SESSION['redirect_loop_count'] = ($_SESSION['redirect_loop_count'] ?? 0) + 1;
         
-        // Limpiamos para evitar quedar atrapados si el usuario refresca manualmente
-        unset($_SESSION['last_redirect_module']);
-        unset($_SESSION['last_redirect_time']);
-    } else {
-        if (file_exists("../modulos/{$moduloDestino}/index.php")) {
-            // Registrar el intento de redirección solo si realmente vamos a redirigir
-            $_SESSION['last_redirect_module'] = $moduloDestino;
-            $_SESSION['last_redirect_time'] = time();
+        // Solo declaramos bucle si rebota 2 o más veces consecutivas (evita falsos positivos por clicks rápidos)
+        if ($_SESSION['redirect_loop_count'] >= 2) {
+            $loopDetected = true;
+            $moduloRechazado = $moduloDestino;
             
+            // Limpiamos variables de control
+            unset($_SESSION['last_redirect_module']);
+            unset($_SESSION['last_redirect_time']);
+            unset($_SESSION['redirect_loop_count']);
+        }
+    } else {
+        $_SESSION['redirect_loop_count'] = 0;
+    }
+
+    if (!$loopDetected) {
+        if (file_exists("../modulos/{$moduloDestino}/index.php")) {
+            $_SESSION['last_redirect_module'] = $moduloDestino;
+            $_SESSION['last_redirect_time'] = $currentTime;
+            
+            // Forzar guardado y liberar el lock de la sesión para evitar condiciones de carrera en el servidor
+            session_write_close();
             header("Location: /modulos/{$moduloDestino}/index.php");
             exit();
         }
