@@ -377,11 +377,11 @@ function obtenerMarcacionesConHorariosProgramados(
         $sqlHorarios .= " AND hso.cod_sucursal = ?";
         $paramsHorarios[] = '6';
 
-        // Y filtrar por los cargos específicos (23, 20, 34) en cualquier sucursal
+        // Y filtrar por los cargos específicos (20, 23, 34, 58, 59, 60) en cualquier sucursal
         $sqlHorarios .= " AND EXISTS (
         SELECT 1 FROM AsignacionNivelesCargos anc
         WHERE anc.CodOperario = hso.cod_operario
-        AND anc.CodNivelesCargos IN (23, 20, 34)
+        AND anc.CodNivelesCargos IN (20, 23, 34, 58, 59, 60)
         AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
         )";
     }
@@ -501,7 +501,7 @@ function obtenerMarcacionesConHorariosProgramados(
         $sqlMarcaciones .= " AND (m.sucursal_codigo = ? OR EXISTS (
         SELECT 1 FROM AsignacionNivelesCargos anc
         WHERE anc.CodOperario = m.CodOperario
-        AND anc.CodNivelesCargos IN (23, 20, 34)
+        AND anc.CodNivelesCargos IN (20, 23, 34, 58, 59, 60)
         AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
         ))";
         $paramsMarcaciones[] = '6';

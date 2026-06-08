@@ -683,36 +683,73 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
         }
 
         // Preguntar confirmación antes de guardar
-        const dias = calcularDiasLaborables(fechaInicio, fechaFin);
-        let textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de ausencias?`;
+        const diasRango = calcularDiasLaborables(fechaInicio, fechaFin);
+        const puedeAprobar = window.CONFIG_VACACIONES && window.CONFIG_VACACIONES.puedeAprobar;
+
+        // Determinar el nombre del select de cantidad_dias según el formulario
+        const selectIdMap = {
+            'formNuevaVacacion': 'nueva_cantidad_dias',
+            'formNuevoSubsidio': 'subsidio_cantidad_dias',
+            'formNuevaFalta':    'falta_cantidad_dias'
+        };
+        const selectCantId = selectIdMap[formId] || null;
+
+        // Leer la cantidad de días seleccionada (solo si puede aprobar y existe el select)
+        let cantidadDiasTexto = null;
+        if (puedeAprobar && selectCantId) {
+            const cantVal = parseFloat(obtenerCantidadDias(selectCantId));
+            if (!isNaN(cantVal)) {
+                // Buscar el texto de la opción seleccionada para describirlo
+                const selectEl = document.getElementById(selectCantId);
+                let optionLabel = '';
+                if (selectEl && selectEl.value !== 'custom') {
+                    optionLabel = selectEl.options[selectEl.selectedIndex]?.text || '';
+                    // Quedarnos solo con la parte descriptiva (antes del paréntesis)
+                    const parenIdx = optionLabel.indexOf('(');
+                    if (parenIdx > 0) optionLabel = optionLabel.substring(0, parenIdx).trim();
+                }
+                cantidadDiasTexto = optionLabel || `${cantVal} día(s)`;
+            }
+        }
 
         let tipoNombre = '';
         const tipoFaltaEl = form.querySelector('[name="tipo_falta"]');
         if (tipoFaltaEl) {
             if (tipoFaltaEl.tagName === 'SELECT' && tipoFaltaEl.selectedIndex !== -1) {
                 const optText = tipoFaltaEl.options[tipoFaltaEl.selectedIndex].text;
-                // Remove the percentage/payment text like "(Paga 100%)", "(Pagas 100%)", etc.
+                // Quitar el texto de porcentaje como "(Paga 100%)"
                 tipoNombre = optText.replace(/\s*\(Pagas?\s*-?\d+%\)/gi, '').trim();
             } else if (tipoFaltaEl.tagName === 'INPUT' && tipoFaltaEl.value !== 'Pendiente') {
                 tipoNombre = tipoFaltaEl.value;
             }
         }
 
-        if (categoriaFalta === 'vacaciones') {
-            textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de vacaciones?`;
-        } else if (categoriaFalta === 'subsidio') {
-            if (tipoNombre) {
-                const tipoLower = tipoNombre.toLowerCase();
-                textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de ${tipoLower}?`;
+        let textoConfirmacion;
+
+        if (!puedeAprobar) {
+            // Líderes sin permiso de aprobar: el registro queda como Pendiente,
+            // no se muestra cantidad de días ni tipo (lo define RRHH después)
+            if (categoriaFalta === 'vacaciones') {
+                textoConfirmacion = `¿Está seguro de solicitar vacaciones para este rango de ${diasRango} día(s)?\n\nQuedarán como Pendiente hasta ser aprobadas por RRHH.`;
+            } else if (categoriaFalta === 'subsidio') {
+                textoConfirmacion = `¿Está seguro de registrar el subsidio para este rango de ${diasRango} día(s)?\n\nQuedarán como Pendiente hasta ser revisados por RRHH.`;
             } else {
-                textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de subsidio?`;
+                textoConfirmacion = `¿Está seguro de registrar esta falta/permiso para este rango de ${diasRango} día(s)?\n\nQuedarán como Pendiente hasta ser revisados por RRHH.`;
             }
-        } else if (categoriaFalta === 'falta_permiso') {
-            if (tipoNombre) {
-                const tipoLower = tipoNombre.toLowerCase();
-                textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de ${tipoLower}?`;
+        } else {
+            // Quien puede aprobar: mostrar tipo y cantidad de días exacta
+            const descripcionDias = cantidadDiasTexto
+                ? `${diasRango} día(s) — ${cantidadDiasTexto} cada uno`
+                : `${diasRango} día(s)`;
+
+            if (categoriaFalta === 'vacaciones') {
+                textoConfirmacion = `¿Está seguro de registrar vacaciones para este rango?\n\n• Días en rango: ${diasRango}\n• Duración por día: ${cantidadDiasTexto || '1 día completo'}`;
+            } else if (categoriaFalta === 'subsidio') {
+                const tipoLower = tipoNombre ? tipoNombre.toLowerCase() : 'subsidio';
+                textoConfirmacion = `¿Está seguro de registrar "${tipoNombre || 'subsidio'}" para este rango?\n\n• Días en rango: ${diasRango}\n• Duración por día: ${cantidadDiasTexto || '1 día completo'}`;
             } else {
-                textoConfirmacion = `¿Está seguro de registrar este rango de ${dias} días de falta o permiso?`;
+                const tipoLower = tipoNombre ? tipoNombre.toLowerCase() : 'falta o permiso';
+                textoConfirmacion = `¿Está seguro de registrar "${tipoNombre || 'falta/permiso'}" para este rango?\n\n• Días en rango: ${diasRango}\n• Duración por día: ${cantidadDiasTexto || '1 día completo'}`;
             }
         }
 
@@ -838,6 +875,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!observacionesRrhh) {
                 alert('Las observaciones de Recursos Humanos son obligatorias para aprobar o editar.');
+                return false;
+            }
+
+            // Confirmación con detalle de tipo y duración seleccionada
+            const selectTipoEl = document.getElementById('editar_tipo');
+            let tipoNombreEditar = tipoFalta;
+            if (selectTipoEl && selectTipoEl.selectedIndex !== -1) {
+                const optTxt = selectTipoEl.options[selectTipoEl.selectedIndex].text;
+                tipoNombreEditar = optTxt.replace(/\s*\(-?\d+%\)/gi, '').trim();
+            }
+
+            const selectCantEditar = document.getElementById('editar_cantidad_dias');
+            let cantDiasLabel = '1 día completo';
+            if (selectCantEditar) {
+                if (selectCantEditar.value !== 'custom') {
+                    const optLabel = selectCantEditar.options[selectCantEditar.selectedIndex]?.text || '';
+                    const parenIdx = optLabel.indexOf('(');
+                    cantDiasLabel = parenIdx > 0 ? optLabel.substring(0, parenIdx).trim() : optLabel.trim();
+                } else {
+                    const customVal = selectCantEditar.dataset.customValue || '1.00';
+                    cantDiasLabel = `${customVal} día(s) personalizado`;
+                }
+            }
+
+            const nombreColaborador = document.getElementById('editar_nombre')?.textContent || '';
+            const textoConfirmEditar = `¿Confirmar la aprobación/edición de este registro?\n\n• Colaborador: ${nombreColaborador}\n• Tipo: ${tipoNombreEditar}\n• Duración: ${cantDiasLabel}`;
+            if (!confirm(textoConfirmEditar)) {
                 return false;
             }
 
@@ -1069,3 +1133,197 @@ function vacCambiarPagina(pagina) {
 document.addEventListener('DOMContentLoaded', function () {
     vacRenderizar();
 });
+
+// =====================================================
+// FAB ARRASTRABLE — SNAP A 4 ESQUINAS
+// =====================================================
+(function () {
+    const MARGIN = 20;           // px de margen a los bordes
+    const DRAG_THRESHOLD = 6;    // px mínimos para considerar arrastre
+    const STORAGE_KEY = 'vac_fab_corner';
+
+    function applyCorner(el, corner) {
+        // Anular posiciones anteriores usando 'auto' para que no hereden 
+        // valores de la hoja de estilos global (evitando conflictos top/bottom o left/right)
+        el.style.top    = 'auto';
+        el.style.bottom = 'auto';
+        el.style.left   = 'auto';
+        el.style.right  = 'auto';
+
+        const m = MARGIN + 'px';
+        if (corner === 'top-left')          { el.style.top = m;    el.style.left  = m; }
+        else if (corner === 'top-right')    { el.style.top = m;    el.style.right = m; }
+        else if (corner === 'bottom-left')  { el.style.bottom = m; el.style.left  = m; }
+        else                               { el.style.bottom = m; el.style.right = m; }
+
+        // Lado izquierdo → opciones se abren hacia la derecha
+        if (corner === 'top-left' || corner === 'bottom-left') {
+            el.classList.add('fab-left-side');
+        } else {
+            el.classList.remove('fab-left-side');
+        }
+
+        // Esquina superior → opciones se despliegan hacia abajo
+        if (corner === 'top-left' || corner === 'top-right') {
+            el.classList.add('fab-top-side');
+        } else {
+            el.classList.remove('fab-top-side');
+        }
+    }
+
+    function getCornerFromCenter(el) {
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width  / 2;
+        const cy = rect.top  + rect.height / 2;
+        const isLeft = cx < window.innerWidth  / 2;
+        const isTop  = cy < window.innerHeight / 2;
+        if (isTop  && isLeft)  return 'top-left';
+        if (isTop  && !isLeft) return 'top-right';
+        if (!isTop && isLeft)  return 'bottom-left';
+        return 'bottom-right';
+    }
+
+    function initDraggableFab() {
+        const fab = document.getElementById('fabContainer');
+        if (!fab) return;
+
+        // Mover el contenedor al final del body para garantizar que se posicione respecto a la pantalla
+        // y evitar heredar coordenadas de contenedores padres con transform, relative, absolute, etc.
+        if (fab.parentElement !== document.body) {
+            document.body.appendChild(fab);
+        }
+
+        const btn = fab.querySelector('.btn-floating-pitaya');
+        if (!btn) return;
+
+        let isDragging  = false;
+        let dragStarted = false;
+        let wasDragged  = false;
+        let startX, startY, startLeft, startTop;
+
+        // Restaurar esquina guardada (o default bottom-right)
+        const savedCorner = localStorage.getItem(STORAGE_KEY) || 'bottom-right';
+        applyCorner(fab, savedCorner);
+
+        // ── Cursor de arrastre ────────────────────────────────────
+        btn.style.cursor = 'grab';
+
+        // ── mousedown / touchstart ────────────────────────────────
+        function onDragStart(e) {
+            // Solo botón izquierdo del ratón
+            if (e.button !== undefined && e.button !== 0) return;
+
+            isDragging  = true;
+            dragStarted = false;
+            wasDragged  = false;
+
+            // Bloquear el :hover CSS y ocultar opciones durante el arrastre
+            // (NO se toca .active — el CSS fab-dragging lo suprime con !important
+            //  para que el toggle por clic siga funcionando correctamente)
+            fab.classList.add('fab-dragging');
+
+            // Deshabilitar pointer-events en las opciones durante el arrastre
+            const fabOpts = fab.querySelector('.fab-options');
+            if (fabOpts) fabOpts.style.pointerEvents = 'none';
+
+            // Prevenir selección de texto accidental
+            document.body.style.userSelect = 'none';
+
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX;
+            startY = touch.clientY;
+
+            const rect = fab.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop  = rect.top;
+
+            // Congelar transiciones y fijar posición con top/left
+            fab.style.transition = 'none';
+            fab.style.top    = startTop  + 'px';
+            fab.style.left   = startLeft + 'px';
+            fab.style.right  = 'auto';
+            fab.style.bottom = 'auto';
+
+            btn.style.cursor = 'grabbing';
+            e.preventDefault();
+        }
+
+        // ── mousemove / touchmove ─────────────────────────────────
+        function onDragMove(e) {
+            if (!isDragging) return;
+
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+
+            if (!dragStarted && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+                dragStarted = true;
+            }
+            if (!dragStarted) return;
+
+            wasDragged = true;
+
+            // Calcular nueva posición con límites de pantalla
+            const fabW   = fab.getBoundingClientRect().width  || 75;
+            const fabH   = fab.getBoundingClientRect().height || 75;
+            const maxLeft = window.innerWidth  - fabW  - MARGIN;
+            const maxTop  = window.innerHeight - fabH  - MARGIN;
+
+            fab.style.left = Math.max(MARGIN, Math.min(startLeft + dx, maxLeft)) + 'px';
+            fab.style.top  = Math.max(MARGIN, Math.min(startTop  + dy, maxTop))  + 'px';
+
+            e.preventDefault();
+        }
+
+        // ── mouseup / touchend ────────────────────────────────────
+        function onDragEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+
+            btn.style.cursor = 'grab';
+
+            // Restaurar pointer-events en opciones y selección de texto
+            const fabOpts = fab.querySelector('.fab-options');
+            if (fabOpts) fabOpts.style.pointerEvents = '';
+            document.body.style.userSelect = '';
+
+            // Quitar clase de arrastre (reactiva el hover CSS)
+            fab.classList.remove('fab-dragging');
+
+            if (!wasDragged) {
+                // Clic normal (sin arrastre real):
+                // onDragStart dejó inline top/left y transition:none que hay que limpiar
+                // para que el FAB vuelva exactamente a su esquina guardada sin glitch
+                fab.style.transition = '';
+                applyCorner(fab, localStorage.getItem(STORAGE_KEY) || 'bottom-right');
+                return;
+            }
+
+            // Arrastre real: cerrar menú y snap a la esquina más cercana
+            fab.classList.remove('active');
+            fab.style.transition = '';
+            const corner = getCornerFromCenter(fab);
+            applyCorner(fab, corner);
+            localStorage.setItem(STORAGE_KEY, corner);
+        }
+
+        // ── Prevenir que un arrastre active toggleFab ─────────────
+        btn.addEventListener('click', function (e) {
+            if (wasDragged) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                wasDragged = false;
+            }
+        }, true); // captura antes que el onclick inline
+
+        // ── Registrar eventos ─────────────────────────────────────
+        btn.addEventListener('mousedown',  onDragStart);
+        btn.addEventListener('touchstart', onDragStart, { passive: false });
+        document.addEventListener('mousemove',  onDragMove);
+        document.addEventListener('touchmove',  onDragMove, { passive: false });
+        document.addEventListener('mouseup',    onDragEnd);
+        document.addEventListener('touchend',   onDragEnd);
+    }
+
+    document.addEventListener('DOMContentLoaded', initDraggableFab);
+})();

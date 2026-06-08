@@ -59,11 +59,25 @@ async function cargarEntrevistas() {
         const data = await response.json();
         if (data.success) {
             entrevistas = data.entrevistas;
-            renderizarCalendarioSemanal();
-            renderizarAgendaHoy();
+        } else {
+            console.error('Error en data:', data.message);
+            entrevistas = [];
         }
     } catch (error) {
         console.error('Error:', error);
+        entrevistas = [];
+    } finally {
+        renderizarCalendarioSemanal();
+        renderizarAgendaHoy();
+
+        const alerta = document.getElementById('alertaNoEntrevistas');
+        if (alerta) {
+            if (entrevistas.length === 0) {
+                alerta.classList.remove('d-none');
+            } else {
+                alerta.classList.add('d-none');
+            }
+        }
     }
 }
 

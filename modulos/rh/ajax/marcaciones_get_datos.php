@@ -134,7 +134,7 @@ try {
         $sqlHorarios .= " AND EXISTS (
             SELECT 1 FROM AsignacionNivelesCargos anc_cds
             WHERE anc_cds.CodOperario = hso.cod_operario
-            AND anc_cds.CodNivelesCargos IN (23, 20, 34)
+            AND anc_cds.CodNivelesCargos IN (20, 23, 34, 58, 59, 60)
             AND (anc_cds.Fin IS NULL OR anc_cds.Fin >= CURDATE())
         )";
     } elseif ($esOperaciones) {
@@ -415,6 +415,199 @@ try {
         }
     }
 
+    // PASO 3.5: Agregar marcaciones SIN horario programado (sucursales sin programación, ej: sucursal 6, 18)
+    // Buscar marcaciones de operarios/sucursales que no aparecieron en los horarios ya procesados
+    {
+        // Construir claves de los registros ya procesados para evitar duplicados
+        $clavesYaProcesadas = [];
+        foreach ($resultado as $r) {
+            if ($r['tiene_marcacion'] && $r['id']) {
+                $clavesYaProcesadas[$r['id']] = true;
+            }
+        }
+
+        // Calcular rango de fechas para marcaciones sin horario
+        $fechaDesdeSH = $fechaDesde;
+        $fechaHastaSH = $fechaHasta;
+        if (isset($filtros['numero_semana']) && !empty($filtros['numero_semana'])) {
+            $stmtSemSH = $conn->prepare("
+                SELECT MIN(fecha_inicio) as minima, MAX(fecha_fin) as maxima
+                FROM SemanasSistema
+                WHERE (numero_semana >= ? OR ? = '') AND (numero_semana <= ? OR ? = '')
+            ");
+            $minSemSH = isset($filtros['numero_semana']['min']) ? $filtros['numero_semana']['min'] : '';
+            $maxSemSH = isset($filtros['numero_semana']['max']) ? $filtros['numero_semana']['max'] : '';
+            $stmtSemSH->execute([$minSemSH, $minSemSH, $maxSemSH, $maxSemSH]);
+            $rangoSH = $stmtSemSH->fetch(PDO::FETCH_ASSOC);
+            if ($rangoSH && $rangoSH['minima']) {
+                $fechaDesdeSH = $rangoSH['minima'];
+                $fechaHastaSH = min($rangoSH['maxima'], $fechaHoy);
+            }
+        }
+
+        // Construir SQL de marcaciones sin horario según permisos del usuario
+        $sqlMarcSH = "
+            SELECT
+                m.id, m.fecha, m.hora_ingreso, m.hora_salida, m.CodOperario, m.sucursal_codigo,
+                s.nombre as nombre_sucursal,
+                o.Nombre, o.Apellido, o.Apellido2,
+                (SELECT ss2.numero_semana FROM SemanasSistema ss2
+                 WHERE m.fecha BETWEEN ss2.fecha_inicio AND ss2.fecha_fin LIMIT 1) as numero_semana,
+                (SELECT nc2.Nombre FROM AsignacionNivelesCargos anc2
+                 LEFT JOIN NivelesCargos nc2 ON anc2.CodNivelesCargos = nc2.CodNivelesCargos
+                 WHERE anc2.CodOperario = m.CodOperario
+                 ORDER BY CASE WHEN anc2.Fin IS NULL THEN 0 ELSE 1 END, anc2.Fin DESC, anc2.Fecha DESC
+                 LIMIT 1) as nombre_cargo,
+                (SELECT anc2.CodNivelesCargos FROM AsignacionNivelesCargos anc2
+                 WHERE anc2.CodOperario = m.CodOperario
+                 ORDER BY CASE WHEN anc2.Fin IS NULL THEN 0 ELSE 1 END, anc2.Fin DESC, anc2.Fecha DESC
+                 LIMIT 1) as codigo_cargo
+            FROM marcaciones m
+            JOIN sucursales s ON m.sucursal_codigo = s.codigo
+            JOIN Operarios o ON m.CodOperario = o.CodOperario
+            WHERE m.fecha BETWEEN ? AND ?
+            AND m.fecha <= ?
+        ";
+        $paramsMarcSH = [$fechaDesdeSH, $fechaHastaSH, $fechaHoy];
+
+        // Aplicar restricciones según permisos del usuario
+        if ($esLider) {
+            $sucursalesLiderSH = obtenerSucursalesLider($usuario['CodOperario']);
+            $codsSucLiderSH = array_filter(array_column($sucursalesLiderSH, 'codigo'));
+            if (!empty($codsSucLiderSH)) {
+                $phSH = implode(',', array_fill(0, count($codsSucLiderSH), '?'));
+                // Para líder: marcaciones de operarios asignados a sus sucursales (aunque marqen en otra)
+                $sqlMarcSH .= " AND EXISTS (
+                    SELECT 1 FROM AsignacionNivelesCargos anc_sh
+                    WHERE anc_sh.CodOperario = m.CodOperario
+                    AND anc_sh.Sucursal IN ($phSH)
+                    AND (anc_sh.Fin IS NULL OR anc_sh.Fin >= CURDATE())
+                    AND anc_sh.CodNivelesCargos != 27
+                )";
+                foreach ($codsSucLiderSH as $cSH) $paramsMarcSH[] = $cSH;
+            }
+        } elseif ($esCDS) {
+            // CDS solo ve sucursal 6 con cargos específicos
+            $sqlMarcSH .= " AND m.sucursal_codigo = '6'";
+            $sqlMarcSH .= " AND EXISTS (
+                SELECT 1 FROM AsignacionNivelesCargos anc_sh
+                WHERE anc_sh.CodOperario = m.CodOperario
+                AND anc_sh.CodNivelesCargos IN (20, 23, 34, 58, 59, 60)
+                AND (anc_sh.Fin IS NULL OR anc_sh.Fin >= CURDATE())
+            )";
+        } elseif ($esOperaciones) {
+            // Operaciones solo ve sucursales físicas
+            $sqlMarcSH .= " AND s.sucursal = 1";
+        }
+        // Para contabilidad/RH/admin: sin restricción adicional de sucursal (ven todo)
+
+        // Aplicar filtro de sucursal si viene del panel de filtros de la columna
+        if (isset($filtros['nombre_sucursal']) && is_array($filtros['nombre_sucursal']) && !empty($filtros['nombre_sucursal'])) {
+            $phFiltSuc = implode(',', array_fill(0, count($filtros['nombre_sucursal']), '?'));
+            $sqlMarcSH .= " AND m.sucursal_codigo IN ($phFiltSuc)";
+            foreach ($filtros['nombre_sucursal'] as $fsc) $paramsMarcSH[] = $fsc;
+        }
+
+        // Aplicar filtro de operario específico
+        if (isset($filtros['operario']) && !empty($filtros['operario']) && $filtros['operario'] !== 'todos') {
+            $sqlMarcSH .= " AND m.CodOperario = ?";
+            $paramsMarcSH[] = $filtros['operario'];
+        }
+        if (isset($filtros['nombre_completo']) && is_array($filtros['nombre_completo']) && !empty($filtros['nombre_completo'])) {
+            $phOpSH = implode(',', array_fill(0, count($filtros['nombre_completo']), '?'));
+            $sqlMarcSH .= " AND m.CodOperario IN ($phOpSH)";
+            foreach ($filtros['nombre_completo'] as $opSH) $paramsMarcSH[] = $opSH;
+        }
+
+        // Excluir cargo 27 (guardias/externos que se excluyen globalmente)
+        $sqlMarcSH .= " AND NOT EXISTS (
+            SELECT 1 FROM AsignacionNivelesCargos anc_exc
+            WHERE anc_exc.CodOperario = m.CodOperario
+            AND anc_exc.CodNivelesCargos = 27
+            AND (anc_exc.Fin IS NULL OR anc_exc.Fin >= CURDATE())
+        )";
+
+        $stmtMarcSH = $conn->prepare($sqlMarcSH);
+        $stmtMarcSH->execute($paramsMarcSH);
+        $marcacionesSinHorario = $stmtMarcSH->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($marcacionesSinHorario as $msh) {
+            // Saltar si esta marcación ya fue procesada como parte de un horario
+            if (isset($clavesYaProcesadas[$msh['id']])) {
+                continue;
+            }
+
+            // Verificar que no haya ya un registro con el mismo operario+fecha+sucursal de un horario
+            // (puede ocurrir si marcó en distinta sucursal al programada)
+            $yaEnResultado = false;
+            foreach ($resultado as $rExist) {
+                if (
+                    $rExist['CodOperario'] == $msh['CodOperario'] &&
+                    $rExist['fecha'] == $msh['fecha'] &&
+                    $rExist['id'] == $msh['id']
+                ) {
+                    $yaEnResultado = true;
+                    break;
+                }
+            }
+            if ($yaEnResultado) continue;
+
+            // Calcular horas trabajadas
+            $horasTrabajadasSH = 0;
+            if (!empty($msh['hora_ingreso']) && !empty($msh['hora_salida'])) {
+                try {
+                    $inicioSH = new DateTime($msh['hora_ingreso']);
+                    $finSH = new DateTime($msh['hora_salida']);
+                    if ($finSH < $inicioSH) $finSH->modify('+1 day');
+                    $diffSH = $finSH->diff($inicioSH);
+                    $horasTrabajadasSH = $diffSH->h + ($diffSH->i / 60);
+                } catch (Exception $e) {
+                    $horasTrabajadasSH = 0;
+                }
+            }
+
+            // Verificar existencia de fotos para esta marcación
+            $_mIdSH = $msh['id'];
+            $_fotoEntradaSH = $_mIdSH && file_exists($uploadMarcaciones . '/marcacion_' . $_mIdSH . '_entrada.jpg');
+            $_fotoSalidaSH  = $_mIdSH && file_exists($uploadMarcaciones . '/marcacion_' . $_mIdSH . '_salida.jpg');
+
+            $resultado[] = [
+                'id'                      => $msh['id'],
+                'fecha'                   => $msh['fecha'],
+                'numero_semana'           => $msh['numero_semana'],
+                'nombre_sucursal'         => $msh['nombre_sucursal'],
+                'sucursal_codigo'         => $msh['sucursal_codigo'],
+                'nombre_completo'         => trim($msh['Nombre'] . ' ' . ($msh['Apellido'] ?? '')),
+                'CodOperario'             => $msh['CodOperario'],
+                'nombre_cargo'            => $msh['nombre_cargo'],
+                'codigo_cargo'            => $msh['codigo_cargo'],
+                'hora_ingreso'            => $msh['hora_ingreso'],
+                'hora_salida'             => $msh['hora_salida'],
+                'hora_entrada_programada' => null,
+                'hora_salida_programada'  => null,
+                'estado_dia'              => 'Sin horario programado',
+                'sucursal_externa_codigo' => null,
+                'sucursal_externa_nombre' => null,
+                'tiene_horario'           => false,
+                'tiene_marcacion'         => true,
+                'requiere_marcacion'      => false,
+                'requiere_justificacion'  => 0,
+                'horas_trabajadas'        => $horasTrabajadasSH,
+                'tardanza_solicitada'     => false,
+                'falta_solicitada'        => false,
+                'tardanza_data'           => null,
+                'falta_data'              => null,
+                'sucursal_marcacion_codigo' => $msh['sucursal_codigo'],
+                'sucursal_marcacion_nombre' => $msh['nombre_sucursal'],
+                'foto_entrada_existe'     => $_fotoEntradaSH,
+                'foto_salida_existe'      => $_fotoSalidaSH,
+                'foto_entrada_path'       => $_fotoEntradaSH ? '/modulos/rh/uploads/marcaciones/marcacion_' . $_mIdSH . '_entrada.jpg' : null,
+                'foto_salida_path'        => $_fotoSalidaSH  ? '/modulos/rh/uploads/marcaciones/marcacion_' . $_mIdSH . '_salida.jpg'  : null,
+            ];
+        }
+    }
+    // FIN PASO 3.5
+
     // PASO 4: Aplicar filtros a los resultados combinados
     $incidenciasFiltro = isset($_POST['incidencias']) ? $_POST['incidencias'] : 'todos';
 
@@ -469,7 +662,7 @@ try {
             }
         }
 
-        // Filtro de sucursal
+        // Filtro de sucursal (el valor del filtro es el código de sucursal, que coincide con sucursal_codigo)
         if (isset($filtros['nombre_sucursal']) && is_array($filtros['nombre_sucursal']) && !empty($filtros['nombre_sucursal'])) {
             $resultado = array_filter($resultado, function ($r) use ($filtros) {
                 return in_array($r['sucursal_codigo'], $filtros['nombre_sucursal']);
