@@ -602,8 +602,8 @@ function obtenerTiposFaltaConPorcentajes()
                                 <i class="fas fa-search"></i> Buscar
                             </button>
 
-                            <a href="imprimir_boleta.php" target="_blank" class="btn-agregar"
-                                style="background-color: #17a2b8; border-color: #17a2b8; color: white; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;">
+                            <a href="imprimir_boleta.php" target="_blank" class="btn-aplicar"
+                                style="display: inline-flex; align-items: center; gap: 5px; text-decoration: none;">
                                 <i class="fas fa-print"></i> Imprimir Boleta
                             </a>
 

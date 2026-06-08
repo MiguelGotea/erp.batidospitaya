@@ -532,3 +532,91 @@ tr:nth-child(even) {
 .btn-action-delete:hover {
     background: #bd2130;
 }
+
+/* =====================================================
+   FAB ARRASTRABLE — Lado izquierdo (opciones hacia derecha)
+   ===================================================== */
+.fab-container.fab-left-side {
+    align-items: flex-start;
+}
+
+.fab-container.fab-left-side .fab-options {
+    align-items: flex-start;
+}
+
+.fab-container.fab-left-side .fab-option {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+}
+
+/* Etiqueta aparece deslizando hacia la derecha */
+.fab-container.fab-left-side .fab-label {
+    transform: translateX(-10px);
+}
+
+.fab-container.fab-left-side .fab-option:hover .fab-label,
+.fab-container.fab-left-side.active .fab-label {
+    transform: translateX(0);
+}
+
+/* Cursor grab en el botón principal cuando la función drag está activa */
+#fabContainer .btn-floating-pitaya {
+    cursor: grab;
+}
+#fabContainer .btn-floating-pitaya:active {
+    cursor: grabbing;
+}
+
+/* =====================================================
+   FAB ARRASTRABLE — Esquinas superiores (opciones hacia abajo)
+   ===================================================== */
+.fab-container.fab-top-side {
+    flex-direction: column-reverse;
+}
+
+/* Animación de entrada invertida: desliza hacia abajo al aparecer */
+.fab-container.fab-top-side .fab-options {
+    transform: translateY(-20px);
+}
+
+.fab-container.fab-top-side:hover .fab-options,
+.fab-container.fab-top-side.active .fab-options {
+    transform: translateY(0);
+}
+
+/* =====================================================
+   FAB ARRASTRABLE — Suprimir hover/active durante arrastre
+   ===================================================== */
+.fab-container.fab-dragging .fab-options,
+.fab-container.fab-dragging:hover .fab-options,
+.fab-container.fab-dragging.active .fab-options {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateY(20px) !important;
+}
+
+/* Suprimir también la versión top-side */
+.fab-container.fab-dragging.fab-top-side .fab-options,
+.fab-container.fab-dragging.fab-top-side:hover .fab-options {
+    transform: translateY(-20px) !important;
+}
+
+/* =====================================================
+   FAB — Solo clic despliega las opciones (no hover)
+   Override del comportamiento global de fab_button.css
+   para que el toggle por clic funcione correctamente:
+   el hover solo aplica cuando ya está .active.
+   ===================================================== */
+.fab-container:hover:not(.active) .fab-options {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateY(20px) !important;
+}
+
+/* Variante top-side: animación invertida también al hacer hover sin active */
+.fab-container.fab-top-side:hover:not(.active) .fab-options {
+    transform: translateY(-20px) !important;
+}
+

@@ -24,6 +24,34 @@ $esOperaciones = tienePermiso('historial_marcaciones_globales', 'permisosoperaci
 $columna = $_POST['columna'] ?? '';
 $opciones = [];
 
+// Obtener parámetros de filtros para rango de fechas
+$filtros = isset($_POST['filtros']) ? json_decode($_POST['filtros'], true) : [];
+$fechaHoy = date('Y-m-d');
+$fechaDesde = isset($filtros['fecha']['desde']) ? $filtros['fecha']['desde'] : date('Y-m-01');
+$fechaHasta = isset($filtros['fecha']['hasta']) ? $filtros['fecha']['hasta'] : $fechaHoy;
+
+if ($fechaHasta > $fechaHoy) {
+    $fechaHasta = $fechaHoy;
+}
+
+// Resolver filtro de semana si está seleccionado
+if (isset($filtros['numero_semana']) && !empty($filtros['numero_semana'])) {
+    $stmtSemanas = $conn->prepare("
+        SELECT MIN(fecha_inicio) as minima, MAX(fecha_fin) as maxima 
+        FROM SemanasSistema 
+        WHERE (numero_semana >= ? OR ? = '') AND (numero_semana <= ? OR ? = '')
+    ");
+    $minSem = isset($filtros['numero_semana']['min']) ? $filtros['numero_semana']['min'] : '';
+    $maxSem = isset($filtros['numero_semana']['max']) ? $filtros['numero_semana']['max'] : '';
+    $stmtSemanas->execute([$minSem, $minSem, $maxSem, $maxSem]);
+    $rangoSemanas = $stmtSemanas->fetch(PDO::FETCH_ASSOC);
+
+    if ($rangoSemanas && $rangoSemanas['minima']) {
+        $fechaDesde = $rangoSemanas['minima'];
+        $fechaHasta = min($rangoSemanas['maxima'], $fechaHoy);
+    }
+}
+
 try {
     switch ($columna) {
         case 'nombre_sucursal':
@@ -83,7 +111,7 @@ try {
                     $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 }
             } elseif ($esCDS) {
-                // CDS solo ve cargos específicos en sucursal 6
+                // CDS solo ve cargos específicos en sucursal 6 (incluyendo 20, 23, 34, 58, 59, 60)
                 $stmt = $conn->query("
                     SELECT DISTINCT
                         o.CodOperario as valor,
@@ -99,18 +127,23 @@ try {
                             LIMIT 1
                         )
                     WHERE anc.Sucursal = '6'
-                    AND anc.CodNivelesCargos IN (23, 20, 34)
+                    AND anc.CodNivelesCargos IN (20, 23, 34, 58, 59, 60)
                     AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
                     AND (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
                     ORDER BY o.Nombre, o.Apellido
                 ");
                 $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
-                // Otros usuarios ven todos los colaboradores activos
-                $stmt = $conn->query("
+                // Otros usuarios (RH, contabilidad, admin, operaciones) ven colaboradores con actividad
+                // en el rango de fechas seleccionado, indicando si están dados de baja hoy
+                $sqlGeneral = "
                     SELECT DISTINCT
                         o.CodOperario as valor,
-                        CONCAT(TRIM(o.Nombre), ' ', TRIM(IFNULL(o.Apellido, '')), ' (', o.CodOperario, ')') as texto
+                        CONCAT(
+                            TRIM(o.Nombre), ' ', TRIM(IFNULL(o.Apellido, '')), 
+                            IF(uc.fecha_salida IS NOT NULL AND uc.fecha_salida <= CURDATE(), ' (baja)', ''),
+                            ' (', o.CodOperario, ')'
+                        ) as texto
                     FROM Operarios o
                     LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
                         AND uc.CodContrato = (
@@ -120,9 +153,54 @@ try {
                             ORDER BY inicio_contrato DESC, CodContrato DESC
                             LIMIT 1
                         )
-                    WHERE (uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE())
-                    ORDER BY o.Nombre, o.Apellido
-                ");
+                    WHERE o.CodOperario NOT IN (
+                        SELECT DISTINCT anc_exc.CodOperario FROM AsignacionNivelesCargos anc_exc
+                        WHERE anc_exc.CodNivelesCargos = 27 AND (anc_exc.Fin IS NULL OR anc_exc.Fin >= CURDATE())
+                    )
+                ";
+                
+                $paramsGeneral = [$fechaDesde, $fechaHasta, $fechaHasta, $fechaDesde];
+                
+                if ($esOperaciones) {
+                    // Operaciones solo ve colaboradores con actividad en sucursales físicas (sucursal = 1)
+                    $sqlGeneral .= " AND (
+                        EXISTS (
+                            SELECT 1 FROM marcaciones m
+                            JOIN sucursales s ON m.sucursal_codigo = s.codigo
+                            WHERE m.CodOperario = o.CodOperario 
+                            AND m.fecha BETWEEN ? AND ?
+                            AND s.sucursal = 1
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM HorariosSemanalesOperaciones hso
+                            JOIN SemanasSistema ss ON hso.id_semana_sistema = ss.id
+                            JOIN sucursales s ON hso.cod_sucursal = s.codigo
+                            WHERE hso.cod_operario = o.CodOperario 
+                            AND ss.fecha_inicio <= ? AND ss.fecha_fin >= ?
+                            AND s.sucursal = 1
+                        )
+                    ) ";
+                } else {
+                    // RH/Contabilidad/Admin ven colaboradores con actividad en cualquier sucursal
+                    $sqlGeneral .= " AND (
+                        EXISTS (
+                            SELECT 1 FROM marcaciones m
+                            WHERE m.CodOperario = o.CodOperario 
+                            AND m.fecha BETWEEN ? AND ?
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM HorariosSemanalesOperaciones hso
+                            JOIN SemanasSistema ss ON hso.id_semana_sistema = ss.id
+                            WHERE hso.cod_operario = o.CodOperario 
+                            AND ss.fecha_inicio <= ? AND ss.fecha_fin >= ?
+                        )
+                    ) ";
+                }
+                
+                $sqlGeneral .= " ORDER BY o.Nombre, o.Apellido ";
+                
+                $stmt = $conn->prepare($sqlGeneral);
+                $stmt->execute($paramsGeneral);
                 $opciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
             break;
@@ -143,7 +221,7 @@ try {
                     }
                 }
             } elseif ($esCDS) {
-                $whereCargos = " AND anc.Sucursal = '6' AND anc.CodNivelesCargos IN (23, 20, 34) ";
+                $whereCargos = " AND anc.Sucursal = '6' AND anc.CodNivelesCargos IN (20, 23, 34, 58, 59, 60) ";
             } elseif ($esOperaciones) {
                 $whereCargos = " AND s.sucursal = 1 ";
             }

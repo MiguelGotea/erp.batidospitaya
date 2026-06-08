@@ -85,6 +85,9 @@ if (!tienePermiso('postulacion_plazas_activas', 'vista', $cargoOperario)) {
                                 </div>
                             </div>
                             <div class="card-body p-0">
+                                <div id="alertaNoEntrevistas" class="alert alert-info m-3 d-none">
+                                    <i class="bi bi-info-circle me-2"></i>No hay entrevistas programadas en este momento.
+                                </div>
                                 <div id="calendario" class="calendario-container">
                                     <!-- Generado dinámicamente -->
                                 </div>

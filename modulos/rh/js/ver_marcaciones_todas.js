@@ -609,7 +609,10 @@ function cargarOpcionesFiltro(panel, columna, icon) {
     $.ajax({
         url: 'ajax/marcaciones_get_opciones_filtro.php',
         method: 'POST',
-        data: { columna: columna },
+        data: { 
+            columna: columna,
+            filtros: JSON.stringify(filtrosActivos)
+        },
         dataType: 'json',
         success: function (response) {
             if (response.success) {
