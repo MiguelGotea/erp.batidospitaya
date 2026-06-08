@@ -1292,19 +1292,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!wasDragged) {
                 // Clic normal (sin arrastre real):
-                // onDragStart dejó inline top/left y transition:none que hay que limpiar
-                // para que el FAB vuelva exactamente a su esquina guardada sin glitch
-                fab.style.transition = '';
+                // Restaurar la esquina guardada con transición suave
+                fab.style.transition = 'top 300ms cubic-bezier(0.25,0.8,0.25,1), left 300ms cubic-bezier(0.25,0.8,0.25,1), bottom 300ms cubic-bezier(0.25,0.8,0.25,1), right 300ms cubic-bezier(0.25,0.8,0.25,1)';
                 applyCorner(fab, localStorage.getItem(STORAGE_KEY) || 'bottom-right');
+                setTimeout(function () { fab.style.transition = ''; }, 320);
                 return;
             }
 
-            // Arrastre real: cerrar menú y snap a la esquina más cercana
+            // Arrastre real: cerrar menú y deslizar suavemente a la esquina más cercana
             fab.classList.remove('active');
-            fab.style.transition = '';
+            fab.style.transition = 'top 350ms cubic-bezier(0.25,0.8,0.25,1), left 350ms cubic-bezier(0.25,0.8,0.25,1), bottom 350ms cubic-bezier(0.25,0.8,0.25,1), right 350ms cubic-bezier(0.25,0.8,0.25,1)';
             const corner = getCornerFromCenter(fab);
             applyCorner(fab, corner);
             localStorage.setItem(STORAGE_KEY, corner);
+            setTimeout(function () { fab.style.transition = ''; }, 370);
         }
 
         // ── Prevenir que un arrastre active toggleFab ─────────────

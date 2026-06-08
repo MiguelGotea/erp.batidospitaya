@@ -12,6 +12,7 @@ $codOperario = $usuario['CodOperario'];
 
 // Verificar acceso al módulo usando sistema de permisos
 if (!tienePermiso('index_lideres', 'vista', $cargoOperario)) {
+    session_write_close();
     header('Location: ../index.php');
     exit();
 }
