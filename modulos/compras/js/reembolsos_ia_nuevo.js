@@ -4,7 +4,7 @@
  */
 
 let itemsActuales = [];
-let id_cuenta_proveedor = null;
+let id_cuenta_proveedor = null;   // cuenta del proveedor de reembolso
 let stream = null;
 let modalCamara = null;
 
@@ -68,8 +68,9 @@ function cargarDatosEdicion(id) {
     $.get('ajax/reembolsos_ia_get_detalle.php', { id: id }, function (res) {
         if (res.success) {
             const s = res.solicitud;
-            const idProv = s.id_proveedor;
-            const idCuenta = s.id_cuenta_proveedor;
+            const idProv          = s.id_proveedor;
+            const idProvReembolso = s.id_proveedor_reembolso || idProv; // fallback al mismo
+            const idCuenta        = s.id_cuenta_proveedor;
 
             $('#id_proveedor').val(idProv);
             $('#proveedor_nombre').val(s.proveedor_nombre || '');
@@ -78,10 +79,14 @@ function cargarDatosEdicion(id) {
             $('#concepto').val(s.concepto);
             $('#ceco').val(s.ceco);
             $('#ceco_nombre').val(s.ceco_nombre || s.ceco);
-            // Cargar el dropdown de cuentas y pre-seleccionar la guardada
-            // La moneda se detecta automáticamente de la cuenta seleccionada
-            if (idProv) {
-                cargarDatosProveedor(idProv, idCuenta);
+
+            // Proveedor de reembolso
+            $('#id_proveedor_reembolso').val(idProvReembolso);
+            $('#reembolso_proveedor_nombre').val(s.proveedor_reembolso_nombre || s.proveedor_nombre || '');
+
+            // Cargar cuentas del proveedor de reembolso y pre-seleccionar la guardada
+            if (idProvReembolso) {
+                cargarCuentasReembolso(idProvReembolso, idCuenta);
             }
 
             // Cargar items
@@ -187,9 +192,14 @@ function seleccionarProveedorInternal(id, nombre) {
     $('#id_proveedor').val(id);
     $('#proveedor_nombre').val(nombre);
     $('#proveedor-suggestions').hide();
-    
-    // Disparar la lógica de cargar datos del proveedor
-    cargarDatosProveedor(id);
+
+    // Si el campo de reembolso está vacío o aún apunta al proveedor anterior,
+    // lo sincronizamos automáticamente con el nuevo proveedor de compra.
+    const idActualReembolso = $('#id_proveedor_reembolso').val();
+    const nombreActualReembolso = $('#reembolso_proveedor_nombre').val().trim();
+    if (!idActualReembolso || !nombreActualReembolso) {
+        seleccionarProveedorReembolsoInternal(id, nombre);
+    }
 }
 
 function seleccionarProveedor(valor) {
@@ -230,23 +240,48 @@ function seleccionarCECOInternal(id, texto) {
     $('#ceco-suggestions').hide();
 }
 
-$(document).on('click', function (e) {
-    if (!$(e.target).closest('.position-relative').length) {
-        $('.autocomplete-suggestions').hide();
+// -----------------------------------------------------------------------
+// Autocomplete: Proveedor de Reembolso
+// -----------------------------------------------------------------------
+function filtrarProveedorReembolso(valor) {
+    const suggestionsContainer = $('#reembolso-proveedor-suggestions');
+    if (valor.length < 1) {
+        suggestionsContainer.empty().hide();
+        return;
     }
-});
 
-function cambiarMoneda(m) {
-    const symbol = m === 'Dolares' ? 'US$' : 'C$';
-    $('#thTotalSugerido').text(`Total Sugerido (${symbol})`);
-    calcularTotal();
+    const filtered = dataProveedores.filter(p =>
+        p.nombre.toLowerCase().includes(valor.toLowerCase())
+    );
+
+    if (filtered.length > 0) {
+        suggestionsContainer.empty();
+        filtered.forEach(p => {
+            const div = $('<div class="autocomplete-suggestion"></div>')
+                .text(p.nombre)
+                .on('click', function () {
+                    seleccionarProveedorReembolsoInternal(p.id, p.nombre);
+                });
+            suggestionsContainer.append(div);
+        });
+        suggestionsContainer.show();
+    } else {
+        suggestionsContainer.empty().hide();
+    }
 }
 
-function cargarDatosProveedor(id, preseleccionarId) {
-    const $sel = $('#select_cuenta_proveedor');
+function seleccionarProveedorReembolsoInternal(id, nombre) {
+    $('#id_proveedor_reembolso').val(id);
+    $('#reembolso_proveedor_nombre').val(nombre);
+    $('#reembolso-proveedor-suggestions').hide();
+    cargarCuentasReembolso(id);
+}
+
+function cargarCuentasReembolso(id, preseleccionarId) {
+    const $sel = $('#select_cuenta_reembolso');
 
     if (!id) {
-        $sel.empty().append('<option value="">— Selecciona un proveedor primero —</option>').prop('disabled', true);
+        $sel.empty().append('<option value="">— Selecciona el proveedor a reembolsar —</option>').prop('disabled', true);
         $('#cuenta_bancaria').val('');
         $('#banco_proveedor').val('');
         id_cuenta_proveedor = null;
@@ -267,11 +302,9 @@ function cargarDatosProveedor(id, preseleccionarId) {
                 $sel.append(opt);
             });
 
-            // Pre-seleccionar: si se pide una cuenta específica, úsala; sino la primera (principal ya viene primera por ORDER BY)
             if (preseleccionarId) {
                 $sel.val(preseleccionarId);
             }
-            // Si no se pudo pre-seleccionar o no se pidió, queda el primero (principal)
             $sel.prop('disabled', false).trigger('change');
         } else {
             $sel.append('<option value="">— Sin cuentas registradas —</option>').prop('disabled', true);
@@ -285,16 +318,49 @@ function cargarDatosProveedor(id, preseleccionarId) {
     });
 }
 
-function seleccionarCuenta(el) {
+function seleccionarCuentaReembolso(el) {
     const $opt = $(el).find('option:selected');
     id_cuenta_proveedor = $(el).val() ? parseInt($(el).val()) : null;
     $('#cuenta_bancaria').val($opt.data('numero_cuenta') || '');
     $('#banco_proveedor').val($opt.data('banco') || '');
 
-    // Moneda se deriva automáticamente de la cuenta bancaria elegida
     const monedaCuenta = $opt.data('moneda') || 'Cordobas';
     $('#moneda').val(monedaCuenta);
     cambiarMoneda(monedaCuenta);
+}
+
+$(document).on('click', function (e) {
+    if (!$(e.target).closest('.position-relative').length) {
+        $('.autocomplete-suggestions').hide();
+    }
+});
+
+function cambiarMoneda(m) {
+    const symbol = m === 'Dolares' ? 'US$' : 'C$';
+    $('#thTotalSugerido').text(`Total Sugerido (${symbol})`);
+    calcularTotal();
+}
+
+// cargarDatosProveedor ya no gestiona cuentas (se eliminó el select del proveedor de compra)
+// Se mantiene por compatibilidad con llamadas desde cargarDatosEdicion y otros flujos
+function cargarDatosProveedor(id, preseleccionarCuentaId) {
+    // Sólo sincroniza el campo de reembolso si coincide con el proveedor de compra
+    // (para no pisarlo si el usuario ya eligió uno distinto)
+    const idReembolsoActual = parseInt($('#id_proveedor_reembolso').val());
+    if (!idReembolsoActual || idReembolsoActual === parseInt(id)) {
+        const prov = dataProveedores.find(p => p.id === parseInt(id));
+        if (prov) {
+            seleccionarProveedorReembolsoInternal(prov.id, prov.nombre);
+        } else if (id) {
+            // fallback: cargar cuentas del proveedor sin cambiar el nombre ya cargado
+            cargarCuentasReembolso(id, preseleccionarCuentaId);
+        }
+    }
+}
+
+// seleccionarCuenta se mantiene por compatibilidad (se usaba en el select ya eliminado)
+function seleccionarCuenta(el) {
+    seleccionarCuentaReembolso(el);
 }
 
 
@@ -477,6 +543,7 @@ async function guardarSolicitud() {
     let data = {
         id: editingId,
         id_proveedor: $('#id_proveedor').val(),
+        id_proveedor_reembolso: $('#id_proveedor_reembolso').val(),
         id_cuenta_proveedor: id_cuenta_proveedor,
         concepto: $('#concepto').val(),
         ceco: $('#ceco').val(),

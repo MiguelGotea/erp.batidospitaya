@@ -20,6 +20,7 @@ try {
     }
 
     $id_proveedor = !empty($input['id_proveedor']) ? $input['id_proveedor'] : null;
+    $id_proveedor_reembolso = !empty($input['id_proveedor_reembolso']) ? $input['id_proveedor_reembolso'] : $id_proveedor; // Por defecto: mismo proveedor
     $id_cuenta_proveedor = !empty($input['id_cuenta_proveedor']) ? $input['id_cuenta_proveedor'] : null;
     $concepto = !empty($input['concepto']) ? trim($input['concepto']) : '';
     $ceco = !empty($input['ceco']) ? (int)$input['ceco'] : null;
@@ -40,11 +41,12 @@ try {
         // Actualizar cabecera
         $stmt = $conn->prepare("
             UPDATE reembolsos_solicitudes 
-            SET id_proveedor = ?, id_cuenta_proveedor = ?, concepto = ?, ceco = ?, total_cordobas = ?, fecha_solicitud = ?, moneda = ?
+            SET id_proveedor = ?, id_proveedor_reembolso = ?, id_cuenta_proveedor = ?, concepto = ?, ceco = ?, total_cordobas = ?, fecha_solicitud = ?, moneda = ?
             WHERE id = ?
         ");
         $stmt->execute([
             $id_proveedor,
+            $id_proveedor_reembolso,
             $id_cuenta_proveedor,
             $concepto,
             $ceco,
@@ -60,11 +62,12 @@ try {
         // Insertar cabecera
         $stmt = $conn->prepare("
             INSERT INTO reembolsos_solicitudes 
-            (id_proveedor, id_cuenta_proveedor, concepto, ceco, total_cordobas, usuario_registro, fecha_solicitud, moneda)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (id_proveedor, id_proveedor_reembolso, id_cuenta_proveedor, concepto, ceco, total_cordobas, usuario_registro, fecha_solicitud, moneda)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $id_proveedor,
+            $id_proveedor_reembolso,
             $id_cuenta_proveedor,
             $concepto,
             $ceco,

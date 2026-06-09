@@ -72,6 +72,20 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
             color: #51B8AC;
         }
         .position-relative { position: relative; }
+        .reembolso-section {
+            background: linear-gradient(135deg, rgba(81,184,172,0.06), rgba(81,184,172,0.02));
+            border: 1px solid rgba(81,184,172,0.25);
+            border-radius: 12px;
+            padding: 12px 16px 4px;
+        }
+        .reembolso-section .section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #51B8AC;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
     </style>
 </head>
 <body>
@@ -101,21 +115,45 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                     <div class="card-body p-4 pt-0">
                         <form id="formReembolso">
                             <div class="row g-3 mb-4 p-3 bg-light rounded-4 shadow-sm">
-                                <div class="col-md-3 position-relative">
-                                    <label class="form-label small fw-bold text-secondary">Proveedor</label>
-                                    <input type="text" id="proveedor_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar..." oninput="filtrarProveedor(this.value)" autocomplete="off">
-                                    <input type="hidden" id="id_proveedor" value="">
-                                    <div id="proveedor-suggestions" class="autocomplete-suggestions"></div>
+                                <!-- PROVEEDOR DE COMPRA -->
+                                <div class="col-12">
+                                    <div class="reembolso-section">
+                                        <div class="section-label"><i class="fas fa-store me-1"></i>Proveedor de la Compra</div>
+                                        <div class="row g-2">
+                                            <div class="col-md-4 position-relative">
+                                                <label class="form-label small fw-bold text-secondary">Proveedor</label>
+                                                <input type="text" id="proveedor_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar..." oninput="filtrarProveedor(this.value)" autocomplete="off">
+                                                <input type="hidden" id="id_proveedor" value="">
+                                                <div id="proveedor-suggestions" class="autocomplete-suggestions"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-7">
-                                    <label class="form-label small fw-bold text-secondary">Cuenta Bancaria del Proveedor</label>
-                                    <select id="select_cuenta_proveedor" class="form-select border-0 shadow-sm" disabled onchange="seleccionarCuenta(this)">
-                                        <option value="">— Selecciona un proveedor primero —</option>
-                                    </select>
-                                    <input type="hidden" id="cuenta_bancaria" value="">
-                                    <input type="hidden" id="banco_proveedor" value="">
-                                    <input type="hidden" id="moneda" value="Cordobas">
+
+                                <!-- PROVEEDOR DE REEMBOLSO -->
+                                <div class="col-12">
+                                    <div class="reembolso-section">
+                                        <div class="section-label"><i class="fas fa-hand-holding-usd me-1"></i>Reembolsar a</div>
+                                        <div class="row g-2">
+                                            <div class="col-md-4 position-relative">
+                                                <label class="form-label small fw-bold text-secondary">Proveedor / Persona a Reembolsar</label>
+                                                <input type="text" id="reembolso_proveedor_nombre" class="form-control border-0 shadow-sm" placeholder="Por defecto: mismo proveedor" oninput="filtrarProveedorReembolso(this.value)" autocomplete="off">
+                                                <input type="hidden" id="id_proveedor_reembolso" value="">
+                                                <div id="reembolso-proveedor-suggestions" class="autocomplete-suggestions"></div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <label class="form-label small fw-bold text-secondary">Cuenta Bancaria para el Reembolso</label>
+                                                <select id="select_cuenta_reembolso" class="form-select border-0 shadow-sm" disabled onchange="seleccionarCuentaReembolso(this)">
+                                                    <option value="">— Selecciona el proveedor a reembolsar —</option>
+                                                </select>
+                                                <input type="hidden" id="cuenta_bancaria" value="">
+                                                <input type="hidden" id="banco_proveedor" value="">
+                                                <input type="hidden" id="moneda" value="Cordobas">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <div class="col-md-4">
                                     <label class="form-label small fw-bold text-secondary">Fecha de Solicitud</label>
                                     <input type="date" id="fecha_solicitud" class="form-control border-0 shadow-sm" value="<?= date('Y-m-d') ?>">
