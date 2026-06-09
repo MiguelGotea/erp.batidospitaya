@@ -40,6 +40,48 @@
     const idbDel    = (s, k) => new Promise((r, j) => { const q = tx(s,'readwrite').delete(k);   q.onsuccess = ()=>r();               q.onerror=e=>j(e.target.error); });
     const idbClear  = (s)    => new Promise((r, j) => { const q = tx(s,'readwrite').clear();     q.onsuccess = ()=>r();               q.onerror=e=>j(e.target.error); });
 
+    // ── LocalStorage Mirror Backup Helpers ─────────────────────────────────
+    async function updateLocalStorageBackup() {
+        try {
+            const all = await idbGetAll('marcaciones_queue');
+            const pending = all.filter(i => i.status === 'pending');
+            if (pending.length > 0) {
+                localStorage.setItem('pitaya_offline_queue_backup', JSON.stringify(pending));
+            } else {
+                localStorage.removeItem('pitaya_offline_queue_backup');
+            }
+        } catch (e) {
+            console.warn('[PitayaOffline] Error al actualizar backup en localStorage:', e.message);
+        }
+    }
+
+    async function restoreFromLocalStorageBackup() {
+        try {
+            const backupStr = localStorage.getItem('pitaya_offline_queue_backup');
+            if (!backupStr) return;
+            const backup = JSON.parse(backupStr);
+            if (!Array.isArray(backup) || backup.length === 0) return;
+
+            const current = await idbGetAll('marcaciones_queue');
+            let restoredCount = 0;
+
+            for (const item of backup) {
+                // Si el item no existe en IndexedDB, restaurarlo
+                if (!current.some(i => i.local_id === item.local_id)) {
+                    await idbPut('marcaciones_queue', item);
+                    restoredCount++;
+                }
+            }
+
+            if (restoredCount > 0) {
+                console.log(`[PitayaOffline] Se restauraron ${restoredCount} marcaciones desde el backup de localStorage.`);
+                await updateBannerCount();
+            }
+        } catch (e) {
+            console.warn('[PitayaOffline] Error al restaurar desde backup de localStorage:', e.message);
+        }
+    }
+
     // ── UI ───────────────────────────────────────────────────────────────
     function showBanner(mode, html) {
         const b = document.getElementById('offlineBanner');
@@ -57,6 +99,51 @@
         const n = all.filter(i => i.status === 'pending').length;
         document.querySelectorAll('.offline-queue-count').forEach(el => el.textContent = n);
         return n;
+    }
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+    function abrirModalCola() {
+        const modal = document.getElementById('modalColaOffline');
+        const listContainer = document.getElementById('listaColaOffline');
+        if (!modal || !listContainer) return;
+
+        listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Cargando cola...</div>';
+        modal.style.display = 'flex';
+
+        idbGetAll('marcaciones_queue').then(all => {
+            const pending = all.filter(i => i.status === 'pending');
+            listContainer.innerHTML = '';
+
+            if (pending.length === 0) {
+                listContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fas fa-check-circle" style="color:var(--primary-color); font-size:1.8rem; display:block; margin-bottom:8px;"></i>No hay marcaciones pendientes de sincronizar</div>';
+            } else {
+                pending.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'item-cola-offline';
+                    div.innerHTML = `
+                        <div>
+                            <div class="item-cola-offline-nombre">${escapeHTML(item.nombre_completo)}</div>
+                            <div class="item-cola-offline-meta">
+                                <i class="far fa-clock"></i> ${item.fecha} ${item.hora}
+                            </div>
+                        </div>
+                        <div>
+                            <span class="item-cola-offline-badge badge-entrada">Pendiente</span>
+                        </div>
+                    `;
+                    listContainer.appendChild(div);
+                });
+            }
+        }).catch(err => {
+            listContainer.innerHTML = `<div style="text-align:center; padding:20px; color:red;">Error al cargar la cola: ${escapeHTML(err.message)}</div>`;
+        });
+    }
+    function cerrarModalCola() {
+        const modal = document.getElementById('modalColaOffline');
+        if (modal) modal.style.display = 'none';
     }
 
     // ── Caché de operarios ───────────────────────────────────────────────
@@ -118,6 +205,21 @@
         };
         await idbPut('marcaciones_queue', item);
         await updateBannerCount();
+        await updateLocalStorageBackup();
+
+        // Registrar Background Sync: el SW sincronizará aunque el tab esté minimizado
+        try {
+            if ('serviceWorker' in navigator) {
+                const reg = await navigator.serviceWorker.ready;
+                if (reg.sync) {
+                    await reg.sync.register('sync-marcaciones-pitaya');
+                    console.log('[PitayaOffline] Background Sync registrado ✓');
+                }
+            }
+        } catch (e) {
+            console.warn('[PitayaOffline] Background Sync no disponible:', e.message);
+        }
+
         return item;
     }
 
@@ -178,6 +280,7 @@
                     err++;
                 }
             }
+            await updateLocalStorageBackup();
             await refreshCache();
             if (ok > 0) {
                 const msg = `✅ ${ok} marcación${ok>1?'es':''} sincronizada${ok>1?'s':''}` + (err ? ` — ${err} con error (preservada${err>1?'s':''})` : '');
@@ -191,7 +294,7 @@
             }
         } catch (e) {
             console.warn('[PitayaOffline] Error sync:', e.message);
-            showBanner('offline', '⚡ Sin conexión — <strong class="offline-queue-count">?</strong> marcaciones en espera');
+            showBanner('offline', '⚡ Sin conexión — <strong class="offline-queue-count">?</strong> marcaciones en espera <button class="btn-ver-cola-link" onclick="PitayaOffline.abrirModalCola()">Ver cola</button>');
             updateBannerCount();
         } finally {
             syncInProgress = false;
@@ -200,17 +303,41 @@
 
     // ── Init ─────────────────────────────────────────────────────────────
     async function init() {
+        // Solicitar almacenamiento persistente (protege IndexedDB de desalojo en Android/Chrome)
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().then(granted => {
+                console.log('[PitayaOffline] Almacenamiento persistente:', granted ? 'concedido ✓' : 'no concedido');
+            });
+        }
+
         db = await openDB();
+        await restoreFromLocalStorageBackup();
+
+        // Configurar botones del modal de cola offline
+        const btnCerrarCola = document.getElementById('btnCerrarColaOffline');
+        const btnAceptarCola = document.getElementById('btnAceptarColaOffline');
+        if (btnCerrarCola) btnCerrarCola.addEventListener('click', cerrarModalCola);
+        if (btnAceptarCola) btnAceptarCola.addEventListener('click', cerrarModalCola);
 
         window.addEventListener('online',  () => syncQueue());
         window.addEventListener('offline', async () => {
             const n = await updateBannerCount();
-            showBanner('offline', `⚡ Sin conexión — <strong class="offline-queue-count">${n}</strong> marcaciones en espera`);
+            showBanner('offline', `⚡ Sin conexión — <strong class="offline-queue-count">${n}</strong> marcaciones en espera <button class="btn-ver-cola-link" onclick="PitayaOffline.abrirModalCola()">Ver cola</button>`);
         });
+
+        // Escuchar mensajes del Service Worker (ej: Background Sync con tab abierto)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data?.type === 'SYNC_QUEUE') {
+                    console.log('[PitayaOffline] Sync disparado por Service Worker');
+                    syncQueue();
+                }
+            });
+        }
 
         if (!navigator.onLine) {
             const n = await updateBannerCount();
-            showBanner('offline', `⚡ Sin conexión — <strong class="offline-queue-count">${n}</strong> marcaciones en espera`);
+            showBanner('offline', `⚡ Sin conexión — <strong class="offline-queue-count">${n}</strong> marcaciones en espera <button class="btn-ver-cola-link" onclick="PitayaOffline.abrirModalCola()">Ver cola</button>`);
         } else {
             setTimeout(() => { syncQueue(); }, 2000);
             setInterval(refreshCache, 600000);
@@ -235,5 +362,5 @@
     }
 
     // ── API pública ──────────────────────────────────────────────────────
-    window.PitayaOffline = { init, checkPasswordOffline, enqueue, syncQueue, updateBannerCount };
+    window.PitayaOffline = { init, checkPasswordOffline, enqueue, syncQueue, updateBannerCount, abrirModalCola, cerrarModalCola };
 })();

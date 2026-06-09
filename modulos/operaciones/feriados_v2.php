@@ -23,14 +23,14 @@ $puedeCrear = tienePermiso('feriados_v2', 'crear', $cargoOperario);
 $puedeAprobar = tienePermiso('feriados_v2', 'aprobar', $cargoOperario);
 $puedeExportar = tienePermiso('feriados_v2', 'exportar', $cargoOperario);
 
-$esRH = ($cargoOperario == 13 || $cargoOperario == 16 || $cargoOperario == 30 || $cargoOperario == 49);
+$puedeVerTodasSucursales = tienePermiso('feriados_v2', 'ver_todas_sucursales', $cargoOperario);
 
-// Obtener sucursales según el cargo
-if ($esRH) {
+// Obtener sucursales según el permiso (patrón idéntico a vacaciones.php)
+if ($puedeVerTodasSucursales) {
     $sucursales = obtenerTodasSucursales();
     array_unshift($sucursales, ['codigo' => 'todas', 'nombre' => 'Todas las sucursales']);
 } else {
-    $sucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
+    $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 }
 
 // Sucursal seleccionada
@@ -84,7 +84,7 @@ $where .= " AND fs.fecha_feriado BETWEEN ? AND ?";
 $params[] = $fechaDesde;
 $params[] = $fechaHasta;
 
-if ($esRH) {
+if ($puedeVerTodasSucursales) {
     if ($sucursalSeleccionada && $sucursalSeleccionada !== 'todas') {
         $where .= " AND COALESCE(c.cod_sucursal_contrato, anc.Sucursal) = ?";
         $params[] = $sucursalSeleccionada;
@@ -206,7 +206,8 @@ if (isset($_GET['exportar_excel'])) {
 
 // PAGINACIÓN LÓGICA
 $paginaActual = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
-$registrosPorPagina = 25;
+$limitesValidos = [25, 50, 100];
+$registrosPorPagina = in_array((int)($_GET['limit'] ?? 25), $limitesValidos) ? (int)$_GET['limit'] : 25;
 $offset = ($paginaActual - 1) * $registrosPorPagina;
 
 // Conteo total
@@ -351,10 +352,6 @@ function getEstadoBadgeClass($estado) {
                             <button type="button" class="btn-aplicar" onclick="actualizarFiltros()">
                                 <i class="fas fa-search"></i> Buscar
                             </button>
-                            
-                            <button type="button" class="btn-limpiar" onclick="limpiarFiltros()">
-                                <i class="fas fa-undo"></i> Reset
-                            </button>
 
                             <?php if ($puedeExportar): ?>
                                 <a href="feriados_v2.php?<?= http_build_query([
@@ -371,7 +368,7 @@ function getEstadoBadgeClass($estado) {
 
                             <?php if ($puedeCrear): ?>
                                 <button type="button" class="btn-solicitar" onclick="mostrarModalSolicitud()">
-                                    <i class="fas fa-plus"></i> Solicitar Feriado
+                                    <i class="fas fa-plus"></i> Nuevo
                                 </button>
                             <?php endif; ?>
                         </div>
@@ -379,6 +376,20 @@ function getEstadoBadgeClass($estado) {
                 </div>
 
                 <!-- Tabla de Resultados -->
+                <?php
+                // Determinar si se debe mostrar la columna de Acciones
+                $mostrarColumnaAcciones = false;
+                if ($puedeAprobar) {
+                    $mostrarColumnaAcciones = true;
+                } elseif ($puedeCrear) {
+                    foreach ($records as $r) {
+                        if ($r['estado'] === 'Pendiente' && $r['creado_por'] == $_SESSION['usuario_id']) {
+                            $mostrarColumnaAcciones = true;
+                            break;
+                        }
+                    }
+                }
+                ?>
                 <div class="table-container">
                     <?php if (!empty($records)): ?>
                         <table>
@@ -393,7 +404,7 @@ function getEstadoBadgeClass($estado) {
                                     <th>Estado</th>
                                     <th>Observaciones</th>
                                     <th>Registrado por</th>
-                                    <?php if ($puedeAprobar || $puedeCrear): ?>
+                                    <?php if ($mostrarColumnaAcciones): ?>
                                         <th style="text-align: center;">Acciones</th>
                                     <?php endif; ?>
                                 </tr>
@@ -417,7 +428,7 @@ function getEstadoBadgeClass($estado) {
                                         </td>
                                         <td><?= htmlspecialchars($r['creador_nombre'] ?? 'Sistema') ?></td>
                                         
-                                        <?php if ($puedeAprobar || $puedeCrear): ?>
+                                        <?php if ($mostrarColumnaAcciones): ?>
                                             <td>
                                                 <div class="action-buttons-cell">
                                                     <?php if ($puedeAprobar): ?>
@@ -464,27 +475,55 @@ function getEstadoBadgeClass($estado) {
                     <?php endif; ?>
 
                     <!-- Paginación -->
-                    <?php if ($totalPaginas > 1): ?>
-                        <div class="paginacion-toolbar px-3 pb-3">
-                            <div class="paginacion-info">
-                                Mostrando registros <?= $offset + 1 ?> al <?= min($offset + $registrosPorPagina, $totalRegistros) ?> de un total de <?= $totalRegistros ?>
-                            </div>
-                            <div id="paginacion">
-                                <button class="pagination-btn" <?= $paginaActual <= 1 ? 'disabled' : '' ?> onclick="window.location.href='feriados_v2.php?p=1&<?= http_build_query(array_merge($_GET, ['p' => 1])) ?>'">&laquo;</button>
-                                <button class="pagination-btn" <?= $paginaActual <= 1 ? 'disabled' : '' ?> onclick="window.location.href='feriados_v2.php?p=<?= $paginaActual - 1 ?>&<?= http_build_query(array_merge($_GET, ['p' => $paginaActual - 1])) ?>'">&lsaquo;</button>
-                                
-                                <?php
-                                $rangoPaginas = 2;
-                                for ($i = max(1, $paginaActual - $rangoPaginas); $i <= min($totalPaginas, $paginaActual + $rangoPaginas); $i++):
-                                ?>
-                                    <button class="pagination-btn <?= $paginaActual == $i ? 'active' : '' ?>" onclick="window.location.href='feriados_v2.php?p=<?= $i ?>&<?= http_build_query(array_merge($_GET, ['p' => $i])) ?>'"><?= $i ?></button>
-                                <?php endfor; ?>
-                                
-                                <button class="pagination-btn" <?= $paginaActual >= $totalPaginas ? 'disabled' : '' ?> onclick="window.location.href='feriados_v2.php?p=<?= $paginaActual + 1 ?>&<?= http_build_query(array_merge($_GET, ['p' => $paginaActual + 1])) ?>'">&rsaquo;</button>
-                                <button class="pagination-btn" <?= $paginaActual >= $totalPaginas ? 'disabled' : '' ?> onclick="window.location.href='feriados_v2.php?p=<?= $totalPaginas ?>&<?= http_build_query(array_merge($_GET, ['p' => $totalPaginas])) ?>'">&raquo;</button>
-                            </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="mb-0 small text-muted">Mostrar:</label>
+                            <select class="form-select form-select-sm" id="registrosPorPagina" style="width: auto;"
+                                onchange="cambiarRegistrosPorPagina()">
+                                <option value="25" <?= $registrosPorPagina == 25 ? 'selected' : '' ?>>25</option>
+                                <option value="50" <?= $registrosPorPagina == 50 ? 'selected' : '' ?>>50</option>
+                                <option value="100" <?= $registrosPorPagina == 100 ? 'selected' : '' ?>>100</option>
+                            </select>
+                            <span class="small text-muted">registros</span>
+                            <?php if ($totalRegistros > 0): ?>
+                                <span class="small text-muted ms-2">
+                                    (<?= $offset + 1 ?>–<?= min($offset + $registrosPorPagina, $totalRegistros) ?> de <?= $totalRegistros ?>)
+                                </span>
+                            <?php endif; ?>
                         </div>
-                    <?php endif; ?>
+                        <?php if ($totalPaginas > 1): ?>
+                        <div id="paginacion" class="d-flex gap-1">
+                            <button class="pagination-btn" <?= $paginaActual <= 1 ? 'disabled' : '' ?>
+                                onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $paginaActual - 1])) ?>'">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <?php
+                            $inicio = max(1, $paginaActual - 2);
+                            $fin    = min($totalPaginas, $paginaActual + 2);
+                            if ($inicio > 1):
+                            ?>
+                                <button class="pagination-btn" onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => 1])) ?>'">1</button>
+                                <?php if ($inicio > 2): ?>
+                                    <span class="pagination-btn" style="cursor:default;">...</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                            <?php for ($i = $inicio; $i <= $fin; $i++): ?>
+                                <button class="pagination-btn <?= $paginaActual == $i ? 'active' : '' ?>"
+                                    onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $i])) ?>'"><?= $i ?></button>
+                            <?php endfor; ?>
+                            <?php if ($fin < $totalPaginas):
+                                if ($fin < $totalPaginas - 1): ?>
+                                    <span class="pagination-btn" style="cursor:default;">...</span>
+                                <?php endif; ?>
+                                <button class="pagination-btn" onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $totalPaginas])) ?>'"><?= $totalPaginas ?></button>
+                            <?php endif; ?>
+                            <button class="pagination-btn" <?= $paginaActual >= $totalPaginas ? 'disabled' : '' ?>
+                                onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $paginaActual + 1])) ?>'">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
             </div>
@@ -504,7 +543,7 @@ function getEstadoBadgeClass($estado) {
                         <div class="form-group">
                             <label class="form-label" for="solicitud_sucursal">Sucursal / Tienda:</label>
                             <select id="solicitud_sucursal" name="cod_sucursal" class="form-select" required>
-                                <?php if ($esRH): ?>
+                                <?php if ($puedeVerTodasSucursales): ?>
                                     <option value="">Seleccione una tienda</option>
                                     <?php foreach (obtenerTodasSucursales() as $suc): ?>
                                         <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
@@ -594,8 +633,16 @@ function getEstadoBadgeClass($estado) {
                 <?php endforeach; ?>
             ],
             puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
-            esRH: <?= $esRH ? 'true' : 'false' ?>
+            esRH: <?= $puedeVerTodasSucursales ? 'true' : 'false' ?>
         };
+
+        function cambiarRegistrosPorPagina() {
+            const limit = document.getElementById('registrosPorPagina').value;
+            const params = new URLSearchParams(window.location.search);
+            params.set('limit', limit);
+            params.set('p', '1');
+            window.location.href = 'feriados_v2.php?' + params.toString();
+        }
     </script>
     <script src="js/feriados_v2.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>

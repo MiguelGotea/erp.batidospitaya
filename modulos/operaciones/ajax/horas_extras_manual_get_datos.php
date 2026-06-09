@@ -23,16 +23,31 @@ if (!tienePermiso('horas_extras_manual', 'vista', $cargoUsuario)) {
 $puedeVerTodo = tienePermiso('horas_extras_manual', 'ver_todo', $cargoUsuario);
 $puedeFiltroAll = tienePermiso('horas_extras_manual', 'filtro_todas_tiendas', $cargoUsuario);
 
-if (!$puedeVerTodo && !$puedeFiltroAll) {
-    // Si no tiene permiso de ver todo ni de filtrar todas, forzar su sucursal
-    $misSucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
-    $sucursalPropia = $misSucursales[0]['codigo'] ?? 'NINGUNA';
+$codigosSucursales = []; // se llena solo si el usuario está restringido
 
-    // Si intentó filtrar algo distinto a su sucursal, lo forzamos a la suya
-    if (empty($sucursal) || $sucursal != $sucursalPropia) {
-        $sucursal = $sucursalPropia;
+if (!$puedeVerTodo && !$puedeFiltroAll) {
+    // Obtener todas las sucursales asignadas al usuario (funciona para cualquier cargo de líder)
+    $misSucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
+    $codigosSucursales = array_column($misSucursales, 'codigo');
+
+    if (empty($codigosSucursales)) {
+        // Sin sucursales asignadas: forzar resultado vacío
+        echo json_encode(['success' => true, 'data' => []]);
+        exit;
+    }
+
+    if (!empty($sucursal)) {
+        // Si pidió una sucursal, validar que sea una de las permitidas
+        if (!in_array($sucursal, $codigosSucursales)) {
+            $sucursal = $codigosSucursales[0]; // fallback a la primera
+        }
+        // $sucursal queda como string; se usa con = ? más abajo
+    } else {
+        // Sin filtro de sucursal: se restringirá con IN(...) más abajo
+        $sucursal = '__MULTIPLE__'; // marcador para usar IN
     }
 }
+
 
 // Si no hay fechas, usar el mes actual por defecto
 if (empty($desde))
@@ -107,9 +122,15 @@ try {
 
     $params = [$desde, $hasta];
 
-    if (!empty($sucursal)) {
+    if (!empty($sucursal) && $sucursal !== '__MULTIPLE__') {
         $sql .= " AND hem.cod_sucursal = ?";
         $params[] = $sucursal;
+    } elseif ($sucursal === '__MULTIPLE__' && !empty($codigosSucursales)) {
+        $placeholders = implode(',', array_fill(0, count($codigosSucursales), '?'));
+        $sql .= " AND hem.cod_sucursal IN ($placeholders)";
+        foreach ($codigosSucursales as $cod) {
+            $params[] = $cod;
+        }
     }
 
     if (!empty($operario)) {

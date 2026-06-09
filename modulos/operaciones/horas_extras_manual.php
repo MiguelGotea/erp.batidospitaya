@@ -59,7 +59,7 @@ if (isset($_GET['exportar_excel']) && $puedeExportar) {
 
     // Restricción de sucursal si no tiene permiso de ver todo
     if (!$puedeVerTodo) {
-        $misSucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
+        $misSucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
         $sucursal = $misSucursales[0]['codigo'] ?? 'NINGUNA';
     }
     if (!empty($sucursal)) {
@@ -133,7 +133,7 @@ if (isset($_GET['exportar_excel']) && $puedeExportar) {
 if ($puedeVerTodo || $puedeFiltroAll) {
     $sucursales = obtenerTodasSucursales();
 } else {
-    $sucursales = obtenerSucursalesLider($_SESSION['usuario_id']);
+    $sucursales = obtenerSucursalesUsuario($_SESSION['usuario_id']);
 }
 
 // Determinar si se comporta como líder (restringido a su tienda)
