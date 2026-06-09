@@ -115,33 +115,30 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                     <div class="card-body p-4 pt-0">
                         <form id="formReembolso">
                             <div class="row g-3 mb-4 p-3 bg-light rounded-4 shadow-sm">
-                                <!-- PROVEEDOR DE COMPRA -->
-                                <div class="col-12">
-                                    <div class="reembolso-section">
+
+                                <!-- FILA 1: Proveedores lado a lado -->
+                                <div class="col-md-5">
+                                    <div class="reembolso-section h-100">
                                         <div class="section-label"><i class="fas fa-store me-1"></i>Proveedor de la Compra</div>
-                                        <div class="row g-2">
-                                            <div class="col-md-4 position-relative">
-                                                <label class="form-label small fw-bold text-secondary">Proveedor</label>
-                                                <input type="text" id="proveedor_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar..." oninput="filtrarProveedor(this.value)" autocomplete="off">
-                                                <input type="hidden" id="id_proveedor" value="">
-                                                <div id="proveedor-suggestions" class="autocomplete-suggestions"></div>
-                                            </div>
+                                        <div class="position-relative">
+                                            <label class="form-label small fw-bold text-secondary">Proveedor</label>
+                                            <input type="text" id="proveedor_nombre" class="form-control border-0 shadow-sm" placeholder="Escribe para buscar..." oninput="filtrarProveedor(this.value)" autocomplete="off">
+                                            <input type="hidden" id="id_proveedor" value="">
+                                            <div id="proveedor-suggestions" class="autocomplete-suggestions"></div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- PROVEEDOR DE REEMBOLSO -->
-                                <div class="col-12">
-                                    <div class="reembolso-section">
+                                <div class="col-md-7">
+                                    <div class="reembolso-section h-100">
                                         <div class="section-label"><i class="fas fa-hand-holding-usd me-1"></i>Reembolsar a</div>
                                         <div class="row g-2">
-                                            <div class="col-md-4 position-relative">
-                                                <label class="form-label small fw-bold text-secondary">Proveedor / Persona a Reembolsar</label>
+                                            <div class="col-md-5 position-relative">
+                                                <label class="form-label small fw-bold text-secondary">Persona / Proveedor a Reembolsar</label>
                                                 <input type="text" id="reembolso_proveedor_nombre" class="form-control border-0 shadow-sm" placeholder="Por defecto: mismo proveedor" oninput="filtrarProveedorReembolso(this.value)" autocomplete="off">
                                                 <input type="hidden" id="id_proveedor_reembolso" value="">
                                                 <div id="reembolso-proveedor-suggestions" class="autocomplete-suggestions"></div>
                                             </div>
-                                            <div class="col-md-8">
+                                            <div class="col-md-7">
                                                 <label class="form-label small fw-bold text-secondary">Cuenta Bancaria para el Reembolso</label>
                                                 <select id="select_cuenta_reembolso" class="form-select border-0 shadow-sm" disabled onchange="seleccionarCuentaReembolso(this)">
                                                     <option value="">— Selecciona el proveedor a reembolsar —</option>
@@ -154,11 +151,12 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                                     </div>
                                 </div>
 
-                                <div class="col-md-4">
+                                <!-- FILA 2: Fecha + Concepto + CECO (siempre juntos) -->
+                                <div class="col-md-2">
                                     <label class="form-label small fw-bold text-secondary">Fecha de Solicitud</label>
                                     <input type="date" id="fecha_solicitud" class="form-control border-0 shadow-sm" value="<?= date('Y-m-d') ?>">
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-secondary">Concepto General del Reembolso</label>
                                     <input type="text" id="concepto" class="form-control border-0 shadow-sm" placeholder="Ej: Viáticos de viaje a Occidente - Marzo 2026">
                                 </div>
@@ -168,19 +166,28 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                                     <input type="hidden" id="ceco" value="">
                                     <div id="ceco-suggestions" class="autocomplete-suggestions"></div>
                                 </div>
-                                <div class="col-md-8">
-                                    <label class="form-label small fw-bold text-primary">
-                                        <i class="fas fa-camera me-1"></i> Subir Foto de Factura para Transcribir con IA
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-primary text-white border-0"><i class="fas fa-robot"></i></span>
-                                        <input type="file" id="foto_factura" class="form-control border-0 shadow-sm" accept="image/*,application/pdf" onchange="procesarFoto(this)">
-                                        <button type="button" class="btn btn-primary" onclick="abrirCamara()" title="Tomar Foto">
-                                            <i class="fas fa-camera"></i>
-                                        </button>
+
+                                <!-- FILA 3: Área Multimedia IA -->
+                                <div class="col-12">
+                                    <div class="reembolso-section" style="background: linear-gradient(135deg, rgba(13,110,253,0.06), rgba(13,110,253,0.02)); border-color: rgba(13,110,253,0.2);">
+                                        <div class="section-label" style="color: #0d6efd;"><i class="fas fa-robot me-1"></i>Transcripción con Inteligencia Artificial</div>
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-md-8">
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-primary text-white border-0"><i class="fas fa-robot"></i></span>
+                                                    <input type="file" id="foto_factura" class="form-control border-0 shadow-sm" accept="image/*,application/pdf" onchange="procesarFoto(this)">
+                                                    <button type="button" class="btn btn-primary" onclick="abrirCamara()" title="Tomar Foto con Cámara">
+                                                        <i class="fas fa-camera"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div id="statusIA" class="small text-muted px-1"></div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div id="statusIA" class="small mt-1 text-muted"></div>
                                 </div>
+
                             </div>
 
                             <div class="table-responsive border rounded-4 bg-white shadow-sm overflow-hidden mb-4">
