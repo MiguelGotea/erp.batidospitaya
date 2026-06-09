@@ -258,7 +258,8 @@ function cargarDatosProveedor(id, preseleccionarId) {
 
         if (res.success && res.cuentas && res.cuentas.length > 0) {
             res.cuentas.forEach(function (c) {
-                const label = `${c.banco} — ${c.numero_cuenta}${c.titular ? ' (' + c.titular + ')' : ''}${c.principal == 1 ? ' ★' : ''}`;
+                const monedaLabel = (c.moneda && (c.moneda.toLowerCase().includes('dolar') || c.moneda === 'USD')) ? '[US$]' : '[C$]';
+                const label = `${monedaLabel} ${c.banco} — ${c.numero_cuenta}${c.titular ? ' (' + c.titular + ')' : ''}${c.principal == 1 ? ' ★' : ''}`;
                 const opt = $('<option>').val(c.id).text(label)
                     .data('banco', c.banco)
                     .data('numero_cuenta', c.numero_cuenta)
