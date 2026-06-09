@@ -68,17 +68,22 @@ function cargarDatosEdicion(id) {
     $.get('ajax/reembolsos_ia_get_detalle.php', { id: id }, function (res) {
         if (res.success) {
             const s = res.solicitud;
-            $('#id_proveedor').val(s.id_proveedor);
+            const idProv = s.id_proveedor;
+            const idCuenta = s.id_cuenta_proveedor;
+
+            $('#id_proveedor').val(idProv);
             $('#proveedor_nombre').val(s.proveedor_nombre || '');
             $('#moneda').val(s.moneda || 'Cordobas');
-            $('#cuenta_bancaria').val(s.numero_cuenta).removeClass('opacity-50');
-            $('#banco_proveedor').val(s.banco).removeClass('opacity-50');
             $('#fecha_solicitud').val(s.fecha_solicitud);
             $('#concepto').val(s.concepto);
             $('#ceco').val(s.ceco);
-            $('#ceco_nombre').val(s.ceco_nombre || s.ceco); // Mostrar nombre si está disponible, sino el código
-            id_cuenta_proveedor = s.id_cuenta_proveedor;
-            cambiarMoneda(s.moneda || 'Cordobas'); // Actualizar labels
+            $('#ceco_nombre').val(s.ceco_nombre || s.ceco);
+            cambiarMoneda(s.moneda || 'Cordobas');
+
+            // Cargar el dropdown de cuentas y pre-seleccionar la guardada
+            if (idProv) {
+                cargarDatosProveedor(idProv, idCuenta);
+            }
 
             // Cargar items
             itemsActuales = res.detalles.map(d => ({
@@ -238,26 +243,54 @@ function cambiarMoneda(m) {
     calcularTotal();
 }
 
-function cargarDatosProveedor(id) {
+function cargarDatosProveedor(id, preseleccionarId) {
+    const $sel = $('#select_cuenta_proveedor');
+
     if (!id) {
-        $('#cuenta_bancaria').val('').addClass('opacity-50');
-        $('#banco_proveedor').val('').addClass('opacity-50');
+        $sel.empty().append('<option value="">— Selecciona un proveedor primero —</option>').prop('disabled', true);
+        $('#cuenta_bancaria').val('');
+        $('#banco_proveedor').val('');
         id_cuenta_proveedor = null;
         return;
     }
 
-    $.get('ajax/reembolsos_ia_get_proveedor_data.php', { id_proveedor: id }, function (res) {
-        if (res.success && res.data) {
-            $('#cuenta_bancaria').val(res.data.numero_cuenta).removeClass('opacity-50');
-            $('#banco_proveedor').val(res.data.banco).removeClass('opacity-50');
-            id_cuenta_proveedor = res.data.id;
+    $.post('ajax/proveedores_get_cuentas.php', { id_proveedor: id }, function (res) {
+        $sel.empty();
+
+        if (res.success && res.cuentas && res.cuentas.length > 0) {
+            res.cuentas.forEach(function (c) {
+                const label = `${c.banco} — ${c.numero_cuenta}${c.titular ? ' (' + c.titular + ')' : ''}${c.principal == 1 ? ' ★' : ''}`;
+                const opt = $('<option>').val(c.id).text(label)
+                    .data('banco', c.banco)
+                    .data('numero_cuenta', c.numero_cuenta);
+                $sel.append(opt);
+            });
+
+            // Pre-seleccionar: si se pide una cuenta específica, úsala; sino la primera (principal ya viene primera por ORDER BY)
+            if (preseleccionarId) {
+                $sel.val(preseleccionarId);
+            }
+            // Si no se pudo pre-seleccionar o no se pidió, queda el primero (principal)
+            $sel.prop('disabled', false).trigger('change');
         } else {
-            $('#cuenta_bancaria').val('No registra cuenta').addClass('opacity-50');
-            $('#banco_proveedor').val('No registra banco').addClass('opacity-50');
+            $sel.append('<option value="">— Sin cuentas registradas —</option>').prop('disabled', true);
+            $('#cuenta_bancaria').val('');
+            $('#banco_proveedor').val('');
             id_cuenta_proveedor = null;
         }
+    }, 'json').fail(function () {
+        $sel.empty().append('<option value="">— Error al cargar cuentas —</option>').prop('disabled', true);
+        id_cuenta_proveedor = null;
     });
 }
+
+function seleccionarCuenta(el) {
+    const $opt = $(el).find('option:selected');
+    id_cuenta_proveedor = $(el).val() ? parseInt($(el).val()) : null;
+    $('#cuenta_bancaria').val($opt.data('numero_cuenta') || '');
+    $('#banco_proveedor').val($opt.data('banco') || '');
+}
+
 
 
 function procesarFoto(archivo) {

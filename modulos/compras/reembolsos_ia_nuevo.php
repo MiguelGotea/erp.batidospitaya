@@ -114,13 +114,13 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                                         <option value="Dolares">Dólares (US$)</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-bold text-secondary">Cuenta Bancaria (Auto)</label>
-                                    <input type="text" id="cuenta_bancaria" class="form-control border-0 shadow-sm bg-white" readonly placeholder="Esperando proveedor...">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-bold text-secondary">Banco (Auto)</label>
-                                    <input type="text" id="banco_proveedor" class="form-control border-0 shadow-sm bg-white" readonly placeholder="Esperando proveedor...">
+                                <div class="col-md-7">
+                                    <label class="form-label small fw-bold text-secondary">Cuenta Bancaria del Proveedor</label>
+                                    <select id="select_cuenta_proveedor" class="form-select border-0 shadow-sm" disabled onchange="seleccionarCuenta(this)">
+                                        <option value="">— Selecciona un proveedor primero —</option>
+                                    </select>
+                                    <input type="hidden" id="cuenta_bancaria" value="">
+                                    <input type="hidden" id="banco_proveedor" value="">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small fw-bold text-secondary">Fecha de Solicitud</label>
