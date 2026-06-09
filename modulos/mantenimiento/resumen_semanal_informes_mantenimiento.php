@@ -18,15 +18,14 @@ $puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso
 
 // Parámetros GET
 $numSemana = isset($_GET['semana']) ? intval($_GET['semana']) : null;
-$anio      = isset($_GET['anio'])   ? intval($_GET['anio'])   : intval(date('Y'));
 $costoKm   = isset($_GET['costo'])  ? floatval($_GET['costo']) : 5.0;
 $depFija   = 150.00;
 
 // Si no viene semana, obtener la actual
 if (!$numSemana) {
     $db   = (new Ticket())->getDb()->getConnection();
-    $stmt = $db->prepare("SELECT numero_semana FROM SemanasSistema WHERE :hoy BETWEEN fecha_inicio AND fecha_fin AND anio = :anio LIMIT 1");
-    $stmt->execute([':hoy' => date('Y-m-d'), ':anio' => $anio]);
+    $stmt = $db->prepare("SELECT numero_semana FROM SemanasSistema WHERE :hoy BETWEEN fecha_inicio AND fecha_fin LIMIT 1");
+    $stmt->execute([':hoy' => date('Y-m-d')]);
     $row  = $stmt->fetch(PDO::FETCH_ASSOC);
     $numSemana = $row ? intval($row['numero_semana']) : 1;
 }
@@ -125,13 +124,6 @@ if (!$numSemana) {
     <div class="sub-container">
         <?php echo renderHeader($usuario, 'Resumen Semanal de Informes'); ?>
 
-        <!-- HERO -->
-        <div class="page-hero no-print">
-            <div class="d-flex align-items-center gap-3 mb-1">
-                <h4 class="mb-0 fw-bold"><i class="fas fa-chart-bar me-2"></i>Resumen Semanal de Informes</h4>
-            </div>
-            <p class="mb-0 opacity-75 small mt-1">Kilometrajes, costos consolidados y detalle de visitas por colaborador</p>
-        </div>
 
         <div class="container-fluid px-4 py-4">
 
@@ -140,11 +132,6 @@ if (!$numSemana) {
                 <div class="d-flex align-items-center gap-2">
                     <label class="small fw-bold text-muted mb-0">Semana:</label>
                     <input type="number" id="inputSemana" class="form-control form-control-sm rounded-pill text-center fw-bold border-0 bg-light" style="width:75px" value="<?= $numSemana ?>">
-                </div>
-                <div class="vr mx-2"></div>
-                <div class="d-flex align-items-center gap-2">
-                    <label class="small fw-bold text-muted mb-0">Año:</label>
-                    <input type="number" id="inputAnio" class="form-control form-control-sm rounded-pill text-center fw-bold border-0 bg-light" style="width:85px" value="<?= $anio ?>">
                 </div>
                 <div class="vr mx-2"></div>
                 <div class="d-flex align-items-center gap-2">
@@ -240,7 +227,6 @@ $(document).ready(function () {
 
 function cargarResumen() {
     const semana = $('#inputSemana').val();
-    const anio   = $('#inputAnio').val();
     const costo  = parseFloat($('#inputCosto').val()) || 5;
 
     if (!semana) { Swal.fire('Atención', 'Ingresa el número de semana', 'warning'); return; }
@@ -249,8 +235,8 @@ function cargarResumen() {
     $('#emptyState,#rangoTexto,#seccionKm,#seccionDetalle').hide();
 
     Promise.all([
-        $.post('ajax/reporte_semanal_handler.php',    { action: 'get_datos_semanales', numero_semana: semana, anio }),
-        $.post('ajax/resumen_semanal_get_detalle.php', { numero_semana: semana, anio })
+        $.post('ajax/reporte_semanal_handler.php',    { action: 'get_datos_semanales', numero_semana: semana }),
+        $.post('ajax/resumen_semanal_get_detalle.php', { numero_semana: semana })
     ]).then(([resKm, resDet]) => {
         $('#loadingState').hide();
 
@@ -261,7 +247,7 @@ function cargarResumen() {
             $('#emptyState').show(); return;
         }
 
-        datosGlobal = { resKm, resDet, costo, semana, anio };
+        datosGlobal = { resKm, resDet, costo, semana };
 
         $('#rangoTexto').text(`Semana #${semana} | ${resKm.rango.desde} al ${resKm.rango.hasta}`).show();
 
@@ -459,8 +445,8 @@ function renderDetalle(informes) {
 /* ===================== HELPERS ===================== */
 function irAReembolso() {
     if (!datosGlobal) return;
-    const { semana, anio, costo } = datosGlobal;
-    window.open(`../compras/reembolsos_ia_nuevo.php?id=15&from_km=1&semana=${semana}&anio=${anio}&costo=${costo}`, '_blank');
+    const { semana, costo } = datosGlobal;
+    window.open(`../compras/reembolsos_ia_nuevo.php?id=15&from_km=1&semana=${semana}&costo=${costo}`, '_blank');
 }
 
 function zoomFoto(src) {

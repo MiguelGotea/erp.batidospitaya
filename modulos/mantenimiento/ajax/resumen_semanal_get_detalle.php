@@ -21,7 +21,6 @@ if (!tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)) {
 }
 
 $numero_semana = $_POST['numero_semana'] ?? null;
-$anio          = $_POST['anio']          ?? date('Y');
 
 if (!$numero_semana) {
     echo json_encode(['success' => false, 'message' => 'Semana no indicada']);
@@ -32,8 +31,8 @@ try {
     $db = (new Ticket())->getDb()->getConnection();
 
     // 1. Rango de la semana
-    $stmtS = $db->prepare("SELECT fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = :num AND anio = :anio LIMIT 1");
-    $stmtS->execute([':num' => $numero_semana, ':anio' => $anio]);
+    $stmtS = $db->prepare("SELECT fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = :num LIMIT 1");
+    $stmtS->execute([':num' => $numero_semana]);
     $semana = $stmtS->fetch(PDO::FETCH_ASSOC);
     if (!$semana) throw new Exception("Semana #$numero_semana no encontrada");
 

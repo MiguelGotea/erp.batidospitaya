@@ -25,26 +25,24 @@ try {
     switch ($action) {
         case 'get_current_week':
             $sql = "SELECT numero_semana FROM SemanasSistema 
-                    WHERE :hoy BETWEEN fecha_inicio AND fecha_fin 
-                    AND anio = :anio LIMIT 1";
+                    WHERE :hoy BETWEEN fecha_inicio AND fecha_fin LIMIT 1";
             $stmt = $db->prepare($sql);
-            $stmt->execute([':hoy' => date('Y-m-d'), ':anio' => date('Y')]);
+            $stmt->execute([':hoy' => date('Y-m-d')]);
             $res = $stmt->fetch(PDO::FETCH_ASSOC);
             echo json_encode(['success' => true, 'numero_semana' => $res ? $res['numero_semana'] : null]);
             break;
 
         case 'get_datos_semanales':
             $numero_semana = $_POST['numero_semana'] ?? null;
-            $anio = $_POST['anio'] ?? date('Y');
             
             if (!$numero_semana) throw new Exception("Número de semana no proporcionado");
 
             // 1. Obtener rango de la semana y ID por su número
-            $sqlSemana = "SELECT id, fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = :num AND anio = :anio";
+            $sqlSemana = "SELECT id, fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = :num";
             $stmtS = $db->prepare($sqlSemana);
-            $stmtS->execute([':num' => $numero_semana, ':anio' => $anio]);
+            $stmtS->execute([':num' => $numero_semana]);
             $semana = $stmtS->fetch(PDO::FETCH_ASSOC);
-            if (!$semana) throw new Exception("Semana #$numero_semana no encontrada para el año $anio");
+            if (!$semana) throw new Exception("Semana #$numero_semana no encontrada");
 
             $fecha_inicio = $semana['fecha_inicio'];
             $fecha_fin = $semana['fecha_fin'];
@@ -91,15 +89,14 @@ try {
 
         case 'guardar_costo_km':
             $numero_semana = $_POST['numero_semana'] ?? null;
-            $anio = $_POST['anio'] ?? date('Y');
             $costo_km = $_POST['costo_km'] ?? 0;
             $operario_id = $_POST['operario_id'] ?? null;
 
             if (!$numero_semana) throw new Exception("Número de semana no proporcionado");
 
-            $sqlSemana = "SELECT fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = :num AND anio = :anio";
+            $sqlSemana = "SELECT fecha_inicio, fecha_fin FROM SemanasSistema WHERE numero_semana = :num";
             $stmtS = $db->prepare($sqlSemana);
-            $stmtS->execute([':num' => $numero_semana, ':anio' => $anio]);
+            $stmtS->execute([':num' => $numero_semana]);
             $semana = $stmtS->fetch(PDO::FETCH_ASSOC);
             if (!$semana) throw new Exception("Semana no encontrada");
             
