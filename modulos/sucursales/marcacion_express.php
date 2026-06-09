@@ -773,6 +773,11 @@ if ($dispositivoAutorizado) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0E544C">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Marcación">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
     <script src="js/offline_marcacion.js"></script>
     <meta name="autocomplete" content="off">
@@ -1753,6 +1758,59 @@ if ($dispositivoAutorizado) {
             background: rgba(0,0,0,0.15); border-radius: 50px;
             padding: 2px 12px; margin-left: 10px; font-size: 0.85rem;
         }
+
+        /* Estilos para el Modal de Cola Offline */
+        .item-cola-offline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            text-align: left;
+        }
+        .item-cola-offline:last-child {
+            border-bottom: none;
+        }
+        .item-cola-offline-nombre {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+        .item-cola-offline-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .item-cola-offline-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-entrada {
+            background-color: rgba(14, 84, 76, 0.1);
+            color: var(--primary-color);
+        }
+        .badge-salida {
+            background-color: rgba(230, 126, 34, 0.1);
+            color: #e67e22;
+        }
+        .btn-ver-cola-link {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-left: 10px;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+        .btn-ver-cola-link:hover {
+            background: rgba(255,255,255,0.35);
+        }
     </style>
 </head>
 
@@ -1913,6 +1971,26 @@ if ($dispositivoAutorizado) {
                     <button class="btn-aceptar" id="btnPreConfirmarAceptar" style="background: #e67e22; margin-top: 0; flex: 1; min-width: 120px;" disabled>Confirmar (3s)</button>
                     <button class="btn-aceptar" id="btnPreConfirmarCancelar" style="background: #7f8c8d; margin-top: 0; flex: 1; min-width: 120px;">Cancelar</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Modal de Cola de Marcaciones Offline -->
+        <div class="modal" id="modalColaOffline" style="display: none;">
+            <div class="modal-content" style="border-top: 5px solid var(--primary-color); max-width: 500px; position: relative;">
+                <button class="modal-close" id="btnCerrarColaOffline">&times;</button>
+                <div class="modal-icon" style="color: var(--primary-color); font-size: 3.5rem; margin-bottom: 15px;">
+                    <i class="fas fa-list-ol"></i>
+                </div>
+                <div class="modal-title" style="color: var(--primary-color); font-size: 1.5rem; font-weight: 700; margin-bottom: 15px;">
+                    Marcaciones Pendientes
+                </div>
+                <div class="modal-mensaje" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
+                    Estas marcaciones están guardadas localmente y se sincronizarán automáticamente cuando vuelva la conexión.
+                </div>
+                <div id="listaColaOffline" style="width: 100%; max-height: 250px; overflow-y: auto; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; background: #fafafa; padding: 5px;">
+                    <!-- Se llena dinámicamente con JS -->
+                </div>
+                <button class="btn-aceptar" id="btnAceptarColaOffline" style="margin-top: 0; width: 100%;">Cerrar</button>
             </div>
         </div>
 

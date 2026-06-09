@@ -1,0 +1,25 @@
+{
+  "name": "Batidos Pitaya - Marcación Express",
+  "short_name": "Marcación",
+  "description": "Sistema de marcación de entrada y salida para colaboradores de Batidos Pitaya.",
+  "start_url": "/modulos/sucursales/marcacion_express.php",
+  "scope": "/modulos/sucursales/",
+  "display": "standalone",
+  "background_color": "#eef7f6",
+  "theme_color": "#0E544C",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/core/assets/img/icon12.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/core/assets/img/icon12.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

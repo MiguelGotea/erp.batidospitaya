@@ -460,3 +460,42 @@ tbody tr:hover {
         text-align: center;
     }
 }
+
+/* ── Paginación ─────────────────────────────────────────── */
+#paginacion {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.pagination-btn {
+    padding: 0.35rem 0.65rem;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    min-width: 35px;
+    text-align: center;
+    line-height: 1.4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #f0f7f6;
+    border-color: #51B8AC;
+}
+
+.pagination-btn.active {
+    background-color: #51B8AC;
+    color: white;
+    border-color: #51B8AC;
+    font-weight: 600;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}

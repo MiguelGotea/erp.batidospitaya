@@ -104,3 +104,112 @@ self.addEventListener('fetch', event => {
 self.addEventListener('message', event => {
     if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
+
+// ── Background Sync ───────────────────────────────────────────────────────────
+const DB_NAME = 'pitaya_offline_v1';
+const DB_VERSION = 1;
+
+function openDB() {
+    return new Promise((res, rej) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onsuccess = e => res(e.target.result);
+        req.onerror  = e => rej(e.target.error);
+    });
+}
+
+function getPendingMarcaciones(db) {
+    return new Promise((res, rej) => {
+        try {
+            const tx = db.transaction('marcaciones_queue', 'readonly');
+            const store = tx.objectStore('marcaciones_queue');
+            const req = store.getAll();
+            req.onsuccess = e => {
+                const all = e.target.result || [];
+                res(all.filter(i => i.status === 'pending'));
+            };
+            req.onerror = e => rej(e.target.error);
+        } catch (e) {
+            rej(e);
+        }
+    });
+}
+
+function deleteMarcacion(db, local_id) {
+    return new Promise((res, rej) => {
+        try {
+            const tx = db.transaction('marcaciones_queue', 'readwrite');
+            const store = tx.objectStore('marcaciones_queue');
+            const req = store.delete(local_id);
+            req.onsuccess = () => res();
+            req.onerror = e => rej(e.target.error);
+        } catch (e) {
+            rej(e);
+        }
+    });
+}
+
+function updateMarcacionToError(db, item, errorMsg) {
+    return new Promise((res, rej) => {
+        try {
+            const tx = db.transaction('marcaciones_queue', 'readwrite');
+            const store = tx.objectStore('marcaciones_queue');
+            item.status = 'error';
+            item.error_msg = errorMsg;
+            item.intentos = (item.intentos || 0) + 1;
+            const req = store.put(item);
+            req.onsuccess = () => res();
+            req.onerror = e => rej(e.target.error);
+        } catch (e) {
+            rej(e);
+        }
+    });
+}
+
+async function syncQueueFromSW() {
+    try {
+        const db = await openDB();
+        const pending = await getPendingMarcaciones(db);
+        if (pending.length === 0) return;
+
+        const res = await fetch('/modulos/sucursales/ajax/marcacion_offline_sync.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ queue: pending })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        for (const r of (data.results || [])) {
+            if (r.success) {
+                await deleteMarcacion(db, r.local_id);
+            } else {
+                const it = pending.find(i => i.local_id === r.local_id);
+                if (it) {
+                    await updateMarcacionToError(db, it, r.error);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[SW Background Sync] Error al sincronizar cola:', e.message);
+    }
+}
+
+// Se dispara cuando el navegador detecta conexión y hay una tarea 'sync-marcaciones-pitaya'
+// registrada. Funciona aunque el tab esté minimizado o en segundo plano.
+self.addEventListener('sync', event => {
+    if (event.tag === 'sync-marcaciones-pitaya') {
+        event.waitUntil(
+            self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+                .then(clients => {
+                    if (clients.length > 0) {
+                        // Hay tab(s) abiertos: pedirles que ejecuten el sync
+                        clients.forEach(client => client.postMessage({ type: 'SYNC_QUEUE' }));
+                        return Promise.resolve();
+                    } else {
+                        // Sin tabs abiertos: sync directo desde el SW
+                        return syncQueueFromSW();
+                    }
+                })
+        );
+    }
+});
