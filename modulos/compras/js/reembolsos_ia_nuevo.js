@@ -78,9 +78,8 @@ function cargarDatosEdicion(id) {
             $('#concepto').val(s.concepto);
             $('#ceco').val(s.ceco);
             $('#ceco_nombre').val(s.ceco_nombre || s.ceco);
-            cambiarMoneda(s.moneda || 'Cordobas');
-
             // Cargar el dropdown de cuentas y pre-seleccionar la guardada
+            // La moneda se detecta automáticamente de la cuenta seleccionada
             if (idProv) {
                 cargarDatosProveedor(idProv, idCuenta);
             }
@@ -262,7 +261,8 @@ function cargarDatosProveedor(id, preseleccionarId) {
                 const label = `${c.banco} — ${c.numero_cuenta}${c.titular ? ' (' + c.titular + ')' : ''}${c.principal == 1 ? ' ★' : ''}`;
                 const opt = $('<option>').val(c.id).text(label)
                     .data('banco', c.banco)
-                    .data('numero_cuenta', c.numero_cuenta);
+                    .data('numero_cuenta', c.numero_cuenta)
+                    .data('moneda', c.moneda || 'Cordobas');
                 $sel.append(opt);
             });
 
@@ -289,6 +289,11 @@ function seleccionarCuenta(el) {
     id_cuenta_proveedor = $(el).val() ? parseInt($(el).val()) : null;
     $('#cuenta_bancaria').val($opt.data('numero_cuenta') || '');
     $('#banco_proveedor').val($opt.data('banco') || '');
+
+    // Moneda se deriva automáticamente de la cuenta bancaria elegida
+    const monedaCuenta = $opt.data('moneda') || 'Cordobas';
+    $('#moneda').val(monedaCuenta);
+    cambiarMoneda(monedaCuenta);
 }
 
 

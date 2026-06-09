@@ -318,7 +318,12 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
                 </tr>
             </table>
 
-            <?php $simbolo = $solicitud['moneda'] == 'Dolares' ? 'US$' : 'C$'; ?>
+            <?php
+                // Derivar símbolo desde la moneda de la cuenta bancaria vinculada.
+                // Fallback a solicitud['moneda'] para registros históricos sin cuenta.
+                $monedaEfectiva = !empty($solicitud['cuenta_moneda']) ? $solicitud['cuenta_moneda'] : ($solicitud['moneda'] ?? 'Cordobas');
+                $simbolo = (stripos($monedaEfectiva, 'dolar') !== false || $monedaEfectiva === 'USD') ? 'US$' : 'C$';
+            ?>
             <table class="table-main">
                 <thead>
                     <tr>

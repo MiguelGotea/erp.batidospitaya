@@ -107,13 +107,6 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                                     <input type="hidden" id="id_proveedor" value="">
                                     <div id="proveedor-suggestions" class="autocomplete-suggestions"></div>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small fw-bold text-secondary">Moneda</label>
-                                    <select id="moneda" class="form-select border-0 shadow-sm" onchange="cambiarMoneda(this.value)">
-                                        <option value="Cordobas" selected>Córdobas (C$)</option>
-                                        <option value="Dolares">Dólares (US$)</option>
-                                    </select>
-                                </div>
                                 <div class="col-md-7">
                                     <label class="form-label small fw-bold text-secondary">Cuenta Bancaria del Proveedor</label>
                                     <select id="select_cuenta_proveedor" class="form-select border-0 shadow-sm" disabled onchange="seleccionarCuenta(this)">
@@ -121,6 +114,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
                                     </select>
                                     <input type="hidden" id="cuenta_bancaria" value="">
                                     <input type="hidden" id="banco_proveedor" value="">
+                                    <input type="hidden" id="moneda" value="Cordobas">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label small fw-bold text-secondary">Fecha de Solicitud</label>
