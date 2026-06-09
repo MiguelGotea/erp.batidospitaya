@@ -208,7 +208,7 @@ $sucursalFijada = ($esRestringido && count($sucursales) === 1) ? $sucursales[0][
                         <label class="form-label fw-semibold text-muted small">Estado</label>
                         <select id="filtroEstado" class="form-select form-select-sm">
                             <option value="">Todos</option>
-                            <option value="Pendiente">Pendiente</option>
+                            <option value="Pendiente" <?= ($esRestringido && !$puedeGestionar) ? 'selected' : '' ?>>Pendiente</option>
                             <option value="Aprobado">Aprobado</option>
                             <option value="Denegado">Denegado</option>
                         </select>
