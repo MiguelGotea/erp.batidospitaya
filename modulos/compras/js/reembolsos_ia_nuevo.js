@@ -558,6 +558,20 @@ async function guardarSolicitud() {
         return;
     }
 
+    if (!data.id_proveedor_reembolso) {
+        Swal.fire('Validación', 'Debes seleccionar a quién se reembolsará (campo "Reembolsar a").', 'warning');
+        return;
+    }
+
+    if (!id_cuenta_proveedor) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Cuenta bancaria requerida',
+            html: 'El proveedor seleccionado en <strong>"Reembolsar a"</strong> no tiene una cuenta bancaria registrada o no has seleccionado ninguna.<br><br>Registra una cuenta para ese proveedor antes de continuar.'
+        });
+        return;
+    }
+
     if (itemsActuales.length === 0) {
         Swal.fire('Validación', 'No hay gastos registrados. Sube al menos una factura.', 'warning');
         return;

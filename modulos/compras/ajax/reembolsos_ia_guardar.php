@@ -35,6 +35,10 @@ try {
         throw new Exception('El concepto es obligatorio.');
     }
 
+    if (empty($id_cuenta_proveedor)) {
+        throw new Exception('Debes seleccionar una cuenta bancaria del proveedor a reembolsar.');
+    }
+
     $conn->beginTransaction();
 
     if ($id_solicitud) {
