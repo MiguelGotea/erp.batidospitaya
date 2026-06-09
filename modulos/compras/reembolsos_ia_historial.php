@@ -41,8 +41,8 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
 
     <!-- Estilos Globales y Específicos -->
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
-    <link rel="stylesheet" href="/core/assets/css/modales_premium.css">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/reembolsos_ia_historial.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
@@ -195,7 +195,7 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/reembolsos_ia_historial.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
     <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
-    <script src="/core/assets/js/fab_button.js"></script>
+    <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 
 </body>
 
