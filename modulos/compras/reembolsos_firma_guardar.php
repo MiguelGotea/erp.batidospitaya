@@ -19,7 +19,7 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-$usuarioId   = (int) $_SESSION['usuario_id'];
+$usuarioId = (int) $_SESSION['usuario_id'];
 $cargoOperario = $_SESSION['datos_usuario_actual']['CodNivelesCargos'] ?? null;
 
 // Si el cargo no está cacheado, consultarlo
@@ -49,6 +49,7 @@ if (!tienePermiso('reembolsos_ia_plantilla', 'firma_electronica', $cargoOperario
     exit();
 }
 
+
 // ── 3. Leer y validar input ───────────────────────────────────────────────────
 $input = json_decode(file_get_contents('php://input'), true);
 
@@ -57,8 +58,8 @@ if (empty($input['id_orden']) || empty($input['firma_base64'])) {
     exit();
 }
 
-$idOrden    = (int) $input['id_orden'];
-$firmaB64   = $input['firma_base64'];
+$idOrden = (int) $input['id_orden'];
+$firmaB64 = $input['firma_base64'];
 
 // ── 4. Verificar que la orden exista y NO esté ya firmada ────────────────────
 try {
@@ -94,8 +95,8 @@ if ($imagenDecodificada === false || strlen($imagenDecodificada) < 100) {
 }
 
 // ── 6. Crear directorio de destino si no existe ───────────────────────────────
-$dirRelativo   = 'uploads/firmaordenreembolso';
-$dirAbsoluto   = $_SERVER['DOCUMENT_ROOT'] . '/modulos/compras/' . $dirRelativo;
+$dirRelativo = 'uploads/firmaordenreembolso';
+$dirAbsoluto = $_SERVER['DOCUMENT_ROOT'] . '/modulos/compras/' . $dirRelativo;
 
 if (!is_dir($dirAbsoluto)) {
     if (!mkdir($dirAbsoluto, 0755, true)) {
@@ -108,10 +109,10 @@ if (!is_dir($dirAbsoluto)) {
 }
 
 // ── 7. Guardar el archivo PNG ─────────────────────────────────────────────────
-$timestamp  = date('Ymd_His');
+$timestamp = date('Ymd_His');
 $nombreArchivo = $idOrden . '_' . $timestamp . '.png';
-$rutaAbsoluta  = $dirAbsoluto . '/' . $nombreArchivo;
-$rutaRelativa  = 'modulos/compras/' . $dirRelativo . '/' . $nombreArchivo;
+$rutaAbsoluta = $dirAbsoluto . '/' . $nombreArchivo;
+$rutaRelativa = 'modulos/compras/' . $dirRelativo . '/' . $nombreArchivo;
 
 if (file_put_contents($rutaAbsoluta, $imagenDecodificada) === false) {
     echo json_encode(['success' => false, 'error' => 'No se pudo guardar el archivo de firma.']);
@@ -119,7 +120,8 @@ if (file_put_contents($rutaAbsoluta, $imagenDecodificada) === false) {
 }
 
 // ── 8. Obtener IP del cliente ─────────────────────────────────────────────────
-function obtenerIpCliente_firma() {
+function obtenerIpCliente_firma()
+{
     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
         return $_SERVER['HTTP_CLIENT_IP'];
     } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
@@ -158,7 +160,7 @@ try {
 
 // ── 10. Respuesta exitosa ─────────────────────────────────────────────────────
 echo json_encode([
-    'success'   => true,
+    'success' => true,
     'firma_url' => '/' . $rutaRelativa,
-    'message'   => 'Firma registrada correctamente.'
+    'message' => 'Firma registrada correctamente.'
 ]);
