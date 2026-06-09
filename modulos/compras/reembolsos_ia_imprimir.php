@@ -41,6 +41,7 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Imprimir Reembolso #<?= $id ?></title>
     <!-- Librerías External -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -50,7 +51,7 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
     <style>
         @page {
             size: letter;
-            margin: 5mm;
+            margin: 5mm 3mm; /* top/bottom 5mm, lados 3mm */
         }
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -61,11 +62,13 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
             background-color: #fff;
         }
         .container {
-            width: 205mm;
+            max-width: 205mm;
+            width: 100%;
             margin: 5mm auto;
             border: 1.5px solid #000;
             background: #fff;
             box-shadow: 0 0 10px rgba(0,0,0,0.05); /* Sutil en pantalla */
+            box-sizing: border-box;
         }
         table {
             width: 100%;
@@ -74,7 +77,7 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
         }
         th, td {
             border: 1px solid #000;
-            padding: 6px 10px;
+            padding: 4px 6px;  /* reducido para ahorrar filas */
             text-align: left;
             word-wrap: break-word;
         }
@@ -127,6 +130,11 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
             .no-print { display: none !important; }
             .page-break { page-break-after: always; }
             body { margin: 0; padding: 0; }
+            .container { margin: 0 auto; width: 100%; max-width: 100%; border-left: none; border-right: none; }
+        }
+        @media screen and (max-width: 600px) {
+            .container { margin: 2mm auto; }
+            body { font-size: 10px; }
         }
         .print-options {
             position: fixed;
