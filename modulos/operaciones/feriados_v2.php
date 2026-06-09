@@ -191,7 +191,7 @@ if (isset($_GET['exportar_excel'])) {
         echo '<td>' . htmlspecialchars($r['nombre_completo']) . '</td>';
         echo '<td>' . htmlspecialchars($r['sucursal_nombre']) . '</td>';
         echo '<td>' . $fechaF . '</td>';
-        echo '<td>' . number_format($r['horas_trabajadas'], 2) . '</td>';
+        echo '<td>' . number_format($r['horas_trabajadas'] ?? 0, 2) . '</td>';
         echo '<td>' . htmlspecialchars($r['estado']) . '</td>';
         echo '<td>' . htmlspecialchars($r['observaciones'] ?? '-') . '</td>';
         echo '<td>' . htmlspecialchars($r['creador_nombre'] ?? '-') . '</td>';
@@ -263,9 +263,13 @@ $records = $stmtList->fetchAll();
 
 // Formato de fechas amigable
 function formatoFechaLocal($fecha) {
-    if (empty($fecha)) return '-';
-    $d = new DateTime($fecha);
-    return $d->format('d-m-Y');
+    if (empty($fecha) || $fecha === '0000-00-00') return '-';
+    try {
+        $d = new DateTime($fecha);
+        return $d->format('d-m-Y');
+    } catch (Exception $e) {
+        return '-';
+    }
 }
 
 function getEstadoBadgeClass($estado) {
@@ -417,7 +421,7 @@ function getEstadoBadgeClass($estado) {
                                         <td><strong><?= htmlspecialchars($r['nombre_completo']) ?></strong></td>
                                         <td><?= htmlspecialchars($r['sucursal_nombre']) ?></td>
                                         <td><?= formatoFechaLocal($r['fecha_feriado']) ?></td>
-                                        <td><?= number_format($r['horas_trabajadas'], 2) ?> hrs</td>
+                                        <td><?= number_format($r['horas_trabajadas'] ?? 0, 2) ?> hrs</td>
                                         <td>
                                             <span class="<?= getEstadoBadgeClass($r['estado']) ?>">
                                                 <?= $r['estado'] === 'Descansado' ? 'COMPENSADO' : htmlspecialchars($r['estado']) ?>
