@@ -203,8 +203,10 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
         }
 
         .firma-display img {
-            max-width: 140px;
-            max-height: 55px;
+            max-width: 100%;
+            max-height: 70px;
+            width: auto;
+            height: auto;
             object-fit: contain;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
@@ -569,12 +571,12 @@ function getPhotoClass($path)
                     <td class="text-center" style="width: 100px; color: #999;">v2-Nov24</td>
                 </tr>
                 <tr>
-                    <td class="v-label">Fecha:</td>
-                    <td class="v-value"><?= date('d-M-y', strtotime($solicitud['fecha_solicitud'])) ?></td>
-                    <td class="v-label">Solicita:</td>
+                    <td class="v-label" style="width: 55px;">Fecha:</td>
+                    <td class="v-value" style="width: 80px;"><?= date('d-M-y', strtotime($solicitud['fecha_solicitud'])) ?></td>
+                    <td class="v-label" style="width: 55px;">Solicita:</td>
                     <td class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></td>
-                    <td class="v-label">Autoriza:</td>
-                    <td class="v-value">
+                    <td class="v-label" style="width: 55px;" rowspan="2">Autoriza:</td>
+                    <td class="v-value" rowspan="2" style="vertical-align: middle; text-align: center; min-width: 120px;">
                         <?php if ($yaFirmada): ?>
                             <div class="firma-display">
                                 <img src="/<?= htmlspecialchars($solicitud['firma_imagen']) ?>" alt="Firma electrónica">
@@ -585,6 +587,10 @@ function getPhotoClass($path)
                             </div>
                         <?php endif; ?>
                     </td>
+                </tr>
+                <tr>
+                    <td class="v-label">Concepto:</td>
+                    <td class="v-value" colspan="3"><?= htmlspecialchars($solicitud['concepto'] ?? '') ?></td>
                 </tr>
             </table>
 
