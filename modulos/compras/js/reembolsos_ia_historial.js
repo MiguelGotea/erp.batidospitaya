@@ -86,7 +86,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="8" class="text-center py-4 text-muted">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="9" class="text-center py-4 text-muted">No se encontraron registros</td></tr>');
         return;
     }
 
@@ -95,6 +95,7 @@ function renderizarTabla(datos) {
 
         tr.append(`<td>${formatearFecha(row.fecha_solicitud)}</td>`);
         tr.append(`<td>${row.proveedor_nombre || '<span class="text-muted">N/A</span>'}</td>`);
+        tr.append(`<td>${row.proveedor_reembolso_nombre || '<span class="text-muted">—</span>'}</td>`);
         tr.append(`<td>${row.concepto}</td>`);
         tr.append(`<td><span class="badge bg-light text-dark">${row.ceco_nombre || row.ceco}</span></td>`);
         

@@ -14,10 +14,16 @@ try {
     $where = [];
     $params = [];
     
-    // Filtro de texto (Proveedor)
+    // Filtro de texto (Proveedor de compra)
     if (isset($filtros['proveedor_nombre']) && $filtros['proveedor_nombre'] !== '') {
         $where[] = "p.nombre LIKE :proveedor_nombre";
         $params[":proveedor_nombre"] = '%' . $filtros['proveedor_nombre'] . '%';
+    }
+    
+    // Filtro de texto (Reembolsar a)
+    if (isset($filtros['proveedor_reembolso_nombre']) && $filtros['proveedor_reembolso_nombre'] !== '') {
+        $where[] = "pr.nombre LIKE :proveedor_reembolso_nombre";
+        $params[":proveedor_reembolso_nombre"] = '%' . $filtros['proveedor_reembolso_nombre'] . '%';
     }
     
     // Filtro de texto (Concepto)
@@ -83,7 +89,7 @@ try {
     // Construir ORDER BY
     $orderClause = '';
     if ($orden['columna']) {
-        $columnas_validas = ['fecha_solicitud', 'proveedor_nombre', 'concepto', 'ceco', 'total_cordobas', 'estado', 'usuario_nombre'];
+        $columnas_validas = ['fecha_solicitud', 'proveedor_nombre', 'proveedor_reembolso_nombre', 'concepto', 'ceco', 'total_cordobas', 'estado', 'usuario_nombre'];
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
             
@@ -91,6 +97,8 @@ try {
             $columna_real = $orden['columna'];
             if ($orden['columna'] === 'proveedor_nombre') {
                 $columna_real = 'p.nombre';
+            } elseif ($orden['columna'] === 'proveedor_reembolso_nombre') {
+                $columna_real = 'pr.nombre';
             } elseif ($orden['columna'] === 'usuario_nombre') {
                 $columna_real = 'o.Nombre';
             } elseif ($orden['columna'] === 'ceco') {
@@ -109,6 +117,7 @@ try {
     $sqlCount = "SELECT COUNT(*) as total 
                  FROM reembolsos_solicitudes s
                  LEFT JOIN proveedores p ON s.id_proveedor = p.id
+                 LEFT JOIN proveedores pr ON s.id_proveedor_reembolso = pr.id
                  LEFT JOIN Operarios o ON s.usuario_registro = o.CodOperario
                  $whereClause";
     $stmtCount = $conn->prepare($sqlCount);
@@ -125,10 +134,12 @@ try {
                 s.total_cordobas,
                 s.estado,
                 p.nombre as proveedor_nombre,
+                pr.nombre as proveedor_reembolso_nombre,
                 o.Nombre as usuario_nombre,
                 CONCAT(cc.Codigo, ' - ', cc.Nombre) as ceco_nombre
             FROM reembolsos_solicitudes s
             LEFT JOIN proveedores p ON s.id_proveedor = p.id
+            LEFT JOIN proveedores pr ON s.id_proveedor_reembolso = pr.id
             LEFT JOIN Operarios o ON s.usuario_registro = o.CodOperario
             LEFT JOIN CentroCostos cc ON s.ceco = cc.Codigo
             $whereClause

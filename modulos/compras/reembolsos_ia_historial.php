@@ -75,6 +75,10 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
                                             Proveedor
                                             <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                         </th>
+                                        <th data-column="proveedor_reembolso_nombre" data-type="text">
+                                            Reembolsar a
+                                            <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                        </th>
                                         <th data-column="concepto" data-type="text">
                                             Concepto
                                             <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
@@ -100,7 +104,7 @@ $proveedores = $stmtProv->fetchAll(PDO::FETCH_ASSOC);
                                 </thead>
                                 <tbody id="tablaReembolsosBody">
                                     <tr>
-                                        <td colspan="8" class="text-center py-4 text-muted">
+                                        <td colspan="9" class="text-center py-4 text-muted">
                                             Cargando registros...
                                         </td>
                                     </tr>
