@@ -82,7 +82,8 @@ try {
     if (!empty($visita_ids)) {
         $placeholdersTareas = implode(',', array_fill(0, count($visita_ids), '?'));
         $stmtT = $db->prepare("
-            SELECT t.id, t.visita_id, t.ticket_id, t.titulo, t.trabajo_realizado, t.completado_100
+            SELECT t.id, t.visita_id, t.ticket_id, t.trabajo_realizado, t.completado_100,
+                   (SELECT GROUP_CONCAT(f.foto ORDER BY f.orden SEPARATOR '||') FROM mtto_informe_tareas_fotos f WHERE f.tarea_id = t.id) as fotos
               FROM mtto_informe_tareas t
              WHERE t.visita_id IN ($placeholdersTareas)
              ORDER BY t.id ASC
