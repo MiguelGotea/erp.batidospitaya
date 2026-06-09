@@ -19,7 +19,6 @@ if (!tienePermiso('agenda_mantenimiento', 'vista', $cargoOperario)) {
 $puedeVerTodos = tienePermiso('agenda_mantenimiento', 'todos_colaboradores', $cargoOperario);
 $esAdminCaja = tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario);
 $puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso', $cargoOperario);
-$puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario);
 
 ?>
 <!DOCTYPE html>
@@ -129,30 +128,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
             <?php echo renderHeader($usuario, 'Control de Informes Diarios'); ?>
 
             <div class="container-fluid p-4">
-                <div class="mb-4 d-flex justify-content-end align-items-center gap-3 no-print">
-                    <?php if ($puedeVerReporteSemanal): ?>
-                        <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border px-3 gap-2">
-                            <div class="d-flex align-items-center gap-1">
-                                <label class="small fw-bold text-muted mb-0">Semana:</label>
-                                <input type="number" id="inputSemanaReporte"
-                                    class="form-control form-control-sm border-0 bg-light rounded-pill text-center fw-bold"
-                                    style="width: 70px;" placeholder="#">
-                                <span id="spanSemanaActual" class="badge bg-secondary rounded-pill opacity-75"
-                                    style="font-size: 0.7rem;"></span>
-                            </div>
-                            <div class="vr mx-1"></div>
-                            <div class="d-flex align-items-center gap-1">
-                                <label class="small fw-bold text-muted mb-0">C$:</label>
-                                <input type="number" id="inputCostoKmReporte"
-                                    class="form-control form-control-sm border-0 bg-light rounded-pill text-center fw-bold"
-                                    style="width: 60px;" value="5">
-                            </div>
-                            <button onclick="abrirModalReporte()" class="btn btn-pitaya btn-sm rounded-pill px-3 ms-2">
-                                <i class="fas fa-file-invoice-dollar me-1"></i>Ver Reporte
-                            </button>
-                        </div>
-                    <?php endif; ?>
-                </div>
+
 
                 <!-- Botón Flotante Herramientas -->
                 <div class="fab-container">
@@ -161,6 +137,12 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
                             <span class="fab-label">Nuevo Reporte</span>
                             <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
                         </a>
+                        <?php if (tienePermiso('agenda_mantenimiento', 'reporte_semanal', $cargoOperario)): ?>
+                        <a href="resumen_semanal_informes_mantenimiento.php" class="fab-option">
+                            <span class="fab-label">Reporte Semanal</span>
+                            <div class="fab-icon-holder"><i class="fas fa-chart-bar"></i></div>
+                        </a>
+                        <?php endif; ?>
                     </div>
                     <div class="btn-floating-pitaya" title="Herramientas">
                         <i class="fas fa-wrench"></i>
@@ -375,56 +357,7 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
         </div>
     </div>
 
-    <!-- Modal Reporte Semanal -->
-    <div class="modal fade no-print" id="modalKmReporteSemanal_Unico" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header bg-white border-0 py-3">
-                    <h5 class="modal-title fw-bold text-primary">
-                        <i class="fas fa-file-invoice-dollar me-2"></i>Resumen de KM y Costos Semanal
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4 bg-light">
-                    <div id="rangoFechasTexto"
-                        class="text-muted small mb-3 fw-bold ps-2 border-start border-primary border-4">---</div>
 
-                    <div id="alertaReembolso" class="alert alert-warning d-none" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Esta semana ya cuenta con una solicitud de reembolso vinculada. No se recomienda generar
-                        duplicados.
-                    </div>
-
-                    <div class="table-responsive bg-white rounded-4 shadow-sm">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-white">
-                                <tr>
-                                    <th class="ps-4 py-3" style="width: 250px;">Detalle</th>
-                                    <th class="py-3" style="min-width: 200px;">Sucursales</th>
-                                    <th class="text-center py-3">Registros</th>
-                                    <th class="text-center py-3">KM Totales</th>
-                                    <th class="text-end pe-4 py-3">Total Estimado</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaCuerpoModal">
-                                <!-- Datos cargados por AJAX -->
-                            </tbody>
-                            <tfoot id="tablaPieModal" class="table-light">
-                                <!-- Totales -->
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 bg-white">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
-                        data-bs-dismiss="modal">Cerrar</button>
-                    <button id="btnIrAReembolso" class="btn btn-pitaya px-4 rounded-pill" onclick="enviarAReembolso()">
-                        <i class="fas fa-external-link-alt me-2"></i>Verificar y Generar Orden de Reembolso
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -434,151 +367,6 @@ $puedeVerReporteSemanal = tienePermiso('agenda_mantenimiento', 'reporte_semanal'
         const esAdminCaja = <?= $esAdminCaja ? 'true' : 'false' ?>;
         const puedeVerTodos = <?= $puedeVerTodos ? 'true' : 'false' ?>;
         const puedeGenerarReembolso = <?= $puedeGenerarReembolso ? 'true' : 'false' ?>;
-
-        const depreciacionFija = 150.00;
-        let infoSemanaActual = null;
-
-        $(document).ready(function () {
-            cargarSemanaActual();
-        });
-
-        async function cargarSemanaActual() {
-            try {
-                const response = await $.post('ajax/reporte_semanal_handler.php', { action: 'get_current_week' });
-                if (response.success) {
-                    $('#inputSemanaReporte').val(response.numero_semana);
-                    $('#spanSemanaActual').text('Semana Actual: ' + response.numero_semana);
-                }
-            } catch (err) { console.error(err); }
-        }
-
-        async function abrirModalReporte() {
-            const numSemana = $('#inputSemanaReporte').val();
-            const costoKm = parseFloat($('#inputCostoKmReporte').val()) || 5;
-
-            if (!numSemana) {
-                Swal.fire('Atención', 'Ingresa el número de semana', 'warning');
-                return;
-            }
-
-            Swal.fire({
-                title: 'Generando Resumen...',
-                didOpen: () => { Swal.showLoading(); }
-            });
-
-            try {
-                const res = await $.post('ajax/reporte_semanal_handler.php', {
-                    action: 'get_datos_semanales',
-                    numero_semana: numSemana
-                });
-
-                if (res.success) {
-                    infoSemanaActual = res;
-                    $('#rangoFechasTexto').text(`Semana #${numSemana} | Rango: ${res.rango.desde} al ${res.rango.hasta}`);
-
-                    // Verificar si ya existe reembolso
-                    const yaReembolsado = res.resumen.some(r => r.reembolso_id !== null && r.reembolso_id > 0);
-                    if (yaReembolsado) {
-                        $('#alertaReembolso').removeClass('d-none');
-                        $('#btnIrAReembolso').addClass('disabled').attr('title', 'Ya se ha generado un reembolso para esta semana');
-                    } else {
-                        $('#alertaReembolso').addClass('d-none');
-                        $('#btnIrAReembolso').removeClass('disabled').removeAttr('title');
-                    }
-
-                    let html = '';
-                    let sumTotalKm = 0, sumTotalComb = 0, sumTotalDep = 0, sumTotalFinal = 0;
-
-                    const agrupado = {};
-                    res.detalle.forEach(d => {
-                        const key = d.cod_operario;
-                        if (!agrupado[key]) agrupado[key] = { name: `${d.Nombre} ${d.Apellido}`, logs: [] };
-                        agrupado[key].logs.push(d);
-                    });
-
-                    for (const opId in agrupado) {
-                        const op = agrupado[opId];
-                        const resumenOp = res.resumen.find(r => r.CodOperario == opId);
-                        const kmTotalOp = parseFloat(resumenOp.km_total) || 0;
-                        const combustibleOp = kmTotalOp * costoKm;
-                        const depOp = depreciacionFija;
-                        const totalOp = combustibleOp + depOp;
-
-                        sumTotalKm += kmTotalOp;
-                        sumTotalComb += combustibleOp;
-                        sumTotalDep += depOp;
-                        sumTotalFinal += totalOp;
-
-                        html += `
-                            <tr class="table-light">
-                                <td colspan="5" class="ps-4 fw-bold text-dark" style="background-color: #f8fcfb;">
-                                    <i class="fas fa-user-circle me-2 text-primary"></i>${op.name}
-                                </td>
-                            </tr>
-                        `;
-
-                        op.logs.forEach(log => {
-                            const kmDia = (parseFloat(log.km_final) || 0) - (parseFloat(log.km_inicial) || 0);
-                            const costoDia = kmDia * costoKm;
-                            const fotoHtml = log.km_foto_final ? 
-                                `<i class="fas fa-camera ms-2 text-muted cursor-pointer" title="Ver foto odómetro" onclick="window.open('uploads/informes/${log.km_foto_final}', '_blank')"></i>` : '';
-                            
-                            html += `
-                                <tr class="small text-muted border-0">
-                                    <td class="ps-5 py-1" style="white-space: nowrap;">${log.fecha}</td>
-                                    <td class="py-1">
-                                        <div class="small" title="${log.sucursales_list || ''}">
-                                            ${log.sucursales_list || '<span class="opacity-50">---</span>'}
-                                        </div>
-                                    </td>
-                                    <td class="text-center py-1" style="white-space: nowrap;">
-                                        ${parseFloat(log.km_inicial).toLocaleString()} → ${parseFloat(log.km_final).toLocaleString()}
-                                        ${fotoHtml}
-                                    </td>
-                                    <td class="text-center py-1 fw-bold" style="white-space: nowrap;">${kmDia} km</td>
-                                    <td class="text-end pe-4 py-1" style="white-space: nowrap;">C$ ${costoDia.toFixed(2)}</td>
-                                </tr>
-                            `;
-                        });
-
-                        html += `
-                            <tr class="fw-bold border-bottom shadow-sm">
-                                <td colspan="3" class="text-end text-primary ps-5 py-2">Total Colaborador (incluye C$ 150 fijo):</td>
-                                <td class="text-center text-primary py-2">${kmTotalOp.toLocaleString()} km</td>
-                                <td class="text-end pe-4 text-dark py-2">C$ ${totalOp.toFixed(2)}</td>
-                            </tr>
-                        `;
-                    }
-
-                    $('#tablaCuerpoModal').html(html);
-                    $('#tablaPieModal').html(`
-                        <tr>
-                            <td colspan="3" class="text-end fw-bold py-3 ps-4 fs-5">TOTAL SEMANAL ESTIMADO:</td>
-                            <td class="text-center fw-bold text-primary py-3 fs-5">${sumTotalKm.toLocaleString()} km</td>
-                            <td class="text-end pe-4 fw-bold text-pitaya py-3 fs-5">C$ ${sumTotalFinal.toFixed(2)}</td>
-                        </tr>
-                    `);
-
-                    Swal.close();
-                    const modal = new bootstrap.Modal(document.getElementById('modalKmReporteSemanal_Unico'));
-                    modal.show();
-                } else {
-                    Swal.fire('Error', res.message, 'error');
-                }
-            } catch (err) {
-                console.error(err);
-                Swal.fire('Error', 'No se pudo cargar la información', 'error');
-            }
-        }
-
-        function enviarAReembolso() {
-            const numSemana = $('#inputSemanaReporte').val();
-            const costoKm = $('#inputCostoKmReporte').val() || 5;
-            const anio = new Date().getFullYear();
-
-            const url = `../compras/reembolsos_ia_nuevo.php?id=15&from_km=1&semana=${numSemana}&anio=${anio}&costo=${costoKm}`;
-            window.open(url, '_blank');
-        }
     </script>
     <script src="js/historial_informes.js?v=<?= mt_rand(1, 10000) ?>"></script>
 </body>

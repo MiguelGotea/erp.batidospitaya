@@ -128,9 +128,6 @@ if (!$numSemana) {
         <!-- HERO -->
         <div class="page-hero no-print">
             <div class="d-flex align-items-center gap-3 mb-1">
-                <a href="historial_informes.php" class="btn btn-sm btn-light btn-light rounded-pill px-3 opacity-75">
-                    <i class="fas fa-arrow-left me-1"></i>Volver
-                </a>
                 <h4 class="mb-0 fw-bold"><i class="fas fa-chart-bar me-2"></i>Resumen Semanal de Informes</h4>
             </div>
             <p class="mb-0 opacity-75 small mt-1">Kilometrajes, costos consolidados y detalle de visitas por colaborador</p>
@@ -393,7 +390,7 @@ function renderDetalle(informes) {
                                 <div class="tarea-row">
                                     ${badge}
                                     <div class="flex-grow-1">
-                                        <small class="fw-bold d-block">${escHtml(t.titulo || 'Sin título')}</small>
+                                        <small class="fw-bold d-block">${escHtml(t.trabajo_realizado || 'Sin descripción')}</small>
                                         <small class="text-muted">${escHtml(t.trabajo_realizado || '')}</small>
                                     </div>
                                     <div>${fotosT}</div>
