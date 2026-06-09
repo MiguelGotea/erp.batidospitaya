@@ -100,7 +100,7 @@ function renderizarTabla(datos) {
         tr.append(`<td><span class="badge bg-light text-dark">${row.ceco_nombre || row.ceco}</span></td>`);
         
         const monedaSimbolo = row.moneda === 'Dolares' ? 'US$' : 'C$';
-        tr.append(`<td class="fw-bold text-primary">${monedaSimbolo} ${parseFloat(row.total_cordobas).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>`);
+        tr.append(`<td class="fw-bold text-primary">${monedaSimbolo} ${parseFloat(row.total_cordobas).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>`);
 
         const estadoClass = row.estado === 'pendiente' ? 'badge bg-warning text-dark' : 'badge bg-success';
         tr.append(`<td><span class="${estadoClass}">${row.estado.toUpperCase()}</span></td>`);
