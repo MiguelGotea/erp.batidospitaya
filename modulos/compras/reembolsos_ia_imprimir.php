@@ -258,12 +258,32 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
         @media screen and (max-width: 600px) {
             .container { margin: 2mm auto; }
             body { font-size: 10px; }
+            /* En mobile: mover el panel al fondo para no tapar el documento
+               y agregar scroll por si los botones no caben */
+            .print-options {
+                top: auto;
+                bottom: 12px;
+                right: 12px;
+                left: 12px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 10px 12px;
+                gap: 8px;
+                max-height: none;
+            }
+            .print-options .btn-print,
+            .print-options .btn-firmar {
+                flex: 1 1 auto;
+                min-width: 120px;
+            }
         }
+
         .print-options {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -272,6 +292,8 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
             flex-direction: column;
             gap: 10px;
             border: 1px solid #51B8AC;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
         }
         .btn-print {
             padding: 10px 20px;
