@@ -14,7 +14,7 @@ header('Content-Type: application/json');
 
 try {
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     if (!$input) {
         throw new Exception('Datos inválidos.');
     }
@@ -23,13 +23,13 @@ try {
     $id_proveedor_reembolso = !empty($input['id_proveedor_reembolso']) ? $input['id_proveedor_reembolso'] : $id_proveedor; // Por defecto: mismo proveedor
     $id_cuenta_proveedor = !empty($input['id_cuenta_proveedor']) ? $input['id_cuenta_proveedor'] : null;
     $concepto = !empty($input['concepto']) ? trim($input['concepto']) : '';
-    $ceco = !empty($input['ceco']) ? (int)$input['ceco'] : null;
+    $ceco = !empty($input['ceco']) ? (int) $input['ceco'] : null;
     $fecha_solicitud = !empty($input['fecha_solicitud']) ? $input['fecha_solicitud'] : date('Y-m-d');
     $moneda = !empty($input['moneda']) ? $input['moneda'] : 'Cordobas';
-    $total_cordobas = isset($input['total_cordobas']) ? (float)$input['total_cordobas'] : 0;
+    $total_cordobas = isset($input['total_cordobas']) ? (float) $input['total_cordobas'] : 0;
     $items = isset($input['items']) ? $input['items'] : [];
     $usuario_registro = $_SESSION['usuario_id'] ?? 1;
-    $id_solicitud = !empty($input['id']) ? (int)$input['id'] : null;
+    $id_solicitud = !empty($input['id']) ? (int) $input['id'] : null;
 
     if (empty($concepto)) {
         throw new Exception('El concepto es obligatorio.');
@@ -115,3 +115,4 @@ try {
         'message' => $e->getMessage()
     ]);
 }
+
