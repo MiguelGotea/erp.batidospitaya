@@ -36,8 +36,7 @@ if (!$solicitud) {
 // Determinar si el usuario tiene permiso de firma electrónica
 $usuario       = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'] ?? null;
-$esAdmin       = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-$puedeFirema   = $esAdmin || ($cargoOperario && tienePermiso('reembolsos_ia_plantilla', 'firma_electronica', $cargoOperario));
+$puedeFirema   = $cargoOperario && tienePermiso('reembolsos_ia_plantilla', 'firma_electronica', $cargoOperario);
 $yaFirmada     = !empty($solicitud['firma_imagen']);
 
 // Obtener detalles

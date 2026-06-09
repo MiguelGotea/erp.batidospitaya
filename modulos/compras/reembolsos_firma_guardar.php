@@ -44,8 +44,7 @@ if (!$cargoOperario) {
 }
 
 // ── 2. Verificar permiso firma_electronica ────────────────────────────────────
-$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-if (!$esAdmin && !tienePermiso('reembolsos_ia_plantilla', 'firma_electronica', $cargoOperario)) {
+if (!tienePermiso('reembolsos_ia_plantilla', 'firma_electronica', $cargoOperario)) {
     echo json_encode(['success' => false, 'error' => 'No tiene permiso para firmar órdenes.']);
     exit();
 }
