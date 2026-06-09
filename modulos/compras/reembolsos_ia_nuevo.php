@@ -86,6 +86,143 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
             text-transform: uppercase;
             margin-bottom: 6px;
         }
+
+        /* ── Cámara Premium ── */
+        #camera-viewport {
+            position: relative;
+            background: #000;
+            min-height: 300px;
+            cursor: crosshair;
+            overflow: hidden;
+        }
+        #video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* Anillo de enfoque táctil */
+        #focus-ring {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border: 2px solid #FFD700;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+        }
+        #focus-ring.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        #focus-ring.locked {
+            border-color: #00FF88;
+            opacity: 0.7;
+        }
+        /* Rejilla de enfoque (corners) */
+        #focus-ring::before, #focus-ring::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: inherit;
+            border-style: solid;
+        }
+        #focus-ring::before {
+            top: -1px; left: -1px;
+            border-width: 2px 0 0 2px;
+        }
+        #focus-ring::after {
+            bottom: -1px; right: -1px;
+            border-width: 0 2px 2px 0;
+        }
+        /* Grid de ayuda visual (regla de tercios) */
+        #cam-grid {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.15;
+            background-image:
+                linear-gradient(to right, #fff 1px, transparent 1px),
+                linear-gradient(to bottom, #fff 1px, transparent 1px);
+            background-size: 33.33% 33.33%;
+        }
+        /* Toast de enfoque */
+        #focus-toast {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.65);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        /* Controles inferiores de cámara */
+        .cam-controls {
+            background: #111;
+            padding: 10px 16px 14px;
+        }
+        .cam-controls .zoom-label {
+            color: #aaa;
+            font-size: 0.72rem;
+            margin-bottom: 4px;
+        }
+        #zoomRange {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            outline: none;
+        }
+        #zoomRange::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: #FFD700;
+            cursor: pointer;
+            box-shadow: 0 0 4px rgba(255,215,0,0.6);
+        }
+        .btn-torch {
+            background: transparent;
+            border: 1.5px solid #555;
+            color: #aaa;
+            border-radius: 50%;
+            width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .btn-torch.on {
+            border-color: #FFD700;
+            color: #FFD700;
+            box-shadow: 0 0 8px rgba(255,215,0,0.5);
+        }
+        .btn-capture {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: #fff;
+            border: 4px solid rgba(255,255,255,0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            color: #333;
+            transition: transform 0.1s, background 0.1s;
+            cursor: pointer;
+        }
+        .btn-capture:active {
+            transform: scale(0.92);
+            background: #ddd;
+        }
     </style>
 </head>
 <body>
@@ -286,25 +423,64 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
         <p class="text-muted mt-3">Estamos leyendo tu factura, por favor espera.</p>
     </div>
 
-    <!-- Modal para Cámara -->
+    <!-- Modal para Cámara Premium -->
     <div class="modal fade" id="modalCamara" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 25px !important; overflow: hidden;">
-                <div class="modal-header bg-dark text-white border-0">
-                    <h5 class="modal-title"><i class="fas fa-camera me-2"></i> Capturar Factura</h5>
-                    <button type="button" class="btn-close btn-close-white" onclick="cerrarCamara()"></button>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px !important; overflow: hidden;">
+
+                <!-- Header -->
+                <div class="modal-header bg-dark text-white border-0 py-2 px-3">
+                    <h6 class="modal-title mb-0"><i class="fas fa-camera me-2"></i> Capturar Factura</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="cam-focus-status" class="badge bg-secondary" style="font-size:0.65rem;">AUTO</span>
+                        <button type="button" class="btn-close btn-close-white" onclick="cerrarCamara()"></button>
+                    </div>
                 </div>
-                <div class="modal-body p-0 position-relative bg-black" style="min-height: 300px;">
-                    <video id="video" autoplay playsinline class="w-100 h-100" style="object-fit: cover;"></video>
+
+                <!-- Viewport con overlay -->
+                <div id="camera-viewport" style="min-height: 320px;">
+                    <video id="video" autoplay playsinline muted></video>
+                    <!-- Rejilla de regla de tercios -->
+                    <div id="cam-grid"></div>
+                    <!-- Anillo de enfoque táctil -->
+                    <div id="focus-ring"></div>
+                    <!-- Toast de estado de enfoque -->
+                    <div id="focus-toast">Toca para enfocar</div>
                     <canvas id="canvas" style="display:none;"></canvas>
                 </div>
-                <div class="modal-footer border-0 bg-dark d-flex justify-content-between p-3">
-                    <button type="button" class="btn btn-outline-light rounded-pill px-4" onclick="cerrarCamara()">Cancelar</button>
-                    <button type="button" class="btn btn-primary rounded-circle" style="width: 60px; height: 60px;" onclick="capturarFoto()">
-                        <i class="fas fa-camera fa-lg"></i>
-                    </button>
-                    <div style="width: 80px;"></div> <!-- Espaciador -->
+
+                <!-- Controles -->
+                <div class="cam-controls">
+                    <!-- Zoom slider -->
+                    <div id="zoom-control" style="display:none;">
+                        <div class="zoom-label d-flex justify-content-between">
+                            <span><i class="fas fa-search-minus me-1"></i>Zoom</span>
+                            <span id="zoom-value">1×</span>
+                        </div>
+                        <input type="range" id="zoomRange" min="1" max="5" step="0.1" value="1" oninput="aplicarZoom(this.value)">
+                    </div>
+
+                    <!-- Botones acción -->
+                    <div class="d-flex align-items-center justify-content-between mt-3">
+                        <!-- Cancelar -->
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 text-white border-secondary" onclick="cerrarCamara()">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+
+                        <!-- Disparo -->
+                        <button type="button" class="btn-capture" onclick="capturarFoto()" title="Tomar foto">
+                            <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                        </button>
+
+                        <!-- Linterna -->
+                        <button type="button" id="btnTorch" class="btn-torch" onclick="toggleLinterna()" title="Linterna" style="display:none;">
+                            <i class="fas fa-bolt"></i>
+                        </button>
+                        <!-- Placeholder si no hay linterna -->
+                        <div id="btnTorchPlaceholder" style="width:42px;"></div>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>

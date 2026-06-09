@@ -105,17 +105,37 @@ function cargarDatosEdicion(id) {
     });
 }
 
+// ─── Variables de cámara ─────────────────────────────────────────────────
+let videoTrack = null;
+let torchActivo = false;
+let focusToastTimer = null;
+
 function abrirCamara() {
     const video = document.getElementById('video');
 
-    navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }, // Preferir cámara trasera
-        audio: false
-    })
+    const constraints = {
+        audio: false,
+        video: {
+            facingMode: { ideal: 'environment' },
+            width:  { ideal: 3840 },
+            height: { ideal: 2160 },
+            focusMode: { ideal: 'continuous' }
+        }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
         .then(s => {
             stream = s;
+            videoTrack = s.getVideoTracks()[0];
             video.srcObject = stream;
             modalCamara.show();
+
+            video.onloadedmetadata = () => {
+                inicializarControlesCamara();
+            };
+
+            // Enfoque táctil
+            document.getElementById('camera-viewport').addEventListener('click', enfocarEnPunto);
         })
         .catch(err => {
             console.error("Error al acceder a la cámara:", err);
@@ -123,31 +143,157 @@ function abrirCamara() {
         });
 }
 
+function inicializarControlesCamara() {
+    if (!videoTrack) return;
+    const caps = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+
+    // Zoom
+    if (caps.zoom) {
+        const zoomRange = document.getElementById('zoomRange');
+        zoomRange.min   = caps.zoom.min;
+        zoomRange.max   = caps.zoom.max;
+        zoomRange.step  = caps.zoom.step || 0.1;
+        zoomRange.value = caps.zoom.min;
+        document.getElementById('zoom-control').style.display = 'block';
+    }
+
+    // Linterna
+    if (caps.torch) {
+        document.getElementById('btnTorch').style.display = 'flex';
+        document.getElementById('btnTorchPlaceholder').style.display = 'none';
+    }
+
+    // Intentar enfoque continuo
+    if (caps.focusMode && caps.focusMode.includes('continuous')) {
+        videoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
+            .catch(() => {});
+        document.getElementById('cam-focus-status').textContent = 'CONTÍNUO';
+        document.getElementById('cam-focus-status').className = 'badge bg-success';
+    }
+
+    mostrarFocusToast('Toca la pantalla para enfocar', 2000);
+}
+
+function enfocarEnPunto(e) {
+    const viewport = document.getElementById('camera-viewport');
+    const ring     = document.getElementById('focus-ring');
+    const rect     = viewport.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Posicionar el anillo
+    ring.style.left = x + 'px';
+    ring.style.top  = y + 'px';
+    ring.classList.remove('active', 'locked');
+    void ring.offsetWidth; // reflow
+    ring.classList.add('active');
+
+    document.getElementById('cam-focus-status').textContent = 'ENFOCANDO...';
+    document.getElementById('cam-focus-status').className = 'badge bg-warning text-dark';
+
+    // Intentar enfoque por punto (pointOfInterest) si el navegador lo soporta
+    if (videoTrack) {
+        const xRatio = x / rect.width;
+        const yRatio = y / rect.height;
+
+        videoTrack.applyConstraints({
+            advanced: [{ pointsOfInterest: [{ x: xRatio, y: yRatio }], focusMode: 'single-shot' }]
+        }).then(() => {
+            ring.classList.add('locked');
+            document.getElementById('cam-focus-status').textContent = 'ENFOCADO';
+            document.getElementById('cam-focus-status').className = 'badge bg-success';
+            mostrarFocusToast('✓ Enfocado', 1500);
+
+            // Volver a continuo tras 2s
+            setTimeout(() => {
+                videoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+                document.getElementById('cam-focus-status').textContent = 'CONTINUO';
+            }, 2000);
+        }).catch(() => {
+            // Navegador no soporta pointsOfInterest, anillo igual se muestra
+            ring.classList.add('locked');
+            mostrarFocusToast('Enfoque ajustado', 1200);
+            document.getElementById('cam-focus-status').textContent = 'AUTO';
+            document.getElementById('cam-focus-status').className = 'badge bg-secondary';
+        });
+    }
+
+    // Ocultar anillo después de 2.5s
+    setTimeout(() => ring.classList.remove('active', 'locked'), 2500);
+}
+
+function mostrarFocusToast(msg, duracion) {
+    const toast = document.getElementById('focus-toast');
+    if (focusToastTimer) clearTimeout(focusToastTimer);
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    focusToastTimer = setTimeout(() => { toast.style.opacity = '0'; }, duracion || 1500);
+}
+
+function aplicarZoom(valor) {
+    if (!videoTrack) return;
+    const z = parseFloat(valor);
+    document.getElementById('zoom-value').textContent = z.toFixed(1) + '×';
+    videoTrack.applyConstraints({ advanced: [{ zoom: z }] }).catch(() => {});
+}
+
+function toggleLinterna() {
+    if (!videoTrack) return;
+    torchActivo = !torchActivo;
+    videoTrack.applyConstraints({ advanced: [{ torch: torchActivo }] })
+        .then(() => {
+            const btn = document.getElementById('btnTorch');
+            btn.classList.toggle('on', torchActivo);
+        })
+        .catch(() => {
+            torchActivo = false;
+            Swal.fire('Linterna', 'Este dispositivo no soporta linterna.', 'info');
+        });
+}
+
 function cerrarCamara() {
+    // Apagar linterna si estaba activa
+    if (torchActivo && videoTrack) {
+        videoTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+        torchActivo = false;
+    }
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
+        stream = null;
+        videoTrack = null;
     }
+    // Limpiar listener de tap-to-focus
+    const vp = document.getElementById('camera-viewport');
+    if (vp) vp.replaceWith(vp.cloneNode(true)); // elimina listeners sin perder el DOM
     modalCamara.hide();
+
+    // Resetear controles
+    document.getElementById('zoom-control').style.display = 'none';
+    document.getElementById('btnTorch').style.display = 'none';
+    document.getElementById('btnTorchPlaceholder').style.display = 'block';
+    document.getElementById('zoomRange').value = 1;
+    document.getElementById('zoom-value').textContent = '1×';
+    document.getElementById('cam-focus-status').textContent = 'AUTO';
+    document.getElementById('cam-focus-status').className = 'badge bg-secondary';
+    document.getElementById('focus-ring').className = '';
 }
 
 function capturarFoto() {
-    const video = document.getElementById('video');
+    const video  = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
 
-    // Ajustar dimensiones del canvas al video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Usar resolución nativa del stream para máxima calidad
+    canvas.width  = video.videoWidth  || video.clientWidth;
+    canvas.height = video.videoHeight || video.clientHeight;
 
-    // Dibujar frame
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Convertir a blob y procesar
     canvas.toBlob(blob => {
         const file = new File([blob], "captura_camara.jpg", { type: "image/jpeg" });
         cerrarCamara();
         procesarFoto(file);
-    }, 'image/jpeg', 0.85);
+    }, 'image/jpeg', 0.92);  // calidad subida a 0.92
 }
 
 function agregarFilaManual() {
