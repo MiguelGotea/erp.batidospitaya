@@ -597,7 +597,11 @@ function buscarEnOpciones(input) {
 function formatearFecha(fecha) {
     if (!fecha) return '-';
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    const d = new Date(fecha);
-    const año = String(d.getFullYear()).slice(-2);
-    return `${String(d.getDate()).padStart(2, '0')}-${meses[d.getMonth()]}-${año}`;
+    // Parsear manualmente para evitar que "YYYY-MM-DD" se interprete como UTC
+    // y provoque que la fecha local muestre un día antes (ej: Nicaragua UTC-6)
+    const partes = fecha.substring(0, 10).split('-');
+    const año = String(partes[0]).slice(-2);
+    const mes = parseInt(partes[1], 10) - 1;
+    const dia = parseInt(partes[2], 10);
+    return `${String(dia).padStart(2, '0')}-${meses[mes]}-${año}`;
 }
