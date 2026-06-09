@@ -571,22 +571,26 @@ function getPhotoClass($path)
                     <td class="text-center" style="width: 100px; color: #999;">v2-Nov24</td>
                 </tr>
                 <tr>
-                    <td class="v-label" style="width: 55px;" colspan="4">Fecha: <span class="v-value"><?= date('d-M-y', strtotime($solicitud['fecha_solicitud'])) ?></span></td>
+                    <td class="v-label" colspan="3">Fecha: <span class="v-value"><?= date('d-M-y', strtotime($solicitud['fecha_solicitud'])) ?></span></td>
                     <td class="v-label" style="width: 55px;" rowspan="2">Autoriza:</td>
-                    <td class="v-value" rowspan="2" style="vertical-align: middle; text-align: center; min-width: 130px;">
+                    <td class="v-value" style="width: 120px; vertical-align: middle; text-align: center;">
                         <?php if ($yaFirmada): ?>
-                            <div class="firma-display">
-                                <img src="/<?= htmlspecialchars($solicitud['firma_imagen']) ?>" alt="Firma electrónica">
-                                <div class="firma-meta">
-                                    <?= htmlspecialchars($solicitud['firmante_nombre'] ?? 'Usuario') ?><br>
-                                    <?= date('d/m/Y H:i', strtotime($solicitud['firma_firmado_at'])) ?>
-                                </div>
-                            </div>
+                            <span style="font-size: 8px; font-weight: bold;"><?= htmlspecialchars($solicitud['firmante_nombre'] ?? '') ?></span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="v-value" rowspan="2" style="width: 130px; vertical-align: middle; text-align: center; padding: 3px;">
+                        <?php if ($yaFirmada): ?>
+                            <img src="/<?= htmlspecialchars($solicitud['firma_imagen']) ?>" alt="Firma" style="max-width:100%; max-height:65px; object-fit:contain;">
                         <?php endif; ?>
                     </td>
                 </tr>
                 <tr>
-                    <td class="v-label" colspan="4">Solicita: <span class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></span></td>
+                    <td class="v-label" colspan="3">Solicita: <span class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></span></td>
+                    <td class="v-value" style="vertical-align: middle; text-align: center;">
+                        <?php if ($yaFirmada): ?>
+                            <span style="font-size: 7.5px; color: #555;"><?= date('d/m/Y H:i', strtotime($solicitud['firma_firmado_at'])) ?></span>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             </table>
 
