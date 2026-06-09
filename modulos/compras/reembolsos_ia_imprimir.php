@@ -571,12 +571,9 @@ function getPhotoClass($path)
                     <td class="text-center" style="width: 100px; color: #999;">v2-Nov24</td>
                 </tr>
                 <tr>
-                    <td class="v-label" style="width: 55px;">Fecha:</td>
-                    <td class="v-value" style="width: 80px;"><?= date('d-M-y', strtotime($solicitud['fecha_solicitud'])) ?></td>
-                    <td class="v-label" style="width: 55px;">Solicita:</td>
-                    <td class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></td>
+                    <td class="v-label" style="width: 55px;" colspan="4">Fecha: <span class="v-value"><?= date('d-M-y', strtotime($solicitud['fecha_solicitud'])) ?></span></td>
                     <td class="v-label" style="width: 55px;" rowspan="2">Autoriza:</td>
-                    <td class="v-value" rowspan="2" style="vertical-align: middle; text-align: center; min-width: 120px;">
+                    <td class="v-value" rowspan="2" style="vertical-align: middle; text-align: center; min-width: 130px;">
                         <?php if ($yaFirmada): ?>
                             <div class="firma-display">
                                 <img src="/<?= htmlspecialchars($solicitud['firma_imagen']) ?>" alt="Firma electrónica">
@@ -589,8 +586,7 @@ function getPhotoClass($path)
                     </td>
                 </tr>
                 <tr>
-                    <td class="v-label">Concepto:</td>
-                    <td class="v-value" colspan="3"><?= htmlspecialchars($solicitud['concepto'] ?? '') ?></td>
+                    <td class="v-label" colspan="4">Solicita: <span class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></span></td>
                 </tr>
             </table>
 
