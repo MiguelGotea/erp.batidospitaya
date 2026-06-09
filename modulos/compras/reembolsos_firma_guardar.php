@@ -49,7 +49,6 @@ if (!tienePermiso('reembolsos_ia_plantilla', 'firma_electronica', $cargoOperario
     exit();
 }
 
-
 // ── 3. Leer y validar input ───────────────────────────────────────────────────
 $input = json_decode(file_get_contents('php://input'), true);
 
