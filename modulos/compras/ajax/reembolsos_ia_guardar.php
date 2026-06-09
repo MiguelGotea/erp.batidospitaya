@@ -31,6 +31,21 @@ try {
     $usuario_registro = $_SESSION['usuario_id'] ?? 1;
     $id_solicitud = !empty($input['id']) ? (int) $input['id'] : null;
 
+    // Bloquear edición si la orden ya está firmada
+    if ($id_solicitud) {
+        $stmtFirma = $conn->prepare("SELECT firma_imagen FROM reembolsos_solicitudes WHERE id = ? LIMIT 1");
+        $stmtFirma->execute([$id_solicitud]);
+        $firmaCheck = $stmtFirma->fetchColumn();
+        if (!empty($firmaCheck)) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Esta orden ya fue firmada electrónicamente y no puede ser modificada.'
+            ]);
+            exit();
+        }
+    }
+
     if (empty($concepto)) {
         throw new Exception('El concepto es obligatorio.');
     }

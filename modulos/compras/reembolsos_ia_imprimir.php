@@ -5,6 +5,7 @@
  */
 
 require_once '../../core/auth/auth.php';
+require_once '../../core/permissions/permissions.php';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -12,15 +13,17 @@ if (!$id) {
     die("ID de solicitud no proporcionado.");
 }
 
-// Obtener datos de la solicitud
+// Obtener datos de la solicitud (incluye campos de firma)
 $stmt = $conn->prepare("
     SELECT s.*, p.nombre as proveedor_nombre, cp.banco, cp.numero_cuenta, cp.titular, cp.moneda as cuenta_moneda, o.Nombre as usuario_nombre,
-           CONCAT(cc.Codigo, ' - ', cc.Nombre) as ceco_nombre
+           CONCAT(cc.Codigo, ' - ', cc.Nombre) as ceco_nombre,
+           CONCAT(of.Nombre, ' ', of.Apellido) as firmante_nombre
     FROM reembolsos_solicitudes s
     LEFT JOIN proveedores p ON s.id_proveedor = p.id
     LEFT JOIN cuenta_proveedor cp ON s.id_cuenta_proveedor = cp.id
     LEFT JOIN Operarios o ON s.usuario_registro = o.CodOperario
     LEFT JOIN CentroCostos cc ON s.ceco = cc.Codigo
+    LEFT JOIN Operarios of ON s.firma_firmado_por = of.CodOperario
     WHERE s.id = ?
 ");
 $stmt->execute([$id]);
@@ -29,6 +32,13 @@ $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$solicitud) {
     die("Solicitud no encontrada.");
 }
+
+// Determinar si el usuario tiene permiso de firma electrónica
+$usuario       = obtenerUsuarioActual();
+$cargoOperario = $usuario['CodNivelesCargos'] ?? null;
+$esAdmin       = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$puedeFirema   = $esAdmin || ($cargoOperario && tienePermiso('reembolsos_ia_plantilla', 'firma_electronica', $cargoOperario));
+$yaFirmada     = !empty($solicitud['firma_imagen']);
 
 // Obtener detalles
 $stmtDet = $conn->prepare("SELECT * FROM reembolsos_detalles WHERE id_solicitud = ?");
@@ -131,7 +141,121 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
             .page-break { page-break-after: always; }
             body { margin: 0; padding: 0; }
             .container { margin: 0 auto; width: 100%; max-width: 100%; border-left: none; border-right: none; }
+            .firma-display { display: block !important; }
         }
+
+        /* ── Firma Electrónica ───────────────────────────────────── */
+        .firma-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .firma-display img {
+            max-width: 140px;
+            max-height: 55px;
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+        .firma-meta {
+            font-size: 7.5px;
+            color: #555;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* ── Botón Firmar ────────────────────────────────────────── */
+        .btn-firmar {
+            padding: 10px 20px;
+            background: #2d7dd2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-firmar:hover { background: #1f5fa8; }
+
+        /* ── Modal Firma ─────────────────────────────────────────── */
+        .modal-firma-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+        .modal-firma-overlay.active { display: flex; }
+        .modal-firma-box {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+            width: 100%;
+            max-width: 460px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-firma-header {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 14px 18px;
+            font-weight: 700;
+            font-size: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-firma-header .instruccion {
+            font-size: 12px;
+            font-weight: 400;
+            color: #aaa;
+            margin-top: 2px;
+        }
+        .modal-firma-body { padding: 16px; }
+        #canvasFirma {
+            width: 100%;
+            height: 180px;
+            background: #fff;
+            border: 2px dashed #999;
+            border-radius: 8px;
+            display: block;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        #canvasFirma.has-stroke { border-color: #2d7dd2; border-style: solid; }
+        .modal-firma-footer {
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+            background: #f7f7f7;
+            border-top: 1px solid #e0e0e0;
+        }
+        .modal-firma-footer button {
+            flex: 1;
+            min-height: 44px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity .2s;
+        }
+        .modal-firma-footer button:disabled { opacity: .4; cursor: not-allowed; }
+        .btn-limpiar-firma { background: #e9ecef; color: #333; }
+        .btn-limpiar-firma:hover:not(:disabled) { background: #dee2e6; }
+        .btn-confirmar-firma { background: #2d7dd2; color: #fff; }
+        .btn-confirmar-firma:hover:not(:disabled) { background: #1f5fa8; }
+        .btn-cancelar-firma { background: #6c757d; color: #fff; flex: 0 0 auto; padding: 0 16px; }
+        .btn-cancelar-firma:hover { background: #5a6268; }
         @media screen and (max-width: 600px) {
             .container { margin: 2mm auto; }
             body { font-size: 10px; }
@@ -303,6 +427,11 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
         <button class="btn-print" onclick="prepararImpresion()">
             <i class="fas fa-print me-2"></i> Imprimir
         </button>
+        <?php if ($puedeFirema && !$yaFirmada): ?>
+        <button class="btn-firmar" id="btnFirmarOrden" onclick="abrirModalFirma()">
+            <i class="fas fa-signature"></i> Firmar Orden
+        </button>
+        <?php endif; ?>
         <div style="font-size: 9px; color: #666; margin-top: 5px;">
             Pasa el mouse sobre una foto para recortarla.
         </div>
@@ -322,7 +451,17 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
                     <td class="v-label">Solicita:</td>
                     <td class="v-value"><?= htmlspecialchars($solicitud['usuario_nombre']) ?></td>
                     <td class="v-label">Autoriza:</td>
-                    <td class="v-value"></td>
+                    <td class="v-value">
+                        <?php if ($yaFirmada): ?>
+                        <div class="firma-display">
+                            <img src="/<?= htmlspecialchars($solicitud['firma_imagen']) ?>" alt="Firma electrónica">
+                            <div class="firma-meta">
+                                <?= htmlspecialchars($solicitud['firmante_nombre'] ?? 'Usuario') ?><br>
+                                <?= date('d/m/Y H:i', strtotime($solicitud['firma_firmado_at'])) ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             </table>
 
@@ -426,6 +565,29 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
         <?php endif; ?>
     </div>
 
+    <!-- Modal de Firma Electrónica -->
+    <?php if ($puedeFirema && !$yaFirmada): ?>
+    <div class="modal-firma-overlay no-print" id="modalFirmaOverlay">
+        <div class="modal-firma-box">
+            <div class="modal-firma-header">
+                <div>
+                    <div><i class="fas fa-signature" style="margin-right:6px;"></i>Firma Electrónica</div>
+                    <div class="instruccion">Firme con su dedo o mouse en el área blanca</div>
+                </div>
+                <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;" onclick="cerrarModalFirma()" title="Cerrar">&times;</button>
+            </div>
+            <div class="modal-firma-body">
+                <canvas id="canvasFirma" width="800" height="300"></canvas>
+            </div>
+            <div class="modal-firma-footer">
+                <button class="btn-limpiar-firma" id="btnLimpiarFirma" onclick="limpiarCanvasFirma()">Limpiar</button>
+                <button class="btn-confirmar-firma" id="btnConfirmarFirma" onclick="confirmarFirma()" disabled>Confirmar Firma</button>
+                <button class="btn-cancelar-firma" onclick="cerrarModalFirma()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Modal de Recorte -->
     <div class="modal fade no-print" id="modalCrop" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -469,6 +631,194 @@ $detalles = $stmtDet->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     
+    <?php if ($puedeFirema && !$yaFirmada): ?>
+    <script>
+    /* ================================================================
+       FIRMA ELECTRÓNICA — Canvas con soporte Mouse + Touch
+    ================================================================ */
+    (function() {
+        const ORDEN_ID   = <?= (int)$id ?>;
+        const ENDPOINT   = '/modulos/compras/reembolsos_firma_guardar.php';
+
+        let canvas, ctx, isDrawing = false, hasStroke = false;
+        let lastX = 0, lastY = 0;
+
+        // ── Inicialización ──────────────────────────────────────────
+        function initCanvas() {
+            canvas = document.getElementById('canvasFirma');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+
+            // Configurar trazo
+            ctx.lineWidth   = 2.5;
+            ctx.lineCap     = 'round';
+            ctx.lineJoin    = 'round';
+            ctx.strokeStyle = '#0a0a0a';
+            ctx.fillStyle   = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Eventos Mouse
+            canvas.addEventListener('mousedown',  startDraw);
+            canvas.addEventListener('mousemove',  draw);
+            canvas.addEventListener('mouseup',    stopDraw);
+            canvas.addEventListener('mouseleave', stopDraw);
+
+            // Eventos Touch (preventDefault para evitar scroll)
+            canvas.addEventListener('touchstart',  onTouchStart,  { passive: false });
+            canvas.addEventListener('touchmove',   onTouchMove,   { passive: false });
+            canvas.addEventListener('touchend',    onTouchEnd,    { passive: false });
+            canvas.addEventListener('touchcancel', onTouchEnd,    { passive: false });
+        }
+
+        // ── Mouse handlers ──────────────────────────────────────────
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width  / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top)  * scaleY
+            };
+        }
+
+        function startDraw(e) {
+            isDrawing = true;
+            const pos = getPos(e);
+            lastX = pos.x; lastY = pos.y;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            lastX = pos.x; lastY = pos.y;
+            markStroke();
+        }
+
+        function stopDraw() { isDrawing = false; }
+
+        // ── Touch handlers ──────────────────────────────────────────
+        function getTouchPos(touch) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width  / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (touch.clientX - rect.left) * scaleX,
+                y: (touch.clientY - rect.top)  * scaleY
+            };
+        }
+
+        function onTouchStart(e) {
+            e.preventDefault();
+            const touch = e.changedTouches[0];
+            const pos   = getTouchPos(touch);
+            isDrawing = true;
+            lastX = pos.x; lastY = pos.y;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+        }
+
+        function onTouchMove(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            const touch = e.changedTouches[0];
+            const pos   = getTouchPos(touch);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            lastX = pos.x; lastY = pos.y;
+            markStroke();
+        }
+
+        function onTouchEnd(e) {
+            e.preventDefault();
+            isDrawing = false;
+        }
+
+        // ── Detectar trazo real ─────────────────────────────────────
+        function markStroke() {
+            if (!hasStroke) {
+                hasStroke = true;
+                canvas.classList.add('has-stroke');
+                document.getElementById('btnConfirmarFirma').disabled = false;
+            }
+        }
+
+        // ── API Pública ─────────────────────────────────────────────
+        window.abrirModalFirma = function() {
+            const overlay = document.getElementById('modalFirmaOverlay');
+            overlay.classList.add('active');
+            // Bloquear scroll del body en mobile
+            document.body.style.overflow = 'hidden';
+            // Inicializar canvas al abrirlo (así tiene el tamaño correcto)
+            requestAnimationFrame(() => { initCanvas(); });
+        };
+
+        window.cerrarModalFirma = function() {
+            document.getElementById('modalFirmaOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+            limpiarCanvasFirma();
+        };
+
+        window.limpiarCanvasFirma = function() {
+            if (!canvas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            hasStroke = false;
+            canvas.classList.remove('has-stroke');
+            document.getElementById('btnConfirmarFirma').disabled = true;
+        };
+
+        window.confirmarFirma = async function() {
+            if (!hasStroke) return;
+
+            const btnConfirmar = document.getElementById('btnConfirmarFirma');
+            const btnLimpiar   = document.getElementById('btnLimpiarFirma');
+            btnConfirmar.disabled = true;
+            btnLimpiar.disabled   = true;
+            btnConfirmar.textContent = 'Guardando...';
+
+            try {
+                const firmaBase64 = canvas.toDataURL('image/png');
+
+                const response = await fetch(ENDPOINT, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ id_orden: ORDEN_ID, firma_base64: firmaBase64 })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    cerrarModalFirma();
+                    // Recargar para mostrar la firma en el documento
+                    window.location.reload();
+                } else {
+                    alert('Error al guardar la firma: ' + (data.error || 'Error desconocido'));
+                    btnConfirmar.disabled = false;
+                    btnLimpiar.disabled   = false;
+                    btnConfirmar.textContent = 'Confirmar Firma';
+                }
+            } catch (err) {
+                alert('Error de conexión al guardar la firma.');
+                btnConfirmar.disabled = false;
+                btnLimpiar.disabled   = false;
+                btnConfirmar.textContent = 'Confirmar Firma';
+            }
+        };
+
+        // Cerrar overlay al hacer clic fuera del box
+        document.getElementById('modalFirmaOverlay').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalFirma();
+        });
+
+    })();
+    </script>
+    <?php endif; ?>
+
     <script>
         let cropper = null;
         let currentImgId = null;
