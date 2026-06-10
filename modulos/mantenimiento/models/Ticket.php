@@ -30,29 +30,29 @@ class Ticket
                     VALUES (:codigo, :titulo, :descripcion, :tipo_formulario, :cod_operario, :cod_sucursal, :area_equipo, :nivel_urgencia, :tiempo_estimado, :resolucion)";
 
             $params = [
-                ':codigo'          => $codigo,
-                ':titulo'          => $data['titulo'],
-                ':descripcion'     => $data['descripcion'],
+                ':codigo' => $codigo,
+                ':titulo' => $data['titulo'],
+                ':descripcion' => $data['descripcion'],
                 ':tipo_formulario' => $data['tipo_formulario'],
-                ':cod_operario'    => $data['cod_operario'],
-                ':cod_sucursal'    => $data['cod_sucursal'],
-                ':area_equipo'     => $data['area_equipo'],
-                ':nivel_urgencia'  => (int)($data['nivel_urgencia']  ?? 0),
-                ':tiempo_estimado' => (int)($data['tiempo_estimado'] ?? 0),
-                ':resolucion'      => $data['resolucion'] ?? ''
+                ':cod_operario' => $data['cod_operario'],
+                ':cod_sucursal' => $data['cod_sucursal'],
+                ':area_equipo' => $data['area_equipo'],
+                ':nivel_urgencia' => (int) ($data['nivel_urgencia'] ?? 0),
+                ':tiempo_estimado' => (int) ($data['tiempo_estimado'] ?? 0),
+                ':resolucion' => $data['resolucion'] ?? ''
             ];
         } else {
             $sql = "INSERT INTO mtto_tickets (codigo, titulo, descripcion, tipo_formulario, cod_operario, cod_sucursal, area_equipo) 
                     VALUES (:codigo, :titulo, :descripcion, :tipo_formulario, :cod_operario, :cod_sucursal, :area_equipo)";
 
             $params = [
-                ':codigo'          => $codigo,
-                ':titulo'          => $data['titulo'],
-                ':descripcion'     => $data['descripcion'],
+                ':codigo' => $codigo,
+                ':titulo' => $data['titulo'],
+                ':descripcion' => $data['descripcion'],
                 ':tipo_formulario' => $data['tipo_formulario'],
-                ':cod_operario'    => $data['cod_operario'],
-                ':cod_sucursal'    => $data['cod_sucursal'],
-                ':area_equipo'     => $data['area_equipo']
+                ':cod_operario' => $data['cod_operario'],
+                ':cod_sucursal' => $data['cod_sucursal'],
+                ':area_equipo' => $data['area_equipo']
             ];
         }
 
@@ -456,7 +456,7 @@ class Ticket
     public function finalizarInformeDiario($informe_id, $data)
     {
         // 1. Marcar el informe como finalizado (km opcional)
-        $km_final      = $data['km_final']      ?? null;
+        $km_final = $data['km_final'] ?? null;
         $km_foto_final = $data['km_foto_final'] ?? null;
 
         $sql = "UPDATE mtto_informes_diarios SET 
@@ -476,11 +476,12 @@ class Ticket
             "SELECT fecha, cod_operario FROM mtto_informes_diarios WHERE id = ?",
             [$informe_id]
         );
-        if (!$informe) return;
+        if (!$informe)
+            return;
 
-        $fechaInforme   = $informe['fecha'];       // formato Y-m-d
-        $codOperario    = $informe['cod_operario'];
-        $ahora          = date('Y-m-d H:i:s');     // Nicaragua (America/Managua) por conexion.php
+        $fechaInforme = $informe['fecha'];       // formato Y-m-d
+        $codOperario = $informe['cod_operario'];
+        $ahora = date('Y-m-d H:i:s');     // Nicaragua (America/Managua) por conexion.php
 
         // 3. Obtener todas las tareas del informe (a través de sus visitas)
         $tareas = $this->db->fetchAll(
@@ -492,19 +493,21 @@ class Ticket
         );
 
         foreach ($tareas as $tarea) {
-            $ticketId     = $tarea['ticket_id'];
-            $completado   = (int) $tarea['completado_100'];
+            $ticketId = $tarea['ticket_id'];
+            $completado = (int) $tarea['completado_100'];
+
 
             // Leer fecha_inicio actual para no sobreescribir si ya existe
             $ticketActual = $this->db->fetchOne(
                 "SELECT fecha_inicio FROM mtto_tickets WHERE id = ?",
                 [$ticketId]
             );
-            if (!$ticketActual) continue;
+            if (!$ticketActual)
+                continue;
 
             $fechaInicioActual = $ticketActual['fecha_inicio'];
             // Si ya tiene fecha_inicio registrada no se modifica; si es NULL se asigna la del informe
-            $nuevaFechaInicio  = $fechaInicioActual ?: $fechaInforme;
+            $nuevaFechaInicio = $fechaInicioActual ?: $fechaInforme;
 
             if ($completado === 1) {
                 // Tarea 100% completada → finalizar ticket
@@ -605,7 +608,8 @@ class Ticket
                 WHERE i.id = ?";
         $informe = $this->db->fetchOne($sql, [$informe_id]);
 
-        if (!$informe) return null;
+        if (!$informe)
+            return null;
 
         // Visitas
         $sqlV = "SELECT v.*, s.nombre as nombre_sucursal, s.departamento as departamento_sucursal, 
@@ -683,7 +687,7 @@ class Ticket
         }
 
         $sql .= " ORDER BY i.fecha DESC, i.created_at DESC LIMIT 100";
-        
+
         return $this->db->fetchAll($sql, $params);
     }
 
@@ -722,7 +726,7 @@ class Ticket
         // 1. Obtener fotos para borrar archivos físicos
         $sqlFotos = "SELECT foto FROM mtto_informe_tareas_fotos WHERE tarea_id = ?";
         $fotos = $this->db->fetchAll($sqlFotos, [$tarea_id]);
-        
+
         foreach ($fotos as $f) {
             $path = __DIR__ . '/../uploads/evidencias/' . $f['foto'];
             if (file_exists($path)) {
@@ -743,7 +747,7 @@ class Ticket
         // 1. Obtener foto
         $sql = "SELECT foto_factura FROM mtto_informe_compras WHERE id = ?";
         $compra = $this->db->fetchOne($sql, [$compra_id]);
-        
+
         if ($compra && $compra['foto_factura']) {
             $path = __DIR__ . '/../uploads/compras/' . $compra['foto_factura'];
             if (file_exists($path)) {
