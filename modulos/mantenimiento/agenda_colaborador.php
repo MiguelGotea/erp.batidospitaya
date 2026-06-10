@@ -250,7 +250,7 @@ $sucursales = $ticketModel->getSucursales();
                                     <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
                                         <button class="btn btn-sm btn-primary rounded-pill btn-agregar-tienda"
                                             onclick="modalNuevaVisita(<?= $informeActual['id'] ?>)">
-                                            <i class="fas fa-plus me-1"></i>+ Agregar Tienda
+                                            <i class="fas fa-plus me-1"></i>Agregar Tienda
                                         </button>
                                     <?php endif; ?>
                                 </div>
