@@ -202,7 +202,7 @@ $sucursales = $ticketModel->getSucursales();
                                 <hr class="my-3 opacity-10">
                                 <div class="row g-4 text-center align-items-center">
                                     <!-- COLUMNA CAJA CHICA -->
-                                    <div class="col-md-4 border-end">
+                                    <div class="col-md-12">
                                         <?php
                                         $totalGastado = 0;
                                         foreach ($informeActual['visitas'] as $v) {
@@ -234,38 +234,6 @@ $sucursales = $ticketModel->getSucursales();
                                                 <span class="fw-bold fs-5 text-success">C$<?= number_format($saldoActual, 2) ?></span>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <!-- COLUMNA ESTADISTICAS -->
-                                    <div class="col-md-4 border-end">
-                                        <div class="row g-0">
-                                            <div class="col-6 border-end">
-                                                <small class="visita-info-label mb-1">Sucursales</small>
-                                                <div class="fs-3 fw-bold text-primary"><?= count($informeActual['visitas']) ?></div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="visita-info-label mb-1">Tareas</small>
-                                                <?php
-                                                $totalT = 0;
-                                                foreach ($informeActual['visitas'] as $v)
-                                                    $totalT += count($v['tareas']);
-                                                ?>
-                                                <div class="fs-3 fw-bold text-primary"><?= $totalT ?></div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- COLUMNA ESTADO FINAL -->
-                                    <div class="col-md-4">
-                                        <div class="visita-info-label mb-1">Estado del Informe</div>
-                                        <?php if ($informeActual['estado'] === 'creado'): ?>
-                                            <div class="text-warning fw-bold fs-5"><i class="fas fa-spinner fa-spin me-2"></i>ABIERTO</div>
-                                        <?php else: ?>
-                                            <div class="text-success fw-bold fs-5"><i class="fas fa-check-circle me-2"></i>FINALIZADO</div>
-                                            <?php if (!empty($informeActual['km_final']) && !empty($informeActual['km_inicial'])): ?>
-                                                <small class="text-muted d-block">Distancia: <?= number_format($informeActual['km_final'] - $informeActual['km_inicial'], 2) ?> km</small>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
