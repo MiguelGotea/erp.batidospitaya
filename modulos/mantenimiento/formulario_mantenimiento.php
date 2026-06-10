@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'tipo_formulario' => 'mantenimiento_general',
             'cod_operario'    => $cod_operario,
             'cod_sucursal'    => $cod_sucursal,
-            'area_equipo'     => $_POST['area']
+            'area_equipo'     => ''
         ];
 
         // Campos IA opcionales
@@ -262,11 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </div>
                                             <?php endif; ?>
 
-                                            <div class="<?= (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) || count($sucursalesPermitidas) > 1) ? 'col-md-6' : 'col-12' ?> mb-3">
-                                                <label for="area" class="form-label">Área Física *</label>
-                                                <input type="text" class="form-control" id="area" name="area"
-                                                    placeholder="Ej: Area de preparación, Almacén, Caja..." required>
-                                            </div>
+
                                         </div>
 
                                         <div class="mb-3">
@@ -391,7 +387,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         async function iniciarEnvio() {
             const titulo      = document.getElementById('titulo').value.trim();
             const descripcion = document.getElementById('descripcion').value.trim();
-            const area        = document.getElementById('area').value.trim();
 
             if (titulo.length < 5) { alert('El título debe tener al menos 5 caracteres'); return; }
             if (descripcion.length < 10) { alert('La descripción debe tener al menos 10 caracteres'); return; }
@@ -407,7 +402,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 const iaResp = await fetch('ajax/formulario_consulta_ia.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ titulo, descripcion, area_equipo: area })
+                    body: JSON.stringify({ titulo, descripcion, area_equipo: '' })
                 });
                 if (iaResp.ok) {
                     const iaJson = await iaResp.json();
