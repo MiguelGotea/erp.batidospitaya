@@ -273,16 +273,9 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                     <small style="color: #6c757d;">Monto en córdobas (opcional)</small>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; gap: 10px; flex-wrap: wrap;">
+                <div style="display: flex; justify-content: space-between; margin-top: 30px;">
                     <button type="button" class="btn-modern btn-modern-secondary" onclick="cerrarModalTerminacion()">
                         <i class="fas fa-times"></i> Cancelar
-                    </button>
-                    <!-- TEMPORAL: Botón de prueba de correo sin guardar datos -->
-                    <button type="button" id="btnTestEmail" class="btn-modern"
-                            style="background: #6f42c1; border-color: #6f42c1; color: #fff; font-size: 12px; padding: 8px 14px;"
-                            onclick="probarEnvioCorreo()"
-                            title="Envía el correo de notificación sin terminar el contrato (solo para testing)">
-                        <i class="fas fa-flask"></i> Probar Correo
                     </button>
                     <button type="submit" class="btn-modern btn-modern-danger">
                         <i class="fas fa-check"></i> Confirmar Terminación
