@@ -72,7 +72,7 @@ try {
                 LEFT JOIN sucursales s
                     ON s.id = anc.Sucursal
                 LEFT JOIN TipoSalida ts
-                    ON ts.id = c.cod_tipo_salida
+                    ON ts.CodTipoSalida = c.cod_tipo_salida
                 WHERE c.CodContrato = ?
             ");
             $stmtColaborador->execute([$idContrato]);

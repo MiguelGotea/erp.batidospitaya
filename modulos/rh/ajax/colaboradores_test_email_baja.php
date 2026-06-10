@@ -45,9 +45,8 @@ try {
             o.Nombre,
             o.Apellido,
             o.Cedula,
-            nc.Nombre        AS nombre_cargo,
-            s.nombre         AS nombre_sucursal,
-            ts.nombre        AS tipo_salida_nombre
+            nc.Nombre  AS nombre_cargo,
+            s.nombre   AS nombre_sucursal
         FROM Contratos c
         INNER JOIN Operarios o
             ON o.CodOperario = c.cod_operario
@@ -57,15 +56,19 @@ try {
             ON nc.CodNivelesCargos = anc.CodNivelesCargos
         LEFT JOIN sucursales s
             ON s.id = anc.Sucursal
-        LEFT JOIN TipoSalida ts
-            ON ts.id = :tipo_salida_id
-        WHERE c.CodContrato = :id
+        WHERE c.CodContrato = ?
     ");
-    $stmtColaborador->execute([
-        ':id'            => $idContrato,
-        ':tipo_salida_id'=> $tipoSalidaPost ?: 0,
-    ]);
+    $stmtColaborador->execute([$idContrato]);
     $colaborador = $stmtColaborador->fetch(PDO::FETCH_ASSOC);
+
+    // Obtener nombre del tipo de salida por separado (evita JOIN con parámetro en ON)
+    $tipoSalidaNombre = $tipoSalidaPost;
+    if (!empty($tipoSalidaPost) && is_numeric($tipoSalidaPost)) {
+        $stmtTipo = $conn->prepare("SELECT nombre FROM TipoSalida WHERE CodTipoSalida = ?");
+        $stmtTipo->execute([$tipoSalidaPost]);
+        $tipoRow = $stmtTipo->fetch(PDO::FETCH_ASSOC);
+        if ($tipoRow) $tipoSalidaNombre = $tipoRow['nombre'];
+    }
 
     if (!$colaborador) {
         throw new Exception('No se encontraron datos del colaborador para el contrato #' . $idContrato);
@@ -73,9 +76,9 @@ try {
 
     $nombreCompleto = trim($colaborador['Nombre'] . ' ' . $colaborador['Apellido']);
     $cedula         = $colaborador['Cedula']             ?? 'N/D';
-    $cargo          = $colaborador['nombre_cargo']       ?? 'N/D';
-    $sucursal       = $colaborador['nombre_sucursal']    ?? 'N/D';
-    $tipoSalida     = $colaborador['tipo_salida_nombre'] ?? ($tipoSalidaPost ?: 'N/D');
+    $cargo          = $colaborador['nombre_cargo']    ?? 'N/D';
+    $sucursal       = $colaborador['nombre_sucursal'] ?? 'N/D';
+    $tipoSalida     = !empty($tipoSalidaNombre) ? $tipoSalidaNombre : 'N/D';
 
     // 2. Formatear fechas en español
     $meses = [
