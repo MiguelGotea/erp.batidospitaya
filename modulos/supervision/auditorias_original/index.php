@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // index.php - Registros de Auditoría con filtros avanzados
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
@@ -40,7 +40,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
 
     <!-- Estilos Estándar ERP -->
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
 
     <!-- CSS personalizado de la página -->
     <link rel="stylesheet" href="css/auditorias.css?v=<?php echo mt_rand(1, 10000); ?>">
@@ -160,6 +160,8 @@ $cargoOperario = $usuario['CodNivelesCargos'];
             });
         });
     </script>
+    <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
+    <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>

@@ -2316,6 +2316,8 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
             </div>
         </div>
     <?php endif; ?>
+    <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
+    <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>
