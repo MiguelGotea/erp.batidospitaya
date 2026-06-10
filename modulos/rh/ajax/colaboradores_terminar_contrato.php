@@ -25,14 +25,14 @@ try {
 
     // Mapear datos del POST para que coincidan con lo que espera terminarContrato
     $datos = [
-        'fecha_terminacion'          => $_POST['fecha_terminacion'],
-        'fecha_liquidacion'          => $_POST['fecha_liquidacion'] ?? null,
-        'tipo_salida'                => $_POST['tipo_salida'],
-        'motivo_salida'              => $_POST['motivo_salida'],
-        'dias_trabajados'            => $_POST['dias_trabajados'] ?? 0,
-        'monto_indemnizacion'        => $_POST['monto_indemnizacion'] ?? 0,
-        'devolucion_herramientas'    => isset($_POST['devolucion_herramientas']) && $_POST['devolucion_herramientas'] == '1',
-        'persona_recibe_herramientas'=> $_POST['persona_recibe_herramientas'] ?? ''
+        'fecha_terminacion' => $_POST['fecha_terminacion'],
+        'fecha_liquidacion' => $_POST['fecha_liquidacion'] ?? null,
+        'tipo_salida' => $_POST['tipo_salida'],
+        'motivo_salida' => $_POST['motivo_salida'],
+        'dias_trabajados' => $_POST['dias_trabajados'] ?? 0,
+        'monto_indemnizacion' => $_POST['monto_indemnizacion'] ?? 0,
+        'devolucion_herramientas' => isset($_POST['devolucion_herramientas']) && $_POST['devolucion_herramientas'] == '1',
+        'persona_recibe_herramientas' => $_POST['persona_recibe_herramientas'] ?? ''
     ];
 
     $resultado = terminarContrato($idContrato, $datos);
@@ -80,26 +80,38 @@ try {
 
             if ($colaborador) {
                 $nombreCompleto = trim($colaborador['Nombre'] . ' ' . $colaborador['Apellido']);
-                $cedula         = $colaborador['Cedula']           ?? 'N/D';
-                $cargo          = $colaborador['nombre_cargo']     ?? 'N/D';
-                $sucursal       = $colaborador['nombre_sucursal']  ?? 'N/D';
-                $tipoSalida     = $colaborador['tipo_salida_nombre'] ?? ($datos['tipo_salida'] ?? 'N/D');
+                $cedula = $colaborador['Cedula'] ?? 'N/D';
+                $cargo = $colaborador['nombre_cargo'] ?? 'N/D';
+                $sucursal = $colaborador['nombre_sucursal'] ?? 'N/D';
+                $tipoSalida = $colaborador['tipo_salida_nombre'] ?? ($datos['tipo_salida'] ?? 'N/D');
 
                 // Formatear fechas en español
-                $meses = ['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril',
-                          '05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto',
-                          '09'=>'septiembre','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'];
+                $meses = [
+                    '01' => 'enero',
+                    '02' => 'febrero',
+                    '03' => 'marzo',
+                    '04' => 'abril',
+                    '05' => 'mayo',
+                    '06' => 'junio',
+                    '07' => 'julio',
+                    '08' => 'agosto',
+                    '09' => 'septiembre',
+                    '10' => 'octubre',
+                    '11' => 'noviembre',
+                    '12' => 'diciembre'
+                ];
 
-                $fmtFecha = function($fecha) use ($meses) {
-                    if (empty($fecha) || $fecha === '0000-00-00') return 'N/D';
+                $fmtFecha = function ($fecha) use ($meses) {
+                    if (empty($fecha) || $fecha === '0000-00-00')
+                        return 'N/D';
                     [$y, $m, $d] = explode('-', substr($fecha, 0, 10));
                     return intval($d) . ' de ' . ($meses[$m] ?? $m) . ' del ' . $y;
                 };
 
                 $fechaCarta = $fmtFecha($datos['fecha_terminacion']);
-                $ultimoDia  = !empty($datos['fecha_liquidacion'])
-                                ? $fmtFecha($datos['fecha_liquidacion'])
-                                : $fmtFecha($datos['fecha_terminacion']);
+                $ultimoDia = !empty($datos['fecha_liquidacion'])
+                    ? $fmtFecha($datos['fecha_liquidacion'])
+                    : $fmtFecha($datos['fecha_terminacion']);
 
                 // 2. Construir cuerpo HTML del correo
                 $cuerpoHtml = "
