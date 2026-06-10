@@ -102,28 +102,28 @@ $sucursales = $ticketModel->getSucursales();
                                 </h4>
                                 <p class="mb-0 text-muted">
                                     <?php if (!$informeActual): ?>
-                                        <span class="badge bg-secondary">Sin Iniciar</span>
-                                        Presione "Iniciar Informe" para comenzar su jornada.
+                                        <span class="badge bg-secondary fs-6">⚪ Sin Iniciar</span>
+                                        <span class="d-block mt-1 small">Toca el botón de abajo para iniciar tu jornada.</span>
                                     <?php elseif ($informeActual['estado'] === 'creado'): ?>
-                                        <span class="badge bg-primary">En Transcurso (Abierto)</span>
-                                        Puede registrar visitas, compras y tareas.
+                                        <span class="badge bg-primary fs-6">🟢 En Curso — Abierto</span>
+                                        <span class="d-block mt-1 small">Puedes agregar tiendas, tareas y facturas.</span>
                                     <?php else: ?>
-                                        <span class="badge bg-success">Informe Finalizado</span>
-                                        El informe está cerrado y no admite ediciones.
+                                        <span class="badge bg-success fs-6">✅ Informe Cerrado</span>
+                                        <span class="d-block mt-1 small">El informe está finalizado y no admite cambios.</span>
                                     <?php endif; ?>
                                 </p>
                             </div>
 
 
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-column flex-sm-row w-100 w-sm-auto">
                                 <?php if (!$informeActual && ($colaborador_filtro == $usuario['CodOperario'] || $puedeVerTodosColaboradores)): ?>
-                                    <button class="btn btn-primary px-4 rounded-pill" onclick="modalApertura()">
-                                        <i class="fas fa-play me-2"></i>Iniciar Informe
+                                    <button class="btn btn-primary btn-iniciar-informe" onclick="modalApertura()">
+                                        <i class="fas fa-play me-2"></i>Iniciar mi Informe del Día
                                     </button>
                                 <?php elseif ($informeActual && $informeActual['estado'] === 'creado' && ($colaborador_filtro == $usuario['CodOperario'] || $puedeVerTodosColaboradores)): ?>
-                                    <button class="btn btn-outline-danger px-4 rounded-pill"
+                                    <button class="btn btn-outline-danger btn-finalizar-informe"
                                         onclick="modalCierre(<?= $informeActual['id'] ?>)">
-                                        <i class="fas fa-stop me-2"></i>Finalizar Informe
+                                        <i class="fas fa-flag-checkered me-2"></i>Finalizar y Cerrar Informe
                                     </button>
                                 <?php endif; ?>
 
@@ -248,18 +248,18 @@ $sucursales = $ticketModel->getSucursales();
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5><i class="fas fa-map-marker-alt text-danger me-2"></i>Mis Visitas del Día</h5>
                                     <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
-                                        <button class="btn btn-sm btn-primary rounded-pill"
+                                        <button class="btn btn-sm btn-primary rounded-pill btn-agregar-tienda"
                                             onclick="modalNuevaVisita(<?= $informeActual['id'] ?>)">
-                                            <i class="fas fa-plus me-1"></i>Agregar Sucursal
+                                            <i class="fas fa-plus me-1"></i>+ Agregar Tienda
                                         </button>
                                     <?php endif; ?>
                                 </div>
 
                                 <div class="visitas-timeline">
                                     <?php if (empty($informeActual['visitas'])): ?>
-                                        <div class="alert alert-light border text-center py-4 rounded-4">
-                                            <i class="fas fa-truck-loading fa-2x text-muted mb-2"></i>
-                                            <p class="text-muted mb-0">Aún no has registrado visitas a sucursales hoy.</p>
+                                        <div class="alert alert-light border text-center empty-state rounded-4">
+                                            <i class="fas fa-store-slash fa-2x"></i>
+                                            <p class="text-muted mb-0">Aún no has registrado visitas a tiendas hoy.<br><small>Presiona <strong>"+ Agregar Tienda"</strong> para comenzar.</small></p>
                                         </div>
                                     <?php else: ?>
                                         <?php foreach ($informeActual['visitas'] as $v): ?>
@@ -437,8 +437,8 @@ $sucursales = $ticketModel->getSucursales();
                     <div class="mb-3">
                         <i class="fas fa-clipboard-list fa-3x text-primary opacity-75"></i>
                     </div>
-                    <p class="mb-1 fw-bold fs-5">¿Desea iniciar un nuevo informe?</p>
-                    <p class="text-muted small">Se creará el informe del día de hoy y podrá comenzar a registrar sus visitas, tareas y compras.</p>
+                    <p class="mb-2 fw-bold fs-5">¿Listo para comenzar tu jornada?</p>
+                    <p class="text-muted">Se abrirá tu informe de hoy. Luego podrás ir agregando cada tienda que visites y las tareas que hagas.</p>
                 </div>
                 <div class="modal-footer border-0 p-3 px-4 pb-4">
                     <button type="button" class="btn btn-secondary rounded-pill px-4"
@@ -465,9 +465,9 @@ $sucursales = $ticketModel->getSucursales();
                     <form id="formVisita">
                         <input type="hidden" name="informe_id" id="visita_informe_id">
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Sucursal Visitada *</label>
-                            <select name="cod_sucursal" class="form-select rounded-3" required>
-                                <option value="">Seleccionar tienda...</option>
+                            <label class="form-label required">🏪 Tienda Visitada</label>
+                            <select name="cod_sucursal" class="form-select" required>
+                                <option value="">— Seleccione la tienda —</option>
                                 <?php foreach ($sucursales as $s): ?>
                                     <option value="<?= $s['cod_sucursal'] ?>"><?= htmlspecialchars($s['nombre_sucursal']) ?>
                                     </option>
@@ -501,36 +501,33 @@ $sucursales = $ticketModel->getSucursales();
                     <form id="formTarea">
                         <input type="hidden" name="visita_id" id="tarea_visita_id">
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Seleccionar Ticket de la Agenda *</label>
-                            <select name="ticket_id" class="form-select rounded-3" required>
+                            <label class="form-label required">🎫 Ticket de Trabajo (de la Agenda)</label>
+                            <select name="ticket_id" class="form-select" required>
                                 <option value="">Seleccione una parada para cargar tickets...</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Grado de Finalización *</label>
+                            <label class="form-label required">✅ ¿Cómo quedó el trabajo?</label>
                             <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="completado_100" id="done100" value="1"
-                                    checked>
-                                <label class="btn btn-outline-success" for="done100">Completado 100%</label>
+                                <input type="radio" class="btn-check" name="completado_100" id="done100" value="1" checked>
+                                <label class="btn btn-outline-success" for="done100">✅ Completado 100%</label>
                                 <input type="radio" class="btn-check" name="completado_100" id="donePartial" value="0">
-                                <label class="btn btn-outline-warning" for="donePartial">Parcial / Pendiente</label>
+                                <label class="btn btn-outline-warning" for="donePartial">⚠️ Parcial / Pendiente</label>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Detalle del Trabajo Realizado *</label>
-                            <textarea name="trabajo_realizado" class="form-control rounded-3" rows="3" required
-                                placeholder="Explica detalladamente qué hiciste..."></textarea>
+                            <label class="form-label required">📋 Describe el trabajo realizado</label>
+                            <textarea name="trabajo_realizado" class="form-control" rows="3" required
+                                placeholder="Ej: Se reparó la llave del lavamanos del área de producción. Se cambió empaque y ajustaron conexiones."></textarea>
                         </div>
-
                         <div class="mb-0">
-                            <label class="form-label small fw-bold">Fotos de Evidencia (Múltiples permitsas, mín 1)
-                                *</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary"
+                            <label class="form-label required">📷 Fotos de Evidencia (mín. 1 foto)</label>
+                            <div class="foto-upload-group mb-2">
+                                <button type="button" class="btn btn-outline-primary"
                                     onclick="document.getElementById('evidencia_input').click()">
-                                    <i class="fas fa-file-image me-1"></i>Galería
+                                    <i class="fas fa-image me-1"></i>Galería
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-success"
+                                <button type="button" class="btn btn-outline-success"
                                     onclick="startCamera('cam_evidencia')">
                                     <i class="fas fa-camera me-1"></i>Cámara
                                 </button>
@@ -571,23 +568,25 @@ $sucursales = $ticketModel->getSucursales();
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <p class="text-muted small">Al finalizar, no podrá agregar más visitas o fotos al reporte de hoy.
-                    </p>
+                    <div class="alert alert-warning rounded-3 d-flex align-items-center gap-2 mb-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span class="small fw-bold">Al finalizar, ya no podrás agregar más tiendas ni tareas al informe de hoy.</span>
+                    </div>
                     <form id="formCierre">
                         <input type="hidden" name="informe_id" id="cierre_informe_id">
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Kilometraje Final *</label>
-                            <input type="number" step="0.01" class="form-control form-control-lg rounded-3"
-                                name="km_final" required>
+                            <label class="form-label required">📍 Kilometraje Final del Vehículo</label>
+                            <input type="number" step="0.01" class="form-control form-control-lg"
+                                name="km_final" required placeholder="Ej: 45230.5">
                         </div>
                         <div class="mb-0">
-                            <label class="form-label fw-bold">Foto del Odómetro (Final) *</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm flex-grow-1"
+                            <label class="form-label required">📷 Foto del Odómetro (al terminar)</label>
+                            <div class="foto-upload-group mb-2">
+                                <button type="button" class="btn btn-outline-primary"
                                     onclick="document.getElementById('km_fin_input').click()">
-                                    <i class="fas fa-upload me-1"></i>Subir
+                                    <i class="fas fa-image me-1"></i>Galería
                                 </button>
-                                <button type="button" class="btn btn-outline-success btn-sm flex-grow-1"
+                                <button type="button" class="btn btn-outline-success"
                                     onclick="startCamera('cam_cierre')">
                                     <i class="fas fa-camera me-1"></i>Cámara
                                 </button>
@@ -633,18 +632,18 @@ $sucursales = $ticketModel->getSucursales();
                     <form id="formKmInicial">
                         <input type="hidden" name="informe_id" id="km_inicial_informe_id">
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Kilometraje Inicial *</label>
-                            <input type="number" step="0.01" class="form-control form-control-lg rounded-3"
-                                name="km_inicial" required placeholder="0.00">
+                            <label class="form-label required">📍 Kilometraje Inicial del Vehículo</label>
+                            <input type="number" step="0.01" class="form-control form-control-lg"
+                                name="km_inicial" required placeholder="Ej: 45000.0">
                         </div>
                         <div class="mb-0">
-                            <label class="form-label fw-bold">Foto del Odómetro *</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm flex-grow-1"
+                            <label class="form-label required">📷 Foto del Odómetro (al salir)</label>
+                            <div class="foto-upload-group mb-2">
+                                <button type="button" class="btn btn-outline-primary"
                                     onclick="document.getElementById('km_ini_foto_input').click()">
-                                    <i class="fas fa-upload me-1"></i>Subir
+                                    <i class="fas fa-image me-1"></i>Galería
                                 </button>
-                                <button type="button" class="btn btn-outline-success btn-sm flex-grow-1"
+                                <button type="button" class="btn btn-outline-success"
                                     onclick="startCamera('cam_km_ini')">
                                     <i class="fas fa-camera me-1"></i>Cámara
                                 </button>
@@ -691,26 +690,26 @@ $sucursales = $ticketModel->getSucursales();
                     <form id="formCompra">
                         <input type="hidden" name="visita_id" id="compra_visita_id">
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Monto de la Factura *</label>
+                            <label class="form-label required">💰 Monto de la Factura</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light">C$</span>
+                                <span class="input-group-text">C$</span>
                                 <input type="number" step="0.01" name="monto" class="form-control form-control-lg"
                                     required placeholder="0.00">
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Detalle de lo Comprado *</label>
+                            <label class="form-label required">📝 ¿Qué se compró?</label>
                             <input type="text" name="detalle" class="form-control" required
-                                placeholder="Ej: Tornillería p/ estante">
+                                placeholder="Ej: Tornillos para estante del área de batidos">
                         </div>
                         <div class="mb-0">
-                            <label class="form-label small fw-bold">Foto de la Factura *</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary"
+                            <label class="form-label required">📷 Foto de la Factura</label>
+                            <div class="foto-upload-group mb-2">
+                                <button type="button" class="btn btn-outline-primary"
                                     onclick="document.getElementById('compra_foto_input').click()">
-                                    <i class="fas fa-upload me-1"></i>Galería
+                                    <i class="fas fa-image me-1"></i>Galería
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-success"
+                                <button type="button" class="btn btn-outline-success"
                                     onclick="startCamera('cam_compra')">
                                     <i class="fas fa-camera me-1"></i>Cámara
                                 </button>
@@ -772,21 +771,21 @@ $sucursales = $ticketModel->getSucursales();
                     <form id="formCaja">
                         <input type="hidden" name="informe_id" id="caja_informe_id">
                         <div class="mb-4">
-                            <label class="form-label small fw-bold">Monto Recibido *</label>
+                            <label class="form-label required">💵 Monto Recibido (Caja Chica)</label>
                             <div class="input-group">
                                 <span class="input-group-text">C$</span>
                                 <input type="number" step="0.01" name="monto" id="caja_monto"
-                                    class="form-control form-control-lg" required>
+                                    class="form-control form-control-lg" required placeholder="0.00">
                             </div>
                         </div>
                         <div class="mb-0">
-                            <label class="form-label small fw-bold">Foto del Voucher / Comprobante *</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1"
+                            <label class="form-label required">📷 Foto del Voucher / Comprobante</label>
+                            <div class="foto-upload-group mb-2">
+                                <button type="button" class="btn btn-outline-primary"
                                     onclick="document.getElementById('caja_foto_input').click()">
-                                    <i class="fas fa-upload me-1"></i>Galería
+                                    <i class="fas fa-image me-1"></i>Galería
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-success flex-grow-1"
+                                <button type="button" class="btn btn-outline-success"
                                     onclick="startCamera('cam_caja')">
                                     <i class="fas fa-camera me-1"></i>Cámara
                                 </button>
@@ -833,110 +832,50 @@ $sucursales = $ticketModel->getSucursales();
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-3">
+                    <p class="text-muted small mb-3">Sigue estos pasos cada vez que salgas a trabajar:</p>
 
-                    <!-- FLUJO GENERAL -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-12">
-                            <div class="card border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="text-primary border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-route me-2"></i>Flujo del Informe Diario
-                                    </h6>
-                                    <ol class="small text-muted mb-0 ps-3">
-                                        <li class="mb-1"><strong>Iniciar Informe</strong> – Registrar el kilometraje inicial y foto del odómetro.</li>
-                                        <li class="mb-1"><strong>Agregar Visitas</strong> – Por cada sucursal visitada, registrar hora de llegada, salida y materiales usados.</li>
-                                        <li class="mb-1"><strong>Registrar Tareas</strong> – Dentro de cada visita, vincular tickets de la agenda e indicar el grado de avance (100% o Parcial).</li>
-                                        <li class="mb-1"><strong>Registrar Facturas</strong> – Agregar compras/gastos con foto de factura y monto.</li>
-                                        <li><strong>Finalizar Informe</strong> – Registrar el kilometraje final y foto. <span class="text-danger fw-bold">Solo en este paso</span> se actualizan los tickets en el sistema.</li>
-                                    </ol>
-                                </div>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex gap-3 align-items-start p-3 bg-light rounded-3">
+                            <span class="badge bg-primary rounded-circle fs-5 px-3 py-2">1</span>
+                            <div>
+                                <div class="fw-bold">Inicia tu Informe</div>
+                                <small class="text-muted">Toca "Iniciar mi Informe del Día" al comenzar tu jornada.</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start p-3 bg-light rounded-3">
+                            <span class="badge bg-primary rounded-circle fs-5 px-3 py-2">2</span>
+                            <div>
+                                <div class="fw-bold">Agrega cada Tienda que visitas</div>
+                                <small class="text-muted">Por cada tienda: registra hora de llegada, salida y materiales usados.</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start p-3 bg-light rounded-3">
+                            <span class="badge bg-primary rounded-circle fs-5 px-3 py-2">3</span>
+                            <div>
+                                <div class="fw-bold">Registra tus Tareas</div>
+                                <small class="text-muted">Selecciona el ticket, describe qué hiciste y adjunta al menos 1 foto.</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start p-3 bg-light rounded-3">
+                            <span class="badge bg-primary rounded-circle fs-5 px-3 py-2">4</span>
+                            <div>
+                                <div class="fw-bold">Registra tus Facturas (si aplica)</div>
+                                <small class="text-muted">Agrega monto, detalle y foto de cada factura o compra del día.</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-start p-3 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25">
+                            <span class="badge bg-danger rounded-circle fs-5 px-3 py-2">5</span>
+                            <div>
+                                <div class="fw-bold text-danger">Finaliza tu Informe al terminar</div>
+                                <small class="text-muted">Registra el KM final y toma foto del odómetro. <strong>Una vez finalizado no se puede editar.</strong></small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- REGLA DE ACTUALIZACIÓN DE TICKETS -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-12">
-                            <div class="card border-0 border-start border-4 border-warning bg-warning bg-opacity-10">
-                                <div class="card-body">
-                                    <h6 class="text-warning border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>Regla Importante: Actualización de Tickets
-                                    </h6>
-                                    <p class="small text-muted mb-2">
-                                        Agregar una tarea a una visita <strong>NO modifica el estado del ticket</strong> de inmediato.
-                                        La actualización de <code>mtto_tickets</code> ocurre <strong>únicamente al presionar "Finalizar Informe"</strong>.
-                                    </p>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-bordered small mb-0">
-                                            <thead class="table-primary">
-                                                <tr>
-                                                    <th>Grado de Avance</th>
-                                                    <th>fecha_inicio</th>
-                                                    <th>fecha_final</th>
-                                                    <th>status</th>
-                                                    <th>fecha_finalizacion</th>
-                                                    <th>finalizado_por</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr class="table-success">
-                                                    <td><span class="badge bg-success">100% Hecho</span></td>
-                                                    <td>Si NULL → fecha del informe; si ya tenía → no modificar</td>
-                                                    <td>Fecha del informe</td>
-                                                    <td><code>finalizado</code></td>
-                                                    <td>Fecha del informe</td>
-                                                    <td>Operario del informe</td>
-                                                </tr>
-                                                <tr class="table-warning">
-                                                    <td><span class="badge bg-warning text-dark">Parcial / Pendiente</span></td>
-                                                    <td>Si NULL → fecha del informe; si ya tenía → no modificar</td>
-                                                    <td class="text-muted">Sin cambio</td>
-                                                    <td class="text-muted">Sin cambio</td>
-                                                    <td class="text-muted">Sin cambio</td>
-                                                    <td class="text-muted">Sin cambio</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="alert alert-warning mt-3 small rounded-3">
+                        <i class="fas fa-lock me-1"></i> <strong>Para finalizar necesitas:</strong> que todas las tiendas tengan hora de salida y materiales registrados.
                     </div>
-
-                    <!-- OTRAS REGLAS -->
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="text-danger border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-lock me-2"></i>Requisitos para Finalizar
-                                    </h6>
-                                    <ul class="small text-muted mb-0 ps-3">
-                                        <li>Todas las visitas deben tener <strong>hora de salida</strong> registrada.</li>
-                                        <li>Todas las visitas deben tener <strong>materiales usados</strong> registrados (poner "Ninguno" si aplica).</li>
-                                        <li>Foto del odómetro final es obligatoria.</li>
-                                        <li>Una vez finalizado, el informe <strong>no admite ediciones</strong>.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="text-info border-bottom pb-2 fw-bold">
-                                        <i class="fas fa-user-shield me-2"></i>Permisos
-                                    </h6>
-                                    <ul class="small text-muted mb-0 ps-3">
-                                        <li><strong>Vista propia:</strong> Cada colaborador ve únicamente su agenda.</li>
-                                        <li><strong>Todos los colaboradores:</strong> Supervisores con permiso <code>todos_colaboradores</code> pueden ver cualquier informe.</li>
-                                        <li><strong>Caja Chica:</strong> Solo operarios con permiso <code>caja_chica</code> pueden validar el monto recibido.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
