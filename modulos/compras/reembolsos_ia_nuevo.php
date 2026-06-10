@@ -171,28 +171,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
             background: #111;
             padding: 10px 16px 14px;
         }
-        .cam-controls .zoom-label {
-            color: #aaa;
-            font-size: 0.72rem;
-            margin-bottom: 4px;
-        }
-        #zoomRange {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 4px;
-            background: #444;
-            border-radius: 2px;
-            outline: none;
-        }
-        #zoomRange::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px; height: 18px;
-            border-radius: 50%;
-            background: #FFD700;
-            cursor: pointer;
-            box-shadow: 0 0 4px rgba(255,215,0,0.6);
-        }
+
         .btn-torch {
             background: transparent;
             border: 1.5px solid #555;
@@ -451,14 +430,7 @@ $tituloPagina = $editingId ? 'Editar Solicitud IA' : 'Nueva Solicitud: Reembolso
 
                 <!-- Controles -->
                 <div class="cam-controls">
-                    <!-- Zoom slider -->
-                    <div id="zoom-control" style="display:none;">
-                        <div class="zoom-label d-flex justify-content-between">
-                            <span><i class="fas fa-search-minus me-1"></i>Zoom</span>
-                            <span id="zoom-value">1×</span>
-                        </div>
-                        <input type="range" id="zoomRange" min="1" max="5" step="0.1" value="1" oninput="aplicarZoom(this.value)">
-                    </div>
+    
 
                     <!-- Botones acción -->
                     <div class="d-flex align-items-center justify-content-between mt-3">

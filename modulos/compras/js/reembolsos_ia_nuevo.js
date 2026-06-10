@@ -147,15 +147,6 @@ function inicializarControlesCamara() {
     if (!videoTrack) return;
     const caps = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
 
-    // Zoom
-    if (caps.zoom) {
-        const zoomRange = document.getElementById('zoomRange');
-        zoomRange.min   = caps.zoom.min;
-        zoomRange.max   = caps.zoom.max;
-        zoomRange.step  = caps.zoom.step || 0.1;
-        zoomRange.value = caps.zoom.min;
-        document.getElementById('zoom-control').style.display = 'block';
-    }
 
     // Linterna
     if (caps.torch) {
@@ -230,12 +221,7 @@ function mostrarFocusToast(msg, duracion) {
     focusToastTimer = setTimeout(() => { toast.style.opacity = '0'; }, duracion || 1500);
 }
 
-function aplicarZoom(valor) {
-    if (!videoTrack) return;
-    const z = parseFloat(valor);
-    document.getElementById('zoom-value').textContent = z.toFixed(1) + '×';
-    videoTrack.applyConstraints({ advanced: [{ zoom: z }] }).catch(() => {});
-}
+
 
 function toggleLinterna() {
     if (!videoTrack) return;
@@ -268,11 +254,8 @@ function cerrarCamara() {
     modalCamara.hide();
 
     // Resetear controles
-    document.getElementById('zoom-control').style.display = 'none';
     document.getElementById('btnTorch').style.display = 'none';
     document.getElementById('btnTorchPlaceholder').style.display = 'block';
-    document.getElementById('zoomRange').value = 1;
-    document.getElementById('zoom-value').textContent = '1×';
     document.getElementById('cam-focus-status').textContent = 'AUTO';
     document.getElementById('cam-focus-status').className = 'badge bg-secondary';
     document.getElementById('focus-ring').className = '';
