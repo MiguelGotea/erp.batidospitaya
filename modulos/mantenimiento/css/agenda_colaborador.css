@@ -1,50 +1,241 @@
 /* css/agenda_colaborador.css */
 :root {
     --color-primary: #0E544C;
+    --color-primary-light: #e8f5f4;
     --color-secondary: #51B8AC;
     --color-accent: #f8f9fa;
-    --color-border: #e9ecef;
+    --color-border: #e0e7e6;
     --color-muted: #6c757d;
     --color-success: #198754;
     --color-danger: #dc3545;
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --color-warning: #e8a020;
+    --shadow-sm: 0 2px 8px rgba(14, 84, 76, 0.08);
+    --shadow-md: 0 4px 16px rgba(14, 84, 76, 0.12);
+    --radius-card: 16px;
+    --radius-btn: 50px;
+    --touch-min: 48px; /* Mínimo recomendado para tap en móvil */
+}
+
+/* ── BASE ── */
+body {
+    -webkit-tap-highlight-color: transparent;
+    font-size: 1rem;
 }
 
 .sub-container {
-    background-color: #fcfcfc;
+    background-color: #f5f8f7;
 }
 
+/* ── PANEL DE ESTADO DEL INFORME ── */
 .report-status-card {
     background-color: #ffffff !important;
     border: 1px solid var(--color-border) !important;
     box-shadow: var(--shadow-sm) !important;
     transition: all 0.3s ease;
+    border-radius: var(--radius-card) !important;
 }
 
 .report-status-card.bg-primary.bg-opacity-10 {
-    border-left: 4px solid var(--color-primary) !important;
+    border-left: 5px solid var(--color-primary) !important;
+    background-color: var(--color-primary-light) !important;
 }
 
 .report-status-card.bg-success.bg-opacity-10 {
-    border-left: 4px solid var(--color-success) !important;
+    border-left: 5px solid var(--color-success) !important;
+    background-color: #eaf5ef !important;
 }
 
+.report-status-card.bg-light {
+    border-left: 5px solid #adb5bd !important;
+}
+
+/* ── BOTONES — DISEÑO TAP-FRIENDLY ── */
+/* Todos los botones principales deben ser fácilmente tocables */
+.btn {
+    min-height: var(--touch-min);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: all 0.18s ease;
+    border-radius: var(--radius-btn) !important;
+}
+
+/* Botones pequeños: se les amplía el área de toque */
+.btn-sm {
+    min-height: 40px;
+    padding: 0.35rem 1rem !important;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(14, 84, 76, 0.25);
+}
+
+.btn-primary:hover,
+.btn-primary:active {
+    background-color: #0c4841;
+    border-color: #0c4841;
+    box-shadow: 0 6px 16px rgba(14, 84, 76, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    border-width: 2px;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+/* Botón de eliminar (trash) — área de toque mínima */
+.btn-link.text-danger {
+    min-height: var(--touch-min) !important;
+    min-width: var(--touch-min) !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
+    transition: background 0.2s;
+}
+.btn-link.text-danger:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* ── BOTONES DE ACCIÓN PRINCIPALES (Iniciar / Finalizar) ── */
+.btn-iniciar-informe {
+    font-size: 1.1rem;
+    padding: 0.75rem 2rem !important;
+    min-height: 56px;
+    width: 100%;
+    box-shadow: 0 6px 20px rgba(14, 84, 76, 0.3);
+}
+
+.btn-finalizar-informe {
+    font-size: 1.1rem;
+    padding: 0.75rem 2rem !important;
+    min-height: 56px;
+    width: 100%;
+}
+
+/* ── INPUTS — DEBEN VERSE CLARAMENTE COMO CAMPOS A LLENAR ── */
+.form-control,
+.form-select {
+    border: 2px solid #c8d8d6 !important;
+    border-radius: 12px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+    min-height: var(--touch-min);
+    background-color: #f0f7f6 !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(14, 84, 76, 0.15) !important;
+    background-color: #ffffff !important;
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: #a0b5b3;
+    font-style: italic;
+}
+
+.form-control-lg {
+    font-size: 1.15rem !important;
+    min-height: 56px;
+    border-radius: 14px !important;
+}
+
+.input-group-text {
+    border: 2px solid #c8d8d6 !important;
+    border-right: none !important;
+    border-radius: 12px 0 0 12px !important;
+    background-color: var(--color-primary-light) !important;
+    font-weight: 700;
+    color: var(--color-primary);
+    padding: 0.75rem 1rem !important;
+}
+
+.input-group .form-control {
+    border-left: none !important;
+    border-radius: 0 12px 12px 0 !important;
+}
+
+/* Labels de formulario — claros y distinguibles */
+.form-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #2d4a48;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.form-label::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    background-color: var(--color-primary);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+/* Inputs inline (hora arribo/salida dentro de tarjeta) — versión compacta */
+.visita-logistica-box .form-control {
+    border: 1.5px solid #c8d8d6 !important;
+    border-radius: 10px !important;
+    background-color: #ffffff !important;
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.95rem !important;
+    min-height: 40px;
+}
+
+.visita-logistica-box .form-control:focus {
+    border-color: var(--color-primary) !important;
+    background-color: #ffffff !important;
+}
+
+.visita-logistica-box textarea.form-control {
+    min-height: 44px;
+}
+
+/* ── TARJETAS DE VISITA ── */
 .visita-item {
     background-color: #ffffff;
     border: 1px solid var(--color-border) !important;
-    border-radius: 12px !important;
+    border-radius: var(--radius-card) !important;
     box-shadow: var(--shadow-sm) !important;
+    overflow: hidden;
 }
 
 .visita-item .card-header {
-    background-color: #ffffff;
-    border-bottom: 1px solid #f8f9fa !important;
+    background: linear-gradient(135deg, #f0f7f6 0%, #e8f3f2 100%);
+    border-bottom: 1px solid #d5e8e6 !important;
+    padding: 1rem 1.25rem !important;
 }
 
+/* Nombre de la tienda en la tarjeta */
+.visita-item .card-header h6 {
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+/* ── TAREAS DENTRO DE VISITA ── */
 .visita-tareas > div {
-    padding: 12px !important;
-    border-bottom: 1px solid #f8f9fa !important;
+    padding: 14px !important;
+    border-bottom: 1px solid #f0f5f4 !important;
     transition: background 0.2s ease;
 }
 
@@ -53,36 +244,113 @@
 }
 
 .visita-tareas > div:hover {
-    background-color: #fcfcfc;
+    background-color: #f8faf9;
 }
 
-.pending-list .card {
-    background-color: #ffffff;
-    border: 1px solid var(--color-border) !important;
-    border-width: 1px 1px 1px 4px !important;
-    box-shadow: var(--shadow-sm) !important;
+/* ── SECCIÓN DE LOGÍSTICA ── */
+.visita-logistica-box {
+    background-color: #f0f7f6;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1.5px dashed #b0cfcc;
 }
 
-.btn-primary {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
+.section-divider {
+    border: 0;
+    border-top: 1px solid #e0ebe9;
+    margin: 1.25rem 0;
+    opacity: 0.8;
 }
 
-.btn-primary:hover {
-    background-color: #0c4841;
-    border-color: #0c4841;
-}
-
-.btn-outline-primary {
+/* ── ETIQUETA DE CAMPO (uppercase) ── */
+.visita-info-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
     color: var(--color-primary);
-    border-color: var(--color-primary);
+    font-weight: 800;
+    display: block;
 }
 
-.btn-outline-primary:hover {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
+/* ── MODALES — OPTIMIZADOS PARA MÓVIL ── */
+.shadow-premium {
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
 }
 
+.modal-content {
+    border-radius: 20px !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid #f0f0f0 !important;
+    padding: 1.25rem 1.5rem !important;
+}
+
+.modal-footer {
+    border-top: 1px solid #f0f0f0 !important;
+    padding: 1rem 1.5rem 1.5rem !important;
+    gap: 0.75rem;
+}
+
+/* Botones del modal — full width en móvil */
+.modal-footer .btn {
+    flex: 1;
+}
+
+.modal-body {
+    padding: 1.25rem 1.5rem !important;
+}
+
+/* ── BADGES DE ESTADO ── */
+.badge {
+    font-size: 0.8rem;
+    padding: 0.45em 0.85em;
+    letter-spacing: 0.3px;
+}
+
+/* ── SWITCH DE KILOMETRAJE ── */
+.form-check-input {
+    width: 2.75em !important;
+    height: 1.5em !important;
+    cursor: pointer;
+}
+
+.form-check-label {
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding-left: 0.5rem;
+}
+
+/* ── SALDO / RESUMEN FINANCIERO ── */
+.saldo-pill {
+    background: linear-gradient(135deg, #e8f5f0, #d4edda);
+    border: 1.5px solid #b2dfcc;
+    border-radius: 50px;
+    padding: 0.6rem 1.25rem;
+}
+
+/* ── ESTADO VACÍO ── */
+.empty-state {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--color-muted);
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    opacity: 0.35;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+/* ── FOTO THUMB ── */
+.foto-thumb, .img-thumbnail {
+    border: 1px solid var(--color-border);
+    padding: 2px;
+    background-color: #fff;
+}
+
+/* ── BADGES ── */
 .badge.bg-primary {
     background-color: var(--color-primary) !important;
 }
@@ -91,60 +359,86 @@
     color: var(--color-primary) !important;
 }
 
-/* Timeline Minimalista */
-.visitas-timeline {
-    position: relative;
-    padding-left: 0;
+/* ── BOTONES DE CÁMARA / GALERÍA — Ancho completo en móvil ── */
+.foto-upload-group {
+    display: flex;
+    gap: 0.5rem;
 }
 
-.foto-thumb, .img-thumbnail {
-    border: 1px solid var(--color-border);
-    padding: 2px;
-    background-color: #fff;
+.foto-upload-group .btn {
+    flex: 1;
+    font-size: 0.95rem;
 }
 
-.shadow-premium {
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
-}
-
-.modal-content {
-    border-radius: 16px !important;
-}
-
-.modal-header {
-    border-bottom: 1px solid #f0f0f0 !important;
-}
-
-.modal-footer {
-    border-top: 1px solid #f0f0f0 !important;
-}
-
+/* ── RESPONSIVE — MÓVIL PRIMERO ── */
 @media (max-width: 768px) {
     .report-status-card {
-        padding: 1.5rem !important;
+        padding: 1.25rem !important;
+    }
+
+    /* Botones de acción en tarjeta de visita — full width en móvil */
+    .visita-item .card-header .d-flex.gap-2 {
+        width: 100%;
+    }
+
+    .visita-item .card-header .btn {
+        flex: 1;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.5rem !important;
+    }
+
+    /* Logística: apilar verticalmente */
+    .visita-logistica-box .row > div {
+        border-left: none !important;
+        padding-left: 0 !important;
+        border-top: 1px solid #d5e8e6;
+        padding-top: 12px !important;
+    }
+
+    .visita-logistica-box .row > div:first-child {
+        border-top: none;
+        padding-top: 0 !important;
+    }
+
+    /* Inputs de hora — más anchos en móvil */
+    .visita-logistica-box input[type="time"] {
+        width: 100% !important;
+        font-size: 1.1rem !important;
+    }
+
+    /* Header principal */
+    .report-status-card h4 {
+        font-size: 1.1rem;
+    }
+
+    /* Modal ocupa casi toda la pantalla */
+    .modal-dialog {
+        margin: 0.5rem auto;
+        max-width: calc(100vw - 1rem);
+    }
+
+    /* Tamaño de touch para fotos zoom */
+    .foto-thumb {
+        width: 44px !important;
+        height: 44px !important;
     }
 }
 
-/* NUEVOS ESTILOS PARA ORGANIZACION DE VISITA */
-.visita-logistica-box {
-    background-color: #f8f9fa;
-    border-radius: 12px;
-    padding: 15px;
-    border: 1px dashed #dee2e6;
+@media (max-width: 480px) {
+    .btn-iniciar-informe,
+    .btn-finalizar-informe {
+        font-size: 1rem;
+        padding: 0.65rem 1.5rem !important;
+    }
 }
 
-.section-divider {
-    border: 0;
-    border-top: 1px solid #eee;
-    margin: 1.5rem 0;
-    opacity: 0.8;
-}
+/* ── AYUDA: botón flotante de ayuda ya viene del header_universal ── */
+#pageHelpModal { z-index: 1060 !important; }
+.modal-backdrop { z-index: 1050 !important; }
 
-.visita-info-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: #888;
-    font-weight: 800;
-    display: block;
+/* ── INDICADOR VISUAL DE CAMPO REQUERIDO ── */
+.form-label.required::after {
+    content: ' *';
+    color: var(--color-danger);
+    font-weight: 900;
 }
