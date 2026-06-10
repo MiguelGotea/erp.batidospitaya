@@ -496,7 +496,6 @@ class Ticket
             $ticketId = $tarea['ticket_id'];
             $completado = (int) $tarea['completado_100'];
 
-
             // Leer fecha_inicio actual para no sobreescribir si ya existe
             $ticketActual = $this->db->fetchOne(
                 "SELECT fecha_inicio FROM mtto_tickets WHERE id = ?",
