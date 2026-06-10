@@ -1655,7 +1655,7 @@ function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/faltas_manual.css">
 </head>
 

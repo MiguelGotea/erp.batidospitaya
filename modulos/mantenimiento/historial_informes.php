@@ -32,9 +32,9 @@ $puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/core/assets/css/global_tools.css">
-    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
-    <link rel="stylesheet" href="../../core/assets/css/modales_premium.css">
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
         :root {
             --color-header-tabla: #0E544C;
@@ -369,6 +369,8 @@ $puedeGenerarReembolso = tienePermiso('agenda_mantenimiento', 'generar_reembolso
         const puedeGenerarReembolso = <?= $puedeGenerarReembolso ? 'true' : 'false' ?>;
     </script>
     <script src="js/historial_informes.js?v=<?= mt_rand(1, 10000) ?>"></script>
+    <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
+    <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>

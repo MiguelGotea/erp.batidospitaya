@@ -37,7 +37,7 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/gestion_anulaciones.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
@@ -550,6 +550,8 @@ $puedeAprobar = tienePermiso('aprobacion_pedidos_access_host', 'aprobar', $cargo
             </div>
         </div>
     <?php endif; ?>
+    <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
+    <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>

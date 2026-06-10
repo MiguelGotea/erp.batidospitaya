@@ -107,7 +107,7 @@ function getTextoUrgencia($nivel)
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <link rel="stylesheet" href="/core/assets/css/fab_button.css">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/historial_solicitudes.css?v=<?php echo mt_rand(1, 10000); ?>">
     <!-- Library for HEIC support -->
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
@@ -317,6 +317,8 @@ function getTextoUrgencia($nivel)
         });
     </script>
     <script src="js/historial_solicitudes.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
+    <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>
