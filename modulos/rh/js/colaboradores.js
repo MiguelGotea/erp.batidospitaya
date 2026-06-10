@@ -911,3 +911,56 @@ function actualizarVisibilidadFechaSalida() {
         $('.col-fecha-salida').show();
     }
 }
+
+// ── Test de correo (botón temporal en modal de terminación) ───────────────
+function probarEnvioCorreo() {
+    const idContrato = $('#idContratoTerminar').val();
+    if (!idContrato) {
+        alert('No hay un contrato seleccionado.');
+        return;
+    }
+
+    const fechaTerminacion = $('#fecha_terminacion').val();
+    if (!fechaTerminacion) {
+        alert('Completa la Fecha de Salida antes de probar el correo.');
+        return;
+    }
+
+    const btn = $('#btnTestEmail');
+    const originalHtml = btn.html();
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Enviando...');
+
+    $.ajax({
+        url: 'ajax/colaboradores_test_email_baja.php',
+        method: 'POST',
+        data: {
+            id_contrato:       idContrato,
+            fecha_terminacion: fechaTerminacion,
+            fecha_liquidacion: $('#fecha_liquidacion').val() || '',
+            tipo_salida:       $('#tipo_salida').val() || ''
+        },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success) {
+                btn.html('<i class="fas fa-check"></i> ¡Enviado!').css('background', '#28a745');
+                alert('✅ ' + response.mensaje);
+            } else {
+                btn.html('<i class="fas fa-exclamation-triangle"></i> Error').css('background', '#dc3545');
+                alert('❌ ' + response.mensaje);
+            }
+        },
+        error: function () {
+            btn.html('<i class="fas fa-exclamation-triangle"></i> Error').css('background', '#dc3545');
+            alert('Error de conexión al intentar enviar el correo de prueba.');
+        },
+        complete: function () {
+            // Restaurar botón tras 3 segundos
+            setTimeout(function () {
+                btn.prop('disabled', false).html(originalHtml)
+                   .css('background', '#6f42c1');
+            }, 3000);
+        }
+    });
+}
+// ── Fin Test correo ────────────────────────────────────────────────────────
+
