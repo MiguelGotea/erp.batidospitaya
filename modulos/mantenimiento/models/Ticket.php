@@ -782,5 +782,19 @@ class Ticket
         $sql = "UPDATE mtto_informe_visitas SET reembolso_id = ? WHERE id = ?";
         return $this->db->query($sql, [$reembolso_id, $visita_id]);
     }
+
+    /**
+     * Registrar el kilometraje inicial en un informe ya creado
+     */
+    public function actualizarKmInicial($informe_id, $km_inicial, $foto_nombre = null)
+    {
+        if ($foto_nombre) {
+            $sql = "UPDATE mtto_informes_diarios SET km_inicial = ?, km_foto_inicial = ? WHERE id = ?";
+            return $this->db->query($sql, [$km_inicial, $foto_nombre, $informe_id]);
+        } else {
+            $sql = "UPDATE mtto_informes_diarios SET km_inicial = ? WHERE id = ?";
+            return $this->db->query($sql, [$km_inicial, $informe_id]);
+        }
+    }
 }
 ?>

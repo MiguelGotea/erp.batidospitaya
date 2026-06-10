@@ -110,34 +110,58 @@ async function actualizarVisitaInline(id, campo, valor) {
 }
 
 /**
- * VALIDACIÓN DE IMPRESIÓN
+ * Toggle visibilidad de la sección de kilometraje
  */
-function validarImpresion(id, estado) {
-    if (estado !== 'finalizado') {
-        const inputs = document.querySelectorAll('input[onchange^="actualizarVisitaInline"]');
-        const textareas = document.querySelectorAll('textarea[onchange^="actualizarVisitaInline"]');
-        
-        // Verificar si hay campos vacíos obligatorios (Término y Materiales)
-        let incompleto = false;
-        inputs.forEach(input => {
-            if (input.onchange.toString().includes('hora_salida') && !input.value) incompleto = true;
-        });
-        textareas.forEach(textarea => {
-            if (!textarea.value) incompleto = true;
-        });
-
-        if (incompleto) {
-            Swal.fire({
-                title: 'No se puede imprimir',
-                text: 'Debe completar la Hora de Salida y los Materiales de todas las visitas antes de imprimir el reporte.',
-                icon: 'warning',
-                confirmButtonColor: '#0E544C'
-            });
-            return;
-        }
+function toggleKilometraje(enabled) {
+    const section = document.getElementById('kmSection');
+    if (enabled) {
+        section.classList.remove('d-none');
+    } else {
+        section.classList.add('d-none');
     }
-    
-    window.open(`imprimir_informe.php?id=${id}`, '_blank');
+}
+
+/**
+ * Abre modal para registrar KM Inicial
+ */
+function modalRegistrarKmInicial(informeId) {
+    $('#km_inicial_informe_id').val(informeId);
+    $('#formKmInicial')[0].reset();
+    $('#preview_km_ini').addClass('d-none');
+    $('#cam_km_ini_container').addClass('d-none');
+    stopCamera();
+    new bootstrap.Modal(document.getElementById('kmInicialModal')).show();
+}
+
+async function guardarKmInicial() {
+    const form = document.getElementById('formKmInicial');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = new FormData(form);
+    if (!formData.get('km_foto_inicial').name && !formData.get('km_foto_inicial_cam')) {
+        Swal.fire('Error', 'Debe adjuntar o tomar una foto del odómetro inicial', 'error');
+        return;
+    }
+
+    Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });
+
+    try {
+        const response = await fetch('ajax/guardar_km_inicial.php', {
+            method: 'POST',
+            body: formData
+        });
+        const res = await response.json();
+        if (res.success) {
+            Swal.fire('¡Guardado!', 'KM Inicial registrado correctamente', 'success').then(() => location.reload());
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    }
 }
 
 /**

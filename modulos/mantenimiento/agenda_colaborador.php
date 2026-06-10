@@ -55,16 +55,7 @@ if ($informeActual) {
 // Obtener sucursales para el selector de visitas
 $sucursales = $ticketModel->getSucursales();
 
-// Obtener tickets pendientes (solicitados/agendados) del colaborador para el panel lateral
-$ticketsPendientes = [];
-if ($colaborador_filtro) {
-    $todosTickets = $ticketModel->getTicketsPorColaborador($colaborador_filtro, "2016-01-01");
-    foreach ($todosTickets as $t) {
-        if ($t['status'] === 'agendado' || $t['status'] === 'solicitado') {
-            $ticketsPendientes[] = $t;
-        }
-    }
-}
+
 
 ?>
 <!DOCTYPE html>
@@ -136,13 +127,7 @@ if ($colaborador_filtro) {
                                     </button>
                                 <?php endif; ?>
 
-                                <?php if ($informeActual): ?>
-                                    <button
-                                        onclick="validarImpresion(<?= $informeActual['id'] ?>, '<?= $informeActual['estado'] ?>')"
-                                        class="btn btn-dark px-4 rounded-pill">
-                                        <i class="fas fa-print me-2"></i>Imprimir Reporte
-                                    </button>
-                                <?php endif; ?>
+
                             </div>
                         </div>
 
@@ -150,27 +135,48 @@ if ($colaborador_filtro) {
                             <hr class="my-3 opacity-10">
                             <div class="row g-4 text-center align-items-center">
                                 <!-- COLUMNA KILOMETRAJE -->
-                                <div class="col-md-3 border-end">
-                                    <div class="row g-0">
+                                <!-- KM TOGGLE -->
+                                <hr class="my-2 opacity-10">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="toggleKm"
+                                            <?= (!empty($informeActual['km_inicial']) || !empty($informeActual['km_final'])) ? 'checked' : '' ?>
+                                            onchange="toggleKilometraje(this.checked)">
+                                        <label class="form-check-label small fw-bold text-muted" for="toggleKm">
+                                            <i class="fas fa-road me-1"></i>Registrar Kilometraje
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="kmSection" class="<?= (!empty($informeActual['km_inicial']) || !empty($informeActual['km_final'])) ? '' : 'd-none' ?>">
+                                    <div class="row g-0 text-center mb-2 border rounded-3 py-2 bg-white">
                                         <div class="col-6 border-end">
                                             <small class="visita-info-label mb-1">KM Inicial</small>
                                             <div class="d-flex flex-column align-items-center gap-1">
-                                                <span
-                                                    class="fw-bold fs-5"><?= number_format($informeActual['km_inicial'], 2) ?></span>
-                                                <?php if ($informeActual['km_foto_inicial']): ?>
-                                                    <img src="uploads/informes/<?= $informeActual['km_foto_inicial'] ?>"
-                                                        class="rounded shadow-sm"
-                                                        style="width: 45px; height: 45px; object-fit: cover; cursor: zoom-in;"
-                                                        onclick="zoomFoto(this.src)">
+                                                <?php if (!empty($informeActual['km_inicial'])): ?>
+                                                    <span class="fw-bold fs-5"><?= number_format($informeActual['km_inicial'], 2) ?></span>
+                                                    <?php if ($informeActual['km_foto_inicial']): ?>
+                                                        <img src="uploads/informes/<?= $informeActual['km_foto_inicial'] ?>"
+                                                            class="rounded shadow-sm"
+                                                            style="width: 45px; height: 45px; object-fit: cover; cursor: zoom-in;"
+                                                            onclick="zoomFoto(this.src)">
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <?php if ($informeActual['estado'] === 'creado'): ?>
+                                                        <button class="btn btn-sm btn-outline-primary mt-1 rounded-pill"
+                                                            onclick="modalRegistrarKmInicial(<?= $informeActual['id'] ?>)">
+                                                            <i class="fas fa-plus me-1"></i>Registrar
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <span class="text-muted small">—</span>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
                                         <div class="col-6">
                                             <small class="visita-info-label mb-1">KM Final</small>
                                             <div class="d-flex flex-column align-items-center gap-1">
-                                                <?php if ($informeActual['km_final']): ?>
-                                                    <span
-                                                        class="fw-bold fs-5"><?= number_format($informeActual['km_final'], 2) ?></span>
+                                                <?php if (!empty($informeActual['km_final'])): ?>
+                                                    <span class="fw-bold fs-5"><?= number_format($informeActual['km_final'], 2) ?></span>
                                                     <?php if ($informeActual['km_foto_final']): ?>
                                                         <img src="uploads/informes/<?= $informeActual['km_foto_final'] ?>"
                                                             class="rounded shadow-sm"
@@ -178,97 +184,97 @@ if ($colaborador_filtro) {
                                                             onclick="zoomFoto(this.src)">
                                                     <?php endif; ?>
                                                 <?php else: ?>
-                                                    <button class="btn btn-sm btn-outline-danger mt-1 rounded-pill"
-                                                        onclick="modalCierre(<?= $informeActual['id'] ?>)">
-                                                        <i class="fas fa-plus me-1"></i>Registrar
-                                                    </button>
+                                                    <?php if ($informeActual['estado'] === 'creado'): ?>
+                                                        <button class="btn btn-sm btn-outline-danger mt-1 rounded-pill"
+                                                            onclick="modalCierre(<?= $informeActual['id'] ?>)">
+                                                            <i class="fas fa-plus me-1"></i>Registrar
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <span class="text-muted small">—</span>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- COLUMNA CAJA CHICA -->
-                                <div class="col-md-3 border-end">
-                                    <?php
-                                    $totalGastado = 0;
-                                    foreach ($informeActual['visitas'] as $v) {
-                                        foreach ($v['compras'] as $c)
-                                            $totalGastado += $c['monto'];
-                                    }
-                                    $saldoActual = $informeActual['monto_caja_chica'] - $totalGastado;
-                                    ?>
-                                    <div class="d-flex flex-column gap-1 text-start">
-                                        <div class="d-flex justify-content-between px-3">
-                                            <small class="visita-info-label small opacity-75">Caja Chica (Ingreso):</small>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span
-                                                    class="fw-bold text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
-                                                <?php if ($informeActual['monto_caja_chica'] == 0 && tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario) && $informeActual['estado'] === 'creado'): ?>
-                                                    <button class="btn btn-sm btn-outline-success p-0 px-2 rounded-pill"
-                                                        style="font-size: 0.75rem;"
-                                                        onclick="modalValidarCaja(<?= $informeActual['id'] ?>, 0)">
-                                                        <i class="fas fa-plus me-1"></i>Registrar
-                                                    </button>
-                                                <?php endif; ?>
+                                <!-- STATS ROW -->
+                                <hr class="my-3 opacity-10">
+                                <div class="row g-4 text-center align-items-center">
+                                    <!-- COLUMNA CAJA CHICA -->
+                                    <div class="col-md-4 border-end">
+                                        <?php
+                                        $totalGastado = 0;
+                                        foreach ($informeActual['visitas'] as $v) {
+                                            foreach ($v['compras'] as $c)
+                                                $totalGastado += $c['monto'];
+                                        }
+                                        $saldoActual = $informeActual['monto_caja_chica'] - $totalGastado;
+                                        ?>
+                                        <div class="d-flex flex-column gap-1 text-start">
+                                            <div class="d-flex justify-content-between px-3">
+                                                <small class="visita-info-label small opacity-75">Caja Chica (Ingreso):</small>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="fw-bold text-dark">C$<?= number_format($informeActual['monto_caja_chica'], 2) ?></span>
+                                                    <?php if ($informeActual['monto_caja_chica'] == 0 && tienePermiso('agenda_mantenimiento', 'caja_chica', $cargoOperario) && $informeActual['estado'] === 'creado'): ?>
+                                                        <button class="btn btn-sm btn-outline-success p-0 px-2 rounded-pill"
+                                                            style="font-size: 0.75rem;"
+                                                            onclick="modalValidarCaja(<?= $informeActual['id'] ?>, 0)">
+                                                            <i class="fas fa-plus me-1"></i>Registrar
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between px-3">
+                                                <small class="visita-info-label small opacity-75">Total Gastado:</small>
+                                                <span class="fw-bold text-danger">C$<?= number_format($totalGastado, 2) ?></span>
+                                            </div>
+                                            <div class="bg-white rounded-pill py-1 px-3 mt-1 d-flex justify-content-between shadow-sm border mx-2">
+                                                <small class="visita-info-label">Saldo Actual:</small>
+                                                <span class="fw-bold fs-5 text-success">C$<?= number_format($saldoActual, 2) ?></span>
                                             </div>
                                         </div>
-                                        <div class="d-flex justify-content-between px-3">
-                                            <small class="visita-info-label small opacity-75">Total Gastado:</small>
-                                            <span
-                                                class="fw-bold text-danger">C$<?= number_format($totalGastado, 2) ?></span>
-                                        </div>
-                                        <div
-                                            class="bg-white rounded-pill py-1 px-3 mt-1 d-flex justify-content-between shadow-sm border mx-2">
-                                            <small class="visita-info-label">Saldo Actual:</small>
-                                            <span
-                                                class="fw-bold fs-5 text-success">C$<?= number_format($saldoActual, 2) ?></span>
-                                        </div>
                                     </div>
-                                </div>
 
-                                <!-- COLUMNA ESTADISTICAS -->
-                                <div class="col-md-3 border-end">
-                                    <div class="row g-0">
-                                        <div class="col-6 border-end">
-                                            <small class="visita-info-label mb-1">Sucursales</small>
-                                            <div class="fs-3 fw-bold text-primary"><?= count($informeActual['visitas']) ?>
+                                    <!-- COLUMNA ESTADISTICAS -->
+                                    <div class="col-md-4 border-end">
+                                        <div class="row g-0">
+                                            <div class="col-6 border-end">
+                                                <small class="visita-info-label mb-1">Sucursales</small>
+                                                <div class="fs-3 fw-bold text-primary"><?= count($informeActual['visitas']) ?></div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="visita-info-label mb-1">Tareas</small>
+                                                <?php
+                                                $totalT = 0;
+                                                foreach ($informeActual['visitas'] as $v)
+                                                    $totalT += count($v['tareas']);
+                                                ?>
+                                                <div class="fs-3 fw-bold text-primary"><?= $totalT ?></div>
                                             </div>
                                         </div>
-                                        <div class="col-6">
-                                            <small class="visita-info-label mb-1">Tareas</small>
-                                            <?php
-                                            $totalT = 0;
-                                            foreach ($informeActual['visitas'] as $v)
-                                                $totalT += count($v['tareas']);
-                                            ?>
-                                            <div class="fs-3 fw-bold text-primary"><?= $totalT ?></div>
-                                        </div>
+                                    </div>
+
+                                    <!-- COLUMNA ESTADO FINAL -->
+                                    <div class="col-md-4">
+                                        <div class="visita-info-label mb-1">Estado del Informe</div>
+                                        <?php if ($informeActual['estado'] === 'creado'): ?>
+                                            <div class="text-warning fw-bold fs-5"><i class="fas fa-spinner fa-spin me-2"></i>ABIERTO</div>
+                                        <?php else: ?>
+                                            <div class="text-success fw-bold fs-5"><i class="fas fa-check-circle me-2"></i>FINALIZADO</div>
+                                            <?php if (!empty($informeActual['km_final']) && !empty($informeActual['km_inicial'])): ?>
+                                                <small class="text-muted d-block">Distancia: <?= number_format($informeActual['km_final'] - $informeActual['km_inicial'], 2) ?> km</small>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
-
-                                <!-- COLUMNA ESTADO FINAL -->
-                                <div class="col-md-3">
-                                    <div class="visita-info-label mb-1">Estado del Informe</div>
-                                    <?php if ($informeActual['estado'] === 'creado'): ?>
-                                        <div class="text-warning fw-bold fs-5"><i
-                                                class="fas fa-spinner fa-spin me-2"></i>ABIERTO</div>
-                                    <?php else: ?>
-                                        <div class="text-success fw-bold fs-5"><i
-                                                class="fas fa-check-circle me-2"></i>FINALIZADO</div>
-                                        <small class="text-muted d-block">Distancia:
-                                            <?= number_format($informeActual['km_final'] - $informeActual['km_inicial'], 2) ?>
-                                            km</small>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
                         <?php endif; ?>
                     </div>
 
                     <!-- LISTA DE VISITAS/PROGRESO -->
                     <?php if ($informeActual): ?>
-                        <div class="row">
-                            <div class="col-lg-8">
+                            <div class="row">
+                            <div class="col-12">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5><i class="fas fa-map-marker-alt text-danger me-2"></i>Mis Visitas del Día</h5>
                                     <?php if ($informeActual['estado'] === 'creado' && $colaborador_filtro == $usuario['CodOperario']): ?>
@@ -437,42 +443,8 @@ if ($colaborador_filtro) {
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-4">
-                                <h5 class="mb-3"><i class="fas fa-tasks text-primary me-2"></i>Agenda Pendiente</h5>
-                                <div class="pending-list">
-                                    <?php if (empty($ticketsPendientes)): ?>
-                                        <div class="text-center bg-white p-4 rounded-4 shadow-sm">
-                                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                                            <p class="text-muted small">No hay tickets pendientes asignados.</p>
-                                        </div>
-                                    <?php else: ?>
-                                        <?php foreach ($ticketsPendientes as $tp): ?>
-                                            <div
-                                                class="card border-0 shadow-sm mb-3 rounded-4 overflow-hidden border-start border-4
-                                                    <?= $tp['tipo_formulario'] === 'cambio_equipos' ? 'border-danger' : 'border-info' ?>">
-                                                <div class="card-body p-3">
-                                                    <div class="d-flex justify-content-between mb-1">
-                                                        <small
-                                                            class="text-muted fw-bold"><?= htmlspecialchars($tp['nombre_sucursal']) ?></small>
-                                                        <?php if ($tp['nivel_urgencia'] == 4): ?>
-                                                            <span class="badge bg-danger rounded-pill">CRÍTICO</span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                    <h6 class="mb-1 fw-bold small"><?= htmlspecialchars($tp['titulo']) ?></h6>
-                                                    <p class="small text-muted mb-0" style="font-size: 0.8em;">
-                                                        <?= htmlspecialchars($tp['descripcion']) ?>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
                         </div>
+                    </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -683,6 +655,63 @@ if ($colaborador_filtro) {
                         data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-danger rounded-pill px-4" onclick="guardarCierre()">Finalizar
                         Informe</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KM INICIAL -->
+    <div class="modal fade" id="kmInicialModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header bg-primary text-white p-3 px-4 border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-road me-2"></i>Registrar KM Inicial</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formKmInicial">
+                        <input type="hidden" name="informe_id" id="km_inicial_informe_id">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Kilometraje Inicial *</label>
+                            <input type="number" step="0.01" class="form-control form-control-lg rounded-3"
+                                name="km_inicial" required placeholder="0.00">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">Foto del Odómetro *</label>
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm flex-grow-1"
+                                    onclick="document.getElementById('km_ini_foto_input').click()">
+                                    <i class="fas fa-upload me-1"></i>Subir
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm flex-grow-1"
+                                    onclick="startCamera('cam_km_ini')">
+                                    <i class="fas fa-camera me-1"></i>Cámara
+                                </button>
+                            </div>
+                            <input type="file" id="km_ini_foto_input" name="km_foto_inicial" accept="image/*"
+                                class="d-none" onchange="previewFile(this, 'preview_km_ini')">
+                            <input type="hidden" name="km_foto_inicial_cam" id="cam_km_ini_data">
+                            <div id="preview_km_ini" class="text-center mt-2 d-none">
+                                <img src="" class="img-thumbnail rounded-3" style="max-height: 180px;">
+                            </div>
+                            <div id="cam_km_ini_container"
+                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
+                                <video id="cam_km_ini_video" autoplay playsinline class="w-100"></video>
+                                <button type="button"
+                                    class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2"
+                                    onclick="captureSnapshot('cam_km_ini')">
+                                    <i class="fas fa-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="guardarKmInicial()">
+                        <i class="fas fa-save me-2"></i>Guardar KM Inicial
+                    </button>
                 </div>
             </div>
         </div>
