@@ -46,7 +46,7 @@ if (!verificarAccesoSucursalMantenimiento($cod_operario, $cod_sucursal)) {
 
 $ticket = new Ticket();
 $sucursales = $sucursalesPermitidas; // Usar solo las sucursales permitidas
-$equipos = $ticket->getEquipos();
+
 
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'tipo_formulario' => 'cambio_equipos',
             'cod_operario' => $cod_operario,
             'cod_sucursal' => $cod_sucursal,
-            'area_equipo' => $_POST['equipo'],
+            'area_equipo' => '',
             'foto' => $foto
         ];
 
@@ -209,19 +209,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </div>
                                             <?php endif; ?>
 
-                                            <div class="<?= (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario) || count($sucursalesPermitidas) > 1) ? 'col-md-6' : 'col-12' ?> mb-3">
-                                                <label for="equipo" class="form-label">Tipo de Equipo *</label>
-                                                <select class="form-select" id="equipo" name="equipo" required>
-                                                    <option value="">Seleccionar equipo</option>
-                                                    <?php foreach ($equipos as $equipo): ?>
-                                                        <option value="<?= htmlspecialchars($equipo['marca']) ?>"
-                                                            data-descripcion="<?= htmlspecialchars($equipo['caracteristicas']) ?>">
-                                                            <?= htmlspecialchars($equipo['marca']) ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                                <div id="equipoDescripcion" class="form-text mt-2 text-primary fw-bold"></div>
-                                            </div>
                                         </div>
 
                                         <div class="mb-3">
@@ -320,17 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script>
         let stream = null;
 
-        // Manejar cambio de equipo
-        document.getElementById('equipo').addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            const descripcion = selectedOption.getAttribute('data-descripcion');
-            document.getElementById('equipoDescripcion').textContent = descripcion || '';
 
-            // Auto-llenar título si está vacío
-            //if (this.value && !document.getElementById('titulo').value) {
-            //    document.getElementById('titulo').value = 'Solicitud para ' + this.value;
-            //}
-        });
 
         // Manejar carga de archivo
         document.getElementById('btnFile').addEventListener('click', function () {
@@ -450,13 +427,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.getElementById('equipmentForm').addEventListener('submit', function (e) {
             const titulo = document.getElementById('titulo').value.trim();
             const descripcion = document.getElementById('descripcion').value.trim();
-            const equipo = document.getElementById('equipo').value;
-
-            if (!equipo) {
-                e.preventDefault();
-                alert('Debe seleccionar un tipo de equipo');
-                return;
-            }
 
             if (titulo.length < 5) {
                 e.preventDefault();
