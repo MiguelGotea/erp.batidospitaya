@@ -218,6 +218,13 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                 </div>
 
                 <div class="form-group mb-3">
+                    <label for="fecha_carta" class="form-label fw-bold">Fecha de la Carta</label>
+                    <input type="date" id="fecha_carta" name="fecha_carta" class="form-control"
+                        value="<?php echo date('Y-m-d'); ?>">
+                    <small style="color: #6c757d;">Fecha formal que aparece en la carta de terminación</small>
+                </div>
+
+                <div class="form-group mb-3">
                     <label for="tipo_salida" class="form-label fw-bold">Tipo de Salida *</label>
                     <select id="tipo_salida" name="tipo_salida" class="form-control" required>
                         <option value="">Seleccionar tipo de salida...</option>

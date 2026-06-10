@@ -25,14 +25,15 @@ try {
 
     // Mapear datos del POST para que coincidan con lo que espera terminarContrato
     $datos = [
-        'fecha_terminacion' => $_POST['fecha_terminacion'],
-        'fecha_liquidacion' => $_POST['fecha_liquidacion'] ?? null,
-        'tipo_salida' => $_POST['tipo_salida'],
-        'motivo_salida' => $_POST['motivo_salida'],
-        'dias_trabajados' => $_POST['dias_trabajados'] ?? 0,
-        'monto_indemnizacion' => $_POST['monto_indemnizacion'] ?? 0,
-        'devolucion_herramientas' => isset($_POST['devolucion_herramientas']) && $_POST['devolucion_herramientas'] == '1',
-        'persona_recibe_herramientas' => $_POST['persona_recibe_herramientas'] ?? ''
+        'fecha_terminacion'          => $_POST['fecha_terminacion'],
+        'fecha_liquidacion'          => $_POST['fecha_liquidacion'] ?? null,
+        'fecha_carta'                => $_POST['fecha_carta'] ?? null,
+        'tipo_salida'                => $_POST['tipo_salida'],
+        'motivo_salida'              => $_POST['motivo_salida'],
+        'dias_trabajados'            => $_POST['dias_trabajados'] ?? 0,
+        'monto_indemnizacion'        => $_POST['monto_indemnizacion'] ?? 0,
+        'devolucion_herramientas'    => isset($_POST['devolucion_herramientas']) && $_POST['devolucion_herramientas'] == '1',
+        'persona_recibe_herramientas'=> $_POST['persona_recibe_herramientas'] ?? ''
     ];
 
     $resultado = terminarContrato($idContrato, $datos);
@@ -51,28 +52,42 @@ try {
             require_once __DIR__ . '/../../../core/email/EmailService.php';
             $emailService = new EmailService($conn);
 
-            // 1. Obtener datos completos del colaborador y contrato
+            // 1. Obtener cargo/sucursal ACTUAL del colaborador (no del contrato antiguo)
             $stmtColaborador = $conn->prepare("
                 SELECT
                     o.Nombre,
                     o.Apellido,
                     o.Cedula,
-                    nc.Nombre        AS nombre_cargo,
-                    s.nombre         AS nombre_sucursal,
-                    ts.nombre        AS tipo_salida_nombre,
-                    c.fecha_salida,
-                    c.fecha_liquidacion
+                    COALESCE(
+                        (SELECT nc.Nombre
+                         FROM AsignacionNivelesCargos anc
+                         JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
+                         WHERE anc.CodOperario = o.CodOperario
+                           AND anc.CodNivelesCargos != 2
+                           AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
+                         ORDER BY anc.CodAsignacionNivelesCargos DESC LIMIT 1),
+                        (SELECT nc.Nombre
+                         FROM AsignacionNivelesCargos anc
+                         JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
+                         WHERE anc.CodOperario = o.CodOperario
+                           AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
+                         ORDER BY anc.CodAsignacionNivelesCargos DESC LIMIT 1),
+                        'Sin cargo'
+                    ) AS nombre_cargo,
+                    COALESCE(
+                        (SELECT s.nombre
+                         FROM AsignacionNivelesCargos anc2
+                         JOIN sucursales s ON anc2.Sucursal = s.codigo
+                         WHERE anc2.CodOperario = o.CodOperario
+                           AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
+                         ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC LIMIT 1),
+                        'Sin tienda'
+                    ) AS nombre_sucursal,
+                    ts.nombre AS tipo_salida_nombre,
+                    c.fecha_carta
                 FROM Contratos c
-                INNER JOIN Operarios o
-                    ON o.CodOperario = c.cod_operario
-                LEFT JOIN AsignacionNivelesCargos anc
-                    ON anc.CodAsignacionNivelesCargos = c.CodAsignacionNivelesCargos
-                LEFT JOIN NivelesCargos nc
-                    ON nc.CodNivelesCargos = anc.CodNivelesCargos
-                LEFT JOIN sucursales s
-                    ON s.id = anc.Sucursal
-                LEFT JOIN TipoSalida ts
-                    ON ts.CodTipoSalida = c.cod_tipo_salida
+                INNER JOIN Operarios o ON o.CodOperario = c.cod_operario
+                LEFT JOIN TipoSalida ts ON ts.CodTipoSalida = c.cod_tipo_salida
                 WHERE c.CodContrato = ?
             ");
             $stmtColaborador->execute([$idContrato]);
@@ -80,38 +95,28 @@ try {
 
             if ($colaborador) {
                 $nombreCompleto = trim($colaborador['Nombre'] . ' ' . $colaborador['Apellido']);
-                $cedula = $colaborador['Cedula'] ?? 'N/D';
-                $cargo = $colaborador['nombre_cargo'] ?? 'N/D';
-                $sucursal = $colaborador['nombre_sucursal'] ?? 'N/D';
-                $tipoSalida = $colaborador['tipo_salida_nombre'] ?? ($datos['tipo_salida'] ?? 'N/D');
+                $cedula         = $colaborador['Cedula']             ?? 'N/D';
+                $cargo          = $colaborador['nombre_cargo']       ?? 'N/D';
+                $sucursal       = $colaborador['nombre_sucursal']    ?? 'N/D';
+                $tipoSalida     = $colaborador['tipo_salida_nombre'] ?? ($datos['tipo_salida'] ?? 'N/D');
 
                 // Formatear fechas en español
-                $meses = [
-                    '01' => 'enero',
-                    '02' => 'febrero',
-                    '03' => 'marzo',
-                    '04' => 'abril',
-                    '05' => 'mayo',
-                    '06' => 'junio',
-                    '07' => 'julio',
-                    '08' => 'agosto',
-                    '09' => 'septiembre',
-                    '10' => 'octubre',
-                    '11' => 'noviembre',
-                    '12' => 'diciembre'
-                ];
+                $meses = ['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril',
+                          '05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto',
+                          '09'=>'septiembre','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'];
 
                 $fmtFecha = function ($fecha) use ($meses) {
-                    if (empty($fecha) || $fecha === '0000-00-00')
-                        return 'N/D';
+                    if (empty($fecha) || $fecha === '0000-00-00') return 'N/D';
                     [$y, $m, $d] = explode('-', substr($fecha, 0, 10));
                     return intval($d) . ' de ' . ($meses[$m] ?? $m) . ' del ' . $y;
                 };
 
-                $fechaCarta = $fmtFecha($datos['fecha_terminacion']);
-                $ultimoDia = !empty($datos['fecha_liquidacion'])
-                    ? $fmtFecha($datos['fecha_liquidacion'])
-                    : $fmtFecha($datos['fecha_terminacion']);
+                // fecha_carta: prioridad → guardada en DB → enviada en POST → fecha_terminacion
+                $rawCarta   = $colaborador['fecha_carta'] ?? ($datos['fecha_carta'] ?? $datos['fecha_terminacion']);
+                $fechaCarta = $fmtFecha($rawCarta);
+                $ultimoDia  = !empty($datos['fecha_liquidacion'])
+                                ? $fmtFecha($datos['fecha_liquidacion'])
+                                : $fmtFecha($datos['fecha_terminacion']);
 
                 // 2. Construir cuerpo HTML del correo
                 $cuerpoHtml = "
@@ -129,8 +134,7 @@ try {
                     </div>
                 ";
 
-                // 3. Obtener destinatarios: cargos con permiso 'allow' en acción 'correo'
-                //    de la tool 'salida_colaborador' tipo 'notificacion_email'
+                // 3. Obtener destinatarios: cargos con permiso 'allow' → acción 'correo' → tool 'salida_colaborador'
                 $stmtDestinatarios = $conn->prepare("
                     SELECT DISTINCT o.email_trabajo
                     FROM Operarios o
@@ -159,7 +163,7 @@ try {
                 if (!empty($destinatarios)) {
                     $asunto = "Baja de Colaborador: {$nombreCompleto}";
                     $emailService->enviarCorreo(
-                        $usuario['CodOperario'], // remitente = usuario logueado (usa su email_trabajo como SMTP)
+                        $usuario['CodOperario'],
                         $destinatarios,
                         $asunto,
                         $cuerpoHtml

@@ -4,8 +4,6 @@
  * 
  * Endpoint TEMPORAL de prueba: envía el correo de notificación de baja
  * usando datos reales del contrato/colaborador, SIN modificar ningún dato en BD.
- * 
- * Solo accesible para usuarios con permiso 'finalizar_contrato'.
  */
 
 ob_start();
@@ -19,49 +17,65 @@ try {
     $usuario = obtenerUsuarioActual();
     $cargoId = $usuario['CodNivelesCargos'] ?? 0;
 
-    // Misma guardia de permisos que el flujo real
     if (!tienePermiso('gestion_colaboradores', 'finalizar_contrato', $cargoId)) {
         throw new Exception('No tiene permisos para esta acción');
     }
 
-    $idContrato       = (int) ($_POST['id_contrato']       ?? 0);
-    $fechaTerminacion = trim($_POST['fecha_terminacion']    ?? '');
-    $fechaLiquidacion = trim($_POST['fecha_liquidacion']    ?? '');
-    $tipoSalidaPost   = trim($_POST['tipo_salida']          ?? '');
+    $idContrato       = (int)  ($_POST['id_contrato']       ?? 0);
+    $fechaTerminacion = trim(   $_POST['fecha_terminacion']  ?? '');
+    $fechaLiquidacion = trim(   $_POST['fecha_liquidacion']  ?? '');
+    $fechaCartaPost   = trim(   $_POST['fecha_carta']        ?? '');
+    $tipoSalidaPost   = trim(   $_POST['tipo_salida']        ?? '');
 
-    if ($idContrato <= 0) {
-        throw new Exception('ID de contrato inválido');
-    }
-    if (empty($fechaTerminacion)) {
-        throw new Exception('Fecha de terminación requerida');
-    }
+    if ($idContrato <= 0)        throw new Exception('ID de contrato inválido');
+    if (empty($fechaTerminacion)) throw new Exception('Fecha de terminación requerida');
 
     require_once __DIR__ . '/../../../core/email/EmailService.php';
     $emailService = new EmailService($conn);
 
-    // 1. Obtener datos del colaborador (solo lectura)
+    // 1. Obtener cargo/sucursal ACTUAL del colaborador (misma lógica que colaboradores_get_datos.php)
     $stmtColaborador = $conn->prepare("
         SELECT
             o.Nombre,
             o.Apellido,
             o.Cedula,
-            nc.Nombre  AS nombre_cargo,
-            s.nombre   AS nombre_sucursal
+            COALESCE(
+                (SELECT nc.Nombre
+                 FROM AsignacionNivelesCargos anc
+                 JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
+                 WHERE anc.CodOperario = o.CodOperario
+                   AND anc.CodNivelesCargos != 2
+                   AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
+                 ORDER BY anc.CodAsignacionNivelesCargos DESC LIMIT 1),
+                (SELECT nc.Nombre
+                 FROM AsignacionNivelesCargos anc
+                 JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
+                 WHERE anc.CodOperario = o.CodOperario
+                   AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
+                 ORDER BY anc.CodAsignacionNivelesCargos DESC LIMIT 1),
+                'Sin cargo'
+            ) AS nombre_cargo,
+            COALESCE(
+                (SELECT s.nombre
+                 FROM AsignacionNivelesCargos anc2
+                 JOIN sucursales s ON anc2.Sucursal = s.codigo
+                 WHERE anc2.CodOperario = o.CodOperario
+                   AND (anc2.Fin IS NULL OR anc2.Fin >= CURDATE())
+                 ORDER BY anc2.Fecha DESC, anc2.CodAsignacionNivelesCargos DESC LIMIT 1),
+                'Sin tienda'
+            ) AS nombre_sucursal
         FROM Contratos c
-        INNER JOIN Operarios o
-            ON o.CodOperario = c.cod_operario
-        LEFT JOIN AsignacionNivelesCargos anc
-            ON anc.CodAsignacionNivelesCargos = c.CodAsignacionNivelesCargos
-        LEFT JOIN NivelesCargos nc
-            ON nc.CodNivelesCargos = anc.CodNivelesCargos
-        LEFT JOIN sucursales s
-            ON s.id = anc.Sucursal
+        INNER JOIN Operarios o ON o.CodOperario = c.cod_operario
         WHERE c.CodContrato = ?
     ");
     $stmtColaborador->execute([$idContrato]);
     $colaborador = $stmtColaborador->fetch(PDO::FETCH_ASSOC);
 
-    // Obtener nombre del tipo de salida por separado (evita JOIN con parámetro en ON)
+    if (!$colaborador) {
+        throw new Exception('No se encontraron datos del colaborador para el contrato #' . $idContrato);
+    }
+
+    // 2. Obtener nombre del tipo de salida
     $tipoSalidaNombre = $tipoSalidaPost;
     if (!empty($tipoSalidaPost) && is_numeric($tipoSalidaPost)) {
         $stmtTipo = $conn->prepare("SELECT nombre FROM TipoSalida WHERE CodTipoSalida = ?");
@@ -70,35 +84,31 @@ try {
         if ($tipoRow) $tipoSalidaNombre = $tipoRow['nombre'];
     }
 
-    if (!$colaborador) {
-        throw new Exception('No se encontraron datos del colaborador para el contrato #' . $idContrato);
-    }
-
     $nombreCompleto = trim($colaborador['Nombre'] . ' ' . $colaborador['Apellido']);
-    $cedula         = $colaborador['Cedula']             ?? 'N/D';
+    $cedula         = $colaborador['Cedula']          ?? 'N/D';
     $cargo          = $colaborador['nombre_cargo']    ?? 'N/D';
     $sucursal       = $colaborador['nombre_sucursal'] ?? 'N/D';
     $tipoSalida     = !empty($tipoSalidaNombre) ? $tipoSalidaNombre : 'N/D';
 
-    // 2. Formatear fechas en español
-    $meses = [
-        '01' => 'enero',   '02' => 'febrero', '03' => 'marzo',
-        '04' => 'abril',   '05' => 'mayo',     '06' => 'junio',
-        '07' => 'julio',   '08' => 'agosto',   '09' => 'septiembre',
-        '10' => 'octubre', '11' => 'noviembre','12' => 'diciembre',
-    ];
+    // 3. Formatear fechas en español
+    $meses = ['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril',
+              '05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto',
+              '09'=>'septiembre','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'];
+
     $fmtFecha = function ($fecha) use ($meses) {
         if (empty($fecha) || $fecha === '0000-00-00') return 'N/D';
         [$y, $m, $d] = explode('-', substr($fecha, 0, 10));
         return intval($d) . ' de ' . ($meses[$m] ?? $m) . ' del ' . $y;
     };
 
-    $fechaCarta = $fmtFecha($fechaTerminacion);
+    // fecha_carta: campo del formulario si existe, sino fecha_terminacion
+    $rawCarta   = !empty($fechaCartaPost) ? $fechaCartaPost : $fechaTerminacion;
+    $fechaCarta = $fmtFecha($rawCarta);
     $ultimoDia  = !empty($fechaLiquidacion)
                     ? $fmtFecha($fechaLiquidacion)
                     : $fmtFecha($fechaTerminacion);
 
-    // 3. Construir HTML del correo (mismo cuerpo que el flujo real)
+    // 4. Construir HTML del correo
     $cuerpoHtml = "
         <div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #222; line-height: 1.8;\">
             <p style=\"color:#6f42c1; font-size:12px;\">
@@ -117,7 +127,7 @@ try {
         </div>
     ";
 
-    // 4. Obtener destinatarios por permisos (misma query que el flujo real)
+    // 5. Obtener destinatarios por permisos
     $stmtDestinatarios = $conn->prepare("
         SELECT DISTINCT o.email_trabajo
         FROM Operarios o
@@ -146,12 +156,12 @@ try {
         ob_end_clean();
         echo json_encode([
             'success' => false,
-            'mensaje' => 'No hay destinatarios configurados. Ve a Gestión de Permisos → Notif. Email → salida_colaborador y asigna la acción "correo" a los cargos correspondientes.'
+            'mensaje' => 'No hay destinatarios configurados. Ve a Gestión de Permisos → Notif. Email → salida_colaborador y asigna la acción "correo" a los cargos.'
         ]);
         exit;
     }
 
-    // 5. Enviar (remitente = usuario logueado)
+    // 6. Enviar
     $resultado = $emailService->enviarCorreo(
         $usuario['CodOperario'],
         $destinatarios,
@@ -165,7 +175,7 @@ try {
         'success'       => $resultado['success'],
         'mensaje'       => $resultado['success']
                             ? 'Correo de prueba enviado correctamente a ' . count($destinatarios) . ' destinatario(s): ' . implode(', ', $destinatarios)
-                            : 'Error al enviar: ' . $resultado['message'],
+                            : 'Error al enviar: ' . ($resultado['message'] ?? 'Error desconocido'),
         'destinatarios' => $destinatarios,
     ]);
 

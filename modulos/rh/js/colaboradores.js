@@ -937,7 +937,8 @@ function probarEnvioCorreo() {
             id_contrato:       idContrato,
             fecha_terminacion: fechaTerminacion,
             fecha_liquidacion: $('#fecha_liquidacion').val() || '',
-            tipo_salida:       $('#tipo_salida').val() || ''
+            fecha_carta:       $('#fecha_carta').val()       || '',
+            tipo_salida:       $('#tipo_salida').val()       || ''
         },
         dataType: 'json',
         success: function (response) {

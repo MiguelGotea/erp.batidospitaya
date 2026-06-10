@@ -1482,6 +1482,7 @@ FROM Contratos WHERE CodContrato = ?
 UPDATE Contratos
 SET fecha_salida = ?,
 fecha_liquidacion = ?,
+fecha_carta = ?,
 motivo = ?,
 cod_tipo_salida = ?,
 dias_trabajados = ?,
@@ -1496,14 +1497,15 @@ WHERE CodContrato = ?
 
         $params = [
             $fechaSalida,
-            !empty($datos['fecha_liquidacion']) ? $datos['fecha_liquidacion'] : null, // NULL en lugar de "0000-00-00"
+            !empty($datos['fecha_liquidacion']) ? $datos['fecha_liquidacion'] : null,
+            !empty($datos['fecha_carta'])        ? $datos['fecha_carta']        : null,
             $datos['motivo_salida'],
             $datos['tipo_salida'],
             $datos['dias_trabajados'] ?? 0,
             $datos['monto_indemnizacion'] ?? 0,
             $datos['devolucion_herramientas'] ? 1 : 0,
             $datos['persona_recibe_herramientas'] ?? '',
-            $_SESSION['usuario_id'], // Usuario que modifica
+            $_SESSION['usuario_id'],
             $codContrato
         ];
 
