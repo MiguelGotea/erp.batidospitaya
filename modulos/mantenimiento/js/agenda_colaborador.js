@@ -1,7 +1,10 @@
 /* js/agenda_colaborador.js */
 
-let activeStream = null;
+let activeStream     = null;
+let activeVideoTrack = null;
+let torchActivo      = false;
 let currentCameraTarget = null;
+let focusToastTimers = {};
 let fotosEvidenciaTmp = []; // Almacena fotos (file o base64) para la tarea actual
 
 function modalApertura() {
@@ -305,51 +308,182 @@ async function guardarTarea() {
 }
 
 /**
- * GESTIÓN DE CÁMARA UNIVERSAL
+ * GESTIÓN DE CÁMARA UNIVERSAL — Premium (con enfoque táctil + linterna)
  */
 async function startCamera(target) {
+    // Detener cualquier cámara activa primero
+    stopCamera();
+
     currentCameraTarget = target;
-    const container = $(`#${target}_container`);
-    const video = document.getElementById(`${target}_video`);
+    torchActivo         = false;
+    const container = document.getElementById(`${target}_container`);
+    const video     = document.getElementById(`${target}_video`);
+    const btnTorch  = document.getElementById(`${target}_torch`);
+
+    const constraints = {
+        audio: false,
+        video: {
+            facingMode: { ideal: 'environment' },
+            width:      { ideal: 3840 },
+            height:     { ideal: 2160 },
+            focusMode:  { ideal: 'continuous' }
+        }
+    };
 
     try {
-        activeStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
-        });
-        video.srcObject = activeStream;
-        container.removeClass('d-none');
+        activeStream     = await navigator.mediaDevices.getUserMedia(constraints);
+        activeVideoTrack = activeStream.getVideoTracks()[0];
+        video.srcObject  = activeStream;
+        container.classList.remove('d-none');
+
+        video.onloadedmetadata = () => initCameraControls(target);
+
+        // Tap-to-focus
+        container.addEventListener('click', (e) => onCameraViewportClick(e, target));
+
     } catch (e) {
         Swal.fire('Cámara', 'No se pudo acceder a la cámara: ' + e.message, 'warning');
     }
 }
 
-function captureSnapshot(target) {
-    const video = document.getElementById(`${target}_video`);
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+function initCameraControls(target) {
+    if (!activeVideoTrack) return;
+    const caps     = activeVideoTrack.getCapabilities ? activeVideoTrack.getCapabilities() : {};
+    const btnTorch = document.getElementById(`${target}_torch`);
 
-    if (target === 'cam_evidencia') {
-        fotosEvidenciaTmp.push({ tipo: 'cam', data: dataURL });
-        renderEvidenciaPreviews();
-    } else {
-        $(`#${target}_data`).val(dataURL);
-        const preview = target.replace('cam_', 'preview_');
-        $(`#${preview}`).removeClass('d-none').find('img').attr('src', dataURL);
+    // Mostrar / ocultar botón de linterna
+    if (btnTorch) {
+        btnTorch.style.display = caps.torch ? 'flex' : 'none';
+        btnTorch.classList.remove('on');
     }
 
-    stopCamera();
+    // Modo de enfoque continuo
+    if (caps.focusMode && caps.focusMode.includes('continuous')) {
+        activeVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+    }
+
+    showFocusToast(target, 'Toca para enfocar', 2000);
+}
+
+function onCameraViewportClick(e, target) {
+    // Ignorar clicks en botones dentro del container
+    if (e.target.closest('button')) return;
+
+    const container = document.getElementById(`${target}_container`);
+    const ring      = document.getElementById(`${target}_ring`);
+    if (!ring || !container) return;
+
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ring.style.left = x + 'px';
+    ring.style.top  = y + 'px';
+    ring.classList.remove('focus-active', 'focus-locked');
+    void ring.offsetWidth; // reflow
+    ring.classList.add('focus-active');
+
+    if (activeVideoTrack) {
+        const xR = x / rect.width;
+        const yR = y / rect.height;
+        activeVideoTrack.applyConstraints({
+            advanced: [{ pointsOfInterest: [{ x: xR, y: yR }], focusMode: 'single-shot' }]
+        }).then(() => {
+            ring.classList.add('focus-locked');
+            showFocusToast(target, '✓ Enfocado', 1500);
+            setTimeout(() => {
+                activeVideoTrack && activeVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+            }, 2000);
+        }).catch(() => {
+            ring.classList.add('focus-locked');
+            showFocusToast(target, 'Enfoque ajustado', 1200);
+        });
+    }
+
+    setTimeout(() => ring.classList.remove('focus-active', 'focus-locked'), 2500);
+}
+
+function showFocusToast(target, msg, duration) {
+    const toast = document.getElementById(`${target}_toast`);
+    if (!toast) return;
+    if (focusToastTimers[target]) clearTimeout(focusToastTimers[target]);
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    focusToastTimers[target] = setTimeout(() => { toast.style.opacity = '0'; }, duration || 1500);
+}
+
+function toggleCameraTorch(target) {
+    if (!activeVideoTrack || currentCameraTarget !== target) return;
+    torchActivo = !torchActivo;
+    activeVideoTrack.applyConstraints({ advanced: [{ torch: torchActivo }] })
+        .then(() => {
+            const btn = document.getElementById(`${target}_torch`);
+            if (btn) btn.classList.toggle('on', torchActivo);
+        })
+        .catch(() => {
+            torchActivo = false;
+            Swal.fire('Linterna', 'Este dispositivo no soporta linterna.', 'info');
+        });
+}
+
+function captureSnapshot(target) {
+    const video     = document.getElementById(`${target}_video`);
+    const container = document.getElementById(`${target}_container`);
+    const canvas    = document.createElement('canvas');
+
+    // Resolución nativa para máxima calidad
+    canvas.width  = video.videoWidth  || video.clientWidth;
+    canvas.height = video.videoHeight || video.clientHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Flash visual
+    if (container) {
+        const flash = document.createElement('div');
+        flash.style.cssText = 'position:absolute;inset:0;background:#fff;opacity:0.85;pointer-events:none;z-index:10;transition:opacity 0.35s';
+        container.appendChild(flash);
+        requestAnimationFrame(() => { flash.style.opacity = '0'; });
+        setTimeout(() => flash.remove(), 400);
+    }
+
+    canvas.toBlob(blob => {
+        const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+
+        if (target === 'cam_evidencia') {
+            fotosEvidenciaTmp.push({ tipo: 'cam', data: dataURL });
+            renderEvidenciaPreviews();
+        } else {
+            $(`#${target}_data`).val(dataURL);
+            const preview = target.replace('cam_', 'preview_');
+            $(`#${preview}`).removeClass('d-none').find('img').attr('src', dataURL);
+        }
+
+        stopCamera();
+    }, 'image/jpeg', 0.92);
 }
 
 function stopCamera() {
+    // Apagar linterna si estaba activa
+    if (torchActivo && activeVideoTrack) {
+        activeVideoTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+        torchActivo = false;
+    }
     if (activeStream) {
         activeStream.getTracks().forEach(track => track.stop());
-        activeStream = null;
+        activeStream     = null;
+        activeVideoTrack = null;
     }
     if (currentCameraTarget) {
-        $(`#${currentCameraTarget}_container`).addClass('d-none');
+        const container = document.getElementById(`${currentCameraTarget}_container`);
+        if (container) {
+            // Clonar para eliminar listeners de tap-to-focus sin perder el DOM
+            const clone = container.cloneNode(true);
+            container.parentNode.replaceChild(clone, container);
+            clone.classList.add('d-none');
+        }
+        // Resetear torch button
+        const btnTorch = document.getElementById(`${currentCameraTarget}_torch`);
+        if (btnTorch) { btnTorch.classList.remove('on'); btnTorch.style.display = 'none'; }
+        currentCameraTarget = null;
     }
 }
 

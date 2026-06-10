@@ -538,13 +538,29 @@ $sucursales = $ticketModel->getSucursales();
 
                             <div id="cam_evidencia_container"
                                 class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black"
-                                style="max-width: 400px; margin: 0 auto;">
-                                <video id="cam_evidencia_video" autoplay playsinline class="w-100"></video>
-                                <button type="button"
-                                    class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2"
-                                    onclick="captureSnapshot('cam_evidencia')">
-                                    <i class="fas fa-circle"></i>
-                                </button>
+                                style="max-width: 420px; margin: 0 auto; cursor: crosshair;">
+                                <video id="cam_evidencia_video" autoplay playsinline class="w-100" style="display:block;"></video>
+                                <!-- Rejilla tercios -->
+                                <div class="ag-cam-grid"></div>
+                                <!-- Anillo de enfoque táctil -->
+                                <div id="cam_evidencia_ring" class="ag-focus-ring"></div>
+                                <!-- Toast de enfoque -->
+                                <div id="cam_evidencia_toast" class="ag-focus-toast">Toca para enfocar</div>
+                                <!-- Controles inferiores -->
+                                <div class="ag-cam-controls d-flex align-items-center justify-content-between px-3 py-2">
+                                    <button type="button" id="cam_evidencia_torch" class="ag-btn-torch" style="display:none;"
+                                        onclick="toggleCameraTorch('cam_evidencia')" title="Linterna">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+                                    <button type="button" class="ag-btn-capture"
+                                        onclick="captureSnapshot('cam_evidencia')" title="Tomar foto">
+                                        <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-white border-secondary"
+                                        onclick="stopCamera()">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -599,13 +615,26 @@ $sucursales = $ticketModel->getSucursales();
                                 <img src="" class="img-thumbnail rounded-3" style="max-height: 180px;">
                             </div>
                             <div id="cam_cierre_container"
-                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
-                                <video id="cam_cierre_video" autoplay playsinline class="w-100"></video>
-                                <button type="button"
-                                    class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2"
-                                    onclick="captureSnapshot('cam_cierre')">
-                                    <i class="fas fa-circle"></i>
-                                </button>
+                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black"
+                                style="cursor: crosshair;">
+                                <video id="cam_cierre_video" autoplay playsinline class="w-100" style="display:block;"></video>
+                                <div class="ag-cam-grid"></div>
+                                <div id="cam_cierre_ring" class="ag-focus-ring"></div>
+                                <div id="cam_cierre_toast" class="ag-focus-toast">Toca para enfocar</div>
+                                <div class="ag-cam-controls d-flex align-items-center justify-content-between px-3 py-2">
+                                    <button type="button" id="cam_cierre_torch" class="ag-btn-torch" style="display:none;"
+                                        onclick="toggleCameraTorch('cam_cierre')" title="Linterna">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+                                    <button type="button" class="ag-btn-capture"
+                                        onclick="captureSnapshot('cam_cierre')" title="Tomar foto">
+                                        <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-white border-secondary"
+                                        onclick="stopCamera()">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -655,13 +684,26 @@ $sucursales = $ticketModel->getSucursales();
                                 <img src="" class="img-thumbnail rounded-3" style="max-height: 180px;">
                             </div>
                             <div id="cam_km_ini_container"
-                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
-                                <video id="cam_km_ini_video" autoplay playsinline class="w-100"></video>
-                                <button type="button"
-                                    class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2"
-                                    onclick="captureSnapshot('cam_km_ini')">
-                                    <i class="fas fa-circle"></i>
-                                </button>
+                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black"
+                                style="cursor: crosshair;">
+                                <video id="cam_km_ini_video" autoplay playsinline class="w-100" style="display:block;"></video>
+                                <div class="ag-cam-grid"></div>
+                                <div id="cam_km_ini_ring" class="ag-focus-ring"></div>
+                                <div id="cam_km_ini_toast" class="ag-focus-toast">Toca para enfocar</div>
+                                <div class="ag-cam-controls d-flex align-items-center justify-content-between px-3 py-2">
+                                    <button type="button" id="cam_km_ini_torch" class="ag-btn-torch" style="display:none;"
+                                        onclick="toggleCameraTorch('cam_km_ini')" title="Linterna">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+                                    <button type="button" class="ag-btn-capture"
+                                        onclick="captureSnapshot('cam_km_ini')" title="Tomar foto">
+                                        <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-white border-secondary"
+                                        onclick="stopCamera()">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -722,13 +764,26 @@ $sucursales = $ticketModel->getSucursales();
                                 <img src="" class="img-thumbnail rounded-3" style="max-height: 150px;">
                             </div>
                             <div id="cam_compra_container"
-                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
-                                <video id="cam_compra_video" autoplay playsinline class="w-100"></video>
-                                <button type="button"
-                                    class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2"
-                                    onclick="captureSnapshot('cam_compra')">
-                                    <i class="fas fa-circle"></i>
-                                </button>
+                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black"
+                                style="cursor: crosshair;">
+                                <video id="cam_compra_video" autoplay playsinline class="w-100" style="display:block;"></video>
+                                <div class="ag-cam-grid"></div>
+                                <div id="cam_compra_ring" class="ag-focus-ring"></div>
+                                <div id="cam_compra_toast" class="ag-focus-toast">Toca para enfocar</div>
+                                <div class="ag-cam-controls d-flex align-items-center justify-content-between px-3 py-2">
+                                    <button type="button" id="cam_compra_torch" class="ag-btn-torch" style="display:none;"
+                                        onclick="toggleCameraTorch('cam_compra')" title="Linterna">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+                                    <button type="button" class="ag-btn-capture"
+                                        onclick="captureSnapshot('cam_compra')" title="Tomar foto">
+                                        <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-white border-secondary"
+                                        onclick="stopCamera()">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -799,13 +854,26 @@ $sucursales = $ticketModel->getSucursales();
                             </div>
 
                             <div id="cam_caja_container"
-                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
-                                <video id="cam_caja_video" autoplay playsinline class="w-100"></video>
-                                <button type="button"
-                                    class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2"
-                                    onclick="captureSnapshot('cam_caja')">
-                                    <i class="fas fa-circle"></i>
-                                </button>
+                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black"
+                                style="cursor: crosshair;">
+                                <video id="cam_caja_video" autoplay playsinline class="w-100" style="display:block;"></video>
+                                <div class="ag-cam-grid"></div>
+                                <div id="cam_caja_ring" class="ag-focus-ring"></div>
+                                <div id="cam_caja_toast" class="ag-focus-toast">Toca para enfocar</div>
+                                <div class="ag-cam-controls d-flex align-items-center justify-content-between px-3 py-2">
+                                    <button type="button" id="cam_caja_torch" class="ag-btn-torch" style="display:none;"
+                                        onclick="toggleCameraTorch('cam_caja')" title="Linterna">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+                                    <button type="button" class="ag-btn-capture"
+                                        onclick="captureSnapshot('cam_caja')" title="Tomar foto">
+                                        <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-white border-secondary"
+                                        onclick="stopCamera()">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -887,6 +955,70 @@ $sucursales = $ticketModel->getSucursales();
     <style>
         #pageHelpModal { z-index: 1060 !important; }
         .modal-backdrop { z-index: 1050 !important; }
+
+        /* ── Cámara Premium (Agenda Colaborador) ── */
+        .ag-cam-grid {
+            position: absolute; inset: 0; pointer-events: none;
+            opacity: 0.15;
+            background-image:
+                linear-gradient(to right, #fff 1px, transparent 1px),
+                linear-gradient(to bottom, #fff 1px, transparent 1px);
+            background-size: 33.33% 33.33%;
+        }
+        .ag-focus-ring {
+            position: absolute;
+            width: 70px; height: 70px;
+            border: 2px solid #FFD700;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1.6);
+            opacity: 0; pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+        }
+        .ag-focus-ring.focus-active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        .ag-focus-ring.focus-locked { border-color: #00FF88; opacity: 0.7; }
+        .ag-focus-ring::before, .ag-focus-ring::after {
+            content: ''; position: absolute;
+            width: 10px; height: 10px;
+            border-color: inherit; border-style: solid;
+        }
+        .ag-focus-ring::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+        .ag-focus-ring::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+        .ag-focus-toast {
+            position: absolute; bottom: 58px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.65); color: #fff;
+            font-size: 0.72rem; padding: 3px 12px;
+            border-radius: 20px; opacity: 0;
+            transition: opacity 0.3s; pointer-events: none;
+            white-space: nowrap;
+        }
+        .ag-cam-controls {
+            background: #111; padding: 8px 14px 12px;
+        }
+        .ag-btn-torch {
+            background: transparent; border: 1.5px solid #555;
+            color: #aaa; border-radius: 50%;
+            width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all 0.2s; cursor: pointer;
+        }
+        .ag-btn-torch.on {
+            border-color: #FFD700; color: #FFD700;
+            box-shadow: 0 0 8px rgba(255,215,0,0.5);
+        }
+        .ag-btn-capture {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #fff; border: 4px solid rgba(255,255,255,0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; color: #333;
+            transition: transform 0.1s, background 0.1s;
+            cursor: pointer;
+        }
+        .ag-btn-capture:active { transform: scale(0.92); background: #ddd; }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
