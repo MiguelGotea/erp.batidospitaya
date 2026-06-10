@@ -580,70 +580,29 @@ $sucursales = $ticketModel->getSucursales();
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-premium border-0 rounded-4">
                 <div class="modal-header bg-danger text-white p-3 px-4 border-0">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-stop me-2"></i>Finalizar Informe</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-flag-checkered me-2"></i>Finalizar Informe</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="alert alert-warning rounded-3 d-flex align-items-center gap-2 mb-3">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span class="small fw-bold">Al finalizar, ya no podrás agregar más tiendas ni tareas al informe de hoy.</span>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-clipboard-check fa-3x text-danger opacity-75"></i>
+                    </div>
+                    <p class="mb-2 fw-bold fs-5">¿Finalizar y cerrar el informe de hoy?</p>
+                    <p class="text-muted">Una vez cerrado, <strong>no podrás agregar más tiendas ni tareas</strong>. Asegúrate de haber registrado todo.</p>
+                    <div class="alert alert-warning rounded-3 d-flex align-items-center gap-2 mt-3 text-start">
+                        <i class="fas fa-exclamation-triangle flex-shrink-0"></i>
+                        <span class="small fw-bold">Esta acción es irreversible.</span>
                     </div>
                     <form id="formCierre">
                         <input type="hidden" name="informe_id" id="cierre_informe_id">
-                        <div class="mb-4">
-                            <label class="form-label required">📍 Kilometraje Final del Vehículo</label>
-                            <input type="number" step="0.01" class="form-control form-control-lg"
-                                name="km_final" required placeholder="Ej: 45230.5">
-                        </div>
-                        <div class="mb-0">
-                            <label class="form-label required">📷 Foto del Odómetro (al terminar)</label>
-                            <div class="foto-upload-group mb-2">
-                                <button type="button" class="btn btn-outline-primary"
-                                    onclick="document.getElementById('km_fin_input').click()">
-                                    <i class="fas fa-image me-1"></i>Galería
-                                </button>
-                                <button type="button" class="btn btn-outline-success"
-                                    onclick="startCamera('cam_cierre')">
-                                    <i class="fas fa-camera me-1"></i>Cámara
-                                </button>
-                            </div>
-                            <input type="file" id="km_fin_input" name="km_foto_final" accept="image/*" class="d-none"
-                                onchange="previewFile(this, 'preview_cierre')">
-                            <input type="hidden" name="km_foto_final_cam" id="cam_cierre_data">
-
-                            <div id="preview_cierre" class="text-center mt-2 d-none">
-                                <img src="" class="img-thumbnail rounded-3" style="max-height: 180px;">
-                            </div>
-                            <div id="cam_cierre_container"
-                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black"
-                                style="cursor: crosshair;">
-                                <video id="cam_cierre_video" autoplay playsinline class="w-100" style="display:block;"></video>
-                                <div class="ag-cam-grid"></div>
-                                <div id="cam_cierre_ring" class="ag-focus-ring"></div>
-                                <div id="cam_cierre_toast" class="ag-focus-toast">Toca para enfocar</div>
-                                <div class="ag-cam-controls d-flex align-items-center justify-content-between px-3 py-2">
-                                    <button type="button" id="cam_cierre_torch" class="ag-btn-torch" style="display:none;"
-                                        onclick="toggleCameraTorch('cam_cierre')" title="Linterna">
-                                        <i class="fas fa-bolt"></i>
-                                    </button>
-                                    <button type="button" class="ag-btn-capture"
-                                        onclick="captureSnapshot('cam_cierre')" title="Tomar foto">
-                                        <i class="fas fa-circle" style="color:#e74c3c;"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-white border-secondary"
-                                        onclick="stopCamera()">
-                                        <i class="fas fa-times me-1"></i>Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 px-4 pb-4">
                     <button type="button" class="btn btn-light rounded-pill px-4"
                         data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger rounded-pill px-4" onclick="guardarCierre()">Finalizar
-                        Informe</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4" onclick="guardarCierre()">
+                        <i class="fas fa-flag-checkered me-2"></i>Confirmar Cierre
+                    </button>
                 </div>
             </div>
         </div>

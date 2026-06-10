@@ -509,32 +509,20 @@ function zoomFoto(src) {
  * CIERRE DE JORNADA
  */
 function modalCierre(informeId) {
-    $('#cierre_informe_id').val(informeId);
-    $('#formCierre')[0].reset();
-    $('#preview_cierre').addClass('d-none');
-    $('#cam_cierre_container').addClass('d-none');
-    stopCamera();
+    document.getElementById('cierre_informe_id').value = informeId;
     new bootstrap.Modal(document.getElementById('cierreModal')).show();
 }
 
 async function guardarCierre() {
-    const form = document.getElementById('formCierre');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-
-
-
-    const formData = new FormData(form);
-    if (!formData.get('km_foto_final').name && !formData.get('km_foto_final_cam')) {
-        Swal.fire('Error', 'Debe adjuntar foto del kilometraje final', 'error');
-        return;
-    }
+    const informeId = document.getElementById('cierre_informe_id').value;
+    if (!informeId) return;
 
     Swal.fire({ title: 'Finalizando informe...', didOpen: () => Swal.showLoading() });
 
     try {
+        const formData = new FormData();
+        formData.append('informe_id', informeId);
+
         const response = await fetch('ajax/finalizar_informe_diario.php', {
             method: 'POST',
             body: formData

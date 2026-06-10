@@ -455,16 +455,19 @@ class Ticket
      */
     public function finalizarInformeDiario($informe_id, $data)
     {
-        // 1. Marcar el informe como finalizado
+        // 1. Marcar el informe como finalizado (km opcional)
+        $km_final      = $data['km_final']      ?? null;
+        $km_foto_final = $data['km_foto_final'] ?? null;
+
         $sql = "UPDATE mtto_informes_diarios SET 
-                km_final = ?, 
-                km_foto_final = ?, 
+                km_final = COALESCE(?, km_final), 
+                km_foto_final = COALESCE(?, km_foto_final), 
                 estado = 'finalizado',
                 updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?";
         $this->db->query($sql, [
-            $data['km_final'],
-            $data['km_foto_final'],
+            $km_final,
+            $km_foto_final,
             $informe_id
         ]);
 
