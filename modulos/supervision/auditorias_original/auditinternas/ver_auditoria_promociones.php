@@ -1,6 +1,7 @@
 <?php
 // ver_auditoria_promociones.php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 // Antes llamaba a ../funciones.php de auditora
 // require_once 'config.php'; // Comentado por migración al core
 
