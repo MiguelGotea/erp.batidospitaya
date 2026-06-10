@@ -64,6 +64,9 @@ $puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
                                 <button class="tab-btn-custom" id="tab-alertas" onclick="cambiarTab('alertas')">
                                     <i class="bi bi-bell-fill"></i><br>Alertas
                                 </button>
+                                <button class="tab-btn-custom" id="tab-notificaciones_email" onclick="cambiarTab('notificaciones_email')">
+                                    <i class="bi bi-envelope-fill"></i><br>Notif. Email
+                                </button>
                             </div>
                             
                             <div class="card-body p-0">
@@ -115,6 +118,19 @@ $puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
                                         <div class="text-center p-4">
                                             <div class="spinner-border text-primary" role="status"></div>
                                             <p class="mt-2 text-muted">Cargando alertas...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tab Notificaciones Email -->
+                                <div class="tab-content-custom" id="content-notificaciones_email">
+                                    <div class="p-3 border-bottom">
+                                        <input type="text" class="form-control form-control-sm buscar-input" data-tipo="notificaciones_email" placeholder="Buscar notificación...">
+                                    </div>
+                                    <div class="tree-container" id="treeNotificacionesEmail">
+                                        <div class="text-center p-4">
+                                            <div class="spinner-border text-primary" role="status"></div>
+                                            <p class="mt-2 text-muted">Cargando notificaciones...</p>
                                         </div>
                                     </div>
                                 </div>

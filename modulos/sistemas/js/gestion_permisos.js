@@ -8,7 +8,8 @@ let datosHerramientas = {
     herramientas: {},
     indicadores: {},
     balances: {},
-    alertas: {}
+    alertas: {},
+    notificaciones_email: {}
 };
 
 // Mapeo de tipos plural a singular para la API
@@ -16,7 +17,8 @@ const tipoApiMap = {
     'herramientas': 'herramienta',
     'indicadores': 'indicador',
     'balances': 'balance',
-    'alertas': 'alerta'
+    'alertas': 'alerta',
+    'notificaciones_email': 'notificacion_email'
 };
 
 /**
@@ -59,6 +61,7 @@ function getContainerId(tipo) {
         case 'indicadores': return '#treeIndicadores';
         case 'balances': return '#treeBalances';
         case 'alertas': return '#treeAlertas';
+        case 'notificaciones_email': return '#treeNotificacionesEmail';
         default: return '#treeHerramientas';
     }
 }

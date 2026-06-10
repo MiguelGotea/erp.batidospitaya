@@ -26,7 +26,7 @@ try {
     $tipoComponente = isset($_GET['tipo_componente']) ? $_GET['tipo_componente'] : 'herramienta';
     
     // Validar tipo de componente
-    $tiposPermitidos = ['herramienta', 'indicador', 'balance', 'alerta'];
+    $tiposPermitidos = ['herramienta', 'indicador', 'balance', 'alerta', 'notificacion_email'];
     if (!in_array($tipoComponente, $tiposPermitidos)) {
         $tipoComponente = 'herramienta';
     }
