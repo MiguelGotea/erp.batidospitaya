@@ -487,6 +487,7 @@ $sucursales = $ticketModel->getSucursales();
         </div>
     </div>
 
+    
     <!-- MODAL TAREA/TICKET RESULTADO -->
     <div class="modal fade" id="tareaModal" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered">
