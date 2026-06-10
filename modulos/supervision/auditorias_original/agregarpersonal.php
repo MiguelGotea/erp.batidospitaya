@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Al inicio del archivo, verificar autenticación y acceso al módulo
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
@@ -13,12 +13,10 @@ verificarAutenticacion();
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21, 52, 49]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21, 52, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!tienePermiso('auditorias_desempeno', 'crear', $cargoOperario) && !$esAdmin) {
     header('Location: ../../../index.php');
     exit();
 }

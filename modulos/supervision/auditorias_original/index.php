@@ -13,14 +13,13 @@ $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 21, 49, 52]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+if (!tienePermiso('auditorias_desempeno', 'vista_interna', $cargoOperario) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-$cargoOperario = $usuario['CodNivelesCargos'];
 //******************************Estándar para header, termina******************************
 ?>
 
@@ -108,7 +107,7 @@ $cargoOperario = $usuario['CodNivelesCargos'];
     </div>
 
     <!-- Botón Flotante con opciones (FAB) -->
-    <?php if (verificarAccesoCargo([16, 21, 49, 52])): ?>
+    <?php if (tienePermiso('auditorias_desempeno', 'crear', $cargoOperario) || (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')): ?>
         <div class="fab-container">
             <div class="fab-options">
                 <a href="auditinternas/auditoria_promociones.php" class="fab-option">

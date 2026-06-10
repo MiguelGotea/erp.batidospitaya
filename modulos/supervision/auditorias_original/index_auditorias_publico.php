@@ -10,7 +10,7 @@ $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 
-if (!tienePermiso('auditorias', 'vista', $cargoOperario)) {
+if (!tienePermiso('auditorias_desempeno', 'vista', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }
@@ -35,7 +35,7 @@ $mes_seleccionado = isset($_GET['mes']) ? intval($_GET['mes']) : date('n');
 $anio_seleccionado = isset($_GET['anio']) ? intval($_GET['anio']) : date('Y');
 
 // Validar las selecciones para evitar inyecciones SQL
-$tipos_permitidos = ['todos', 'limpieza', 'personal', 'servicio'];
+$tipos_permitidos = ['todos', 'limpieza', 'personal', 'servicio', 'proceso', 'promocion'];
 if (!in_array($tipo_seleccionado, $tipos_permitidos)) {
     $tipo_seleccionado = 'todos'; // Valor por defecto
 }
@@ -54,7 +54,7 @@ if ($anio_seleccionado < 2020 || $anio_seleccionado > 2030) {
 }
 
 try {
-    // Subconsulta para combinar las 3 tablas
+    // Subconsulta para combinar las 5 tablas
     $sql = "
             SELECT * FROM (
                 SELECT a.id, a.fecha_hora, s.nombre as sucursal, a.persona, a.promedio_general AS promedio, 'limpieza' AS tipo_auditoria 
@@ -68,6 +68,14 @@ try {
                 SELECT asv.id, asv.fecha_hora, s.nombre as sucursal, asv.persona, asv.promedio_calificacion AS promedio, 'servicio' AS tipo_auditoria 
                 FROM auditoria_servicio asv 
                 JOIN sucursales s ON asv.cod_sucursal = s.codigo
+                UNION ALL
+                SELECT apr.id, apr.fecha AS fecha_hora, s.nombre as sucursal, apr.operario_nombre AS persona, (apr.porcentaje_cumplimiento / 20.0) AS promedio, 'proceso' AS tipo_auditoria 
+                FROM auditoria_procesos apr 
+                JOIN sucursales s ON apr.sucursal_id = s.codigo
+                UNION ALL
+                SELECT apm.id, apm.fecha AS fecha_hora, s.nombre as sucursal, apm.operario_nombre AS persona, (apm.porcentaje_cumplimiento / 20.0) AS promedio, 'promocion' AS tipo_auditoria 
+                FROM auditoria_promociones apm 
+                JOIN sucursales s ON apm.sucursal_id = s.codigo
             ) AS combined_tables
             WHERE MONTH(fecha_hora) = :mes AND YEAR(fecha_hora) = :anio
         ";
@@ -590,6 +598,10 @@ $sucursales_filtro = $stmt_sucursales_filtro->fetchAll(PDO::FETCH_ASSOC);
                                         href="<?php echo $url_base; ?>sucursal=<?php echo urlencode($sucursal_seleccionada); ?>&mes=<?php echo $mes_seleccionado; ?>&anio=<?php echo $anio_seleccionado; ?>&tipo=personal">Personal</a>
                                     <a
                                         href="<?php echo $url_base; ?>sucursal=<?php echo urlencode($sucursal_seleccionada); ?>&mes=<?php echo $mes_seleccionado; ?>&anio=<?php echo $anio_seleccionado; ?>&tipo=servicio">Servicios</a>
+                                    <a
+                                        href="<?php echo $url_base; ?>sucursal=<?php echo urlencode($sucursal_seleccionada); ?>&mes=<?php echo $mes_seleccionado; ?>&anio=<?php echo $anio_seleccionado; ?>&tipo=proceso">Procesos</a>
+                                    <a
+                                        href="<?php echo $url_base; ?>sucursal=<?php echo urlencode($sucursal_seleccionada); ?>&mes=<?php echo $mes_seleccionado; ?>&anio=<?php echo $anio_seleccionado; ?>&tipo=promocion">Promociones</a>
                                 </div>
                             </div>
                         </th>
@@ -649,7 +661,21 @@ $sucursales_filtro = $stmt_sucursales_filtro->fetchAll(PDO::FETCH_ASSOC);
                                 <td style="text-align:center;" class="columna-promedio">
                                     <div style="text-align:center;" class="promedio-contenedor">
                                         <?php echo number_format($registro['promedio'], 2); ?>
-                                        <a href="<?php echo ($registro['tipo_auditoria'] == 'limpieza') ? 'ver_publico.php' : ($registro['tipo_auditoria'] == 'personal' ? 'verpersonal_publico.php' : 'verservicios_publico.php'); ?>?id=<?php echo $registro['id']; ?>"
+                                        <?php
+                                        $enlace_detalle = '';
+                                        if ($registro['tipo_auditoria'] == 'limpieza') {
+                                            $enlace_detalle = 'ver_publico.php?id=' . $registro['id'];
+                                        } elseif ($registro['tipo_auditoria'] == 'personal') {
+                                            $enlace_detalle = 'verpersonal_publico.php?id=' . $registro['id'];
+                                        } elseif ($registro['tipo_auditoria'] == 'servicio') {
+                                            $enlace_detalle = 'verservicios_publico.php?id=' . $registro['id'];
+                                        } elseif ($registro['tipo_auditoria'] == 'proceso') {
+                                            $enlace_detalle = 'verprocesos.php?id=' . $registro['id'];
+                                        } elseif ($registro['tipo_auditoria'] == 'promocion') {
+                                            $enlace_detalle = 'auditinternas/ver_auditoria_promociones.php?id=' . $registro['id'];
+                                        }
+                                        ?>
+                                        <a href="<?php echo $enlace_detalle; ?>"
                                             style="color:#51B8AC;">
                                             <i class="fas fa-eye"></i>
                                         </a>

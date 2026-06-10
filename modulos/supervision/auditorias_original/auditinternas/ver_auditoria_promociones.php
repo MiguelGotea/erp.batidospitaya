@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // ver_auditoria_promociones.php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 // Antes llamaba a ../funciones.php de auditora
@@ -11,8 +11,11 @@ $db = $conn;
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 16, 21, 49, 52])) {
+$esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$cargoOperario = $usuario['CodNivelesCargos'];
+
+// Verificar acceso al módulo (permiso de vista o vista_interna)
+if (!tienePermiso('auditorias_desempeno', 'vista', $cargoOperario) && !tienePermiso('auditorias_desempeno', 'vista_interna', $cargoOperario) && !$esAdmin) {
     header('Location: ../../../index.php');
     exit();
 }

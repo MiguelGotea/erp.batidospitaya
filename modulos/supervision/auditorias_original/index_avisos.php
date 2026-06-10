@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -9,48 +9,26 @@ require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones
 require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
 require_once '../../../core/layout/menu_lateral.php';
 require_once '../../../core/layout/header_universal.php';
+require_once '../../../core/permissions/permissions.php';
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 13, 16, 39, 30, 37, 42, 26, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+// Verificar acceso al módulo (via permisos tools_erp)
+if (!tienePermiso('avisos_internos', 'vista_admin', $cargoOperario) && !$esAdmin) {
     header('Location: ../../../index.php');
     exit();
 }
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-$cargoOperario = $usuario['CodNivelesCargos'];
 //******************************Estándar para header, termina******************************
 
-// Función para formatear fecha en español con corrección horaria (UTC-6)
-function formatFechaEspanol($fecha)
-{
-    $meses = [
-        1 => 'ene',
-        2 => 'feb',
-        3 => 'mar',
-        4 => 'abr',
-        5 => 'may',
-        6 => 'jun',
-        7 => 'jul',
-        8 => 'ago',
-        9 => 'sep',
-        10 => 'oct',
-        11 => 'nov',
-        12 => 'dic'
-    ];
 
-    // Convertir de UTC a UTC-6 (restar 6 horas)
-    $date = new DateTime($fecha, new DateTimeZone('UTC'));
-    $date->sub(new DateInterval('PT6H'));
 
-    // Formatear fecha: 30-abr-25 12:47 pm
-    return $date->format('d') . '-' . $meses[$date->format('n')] . '-' . $date->format('y') . ' ' . $date->format('h:i a');
-}
 
 $pagina_actual = basename($_SERVER['PHP_SELF']);
 $es_pagina_avisos = $pagina_actual == 'index_avisos.php';
@@ -147,9 +125,8 @@ try {
     die("Ocurrió un error al cargar los avisos. Por favor intente más tarde.");
 }
 
-// Verificar permisos de edición
-$allowedRoles = ['admin', 'aviso', 'operaciones'];
-$canEdit = in_array($_SESSION['rol'] ?? '', $allowedRoles, true);
+// Verificar permisos de edición (via permisos tools_erp)
+$canEdit = tienePermiso('avisos_internos', 'editar', $cargoOperario) || $esAdmin;
 ?>
 
 <!DOCTYPE html>
