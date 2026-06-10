@@ -455,44 +455,81 @@ function mostrarFotos(ticketId) {
                 const carouselInner = $('#carouselFotosInner');
                 carouselInner.empty();
 
+                const totalFotos = response.fotos.length;
+
                 response.fotos.forEach((foto, index) => {
                     const activeClass = index === 0 ? 'active' : '';
                     const isHeic = foto.foto.toLowerCase().endsWith('.heic') || foto.foto.toLowerCase().endsWith('.heif');
                     const imgId = `img-ticket-photo-${index}`;
-                    
+                    const loaderId = `loader-${imgId}`;
+
                     carouselInner.append(`
                         <div class="carousel-item ${activeClass}">
-                            <div class="d-flex justify-content-center align-items-center" style="min-height: 200px; background: #f8f9fa;">
-                                <img id="${imgId}" src="${foto.foto}" class="d-block w-100" alt="Foto ${index + 1}" onerror="this.src='/core/assets/img/broken-image.png'">
-                                <div id="loader-${imgId}" class="spinner-border text-primary position-absolute" role="status" style="display: none;">
-                                    <span class="visually-hidden">Cargando...</span>
+                            <div class="d-flex justify-content-center align-items-center position-relative" style="min-height: 250px; background: #f8f9fa;">
+                                <div id="${loaderId}" class="carousel-foto-loader">
+                                    <div class="spinner-border" role="status" style="color: #0E544C; width: 3rem; height: 3rem;">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <div class="mt-2 text-muted" style="font-size:0.85rem;">Cargando foto...</div>
                                 </div>
+                                <img id="${imgId}"
+                                     class="d-block carousel-foto-img"
+                                     alt="Foto ${index + 1}"
+                                     style="display:none;"
+                                     onerror="this.style.display='block'; document.getElementById('${loaderId}').style.display='none'; this.src='/core/assets/img/broken-image.png';">
                             </div>
                         </div>
                     `);
 
                     if (isHeic) {
-                        const loader = document.getElementById(`loader-${imgId}`);
-                        if (loader) loader.style.display = 'block';
-                        
                         fetch(foto.foto)
                             .then(res => res.blob())
-                            .then(blob => heic2any({ 
-                                blob, 
+                            .then(blob => heic2any({
+                                blob,
                                 toType: "image/jpeg",
                                 quality: 0.6
                             }))
                             .then(conversionResult => {
                                 const url = URL.createObjectURL(Array.isArray(conversionResult) ? conversionResult[0] : conversionResult);
-                                document.getElementById(imgId).src = url;
-                                if (loader) loader.style.display = 'none';
+                                const imgEl = document.getElementById(imgId);
+                                const loaderEl = document.getElementById(loaderId);
+                                if (imgEl) {
+                                    imgEl.onload = function () {
+                                        if (loaderEl) loaderEl.style.display = 'none';
+                                        imgEl.style.display = 'block';
+                                    };
+                                    imgEl.src = url;
+                                }
                             })
                             .catch(e => {
                                 console.error("Error converting HEIC:", e);
-                                if (loader) loader.style.display = 'none';
+                                const loaderEl = document.getElementById(loaderId);
+                                const imgEl = document.getElementById(imgId);
+                                if (loaderEl) loaderEl.style.display = 'none';
+                                if (imgEl) imgEl.style.display = 'block';
                             });
+                    } else {
+                        const imgEl = document.getElementById(imgId);
+                        const loaderEl = document.getElementById(loaderId);
+                        if (imgEl) {
+                            imgEl.onload = function () {
+                                if (loaderEl) loaderEl.style.display = 'none';
+                                imgEl.style.display = 'block';
+                            };
+                            imgEl.onerror = function () {
+                                if (loaderEl) loaderEl.style.display = 'none';
+                                imgEl.style.display = 'block';
+                            };
+                            imgEl.src = foto.foto;
+                        }
                     }
                 });
+
+                // Mostrar u ocultar flechas según cantidad de fotos
+                const prevBtn = document.querySelector('#carouselFotos .carousel-control-prev');
+                const nextBtn = document.querySelector('#carouselFotos .carousel-control-next');
+                if (prevBtn) prevBtn.style.display = totalFotos > 1 ? '' : 'none';
+                if (nextBtn) nextBtn.style.display = totalFotos > 1 ? '' : 'none';
 
                 $('#modalFotos').modal('show');
             } else {

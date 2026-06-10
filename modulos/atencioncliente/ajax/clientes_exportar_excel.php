@@ -21,11 +21,22 @@ try {
     $where = [];
     $params = [];
 
-    $filtrosTexto = ['membresia', 'nombre', 'apellido', 'celular', 'correo'];
+    $filtrosTexto = ['membresia', 'nombre_completo', 'celular', 'correo', 'cedula'];
     foreach ($filtrosTexto as $campo) {
         if (isset($filtros[$campo]) && $filtros[$campo] !== '') {
-            $where[] = "$campo LIKE :$campo";
-            $params[":$campo"] = '%' . $filtros[$campo] . '%';
+            if ($campo === 'nombre_completo') {
+                // Separar los términos de búsqueda por cualquier cantidad de espacios o tabulaciones
+                $terms = preg_split('/\s+/', trim($filtros[$campo]));
+                foreach ($terms as $idx => $term) {
+                    if ($term !== '') {
+                        $where[] = "nombre_completo COLLATE utf8mb4_unicode_ci LIKE :nombre_completo_$idx";
+                        $params[":nombre_completo_$idx"] = '%' . $term . '%';
+                    }
+                }
+            } else {
+                $where[] = "$campo LIKE :$campo";
+                $params[":$campo"] = '%' . $filtros[$campo] . '%';
+            }
         }
     }
 
@@ -65,7 +76,7 @@ try {
 
     $orderClause = '';
     if ($orden['columna']) {
-        $columnas_validas = ['membresia', 'nombre', 'apellido', 'celular', 'fecha_nacimiento', 'correo', 'fecha_registro', 'nombre_sucursal', 'ultima_compra'];
+        $columnas_validas = ['membresia', 'nombre_completo', 'celular', 'fecha_nacimiento', 'correo', 'fecha_registro', 'nombre_sucursal', 'ultima_compra', 'cedula'];
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
             $orderClause = "ORDER BY {$orden['columna']} $direccion";
@@ -79,6 +90,7 @@ try {
                 membresia,
                 nombre,
                 apellido,
+                nombre_completo,
                 celular,
                 fecha_nacimiento,
                 correo,
@@ -91,6 +103,7 @@ try {
                     c.membresia,
                     c.nombre,
                     c.apellido,
+                    CONCAT_WS(' ', c.nombre, c.apellido) as nombre_completo,
                     c.celular,
                     c.fecha_nacimiento,
                     c.correo,
@@ -126,18 +139,17 @@ try {
         <table border="1">
             <thead>
                 <tr style="background-color: #0E544C; color: #FFFFFF; font-weight: bold;">
-                    <th>Membresía</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
+                    <th>Membres&iacute;a</th>
+                    <th>Nombre y Apellido</th>
                     <th>Celular</th>
                     <th>Fecha Nacimiento</th>
                     <th>Correo</th>
-                    <th>Fecha Inscripción</th>
-                    <th>Última Compra</th>
-                    <?php if ($tienePermisoVistaCedula): ?>
-                        <th>Cédula</th>
-                    <?php endif; ?>
-                    <th>Sucursal</th>
+                    <th>Fecha Inscripci&oacute;n</th>
+                    <th>&Uacute;ltima Compra</th>';
+    if ($tienePermisoVistaCedula) {
+        echo '<th>C&eacute;dula</th>';
+    }
+    echo '            <th>Sucursal</th>
                 </tr>
             </thead>
             <tbody>';
@@ -145,8 +157,7 @@ try {
     foreach ($datos as $dato) {
         echo '<tr>';
         echo '<td>' . htmlspecialchars((string) ($dato['membresia'] ?? '')) . '</td>';
-        echo '<td>' . htmlspecialchars((string) ($dato['nombre'] ?? '')) . '</td>';
-        echo '<td>' . htmlspecialchars((string) ($dato['apellido'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string) ($dato['nombre_completo'] ?? '')) . '</td>';
         echo '<td>' . htmlspecialchars((string) ($dato['celular'] ?? '')) . '</td>';
         echo '<td>' . htmlspecialchars((string) ($dato['fecha_nacimiento'] ?? '')) . '</td>';
         echo '<td>' . htmlspecialchars((string) ($dato['correo'] ?? '')) . '</td>';

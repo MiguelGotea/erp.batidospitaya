@@ -55,12 +55,8 @@ $tienePermisoVistaCedula = tienePermiso('historial_clientes_club', 'vista_cedula
                                     Membresía
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="nombre" data-type="text">
-                                    Nombre
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
-                                </th>
-                                <th data-column="apellido" data-type="text">
-                                    Apellido
+                                <th data-column="nombre_completo" data-type="text">
+                                    Nombre y Apellido
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <?php if ($tienePermisoVistaCedula): ?>

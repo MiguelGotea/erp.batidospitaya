@@ -294,9 +294,28 @@ document.getElementById('formNuevaFalta').addEventListener('submit', function (e
             } else if (data.existe_falta) {
                 document.getElementById('formNuevaFalta').submit();
             } else {
-                alert('No se puede registrar falta: El colaborador tiene marcaciones registradas para esta fecha o no tenía horario programado con estado Activo, Otra.Tienda, Subsidio o Vacaciones.');
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                // MODIFICADO: Permitir registro forzado tras confirmación para usuarios que pueden aprobar
+                if (CONFIG_FALTAS.puedeAprobar) {
+                    let mensajeConfirmacion = '';
+                    if (data.tiene_marcaciones) {
+                        mensajeConfirmacion = 'Atención: El colaborador tiene marcaciones registradas para esta fecha (entrada o salida).\n\n¿Está seguro de que desea registrar esta falta de todas formas?';
+                    } else if (!data.tiene_horario_permitido) {
+                        mensajeConfirmacion = 'Atención: El colaborador no tenía horario programado activo para esta fecha.\n\n¿Está seguro de que desea registrar esta falta de todas formas?';
+                    } else {
+                        mensajeConfirmacion = 'Atención: El registro no cumple con las condiciones estándar de una falta real.\n\n¿Está seguro de que desea registrar esta falta de todas formas?';
+                    }
+
+                    if (confirm(mensajeConfirmacion)) {
+                        document.getElementById('formNuevaFalta').submit();
+                    } else {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }
+                } else {
+                    alert('No se puede registrar falta: El colaborador tiene marcaciones registradas para esta fecha o no tenía horario programado con estado Activo, Otra.Tienda, Subsidio o Vacaciones.');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
             }
         })
         .catch(error => {

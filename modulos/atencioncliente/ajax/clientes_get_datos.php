@@ -17,11 +17,22 @@ try {
     $params = [];
 
     // Filtros de texto
-    $filtrosTexto = ['membresia', 'nombre', 'apellido', 'celular', 'correo', 'cedula'];
+    $filtrosTexto = ['membresia', 'nombre_completo', 'celular', 'correo', 'cedula'];
     foreach ($filtrosTexto as $campo) {
         if (isset($filtros[$campo]) && $filtros[$campo] !== '') {
-            $where[] = "$campo LIKE :$campo";
-            $params[":$campo"] = '%' . $filtros[$campo] . '%';
+            if ($campo === 'nombre_completo') {
+                // Separar los términos de búsqueda por cualquier cantidad de espacios o tabulaciones
+                $terms = preg_split('/\s+/', trim($filtros[$campo]));
+                foreach ($terms as $idx => $term) {
+                    if ($term !== '') {
+                        $where[] = "nombre_completo COLLATE utf8mb4_unicode_ci LIKE :nombre_completo_$idx";
+                        $params[":nombre_completo_$idx"] = '%' . $term . '%';
+                    }
+                }
+            } else {
+                $where[] = "$campo LIKE :$campo";
+                $params[":$campo"] = '%' . $filtros[$campo] . '%';
+            }
         }
     }
 
@@ -65,7 +76,7 @@ try {
     // Construir ORDER BY
     $orderClause = '';
     if ($orden['columna']) {
-        $columnas_validas = ['membresia', 'nombre', 'apellido', 'celular', 'fecha_nacimiento', 'correo', 'fecha_registro', 'nombre_sucursal', 'ultima_compra', 'cedula'];
+        $columnas_validas = ['membresia', 'nombre_completo', 'celular', 'fecha_nacimiento', 'correo', 'fecha_registro', 'nombre_sucursal', 'ultima_compra', 'cedula'];
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
             $orderClause = "ORDER BY {$orden['columna']} $direccion";
@@ -78,6 +89,7 @@ try {
     $sqlCount = "SELECT COUNT(*) as total FROM (
                     SELECT 
                         c.*,
+                        CONCAT_WS(' ', c.nombre, c.apellido) as nombre_completo,
                         (SELECT MAX(v.Fecha) 
                          FROM VentasGlobalesAccessCSV v 
                          WHERE v.CodCliente = c.membresia AND v.Anulado = 0) as ultima_compra
@@ -93,6 +105,7 @@ try {
                     membresia,
                     nombre,
                     apellido,
+                    CONCAT_WS(' ', nombre, apellido) as nombre_completo,
                     celular,
                     fecha_nacimiento,
                     correo,

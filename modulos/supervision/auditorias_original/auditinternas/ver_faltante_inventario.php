@@ -86,7 +86,7 @@ function formatFechaHora($fecha_hora)
     $meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
     try {
         $fecha = new DateTime($fecha_hora);
-        $fecha->sub(new DateInterval('PT6H')); // Ajustar a hora de Nicaragua
+        // fecha_hora_regsys ya es convertida a la zona horaria -06:00 por la conexión PDO, por lo que no es necesario restar otras 6 horas.
 
         $dia = $fecha->format('d');
         $mes = $meses[(int)$fecha->format('m') - 1];
