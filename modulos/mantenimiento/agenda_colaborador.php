@@ -112,7 +112,7 @@ if ($colaborador_filtro) {
                                 <p class="mb-0 text-muted">
                                     <?php if (!$informeActual): ?>
                                         <span class="badge bg-secondary">Sin Iniciar</span>
-                                        Debe abrir su informe registrando el kilometraje inicial.
+                                        Presione "Iniciar Informe" para comenzar su jornada.
                                     <?php elseif ($informeActual['estado'] === 'creado'): ?>
                                         <span class="badge bg-primary">En Transcurso (Abierto)</span>
                                         Puede registrar visitas, compras y tareas.
@@ -484,52 +484,21 @@ if ($colaborador_filtro) {
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-premium border-0 overflow-hidden rounded-4">
                 <div class="modal-header bg-primary text-white p-3 px-4 border-0">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-play me-2"></i>Apertura de Informe</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-play me-2"></i>Iniciar Informe</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <form id="formApertura">
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Kilometraje Inicial *</label>
-                            <input type="number" step="0.01" class="form-control form-control-lg rounded-3"
-                                name="km_inicial" required placeholder="0.00">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Foto del Odómetro *</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm flex-grow-1"
-                                    onclick="document.getElementById('km_foto_input').click()">
-                                    <i class="fas fa-upload me-1"></i>Subir
-                                </button>
-                                <button type="button" class="btn btn-outline-success btn-sm flex-grow-1"
-                                    onclick="startCamera('cam_apertura')">
-                                    <i class="fas fa-camera me-1"></i>Cámara
-                                </button>
-                            </div>
-                            <input type="file" id="km_foto_input" name="km_foto_inicial" accept="image/*" class="d-none"
-                                onchange="previewFile(this, 'preview_apertura')">
-                            <input type="hidden" name="km_foto_inicial_cam" id="cam_apertura_data">
-
-                            <div id="preview_apertura" class="text-center mt-2 d-none">
-                                <img src="" class="img-thumbnail rounded-3" style="max-height: 200px;">
-                            </div>
-                            <div id="cam_apertura_container"
-                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black">
-                                <video id="cam_apertura_video" autoplay playsinline class="w-100"></video>
-                                <button type="button"
-                                    class="btn btn-success btn-sm position-absolute bottom-0 start-50 translate-middle-x mb-2"
-                                    onclick="captureSnapshot('cam_apertura')">
-                                    <i class="fas fa-circle"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-clipboard-list fa-3x text-primary opacity-75"></i>
+                    </div>
+                    <p class="mb-1 fw-bold fs-5">¿Desea iniciar un nuevo informe?</p>
+                    <p class="text-muted small">Se creará el informe del día de hoy y podrá comenzar a registrar sus visitas, tareas y compras.</p>
                 </div>
                 <div class="modal-footer border-0 p-3 px-4 pb-4">
                     <button type="button" class="btn btn-secondary rounded-pill px-4"
                         data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary rounded-pill px-4" onclick="guardarApertura()">
-                        Confirmar Inicio
+                        <i class="fas fa-play me-2"></i>Confirmar Inicio
                     </button>
                 </div>
             </div>

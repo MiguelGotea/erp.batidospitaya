@@ -5,28 +5,15 @@ let currentCameraTarget = null;
 let fotosEvidenciaTmp = []; // Almacena fotos (file o base64) para la tarea actual
 
 function modalApertura() {
-    $('#formApertura')[0].reset();
-    $('#preview_apertura').addClass('d-none');
-    $('#cam_apertura_container').addClass('d-none');
-    stopCamera();
     const modal = new bootstrap.Modal(document.getElementById('aperturaModal'));
     modal.show();
 }
 
 async function guardarApertura() {
-    const form = document.getElementById('formApertura');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-
-    const formData = new FormData(form);
-
-    // Validar que haya foto
-    if (!formData.get('km_foto_inicial').name && !formData.get('km_foto_inicial_cam')) {
-        Swal.fire('Error', 'Debe adjuntar o tomar una foto del kilometraje inicial', 'error');
-        return;
-    }
+    // Cerrar modal de confirmación
+    const modalEl = document.getElementById('aperturaModal');
+    const modalInst = bootstrap.Modal.getInstance(modalEl);
+    if (modalInst) modalInst.hide();
 
     Swal.fire({
         title: 'Iniciando reporte...',
@@ -37,7 +24,7 @@ async function guardarApertura() {
     try {
         const response = await fetch('ajax/guardar_informe_apertura.php', {
             method: 'POST',
-            body: formData
+            body: new FormData()
         });
         const res = await response.json();
 
