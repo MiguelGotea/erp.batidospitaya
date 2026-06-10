@@ -290,9 +290,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 // Ahora exportar a Excel TODOS los viáticos nocturnos (no solo los recién guardados)
-                header('Content-Type: application/vnd.ms-excel');
+                header('Content-Type: application/vnd.ms-excel; charset=utf-8');
                 header('Content-Disposition: attachment;filename="viaticos_nocturnos_guardados_' . $fechaDesde . '_a_' . $fechaHasta . '.xls"');
-                header('Cache-Control: max-age=0');
+                header('Pragma: no-cache');
+                header('Expires: 0');
+                
+                // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+                echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+                echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
                 
                 // Obtener TODOS los viáticos nocturnos de la BD para el rango, no solo los recién guardados
                 $viaticosNocturnosBD = obtenerViaticosNocturnosBDParaExport($sucursalCodigo, $fechaDesde, $fechaHasta, $operarioParam);
@@ -316,7 +321,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $codOperario = $viatico['cod_operario'];
                     if (!isset($totalesOperarios[$codOperario])) {
                         $totalesOperarios[$codOperario] = [
-                            'nombre' => trim($viatico['Nombre'] . ' ' . $viatico['Nombre2'] . ' ' . $viatico['Apellido'] . ' ' . $viatico['Apellido2']),
+                            'nombre' => implode(' ', array_filter([
+                                $viatico['Nombre'],
+                                $viatico['Nombre2'] ?? '',
+                                $viatico['Apellido'],
+                                $viatico['Apellido2'] ?? ''
+                            ], fn($v) => trim($v) !== '')),
                             'sucursal' => $viatico['sucursal_nombre'],
                             'total_turnos' => 0,
                             'total_monto' => 0,
@@ -360,6 +370,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 echo '</table>';
+                echo '</body></html>';
                 exit();
                 
             } catch (PDOException $e) {
@@ -932,7 +943,12 @@ if (isset($_GET['exportar_nocturnos'])) {
         $codOperario = $viatico['cod_operario'];
         if (!isset($totalesOperarios[$codOperario])) {
             $totalesOperarios[$codOperario] = [
-                'nombre' => trim($viatico['Nombre'] . ' ' . $viatico['Nombre2'] . ' ' . $viatico['Apellido']),
+                'nombre' => implode(' ', array_filter([
+                    $viatico['Nombre'],
+                    $viatico['Nombre2'] ?? '',
+                    $viatico['Apellido'],
+                    $viatico['Apellido2'] ?? ''
+                ], fn($v) => trim($v) !== '')),
                 'total' => 0,
                 'cantidad' => 0,
                 'registrados' => 0,
@@ -968,7 +984,12 @@ if (isset($_GET['exportar_nocturnos'])) {
     echo '</tr>';
     
     foreach ($viaticosNocturnos as $viatico) {
-        $nombreCompleto = trim($viatico['Nombre'] . ' ' . $viatico['Nombre2'] . ' ' . $viatico['Apellido']);
+        $nombreCompleto = implode(' ', array_filter([
+            $viatico['Nombre'],
+            $viatico['Nombre2'] ?? '',
+            $viatico['Apellido'],
+            $viatico['Apellido2'] ?? ''
+        ], fn($v) => trim($v) !== ''));
         
         echo '<tr>';
         echo '<td>' . htmlspecialchars($viatico['cod_operario'], ENT_QUOTES, 'UTF-8') . '</td>';
@@ -1146,7 +1167,12 @@ if (isset($_GET['exportar_nocturnos2'])) {
         $codOperario = $viatico['cod_operario'];
         if (!isset($totalesOperarios[$codOperario])) {
             $totalesOperarios[$codOperario] = [
-                'nombre' => trim($viatico['Nombre'] . ' ' . $viatico['Nombre2'] . ' ' . $viatico['Apellido'] . ' ' . $viatico['Apellido2']),
+                'nombre' => implode(' ', array_filter([
+                    $viatico['Nombre'],
+                    $viatico['Nombre2'] ?? '',
+                    $viatico['Apellido'],
+                    $viatico['Apellido2'] ?? ''
+                ], fn($v) => trim($v) !== '')),
                 'total' => 0,
                 'cantidad_turnos' => 0
             ];
@@ -1168,15 +1194,18 @@ if (isset($_GET['exportar_nocturnos2'])) {
     echo '<th>Total a recibir</th>';
     echo '<th>Notas</th>';
     echo '</tr>';
-    
     foreach ($viaticosNocturnosBD as $viatico) {
-        $nombreCompleto = trim($viatico['Nombre'] . ' ' . $viatico['Nombre2'] . ' ' . $viatico['Apellido'] . ' ' . $viatico['Apellido2']);
         $totalOperario = $totalesOperarios[$viatico['cod_operario']]['total'];
         $totalTurnos = $totalesOperarios[$viatico['cod_operario']]['cantidad_turnos'];
         
         echo '<tr>';
         $codContrato = $viatico['cod_contrato'] ?? '';
-        $nombreCompleto = trim($viatico['Nombre'] . ' ' . $viatico['Nombre2'] . ' ' . $viatico['Apellido'] . ' ' . $viatico['Apellido2']);
+        $nombreCompleto = implode(' ', array_filter([
+            $viatico['Nombre'],
+            $viatico['Nombre2'] ?? '',
+            $viatico['Apellido'],
+            $viatico['Apellido2'] ?? ''
+        ], fn($v) => trim($v) !== ''));
         $nombreConContrato = $codContrato . ' ' . $nombreCompleto;
         
         echo '<td>' . htmlspecialchars($nombreConContrato, ENT_QUOTES, 'UTF-8') . '</td>';
@@ -1350,7 +1379,12 @@ if (isset($_GET['exportar_nocturnos_guardados'])) {
         $codOperario = $viatico['cod_operario'];
         if (!isset($totalesOperarios[$codOperario])) {
             $totalesOperarios[$codOperario] = [
-                'nombre' => trim($viatico['Nombre'] . ' ' . $viatico['Nombre2'] . ' ' . $viatico['Apellido'] . ' ' . $viatico['Apellido2']),
+                'nombre' => implode(' ', array_filter([
+                    $viatico['Nombre'],
+                    $viatico['Nombre2'] ?? '',
+                    $viatico['Apellido'],
+                    $viatico['Apellido2'] ?? ''
+                ], fn($v) => trim($v) !== '')),
                 'sucursal' => $viatico['sucursal_nombre'],
                 'total_turnos' => 0,
                 'total_monto' => 0,

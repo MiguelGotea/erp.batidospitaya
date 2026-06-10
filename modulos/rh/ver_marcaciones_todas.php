@@ -752,9 +752,14 @@ if (
     if (isset($_GET['exportar_excel'])) {
         // Configurar headers para descarga de archivo Excel con rango de fechas
         $nombreArchivo = "marcaciones_{$fechaDesde}_a_{$fechaHasta}.xls";
-        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Type: application/vnd.ms-excel; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
-        header('Cache-Control: max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+        echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+        echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
 
         // Iniciar salida
         echo '<table border="1">';
@@ -879,13 +884,19 @@ if (
         }
 
         echo '</table>';
+        echo '</body></html>';
         exit;
     } elseif (isset($_GET['exportar_faltas'])) {
         // Exportar FALTAS con rango de fechas
         $nombreArchivo = "faltas_{$fechaDesde}_a_{$fechaHasta}.xls";
-        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Type: application/vnd.ms-excel; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
-        header('Cache-Control: max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+        echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+        echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
 
         // Obtener datos para el reporte de faltas
         $reporteFaltas = generarReporteFaltas(
@@ -923,13 +934,19 @@ if (
         }
 
         echo '</table>';
+        echo '</body></html>';
         exit;
     } elseif (isset($_GET['exportar_tardanzas'])) {
         // Exportar TARDANZAS con rango de fechas - VERSIÓN MODIFICADA
         $nombreArchivo = "tardanzas_{$fechaDesde}_a_{$fechaHasta}.xls";
-        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Type: application/vnd.ms-excel; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
-        header('Cache-Control: max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+        echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+        echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
 
         // Obtener datos para el reporte de tardanzas (nueva versión)
         $reporteTardanzas = generarReporteTardanzas(
@@ -1005,6 +1022,7 @@ if (
         }
 
         echo '</table>';
+        echo '</body></html>';
         exit;
     }
 }
@@ -1051,11 +1069,11 @@ function generarReporteFaltas($modoVista, $codSucursal, $fechaDesde, $fechaHasta
         $sqlOperarios = "SELECT
             o.CodOperario,
             o.Operativo,
-            CONCAT(
-                IFNULL(o.Nombre, ''), ' ',
-                IFNULL(o.Nombre2, ''), ' ',
-                IFNULL(o.Apellido, ''), ' ',
-                IFNULL(o.Apellido2, '')
+            CONCAT_WS(' ',
+                NULLIF(TRIM(o.Nombre),   ''),
+                NULLIF(TRIM(o.Nombre2),  ''),
+                NULLIF(TRIM(o.Apellido), ''),
+                NULLIF(TRIM(o.Apellido2),'')
             ) AS nombre_completo,
             COALESCE(
                 (SELECT s.nombre
@@ -1212,11 +1230,11 @@ function generarReporteTardanzas(
                                 tm.cod_contrato,
                                 tm.cod_operario,
                                 o.Operativo,
-                                CONCAT(
-                                IFNULL(o.Nombre, ''), ' ',
-                                IFNULL(o.Nombre2, ''), ' ',
-                                IFNULL(o.Apellido, ''), ' ',
-                                IFNULL(o.Apellido2, '')
+                                CONCAT_WS(' ',
+                                    NULLIF(TRIM(o.Nombre),   ''),
+                                    NULLIF(TRIM(o.Nombre2),  ''),
+                                    NULLIF(TRIM(o.Apellido), ''),
+                                    NULLIF(TRIM(o.Apellido2),'')
                                 ) AS nombre_completo,
                                 COALESCE(
                                 (SELECT s.nombre

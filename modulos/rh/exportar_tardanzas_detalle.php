@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // /public_html/modulos/rh/exportar_tardanzas_detalle.php
 
 // Limpiar cualquier output previo
@@ -51,9 +51,13 @@ $tardanzasDetalladas = obtenerTardanzasDetalladas($modoVista, $sucursalParam, $f
 $mesesEnRango = generarListaMeses($fechaDesde, $fechaHasta);
 
 // Configurar headers para Excel
-header('Content-Type: application/vnd.ms-excel');
+header('Content-Type: application/vnd.ms-excel; charset=utf-8');
 header('Content-Disposition: attachment; filename="tardanzas_detalle_' . $fechaDesde . '_a_' . $fechaHasta . '.xls"');
-header('Cache-Control: max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+// BOM para UTF-8 (debe emitirse antes de cualquier HTML)
+echo pack("CCC", 0xef, 0xbb, 0xbf);
 
 // Función para generar lista de meses en el rango
 function generarListaMeses($fechaDesde, $fechaHasta)
@@ -95,6 +99,7 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                 m.sucursal_codigo,
                 s.nombre as nombre_sucursal,
                 o.Nombre,
+                o.Nombre2,
                 o.Apellido,
                 o.Apellido2,
                 o.Operativo,
@@ -275,7 +280,12 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                     'anio' => $anio,
                     'dia_semana' => obtenerNombreDia($diaSemana),
                     'cod_operario' => $marcacion['CodOperario'],
-                    'nombre_operario' => trim($marcacion['Nombre'] . ' ' . $marcacion['Apellido'] . ' ' . $marcacion['Apellido2']),
+                    'nombre_operario' => implode(' ', array_filter([
+                        trim($marcacion['Nombre']   ?? ''),
+                        trim($marcacion['Nombre2']  ?? ''),
+                        trim($marcacion['Apellido'] ?? ''),
+                        trim($marcacion['Apellido2'] ?? '')
+                    ], fn($v) => $v !== '')),
                     'nombre_sucursal' => $marcacion['nombre_sucursal'],
                     'nombre_cargo' => $marcacion['nombre_cargo'] ?? 'Sin cargo',
                     'cod_contrato' => $marcacion['CodContrato'] ?? '',

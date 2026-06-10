@@ -71,8 +71,14 @@ if (isset($_GET['exportar_excel'])) {
 
     // Configurar headers para descarga con rango de fechas
     $nombreArchivo = "tardanzas_justificadas_{$fechaDesde}_a_{$fechaHasta}.xls";
-    header('Content-Type: application/vnd.ms-excel');
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+    echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+    echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
 
     echo '<table border="1">';
     echo '<tr>';
@@ -95,12 +101,12 @@ if (isset($_GET['exportar_excel'])) {
     echo '</tr>';
 
     foreach ($datosJustificados as $item) {
-        $nombreCompleto = trim(
-            $item['operario_nombre'] . ' ' .
-                ($item['operario_nombre2'] ?? '') . ' ' .
-                $item['operario_apellido'] . ' ' .
-                ($item['operario_apellido2'] ?? '')
-        );
+        $nombreCompleto = implode(' ', array_filter([
+            $item['operario_nombre'],
+            $item['operario_nombre2'] ?? '',
+            $item['operario_apellido'],
+            $item['operario_apellido2'] ?? ''
+        ], fn($v) => trim($v) !== ''));
 
         $codOperario = $item['cod_operario'];
         $totalJustificadas = $tardanzasJustificadasPorOperario[$codOperario] ?? 0;
@@ -133,6 +139,7 @@ if (isset($_GET['exportar_excel'])) {
     }
 
     echo '</table>';
+    echo '</body></html>';
     exit;
 }
 
@@ -151,8 +158,14 @@ if (isset($_GET['exportar_contabilidad'])) {
 
     // Configurar headers para descarga con rango de fechas
     $nombreArchivo = "tardanzas_contabilidad_{$fechaDesde}_a_{$fechaHasta}.xls";
-    header('Content-Type: application/vnd.ms-excel');
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+    echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+    echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
 
     echo '<table border="1">';
     echo '<tr>';
@@ -190,6 +203,7 @@ if (isset($_GET['exportar_contabilidad'])) {
     }
 
     echo '</table>';
+    echo '</body></html>';
     exit;
 }
 
@@ -537,13 +551,13 @@ if ($esOperaciones) {
 }
 
 // Obtener todos los operarios para el filtro
-$sql_operarios = "SELECT o.CodOperario, 
-                 CONCAT(
-                     IFNULL(o.Nombre, ''), ' ', 
-                     IFNULL(o.Nombre2, ''), ' ', 
-                     IFNULL(o.Apellido, ''), ' ', 
-                     IFNULL(o.Apellido2, '')
-                 ) AS nombre_completo 
+$sql_operarios = "SELECT o.CodOperario,
+                 CONCAT_WS(' ',
+                     NULLIF(TRIM(o.Nombre),   ''),
+                     NULLIF(TRIM(o.Nombre2),  ''),
+                     NULLIF(TRIM(o.Apellido), ''),
+                     NULLIF(TRIM(o.Apellido2),'')
+                 ) AS nombre_completo
                  FROM Operarios o
                  LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
                  WHERE (anc.CodNivelesCargos IS NULL OR anc.CodNivelesCargos != 27)

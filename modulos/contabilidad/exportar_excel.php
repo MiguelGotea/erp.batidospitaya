@@ -246,9 +246,15 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
     
     // Configurar headers para descarga con rango de fechas
     $nombreArchivo = "permisos_{$fechaDesde}_a_{$fechaHasta}.xls";
-    header('Content-Type: application/vnd.ms-excel');
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
-    
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+    echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+    echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+
     echo '<table border="1">';
     echo '<tr>';
     echo '<th>Código</th>';
@@ -296,6 +302,7 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta) {
     }
     
     echo '</table>';
+    echo '</body></html>';
     exit;
 }
 
@@ -330,9 +337,15 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
     
     // Configurar headers para descarga con rango de fechas
     $nombreArchivo = "vacaciones_{$fechaDesde}_a_{$fechaHasta}.xls";
-    header('Content-Type: application/vnd.ms-excel');
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
-    
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+    echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+    echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+
     echo '<table border="1">';
     echo '<tr>';
     echo '<th>Código</th>';
@@ -380,6 +393,7 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
     }
     
     echo '</table>';
+    echo '</body></html>';
     exit;
 }
 
@@ -558,11 +572,11 @@ function exportarTardanzas($codSucursal, $fechaDesde, $fechaHasta) {
                 tm.cod_contrato,
                 tm.cod_operario,
                 o.Operativo,
-                CONCAT(
-                    IFNULL(o.Nombre, ''), ' ', 
-                    IFNULL(o.Nombre2, ''), ' ', 
-                    IFNULL(o.Apellido, ''), ' ', 
-                    IFNULL(o.Apellido2, '')
+                CONCAT_WS(' ',
+                    NULLIF(TRIM(o.Nombre),   ''),
+                    NULLIF(TRIM(o.Nombre2),  ''),
+                    NULLIF(TRIM(o.Apellido), ''),
+                    NULLIF(TRIM(o.Apellido2),'')
                 ) AS nombre_completo,
                 COALESCE(
                     (SELECT s.nombre 
