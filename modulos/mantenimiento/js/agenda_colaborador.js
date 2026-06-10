@@ -390,19 +390,7 @@ async function guardarCierre() {
         return;
     }
 
-    // Validación de campos obligatorios en visitas (Salida y Materiales)
-    const btnSalida = document.querySelector('button[onclick^="modalRegistrarSalida"]');
-    const btnMat = document.querySelector('button[onclick^="modalRegistrarMateriales"]');
-    
-    if (btnSalida || btnMat) {
-        Swal.fire({
-            title: 'Informe Incompleto',
-            text: 'Todas las visitas deben tener registrada la Hora de Salida y los Materiales Usados antes de finalizar.',
-            icon: 'warning',
-            confirmButtonColor: '#0E544C'
-        });
-        return;
-    }
+
 
     const formData = new FormData(form);
     if (!formData.get('km_foto_final').name && !formData.get('km_foto_final_cam')) {

@@ -474,22 +474,7 @@ $sucursales = $ticketModel->getSucursales();
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="mb-3 row">
-                            <div class="col-6">
-                                <label class="form-label small fw-bold">Hora Llegada *</label>
-                                <input type="time" name="hora_llegada" class="form-control rounded-3"
-                                    value="<?= date('H:i') ?>" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-bold">Hora Salida (Opcional)</label>
-                                <input type="time" name="hora_salida" class="form-control rounded-3">
-                            </div>
-                        </div>
-                        <div class="mb-0">
-                            <label class="form-label small fw-bold">Materiales del Stock Usados</label>
-                            <textarea name="materiales_stock" class="form-control rounded-3" rows="2"
-                                placeholder="Ej: 3 tornillos, 1m cable..."></textarea>
-                        </div>
+
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 px-4 pb-4">
