@@ -41,7 +41,7 @@ function formatFechaEspanolAuditoria($fecha)
     ];
 
     $date = new DateTime($fecha);
-    $date->modify('-6 hours'); // Restar 6 horas
+    // fecha_hora ya contiene la hora real de Nicaragua, no se aplica ajuste
     return $date->format('d') . '-' . $meses[$date->format('n')] . '-' . $date->format('y') . ' ' . $date->format('h:i a');
 }
 
@@ -147,7 +147,7 @@ function mostrarListadoAuditorias($conn)
                                         $textoDiferencia = ($diferencia > 0) ? 'Faltante' : (($diferencia < 0) ? 'Sobrante' : 'Correcto');
                                     ?>
                                         <tr>
-                                            <td><?= formatFechaEspanolAuditoria($auditoria['fecha_hora_regsys']) ?></td>
+                                            <td><?= formatFechaEspanolAuditoria($auditoria['fecha_hora']) ?></td>
                                             <td><?= htmlspecialchars($auditoria['sucursal_nombre']) ?></td>
                                             <td>
                                                 <?= !empty($auditoria['nombre_lider']) ? htmlspecialchars($auditoria['nombre_lider']) : htmlspecialchars($auditoria['lider_tienda']) ?>
@@ -247,7 +247,7 @@ function mostrarDetalleAuditoria($conn, $id)
 
                         <div class="card">
                             <div class="card-title">Detalles de la Auditoría</div>
-                            <p><strong>Fecha:</strong> <?= formatFechaEspanolAuditoria($auditoria['fecha_hora_regsys']) ?></p>
+                            <p><strong>Fecha:</strong> <?= formatFechaEspanolAuditoria($auditoria['fecha_hora']) ?></p>
                             <p><strong>Sucursal:</strong> <?= htmlspecialchars($auditoria['sucursal_nombre']) ?></p>
                             <p><strong>Líder de Tienda:</strong>
                                 <?= !empty($auditoria['nombre_lider']) ? htmlspecialchars($auditoria['nombre_lider']) : htmlspecialchars($auditoria['lider_tienda']) ?>

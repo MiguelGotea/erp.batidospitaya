@@ -78,7 +78,15 @@ function obtenerTodasFaltasManuales($codSucursal, $fechaDesde, $fechaHasta)
                fm.fecha_registro,
                o.Nombre as operario_nombre, o.Nombre2 as operario_nombre2,
                o.Apellido as operario_apellido, o.Apellido2 as operario_apellido2,
-               s.nombre as sucursal_nombre
+               s.nombre as sucursal_nombre,
+               (
+                   SELECT COUNT(*)
+                   FROM marcaciones m
+                   WHERE m.CodOperario = fm.cod_operario
+                   AND m.sucursal_codigo = fm.cod_sucursal
+                   AND m.fecha = fm.fecha_falta
+                   AND (m.hora_ingreso IS NOT NULL OR m.hora_salida IS NOT NULL)
+               ) as tiene_marcacion
         FROM faltas_manual fm
         JOIN Operarios o ON fm.cod_operario = o.CodOperario
         JOIN sucursales s ON fm.cod_sucursal = s.codigo
@@ -181,7 +189,9 @@ if (isset($_GET['exportar_contabilidad'])) {
         }
 
         // CONTAR FALTAS JUSTIFICADAS (todo lo que NO es "Pendiente" ni "No_Pagado")
-        if ($fr['tipo_falta'] !== 'Pendiente' && $fr['tipo_falta'] !== 'No_Pagado') {
+        // EXCEPCIÓN: Si la falta manual fue registrada en una fecha donde hay marcaciones
+        //            (salida temprana / registro de RH), NO cuenta como justificada
+        if ($fr['tipo_falta'] !== 'Pendiente' && $fr['tipo_falta'] !== 'No_Pagado' && empty($fr['tiene_marcacion'])) {
             $faltasPorOperario[$codOperario]['total_faltas_justificadas']++;
         }
     }
@@ -863,8 +873,9 @@ if (isset($_GET['exportar_excel'])) {
         // SOLO LAS FALTAS "No_Pagado" CUENTAN COMO NO PAGADAS
         if ($fr['tipo_falta'] === 'No_Pagado') {
             $faltasPorOperario[$codOperario]['total_faltas_no_pagadas']++;
-        } else {
-            // NUEVO: CONTAR FALTAS JUSTIFICADAS (todo lo que NO es No_Pagado)
+        } elseif (empty($fr['tiene_marcacion'])) {
+            // CONTAR FALTAS JUSTIFICADAS solo si NO hay marcaciones en esa fecha
+            // (faltas con marcaciones son registros de RH/salida temprana, no justifican falta automática)
             $faltasPorOperario[$codOperario]['total_faltas_justificadas']++;
         }
     }
@@ -1217,12 +1228,10 @@ function procesarRegistroFaltaManual()
             throw new Exception('No se pueden registrar faltas para fechas futuras ni para el día actual. Solo se permiten fechas hasta: ' . formatoFechaCorta($fechaMaximaPermitida));
         }
 
-        // VALIDACIÓN MEJORADA: Verificar si realmente hubo falta (no hay NINGUNA marcación)
-        // EXCEPCIÓN: Para sucursales 6 y 18, quienes aprueban pueden registrar sin validación de horario
-        $esSucursalEspecial = in_array($codSucursal, ['6', '18']);
-
-        if (!$esSucursalEspecial || !$puedeAprobar) {
-            // Solo validar horario si NO es sucursal especial O NO puede aprobar
+        // VALIDACIÓN: Verificar si realmente hubo falta
+        // EXCEPCIÓN: Usuarios con permiso 'aprobar' pueden registrar incluso si hay marcaciones
+        //            (caso salida temprana u otros registros especiales de RH)
+        if (!$puedeAprobar) {
             if (!verificarFaltaReal($codOperario, $codSucursal, $fechaFalta)) {
                 throw new Exception('No se puede registrar falta: El colaborador tiene marcaciones registradas para esta fecha (entrada o salida) o no tenía horario programado activo');
             }

@@ -77,7 +77,7 @@ $sql = "
         -- Auditoría de Facturación
         SELECT 
             id, 
-            fecha_hora_regsys AS fecha_hora, 
+            fecha_hora AS fecha_hora, 
             sucursal, 
             'facturacion' AS tipo_auditoria,
             faltante_sobrante AS monto_faltante,
@@ -91,7 +91,7 @@ $sql = "
         -- Auditoría de Caja Chica
         SELECT 
             id, 
-            fecha_hora_regsys AS fecha_hora, 
+            fecha_hora AS fecha_hora, 
             sucursal, 
             'caja_chica' AS tipo_auditoria,
             faltante_sobrante AS monto_faltante,
@@ -113,6 +113,7 @@ $sql = "
             NULL AS operario_id, -- No asociamos a un operario específico para evitar duplicados
             ai.sucursal_id
         FROM auditoria_inventario ai
+        -- NOTA: inventario usa fecha_hora_regsys que ya tiene -6h en BD, y el display NO aplica sub(6H) para no tipo_auditoria = inventario/faltante*
         
         UNION ALL
         
@@ -684,9 +685,9 @@ if (isset($_GET['exportar_faltante_caja'])) {
                                             $anio = $fecha->format('y');
                                             echo "$dia-$mes-$anio";
                                         } else {
-                                            // Para los demás tipos, mostrar fecha y hora (con ajuste de -6 horas)
+                                            // Para facturación/caja chica: fecha_hora ya es la hora real de Nicaragua (sin ajuste necesario)
+                                            // Para inventario/faltante: fecha_hora_regsys que también ya viene procesada
                                             $fecha = new DateTime($registro['fecha_hora']);
-                                            $fecha->sub(new DateInterval('PT6H'));
 
                                             $dia = $fecha->format('d');
                                             $mes = $meses_cortos[(int) $fecha->format('m')];

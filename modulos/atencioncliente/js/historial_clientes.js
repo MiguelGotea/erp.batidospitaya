@@ -75,8 +75,7 @@ function renderizarTabla(datos) {
         const tr = $('<tr>');
 
         tr.append(`<td>${row.membresia || '-'}</td>`);
-        tr.append(`<td>${row.nombre || '-'}</td>`);
-        tr.append(`<td>${row.apellido || '-'}</td>`);
+        tr.append(`<td>${row.nombre_completo || '-'}</td>`);
 
         if ($('#tablaClientes').data('permiso-cedula')) {
             tr.append(`<td>${row.cedula || '-'}</td>`);

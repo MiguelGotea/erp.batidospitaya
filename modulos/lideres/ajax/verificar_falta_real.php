@@ -39,79 +39,64 @@ try {
     $puedeAprobar = tienePermiso('faltas_manual', 'aprobar', $cargoOperario);
     $esSucursalEspecial = in_array($codSucursal, ['6', '18']);
     
-    if ($esSucursalEspecial && $puedeAprobar) {
-        // Para sucursales especiales y quienes aprueban, siempre retornar true (permite registro)
-        echo json_encode(['existe_falta' => true]);
-        exit;
-    }
+    // 1. Verificar si hay marcaciones para ese día
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as total_marcaciones 
+        FROM marcaciones 
+        WHERE CodOperario = ? 
+        AND sucursal_codigo = ?
+        AND fecha = ?
+        AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL)
+    ");
+    $stmt->execute([$codOperario, $codSucursal, $fechaFalta]);
+    $result = $stmt->fetch();
+    $tieneMarcaciones = ($result && $result['total_marcaciones'] > 0);
     
-    // Función para verificar si realmente hubo falta
-    function verificarFaltaReal($codOperario, $codSucursal, $fechaFalta) {
-        global $conn;
-        
-        // 1. Verificar si hay marcaciones para ese día
-        $stmt = $conn->prepare("
-            SELECT COUNT(*) as total_marcaciones 
-            FROM marcaciones 
-            WHERE CodOperario = ? 
-            AND sucursal_codigo = ?
-            AND fecha = ?
-            AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL)
-        ");
-        $stmt->execute([$codOperario, $codSucursal, $fechaFalta]);
-        $result = $stmt->fetch();
-        
-        // Si hay marcaciones, no es una falta real
-        if ($result && $result['total_marcaciones'] > 0) {
-            return false;
-        }
-        
-        // 2. Verificar si el operario tenía horario programado para ese día
-        $diaSemana = date('N', strtotime($fechaFalta)); // 1=lunes, 7=domingo
-        
-        // Mapear a los nombres de columna
-        $dias = [
-            1 => 'lunes',
-            2 => 'martes', 
-            3 => 'miercoles',
-            4 => 'jueves',
-            5 => 'viernes',
-            6 => 'sabado',
-            7 => 'domingo'
-        ];
-        $diaColumna = $dias[$diaSemana];
-        
-        // Obtener el horario programado para ese día
-        $stmt = $conn->prepare("
-            SELECT 
-                {$diaColumna}_estado as estado,
-                {$diaColumna}_entrada as hora_entrada,
-                {$diaColumna}_salida as hora_salida
-            FROM HorariosSemanalesOperaciones hso
-            JOIN SemanasSistema ss ON hso.id_semana_sistema = ss.id
-            WHERE hso.cod_operario = ?
-            AND hso.cod_sucursal = ?
-            AND ? BETWEEN ss.fecha_inicio AND ss.fecha_fin
-            LIMIT 1
-        ");
-        $stmt->execute([$codOperario, $codSucursal, $fechaFalta]);
-        $horario = $stmt->fetch();
-        
-        // MODIFICADO: Permitir registro si el estado es Activo, Otra.Tienda, Subsidio o Vacaciones
-        $estadosPermitidos = ['Activo', 'Otra.Tienda', 'Subsidio', 'Vacaciones'];
-        
-        // Si no hay horario programado o el día no está en estados permitidos, no es una falta real
-        if (!$horario || !in_array($horario['estado'], $estadosPermitidos)) {
-            return false;
-        }
-        
-        // 3. Si no hay marcaciones Y tenía horario programado con estado permitido, entonces es una falta real
-        return true;
-    }
+    // 2. Verificar si el operario tenía horario programado para ese día
+    $diaSemana = date('N', strtotime($fechaFalta)); // 1=lunes, 7=domingo
     
-    $existeFalta = verificarFaltaReal($codOperario, $codSucursal, $fechaFalta);
+    // Mapear a los nombres de columna
+    $dias = [
+        1 => 'lunes',
+        2 => 'martes', 
+        3 => 'miercoles',
+        4 => 'jueves',
+        5 => 'viernes',
+        6 => 'sabado',
+        7 => 'domingo'
+    ];
+    $diaColumna = $dias[$diaSemana];
     
-    echo json_encode(['existe_falta' => $existeFalta]);
+    // Obtener el horario programado para ese día
+    $stmt = $conn->prepare("
+        SELECT 
+            {$diaColumna}_estado as estado,
+            {$diaColumna}_entrada as hora_entrada,
+            {$diaColumna}_salida as hora_salida
+        FROM HorariosSemanalesOperaciones hso
+        JOIN SemanasSistema ss ON hso.id_semana_sistema = ss.id
+        WHERE hso.cod_operario = ?
+        AND hso.cod_sucursal = ?
+        AND ? BETWEEN ss.fecha_inicio AND ss.fecha_fin
+        LIMIT 1
+    ");
+    $stmt->execute([$codOperario, $codSucursal, $fechaFalta]);
+    $horario = $stmt->fetch();
+    
+    // MODIFICADO: Permitir registro si el estado es Activo, Otra.Tienda, Subsidio o Vacaciones
+    $estadosPermitidos = ['Activo', 'Otra.Tienda', 'Subsidio', 'Vacaciones'];
+    
+    // Si es sucursal especial, se considera que tiene horario permitido para evitar advertencias de horario
+    $tieneHorarioPermitido = $esSucursalEspecial || ($horario && in_array($horario['estado'], $estadosPermitidos));
+    
+    // Es una falta real estándar si NO tiene marcaciones Y tiene un horario permitido
+    $existeFalta = (!$tieneMarcaciones && $tieneHorarioPermitido);
+    
+    echo json_encode([
+        'existe_falta' => $existeFalta,
+        'tiene_marcaciones' => $tieneMarcaciones,
+        'tiene_horario_permitido' => $tieneHorarioPermitido
+    ]);
 } catch (Throwable $e) {
     http_response_code(400);
     echo json_encode([

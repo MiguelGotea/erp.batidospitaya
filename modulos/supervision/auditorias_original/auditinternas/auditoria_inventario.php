@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    (fecha_hora, sucursal_id, sucursal, total_faltante, comentarios, auditor_id) 
                    VALUES (?, ?, ?, ?, ?, ?)");
                 
-                $stmt->bind_param("issdsi", 
+                $stmt->bind_param("sssdsi", 
                     $fecha_hora,
                     $sucursal_id,
                     $sucursal_nombre,
