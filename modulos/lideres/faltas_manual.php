@@ -206,10 +206,16 @@ if (isset($_GET['exportar_contabilidad'])) {
 
     // Configurar headers para descarga de archivo Excel con rango de fechas
     $nombreArchivo = "faltas_pendientes_contabilidad_{$fechaDesde}_a_{$fechaHasta}.xls";
-    header('Content-Type: application/vnd.ms-excel');
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
 
-    // Iniciar salida - UNA SOLA FILA POR OPERARIO, SIN COLUMNAS DE DETALLE
+    // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+    echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+    echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+
+    // UNA SOLA FILA POR OPERARIO, SIN COLUMNAS DE DETALLE
     echo '<table border="1">';
     echo '<tr>';
     // echo '<th>Código</th>';
@@ -248,6 +254,7 @@ if (isset($_GET['exportar_contabilidad'])) {
     }
 
     echo '</table>';
+    echo '</body></html>';
     exit;
 }
 
@@ -635,8 +642,14 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta)
 
     // Configurar headers para descarga con rango de fechas
     $nombreArchivo = "permisos_{$fechaDesde}_a_{$fechaHasta}.xls";
-    header('Content-Type: application/vnd.ms-excel');
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+    echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+    echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
 
     echo '<table border="1">';
     echo '<tr>';
@@ -687,6 +700,7 @@ function exportarPermisos($codSucursal, $fechaDesde, $fechaHasta)
     }
 
     echo '</table>';
+    echo '</body></html>';
     exit;
 }
 
@@ -722,8 +736,14 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta)
 
     // Configurar headers para descarga con rango de fechas
     $nombreArchivo = "vacaciones_{$fechaDesde}_a_{$fechaHasta}.xls";
-    header('Content-Type: application/vnd.ms-excel');
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+    echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+    echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
 
     echo '<table border="1">';
     echo '<tr>';
@@ -774,6 +794,7 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta)
     }
 
     echo '</table>';
+    echo '</body></html>';
     exit;
 }
 
@@ -850,10 +871,15 @@ if (isset($_GET['exportar_excel'])) {
 
     // Configurar headers para descarga de archivo Excel con rango de fechas
     $nombreArchivo = "faltas_manuales_{$fechaDesde}_a_{$fechaHasta}.xls";
-    header('Content-Type: application/vnd.ms-excel');
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
 
-    // Iniciar salida
+    // Iniciar salida con BOM para UTF-8 y estructura HTML correcta
+    echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM para UTF-8
+    echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+
     echo '<table border="1">';
     echo '<tr>';
     // echo '<th>Código</th>';
@@ -931,6 +957,7 @@ if (isset($_GET['exportar_excel'])) {
     }
 
     echo '</table>';
+    echo '</body></html>';
     exit;
 }
 
@@ -1004,11 +1031,11 @@ function obtenerOperariosFiltro()
     global $conn;
 
     $sql = "SELECT o.CodOperario, 
-                   CONCAT(
-                       IFNULL(o.Nombre, ''), ' ', 
-                       IFNULL(o.Nombre2, ''), ' ', 
-                       IFNULL(o.Apellido, ''), ' ', 
-                       IFNULL(o.Apellido2, '')
+                   CONCAT_WS(' ',
+                       NULLIF(TRIM(o.Nombre),   ''),
+                       NULLIF(TRIM(o.Nombre2),  ''),
+                       NULLIF(TRIM(o.Apellido), ''),
+                       NULLIF(TRIM(o.Apellido2),'')
                    ) AS nombre_completo 
             FROM Operarios o
             LEFT JOIN (
