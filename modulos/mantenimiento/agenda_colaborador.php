@@ -268,8 +268,10 @@ $sucursales = $ticketModel->getSucursales();
                                         <?php endif; ?>
                                     </div>
                                 </div>
+                            </div>
                         <?php endif; ?>
                     </div>
+
 
                     <!-- LISTA DE VISITAS/PROGRESO -->
                     <?php if ($informeActual): ?>
@@ -443,9 +445,13 @@ $sucursales = $ticketModel->getSucursales();
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
-                        </div>
-                    </div>
+                                    <?php endif; ?>
+                                    </div><!-- /visitas-timeline -->
+                                </div><!-- /col-12 -->
+                            </div><!-- /row -->
                     <?php endif; ?>
+
+
                 </div>
             </div>
         </div>
