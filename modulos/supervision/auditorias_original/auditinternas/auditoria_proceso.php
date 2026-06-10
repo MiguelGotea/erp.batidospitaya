@@ -15,11 +15,8 @@ $db = $conn;
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21, 49, 52]);
-
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21, 49, 52])) {
+if (!tienePermiso('auditorias_desempeno', 'crear', $cargoOperario) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }

@@ -1,10 +1,11 @@
-﻿<?php
+<?php
 // Includes estándar del ERP
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
 require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
 require_once '../../../core/layout/menu_lateral.php';
 require_once '../../../core/layout/header_universal.php';
+require_once '../../../core/permissions/permissions.php';
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
@@ -12,19 +13,16 @@ verificarAutenticacion();
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
 $esAdmin = isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+$cargoOperario = $usuario['CodNivelesCargos'];
 
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([11, 13, 16, 39, 30, 37, 42, 26, 49]);
-
-// Verificar acceso al módulo
-if (!verificarAccesoCargo([11, 13, 16, 39, 30, 37, 42, 26, 49]) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
+// Verificar acceso al módulo (via permisos tools_erp)
+if (!tienePermiso('avisos_internos', 'crear', $cargoOperario) && !$esAdmin) {
     header('Location: ../../../index.php');
     exit();
 }
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-$cargoOperario = $usuario['CodNivelesCargos'];
 //******************************Estándar para header, termina******************************
 
 // Configurar zona horaria para Nicaragua (UTC-6)

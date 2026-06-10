@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // auditoria_promociones.php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
 // Antes llamaba a ../funciones.php de auditora
@@ -13,18 +13,13 @@ $db = $conn;
 
 // Obtener información del usuario actual
 $usuario = obtenerUsuarioActual();
-// Verificar acceso al módulo 'supervision'
-verificarAccesoCargo([16, 21, 49, 52]);
+$cargoOperario = $usuario['CodNivelesCargos'];
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([16, 21, 49, 52])) {
+if (!tienePermiso('auditorias_desempeno', 'crear', $cargoOperario) && !(isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin')) {
     header('Location: ../../../index.php');
     exit();
 }
-
-// Obtenemos el cargo principal usando la función de funciones.php
-$cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
-$cargoOperario = $usuario['CodNivelesCargos'];
 //******************************Estándar para header, termina******************************
 
 // Obtener sucursales para el select

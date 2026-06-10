@@ -207,7 +207,7 @@ if (isset($_GET['exportar_excel'])) {
 // PAGINACIÓN LÓGICA
 $paginaActual = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
 $limitesValidos = [25, 50, 100];
-$registrosPorPagina = in_array((int)($_GET['limit'] ?? 25), $limitesValidos) ? (int)$_GET['limit'] : 25;
+$registrosPorPagina = in_array((int)($_GET['limit'] ?? 25), $limitesValidos) ? (int)($_GET['limit'] ?? 25) : 25;
 $offset = ($paginaActual - 1) * $registrosPorPagina;
 
 // Conteo total
