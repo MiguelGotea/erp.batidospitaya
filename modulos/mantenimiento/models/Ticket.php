@@ -492,6 +492,7 @@ class Ticket
             [$informe_id]
         );
 
+
         foreach ($tareas as $tarea) {
             $ticketId = $tarea['ticket_id'];
             $completado = (int) $tarea['completado_100'];
