@@ -483,6 +483,7 @@ $sucursales = $ticketModel->getSucursales();
         </div>
     </div>
 
+    
     <!-- MODAL NUEVA VISITA -->
     <div class="modal fade" id="visitaModal" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
