@@ -258,14 +258,12 @@ try {
                     continue;
                 }
                 
-                // Verificar falta real si es tipo falta manual y NO es sucursal especial o no es aprobador
-                if ($esFaltaManual) {
-                    $esSucursalEspecial = in_array($codSucursal, ['6', '18']);
-                    if (!$esSucursalEspecial || !$puedeAprobar) {
-                        if (!verificarFaltaReal($codOperario, $codSucursal, $dia)) {
-                            $errores[] = "No aplica falta real para el día " . formatoFechaCorta($dia) . " (no programado o tiene marcas)";
-                            continue;
-                        }
+                // Verificar falta real si es falta manual y el usuario NO tiene permiso de aprobador.
+                // Los aprobadores pueden registrar falta aunque haya marcaciones, en cualquier sucursal.
+                if ($esFaltaManual && !$puedeAprobar) {
+                    if (!verificarFaltaReal($codOperario, $codSucursal, $dia)) {
+                        $errores[] = "No aplica falta real para el día " . formatoFechaCorta($dia) . " (no programado o tiene marcas)";
+                        continue;
                     }
                 }
                 

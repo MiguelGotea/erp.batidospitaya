@@ -101,8 +101,17 @@ if ($esLider) {
     $sucursalSeleccionada = null; // null = cargar todas las sucursales del líder
 } else {
     $sucursalParam = $_GET['sucursal'] ?? 'todas';
-    $modoVista = $sucursalParam === 'todas' ? 'todas' : 'sucursal';
-    $sucursalSeleccionada = $sucursalParam !== 'todas' ? $sucursalParam : ($sucursales[0]['codigo'] ?? null);
+    // Priorizar el parámetro 'modo' explícito (lo pasa el botón exportar cuando sucursal está vacío)
+    if (isset($_GET['modo']) && $_GET['modo'] === 'todas') {
+        $modoVista = 'todas';
+        $sucursalSeleccionada = null;
+    } else {
+        $modoVista = ($sucursalParam !== '' && $sucursalParam !== 'todas') ? 'sucursal' : 'todas';
+        $sucursalSeleccionada = ($sucursalParam !== '' && $sucursalParam !== 'todas') ? $sucursalParam : ($sucursales[0]['codigo'] ?? null);
+        if ($modoVista === 'todas') {
+            $sucursalSeleccionada = null;
+        }
+    }
 }
 
 // LIMITAR FECHAS MÁXIMO AL DÍA ACTUAL
@@ -596,10 +605,15 @@ function obtenerMarcacionesConHorariosProgramados(
             // Solo incluir días que tienen horario programado (estado no vacío)
             if (!empty($estadoDia) && $estadoDia !== 'Inactivo') {
                 // Buscar TODAS las marcaciones para este día y operario (no solo una)
-                $marcacionesExistentes = array_filter($marcaciones, function ($marcacion) use ($horario, $fechaStr) {
-                    return $marcacion['CodOperario'] == $horario['cod_operario'] &&
-                        $marcacion['fecha'] == $fechaStr &&
-                        $marcacion['sucursal_codigo'] == $horario['cod_sucursal'];
+                // En modo 'todas' no filtramos por sucursal porque el colaborador puede
+                // marcar en una sucursal diferente a la que tiene asignada en el horario
+                $marcacionesExistentes = array_filter($marcaciones, function ($marcacion) use ($horario, $fechaStr, $modoVista) {
+                    $match = $marcacion['CodOperario'] == $horario['cod_operario'] &&
+                        $marcacion['fecha'] == $fechaStr;
+                    if ($modoVista !== 'todas') {
+                        $match = $match && $marcacion['sucursal_codigo'] == $horario['cod_sucursal'];
+                    }
+                    return $match;
                 });
 
                 // NUEVO: Verificar si ya existe falta registrada para este día
@@ -747,7 +761,8 @@ if (
             exit();
         }
         // Configurar headers para descarga de archivo Excel con rango de fechas
-        $nombreArchivo = "marcaciones_{$fechaDesde}_a_{$fechaHasta}.xls";
+        $labelSucursal = $modoVista === 'todas' ? 'todas_sucursales' : preg_replace('/[^a-zA-Z0-9_\-]/', '_', $nombreSucursal ?? 'sucursal');
+        $nombreArchivo = "marcaciones_{$labelSucursal}_{$fechaDesde}_a_{$fechaHasta}.xls";
         header('Content-Type: application/vnd.ms-excel; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
         header('Pragma: no-cache');
