@@ -16,6 +16,7 @@ $esCDS = tienePermiso('historial_marcaciones_globales', 'permisoscds', $usuario[
 $esContabilidad = tienePermiso('historial_marcaciones_globales', 'permisoscontabilidad', $usuario['CodNivelesCargos']);
 $esFotoMarcacion = tienePermiso('historial_marcaciones_globales', 'foto_marcacion', $usuario['CodNivelesCargos']);
 $esCambiarFotoMarcacion = tienePermiso('historial_marcaciones_globales', 'cambiar_foto_marcacion', $usuario['CodNivelesCargos']);
+$puedeExportarMarcacionesBD = tienePermiso('historial_marcaciones_globales', 'exportar_marcaciones_bd', $usuario['CodNivelesCargos']);
 
 // Obtener operarios según el tipo de usuario
 if ($esLider) {
@@ -1490,7 +1491,7 @@ function verificarTardanzaYaRegistrada(
                 <!-- En _nuevo.php el filtro de la columna "Sucursal" de la tabla maneja la selección; el selector superior no es necesario -->
 
                 <!-- Toolbar de exportación (solo para perfiles con permisos de exportación) -->
-                <?php if ($esContabilidad || $esOperaciones): ?>
+                <?php if ($esContabilidad || $esOperaciones || $puedeExportarMarcacionesBD): ?>
                     <div class="toolbar-container"
                         style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
                         <?php if ($esContabilidad): ?>
@@ -1536,6 +1537,20 @@ function verificarTardanzaYaRegistrada(
                                 'operario_id' => $operario_id
                             ]) ?>" class="btn btn-sm btn-info" style="color: white;" title="Tardanzas Detalle">
                                 <i class="fas fa-list"></i> Detalle
+                            </a>
+                        <?php endif; ?>
+
+                        <?php if ($puedeExportarMarcacionesBD): ?>
+                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                                'modo' => $modoVista,
+                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                'desde' => $fechaDesde,
+                                'hasta' => $fechaHasta,
+                                'activo' => $filtroActivo,
+                                'operario_id' => $operario_id,
+                                'exportar_marcaciones_bd' => 1
+                            ]) ?>" class="btn btn-sm btn-success" style="background-color: #28a745; border-color: #28a745;" title="Excel Marcaciones BD">
+                                <i class="fas fa-database"></i> Marcaciones BD
                             </a>
                         <?php endif; ?>
                     </div>
