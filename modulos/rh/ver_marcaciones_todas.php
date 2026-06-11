@@ -14,6 +14,7 @@ $esLider = tienePermiso('historial_marcaciones_globales', 'permisoslider', $usua
 $esOperaciones = tienePermiso('historial_marcaciones_globales', 'permisosoperaciones', $usuario['CodNivelesCargos']);
 $esCDS = tienePermiso('historial_marcaciones_globales', 'permisoscds', $usuario['CodNivelesCargos']);
 $esContabilidad = tienePermiso('historial_marcaciones_globales', 'permisoscontabilidad', $usuario['CodNivelesCargos']);
+$puedeExportarMarcacionesBD = tienePermiso('historial_marcaciones_globales', 'exportar_marcaciones_bd', $usuario['CodNivelesCargos']);
 
 // Obtener las últimas semanas disponibles para el filtro
 $semanasDisponibles = obtenerUltimasSemanas(10); // Obtener las últimas 10 semanas
@@ -1024,6 +1025,92 @@ if (
         echo '</table>';
         echo '</body></html>';
         exit;
+    } elseif (isset($_GET['exportar_marcaciones_bd'])) {
+        // -------------------------------------------------------
+        // Exportar directamente desde tabla marcaciones de BD
+        // -------------------------------------------------------
+        // Verificar permiso server-side
+        if (!$puedeExportarMarcacionesBD) {
+            http_response_code(403);
+            echo 'Sin permiso para exportar marcaciones de BD.';
+            exit;
+        }
+        $nombreArchivo = "marcaciones_bd_{$fechaDesde}_a_{$fechaHasta}.xls";
+        header('Content-Type: application/vnd.ms-excel; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        echo pack("CCC", 0xef, 0xbb, 0xbf); // BOM UTF-8
+        echo '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+
+        // Construir la consulta directa a marcaciones
+        $sqlBD = "
+            SELECT
+                m.id,
+                m.fecha,
+                m.hora_ingreso,
+                m.hora_salida,
+                m.CodOperario,
+                CONCAT_WS(' ',
+                    NULLIF(TRIM(o.Nombre),   ''),
+                    NULLIF(TRIM(o.Nombre2),  ''),
+                    NULLIF(TRIM(o.Apellido), ''),
+                    NULLIF(TRIM(o.Apellido2),'')
+                ) AS nombre_completo,
+                m.sucursal_codigo,
+                s.nombre AS nombre_sucursal
+            FROM marcaciones m
+            JOIN Operarios o ON m.CodOperario = o.CodOperario
+            JOIN sucursales s ON m.sucursal_codigo = s.codigo
+            WHERE m.fecha BETWEEN ? AND ?
+        ";
+        $paramsBD = [$fechaDesde, $fechaHasta];
+
+        // Filtro sucursal
+        if ($modoVista === 'sucursal' && !empty($sucursalSeleccionada) && $sucursalSeleccionada !== 'todas') {
+            $sqlBD .= " AND m.sucursal_codigo = ?";
+            $paramsBD[] = $sucursalSeleccionada;
+        }
+
+        // Filtro operario específico
+        if ($operario_id > 0) {
+            $sqlBD .= " AND m.CodOperario = ?";
+            $paramsBD[] = $operario_id;
+        }
+
+        $sqlBD .= " ORDER BY m.fecha DESC, m.CodOperario ASC, m.hora_ingreso ASC";
+
+        $stmtBD = $conn->prepare($sqlBD);
+        $stmtBD->execute($paramsBD);
+        $filasBD = $stmtBD->fetchAll();
+
+        echo '<table border="1">';
+        echo '<tr>';
+        echo '<th>ID</th>';
+        echo '<th>Fecha</th>';
+        echo '<th>Hora Ingreso</th>';
+        echo '<th>Hora Salida</th>';
+        echo '<th>Cód. Operario</th>';
+        echo '<th>Colaborador/a</th>';
+        echo '<th>Sucursal</th>';
+        echo '</tr>';
+
+        foreach ($filasBD as $fila) {
+            echo '<tr>';
+            echo '<td>' . htmlspecialchars($fila['id'] ?? '') . '</td>';
+            echo '<td>' . htmlspecialchars($fila['fecha'] ?? '') . '</td>';
+            echo '<td>' . htmlspecialchars($fila['hora_ingreso'] ?? '') . '</td>';
+            echo '<td>' . htmlspecialchars($fila['hora_salida'] ?? '') . '</td>';
+            echo '<td>' . htmlspecialchars($fila['CodOperario'] ?? '') . '</td>';
+            echo '<td>' . htmlspecialchars($fila['nombre_completo'] ?? '') . '</td>';
+            echo '<td>' . htmlspecialchars($fila['nombre_sucursal'] ?? '') . '</td>';
+            echo '</tr>';
+        }
+
+        echo '</table>';
+        echo '</body></html>';
+        exit;
     }
 }
 
@@ -1689,7 +1776,25 @@ function verificarTardanzaYaRegistrada(
                                 <i class="fas fa-file-excel"></i> Tardanzas Detalle
                             </a>
                         </div>
+
                     <?php endif; ?>
+
+                        <?php if ($puedeExportarMarcacionesBD): ?>
+                        <!-- Botón para exportar directamente tabla marcaciones de BD -->
+                        <div class="filter-group" style="align-self: flex-end;">
+                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                                                                    'modo' => $modoVista,
+                                                                    'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                                                                    'desde' => $fechaDesde,
+                                                                    'hasta' => $fechaHasta,
+                                                                    'activo' => $filtroActivo,
+                                                                    'operario_id' => $operario_id,
+                                                                    'exportar_marcaciones_bd' => 1
+                                                                ]) ?>" class="btn" style="background-color: #28a745; color: #fff;">
+                                <i class="fas fa-database"></i> Excel Marcaciones BD
+                            </a>
+                        </div>
+                        <?php endif; ?>
                 </div>
 
                 <div style="display:none;" class="filter-buttons">
