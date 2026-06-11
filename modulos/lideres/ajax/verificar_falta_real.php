@@ -33,11 +33,10 @@ try {
         exit;
     }
     
-    // EXCEPCIÓN: Para sucursales 6 y 18, quienes aprueban pueden registrar sin validación
+    // EXCEPCIÓN: Quienes tienen permiso de aprobación pueden registrar sin validar marcaciones, en cualquier sucursal.
     require_once '../../../core/permissions/permissions.php';
     $cargoOperario = $_SESSION['cargo_cod'] ?? 0;
-    $puedeAprobar = tienePermiso('faltas_manual', 'aprobar', $cargoOperario);
-    $esSucursalEspecial = in_array($codSucursal, ['6', '18']);
+    $puedeAprobar = tienePermiso('registro_vacaciones', 'aprobar', $cargoOperario);
     
     // 1. Verificar si hay marcaciones para ese día
     $stmt = $conn->prepare("
@@ -86,9 +85,18 @@ try {
     // MODIFICADO: Permitir registro si el estado es Activo, Otra.Tienda, Subsidio o Vacaciones
     $estadosPermitidos = ['Activo', 'Otra.Tienda', 'Subsidio', 'Vacaciones'];
     
-    // Si es sucursal especial, se considera que tiene horario permitido para evitar advertencias de horario
-    $tieneHorarioPermitido = $esSucursalEspecial || ($horario && in_array($horario['estado'], $estadosPermitidos));
-    
+    // Si el usuario puede aprobar, se le permite registrar aunque haya marcaciones, en cualquier sucursal.
+    if ($puedeAprobar) {
+        echo json_encode([
+            'existe_falta' => true,
+            'tiene_marcaciones' => $tieneMarcaciones,
+            'tiene_horario_permitido' => true
+        ]);
+        exit;
+    }
+
+    $tieneHorarioPermitido = ($horario && in_array($horario['estado'], $estadosPermitidos));
+
     // Es una falta real estándar si NO tiene marcaciones Y tiene un horario permitido
     $existeFalta = (!$tieneMarcaciones && $tieneHorarioPermitido);
     
