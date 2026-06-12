@@ -186,7 +186,7 @@ $sucursales = $ticketModel->getSucursales();
                                                 <?php else: ?>
                                                     <?php if ($informeActual['estado'] === 'creado'): ?>
                                                         <button class="btn btn-sm btn-outline-danger mt-1 rounded-pill"
-                                                            onclick="modalCierre(<?= $informeActual['id'] ?>)">
+                                                            onclick="modalRegistrarKmFinal(<?= $informeActual['id'] ?>)">
                                                             <i class="fas fa-plus me-1"></i>Registrar
                                                         </button>
                                                     <?php else: ?>
@@ -672,6 +672,76 @@ $sucursales = $ticketModel->getSucursales();
                         data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary rounded-pill px-4" onclick="guardarKmInicial()">
                         <i class="fas fa-save me-2"></i>Guardar KM Inicial
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KM FINAL -->
+    <div class="modal fade" id="kmFinalModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header bg-danger text-white p-3 px-4 border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-road me-2"></i>Registrar KM Final</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formKmFinal">
+                        <input type="hidden" name="informe_id" id="km_final_informe_id">
+                        <div class="mb-4">
+                            <label class="form-label required">📍 Kilometraje Final del Vehículo</label>
+                            <input type="number" step="0.01" class="form-control form-control-lg"
+                                name="km_final" required placeholder="Ej: 45250.0">
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label required">📷 Foto del Odómetro (al llegar)</label>
+                            <div class="foto-upload-group mb-2">
+                                <button type="button" class="btn btn-outline-primary"
+                                    onclick="document.getElementById('km_fin_foto_input').click()">
+                                    <i class="fas fa-image me-1"></i>Galería
+                                </button>
+                                <button type="button" class="btn btn-outline-success"
+                                    onclick="startCamera('cam_km_fin')">
+                                    <i class="fas fa-camera me-1"></i>Cámara
+                                </button>
+                            </div>
+                            <input type="file" id="km_fin_foto_input" name="km_foto_final" accept="image/*"
+                                class="d-none" onchange="previewFile(this, 'preview_km_fin')">
+                            <input type="hidden" name="km_foto_final_cam" id="cam_km_fin_data">
+                            <div id="preview_km_fin" class="text-center mt-2 d-none">
+                                <img src="" class="img-thumbnail rounded-3" style="max-height: 180px;">
+                            </div>
+                            <div id="cam_km_fin_container"
+                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black"
+                                style="cursor: crosshair;">
+                                <video id="cam_km_fin_video" autoplay playsinline class="w-100" style="display:block;"></video>
+                                <div class="ag-cam-grid"></div>
+                                <div id="cam_km_fin_ring" class="ag-focus-ring"></div>
+                                <div id="cam_km_fin_toast" class="ag-focus-toast">Toca para enfocar</div>
+                                <div class="ag-cam-controls d-flex align-items-center justify-content-between px-3 py-2">
+                                    <button type="button" id="cam_km_fin_torch" class="ag-btn-torch" style="display:none;"
+                                        onclick="toggleCameraTorch('cam_km_fin')" title="Linterna">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+                                    <button type="button" class="ag-btn-capture"
+                                        onclick="captureSnapshot('cam_km_fin')" title="Tomar foto">
+                                        <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-white border-secondary"
+                                        onclick="stopCamera()">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4" onclick="guardarKmFinal()">
+                        <i class="fas fa-save me-2"></i>Guardar KM Final
                     </button>
                 </div>
             </div>

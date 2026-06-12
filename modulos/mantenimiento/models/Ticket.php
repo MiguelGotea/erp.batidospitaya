@@ -803,5 +803,19 @@ class Ticket
             return $this->db->query($sql, [$km_inicial, $informe_id]);
         }
     }
+
+    /**
+     * Registrar el kilometraje final en un informe ya creado
+     */
+    public function actualizarKmFinal($informe_id, $km_final, $foto_nombre = null)
+    {
+        if ($foto_nombre) {
+            $sql = "UPDATE mtto_informes_diarios SET km_final = ?, km_foto_final = ? WHERE id = ?";
+            return $this->db->query($sql, [$km_final, $foto_nombre, $informe_id]);
+        } else {
+            $sql = "UPDATE mtto_informes_diarios SET km_final = ? WHERE id = ?";
+            return $this->db->query($sql, [$km_final, $informe_id]);
+        }
+    }
 }
 ?>

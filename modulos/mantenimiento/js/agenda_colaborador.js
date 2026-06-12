@@ -168,6 +168,49 @@ async function guardarKmInicial() {
 }
 
 /**
+ * Abre modal para registrar KM Final
+ */
+function modalRegistrarKmFinal(informeId) {
+    $('#km_final_informe_id').val(informeId);
+    $('#formKmFinal')[0].reset();
+    $('#preview_km_fin').addClass('d-none');
+    $('#cam_km_fin_container').addClass('d-none');
+    stopCamera();
+    new bootstrap.Modal(document.getElementById('kmFinalModal')).show();
+}
+
+async function guardarKmFinal() {
+    const form = document.getElementById('formKmFinal');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = new FormData(form);
+    if (!formData.get('km_foto_final').name && !formData.get('km_foto_final_cam')) {
+        Swal.fire('Error', 'Debe adjuntar o tomar una foto del odómetro final', 'error');
+        return;
+    }
+
+    Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });
+
+    try {
+        const response = await fetch('ajax/guardar_km_final.php', {
+            method: 'POST',
+            body: formData
+        });
+        const res = await response.json();
+        if (res.success) {
+            Swal.fire('¡Guardado!', 'KM Final registrado correctamente', 'success').then(() => location.reload());
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    }
+}
+
+/**
  * Abre modal para registrar tarea dentro de una visita
  */
 function modalNuevaTarea(visitaId, codSucursal) {
