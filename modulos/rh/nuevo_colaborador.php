@@ -155,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             //    TipoAdendum = 'inicial' identifica este registro como el primero del contrato.
             //    codigo_contrato_asociado = código manual ingresado en el form.
             //    El CodContrato (FK numérico) se actualiza vía UPDATE tras crear el contrato.
-            $salarioInicial        = !empty($valores['salario_inicial']) ? $valores['salario_inicial'] : null;
+            $salarioInicial        = null; // Se registra en editar_colaborador
             $codigoContratoForm    = !empty($valores['codigo_manual_contrato']) ? $valores['codigo_manual_contrato'] : null;
 
             $stmtAsig = $conn->prepare("
@@ -862,7 +862,7 @@ function generarClave($nombre, $apellido)
                                 </div>
                             </div>
 
-                            <!-- Fecha inicio + Fecha fin (Determinado) + Salario -->
+                            <!-- Fecha de Inicio -->
                             <div class="form-row">
                                 <div class="form-col">
                                     <div class="form-group">
@@ -874,15 +874,7 @@ function generarClave($nombre, $apellido)
                                             value="<?= htmlspecialchars($valores['inicio_contrato']) ?>" required>
                                     </div>
                                 </div>
-                                <div class="form-col">
-                                    <div class="form-group">
-                                        <label for="salario_inicial">Salario Inicial</label>
-                                        <input type="number" id="salario_inicial" name="salario_inicial"
-                                            step="0.01" min="0"
-                                            value="<?= htmlspecialchars($valores['salario_inicial']) ?>"
-                                            placeholder="0.00">
-                                    </div>
-                                </div>
+                                <div class="form-col"></div>
                             </div>
 
                             <!-- Fecha fin: visible solo cuando tipo = Determinado -->
@@ -1081,7 +1073,7 @@ function generarClave($nombre, $apellido)
             function toggleFinContrato() {
                 // CodTipoContrato 1 = Determinado (requiere fecha fin)
                 const esDeterminado = selectTipo.value === '1';
-                grupoFin.style.display = esDeterminado ? '' : 'none';
+                grupoFin.style.display = esDeterminado ? 'flex' : 'none';
                 inputFin.required = esDeterminado;
                 if (!esDeterminado) inputFin.value = '';
             }
