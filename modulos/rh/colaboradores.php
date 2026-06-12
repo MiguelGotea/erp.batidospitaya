@@ -12,6 +12,7 @@ if (!tienePermiso('gestion_colaboradores', 'vista', $cargoOperario)) {
     exit();
 }
 $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperario);
+$puedeCrearColaborador = tienePermiso('gestion_colaboradores', 'nuevo_colaborador', $cargoOperario);
 ?>
 
 <!DOCTYPE html>
@@ -42,6 +43,7 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
             <div class="container-fluid p-3">
 
                 <!-- Botón Flotante Herramientas -->
+                <?php if ($puedeCrearColaborador): ?>
                 <div class="fab-container">
                     <div class="fab-options">
                         <a href="nuevo_colaborador.php" class="fab-option">
@@ -53,6 +55,7 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                         <i class="fas fa-wrench"></i>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <?php if (isset($_SESSION['exito'])): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -410,6 +413,7 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
     <script>
         const canFinalize = <?= tienePermiso('gestion_colaboradores', 'finalizar_contrato', $cargoOperario) ? 'true' : 'false' ?>;
         const canExport = <?= $puedeExportar ? 'true' : 'false' ?>;
+        const canCreateColaborador = <?= $puedeCrearColaborador ? 'true' : 'false' ?>;
     </script>
     <script src="js/colaboradores.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
     <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
