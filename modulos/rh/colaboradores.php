@@ -26,6 +26,7 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/colaboradores.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
@@ -38,6 +39,20 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
             <?php echo renderHeader($usuario, 'Maestro de Colaboradores'); ?>
 
             <div class="container-fluid p-3">
+
+                <!-- Botón Flotante Herramientas -->
+                <div class="fab-container">
+                    <div class="fab-options">
+                        <a href="nuevo_colaborador.php" class="fab-option">
+                            <span class="fab-label">Nuevo Colaborador</span>
+                            <div class="fab-icon-holder"><i class="fas fa-user-plus"></i></div>
+                        </a>
+                    </div>
+                    <div class="btn-floating-pitaya" title="Herramientas">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                </div>
+
                 <?php if (isset($_SESSION['exito'])): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <?= $_SESSION['exito'] ?>
@@ -378,6 +393,8 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
         const canExport    = <?= $puedeExportar ? 'true' : 'false' ?>;
     </script>
     <script src="js/colaboradores.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
+    <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>
