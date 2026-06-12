@@ -28,14 +28,22 @@ $usuarioActualId = $_SESSION['usuario_id'];
 $errores = [];
 $exito = false;
 $valores = [
-    'Nombre' => '',
-    'Nombre2' => '',
-    'Apellido' => '',
-    'Apellido2' => '',
-    'Cedula' => '',
-    'Celular' => '',
-    'usuario' => '',
-    'clave' => ''
+    'Nombre'                 => '',
+    'Nombre2'                => '',
+    'Apellido'               => '',
+    'Apellido2'              => '',
+    'Cedula'                 => '',
+    'Celular'                => '',
+    'usuario'                => '',
+    'clave'                  => '',
+    // Contrato (obligatorios)
+    'codigo_manual_contrato' => '',
+    'cod_tipo_contrato'      => '',
+    'cod_cargo'              => '',
+    'sucursal'               => '',
+    'ciudad'                 => '',
+    'inicio_contrato'        => date('Y-m-d'),
+    'salario_inicial'        => '',
 ];
 
 // Obtener el último código de operario para predecir el siguiente
@@ -48,66 +56,86 @@ if ($stmt) {
 
 // Procesar el formulario cuando se envía
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Recoger y sanitizar datos
-    $valores['Nombre'] = trim($_POST['Nombre'] ?? '');
-    $valores['Nombre2'] = trim($_POST['Nombre2'] ?? '');
+
+    // ── Datos del colaborador ────────────────────────────────────────────────
+    $valores['Nombre']   = trim($_POST['Nombre'] ?? '');
+    $valores['Nombre2']  = trim($_POST['Nombre2'] ?? '');
     $valores['Apellido'] = trim($_POST['Apellido'] ?? '');
-    $valores['Apellido2'] = trim($_POST['Apellido2'] ?? '');
-    $valores['Cedula'] = trim($_POST['Cedula'] ?? '');
-    $valores['Celular'] = trim($_POST['Celular'] ?? '');
-    $valores['usuario'] = trim($_POST['usuario'] ?? '');
-    $valores['clave'] = trim($_POST['clave'] ?? '');
+    $valores['Apellido2']= trim($_POST['Apellido2'] ?? '');
+    $valores['Cedula']   = trim($_POST['Cedula'] ?? '');
+    $valores['Celular']  = trim($_POST['Celular'] ?? '');
+    $valores['usuario']  = trim($_POST['usuario'] ?? '');
+    $valores['clave']    = trim($_POST['clave'] ?? '');
 
-    // Validaciones
-    if (empty($valores['Nombre'])) {
-        $errores[] = "El primer nombre es obligatorio";
-    }
+    // ── Datos del contrato (obligatorios) ────────────────────────────────────
+    $valores['codigo_manual_contrato'] = trim($_POST['codigo_manual_contrato'] ?? '');
+    $valores['cod_tipo_contrato']      = trim($_POST['cod_tipo_contrato'] ?? '');
+    $valores['cod_cargo']              = trim($_POST['cod_cargo'] ?? '');
+    $valores['sucursal']               = trim($_POST['sucursal'] ?? '');
+    $valores['ciudad']                 = trim($_POST['ciudad'] ?? '');
+    $valores['inicio_contrato']        = trim($_POST['inicio_contrato'] ?? date('Y-m-d'));
+    $valores['salario_inicial']        = trim($_POST['salario_inicial'] ?? '');
 
-    if (empty($valores['Apellido'])) {
-        $errores[] = "El primer apellido es obligatorio";
-    }
+    // ── Validaciones colaborador ─────────────────────────────────────────────
+    if (empty($valores['Nombre']))    $errores[] = 'El primer nombre es obligatorio';
+    if (empty($valores['Apellido']))  $errores[] = 'El primer apellido es obligatorio';
+    if (empty($valores['Cedula']))    $errores[] = 'La cédula es obligatoria';
 
-    if (empty($valores['Cedula'])) {
-        $errores[] = "La cédula es obligatoria";
-    }
+    // ── Validaciones contrato (campos obligatorios) ──────────────────────────
+    if (empty($valores['cod_tipo_contrato'])) $errores[] = 'El tipo de contrato es obligatorio';
+    if (empty($valores['cod_cargo']))          $errores[] = 'El cargo es obligatorio';
+    if (empty($valores['sucursal']))           $errores[] = 'La sucursal / área es obligatoria';
+    if (empty($valores['inicio_contrato']))    $errores[] = 'La fecha de inicio del contrato es obligatoria';
 
-    // Verificar si la cédula ya existe (eliminando guiones para la comparación)
+    // ── Verificar cédula duplicada ───────────────────────────────────────────
     if (empty($errores)) {
         $cedulaLimpia = str_replace('-', '', $valores['Cedula']);
         $stmt = $conn->prepare("SELECT COUNT(*) FROM Operarios WHERE REPLACE(Cedula, '-', '') = ?");
         $stmt->execute([$cedulaLimpia]);
         if ($stmt->fetchColumn() > 0) {
-            $errores[] = "Ya existe un colaborador con esta cédula";
+            $errores[] = 'Ya existe un colaborador con esta cédula';
         }
     }
 
-    // Verificar si el usuario ya existe (si se proporcionó manualmente)
+    // ── Verificar usuario duplicado (si se ingresó manualmente) ─────────────
     if (empty($errores) && !empty($valores['usuario'])) {
         $stmt = $conn->prepare("SELECT COUNT(*) FROM Operarios WHERE usuario = ?");
         $stmt->execute([$valores['usuario']]);
         if ($stmt->fetchColumn() > 0) {
-            $errores[] = "Ya existe un colaborador con este usuario";
+            $errores[] = 'Ya existe un colaborador con este usuario';
         }
     }
 
-    // Si no hay errores, proceder con el registro
+    // ── Verificar código de contrato único (si se ingresó) ──────────────────
+    if (empty($errores) && !empty($valores['codigo_manual_contrato'])) {
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM Contratos WHERE codigo_manual_contrato = ?");
+        $stmt->execute([$valores['codigo_manual_contrato']]);
+        if ($stmt->fetchColumn() > 0) {
+            $errores[] = 'El código de contrato ya existe. Debe ser único.';
+        }
+    }
+
+    // ── Guardar si todo está correcto ────────────────────────────────────────
     if (empty($errores)) {
         try {
-            // Generar usuario y clave automáticamente si no se proporcionaron
-            $usuarioGenerado = empty($valores['usuario']) ?
-                generarUsuario($valores['Nombre'], $valores['Apellido'], $valores['Cedula']) :
-                $valores['usuario'];
+            $conn->beginTransaction();
 
-            $claveGenerada = empty($valores['clave']) ?
-                generarClave($valores['Nombre'], $valores['Apellido']) :
-                $valores['clave'];
+            // Generar usuario/clave si no se ingresaron manualmente
+            $usuarioGenerado = empty($valores['usuario'])
+                ? generarUsuario($valores['Nombre'], $valores['Apellido'], $valores['Cedula'])
+                : $valores['usuario'];
 
-            // Insertar en la base de datos con el usuario que registra
-            $sql = "INSERT INTO Operarios 
-                    (Nombre, Nombre2, Apellido, Apellido2, Cedula, Celular, usuario, clave, Operativo, FechaCreacion, registrado_por) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)";
+            $claveGenerada = empty($valores['clave'])
+                ? generarClave($valores['Nombre'], $valores['Apellido'])
+                : $valores['clave'];
 
-            $stmt = $conn->prepare($sql);
+            // 1. Insertar en Operarios
+            $stmt = $conn->prepare("
+                INSERT INTO Operarios
+                    (Nombre, Nombre2, Apellido, Apellido2, Cedula, Celular,
+                     usuario, clave, Operativo, FechaCreacion, registrado_por)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)
+            ");
             $stmt->execute([
                 $valores['Nombre'],
                 $valores['Nombre2'],
@@ -119,21 +147,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $claveGenerada,
                 $usuarioActualId
             ]);
-
-            // Obtener el ID del nuevo colaborador
             $nuevoId = $conn->lastInsertId();
 
-            // Guardar mensaje de éxito en sesión para mostrarlo después de la redirección
-            $_SESSION['exito'] = "Colaborador registrado exitosamente. Código: $nuevoId, Usuario: $usuarioGenerado, Clave: $claveGenerada";
+            // 2. Insertar en AsignacionNivelesCargos (registro base del contrato)
+            //    Misma lógica que guardarContrato() modo creación:
+            //    CodTipoContrato viene del tipo de contrato seleccionado.
+            //    No lleva TipoAdendum ni es_activo — eso lo usan adendas/movimientos.
+            $stmtAsig = $conn->prepare("
+                INSERT INTO AsignacionNivelesCargos
+                    (CodOperario, CodNivelesCargos, Fecha, Sucursal, CodTipoContrato, cod_usuario_creador)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ");
+            $stmtAsig->execute([
+                $nuevoId,
+                $valores['cod_cargo'],
+                $valores['inicio_contrato'],
+                $valores['sucursal'],
+                $valores['cod_tipo_contrato'],
+                $usuarioActualId
+            ]);
+            $codAsignacion = $conn->lastInsertId();
 
-            // Redirigir a editar_colaborador.php con el ID del nuevo colaborador
+            // 3. Insertar en Contratos
+            $stmtCont = $conn->prepare("
+                INSERT INTO Contratos
+                    (cod_tipo_contrato, codigo_manual_contrato, cod_operario,
+                     inicio_contrato, ciudad, cod_sucursal_contrato,
+                     CodAsignacionNivelesCargos, cod_usuario_creador)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmtCont->execute([
+                $valores['cod_tipo_contrato'],
+                !empty($valores['codigo_manual_contrato']) ? $valores['codigo_manual_contrato'] : null,
+                $nuevoId,
+                $valores['inicio_contrato'],
+                !empty($valores['ciudad']) ? $valores['ciudad'] : null,
+                $valores['sucursal'],
+                $codAsignacion,
+                $usuarioActualId
+            ]);
+            $codContrato = $conn->lastInsertId();
+
+            // 4. Guardar salario inicial si se proporcionó
+            if (!empty($valores['salario_inicial'])) {
+                $stmtSal = $conn->prepare("
+                    UPDATE Contratos
+                    SET salario_inicial = ?, frecuencia_pago = 'quincenal'
+                    WHERE CodContrato = ?
+                ");
+                $stmtSal->execute([$valores['salario_inicial'], $codContrato]);
+            }
+
+            $conn->commit();
+
+            $_SESSION['exito'] = "Colaborador registrado exitosamente. Código: $nuevoId, Usuario: $usuarioGenerado, Clave: $claveGenerada";
             header("Location: editar_colaborador.php?id=$nuevoId");
             exit();
 
         } catch (PDOException $e) {
-            $errores[] = "Error al registrar el colaborador: " . $e->getMessage();
+            if ($conn->inTransaction()) $conn->rollBack();
+            $errores[] = 'Error al registrar el colaborador: ' . $e->getMessage();
         }
     }
+}
+
+/**
+ * Devuelve todos los cargos disponibles para el formulario de nuevo colaborador.
+ * Función local para no depender de funciones_colaborador.php
+ */
+function ncGetCargos()
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT CodNivelesCargos, Nombre FROM NivelesCargos WHERE CodNivelesCargos != 2 ORDER BY Nombre");
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+/**
+ * Devuelve todos los tipos de contrato disponibles para el formulario.
+ * Función local para no depender de funciones_colaborador.php
+ */
+function ncGetTiposContrato()
+{
+    global $conn;
+    $stmt = $conn->prepare("SELECT CodTipoContrato, nombre FROM TipoContrato WHERE CodTipoContrato != 3 ORDER BY nombre");
+    $stmt->execute();
+    return $stmt->fetchAll();
 }
 
 /**
@@ -474,6 +573,51 @@ function generarClave($nombre, $apellido)
                 font-size: 14px;
             }
         }
+
+        /* ── Sección contrato ────────────────────────────────── */
+        .seccion-contrato {
+            margin-top: 28px;
+            padding: 18px 20px;
+            background: #f0f8f7;
+            border-radius: 8px;
+            border-left: 4px solid #51B8AC;
+        }
+
+        .seccion-titulo {
+            color: #0E544C;
+            font-size: 1rem !important;
+            font-weight: bold;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .seccion-titulo small {
+            font-size: 0.78rem !important;
+            color: #888;
+            font-weight: normal;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .badge-obligatorio {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            font-size: 0.65rem !important;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 
@@ -616,7 +760,110 @@ function generarClave($nombre, $apellido)
 
                         <input type="hidden" name="Operativo" value="1">
 
-                        <button type="submit" class="btn-submit">
+                        <!-- ══════════════════════════════════════════════════ -->
+                        <!-- SECCIÓN: DATOS DE CONTRATO (OBLIGATORIOS)         -->
+                        <!-- ══════════════════════════════════════════════════ -->
+                        <div class="seccion-contrato">
+                            <h3 class="seccion-titulo">
+                                <i class="fas fa-file-contract"></i>
+                                Datos de Contrato
+                                <small>— Obligatorio para crear el colaborador</small>
+                            </h3>
+
+                            <!-- Código contrato + Tipo contrato -->
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="codigo_manual_contrato">Código de Contrato</label>
+                                        <input type="text" id="codigo_manual_contrato" name="codigo_manual_contrato"
+                                            value="<?= htmlspecialchars($valores['codigo_manual_contrato']) ?>"
+                                            placeholder="Ej: CONT-2024-001">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="cod_tipo_contrato">
+                                            Tipo de Contrato
+                                            <span class="badge-obligatorio">Obligatorio</span>
+                                        </label>
+                                        <select id="cod_tipo_contrato" name="cod_tipo_contrato" required>
+                                            <option value="">Seleccionar tipo...</option>
+                                            <?php foreach (ncGetTiposContrato() as $tipo): ?>
+                                                <option value="<?= $tipo['CodTipoContrato'] ?>"
+                                                    <?= $valores['cod_tipo_contrato'] == $tipo['CodTipoContrato'] ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($tipo['nombre']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cargo + Sucursal -->
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="cod_cargo">
+                                            Cargo
+                                            <span class="badge-obligatorio">Obligatorio</span>
+                                        </label>
+                                        <select id="cod_cargo" name="cod_cargo" required>
+                                            <option value="">Seleccionar cargo...</option>
+                                            <?php foreach (ncGetCargos() as $cargo): ?>
+                                                <option value="<?= $cargo['CodNivelesCargos'] ?>"
+                                                    <?= $valores['cod_cargo'] == $cargo['CodNivelesCargos'] ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($cargo['Nombre']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="sucursal">
+                                            Área / Sucursal
+                                            <span class="badge-obligatorio">Obligatorio</span>
+                                        </label>
+                                        <select id="sucursal" name="sucursal" required>
+                                            <option value="">Seleccionar sucursal...</option>
+                                            <?php foreach (obtenerTodasSucursales() as $suc): ?>
+                                                <option value="<?= htmlspecialchars($suc['codigo']) ?>"
+                                                    <?= $valores['sucursal'] == $suc['codigo'] ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($suc['nombre']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fecha inicio + Salario -->
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="inicio_contrato">
+                                            Fecha de Inicio
+                                            <span class="badge-obligatorio">Obligatorio</span>
+                                        </label>
+                                        <input type="date" id="inicio_contrato" name="inicio_contrato"
+                                            value="<?= htmlspecialchars($valores['inicio_contrato']) ?>" required>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="salario_inicial">Salario Inicial</label>
+                                        <input type="number" id="salario_inicial" name="salario_inicial"
+                                            step="0.01" min="0"
+                                            value="<?= htmlspecialchars($valores['salario_inicial']) ?>"
+                                            placeholder="0.00">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- FIN SECCIÓN CONTRATO -->
+
+                        <button type="submit" class="btn-submit" style="margin-top:20px;">
                             <i class="fas fa-save"></i> Crear Colaborador
                         </button>
                     </form>
