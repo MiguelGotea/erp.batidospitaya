@@ -629,16 +629,7 @@ function generarClave($nombre, $apellido)
             box-sizing: border-box;
         }
 
-        .badge-obligatorio {
-            display: inline-block;
-            background: #dc3545;
-            color: white;
-            font-size: 0.65rem !important;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 4px;
-            vertical-align: middle;
-        }
+
 
         #grupo_fin_contrato {
             display: none;
@@ -807,10 +798,7 @@ function generarClave($nombre, $apellido)
                                 </div>
                                 <div class="form-col">
                                     <div class="form-group">
-                                        <label for="cod_tipo_contrato">
-                                            Tipo de Contrato
-                                            <span class="badge-obligatorio">Obligatorio</span>
-                                        </label>
+                                        <label for="cod_tipo_contrato">Tipo de Contrato</label>
                                         <select id="cod_tipo_contrato" name="cod_tipo_contrato" required>
                                             <option value="">Seleccionar tipo...</option>
                                             <?php foreach (ncGetTiposContrato() as $tipo): ?>
@@ -828,10 +816,7 @@ function generarClave($nombre, $apellido)
                             <div class="form-row">
                                 <div class="form-col">
                                     <div class="form-group">
-                                        <label for="cod_cargo">
-                                            Cargo
-                                            <span class="badge-obligatorio">Obligatorio</span>
-                                        </label>
+                                        <label for="cod_cargo">Cargo</label>
                                         <select id="cod_cargo" name="cod_cargo" required>
                                             <option value="">Seleccionar cargo...</option>
                                             <?php foreach (ncGetCargos() as $cargo): ?>
@@ -845,10 +830,7 @@ function generarClave($nombre, $apellido)
                                 </div>
                                 <div class="form-col">
                                     <div class="form-group">
-                                        <label for="sucursal">
-                                            Área / Sucursal
-                                            <span class="badge-obligatorio">Obligatorio</span>
-                                        </label>
+                                        <label for="sucursal">Área / Sucursal</label>
                                         <select id="sucursal" name="sucursal" required>
                                             <option value="">Seleccionar sucursal...</option>
                                             <?php foreach (obtenerTodasSucursales() as $suc): ?>
@@ -866,10 +848,7 @@ function generarClave($nombre, $apellido)
                             <div class="form-row">
                                 <div class="form-col">
                                     <div class="form-group">
-                                        <label for="inicio_contrato">
-                                            Fecha de Inicio
-                                            <span class="badge-obligatorio">Obligatorio</span>
-                                        </label>
+                                        <label for="inicio_contrato">Fecha de Inicio</label>
                                         <input type="date" id="inicio_contrato" name="inicio_contrato"
                                             value="<?= htmlspecialchars($valores['inicio_contrato']) ?>" required>
                                     </div>
@@ -881,10 +860,7 @@ function generarClave($nombre, $apellido)
                             <div class="form-row" id="grupo_fin_contrato">
                                 <div class="form-col">
                                     <div class="form-group">
-                                        <label for="fin_contrato">
-                                            Fecha de Fin de Contrato
-                                            <span class="badge-obligatorio">Obligatorio para Determinado</span>
-                                        </label>
+                                        <label for="fin_contrato">Fecha de Fin de Contrato</label>
                                         <input type="date" id="fin_contrato" name="fin_contrato"
                                             value="<?= htmlspecialchars($valores['fin_contrato'] ?? '') ?>">
                                     </div>
