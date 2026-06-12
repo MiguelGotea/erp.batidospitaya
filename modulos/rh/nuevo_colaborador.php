@@ -28,23 +28,23 @@ $usuarioActualId = $_SESSION['usuario_id'];
 $errores = [];
 $exito = false;
 $valores = [
-    'Nombre'                 => '',
-    'Nombre2'                => '',
-    'Apellido'               => '',
-    'Apellido2'              => '',
-    'Cedula'                 => '',
-    'Celular'                => '',
-    'usuario'                => '',
-    'clave'                  => '',
+    'Nombre' => '',
+    'Nombre2' => '',
+    'Apellido' => '',
+    'Apellido2' => '',
+    'Cedula' => '',
+    'Celular' => '',
+    'usuario' => '',
+    'clave' => '',
     // Contrato (obligatorios)
     'codigo_manual_contrato' => '',
-    'cod_tipo_contrato'      => '',
-    'cod_cargo'              => '',
-    'sucursal'               => '',
-    'ciudad'                 => '',
-    'inicio_contrato'        => date('Y-m-d'),
-    'fin_contrato'           => '',
-    'salario_inicial'        => '',
+    'cod_tipo_contrato' => '',
+    'cod_cargo' => '',
+    'sucursal' => '',
+    'ciudad' => '',
+    'inicio_contrato' => date('Y-m-d'),
+    'fin_contrato' => '',
+    'salario_inicial' => '',
 ];
 
 // Obtener el último código de operario para predecir el siguiente
@@ -59,35 +59,42 @@ if ($stmt) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ── Datos del colaborador ────────────────────────────────────────────────
-    $valores['Nombre']   = trim($_POST['Nombre'] ?? '');
-    $valores['Nombre2']  = trim($_POST['Nombre2'] ?? '');
+    $valores['Nombre'] = trim($_POST['Nombre'] ?? '');
+    $valores['Nombre2'] = trim($_POST['Nombre2'] ?? '');
     $valores['Apellido'] = trim($_POST['Apellido'] ?? '');
-    $valores['Apellido2']= trim($_POST['Apellido2'] ?? '');
-    $valores['Cedula']   = trim($_POST['Cedula'] ?? '');
-    $valores['Celular']  = trim($_POST['Celular'] ?? '');
-    $valores['usuario']  = trim($_POST['usuario'] ?? '');
-    $valores['clave']    = trim($_POST['clave'] ?? '');
+    $valores['Apellido2'] = trim($_POST['Apellido2'] ?? '');
+    $valores['Cedula'] = trim($_POST['Cedula'] ?? '');
+    $valores['Celular'] = trim($_POST['Celular'] ?? '');
+    $valores['usuario'] = trim($_POST['usuario'] ?? '');
+    $valores['clave'] = trim($_POST['clave'] ?? '');
 
     // ── Datos del contrato (obligatorios) ────────────────────────────────────
     $valores['codigo_manual_contrato'] = trim($_POST['codigo_manual_contrato'] ?? '');
-    $valores['cod_tipo_contrato']      = trim($_POST['cod_tipo_contrato'] ?? '');
-    $valores['cod_cargo']              = trim($_POST['cod_cargo'] ?? '');
-    $valores['sucursal']               = trim($_POST['sucursal'] ?? '');
-    $valores['ciudad']                 = trim($_POST['ciudad'] ?? '');
-    $valores['inicio_contrato']        = trim($_POST['inicio_contrato'] ?? date('Y-m-d'));
-    $valores['fin_contrato']           = trim($_POST['fin_contrato'] ?? '');
-    $valores['salario_inicial']        = trim($_POST['salario_inicial'] ?? '');
+    $valores['cod_tipo_contrato'] = trim($_POST['cod_tipo_contrato'] ?? '');
+    $valores['cod_cargo'] = trim($_POST['cod_cargo'] ?? '');
+    $valores['sucursal'] = trim($_POST['sucursal'] ?? '');
+    $valores['ciudad'] = trim($_POST['ciudad'] ?? '');
+    $valores['inicio_contrato'] = trim($_POST['inicio_contrato'] ?? date('Y-m-d'));
+    $valores['fin_contrato'] = trim($_POST['fin_contrato'] ?? '');
+    $valores['salario_inicial'] = trim($_POST['salario_inicial'] ?? '');
 
     // ── Validaciones colaborador ─────────────────────────────────────────────
-    if (empty($valores['Nombre']))    $errores[] = 'El primer nombre es obligatorio';
-    if (empty($valores['Apellido']))  $errores[] = 'El primer apellido es obligatorio';
-    if (empty($valores['Cedula']))    $errores[] = 'La cédula es obligatoria';
+    if (empty($valores['Nombre']))
+        $errores[] = 'El primer nombre es obligatorio';
+    if (empty($valores['Apellido']))
+        $errores[] = 'El primer apellido es obligatorio';
+    if (empty($valores['Cedula']))
+        $errores[] = 'La cédula es obligatoria';
 
     // ── Validaciones contrato (campos obligatorios) ──────────────────────────
-    if (empty($valores['cod_tipo_contrato'])) $errores[] = 'El tipo de contrato es obligatorio';
-    if (empty($valores['cod_cargo']))          $errores[] = 'El cargo es obligatorio';
-    if (empty($valores['sucursal']))           $errores[] = 'La sucursal / área es obligatoria';
-    if (empty($valores['inicio_contrato']))    $errores[] = 'La fecha de inicio del contrato es obligatoria';
+    if (empty($valores['cod_tipo_contrato']))
+        $errores[] = 'El tipo de contrato es obligatorio';
+    if (empty($valores['cod_cargo']))
+        $errores[] = 'El cargo es obligatorio';
+    if (empty($valores['sucursal']))
+        $errores[] = 'La sucursal / área es obligatoria';
+    if (empty($valores['inicio_contrato']))
+        $errores[] = 'La fecha de inicio del contrato es obligatoria';
 
     // ── Verificar cédula duplicada ───────────────────────────────────────────
     if (empty($errores)) {
@@ -155,8 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             //    TipoAdendum = 'inicial' identifica este registro como el primero del contrato.
             //    codigo_contrato_asociado = código manual ingresado en el form.
             //    El CodContrato (FK numérico) se actualiza vía UPDATE tras crear el contrato.
-            $salarioInicial        = !empty($valores['salario_inicial']) ? $valores['salario_inicial'] : null;
-            $codigoContratoForm    = !empty($valores['codigo_manual_contrato']) ? $valores['codigo_manual_contrato'] : null;
+            $salarioInicial = !empty($valores['salario_inicial']) ? $valores['salario_inicial'] : null;
+            $codigoContratoForm = !empty($valores['codigo_manual_contrato']) ? $valores['codigo_manual_contrato'] : null;
 
             $stmtAsig = $conn->prepare("
                 INSERT INTO AsignacionNivelesCargos
@@ -224,7 +231,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
 
         } catch (PDOException $e) {
-            if ($conn->inTransaction()) $conn->rollBack();
+            if ($conn->inTransaction())
+                $conn->rollBack();
             $errores[] = 'Error al registrar el colaborador: ' . $e->getMessage();
         }
     }
@@ -639,6 +647,7 @@ function generarClave($nombre, $apellido)
     <!-- Renderizar menú lateral -->
     <?php echo renderMenuLateral($cargoOperario); ?>
 
+
     <!-- Contenido principal -->
     <div class="main-container">
         <div class="sub-container">
@@ -854,9 +863,8 @@ function generarClave($nombre, $apellido)
                                 <div class="form-col">
                                     <div class="form-group">
                                         <label for="salario_inicial">Salario Inicial</label>
-                                        <input type="number" id="salario_inicial" name="salario_inicial"
-                                            step="0.01" min="0"
-                                            value="<?= htmlspecialchars($valores['salario_inicial']) ?>"
+                                        <input type="number" id="salario_inicial" name="salario_inicial" step="0.01"
+                                            min="0" value="<?= htmlspecialchars($valores['salario_inicial']) ?>"
                                             placeholder="0.00" required>
                                     </div>
                                 </div>
@@ -1049,13 +1057,13 @@ function generarClave($nombre, $apellido)
         // Toggle fin_contrato: se muestra solo cuando tipo = Determinado (id=1)
         (function () {
             const selectTipo = document.getElementById('cod_tipo_contrato');
-            const grupoFin   = document.getElementById('grupo_fin_contrato');
-            const inputFin   = document.getElementById('fin_contrato');
+            const grupoFin = document.getElementById('grupo_fin_contrato');
+            const inputFin = document.getElementById('fin_contrato');
 
             function toggleFinContrato() {
                 const esDeterminado = selectTipo.value === '1';
                 grupoFin.style.display = esDeterminado ? 'flex' : 'none';
-                inputFin.required     = esDeterminado;
+                inputFin.required = esDeterminado;
                 if (!esDeterminado) inputFin.value = '';
             }
 
