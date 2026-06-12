@@ -53,6 +53,74 @@ $audpend_estadoAuditoriasMensual = audpend_obtenerEstadoAuditoriasMensual();
             padding: 0;
         }
 
+        /* Estilos para modales estándar del ERP */
+        .modal-pendientes {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content-pendientes {
+            background-color: white;
+            margin: 5% auto;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header-pendientes {
+            background: #0E544C;
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header-pendientes h3 {
+            margin: 0;
+            font-size: 1.4rem !important;
+        }
+
+        .close-modal {
+            font-size: 2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            line-height: 1;
+        }
+
+        .close-modal:hover {
+            color: #ffeb3b;
+        }
+
+        .modal-body-pendientes {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
         /* Estilos de los indicadores integrados del core */
         <?php include '../../core/components/indicators/horarios_confirmacion/horarios_confirmacion_styles.php'; ?>
         <?php include '../../core/components/indicators/auditorias_pendientes/auditorias_pendientes_styles.php'; ?>
@@ -83,67 +151,75 @@ $audpend_estadoAuditoriasMensual = audpend_obtenerEstadoAuditoriasMensual();
             </div>
 
             <!-- Accesos Directos - Grupo 1: Recursos Humanos -->
-            <h2 class="category-title">Recursos Humanos</h2>
-            <div class="modules">
-                <a href="programar_horarios_operaciones.php" class="module-card">
-                    <div class="module-icon">
+            <h2 class="section-title">
+                <i class="fas fa-users"></i> Recursos Humanos
+            </h2>
+            <div class="quick-access-grid">
+                <a href="programar_horarios_operaciones.php" class="quick-access-card">
+                    <div class="quick-access-icon">
                         <i class="fas fa-calendar-check"></i>
                     </div>
-                    <h3 class="module-title">Gestión de RRHH</h3>
+                    <div class="quick-access-title">Gestión de RRHH</div>
                 </a>
 
-                <a href="ver_horarios_compactos.php" class="module-card">
-                    <div class="module-icon">
+                <a href="ver_horarios_compactos.php" class="quick-access-card">
+                    <div class="quick-access-icon">
                         <i class="fas fa-clock"></i>
                     </div>
-                    <h3 class="module-title">Control de Asistencia</h3>
+                    <div class="quick-access-title">Control de Asistencia</div>
                 </a>
 
-                <a href="gestion_categorias_colaboradores.php" class="module-card">
-                    <div class="module-icon">
+                <a href="gestion_categorias_colaboradores.php" class="quick-access-card">
+                    <div class="quick-access-icon">
                         <i class="fas fa-user"></i>
                     </div>
-                    <h3 class="module-title">Gestión de Categorías</h3>
+                    <div class="quick-access-title">Gestión de Categorías</div>
                 </a>
             </div>
 
             <!-- Accesos Directos - Grupo 2: Comunicación Interna -->
-            <h2 class="category-title">Comunicación Interna</h2>
-            <div class="modules">
-                <a href="auditorias_original/index_avisos_publico.php" class="module-card">
-                    <div class="module-icon">
+            <h2 class="section-title">
+                <i class="fas fa-bullhorn"></i> Comunicación Interna
+            </h2>
+            <div class="quick-access-grid">
+                <a href="auditorias_original/index_avisos_publico.php" class="quick-access-card">
+                    <div class="quick-access-icon">
                         <i class="fas fa-eye"></i>
                     </div>
-                    <h3 class="module-title">Vista Pública</h3>
+                    <div class="quick-access-title">Vista Pública</div>
                 </a>
 
-                <a href="auditorias_original/index.php" class="module-card">
-                    <div class="module-icon">
+                <a href="auditorias_original/index.php" class="quick-access-card">
+                    <div class="quick-access-icon">
                         <i class="fas fa-tasks"></i>
                     </div>
-                    <h3 class="module-title">Auditorías de Desempeño</h3>
+                    <div class="quick-access-title">Auditorías de Desempeño</div>
                 </a>
             </div>
 
             <!-- Accesos Directos - Grupo 3: Supervisión -->
-            <h2 class="category-title">Supervisión</h2>
-            <div class="modules">
-                <a href="auditorias_original/auditinternas/auditorias_consolidadas.php" class="module-card">
-                    <div class="module-icon">
+            <h2 class="section-title">
+                <i class="fas fa-clipboard-check"></i> Supervisión
+            </h2>
+            <div class="quick-access-grid">
+                <a href="auditorias_original/auditinternas/auditorias_consolidadas.php" class="quick-access-card">
+                    <div class="quick-access-icon">
                         <i class="fas fa-money-check-alt"></i>
                     </div>
-                    <h3 class="module-title">Auditorías de Efectivo</h3>
+                    <div class="quick-access-title">Auditorías de Efectivo</div>
                 </a>
             </div>
 
             <!-- Accesos Directos - Grupo 4: Mantenimiento y Equipos -->
-            <h2 class="category-title">Mantenimiento y Equipos</h2>
-            <div class="modules">
-                <a href="../supervision/pruebaodoo.php" class="module-card">
-                    <div class="module-icon">
+            <h2 class="section-title">
+                <i class="fas fa-wrench"></i> Mantenimiento y Equipos
+            </h2>
+            <div class="quick-access-grid">
+                <a href="../supervision/pruebaodoo.php" class="quick-access-card">
+                    <div class="quick-access-icon">
                         <i class="fas fa-tools"></i>
                     </div>
-                    <h3 class="module-title">Solicitudes</h3>
+                    <div class="quick-access-title">Solicitudes</div>
                 </a>
             </div>
         </div>
