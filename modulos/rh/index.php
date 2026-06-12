@@ -2044,12 +2044,14 @@ function obtenerDetalleAusenciasColaboradoresModal()
                 <i class="fas fa-bolt"></i> Accesos Rápidos
             </h2>
             <div class="quick-access-grid">
+                <?php if (tienePermiso('gestion_colaboradores', 'nuevo_colaborador', $cargoOperario)): ?>
                 <a href="nuevo_colaborador.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-user-clock"></i>
                     </div>
                     <div class="quick-access-title">Nuevo Colaborador</div>
                 </a>
+                <?php endif; ?>
                 <a href="colaboradores.php" class="quick-access-card">
                     <div class="quick-access-icon">
                         <i class="fas fa-user-clock"></i>

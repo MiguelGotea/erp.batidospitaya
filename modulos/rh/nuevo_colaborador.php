@@ -12,7 +12,7 @@ require_once '../../core/layout/menu_lateral.php';
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 // Verificar acceso al módulo
-if (!tienePermiso('nuevo_colaborador', 'vista', $cargoOperario)) {
+if (!tienePermiso('gestion_colaboradores', 'nuevo_colaborador', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
