@@ -48,7 +48,7 @@ if (isset($_GET['exportar_excel']) && $puedeExportar) {
             o.Apellido2,
             s.nombre  AS sucursal_nombre,
             c.CodContrato,
-            (SELECT MAX(c2.CodContrato) FROM Contratos c2 WHERE c2.CodOperario = o.CodOperario) AS ultimo_contrato
+            (SELECT MAX(c2.CodContrato) FROM Contratos c2 WHERE c2.cod_operario = o.CodOperario) AS ultimo_contrato
         FROM horas_extras_manual hem
         JOIN Operarios o       ON hem.cod_operario  = o.CodOperario
         LEFT JOIN sucursales s ON hem.cod_sucursal  = s.codigo
