@@ -31,6 +31,7 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
     <link rel="stylesheet" href="css/colaboradores.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
 
@@ -71,17 +72,19 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
 
                 <div class="export-toolbar">
                     <?php if ($puedeExportar): ?>
-                    <button id="btnExportarExcel" class="btn-exportar-excel" onclick="exportarExcel()" title="Exportar colaboradores (con filtros activos) a Excel">
-                        <i class="fas fa-file-excel"></i>
-                        Exportar a Excel
-                        <span id="exportarSpinner" class="exportar-spinner" style="display:none;"></span>
-                    </button>
-                    <span id="exportarFiltrosLabel" class="exportar-filtros-label" style="display:none;">
-                        <i class="bi bi-funnel-fill"></i> Con filtros aplicados
-                    </span>
+                        <button id="btnExportarExcel" class="btn-exportar-excel" onclick="exportarExcel()"
+                            title="Exportar colaboradores (con filtros activos) a Excel">
+                            <i class="fas fa-file-excel"></i>
+                            Exportar a Excel
+                            <span id="exportarSpinner" class="exportar-spinner" style="display:none;"></span>
+                        </button>
+                        <span id="exportarFiltrosLabel" class="exportar-filtros-label" style="display:none;">
+                            <i class="bi bi-funnel-fill"></i> Con filtros aplicados
+                        </span>
                     <?php endif; ?>
 
-                    <button id="btnLimpiarTodo" class="btn-limpiar-todo" onclick="limpiarTodosLosFiltros()" style="display:none;" title="Limpiar todos los filtros y restaurar tabla original">
+                    <button id="btnLimpiarTodo" class="btn-limpiar-todo" onclick="limpiarTodosLosFiltros()"
+                        style="display:none;" title="Limpiar todos los filtros y restaurar tabla original">
                         <i class="fas fa-broom"></i> Limpiar Filtros
                     </button>
                 </div>
@@ -143,7 +146,8 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                                     Último Día<br>Marcado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="fecha_salida_ultimo" data-type="daterange" class="col-fecha-salida" style="white-space: nowrap;">
+                                <th data-column="fecha_salida_ultimo" data-type="daterange" class="col-fecha-salida"
+                                    style="white-space: nowrap;">
                                     Fecha de Salida
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
@@ -151,15 +155,18 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                                     Tiempo Trabajado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="cantidad_hijos" data-type="list" style="width: 80px; text-align: center;">
+                                <th data-column="cantidad_hijos" data-type="list"
+                                    style="width: 80px; text-align: center;">
                                     Hijos
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="talla_camisa" data-type="list" style="width: 100px; text-align: center;">
+                                <th data-column="talla_camisa" data-type="list"
+                                    style="width: 100px; text-align: center;">
                                     Talla Camisa
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="porcentaje_llenado" data-type="numrange" style="width: 100px; text-align: center;">
+                                <th data-column="porcentaje_llenado" data-type="numrange"
+                                    style="width: 100px; text-align: center;">
                                     % de avance
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
@@ -309,7 +316,8 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                     <h5 class="modal-title" id="pageHelpModalLabel">
                         <i class="fas fa-info-circle me-2"></i> Guía del Maestro de Colaboradores
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="row">
@@ -321,8 +329,10 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                                         <i class="fas fa-users me-2"></i> Gestión de Colaboradores
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Permite administrar el listado general de personal de <strong>Batidos Pitaya</strong>. 
-                                        Aquí puedes consultar datos personales, INSS, cédulas, contactos, cargos, estado y tallas de camisa.
+                                        Permite administrar el listado general de personal de <strong>Batidos
+                                            Pitaya</strong>.
+                                        Aquí puedes consultar datos personales, INSS, cédulas, contactos, cargos, estado
+                                        y tallas de camisa.
                                     </p>
                                 </div>
                             </div>
@@ -335,8 +345,10 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                                         <i class="fas fa-filter me-2"></i> Filtros de Cabecera
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Cada columna posee un embudo <i class="bi bi-funnel"></i> para filtrados personalizados de forma simultánea. 
-                                        Si deseas restaurar la vista original rápidamente, haz clic en el botón naranja <strong>Limpiar Filtros</strong>.
+                                        Cada columna posee un embudo <i class="bi bi-funnel"></i> para filtrados
+                                        personalizados de forma simultánea.
+                                        Si deseas restaurar la vista original rápidamente, haz clic en el botón naranja
+                                        <strong>Limpiar Filtros</strong>.
                                     </p>
                                 </div>
                             </div>
@@ -349,7 +361,9 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                                         <i class="fas fa-store me-2"></i> Historial e Inactivos
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        Para colaboradores inactivos, el sistema rescata automáticamente su última sucursal de operaciones bajo el sufijo <strong>(última tienda)</strong>, manteniendo el contexto histórico de auditorías.
+                                        Para colaboradores inactivos, el sistema rescata automáticamente su última
+                                        sucursal de operaciones bajo el sufijo <strong>(última tienda)</strong>,
+                                        manteniendo el contexto histórico de auditorías.
                                     </p>
                                 </div>
                             </div>
@@ -362,7 +376,9 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                                         <i class="fas fa-file-excel me-2"></i> Exportar Reportes
                                     </h6>
                                     <p class="small text-muted mb-0">
-                                        El botón <strong>Exportar a Excel</strong> genera un reporte asíncrono respetando fielmente el ordenamiento, orden por nulos de salida y filtros que tengas aplicados en pantalla.
+                                        El botón <strong>Exportar a Excel</strong> genera un reporte asíncrono
+                                        respetando fielmente el ordenamiento, orden por nulos de salida y filtros que
+                                        tengas aplicados en pantalla.
                                     </p>
                                 </div>
                             </div>
@@ -370,7 +386,9 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
                     </div>
                     <div class="alert alert-info py-2 px-3 small mt-2 mb-0">
                         <strong><i class="fas fa-user-slash me-1"></i> Terminación de Contrato:</strong>
-                        Los usuarios con permisos asignados pueden finalizar la relación laboral directamente desde el botón "Terminar" de la columna *Estado/Contrato*, registrando el motivo y fecha formal de salida.
+                        Los usuarios con permisos asignados pueden finalizar la relación laboral directamente desde el
+                        botón "Terminar" de la columna *Estado/Contrato*, registrando el motivo y fecha formal de
+                        salida.
                     </div>
                 </div>
             </div>
@@ -381,6 +399,7 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
         #pageHelpModal {
             z-index: 1060 !important;
         }
+
         .modal-backdrop {
             z-index: 1050 !important;
         }
@@ -389,8 +408,8 @@ $puedeExportar = tienePermiso('gestion_colaboradores', 'exportar', $cargoOperari
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const canFinalize  = <?= tienePermiso('gestion_colaboradores', 'finalizar_contrato', $cargoOperario) ? 'true' : 'false' ?>;
-        const canExport    = <?= $puedeExportar ? 'true' : 'false' ?>;
+        const canFinalize = <?= tienePermiso('gestion_colaboradores', 'finalizar_contrato', $cargoOperario) ? 'true' : 'false' ?>;
+        const canExport = <?= $puedeExportar ? 'true' : 'false' ?>;
     </script>
     <script src="js/colaboradores.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
     <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
