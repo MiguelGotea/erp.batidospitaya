@@ -43,6 +43,7 @@ $valores = [
     'sucursal'               => '',
     'ciudad'                 => '',
     'inicio_contrato'        => date('Y-m-d'),
+    'fin_contrato'           => '',
     'salario_inicial'        => '',
 ];
 
@@ -74,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $valores['sucursal']               = trim($_POST['sucursal'] ?? '');
     $valores['ciudad']                 = trim($_POST['ciudad'] ?? '');
     $valores['inicio_contrato']        = trim($_POST['inicio_contrato'] ?? date('Y-m-d'));
+    $valores['fin_contrato']           = trim($_POST['fin_contrato'] ?? '');
     $valores['salario_inicial']        = trim($_POST['salario_inicial'] ?? '');
 
     // ── Validaciones colaborador ─────────────────────────────────────────────
@@ -149,14 +151,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             $nuevoId = $conn->lastInsertId();
 
-            // 2. Insertar en AsignacionNivelesCargos (registro base del contrato)
-            //    Misma lógica que guardarContrato() modo creación:
-            //    CodTipoContrato viene del tipo de contrato seleccionado.
-            //    No lleva TipoAdendum ni es_activo — eso lo usan adendas/movimientos.
+            // 2. Insertar en AsignacionNivelesCargos (registro base/inicial del contrato)
+            //    TipoAdendum = 'inicial' identifica este registro como el primero del contrato.
+            //    El CodContrato se actualizará justo después de crear el contrato.
+            $salarioInicial = !empty($valores['salario_inicial']) ? $valores['salario_inicial'] : null;
+
             $stmtAsig = $conn->prepare("
                 INSERT INTO AsignacionNivelesCargos
-                    (CodOperario, CodNivelesCargos, Fecha, Sucursal, CodTipoContrato, cod_usuario_creador)
-                VALUES (?, ?, ?, ?, ?, ?)
+                    (CodOperario, CodNivelesCargos, Fecha, Sucursal, CodTipoContrato,
+                     TipoAdendum, Salario, cod_usuario_creador)
+                VALUES (?, ?, ?, ?, ?, 'inicial', ?, ?)
             ");
             $stmtAsig->execute([
                 $nuevoId,
@@ -164,39 +168,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $valores['inicio_contrato'],
                 $valores['sucursal'],
                 $valores['cod_tipo_contrato'],
+                $salarioInicial,
                 $usuarioActualId
             ]);
             $codAsignacion = $conn->lastInsertId();
 
             // 3. Insertar en Contratos
+            //    fin_contrato solo aplica para tipo Determinado (CodTipoContrato = 1)
+            $finContrato = ($valores['cod_tipo_contrato'] == 1 && !empty($valores['fin_contrato']))
+                ? $valores['fin_contrato']
+                : null;
+
             $stmtCont = $conn->prepare("
                 INSERT INTO Contratos
                     (cod_tipo_contrato, codigo_manual_contrato, cod_operario,
-                     inicio_contrato, ciudad, cod_sucursal_contrato,
+                     inicio_contrato, fin_contrato, ciudad, cod_sucursal_contrato,
+                     monto_contrato, salario_inicial, frecuencia_pago,
                      CodAsignacionNivelesCargos, cod_usuario_creador)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'quincenal', ?, ?)
             ");
             $stmtCont->execute([
                 $valores['cod_tipo_contrato'],
                 !empty($valores['codigo_manual_contrato']) ? $valores['codigo_manual_contrato'] : null,
                 $nuevoId,
                 $valores['inicio_contrato'],
+                $finContrato,
                 !empty($valores['ciudad']) ? $valores['ciudad'] : null,
                 $valores['sucursal'],
+                $salarioInicial,   // monto_contrato
+                $salarioInicial,   // salario_inicial
                 $codAsignacion,
                 $usuarioActualId
             ]);
             $codContrato = $conn->lastInsertId();
 
-            // 4. Guardar salario inicial si se proporcionó
-            if (!empty($valores['salario_inicial'])) {
-                $stmtSal = $conn->prepare("
-                    UPDATE Contratos
-                    SET salario_inicial = ?, frecuencia_pago = 'quincenal'
-                    WHERE CodContrato = ?
-                ");
-                $stmtSal->execute([$valores['salario_inicial'], $codContrato]);
-            }
+            // 4. Actualizar ANC con el CodContrato ya creado
+            $stmtUpdAsig = $conn->prepare("
+                UPDATE AsignacionNivelesCargos
+                SET CodContrato = ?
+                WHERE CodAsignacionNivelesCargos = ?
+            ");
+            $stmtUpdAsig->execute([$codContrato, $codAsignacion]);
 
             $conn->commit();
 
@@ -577,17 +589,15 @@ function generarClave($nombre, $apellido)
         /* ── Sección contrato ────────────────────────────────── */
         .seccion-contrato {
             margin-top: 28px;
-            padding: 18px 20px;
-            background: #f0f8f7;
-            border-radius: 8px;
-            border-left: 4px solid #51B8AC;
+            padding: 0;
+            border-top: 2px solid #ddd;
         }
 
         .seccion-titulo {
             color: #0E544C;
             font-size: 1rem !important;
             font-weight: bold;
-            margin: 0 0 16px 0;
+            margin: 20px 0 16px 0;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -599,13 +609,17 @@ function generarClave($nombre, $apellido)
             font-weight: normal;
         }
 
-        .form-group select {
+        /* Igualar estilos de select con los input[type=text] existentes */
+        .form-group select,
+        .form-group input[type="date"],
+        .form-group input[type="number"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 16px;
             background: white;
-            cursor: pointer;
+            box-sizing: border-box;
         }
 
         .badge-obligatorio {
@@ -617,6 +631,10 @@ function generarClave($nombre, $apellido)
             border-radius: 10px;
             margin-left: 4px;
             vertical-align: middle;
+        }
+
+        #grupo_fin_contrato {
+            display: none;
         }
     </style>
 </head>
@@ -837,7 +855,7 @@ function generarClave($nombre, $apellido)
                                 </div>
                             </div>
 
-                            <!-- Fecha inicio + Salario -->
+                            <!-- Fecha inicio + Fecha fin (Determinado) + Salario -->
                             <div class="form-row">
                                 <div class="form-col">
                                     <div class="form-group">
@@ -858,6 +876,21 @@ function generarClave($nombre, $apellido)
                                             placeholder="0.00">
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Fecha fin: visible solo cuando tipo = Determinado -->
+                            <div class="form-row" id="grupo_fin_contrato">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="fin_contrato">
+                                            Fecha de Fin de Contrato
+                                            <span class="badge-obligatorio">Obligatorio para Determinado</span>
+                                        </label>
+                                        <input type="date" id="fin_contrato" name="fin_contrato"
+                                            value="<?= htmlspecialchars($valores['fin_contrato'] ?? '') ?>">
+                                    </div>
+                                </div>
+                                <div class="form-col"></div>
                             </div>
 
                         </div>
@@ -1031,6 +1064,24 @@ function generarClave($nombre, $apellido)
 
             input.setSelectionRange(adjustedPos, adjustedPos);
         }
+
+        // ── Control fin_contrato: mostrar solo cuando tipo = Determinado ──────
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectTipo = document.getElementById('cod_tipo_contrato');
+            const grupoFin   = document.getElementById('grupo_fin_contrato');
+            const inputFin   = document.getElementById('fin_contrato');
+
+            function toggleFinContrato() {
+                // CodTipoContrato 1 = Determinado (requiere fecha fin)
+                const esDeterminado = selectTipo.value === '1';
+                grupoFin.style.display = esDeterminado ? '' : 'none';
+                inputFin.required = esDeterminado;
+                if (!esDeterminado) inputFin.value = '';
+            }
+
+            selectTipo.addEventListener('change', toggleFinContrato);
+            toggleFinContrato(); // Estado inicial
+        });
 
         // Antes de enviar el formulario, quitar los guiones para guardar solo números y letra
         document.addEventListener('DOMContentLoaded', function () {
