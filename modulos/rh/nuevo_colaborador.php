@@ -155,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             //    TipoAdendum = 'inicial' identifica este registro como el primero del contrato.
             //    codigo_contrato_asociado = código manual ingresado en el form.
             //    El CodContrato (FK numérico) se actualiza vía UPDATE tras crear el contrato.
-            $salarioInicial        = null; // Se registra en editar_colaborador
+            $salarioInicial        = !empty($valores['salario_inicial']) ? $valores['salario_inicial'] : null;
             $codigoContratoForm    = !empty($valores['codigo_manual_contrato']) ? $valores['codigo_manual_contrato'] : null;
 
             $stmtAsig = $conn->prepare("
@@ -629,8 +629,6 @@ function generarClave($nombre, $apellido)
             box-sizing: border-box;
         }
 
-
-
         #grupo_fin_contrato {
             display: none;
         }
@@ -793,7 +791,7 @@ function generarClave($nombre, $apellido)
                                         <label for="codigo_manual_contrato">Código de Contrato</label>
                                         <input type="text" id="codigo_manual_contrato" name="codigo_manual_contrato"
                                             value="<?= htmlspecialchars($valores['codigo_manual_contrato']) ?>"
-                                            placeholder="Ej: CONT-2024-001">
+                                            placeholder="Ej: CONT-2024-001" required>
                                     </div>
                                 </div>
                                 <div class="form-col">
@@ -844,7 +842,7 @@ function generarClave($nombre, $apellido)
                                 </div>
                             </div>
 
-                            <!-- Fecha de Inicio -->
+                            <!-- Fecha inicio + Fecha fin (Determinado) + Salario -->
                             <div class="form-row">
                                 <div class="form-col">
                                     <div class="form-group">
@@ -853,7 +851,15 @@ function generarClave($nombre, $apellido)
                                             value="<?= htmlspecialchars($valores['inicio_contrato']) ?>" required>
                                     </div>
                                 </div>
-                                <div class="form-col"></div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="salario_inicial">Salario Inicial</label>
+                                        <input type="number" id="salario_inicial" name="salario_inicial"
+                                            step="0.01" min="0"
+                                            value="<?= htmlspecialchars($valores['salario_inicial']) ?>"
+                                            placeholder="0.00" required>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Fecha fin: visible solo cuando tipo = Determinado -->
@@ -1040,23 +1046,22 @@ function generarClave($nombre, $apellido)
             input.setSelectionRange(adjustedPos, adjustedPos);
         }
 
-        // ── Control fin_contrato: mostrar solo cuando tipo = Determinado ──────
-        document.addEventListener('DOMContentLoaded', function () {
+        // Toggle fin_contrato: se muestra solo cuando tipo = Determinado (id=1)
+        (function () {
             const selectTipo = document.getElementById('cod_tipo_contrato');
             const grupoFin   = document.getElementById('grupo_fin_contrato');
             const inputFin   = document.getElementById('fin_contrato');
 
             function toggleFinContrato() {
-                // CodTipoContrato 1 = Determinado (requiere fecha fin)
                 const esDeterminado = selectTipo.value === '1';
                 grupoFin.style.display = esDeterminado ? 'flex' : 'none';
-                inputFin.required = esDeterminado;
+                inputFin.required     = esDeterminado;
                 if (!esDeterminado) inputFin.value = '';
             }
 
             selectTipo.addEventListener('change', toggleFinContrato);
-            toggleFinContrato(); // Estado inicial
-        });
+            toggleFinContrato(); // estado inicial al cargar
+        })();
 
         // Antes de enviar el formulario, quitar los guiones para guardar solo números y letra
         document.addEventListener('DOMContentLoaded', function () {
