@@ -647,7 +647,6 @@ function generarClave($nombre, $apellido)
     <!-- Renderizar menú lateral -->
     <?php echo renderMenuLateral($cargoOperario); ?>
 
-
     <!-- Contenido principal -->
     <div class="main-container">
         <div class="sub-container">
