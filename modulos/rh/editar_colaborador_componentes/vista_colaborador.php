@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <?php
 $imagenesParaCarrusel = [];
@@ -10,9 +10,9 @@ $imagenesParaCarrusel = [];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Colaborador</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
-    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
-    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
+    <link rel="stylesheet" href="../../core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="../../core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/editar_colaborador.css?v=<?php echo mt_rand(1, 10000); ?>">
     <style>
         /* Estilos para las barras de progreso en las pestañas */
