@@ -153,14 +153,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // 2. Insertar en AsignacionNivelesCargos (registro base/inicial del contrato)
             //    TipoAdendum = 'inicial' identifica este registro como el primero del contrato.
-            //    El CodContrato se actualizará justo después de crear el contrato.
-            $salarioInicial = !empty($valores['salario_inicial']) ? $valores['salario_inicial'] : null;
+            //    codigo_contrato_asociado = código manual ingresado en el form.
+            //    El CodContrato (FK numérico) se actualiza vía UPDATE tras crear el contrato.
+            $salarioInicial        = !empty($valores['salario_inicial']) ? $valores['salario_inicial'] : null;
+            $codigoContratoForm    = !empty($valores['codigo_manual_contrato']) ? $valores['codigo_manual_contrato'] : null;
 
             $stmtAsig = $conn->prepare("
                 INSERT INTO AsignacionNivelesCargos
                     (CodOperario, CodNivelesCargos, Fecha, Sucursal, CodTipoContrato,
-                     TipoAdendum, Salario, cod_usuario_creador)
-                VALUES (?, ?, ?, ?, ?, 'inicial', ?, ?)
+                     TipoAdendum, Salario, codigo_contrato_asociado, cod_usuario_creador)
+                VALUES (?, ?, ?, ?, ?, 'inicial', ?, ?, ?)
             ");
             $stmtAsig->execute([
                 $nuevoId,
@@ -169,15 +171,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $valores['sucursal'],
                 $valores['cod_tipo_contrato'],
                 $salarioInicial,
+                $codigoContratoForm,
                 $usuarioActualId
             ]);
             $codAsignacion = $conn->lastInsertId();
 
             // 3. Insertar en Contratos
-            //    fin_contrato solo aplica para tipo Determinado (CodTipoContrato = 1)
+            //    fin_contrato solo aplica para tipo Determinado (CodTipoContrato = 1).
+            //    ciudad se obtiene del departamento de la sucursal seleccionada (no del form).
             $finContrato = ($valores['cod_tipo_contrato'] == 1 && !empty($valores['fin_contrato']))
                 ? $valores['fin_contrato']
                 : null;
+
+            // Buscar la ciudad (departamento) de la sucursal seleccionada
+            $ciudadSucursal = obtenerDepartamentoSucursal($valores['sucursal']);
 
             $stmtCont = $conn->prepare("
                 INSERT INTO Contratos
@@ -189,11 +196,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
             $stmtCont->execute([
                 $valores['cod_tipo_contrato'],
-                !empty($valores['codigo_manual_contrato']) ? $valores['codigo_manual_contrato'] : null,
+                $codigoContratoForm,
                 $nuevoId,
                 $valores['inicio_contrato'],
                 $finContrato,
-                !empty($valores['ciudad']) ? $valores['ciudad'] : null,
+                $ciudadSucursal !== 'Desconocido' ? $ciudadSucursal : null,  // ciudad del departamento
                 $valores['sucursal'],
                 $salarioInicial,   // monto_contrato
                 $salarioInicial,   // salario_inicial
@@ -202,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             $codContrato = $conn->lastInsertId();
 
-            // 4. Actualizar ANC con el CodContrato ya creado
+            // 4. Actualizar ANC con el CodContrato (FK numérico) ya creado
             $stmtUpdAsig = $conn->prepare("
                 UPDATE AsignacionNivelesCargos
                 SET CodContrato = ?
