@@ -609,8 +609,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 <i class="fas fa-search"></i> Buscar
                             </button>
 
-                            <a href="imprimir_boleta.php" target="_blank" class="btn-aplicar"
-                                style="display: inline-flex; align-items: center; gap: 5px; text-decoration: none;">
+                            <a href="imprimir_boleta.php" target="_blank" class="btn-aplicar">
                                 <i class="fas fa-print"></i> Imprimir Boleta
                             </a>
 
@@ -622,8 +621,7 @@ function obtenerTiposFaltaConPorcentajes()
                                                             'operario' => $operarioSeleccionado,
                                                             'tipo_filtro' => $tipoFiltro,
                                                             'exportar_excel' => 1
-                                                        ]) ?>" class="btn-agregar"
-                                    style="background-color: #28a745; border-color: #28a745; color: white;">
+                                                        ]) ?>" class="btn-agregar">
                                     <i class="fas fa-file-excel"></i> Exportar
                                 </a>
                             <?php endif; ?>

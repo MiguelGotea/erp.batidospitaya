@@ -47,12 +47,19 @@
     flex-wrap: wrap;
 }
 
-.filtro-buttons button {
+.filtro-buttons button,
+.filtro-buttons a {
     padding: 8px 15px;
     border-radius: 5px;
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    font-size: inherit;
+    line-height: normal;
 }
 
 .btn-aplicar {
@@ -62,6 +69,17 @@
 
 .btn-aplicar:hover {
     background-color: #0E544C;
+    color: white;
+}
+
+.btn-agregar {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-agregar:hover {
+    background-color: #1e7e34;
+    color: white;
 }
 
 .btn-limpiar {
