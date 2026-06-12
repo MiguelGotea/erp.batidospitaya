@@ -394,17 +394,30 @@ function getEstadoBadgeClass($estado) {
                     }
                 }
                 ?>
+                <?php
+                // Columnas extra visibles solo para quienes ven Acciones
+                $mostrarColumnasDetalle = $mostrarColumnaAcciones;
+                // Calcular total de columnas visibles para el colspan del mensaje vacío
+                // Columnas fijas: Colaborador, Sucursal, Fecha Feriado, Estado, Observaciones, Registrado por = 6
+                $totalColumnas = 6;
+                if ($mostrarColumnasDetalle) $totalColumnas += 3; // Cód. Operario, Cód. Contrato, Horas Laboradas
+                if ($mostrarColumnaAcciones)  $totalColumnas += 1; // Acciones
+                ?>
                 <div class="table-container">
                     <?php if (!empty($records)): ?>
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Cód. Operario</th>
-                                    <th>Cód. Contrato</th>
+                                    <?php if ($mostrarColumnasDetalle): ?>
+                                        <th>Cód. Operario</th>
+                                        <th>Cód. Contrato</th>
+                                    <?php endif; ?>
                                     <th>Colaborador</th>
                                     <th>Sucursal</th>
                                     <th>Fecha Feriado</th>
-                                    <th>Horas Laboradas</th>
+                                    <?php if ($mostrarColumnasDetalle): ?>
+                                        <th>Horas Laboradas</th>
+                                    <?php endif; ?>
                                     <th>Estado</th>
                                     <th>Observaciones</th>
                                     <th>Registrado por</th>
@@ -416,12 +429,16 @@ function getEstadoBadgeClass($estado) {
                             <tbody>
                                 <?php foreach ($records as $r): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($r['CodOperario']) ?></td>
-                                        <td><?= htmlspecialchars($r['CodContrato'] ?? '-') ?></td>
+                                        <?php if ($mostrarColumnasDetalle): ?>
+                                            <td><?= htmlspecialchars($r['CodOperario']) ?></td>
+                                            <td><?= htmlspecialchars($r['CodContrato'] ?? '-') ?></td>
+                                        <?php endif; ?>
                                         <td><strong><?= htmlspecialchars($r['nombre_completo']) ?></strong></td>
                                         <td><?= htmlspecialchars($r['sucursal_nombre']) ?></td>
                                         <td><?= formatoFechaLocal($r['fecha_feriado']) ?></td>
-                                        <td><?= number_format($r['horas_trabajadas'] ?? 0, 2) ?> hrs</td>
+                                        <?php if ($mostrarColumnasDetalle): ?>
+                                            <td><?= number_format($r['horas_trabajadas'] ?? 0, 2) ?> hrs</td>
+                                        <?php endif; ?>
                                         <td>
                                             <span class="<?= getEstadoBadgeClass($r['estado']) ?>">
                                                 <?= $r['estado'] === 'Descansado' ? 'COMPENSADO' : htmlspecialchars($r['estado']) ?>
@@ -473,9 +490,16 @@ function getEstadoBadgeClass($estado) {
                             </tbody>
                         </table>
                     <?php else: ?>
-                        <div class="alert alert-info p-3 m-3">
-                            No se encontraron solicitudes registradas para los filtros seleccionados en este rango de fechas.
-                        </div>
+                        <table>
+                            <thead><tr><?php for ($ci = 0; $ci < $totalColumnas; $ci++): ?><th></th><?php endfor; ?></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="<?= $totalColumnas ?>" class="text-center text-muted p-4">
+                                        No se encontraron solicitudes registradas para los filtros seleccionados en este rango de fechas.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     <?php endif; ?>
 
                     <!-- Paginación -->
