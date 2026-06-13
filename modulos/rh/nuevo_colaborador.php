@@ -226,6 +226,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $conn->commit();
 
+            // ── Notificación Email ingreso_colaborador ────────────────────────────
+            try {
+                require_once __DIR__ . '/../../core/email/EmailService.php';
+                $emailService = new EmailService($conn);
+
+                // Obtener nombre del cargo y sucursal recién asignados
+                $stmtInfoNuevo = $conn->prepare("
+                    SELECT
+                        nc.Nombre AS nombre_cargo,
+                        s.nombre  AS nombre_sucursal
+                    FROM AsignacionNivelesCargos anc
+                    JOIN NivelesCargos nc ON nc.CodNivelesCargos = anc.CodNivelesCargos
+                    JOIN sucursales    s  ON s.codigo            = anc.Sucursal
+                    WHERE anc.CodAsignacionNivelesCargos = ?
+                ");
+                $stmtInfoNuevo->execute([$codAsignacion]);
+                $infoNuevo = $stmtInfoNuevo->fetch(PDO::FETCH_ASSOC);
+
+                $nombreCompleto  = trim($valores['Nombre'] . ' ' . ($valores['Nombre2'] ?? '') . ' ' . $valores['Apellido'] . ' ' . ($valores['Apellido2'] ?? ''));
+                $cedula          = $valores['Cedula']          ?? 'N/D';
+                $cargoNombre     = $infoNuevo['nombre_cargo']     ?? 'N/D';
+                $sucursalNombre  = $infoNuevo['nombre_sucursal']  ?? 'N/D';
+
+                // Formatear fecha de inicio en español
+                $meses = ['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril',
+                          '05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto',
+                          '09'=>'septiembre','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'];
+                $fmtFecha = function ($fecha) use ($meses) {
+                    if (empty($fecha) || $fecha === '0000-00-00') return 'N/D';
+                    [$y, $m, $d] = explode('-', substr($fecha, 0, 10));
+                    return intval($d) . ' de ' . ($meses[$m] ?? $m) . ' del ' . $y;
+                };
+
+                $fechaInicio = $fmtFecha($valores['inicio_contrato']);
+
+                // Construir cuerpo HTML del correo
+                $cuerpoHtml = "
+                    <div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #222; line-height: 1.8;\">
+                        <p>Buenos días,</p>
+                        <p>Comparto los ingresos que tuvimos</p>
+                        <br>
+                        <p><strong>Nombre:</strong> {$nombreCompleto}</p>
+                        <p><strong>Cédula:</strong> {$cedula}</p>
+                        <p><strong>Puesto:</strong> {$cargoNombre}</p>
+                        <p><strong>Ubicación:</strong> {$sucursalNombre}</p>
+                        <p><strong>Fecha de Ingreso:</strong> {$fechaInicio}</p>
+                    </div>
+                ";
+
+                // Obtener destinatarios: cargos con permiso 'allow' → acción 'correo' → tool 'ingreso_colaborador'
+                $stmtDestinatarios = $conn->prepare("
+                    SELECT DISTINCT o.email_trabajo
+                    FROM Operarios o
+                    INNER JOIN AsignacionNivelesCargos anc
+                        ON anc.CodOperario = o.CodOperario
+                        AND (anc.Fin IS NULL OR anc.Fin >= CURDATE())
+                        AND anc.Fecha <= CURDATE()
+                    INNER JOIN permisos_tools_erp p
+                        ON p.CodNivelesCargos = anc.CodNivelesCargos
+                        AND p.permiso = 'allow'
+                    INNER JOIN acciones_tools_erp ac
+                        ON ac.id = p.accion_tool_erp_id
+                        AND ac.nombre_accion = 'correo'
+                    INNER JOIN tools_erp t
+                        ON t.id = ac.tool_erp_id
+                        AND t.tipo_componente = 'notificacion_email'
+                        AND t.nombre = 'ingreso_colaborador'
+                        AND t.activo = 1
+                    WHERE o.email_trabajo IS NOT NULL
+                      AND o.email_trabajo != ''
+                ");
+                $stmtDestinatarios->execute();
+                $destinatarios = $stmtDestinatarios->fetchAll(PDO::FETCH_COLUMN);
+
+                if (!empty($destinatarios)) {
+                    $asunto = "Ingreso de Colaborador: {$nombreCompleto}";
+                    $emailService->enviarCorreo(
+                        $usuarioActualId,
+                        $destinatarios,
+                        $asunto,
+                        $cuerpoHtml
+                    );
+                }
+            } catch (Exception $eEmail) {
+                // El correo falló pero el registro fue exitoso — solo loguear, no interrumpir
+                error_log('[ingreso_colaborador] Error enviando notificación email: ' . $eEmail->getMessage());
+            }
+            // ── Fin Notificación Email ─────────────────────────────────────────
+
             $_SESSION['exito'] = "Colaborador registrado exitosamente. Código: $nuevoId, Usuario: $usuarioGenerado, Clave: $claveGenerada";
             header("Location: editar_colaborador.php?id=$nuevoId");
             exit();
