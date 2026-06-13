@@ -246,17 +246,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $nombreCompleto  = trim($valores['Nombre'] . ' ' . ($valores['Nombre2'] ?? '') . ' ' . $valores['Apellido'] . ' ' . ($valores['Apellido2'] ?? ''));
                 $cedula          = $valores['Cedula']          ?? 'N/D';
+                $celular         = $valores['Celular']         ?? 'PEND.';
                 $cargoNombre     = $infoNuevo['nombre_cargo']     ?? 'N/D';
                 $sucursalNombre  = $infoNuevo['nombre_sucursal']  ?? 'N/D';
+                $codigoContrato  = !empty($codigoContratoForm) ? $codigoContratoForm : 'N/D';
 
-                // Formatear fecha de inicio en español
-                $meses = ['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril',
-                          '05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto',
-                          '09'=>'septiembre','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'];
-                $fmtFecha = function ($fecha) use ($meses) {
+                // Formatear fecha de inicio en formato dd/mm/yyyy
+                $fmtFecha = function ($fecha) {
                     if (empty($fecha) || $fecha === '0000-00-00') return 'N/D';
                     [$y, $m, $d] = explode('-', substr($fecha, 0, 10));
-                    return intval($d) . ' de ' . ($meses[$m] ?? $m) . ' del ' . $y;
+                    return $d . '/' . $m . '/' . $y;
                 };
 
                 $fechaInicio = $fmtFecha($valores['inicio_contrato']);
@@ -264,14 +263,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Construir cuerpo HTML del correo
                 $cuerpoHtml = "
                     <div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #222; line-height: 1.8;\">
-                        <p>Buenos días,</p>
-                        <p>Comparto los ingresos que tuvimos</p>
+                        <p>Buenos Días equipo, les notifico los nuevos ingresos:</p>
                         <br>
                         <p><strong>Nombre:</strong> {$nombreCompleto}</p>
                         <p><strong>Cédula:</strong> {$cedula}</p>
+                        <p><strong>#INSS:</strong> PEND.</p>
+                        <p><strong>Celular:</strong> {$celular}</p>
                         <p><strong>Puesto:</strong> {$cargoNombre}</p>
                         <p><strong>Ubicación:</strong> {$sucursalNombre}</p>
-                        <p><strong>Fecha de Ingreso:</strong> {$fechaInicio}</p>
+                        <p><strong>Fecha de ingreso: {$fechaInicio}</strong></p>
+                        <p><strong>Código:</strong> {$codigoContrato}</p>
                     </div>
                 ";
 
