@@ -54,8 +54,12 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                     Sucursal
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="Fecha" data-type="daterange">
+                                    Fecha
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
                                 <th data-column="CodigoCierre" data-type="text">
-                                    Cierre Final
+                                    Cierre
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="cajero" data-type="text">
@@ -71,10 +75,6 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                 </th>
                                 <th data-column="HoraFinal">
                                     Hora Final
-                                </th>
-                                <th data-column="Fecha" data-type="daterange">
-                                    Fecha
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="Observaciones" data-type="text">
                                     Observaciones
