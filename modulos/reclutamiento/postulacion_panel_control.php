@@ -72,17 +72,36 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                         <div class="tab-content" id="panelTabsContent">
                             <!-- Pestaña Sucursales -->
                             <div class="tab-pane fade show active" id="sucursales" role="tabpanel">
-                                <div class="table-responsive mb-4">
-                                    <table class="table table-hover panel-control-table align-middle">
-                                        <thead class="table-header">
+                                <div class="table-responsive mb-5">
+                                    <table class="table table-hover panel-control-table align-middle"
+                                        id="tablaSucursales">
+                                        <thead class="table-header text-center">
                                             <tr>
-                                                <th colspan="2" class="text-start ps-3 py-2">
-                                                    <i class="bi bi-globe me-2"></i>Perfiles de Puesto Globales <span
-                                                        class="text-muted small fw-normal ms-2">(Aplica a todas las
-                                                        tiendas)</span>
+                                                <th style="width: 200px;">Grupo</th>
+                                                <th style="width: 100px;">Obligatorio</th>
+                                                <th style="width: 100px;">Plaza Temporal</th>
+                                                <th style="width: 100px;">Personal Contratado</th>
+                                                <th style="width: 100px;">Web</th>
+                                                <th style="width: 150px;" class="d-none">Urgencia</th>
+                                                <th style="width: 80px;">Banner</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tablaSucursalesBody">
+                                            <!-- Cargado dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-hover panel-control-table align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="2" class="text-start ps-3 py-3 bg-primary text-white border-0" style="border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                                                    <i class="bi bi-globe me-2"></i>Perfiles de Puesto Globales 
+                                                    <span class="text-white-50 small fw-normal ms-2">(Aplica a todas las tiendas)</span>
                                                 </th>
                                             </tr>
-                                            <tr>
+                                            <tr class="table-header">
                                                 <th>Cargo</th>
                                                 <th style="width: 150px;" class="text-center">Perfil de Puesto</th>
                                             </tr>
@@ -103,27 +122,6 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                         </tbody>
                                     </table>
                                 </div>
-
-                                <div class="table-responsive">
-                                    <table class="table table-hover panel-control-table align-middle"
-                                        id="tablaSucursales">
-                                        <thead class="table-header text-center">
-                                            <tr>
-                                                <th style="width: 200px;">Grupo</th>
-                                                <th style="width: 100px;">Obligatorio</th>
-                                                <th style="width: 100px;">Plaza Temporal</th>
-                                                <th style="width: 100px;">Personal Contratado</th>
-                                                <th style="width: 100px;">Web</th>
-                                                <th style="width: 150px;" class="d-none">Urgencia</th>
-                                                <th style="width: 80px;">Banner</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tablaSucursalesBody">
-                                            <!-- Cargado dinámicamente -->
-                                        </tbody>
-                                    </table>
-                                </div>
-
                             </div>
 
                             <!-- Pestaña Administrativo -->
