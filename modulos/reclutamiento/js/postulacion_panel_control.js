@@ -50,18 +50,12 @@ function renderizarTablaSucursales(datos) {
     tbody.innerHTML = '';
 
     datos.forEach(sucursal => {
-        // Fila de Encabezado de Sucursal
-        const headerRow = document.createElement('tr');
-        headerRow.innerHTML = `
-            <th colspan="6" class="bg-light text-primary text-start ps-3">
-                <i class="bi bi-shop me-2"></i>${sucursal.nombre_sucursal}
-            </th>
-        `;
-        tbody.appendChild(headerRow);
-
         // Fila Vendedores
         const vRow = document.createElement('tr');
         vRow.innerHTML = `
+            <td rowspan="2" class="align-middle text-start ps-4 fw-bold bg-light border-end">
+                <i class="bi bi-shop me-2 text-primary"></i>${sucursal.nombre_sucursal}
+            </td>
             <td class="text-start ps-4 fw-bold">
                 Vendedores
                 <input type="hidden" value="${sucursal.vendedor_salario || 0}" 
