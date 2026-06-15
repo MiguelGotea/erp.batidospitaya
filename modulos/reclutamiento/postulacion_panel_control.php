@@ -43,41 +43,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
             <div class="container-fluid p-4">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <!-- Perfiles PDF Globales (Solo para Sucursales) -->
-                        <div id="globalPdfsContainer" class="row mb-4 d-none">
-                            <div class="col-md-6 mb-3 mb-md-0">
-                                <div class="card bg-light border-0">
-                                    <div class="card-body d-flex align-items-center justify-content-between py-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="rounded-circle bg-primary text-white p-2 me-3">
-                                                <i class="bi bi-person-badge"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0 fw-bold">Perfil PDF Global (Vendedores)</h6>
-                                                <small class="text-muted">Aplica a todas las sucursales</small>
-                                            </div>
-                                        </div>
-                                        <div id="globalVendedoresBtns"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0">
-                                    <div class="card-body d-flex align-items-center justify-content-between py-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="rounded-circle bg-success text-white p-2 me-3">
-                                                <i class="bi bi-person-check"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-0 fw-bold">Perfil PDF Global (Líderes)</h6>
-                                                <small class="text-muted">Aplica a todas las sucursales</small>
-                                            </div>
-                                        </div>
-                                        <div id="globalLideresBtns"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <!-- Navegación por pestañas -->
                         <ul class="nav nav-tabs nav-fill mb-4" id="panelTabs" role="tablist">
@@ -105,6 +71,36 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                         <div class="tab-content" id="panelTabsContent">
                             <!-- Pestaña Sucursales -->
                             <div class="tab-pane fade show active" id="sucursales" role="tabpanel">
+                                <div class="table-responsive mb-4">
+                                    <table class="table table-hover panel-control-table align-middle">
+                                        <thead class="table-header">
+                                            <tr>
+                                                <th colspan="2" class="text-start ps-3 py-2">
+                                                    <i class="bi bi-globe me-2"></i>Perfiles de Puesto Globales <span class="text-muted small fw-normal ms-2">(Aplica a todas las tiendas)</span>
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th>Cargo</th>
+                                                <th style="width: 150px;" class="text-center">Perfil de Puesto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="text-start fw-bold ps-4">
+                                                    <i class="bi bi-person-badge text-primary me-2"></i>Vendedores
+                                                </td>
+                                                <td class="text-center" id="globalVendedoresBtns"></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-start fw-bold ps-4">
+                                                    <i class="bi bi-person-check text-success me-2"></i>Líderes
+                                                </td>
+                                                <td class="text-center" id="globalLideresBtns"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
                                 <div class="table-responsive">
                                     <table class="table table-hover panel-control-table align-middle" id="tablaSucursales">
                                         <thead class="table-header text-center">
