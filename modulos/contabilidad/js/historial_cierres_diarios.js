@@ -106,12 +106,12 @@ function renderizarTabla(datos) {
         const tr = `
             <tr>
                 <td>${escHtml(row.nombre_sucursal || '—')}</td>
+                <td class="text-nowrap">${fechaStr}</td>
                 <td>${row.CodigoCierre}</td>
                 <td>${escHtml(cajeroStr)}</td>
                 <td>${badgeSF}</td>
                 <td class="text-nowrap">${hiStr}</td>
                 <td class="text-nowrap">${hfStr}</td>
-                <td class="text-nowrap">${fechaStr}</td>
                 <td title="${escHtml(obs)}">${escHtml(obsCorta)}</td>
                 <td class="text-center">
                     <a href="${urlVer}" target="_blank" class="btn-hcd-ver">
