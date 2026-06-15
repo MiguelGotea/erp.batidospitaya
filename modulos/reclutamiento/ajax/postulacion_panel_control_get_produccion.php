@@ -10,6 +10,7 @@ try {
                 nc.CodNivelesCargos as cod_cargo,
                 nc.Nombre as nombre_cargo,
                 nc.Area as area_cargo,
+                COALESCE(nc.operativo, 1) as operativo,
                 COALESCE(pc.id, 0) as config_id,
                 COALESCE(pc.cantidad_real, 0) as cantidad_real,
                 COALESCE(pc.cantidad_adicional, 0) as cantidad_adicional,
