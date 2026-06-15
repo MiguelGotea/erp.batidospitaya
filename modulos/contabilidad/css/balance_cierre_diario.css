@@ -430,6 +430,87 @@ body { font-family: 'Inter', 'Calibri', sans-serif; background: var(--pitaya-bg)
 }
 .bcd-loading .spinner-border { color: var(--pitaya-light); width: 1.5rem; height: 1.5rem; border-width: 2px; }
 
+/* ── Badge de precierre en sidebar ──────────────────────── */
+.ci-badge-prec {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e67e22;
+    color: #fff;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: .6rem;
+    font-weight: 800;
+    margin-left: 4px;
+    flex-shrink: 0;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+/* ── Pestañas Cierre Final / Precierre ───────────────────── */
+.bcd-tabs-precierre {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex-wrap: wrap;
+    padding: .75rem 1.5rem .5rem;
+    border-bottom: 2px solid #e8eef0;
+    background: #f9fbfb;
+}
+
+.bcd-tab-item {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .38rem .85rem;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all var(--transition);
+    white-space: nowrap;
+    background: rgba(14, 84, 76, .08);
+    color: var(--pitaya-dark);
+    border-color: rgba(14, 84, 76, .2);
+}
+.bcd-tab-item:hover {
+    background: var(--pitaya-dark);
+    color: #fff;
+    border-color: var(--pitaya-dark);
+    transform: translateY(-1px);
+}
+.bcd-tab-item.active {
+    background: var(--pitaya-dark);
+    color: #fff;
+    border-color: var(--pitaya-dark);
+    box-shadow: 0 3px 10px rgba(14, 84, 76, .25);
+}
+
+/* Variante precierre: tono ámbar */
+.bcd-tab-precierre {
+    background: rgba(230, 126, 34, .09);
+    color: #b85c0d;
+    border-color: rgba(230, 126, 34, .3);
+}
+.bcd-tab-precierre:hover {
+    background: #e67e22;
+    color: #fff;
+    border-color: #e67e22;
+}
+.bcd-tab-precierre.active {
+    background: #e67e22;
+    color: #fff;
+    border-color: #e67e22;
+    box-shadow: 0 3px 10px rgba(230, 126, 34, .3);
+}
+
+.bcd-tab-code {
+    font-weight: 800;
+    letter-spacing: .3px;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {
     .bcd-layout { grid-template-columns: 1fr; }
@@ -442,4 +523,6 @@ body { font-family: 'Inter', 'Calibri', sans-serif; background: var(--pitaya-bg)
     .bcd-report-meta { grid-template-columns: 1fr 1fr; }
     .bcd-table { font-size: .78rem; }
     .bcd-table thead th, .bcd-table tbody td { padding: .5rem .6rem; }
+    .bcd-tabs-precierre { padding: .5rem 1rem .4rem; gap: .3rem; }
+    .bcd-tab-item { font-size: .72rem; padding: .3rem .65rem; }
 }
