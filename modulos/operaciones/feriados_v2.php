@@ -292,6 +292,7 @@ function getEstadoBadgeClass($estado) {
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/feriados_v2.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
@@ -370,11 +371,7 @@ function getEstadoBadgeClass($estado) {
                                 </a>
                             <?php endif; ?>
 
-                            <?php if ($puedeCrear): ?>
-                                <button type="button" class="btn-solicitar" onclick="mostrarModalSolicitud()">
-                                    <i class="fas fa-plus"></i> Nuevo
-                                </button>
-                            <?php endif; ?>
+
                         </div>
                     </div>
                 </div>
@@ -673,5 +670,22 @@ function getEstadoBadgeClass($estado) {
         }
     </script>
     <script src="js/feriados_v2.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+
+    <!-- Botón Flotante con opciones -->
+    <?php if ($puedeCrear): ?>
+        <div class="fab-container">
+            <div class="fab-options">
+                <div class="fab-option" onclick="mostrarModalSolicitud()">
+                    <span class="fab-label">Nueva Solicitud</span>
+                    <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
+                </div>
+            </div>
+            <div class="btn-floating-pitaya" title="Herramientas">
+                <i class="fas fa-wrench"></i>
+            </div>
+        </div>
+    <?php endif; ?>
+    <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
+    <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 </html>
