@@ -245,7 +245,7 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
                                 </div>
                             </div>
 
-                            <!-- Resultado final efectivo -->
+                            <!-- Resultado final efectivo (acumulado desde inicio del día) -->
                             <div class="bcd-result-box" id="bcdResultBox">
                                 <div>
                                     <div class="bcd-result-label" id="bcdResultLabel">EFECTIVO SOBRANTE</div>
@@ -255,6 +255,26 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
                                     <div class="bcd-result-value" id="bcdResultValue">—</div>
                                     <div id="bcdFaltanteSync" style="display: none;"></div>
                                 </div>
+                            </div>
+
+                            <!-- S/F Cierre Anterior (solo visible si hay cierre previo en el día) -->
+                            <div class="bcd-periodo-row" id="bcdRowAnterior" style="display:none;">
+                                <div class="bcd-periodo-label">
+                                    <i class="bi bi-arrow-counterclockwise me-2"></i>
+                                    S/F Cierre Anterior
+                                    <span class="bcd-periodo-hint" id="bcdAnteriorHint"></span>
+                                </div>
+                                <div class="bcd-periodo-value" id="bcdAnteriorValue">—</div>
+                            </div>
+
+                            <!-- S/F del Período (desagregado solo de este turno) -->
+                            <div class="bcd-periodo-row bcd-periodo-total" id="bcdRowPeriodo" style="display:none;">
+                                <div class="bcd-periodo-label">
+                                    <i class="bi bi-clock-history me-2"></i>
+                                    S/F del Período
+                                    <span class="bcd-periodo-hint" id="bcdPeriodoHint"></span>
+                                </div>
+                                <div class="bcd-periodo-value" id="bcdPeriodoValue">—</div>
                             </div>
 
 

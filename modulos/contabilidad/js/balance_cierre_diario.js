@@ -411,6 +411,48 @@ function renderizarDetalle() {
         $('#bcdObsBlock').hide();
     }
 
+    // ── S/F Cierre Anterior y S/F del Período ──────────────────
+    // Obtener todos los cierres finales del día ordenados por HoraInicial ASC
+    const finalesOrdenados = gruposCierres
+        .map(g => g.final)
+        .slice()
+        .sort((a, b) => horaAMinutos(a.HoraInicial) - horaAMinutos(b.HoraInicial));
+
+    // Encontrar el índice del cierre actual dentro del array ordenado
+    const idxActual = finalesOrdenados.findIndex(
+        f => parseInt(f.CodigoCierre) === parseInt(d.cod_cierre)
+    );
+
+    if (idxActual > 0) {
+        // Hay un cierre previo en el día
+        const cierreAnterior   = finalesOrdenados[idxActual - 1];
+        const faltanteAnterior = parseFloat(cierreAnterior.Faltante) || 0;
+        const faltanteActual   = parseFloat(d.faltante_guardado) || 0;
+        const faltantePeriodo  = faltanteActual - faltanteAnterior;
+
+        // Hint de rango horario
+        const hiAnterior = cierreAnterior.HoraInicial ? formatHora(cierreAnterior.HoraInicial) : '--:--';
+        const hfAnterior = cierreAnterior.HoraFinal   ? formatHora(cierreAnterior.HoraFinal)   : '--:--';
+        const hiActual   = d.hora_inicial ? formatHora(d.hora_inicial) : '--:--';
+        const hfActual   = d.hora_final   ? formatHora(d.hora_final)   : '--:--';
+
+        $('#bcdAnteriorHint').text(`(${hiAnterior} — ${hfAnterior})`);
+        $('#bcdPeriodoHint').text(`(${hiActual} — ${hfActual})`);
+
+        // Poblar S/F Cierre Anterior
+        setPeriodoValue('#bcdAnteriorValue', faltanteAnterior);
+
+        // Poblar S/F del Período
+        setPeriodoValue('#bcdPeriodoValue', faltantePeriodo);
+
+        $('#bcdRowAnterior').show();
+        $('#bcdRowPeriodo').show();
+    } else {
+        // Primer (o único) cierre del día: no hay anterior
+        $('#bcdRowAnterior').hide();
+        $('#bcdRowPeriodo').hide();
+    }
+
     $('#contenidoDetalle').show();
 }
 
@@ -430,6 +472,22 @@ function setDiferencia(sel, dif) {
         el.html(`<span class="bcd-dif-sobrante"><i class="bi bi-arrow-up-circle-fill me-1"></i>SOBRANTE ${fmt(dif)}</span>`);
     } else {
         el.html(`<span class="bcd-dif-faltante"><i class="bi bi-arrow-down-circle-fill me-1"></i>FALTANTE ${fmt(Math.abs(dif))}</span>`);
+    }
+}
+
+// Renderiza el valor de S/F Anterior o S/F Período con color y texto
+function setPeriodoValue(sel, valor) {
+    const el = $(sel);
+    el.removeClass('bcd-periodo-sobrante bcd-periodo-faltante bcd-periodo-cero');
+    if (Math.abs(valor) < 0.005) {
+        el.addClass('bcd-periodo-cero');
+        el.html('<i class="bi bi-check-circle me-1"></i>Exacto');
+    } else if (valor > 0) {
+        el.addClass('bcd-periodo-sobrante');
+        el.html(`<i class="bi bi-arrow-up-circle-fill me-1"></i>Sobrante ${fmt(valor)}`);
+    } else {
+        el.addClass('bcd-periodo-faltante');
+        el.html(`<i class="bi bi-arrow-down-circle-fill me-1"></i>Faltante ${fmt(Math.abs(valor))}`);
     }
 }
 

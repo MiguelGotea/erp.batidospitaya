@@ -375,6 +375,61 @@ body { font-family: 'Inter', 'Calibri', sans-serif; background: var(--pitaya-bg)
 .bcd-result-box.faltante .bcd-result-value { color: var(--negative); }
 .bcd-result-box.cero     .bcd-result-value { color: var(--neutral); }
 
+/* ── Filas de Período (S/F Anterior y S/F del Período) ────── */
+.bcd-periodo-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: .5rem;
+    padding: .7rem 1.25rem;
+    border-radius: 8px;
+    background: rgba(108,117,125,.05);
+    border: 1px solid rgba(108,117,125,.15);
+    font-size: .875rem;
+    gap: .5rem;
+}
+
+.bcd-periodo-total {
+    margin-top: .4rem;
+    background: rgba(14,84,76,.05);
+    border-color: rgba(14,84,76,.2);
+    font-weight: 700;
+}
+
+.bcd-periodo-label {
+    display: flex;
+    align-items: center;
+    color: #555;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.bcd-periodo-total .bcd-periodo-label {
+    color: var(--pitaya-dark);
+    font-weight: 700;
+}
+
+.bcd-periodo-hint {
+    font-size: .75rem;
+    font-weight: 400;
+    color: #999;
+    margin-left: .4rem;
+}
+
+.bcd-periodo-value {
+    font-weight: 700;
+    font-size: .9rem;
+    text-align: right;
+}
+
+.bcd-periodo-total .bcd-periodo-value {
+    font-size: 1rem;
+}
+
+.bcd-periodo-value.bcd-periodo-sobrante { color: var(--positive); }
+.bcd-periodo-value.bcd-periodo-faltante { color: var(--negative); }
+.bcd-periodo-value.bcd-periodo-cero     { color: var(--neutral); }
+
 /* ── Observaciones ───────────────────────────────────────── */
 .bcd-obs-block {
     margin-top: 1rem;
