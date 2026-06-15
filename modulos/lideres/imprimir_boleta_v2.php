@@ -297,7 +297,7 @@ $label_total_dias = 'Total días de vacaciones:';
 
         <!-- Campos Generales -->
         <div class="field-row">
-            <span class="field-label">Área / Tienda:</span>
+            <span class="field-label">Tienda:</span>
             <span class="field-value"><?= htmlspecialchars($tienda) ?></span>
         </div>
         <div class="field-row">
