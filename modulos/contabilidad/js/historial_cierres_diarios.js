@@ -64,7 +64,6 @@ function cargarDatos() {
             renderizarTabla(resp.datos);
             renderizarPaginacion(totalRegistros);
             actualizarIndicadoresFiltros();
-            actualizarContador(totalRegistros);
         },
         error: function () {
             tbody.html('<tr><td colspan="9" class="text-center text-danger py-4">Error de conexión con el servidor.</td></tr>');
@@ -107,7 +106,7 @@ function renderizarTabla(datos) {
         const tr = `
             <tr>
                 <td>${escHtml(row.nombre_sucursal || '—')}</td>
-                <td><span class="hcd-cod-badge"><i class="bi bi-receipt me-1"></i>${row.CodigoCierre}</span></td>
+                <td>${row.CodigoCierre}</td>
                 <td>${escHtml(cajeroStr)}</td>
                 <td>${badgeSF}</td>
                 <td class="text-nowrap">${hiStr}</td>
@@ -134,11 +133,6 @@ function buildBadgeSF(faltante) {
     } else {
         return `<span class="hcd-badge-sobrante"><i class="bi bi-arrow-up-circle-fill"></i> Sobrante: ${Math.abs(faltante)}</span>`;
     }
-}
-
-// ── Actualizar contador de registros ─────────────────────────
-function actualizarContador(total) {
-    $('#hcdContador').text(total + ' registro(s)');
 }
 
 // ── Toggle filtro por columna ─────────────────────────────────
