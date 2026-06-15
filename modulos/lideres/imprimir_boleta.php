@@ -14,13 +14,42 @@ if (!tienePermiso('registro_vacaciones', 'vista', $cargoOperario)) {
     header('Location: ../../../index.php');
     exit();
 }
+
+// Determinar el tipo de boleta
+$tipo = $_GET['tipo'] ?? 'vacaciones';
+
+if ($tipo === 'subsidio') {
+    $titulo_boleta = 'Acción de Personal - Subsidio';
+    $label_total_dias = 'Total días de subsidio:';
+    $obs_preimpresa = 'esta accion de personal equivale para dias de subsidio o reposo médico';
+    $subcampo_1_label = 'Fecha de emisión de subsidio:';
+    $subcampo_2_label = 'Entidad emisora (MINSA/INSS):';
+    $subcampo_3_label = 'Certificado/Colilla presentado (Sí/No):';
+    $nota_pie = '<strong>Nota:</strong> El subsidio médico debe estar debidamente respaldado por la colilla o certificado oficial del INSS o MINSA.';
+} elseif ($tipo === 'permiso') {
+    $titulo_boleta = 'Acción de Personal - Permiso';
+    $label_total_dias = 'Total días de permiso:';
+    $obs_preimpresa = 'esta accion de personal equivale para dias de permiso o falta autorizada';
+    $subcampo_1_label = 'Motivo del permiso / falta:';
+    $subcampo_2_label = 'Permiso con goce de salario (Sí/No):';
+    $subcampo_3_label = 'Permiso autorizado por (Firma/Nombre):';
+    $nota_pie = '<strong>Nota:</strong> Todo permiso debe ser aprobado formalmente por el jefe inmediato para evitar deducciones injustificadas.';
+} else { // 'vacaciones' o cualquier otro valor
+    $titulo_boleta = 'Acción de Personal - Vacaciones';
+    $label_total_dias = 'Total días de vacaciones:';
+    $obs_preimpresa = 'esta accion de personal equivale para dias a cuenta de vacaciones y dias compensados en feriados';
+    $subcampo_1_label = 'Fecha de feriado laborado:';
+    $subcampo_2_label = 'Dia compensado por feriado laborado:';
+    $subcampo_3_label = 'El feriado laborado fue pagado:';
+    $nota_pie = '<strong>Nota:</strong> El dia feriado que es compensado por otro dia, queda saldado en su totalidad debido a esta compensación.';
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imprimir Acción de Personal - Batidos Pitaya</title>
+    <title>Imprimir <?= htmlspecialchars($titulo_boleta) ?> - Batidos Pitaya</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         /* Estilos generales de pantalla */
@@ -309,7 +338,7 @@ if (!tienePermiso('registro_vacaciones', 'vista', $cargoOperario)) {
         <!-- Cabecera -->
         <div class="ticket-header">
             <div class="header-left">
-                <span class="header-title">Acción de Personal</span>
+                <span class="header-title"><?= htmlspecialchars($titulo_boleta) ?></span>
                 <span class="header-subtitle">BATIDOS PITAYA</span>
             </div>
             <div class="header-logo">Pitaya</div>
@@ -354,26 +383,26 @@ if (!tienePermiso('registro_vacaciones', 'vista', $cargoOperario)) {
         </div>
         
         <div class="field-row" style="margin-top: 6px;">
-            <span class="field-label">Total días / horas:</span>
+            <span class="field-label"><?= htmlspecialchars($label_total_dias) ?></span>
             <span class="field-line"></span>
         </div>
 
         <!-- Observación Preimpresa -->
         <div class="observation-box">
-            <strong>Observación:</strong> <span class="observation-text">esta accion de personal equivale para dias a cuenta de vacaciones y dias compensados en feriados</span>
+            <strong>Observación:</strong> <span class="observation-text"><?= htmlspecialchars($obs_preimpresa) ?></span>
         </div>
 
         <!-- Subcampos Feriado -->
         <div class="field-row indent-field">
-            <span class="field-label">Fecha de feriado laborado:</span>
+            <span class="field-label"><?= htmlspecialchars($subcampo_1_label) ?></span>
             <span class="field-line"></span>
         </div>
         <div class="field-row indent-field">
-            <span class="field-label">Dia compensado por feriado laborado:</span>
+            <span class="field-label"><?= htmlspecialchars($subcampo_2_label) ?></span>
             <span class="field-line"></span>
         </div>
         <div class="field-row indent-field">
-            <span class="field-label">El feriado laborado fue pagado:</span>
+            <span class="field-label"><?= htmlspecialchars($subcampo_3_label) ?></span>
             <span class="field-line"></span>
         </div>
 
@@ -409,7 +438,7 @@ if (!tienePermiso('registro_vacaciones', 'vista', $cargoOperario)) {
 
         <!-- Nota al Pie -->
         <div class="footer-note">
-            <strong>Nota:</strong> El dia feriado que es compensado por otro dia, queda saldado en su totalidad debido a esta compensación.
+            <?= $nota_pie ?>
         </div>
 
     </div>
