@@ -126,11 +126,7 @@ function buscarCierres(autoSelectCierre = 0) {
             gruposCierres = agruparCierres(cierresDelDia);
 
             const totalFinal = gruposCierres.length;
-            const totalPrec  = cierresDelDia.length - totalFinal;
-            let badgeText = totalFinal + ' cierre(s) final(es)';
-            if (totalPrec > 0) badgeText += ' · ' + totalPrec + ' precierre(s)';
 
-            $('#badgeResultados').text(badgeText).show();
             $('#sidebarCount').text(totalFinal);
             renderizarSidebar();
             $('#bcdLayout').show();

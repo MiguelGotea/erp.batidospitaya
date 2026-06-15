@@ -52,15 +52,7 @@ $paramCierre   = isset($_GET['cierre'])   ? (int)$_GET['cierre']               :
                 <!-- Badge de resultados (se usa internamente por el JS) -->
                 <span class="badge bcd-badge-info" id="badgeResultados" style="display:none;"></span>
 
-                <!-- Encabezado de contexto -->
-                <?php if ($paramSucursal): ?>
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <a href="historial_cierres_diarios.php" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>Volver al Historial
-                    </a>
-                    <span class="text-muted small">Cierre <strong>#<?php echo $paramCierre; ?></strong> &mdash; <?php echo date('d/m/Y', strtotime($paramFecha)); ?></span>
-                </div>
-                <?php endif; ?>
+
 
                 <!-- Layout principal: menú lateral + detalle -->
                 <div class="bcd-layout" id="bcdLayout" style="display:none;">
