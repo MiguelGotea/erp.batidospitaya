@@ -247,7 +247,10 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
 
                             <!-- Resultado final efectivo -->
                             <div class="bcd-result-box" id="bcdResultBox">
-                                <div class="bcd-result-label" id="bcdResultLabel">EFECTIVO SOBRANTE</div>
+                                <div>
+                                    <div class="bcd-result-label" id="bcdResultLabel">EFECTIVO SOBRANTE</div>
+                                    <div id="bcdResultCalc" class="mt-1" style="font-size: 0.85rem; display: none;"></div>
+                                </div>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="bcd-result-value" id="bcdResultValue">—</div>
                                     <div id="bcdFaltanteSync" style="display: none;"></div>

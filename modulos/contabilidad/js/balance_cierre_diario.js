@@ -324,25 +324,32 @@ function renderizarDetalle() {
     $('#efAEntregar').text(fmt(efectivoAEntregar));
     $('#efTotalEntregado').text(fmt(totalEntregado));
 
-    // Resultado final
+    // Resultado final (Dato real: msaccess_masivo_CierreDiario.Faltante)
+    const savedFaltante = d.faltante_guardado !== undefined ? parseFloat(d.faltante_guardado) : 0;
+    // Fallback al calculado si por algún motivo no existe (aunque siempre debería retornar)
+    const realFaltante = d.faltante_guardado !== undefined ? savedFaltante : resultadoEfectivo;
+
     const rb = $('#bcdResultBox');
     rb.removeClass('sobrante faltante cero');
-    if (resultadoEfectivo > 0.005) {
+    
+    // El cuadro principal muestra el dato real guardado en BD
+    if (realFaltante > 0.005) {
         rb.addClass('sobrante');
         $('#bcdResultLabel').text('EFECTIVO SOBRANTE');
-        $('#bcdResultValue').text(fmt(resultadoEfectivo));
-    } else if (resultadoEfectivo < -0.005) {
+        $('#bcdResultValue').text(fmt(realFaltante));
+    } else if (realFaltante < -0.005) {
         rb.addClass('faltante');
         $('#bcdResultLabel').text('EFECTIVO FALTANTE');
-        $('#bcdResultValue').text(fmt(Math.abs(resultadoEfectivo)));
+        $('#bcdResultValue').text(fmt(Math.abs(realFaltante)));
     } else {
         rb.addClass('cero');
         $('#bcdResultLabel').text('BALANCE EXACTO');
         $('#bcdResultValue').text('C$ 0.00');
     }
 
-    // Comparación con Faltante guardado
+    // Comparación con Faltante guardado (Calculado vs Real)
     const elSync = $('#bcdFaltanteSync');
+    const elCalc = $('#bcdResultCalc');
     
     // Destruir tooltip existente si lo hay para evitar fugas de memoria y tooltips huérfanos
     const tooltipBtn = elSync.find('[data-bs-toggle="tooltip"]');
@@ -353,27 +360,39 @@ function renderizarDetalle() {
         }
     }
     elSync.empty().hide();
+    elCalc.empty().hide();
 
     if (d.faltante_guardado !== undefined) {
-        const savedFaltante = parseFloat(d.faltante_guardado) || 0;
-        // La comparación tolera diferencias mínimas de decimales (menor a 0.1 Cordobas)
-        // y admite que se guarde con signo positivo o negativo (directo o invertido)
-        const matchDirect = Math.abs(resultadoEfectivo - savedFaltante) < 0.1;
-        const matchInverted = Math.abs(resultadoEfectivo + savedFaltante) < 0.1;
+        // La tolerancia pedida es de +-1
+        const matchDirect = Math.abs(resultadoEfectivo - savedFaltante) <= 1;
+        const matchInverted = Math.abs(resultadoEfectivo + savedFaltante) <= 1;
         const coincide = matchDirect || matchInverted;
+
+        // Texto del valor calculado
+        let calcText = '';
+        if (resultadoEfectivo > 0.005) {
+            calcText = `Calculado: Sobrante ${fmt(resultadoEfectivo)}`;
+        } else if (resultadoEfectivo < -0.005) {
+            calcText = `Calculado: Faltante ${fmt(Math.abs(resultadoEfectivo))}`;
+        } else {
+            calcText = `Calculado: Exacto C$ 0.0`;
+        }
 
         let tooltipTitle = '';
         let iconHtml = '';
 
         if (coincide) {
-            tooltipTitle = "El resultado coincide con el cierre guardado en el sistema.";
+            tooltipTitle = "El resultado calculado coincide con el cierre real guardado en caja.";
             iconHtml = `<i class="bi bi-check-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="${tooltipTitle}" style="font-size: 1.25rem; cursor: pointer;"></i>`;
+            elCalc.html(`${calcText} (Coincide)`).css({ opacity: 0.8, fontWeight: 'normal', color: 'inherit' }).removeClass('text-danger fw-bold');
         } else {
-            tooltipTitle = "El resultado NO coincide con el cierre guardado en el sistema.";
+            tooltipTitle = "Incongruencia detectada: El resultado calculado difiere del cierre real.";
             iconHtml = `<i class="bi bi-exclamation-triangle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="${tooltipTitle}" style="font-size: 1.25rem; cursor: pointer;"></i>`;
+            elCalc.html(`${calcText} (Incongruencia)`).css({ opacity: 1 }).addClass('text-danger fw-bold');
         }
 
         elSync.html(iconHtml).show();
+        elCalc.show();
 
         // Inicializar el tooltip de Bootstrap 5
         if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
