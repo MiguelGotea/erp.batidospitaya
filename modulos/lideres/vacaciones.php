@@ -1649,6 +1649,10 @@ function obtenerTiposFaltaConPorcentajes()
             });
 
             window.open('imprimir_boleta_v2.php?' + params.toString(), '_blank');
+
+            // También accionar el registro de vacaciones
+            const submitBtn = document.querySelector('button[type="submit"][form="formNuevaVacacion"]');
+            if (submitBtn) submitBtn.click();
         }
     </script>
 
