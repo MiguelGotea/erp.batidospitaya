@@ -129,9 +129,9 @@ function buildBadgeSF(faltante) {
     if (faltante === 0) {
         return '<span class="hcd-badge-cero"><i class="bi bi-check-circle"></i> Exacto</span>';
     } else if (faltante > 0) {
-        return `<span class="hcd-badge-faltante"><i class="bi bi-arrow-down-circle-fill"></i> Faltante: ${faltante}</span>`;
+        return `<span class="hcd-badge-sobrante"><i class="bi bi-arrow-up-circle-fill"></i> Sobrante: ${faltante}</span>`;
     } else {
-        return `<span class="hcd-badge-sobrante"><i class="bi bi-arrow-up-circle-fill"></i> Sobrante: ${Math.abs(faltante)}</span>`;
+        return `<span class="hcd-badge-faltante"><i class="bi bi-arrow-down-circle-fill"></i> Faltante: ${Math.abs(faltante)}</span>`;
     }
 }
 
