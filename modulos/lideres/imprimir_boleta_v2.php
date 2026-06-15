@@ -15,31 +15,35 @@ if (!tienePermiso('registro_vacaciones', 'vista', $cargoOperario)) {
     exit();
 }
 
+
 // Obtener datos desde GET (pre-llenado desde el modal de vacaciones)
-$tienda       = $_GET['tienda']       ?? '';
-$jefe         = $_GET['jefe']         ?? '';
+$tienda = $_GET['tienda'] ?? '';
+$jefe = $_GET['jefe'] ?? '';
 $fecha_emision = $_GET['fecha_emision'] ?? date('d/m/Y');
-$nombre       = $_GET['nombre']       ?? '';
-$puesto       = $_GET['puesto']       ?? '';
+$nombre = $_GET['nombre'] ?? '';
+$puesto = $_GET['puesto'] ?? '';
 $fecha_inicio = $_GET['fecha_inicio'] ?? '';
-$fecha_fin    = $_GET['fecha_fin']    ?? '';
-$total_dias   = $_GET['total_dias']   ?? '';
+$fecha_fin = $_GET['fecha_fin'] ?? '';
+$total_dias = $_GET['total_dias'] ?? '';
 
 // Formatear fechas para mostrar (de Y-m-d a d/m/Y)
-function formatarFecha($fecha) {
-    if (empty($fecha)) return '';
+function formatarFecha($fecha)
+{
+    if (empty($fecha))
+        return '';
     $dt = DateTime::createFromFormat('Y-m-d', $fecha);
     return $dt ? $dt->format('d/m/Y') : $fecha;
 }
 
 $fecha_inicio_fmt = formatarFecha($fecha_inicio);
-$fecha_fin_fmt    = formatarFecha($fecha_fin);
+$fecha_fin_fmt = formatarFecha($fecha_fin);
 
-$titulo_boleta    = 'Acción de Personal - Vacaciones';
+$titulo_boleta = 'Acción de Personal - Vacaciones';
 $label_total_dias = 'Total días de vacaciones:';
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -67,7 +71,7 @@ $label_total_dias = 'Total días de vacaciones:';
             padding: 10px;
             margin-bottom: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             gap: 10px;
@@ -113,7 +117,7 @@ $label_total_dias = 'Total días de vacaciones:';
             background-color: #fff;
             width: 80mm;
             padding: 6mm 4mm;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
             box-sizing: border-box;
             border: 1px solid #ddd;
         }
@@ -271,6 +275,7 @@ $label_total_dias = 'Total días de vacaciones:';
         }
     </style>
 </head>
+
 <body>
 
     <!-- Barra de herramientas superior (oculta al imprimir) -->
@@ -363,4 +368,5 @@ $label_total_dias = 'Total días de vacaciones:';
         });
     </script>
 </body>
+
 </html>
