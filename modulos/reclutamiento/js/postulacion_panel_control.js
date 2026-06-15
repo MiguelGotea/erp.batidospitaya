@@ -53,8 +53,8 @@ function renderizarTablaSucursales(datos) {
         // Fila Vendedores
         const vRow = document.createElement('tr');
         vRow.innerHTML = `
-            <td rowspan="2" class="align-middle text-start ps-4 fw-bold bg-light border-end">
-                <i class="bi bi-shop me-2 text-primary"></i>${sucursal.nombre_sucursal}
+            <td rowspan="2" class="align-middle text-start ps-4 fw-bold border-end">
+                ${sucursal.nombre_sucursal}
             </td>
             <td class="text-start ps-4 fw-bold">
                 Vendedores
@@ -105,6 +105,7 @@ function renderizarTablaSucursales(datos) {
 
         // Fila Líderes
         const lRow = document.createElement('tr');
+        lRow.style.borderBottom = "2px solid #dee2e6";
         lRow.innerHTML = `
             <td class="text-start ps-4 fw-bold">
                 Líderes

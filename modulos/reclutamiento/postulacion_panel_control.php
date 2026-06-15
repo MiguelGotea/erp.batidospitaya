@@ -82,7 +82,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 100px;">Obligatorio</th>
                                                 <th style="width: 100px;">Plaza Temporal</th>
                                                 <th style="width: 100px;">Personal Contratado</th>
-                                                <th style="width: 100px;">Web</th>
+                                                <th style="width: 120px;">Mostrar en Web</th>
                                                 <th style="width: 150px;" class="d-none">Urgencia</th>
                                                 <th style="width: 80px;">Banner</th>
                                             </tr>
@@ -102,9 +102,9 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                     <span class="text-white-50 small fw-normal ms-2">(Aplica a todas las tiendas)</span>
                                                 </th>
                                             </tr>
-                                            <tr class="table-header">
-                                                <th>Cargo</th>
-                                                <th style="width: 150px;" class="text-center">Perfil de Puesto</th>
+                                            <tr class="bg-light text-secondary">
+                                                <th class="ps-3 border-bottom">Cargo</th>
+                                                <th style="width: 150px;" class="text-center border-bottom">Perfil de Puesto</th>
                                             </tr>
                                         </thead>
                                         <tbody>
