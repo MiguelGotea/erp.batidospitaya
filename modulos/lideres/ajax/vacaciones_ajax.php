@@ -72,6 +72,25 @@ try {
             echo json_encode($operarios);
             break;
 
+        case 'obtener_cargo_operario':
+            $codOperario = (int)($_GET['cod_operario'] ?? 0);
+            if (!$codOperario) {
+                throw new Exception('Debe especificar un colaborador');
+            }
+            $stmtCargo = $conn->prepare("
+                SELECT nc.Nombre AS cargo
+                FROM AsignacionNivelesCargos anc
+                JOIN NivelesCargos nc ON anc.CodNivelesCargos = nc.CodNivelesCargos
+                WHERE anc.CodOperario = ?
+                AND (anc.Fin IS NULL OR anc.Fin = '0000-00-00' OR anc.Fin >= CURDATE())
+                ORDER BY anc.Fecha DESC
+                LIMIT 1
+            ");
+            $stmtCargo->execute([$codOperario]);
+            $cargoRow = $stmtCargo->fetch();
+            echo json_encode(['cargo' => $cargoRow ? $cargoRow['cargo'] : '']);
+            break;
+
         case 'verificar_falta_real':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');

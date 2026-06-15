@@ -1132,8 +1132,11 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
+                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-wrap gap-2">
                     <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-modern" style="background:#17a2b8;color:#fff;" onclick="imprimirBoletaVacacionesV2()">
+                        <i class="fas fa-print me-2"></i>Imprimir Boleta
+                    </button>
                     <button type="submit" form="formNuevaVacacion" class="btn-modern btn-modern-primary">
                         <i class="fas fa-save me-2"></i>Registrar Vacaciones
                     </button>
@@ -1156,7 +1159,8 @@ function obtenerTiposFaltaConPorcentajes()
                 <?php endforeach; ?>
             ],
             puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
-            esRH: <?= $esRH ? 'true' : 'false' ?>
+            esRH: <?= $esRH ? 'true' : 'false' ?>,
+            jefeNombre: '<?= addslashes(trim(($usuario['Nombre'] ?? '') . ' ' . ($usuario['Apellido'] ?? ''))) ?>'
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1585,6 +1589,66 @@ function obtenerTiposFaltaConPorcentajes()
                     modal.hide();
                 }
             }, 500);
+        }
+
+        /**
+         * Imprime la boleta V2 de vacaciones con los datos del formulario modalNuevaVacacion.
+         * Abre imprimir_boleta_v2.php en una nueva pestaña con los campos pre-llenados.
+         */
+        async function imprimirBoletaVacacionesV2() {
+            // Tienda (texto del select de sucursal)
+            const sucursalSel = document.getElementById('nueva_sucursal');
+            const tienda = sucursalSel ? sucursalSel.options[sucursalSel.selectedIndex]?.text?.trim() : '';
+
+            // Jefe: usuario logueado
+            const jefe = (window.CONFIG_VACACIONES && window.CONFIG_VACACIONES.jefeNombre)
+                ? window.CONFIG_VACACIONES.jefeNombre : '';
+
+            // Fecha de emisión: hoy
+            const hoy = new Date();
+            const fechaEmision = ('0' + hoy.getDate()).slice(-2) + '/' +
+                ('0' + (hoy.getMonth() + 1)).slice(-2) + '/' + hoy.getFullYear();
+
+            // Nombre del colaborador
+            const operarioSel = document.getElementById('nueva_operario');
+            const nombre = operarioSel ? operarioSel.options[operarioSel.selectedIndex]?.text?.trim() : '';
+            const codOperario = operarioSel ? operarioSel.value : '';
+
+            // Fechas de inicio y fin
+            const fechaInicio = document.getElementById('nueva_fecha_inicio')?.value || '';
+            const fechaFin    = document.getElementById('nueva_fecha_fin')?.value || '';
+
+            // Total de días (diferencia inclusiva)
+            let totalDias = '';
+            if (fechaInicio && fechaFin) {
+                const d1 = new Date(fechaInicio + 'T00:00:00');
+                const d2 = new Date(fechaFin    + 'T00:00:00');
+                if (d2 >= d1) {
+                    const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+                    totalDias = diff + (diff === 1 ? ' día' : ' días');
+                }
+            }
+
+            // Puesto: traer vía AJAX
+            let puesto = '';
+            if (codOperario && parseInt(codOperario) > 0) {
+                try {
+                    const resp = await fetch(`ajax/vacaciones_ajax.php?action=obtener_cargo_operario&cod_operario=${codOperario}`);
+                    const data = await resp.json();
+                    puesto = data.cargo || '';
+                } catch (e) {
+                    puesto = '';
+                }
+            }
+
+            // Construir URL
+            const params = new URLSearchParams({
+                tienda, jefe, fecha_emision: fechaEmision,
+                nombre, puesto, fecha_inicio: fechaInicio,
+                fecha_fin: fechaFin, total_dias: totalDias
+            });
+
+            window.open('imprimir_boleta_v2.php?' + params.toString(), '_blank');
         }
     </script>
 
