@@ -43,19 +43,7 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
 
             <div class="container-fluid p-3">
 
-                <!-- Barra superior: registros por página -->
-                <div class="d-flex justify-content-end align-items-center mb-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <label class="mb-0 small text-muted">Mostrar:</label>
-                        <select class="form-select form-select-sm" id="hcdPorPagina"
-                                style="width:auto;" onchange="cambiarRegistrosPorPagina()">
-                            <option value="25" selected>25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                        <span class="small text-muted">registros</span>
-                    </div>
-                </div>
+
 
                 <!-- Tabla principal -->
                 <div class="table-responsive">
@@ -101,8 +89,18 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                     </table>
                 </div>
 
-                <!-- Paginación -->
-                <div class="d-flex justify-content-end align-items-center mt-3">
+                <!-- Paginación y registros por página -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="mb-0 small text-muted">Mostrar:</label>
+                        <select class="form-select form-select-sm" id="hcdPorPagina"
+                                style="width:auto;" onchange="cambiarRegistrosPorPagina()">
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="small text-muted">registros</span>
+                    </div>
                     <div id="hcdPaginacion"></div>
                 </div>
 
