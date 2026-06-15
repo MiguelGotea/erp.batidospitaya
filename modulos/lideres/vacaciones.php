@@ -896,7 +896,7 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
 
                         <div class="mb-3">
-                            <label for="subsidio_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de Subsidio:</label>
+                            <label for="subsidio_tipo" class="form-label small fw-bold text-muted text-uppercase"<?php if (!$puedeAprobar): ?> style="display:none;"<?php endif; ?>>Tipo de Subsidio:</label>
                             <?php if ($puedeAprobar): ?>
                                 <select id="subsidio_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeSubsidio(this.value)">
                                     <?php
@@ -1046,7 +1046,7 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
 
                         <div class="mb-3">
-                            <label for="nueva_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo:</label>
+                            <label for="nueva_tipo" class="form-label small fw-bold text-muted text-uppercase"<?php if (!$puedeAprobar): ?> style="display:none;"<?php endif; ?>>Tipo:</label>
                             <?php if ($puedeAprobar): ?>
                                 <select id="nueva_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeVacaciones(this.value)">
                                     <?php
