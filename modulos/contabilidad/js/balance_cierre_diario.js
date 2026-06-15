@@ -4,9 +4,57 @@
  */
 
 // ── Estado global ────────────────────────────────────────────
-let cierresDelDia = [];
-let cierreActivo  = null;
-let datosCierre   = null; // objeto completo del cierre seleccionado
+let cierresDelDia  = [];   // todos los cierres crudos del servidor
+let gruposCierres  = [];   // array de grupos: { final, precierres[] }
+let cierreActivo   = null; // cierre (raw) actualmente mostrado en detalle
+let datosCierre    = null; // objeto completo del cierre seleccionado
+
+// ── Agrupa cierres por ventana de 30 min en HoraInicial ─────
+// Regla: si la diferencia de HoraInicial entre dos cierres es ≤ 30 min,
+// se consideran del mismo turno. El de mayor CodigoCierre es el Cierre Final
+// y los demás son Precierres.
+function agruparCierres(lista) {
+    // Ordenar por CodigoCierre ASC para procesar en orden
+    const sorted = lista.slice().sort((a, b) => a.CodigoCierre - b.CodigoCierre);
+
+    const grupos = [];
+
+    sorted.forEach(function (c) {
+        const minC = horaAMinutos(c.HoraInicial);
+
+        // Buscar un grupo existente cuya HoraInicial (del primer elemento) esté ≤ 30 min de distancia
+        let grupoEncontrado = null;
+        for (let g of grupos) {
+            const minRef = horaAMinutos(g.todos[0].HoraInicial);
+            if (Math.abs(minC - minRef) <= 30) {
+                grupoEncontrado = g;
+                break;
+            }
+        }
+
+        if (grupoEncontrado) {
+            grupoEncontrado.todos.push(c);
+        } else {
+            grupos.push({ todos: [c] });
+        }
+    });
+
+    // Para cada grupo, ordenar por CodigoCierre DESC → el primero es el Final
+    return grupos.map(function (g) {
+        const ordenados = g.todos.slice().sort((a, b) => b.CodigoCierre - a.CodigoCierre);
+        return {
+            final:      ordenados[0],                    // mayor CodigoCierre
+            precierres: ordenados.slice(1)               // los demás (orden desc)
+        };
+    }).sort((a, b) => a.final.CodigoCierre - b.final.CodigoCierre); // sidebar: cronológico
+}
+
+// Convierte "HH:MM:SS" o "HH:MM" a minutos desde medianoche
+function horaAMinutos(h) {
+    if (!h) return 0;
+    const parts = h.split(':');
+    return parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
+}
 
 // ── Inicialización ───────────────────────────────────────────
 $(document).ready(function () {
@@ -70,14 +118,22 @@ function buscarCierres() {
                 return;
             }
 
-            $('#badgeResultados').text(cierresDelDia.length + ' cierre(s)').show();
-            $('#sidebarCount').text(cierresDelDia.length);
+            // Agrupar en cierres finales + precierres
+            gruposCierres = agruparCierres(cierresDelDia);
+
+            const totalFinal = gruposCierres.length;
+            const totalPrec  = cierresDelDia.length - totalFinal;
+            let badgeText = totalFinal + ' cierre(s) final(es)';
+            if (totalPrec > 0) badgeText += ' · ' + totalPrec + ' precierre(s)';
+
+            $('#badgeResultados').text(badgeText).show();
+            $('#sidebarCount').text(totalFinal);
             renderizarSidebar();
             $('#bcdLayout').show();
 
-            // Auto-seleccionar primer cierre
-            if (cierresDelDia.length > 0) {
-                seleccionarCierre(0);
+            // Auto-seleccionar primer grupo
+            if (gruposCierres.length > 0) {
+                seleccionarGrupo(0);
             }
         },
         error: function () {
@@ -86,18 +142,23 @@ function buscarCierres() {
     });
 }
 
-// ── Renderiza la lista lateral ───────────────────────────────
+// ── Renderiza la lista lateral (solo cierres finales) ────────
 function renderizarSidebar() {
     const list = $('#listaCierres');
     list.empty();
 
-    cierresDelDia.forEach(function (c, idx) {
+    gruposCierres.forEach(function (g, idx) {
+        const c  = g.final;
         const hi = c.HoraInicial ? formatHora(c.HoraInicial) : '--:--';
         const hf = c.HoraFinal   ? formatHora(c.HoraFinal)   : '--:--';
+        const tienePrec = g.precierres.length > 0;
 
         list.append(`
-            <div class="bcd-cierre-item" id="item-cierre-${idx}" onclick="seleccionarCierre(${idx})">
-                <span class="ci-code"><i class="bi bi-receipt me-1"></i>Cierre #${c.CodigoCierre}</span>
+            <div class="bcd-cierre-item" id="item-cierre-${idx}" onclick="seleccionarGrupo(${idx})">
+                <span class="ci-code">
+                    <i class="bi bi-receipt me-1"></i>Cierre #${c.CodigoCierre}
+                    ${tienePrec ? `<span class="ci-badge-prec" title="${g.precierres.length} precierre(s)">${g.precierres.length}</span>` : ''}
+                </span>
                 <span class="ci-horario">
                     <i class="bi bi-clock"></i>
                     ${hi} — ${hf}
@@ -107,15 +168,71 @@ function renderizarSidebar() {
     });
 }
 
-// ── Carga el detalle de un cierre ────────────────────────────
-function seleccionarCierre(idx) {
-    // Marcar activo en sidebar
+// ── Selecciona un grupo (cierre final) desde el sidebar ──────
+function seleccionarGrupo(idxGrupo) {
     $('.bcd-cierre-item').removeClass('active');
-    $(`#item-cierre-${idx}`).addClass('active');
+    $(`#item-cierre-${idxGrupo}`).addClass('active');
 
-    cierreActivo = cierresDelDia[idx];
+    const grupo = gruposCierres[idxGrupo];
+    // Cargar el cierre final del grupo por defecto
+    cargarCierre(grupo.final, idxGrupo);
+}
 
-    // Mostrar loading en detalle
+// ── Renderiza las pestañas Cierre Final / Precierre ──────────
+function renderizarTabsPrecierre(grupo, cierreSeleccionado) {
+    // Eliminar tabs previos
+    $('#bcdTabsPrecierre').remove();
+
+    // Solo renderizar si hay al menos 1 precierre
+    if (grupo.precierres.length === 0) return;
+
+    const tabsContainer = $('<div id="bcdTabsPrecierre" class="bcd-tabs-precierre"></div>');
+
+    // Tab del cierre final (primer tab)
+    const esFinal = cierreSeleccionado.CodigoCierre === grupo.final.CodigoCierre;
+    const tabFinal = $(`
+        <button class="bcd-tab-item ${esFinal ? 'active' : ''}" 
+                onclick="cargarCierre(gruposCierres[getIdxGrupoActivo()].final, getIdxGrupoActivo())">
+            <i class="bi bi-patch-check-fill me-1"></i>
+            Cierre Final <span class="bcd-tab-code">#${grupo.final.CodigoCierre}</span>
+        </button>
+    `);
+    tabsContainer.append(tabFinal);
+
+    // Tabs de precierres (desc por CodigoCierre)
+    grupo.precierres.forEach(function (p) {
+        const esActivo = cierreSeleccionado.CodigoCierre === p.CodigoCierre;
+        const tabPrec = $(`
+            <button class="bcd-tab-item bcd-tab-precierre ${esActivo ? 'active' : ''}" 
+                    onclick="cargarCierre(gruposCierres[getIdxGrupoActivo()].precierres.find(x => x.CodigoCierre === ${p.CodigoCierre}), getIdxGrupoActivo())">
+                <i class="bi bi-clock-history me-1"></i>
+                Precierre <span class="bcd-tab-code">#${p.CodigoCierre}</span>
+            </button>
+        `);
+        tabsContainer.append(tabPrec);
+    });
+
+    // Insertar antes del contenidoDetalle
+    $('#contenidoDetalle').before(tabsContainer);
+}
+
+// Helper: obtiene el índice del grupo activo en el sidebar
+function getIdxGrupoActivo() {
+    let idx = 0;
+    $('.bcd-cierre-item').each(function (i) {
+        if ($(this).hasClass('active')) { idx = i; return false; }
+    });
+    return idx;
+}
+
+// ── Carga el detalle de un cierre concreto ───────────────────
+function cargarCierre(cierre, idxGrupo) {
+    cierreActivo = cierre;
+
+    // Redibujar pestañas con la nueva selección
+    renderizarTabsPrecierre(gruposCierres[idxGrupo], cierre);
+
+    // Mostrar loading
     $('#placeholderDetalle').hide();
     $('#contenidoDetalle').hide();
     $('#bcdDetail').prepend(spinnerHTML('Calculando balance...', 'bcd-loading-overlay'));
@@ -130,15 +247,15 @@ function seleccionarCierre(idx) {
         data: {
             fecha,
             sucursal,
-            cod_cierre:     cierreActivo.CodigoCierre,
-            hora_final:     cierreActivo.HoraFinal,
-            cod_operario:   cierreActivo.CodOperario,
-            mf_cor:         cierreActivo.MFCor,
-            mf_dol:         cierreActivo.MFDol,
-            total_pos:      cierreActivo.TotalPOS,
-            total_transfer: cierreActivo.TotalTransferencia,
-            total_py:       cierreActivo.TotalPedidosYa,
-            observaciones:  cierreActivo.Observaciones
+            cod_cierre:     cierre.CodigoCierre,
+            hora_final:     cierre.HoraFinal,
+            cod_operario:   cierre.CodOperario,
+            mf_cor:         cierre.MFCor,
+            mf_dol:         cierre.MFDol,
+            total_pos:      cierre.TotalPOS,
+            total_transfer: cierre.TotalTransferencia,
+            total_py:       cierre.TotalPedidosYa,
+            observaciones:  cierre.Observaciones
         },
         success: function (resp) {
             $('.bcd-loading-overlay').remove();
@@ -155,6 +272,8 @@ function seleccionarCierre(idx) {
         }
     });
 }
+
+
 
 // ── Renderiza el panel de detalle ────────────────────────────
 function renderizarDetalle() {
