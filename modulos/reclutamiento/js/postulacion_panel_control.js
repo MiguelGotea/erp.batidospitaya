@@ -27,20 +27,12 @@ async function cargarDatosSucursales() {
             // Renderizar PDFs globales en el contenedor de tarjetas
             const vHeader = document.getElementById('globalVendedoresBtns');
             const lHeader = document.getElementById('globalLideresBtns');
-            const pdfsContainer = document.getElementById('globalPdfsContainer');
-
             if (data.global_pdf) {
                 if (vHeader) {
-                    vHeader.innerHTML = generarColumnaPDF(data.global_pdf.vendedor.ruta, data.global_pdf.vendedor.id, 2, 0, 'Sucursales', true);
+                    vHeader.innerHTML = generarColumnaPDF(data.global_pdf.vendedor.ruta, data.global_pdf.vendedor.id, 2, 0, 'Sucursales');
                 }
                 if (lHeader) {
-                    lHeader.innerHTML = generarColumnaPDF(data.global_pdf.lider.ruta, data.global_pdf.lider.id, 5, 0, 'Sucursales', true);
-                }
-
-                // Mostrar solo si estamos en la pestaña sucursales (por defecto lo está al cargar)
-                const activeTab = document.querySelector('#panelTabs .nav-link.active');
-                if (activeTab && activeTab.id === 'sucursales-tab') {
-                    pdfsContainer.classList.remove('d-none');
+                    lHeader.innerHTML = generarColumnaPDF(data.global_pdf.lider.ruta, data.global_pdf.lider.id, 5, 0, 'Sucursales');
                 }
             }
         } else {
@@ -52,17 +44,7 @@ async function cargarDatosSucursales() {
     }
 }
 
-// Lógica para mostrar/ocultar PDFs globales según la pestaña
-document.querySelectorAll('#panelTabs button').forEach(tab => {
-    tab.addEventListener('shown.bs.tab', function (event) {
-        const pdfsContainer = document.getElementById('globalPdfsContainer');
-        if (event.target.id === 'sucursales-tab') {
-            pdfsContainer.classList.remove('d-none');
-        } else {
-            pdfsContainer.classList.add('d-none');
-        }
-    });
-});
+
 
 function renderizarTablaSucursales(datos) {
     const tbody = document.getElementById('tablaSucursalesBody');
