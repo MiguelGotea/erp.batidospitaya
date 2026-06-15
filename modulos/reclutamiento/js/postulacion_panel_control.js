@@ -190,7 +190,8 @@ async function cargarDatosAdministrativo() {
 
         if (data.success) {
             renderizarTablaAdministrativo(data.datos);
-            document.getElementById('countAdministrativo').textContent = data.datos.length;
+            const activos = data.datos.filter(c => parseInt(c.operativo) !== 0);
+            document.getElementById('countAdministrativo').textContent = activos.length;
         } else {
             throw new Error(data.message);
         }
@@ -204,90 +205,95 @@ function renderizarTablaAdministrativo(datos) {
     const tbody = document.getElementById('tablaAdministrativoBody');
     tbody.innerHTML = '';
 
-    let areaActual = '';
+    const activos   = datos.filter(c => parseInt(c.operativo) !== 0);
+    const inactivos = datos.filter(c => parseInt(c.operativo) === 0);
 
-    datos.forEach(cargo => {
-        // Agrupación visual por Área
+    let areaActual = '';
+    activos.forEach(cargo => {
         if (cargo.area_cargo !== areaActual) {
             areaActual = cargo.area_cargo;
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = `
-                <th colspan="8" class="bg-light text-secondary text-start ps-3 py-2">
+                <th colspan="9" class="bg-light text-secondary text-start ps-3 py-2">
                     <i class="bi bi-diagram-3 me-2"></i>Área: ${areaActual || 'Sin Área Definida'}
-                </th>
-            `;
+                </th>`;
             tbody.appendChild(headerRow);
         }
-
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="text-start fw-bold">
                 ${cargo.nombre_cargo}
-                <input type="hidden" 
-                       value="${cargo.salario_propuesto || 0}" 
-                       data-cargo="${cargo.cod_cargo}"
-                       data-area="Administrativo"
-                       data-campo="salario_propuesto">
+                <input type="hidden" value="${cargo.salario_propuesto || 0}"
+                       data-cargo="${cargo.cod_cargo}" data-area="Administrativo" data-campo="salario_propuesto">
             </td>
             <td class="cell-editable">
-                <input type="number" 
-                       class="form-control form-control-sm editable-input" 
-                       value="${cargo.cantidad_real || 0}" 
-                       min="0"
-                       data-cargo="${cargo.cod_cargo}"
-                       data-area="Administrativo"
-                       data-campo="cantidad_real"
-                       ${!puedeEditar ? 'disabled' : ''}
-                       onchange="marcarCambio(this)">
+                <input type="number" class="form-control form-control-sm editable-input"
+                       value="${cargo.cantidad_real || 0}" min="0"
+                       data-cargo="${cargo.cod_cargo}" data-area="Administrativo" data-campo="cantidad_real"
+                       ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
             </td>
             <td class="cell-editable">
-                <input type="number" 
-                       class="form-control form-control-sm editable-input" 
-                       value="${cargo.cantidad_adicional || 0}" 
-                       min="0"
-                       data-cargo="${cargo.cod_cargo}"
-                       data-area="Administrativo"
-                       data-campo="cantidad_adicional"
-                       ${!puedeEditar ? 'disabled' : ''}
-                       onchange="marcarCambio(this)">
+                <input type="number" class="form-control form-control-sm editable-input"
+                       value="${cargo.cantidad_adicional || 0}" min="0"
+                       data-cargo="${cargo.cod_cargo}" data-area="Administrativo" data-campo="cantidad_adicional"
+                       ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
             </td>
-            <td>
-                <span class="fw-bold text-dark">${cargo.cantidad_cubierta || 0}</span>
-            </td>
+            <td><span class="fw-bold text-dark">${cargo.cantidad_cubierta || 0}</span></td>
             <td>
                 <div class="d-flex align-items-center justify-content-center gap-2">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" 
-                               type="checkbox" 
+                        <input class="form-check-input" type="checkbox"
                                ${cargo.visible_web == 1 ? 'checked' : ''}
-                               data-cargo="${cargo.cod_cargo}"
-                               data-area="Administrativo"
-                               data-campo="visible_web"
-                               ${!puedeEditar ? 'disabled' : ''}
-                               onchange="toggleWebLink(this)">
+                               data-cargo="${cargo.cod_cargo}" data-area="Administrativo" data-campo="visible_web"
+                               ${!puedeEditar ? 'disabled' : ''} onchange="toggleWebLink(this)">
                     </div>
                     ${cargo.config_id > 0 ? `
-                    <a href="https://talento.batidospitaya.com/postular.php?plaza=${cargo.config_id}&cargo=${cargo.cod_cargo}&sucursal=18" 
-                       target="_blank" 
-                       class="btn btn-sm btn-outline-primary py-0 px-1 link-postulacion ${cargo.visible_web == 1 ? '' : 'd-none'}" 
-                       title="Link de postulación">
-                        <i class="bi bi-link-45deg"></i>
-                    </a>
-                    ` : ''}
+                    <a href="https://talento.batidospitaya.com/postular.php?plaza=${cargo.config_id}&cargo=${cargo.cod_cargo}&sucursal=18"
+                       target="_blank"
+                       class="btn btn-sm btn-outline-primary py-0 px-1 link-postulacion ${cargo.visible_web == 1 ? '' : 'd-none'}"
+                       title="Link de postulación"><i class="bi bi-link-45deg"></i></a>` : ''}
                 </div>
             </td>
-            <td>
-                ${generarSelectUrgencia(cargo.nivel_urgencia || 1, cargo.cod_cargo, 'nivel_urgencia', 'Administrativo', false)}
-            </td>
+            <td>${generarSelectUrgencia(cargo.nivel_urgencia || 1, cargo.cod_cargo, 'nivel_urgencia', 'Administrativo', false)}</td>
+            <td class="text-center">${generarColumnaPDF(cargo.ruta_pdf_cargo, cargo.config_id, cargo.cod_cargo, 18, 'Administrativo')}</td>
+            <td class="text-center">${generarColumnaBanner(cargo.ruta_banner, cargo.config_id, cargo.cod_cargo, 18, 'Administrativo')}</td>
             <td class="text-center">
-                ${generarColumnaPDF(cargo.ruta_pdf_cargo, cargo.config_id, cargo.cod_cargo, 18, 'Administrativo')}
-            </td>
-            <td class="text-center">
-                ${generarColumnaBanner(cargo.ruta_banner, cargo.config_id, cargo.cod_cargo, 18, 'Administrativo')}
-            </td>
-        `;
+                <div class="form-check form-switch d-flex justify-content-center mb-0">
+                    <input class="form-check-input operativo-toggle" type="checkbox" role="switch" checked
+                           title="Desactivar cargo" ${!puedeEditar ? 'disabled' : ''}
+                           onchange="toggleOperativo(this, ${cargo.cod_cargo}, 'administrativo')">
+                </div>
+            </td>`;
         tbody.appendChild(row);
     });
+
+    // Inactivos
+    const container = document.getElementById('inactivosAdministrativoContainer');
+    const lista     = document.getElementById('listaInactivosAdmin');
+    const counter   = document.getElementById('countInactivosAdmin');
+    lista.innerHTML = '';
+    if (inactivos.length > 0) {
+        container.classList.remove('d-none');
+        counter.textContent = inactivos.length;
+        inactivos.forEach(cargo => {
+            const item = document.createElement('div');
+            item.className = 'inactive-cargo-item';
+            item.innerHTML = `
+                <div class="cargo-info">
+                    <i class="bi bi-person-dash text-muted"></i>
+                    <span class="cargo-nombre">${cargo.nombre_cargo}</span>
+                    ${cargo.area_cargo ? `<span class="cargo-area">${cargo.area_cargo}</span>` : ''}
+                </div>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input operativo-toggle" type="checkbox" role="switch"
+                           title="Activar cargo" ${!puedeEditar ? 'disabled' : ''}
+                           onchange="toggleOperativo(this, ${cargo.cod_cargo}, 'administrativo')">
+                </div>`;
+            lista.appendChild(item);
+        });
+    } else {
+        container.classList.add('d-none');
+    }
 }
 
 // ========================================
@@ -300,7 +306,8 @@ async function cargarDatosProduccion() {
 
         if (data.success) {
             renderizarTablaProduccion(data.datos);
-            document.getElementById('countProduccion').textContent = data.datos.length;
+            const activos = data.datos.filter(c => parseInt(c.operativo) !== 0);
+            document.getElementById('countProduccion').textContent = activos.length;
         } else {
             throw new Error(data.message);
         }
@@ -314,97 +321,98 @@ function renderizarTablaProduccion(datos) {
     const tbody = document.getElementById('tablaProduccionBody');
     tbody.innerHTML = '';
 
-    let areaActual = '';
+    const activos   = datos.filter(c => parseInt(c.operativo) !== 0);
+    const inactivos = datos.filter(c => parseInt(c.operativo) === 0);
 
-    datos.forEach(cargo => {
-        // Agrupación visual por Área
+    let areaActual = '';
+    activos.forEach(cargo => {
         if (cargo.area_cargo !== areaActual) {
             areaActual = cargo.area_cargo;
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = `
-                <th colspan="8" class="bg-light text-secondary text-start ps-3 py-2">
+                <th colspan="9" class="bg-light text-secondary text-start ps-3 py-2">
                     <i class="bi bi-diagram-3 me-2"></i>Área: ${areaActual || 'Sin Área Definida'}
-                </th>
-            `;
+                </th>`;
             tbody.appendChild(headerRow);
         }
-
-        const cantidadReal = parseInt(cargo.cantidad_real) || 0;
+        const cantidadReal      = parseInt(cargo.cantidad_real) || 0;
         const cantidadAdicional = parseInt(cargo.cantidad_adicional) || 0;
-        const total = cantidadReal + cantidadAdicional;
-
+        const sucursalId = [17, 19, 12, 9, 10].includes(parseInt(cargo.cod_cargo)) ? 18 : 6;
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="text-start fw-bold">
                 ${cargo.nombre_cargo}
-                <input type="hidden" 
-                       value="${cargo.salario_propuesto || 0}" 
-                       data-cargo="${cargo.cod_cargo}"
-                       data-area="Produccion"
-                       data-campo="salario_propuesto">
+                <input type="hidden" value="${cargo.salario_propuesto || 0}"
+                       data-cargo="${cargo.cod_cargo}" data-area="Produccion" data-campo="salario_propuesto">
             </td>
             <td class="cell-editable">
-                <input type="number" 
-                       class="form-control form-control-sm cantidad-input editable-input" 
-                       value="${cantidadReal}" 
-                       min="0"
-                       data-cargo="${cargo.cod_cargo}"
-                       data-area="Produccion"
-                       data-campo="cantidad_real"
-                       data-row="${cargo.cod_cargo}"
-                       ${!puedeEditar ? 'disabled' : ''}
-                       onchange="marcarCambio(this)">
+                <input type="number" class="form-control form-control-sm cantidad-input editable-input"
+                       value="${cantidadReal}" min="0"
+                       data-cargo="${cargo.cod_cargo}" data-area="Produccion" data-campo="cantidad_real" data-row="${cargo.cod_cargo}"
+                       ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
             </td>
             <td class="cell-editable">
-                <input type="number" 
-                       class="form-control form-control-sm adicional-input editable-input" 
-                       value="${cantidadAdicional}" 
-                       min="0"
-                       data-cargo="${cargo.cod_cargo}"
-                       data-area="Produccion"
-                       data-campo="cantidad_adicional"
-                       data-row="${cargo.cod_cargo}"
-                       ${!puedeEditar ? 'disabled' : ''}
-                       onchange="marcarCambio(this)">
+                <input type="number" class="form-control form-control-sm adicional-input editable-input"
+                       value="${cantidadAdicional}" min="0"
+                       data-cargo="${cargo.cod_cargo}" data-area="Produccion" data-campo="cantidad_adicional" data-row="${cargo.cod_cargo}"
+                       ${!puedeEditar ? 'disabled' : ''} onchange="marcarCambio(this)">
             </td>
-            <td class="text-center">
-                <span class="fw-bold text-dark">${cargo.cantidad_cubierta || 0}</span>
-            </td>
+            <td class="text-center"><span class="fw-bold text-dark">${cargo.cantidad_cubierta || 0}</span></td>
             <td>
                 <div class="d-flex align-items-center justify-content-center gap-2">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" 
-                               type="checkbox" 
+                        <input class="form-check-input" type="checkbox"
                                ${cargo.visible_web == 1 ? 'checked' : ''}
-                               data-cargo="${cargo.cod_cargo}"
-                               data-area="Produccion"
-                               data-campo="visible_web"
-                               data-row="${cargo.cod_cargo}"
-                               ${!puedeEditar ? 'disabled' : ''}
-                               onchange="toggleWebLink(this)">
+                               data-cargo="${cargo.cod_cargo}" data-area="Produccion" data-campo="visible_web" data-row="${cargo.cod_cargo}"
+                               ${!puedeEditar ? 'disabled' : ''} onchange="toggleWebLink(this)">
                     </div>
                     ${cargo.config_id > 0 ? `
-                    <a href="https://talento.batidospitaya.com/postular.php?plaza=${cargo.config_id}&cargo=${cargo.cod_cargo}&sucursal=${[17, 19, 12, 9, 10].includes(parseInt(cargo.cod_cargo)) ? 18 : 6}" 
-                       target="_blank" 
-                       class="btn btn-sm btn-outline-primary py-0 px-1 link-postulacion ${cargo.visible_web == 1 ? '' : 'd-none'}" 
-                       title="Link de postulación">
-                        <i class="bi bi-link-45deg"></i>
-                    </a>
-                    ` : ''}
+                    <a href="https://talento.batidospitaya.com/postular.php?plaza=${cargo.config_id}&cargo=${cargo.cod_cargo}&sucursal=${sucursalId}"
+                       target="_blank"
+                       class="btn btn-sm btn-outline-primary py-0 px-1 link-postulacion ${cargo.visible_web == 1 ? '' : 'd-none'}"
+                       title="Link de postulación"><i class="bi bi-link-45deg"></i></a>` : ''}
                 </div>
             </td>
-            <td>
-                ${generarSelectUrgencia(cargo.nivel_urgencia || 1, cargo.cod_cargo, 'nivel_urgencia', 'Produccion', false)}
-            </td>
+            <td>${generarSelectUrgencia(cargo.nivel_urgencia || 1, cargo.cod_cargo, 'nivel_urgencia', 'Produccion', false)}</td>
+            <td class="text-center">${generarColumnaPDF(cargo.ruta_pdf_cargo, cargo.config_id, cargo.cod_cargo, sucursalId, 'Produccion')}</td>
+            <td class="text-center">${generarColumnaBanner(cargo.ruta_banner, cargo.config_id, cargo.cod_cargo, sucursalId, 'Produccion')}</td>
             <td class="text-center">
-                ${generarColumnaPDF(cargo.ruta_pdf_cargo, cargo.config_id, cargo.cod_cargo, [17, 19, 12, 9, 10].includes(parseInt(cargo.cod_cargo)) ? 18 : 6, 'Produccion')}
-            </td>
-            <td class="text-center">
-                ${generarColumnaBanner(cargo.ruta_banner, cargo.config_id, cargo.cod_cargo, [17, 19, 12, 9, 10].includes(parseInt(cargo.cod_cargo)) ? 18 : 6, 'Produccion')}
-            </td>
-        `;
+                <div class="form-check form-switch d-flex justify-content-center mb-0">
+                    <input class="form-check-input operativo-toggle" type="checkbox" role="switch" checked
+                           title="Desactivar cargo" ${!puedeEditar ? 'disabled' : ''}
+                           onchange="toggleOperativo(this, ${cargo.cod_cargo}, 'produccion')">
+                </div>
+            </td>`;
         tbody.appendChild(row);
     });
+
+    // Inactivos
+    const container = document.getElementById('inactivosCDSContainer');
+    const lista     = document.getElementById('listaInactivosCDS');
+    const counter   = document.getElementById('countInactivosCDS');
+    lista.innerHTML = '';
+    if (inactivos.length > 0) {
+        container.classList.remove('d-none');
+        counter.textContent = inactivos.length;
+        inactivos.forEach(cargo => {
+            const item = document.createElement('div');
+            item.className = 'inactive-cargo-item';
+            item.innerHTML = `
+                <div class="cargo-info">
+                    <i class="bi bi-person-dash text-muted"></i>
+                    <span class="cargo-nombre">${cargo.nombre_cargo}</span>
+                    ${cargo.area_cargo ? `<span class="cargo-area">${cargo.area_cargo}</span>` : ''}
+                </div>
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input operativo-toggle" type="checkbox" role="switch"
+                           title="Activar cargo" ${!puedeEditar ? 'disabled' : ''}
+                           onchange="toggleOperativo(this, ${cargo.cod_cargo}, 'produccion')">
+                </div>`;
+            lista.appendChild(item);
+        });
+    } else {
+        container.classList.add('d-none');
+    }
 }
 
 
@@ -867,4 +875,49 @@ function generarSelectUrgencia(valor, id, tipo, area, isFixed = false) {
 
     html += `</select>`;
     return html;
+}
+
+// ========================================
+// TOGGLE OPERATIVO (activo / inactivo)
+// ========================================
+async function toggleOperativo(checkbox, codCargo, tipo) {
+    const nuevoEstado = checkbox.checked ? 1 : 0;
+    const accion      = nuevoEstado ? 'activar' : 'desactivar';
+
+    const result = await Swal.fire({
+        title: `¿${nuevoEstado ? 'Activar' : 'Desactivar'} este cargo?`,
+        text: nuevoEstado
+            ? 'El cargo volverá a aparecer en la tabla de configuración activa.'
+            : 'El cargo pasará a la lista de inactivos y no podrá editarse hasta reactivarse.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: nuevoEstado ? '#198754' : '#6c757d',
+        cancelButtonColor: '#dc3545',
+        confirmButtonText: `Sí, ${accion}`,
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
+        checkbox.checked = !checkbox.checked; // revertir
+        return;
+    }
+
+    try {
+        const response = await fetch('ajax/postulacion_panel_control_toggle_operativo.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cod_cargo: codCargo, operativo: nuevoEstado })
+        });
+        const data = await response.json();
+        if (data.success) {
+            if (tipo === 'administrativo') cargarDatosAdministrativo();
+            else cargarDatosProduccion();
+        } else {
+            checkbox.checked = !checkbox.checked;
+            Swal.fire('Error', data.message, 'error');
+        }
+    } catch (error) {
+        checkbox.checked = !checkbox.checked;
+        Swal.fire('Error', 'No se pudo actualizar el estado del cargo.', 'error');
+    }
 }
