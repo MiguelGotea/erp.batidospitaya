@@ -42,15 +42,15 @@ body { font-family: 'Inter', 'Calibri', sans-serif; background: var(--pitaya-bg)
 }
 
 .btn-pitaya {
-    background: linear-gradient(135deg, var(--pitaya-dark), var(--pitaya-accent));
+    background-color: var(--pitaya-dark);
     color: #fff;
     border: none;
     border-radius: 8px;
     font-weight: 600;
     padding: .42rem 1.1rem;
-    transition: opacity var(--transition), transform var(--transition);
+    transition: background-color var(--transition), opacity var(--transition), transform var(--transition);
 }
-.btn-pitaya:hover { opacity: .88; transform: translateY(-1px); color: #fff; }
+.btn-pitaya:hover { background-color: var(--pitaya-accent); opacity: 1; transform: translateY(-1px); color: #fff; }
 .btn-pitaya:active { transform: translateY(0); }
 
 .bcd-badge-info {
@@ -82,7 +82,7 @@ body { font-family: 'Inter', 'Calibri', sans-serif; background: var(--pitaya-bg)
 }
 
 .bcd-sidebar-header {
-    background: linear-gradient(135deg, var(--pitaya-dark), var(--pitaya-accent));
+    background-color: var(--pitaya-dark);
     color: #fff;
     padding: .85rem 1rem;
     font-weight: 700;
@@ -161,7 +161,7 @@ body { font-family: 'Inter', 'Calibri', sans-serif; background: var(--pitaya-bg)
 
 /* ── Encabezado del reporte ──────────────────────────────── */
 .bcd-report-header {
-    background: linear-gradient(135deg, var(--pitaya-dark) 0%, var(--pitaya-accent) 100%);
+    background-color: var(--pitaya-dark);
     border-radius: 10px;
     padding: 1.25rem 1.5rem;
     color: #fff;
