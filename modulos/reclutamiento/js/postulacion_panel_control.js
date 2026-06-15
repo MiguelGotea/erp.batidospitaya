@@ -22,7 +22,6 @@ async function cargarDatosSucursales() {
 
         if (data.success) {
             renderizarTablaSucursales(data.datos);
-            document.getElementById('countSucursales').textContent = data.datos.length;
 
             // Renderizar PDFs globales en el contenedor de tarjetas
             const vHeader = document.getElementById('globalVendedoresBtns');
@@ -173,7 +172,6 @@ async function cargarDatosAdministrativo() {
         if (data.success) {
             renderizarTablaAdministrativo(data.datos);
             const activos = data.datos.filter(c => parseInt(c.operativo) !== 0);
-            document.getElementById('countAdministrativo').textContent = activos.length;
         } else {
             throw new Error(data.message);
         }
@@ -289,7 +287,6 @@ async function cargarDatosProduccion() {
         if (data.success) {
             renderizarTablaProduccion(data.datos);
             const activos = data.datos.filter(c => parseInt(c.operativo) !== 0);
-            document.getElementById('countProduccion').textContent = activos.length;
         } else {
             throw new Error(data.message);
         }
