@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Módulo de Supervisión - Index Principal (Core Rediseñado)
  * 
@@ -83,6 +84,7 @@ $audpend_estadoAuditoriasMensual = audpend_obtenerEstadoAuditoriasMensual();
                 opacity: 0;
                 transform: translateY(-50px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -122,8 +124,7 @@ $audpend_estadoAuditoriasMensual = audpend_obtenerEstadoAuditoriasMensual();
         }
 
         /* Estilos de los indicadores integrados del core */
-        <?php include '../../core/components/indicators/horarios_confirmacion/horarios_confirmacion_styles.php'; ?>
-        <?php include '../../core/components/indicators/auditorias_pendientes/auditorias_pendientes_styles.php'; ?>
+        <?php include '../../core/components/indicators/horarios_confirmacion/horarios_confirmacion_styles.php'; ?><?php include '../../core/components/indicators/auditorias_pendientes/auditorias_pendientes_styles.php'; ?>
     </style>
 </head>
 
@@ -167,13 +168,6 @@ $audpend_estadoAuditoriasMensual = audpend_obtenerEstadoAuditoriasMensual();
                         <i class="fas fa-clock"></i>
                     </div>
                     <div class="quick-access-title">Control de Asistencia</div>
-                </a>
-
-                <a href="gestion_categorias_colaboradores.php" class="quick-access-card">
-                    <div class="quick-access-icon">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="quick-access-title">Gestión de Categorías</div>
                 </a>
             </div>
 
