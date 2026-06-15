@@ -1,5 +1,5 @@
 <?php
-// /public_html/modulos/index.php
+// Raíz del erp completo: /public_html/modulos/index.php
 
 require_once '../core/auth/auth.php';
 
@@ -50,24 +50,26 @@ $moduloRechazado = '';
 if (!empty($moduloDestino)) {
     $currentTime = time();
     $isFastRedirect = false;
-    
+
     // Si acabamos de intentar redirigir a este módulo hace menos de 2 segundos, consideramos que es un reintento rápido
-    if (isset($_SESSION['last_redirect_module']) && 
-        $_SESSION['last_redirect_module'] === $moduloDestino && 
-        isset($_SESSION['last_redirect_time']) && 
-        ($currentTime - $_SESSION['last_redirect_time']) < 2) {
-        
+    if (
+        isset($_SESSION['last_redirect_module']) &&
+        $_SESSION['last_redirect_module'] === $moduloDestino &&
+        isset($_SESSION['last_redirect_time']) &&
+        ($currentTime - $_SESSION['last_redirect_time']) < 2
+    ) {
+
         $isFastRedirect = true;
     }
-    
+
     if ($isFastRedirect) {
         $_SESSION['redirect_loop_count'] = ($_SESSION['redirect_loop_count'] ?? 0) + 1;
-        
+
         // Solo declaramos bucle si rebota 2 o más veces consecutivas (evita falsos positivos por clicks rápidos)
         if ($_SESSION['redirect_loop_count'] >= 2) {
             $loopDetected = true;
             $moduloRechazado = $moduloDestino;
-            
+
             // Limpiamos variables de control
             unset($_SESSION['last_redirect_module']);
             unset($_SESSION['last_redirect_time']);
@@ -81,7 +83,7 @@ if (!empty($moduloDestino)) {
         if (file_exists("../modulos/{$moduloDestino}/index.php")) {
             $_SESSION['last_redirect_module'] = $moduloDestino;
             $_SESSION['last_redirect_time'] = $currentTime;
-            
+
             // Forzar guardado y liberar el lock de la sesión para evitar condiciones de carrera en el servidor
             session_write_close();
             header("Location: /modulos/{$moduloDestino}/index.php");
@@ -95,13 +97,19 @@ $cargoNombre = $_SESSION['cargo_nombre'] ?? 'desconocido';
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso no configurado - Batidos Pitaya</title>
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Calibri', sans-serif;
             display: flex;
@@ -113,19 +121,39 @@ $cargoNombre = $_SESSION['cargo_nombre'] ?? 'desconocido';
             padding: 20px;
             gap: 24px;
         }
-        img.logo { max-width: 140px; height: auto; }
+
+        img.logo {
+            max-width: 140px;
+            height: auto;
+        }
+
         .card {
             background: #fff;
             border-radius: 10px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
             padding: 36px 32px;
             max-width: 480px;
             width: 100%;
             text-align: center;
         }
-        .icon { font-size: 48px; margin-bottom: 16px; }
-        h2 { color: #333; margin-bottom: 10px; font-size: 1.3rem; }
-        p { color: #666; line-height: 1.6; margin-bottom: 8px; }
+
+        .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
         .cargo-badge {
             display: inline-block;
             background: #f0f0f0;
@@ -135,6 +163,7 @@ $cargoNombre = $_SESSION['cargo_nombre'] ?? 'desconocido';
             font-size: 0.9rem;
             margin: 10px 0 20px;
         }
+
         a.btn-logout {
             display: inline-block;
             margin-top: 16px;
@@ -146,9 +175,13 @@ $cargoNombre = $_SESSION['cargo_nombre'] ?? 'desconocido';
             font-size: 0.95rem;
             transition: background-color 0.2s;
         }
-        a.btn-logout:hover { background-color: #0E544C; }
+
+        a.btn-logout:hover {
+            background-color: #0E544C;
+        }
     </style>
 </head>
+
 <body>
     <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
     <div class="card">
@@ -168,5 +201,5 @@ $cargoNombre = $_SESSION['cargo_nombre'] ?? 'desconocido';
         <a href="/logout.php" class="btn-logout">Cerrar sesión</a>
     </div>
 </body>
-</html>
 
+</html>
