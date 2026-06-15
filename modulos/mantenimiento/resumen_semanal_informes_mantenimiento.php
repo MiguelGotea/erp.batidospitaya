@@ -219,6 +219,7 @@ if (!$numSemana) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const DEP_FIJA   = <?= $depFija ?>;
+const PUEDE_REEMBOLSO = <?= $puedeGenerarReembolso ? 'true' : 'false' ?>;
 let datosGlobal  = null;
 
 $(document).ready(function () {
@@ -398,6 +399,21 @@ function renderDetalle(informes) {
                     const salida  = v.hora_salida  ? v.hora_salida.substring(0,5)  : '—';
                     const reemb   = v.reembolso_id ? '<span class="stat-pill ms-2"><i class="fas fa-check-circle me-1"></i>Reembolsado</span>' : '';
 
+                    // Botón / badge de reembolso para la sección de facturas
+                    let reembolsoBtnHtml = '';
+                    if (PUEDE_REEMBOLSO && v.compras && v.compras.length > 0) {
+                        if (v.reembolso_id) {
+                            reembolsoBtnHtml = `<span class="badge bg-success rounded-pill px-3 py-2 ms-1" style="font-size:.72rem">
+                                <i class="fas fa-check-circle me-1"></i>Reembolso Procesado
+                            </span>`;
+                        } else {
+                            reembolsoBtnHtml = `<button class="btn btn-sm btn-primary rounded-pill px-3 ms-1"
+                                onclick="generarReembolsoDesdeVisita(${v.id})">
+                                <i class="fas fa-hand-holding-usd me-1"></i>Generar Reembolso
+                            </button>`;
+                        }
+                    }
+
                     visitasHtml += `
                         <div class="visita-card">
                             <div class="visita-card-header">
@@ -413,7 +429,13 @@ function renderDetalle(informes) {
                                     <small class="fw-bold text-uppercase text-muted d-block mb-1" style="font-size:.7rem;letter-spacing:.5px">Trabajos realizados</small>
                                     ${tareasHtml}
                                 </div>
-                                ${comprasHtml ? `<div class="mt-2"><small class="fw-bold text-uppercase text-muted d-block mb-1" style="font-size:.7rem;letter-spacing:.5px">Facturas y gastos</small>${comprasHtml}</div>` : ''}
+                                ${comprasHtml ? `<div class="mt-2">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <small class="fw-bold text-uppercase text-muted" style="font-size:.7rem;letter-spacing:.5px">Facturas y gastos</small>
+                                        ${reembolsoBtnHtml}
+                                    </div>
+                                    ${comprasHtml}
+                                </div>` : ''}
                             </div>
                         </div>`;
                 });
@@ -447,6 +469,27 @@ function irAReembolso() {
     if (!datosGlobal) return;
     const { semana, costo } = datosGlobal;
     window.open(`../compras/reembolsos_ia_nuevo.php?id=15&from_km=1&semana=${semana}&costo=${costo}`, '_blank');
+}
+
+/**
+ * Igual que en agenda_colaborador.js:
+ * Confirma y abre la herramienta de reembolsos con las facturas de la visita pre-cargadas.
+ */
+function generarReembolsoDesdeVisita(visitaId) {
+    Swal.fire({
+        title: '¿Generar reembolso?',
+        text: 'Se abrirá la herramienta de reembolsos con las facturas de esta visita pre-cargadas.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, generar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.open(`../compras/reembolsos_ia_nuevo.php?visita_id=${visitaId}`, '_blank');
+        }
+    });
 }
 
 function zoomFoto(src) {
