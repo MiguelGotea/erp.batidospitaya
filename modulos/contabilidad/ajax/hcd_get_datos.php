@@ -68,8 +68,9 @@ try {
         $gruposPorDia[$key][] = $row;
     }
 
-    $cierresFinales = [];
-    foreach ($gruposPorDia as $lista) {
+    // Recopilar todos los cierres finales antes de calcular el desagregado
+    $cierresFinalesPorDia = [];   // key → "Fecha|Sucursal", valor → array de finales ordenados ASC por HoraInicial
+    foreach ($gruposPorDia as $key => $lista) {
         // Ordenar ASC por CodigoCierre (igual que JS)
         usort($lista, fn($a, $b) => (int)$a['CodigoCierre'] - (int)$b['CodigoCierre']);
 
@@ -91,18 +92,45 @@ try {
             }
         }
 
-        // El de mayor CodigoCierre en cada grupo = Cierre Final
+        // Extraer el cierre final de cada grupo y ordenarlos por HoraInicial ASC
+        $finalesDia = [];
         foreach ($grupos as $g) {
             $ordenados = $g['todos'];
             usort($ordenados, fn($a, $b) => (int)$b['CodigoCierre'] - (int)$a['CodigoCierre']);
             $final                    = $ordenados[0];
             $final['num_precierres']  = count($ordenados) - 1;
-            // Normalizar cajero
             $final['cajero'] = trim($final['cajero'] ?? '');
             if ($final['cajero'] === '') {
                 $final['cajero'] = 'Sin cajero';
             }
-            $cierresFinales[] = $final;
+            $finalesDia[] = $final;
+        }
+
+        // Ordenar los finales del día por HoraInicial ASC para calcular el desagregado
+        usort($finalesDia, fn($a, $b) => horaAMin($a['HoraInicial']) - horaAMin($b['HoraInicial']));
+
+        // Calcular FaltanteDesagregado: cierre_i - cierre_(i-1);
+        // el primer cierre del día conserva su propio Faltante
+        $faltanteAnterior = null;
+        foreach ($finalesDia as &$fila) {
+            $faltanteActual = (int)($fila['Faltante'] ?? 0);
+            if ($faltanteAnterior === null) {
+                $fila['FaltanteDesagregado'] = $faltanteActual;
+            } else {
+                $fila['FaltanteDesagregado'] = $faltanteActual - $faltanteAnterior;
+            }
+            $faltanteAnterior = $faltanteActual;
+        }
+        unset($fila);
+
+        $cierresFinalesPorDia[$key] = $finalesDia;
+    }
+
+    // Aplanar en un único array
+    $cierresFinales = [];
+    foreach ($cierresFinalesPorDia as $finalesDia) {
+        foreach ($finalesDia as $fila) {
+            $cierresFinales[] = $fila;
         }
     }
 
@@ -142,6 +170,17 @@ try {
         }));
     }
 
+    if (!empty($filtros['FaltanteDesagregado']) && is_array($filtros['FaltanteDesagregado'])) {
+        $fMin = $filtros['FaltanteDesagregado']['min'] ?? null;
+        $fMax = $filtros['FaltanteDesagregado']['max'] ?? null;
+        $cierresFinales = array_values(array_filter($cierresFinales, function ($r) use ($fMin, $fMax) {
+            $v = (int)($r['FaltanteDesagregado'] ?? 0);
+            if ($fMin !== null && $fMin !== '' && $v < (int)$fMin) return false;
+            if ($fMax !== null && $fMax !== '' && $v > (int)$fMax) return false;
+            return true;
+        }));
+    }
+
     if (isset($filtros['Observaciones']) && $filtros['Observaciones'] !== '') {
         $q = strtolower((string)$filtros['Observaciones']);
         $cierresFinales = array_values(array_filter(
@@ -152,14 +191,15 @@ try {
 
     // ── Ordenar ───────────────────────────────────────────────────────────────
     $campoMap = [
-        'nombre_sucursal' => 'nombre_sucursal',
-        'CodigoCierre'    => 'CodigoCierre',
-        'cajero'          => 'cajero',
-        'Faltante'        => 'Faltante',
-        'HoraInicial'     => 'HoraInicial',
-        'HoraFinal'       => 'HoraFinal',
-        'Fecha'           => 'Fecha',
-        'Observaciones'   => 'Observaciones',
+        'nombre_sucursal'    => 'nombre_sucursal',
+        'CodigoCierre'       => 'CodigoCierre',
+        'cajero'             => 'cajero',
+        'Faltante'           => 'Faltante',
+        'FaltanteDesagregado'=> 'FaltanteDesagregado',
+        'HoraInicial'        => 'HoraInicial',
+        'HoraFinal'          => 'HoraFinal',
+        'Fecha'              => 'Fecha',
+        'Observaciones'      => 'Observaciones',
     ];
     $campo = $campoMap[$columnaOrden] ?? 'Fecha';
 

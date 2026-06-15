@@ -73,13 +73,13 @@ try {
         $gruposPorDia[$key][] = $row;
     }
 
-    $cierresFinales = [];
-    foreach ($gruposPorDia as $lista) {
+    $cierresFinalesPorDia = [];
+    foreach ($gruposPorDia as $key => $lista) {
         usort($lista, fn($a, $b) => (int)$a['CodigoCierre'] - (int)$b['CodigoCierre']);
 
         $grupos = [];
         foreach ($lista as $c) {
-            $minC      = horaAMinExcel($c['HoraInicial']);
+            $minC       = horaAMinExcel($c['HoraInicial']);
             $encontrado = false;
             foreach ($grupos as &$g) {
                 $minRef = horaAMinExcel($g['todos'][0]['HoraInicial']);
@@ -95,13 +95,36 @@ try {
             }
         }
 
+        $finalesDia = [];
         foreach ($grupos as $g) {
             $ordenados = $g['todos'];
             usort($ordenados, fn($a, $b) => (int)$b['CodigoCierre'] - (int)$a['CodigoCierre']);
-            $final             = $ordenados[0];
-            $final['cajero']   = trim($final['cajero'] ?? '');
+            $final           = $ordenados[0];
+            $final['cajero'] = trim($final['cajero'] ?? '');
             if ($final['cajero'] === '') $final['cajero'] = 'Sin cajero';
-            $cierresFinales[] = $final;
+            $finalesDia[] = $final;
+        }
+
+        // Ordenar por HoraInicial ASC para calcular el desagregado correctamente
+        usort($finalesDia, fn($a, $b) => horaAMinExcel($a['HoraInicial']) - horaAMinExcel($b['HoraInicial']));
+
+        $faltanteAnterior = null;
+        foreach ($finalesDia as &$fila) {
+            $faltanteActual = (int)($fila['Faltante'] ?? 0);
+            $fila['FaltanteDesagregado'] = ($faltanteAnterior === null)
+                ? $faltanteActual
+                : ($faltanteActual - $faltanteAnterior);
+            $faltanteAnterior = $faltanteActual;
+        }
+        unset($fila);
+
+        $cierresFinalesPorDia[$key] = $finalesDia;
+    }
+
+    $cierresFinales = [];
+    foreach ($cierresFinalesPorDia as $finalesDia) {
+        foreach ($finalesDia as $fila) {
+            $cierresFinales[] = $fila;
         }
     }
 
@@ -141,6 +164,17 @@ try {
         }));
     }
 
+    if (!empty($filtros['FaltanteDesagregado']) && is_array($filtros['FaltanteDesagregado'])) {
+        $fMin = $filtros['FaltanteDesagregado']['min'] ?? null;
+        $fMax = $filtros['FaltanteDesagregado']['max'] ?? null;
+        $cierresFinales = array_values(array_filter($cierresFinales, function ($r) use ($fMin, $fMax) {
+            $v = (int)($r['FaltanteDesagregado'] ?? 0);
+            if ($fMin !== null && $fMin !== '' && $v < (int)$fMin) return false;
+            if ($fMax !== null && $fMax !== '' && $v > (int)$fMax) return false;
+            return true;
+        }));
+    }
+
     if (isset($filtros['Observaciones']) && $filtros['Observaciones'] !== '') {
         $q = strtolower((string)$filtros['Observaciones']);
         $cierresFinales = array_values(array_filter(
@@ -151,14 +185,15 @@ try {
 
     // ── Ordenar ───────────────────────────────────────────────────────────────
     $campoMap = [
-        'nombre_sucursal' => 'nombre_sucursal',
-        'CodigoCierre'    => 'CodigoCierre',
-        'cajero'          => 'cajero',
-        'Faltante'        => 'Faltante',
-        'HoraInicial'     => 'HoraInicial',
-        'HoraFinal'       => 'HoraFinal',
-        'Fecha'           => 'Fecha',
-        'Observaciones'   => 'Observaciones',
+        'nombre_sucursal'     => 'nombre_sucursal',
+        'CodigoCierre'        => 'CodigoCierre',
+        'cajero'              => 'cajero',
+        'Faltante'            => 'Faltante',
+        'FaltanteDesagregado' => 'FaltanteDesagregado',
+        'HoraInicial'         => 'HoraInicial',
+        'HoraFinal'           => 'HoraFinal',
+        'Fecha'               => 'Fecha',
+        'Observaciones'       => 'Observaciones',
     ];
     $campo = $campoMap[$columnaOrden] ?? 'Fecha';
 
@@ -189,7 +224,9 @@ try {
                 <th>Cierre Final</th>
                 <th>Cajero</th>
                 <th>Sobrante / Faltante</th>
-                <th>Monto</th>
+                <th>Monto S/F</th>
+                <th>Sobrante / Faltante Acumulado</th>
+                <th>Monto Acumulado</th>
                 <th>Hora Inicial</th>
                 <th>Hora Final</th>
                 <th>Observaciones</th>
@@ -198,15 +235,20 @@ try {
         <tbody>';
 
     foreach ($cierresFinales as $row) {
-        $faltante = (int)($row['Faltante'] ?? 0);
+        $faltanteDesag = (int)($row['FaltanteDesagregado'] ?? 0);
+        $faltanteAcum  = (int)($row['Faltante'] ?? 0);
 
-        // Columna "Sobrante / Faltante" → tipo texto
-        if ($faltante === 0)       $tipoSF = 'Exacto';
-        elseif ($faltante > 0)     $tipoSF = 'Sobrante';
-        else                       $tipoSF = 'Faltante';
+        // Sobrante / Faltante (desagregado)
+        if ($faltanteDesag === 0)   $tipoSF = 'Exacto';
+        elseif ($faltanteDesag > 0) $tipoSF = 'Sobrante';
+        else                        $tipoSF = 'Faltante';
+        $montoSF = abs($faltanteDesag);
 
-        // Monto sin signo
-        $montoSF = abs($faltante);
+        // Sobrante / Faltante Acumulado
+        if ($faltanteAcum === 0)    $tipoAcum = 'Exacto';
+        elseif ($faltanteAcum > 0)  $tipoAcum = 'Sobrante';
+        else                        $tipoAcum = 'Faltante';
+        $montoAcum = abs($faltanteAcum);
 
         $hi = $row['HoraInicial'] ? substr($row['HoraInicial'], 0, 5) : '';
         $hf = $row['HoraFinal']   ? substr($row['HoraFinal'],   0, 5) : '';
@@ -216,8 +258,10 @@ try {
         echo '<td>' . htmlspecialchars((string)($row['Fecha']           ?? '')) . '</td>';
         echo '<td>' . htmlspecialchars((string)($row['CodigoCierre']    ?? '')) . '</td>';
         echo '<td>' . htmlspecialchars((string)($row['cajero']          ?? '')) . '</td>';
-        echo '<td>' . htmlspecialchars($tipoSF)  . '</td>';
-        echo '<td>' . htmlspecialchars((string)$montoSF) . '</td>';
+        echo '<td>' . htmlspecialchars($tipoSF)        . '</td>';
+        echo '<td>' . htmlspecialchars((string)$montoSF)   . '</td>';
+        echo '<td>' . htmlspecialchars($tipoAcum)      . '</td>';
+        echo '<td>' . htmlspecialchars((string)$montoAcum) . '</td>';
         echo '<td>' . htmlspecialchars($hi) . '</td>';
         echo '<td>' . htmlspecialchars($hf) . '</td>';
         echo '<td>' . htmlspecialchars((string)($row['Observaciones']   ?? '')) . '</td>';

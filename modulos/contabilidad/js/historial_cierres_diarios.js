@@ -57,7 +57,7 @@ $(document).ready(function () {
 // ── Cargar datos ──────────────────────────────────────────────
 function cargarDatos() {
     const tbody = $('#hcdTbody');
-    tbody.html('<tr><td colspan="9" class="text-center py-5"><div class="spinner-border text-success spinner-border-sm"></div> <span class="text-muted ms-2">Cargando historial...</span></td></tr>');
+    tbody.html('<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-success spinner-border-sm"></div> <span class="text-muted ms-2">Cargando historial...</span></td></tr>');
 
     $.ajax({
         url:      'ajax/hcd_get_datos.php',
@@ -71,7 +71,7 @@ function cargarDatos() {
         },
         success: function (resp) {
             if (!resp.success) {
-                tbody.html(`<tr><td colspan="9" class="text-center text-danger py-4">${resp.message || 'Error al cargar datos'}</td></tr>`);
+                tbody.html(`<tr><td colspan="10" class="text-center text-danger py-4">${resp.message || 'Error al cargar datos'}</td></tr>`);
                 return;
             }
             totalRegistros = resp.total_registros;
@@ -80,7 +80,7 @@ function cargarDatos() {
             actualizarIndicadoresFiltros();
         },
         error: function () {
-            tbody.html('<tr><td colspan="9" class="text-center text-danger py-4">Error de conexión con el servidor.</td></tr>');
+            tbody.html('<tr><td colspan="10" class="text-center text-danger py-4">Error de conexión con el servidor.</td></tr>');
         }
     });
 }
@@ -93,7 +93,7 @@ function renderizarTabla(datos) {
     if (!datos || datos.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="9">
+                <td colspan="10">
                     <div class="hcd-empty">
                         <i class="bi bi-inbox"></i>
                         <p>No se encontraron cierres con los filtros aplicados.</p>
@@ -105,8 +105,12 @@ function renderizarTabla(datos) {
     }
 
     datos.forEach(function (row) {
-        const faltante  = parseInt(row.Faltante) || 0;
-        const badgeSF   = buildBadgeSF(faltante);
+        const faltanteAcum  = parseInt(row.Faltante) || 0;
+        const faltanteDesag = (row.FaltanteDesagregado != null)
+                              ? parseInt(row.FaltanteDesagregado)
+                              : faltanteAcum;
+        const badgeSF       = buildBadgeSF(faltanteDesag);
+        const badgeSFAcum   = buildBadgeSF(faltanteAcum);
         const obs       = (row.Observaciones || '').trim();
         const hiStr     = row.HoraInicial ? row.HoraInicial.substring(0, 5) : '—';
         const hfStr     = row.HoraFinal   ? row.HoraFinal.substring(0, 5)   : '—';
@@ -123,6 +127,7 @@ function renderizarTabla(datos) {
                 <td>${row.CodigoCierre}</td>
                 <td>${escHtml(cajeroStr)}</td>
                 <td>${badgeSF}</td>
+                <td>${badgeSFAcum}</td>
                 <td class="text-nowrap">${hiStr}</td>
                 <td class="text-nowrap">${hfStr}</td>
                 <td>${escHtml(obs || '—')}</td>

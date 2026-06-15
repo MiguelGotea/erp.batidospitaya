@@ -70,8 +70,12 @@ $puedeExportar = tienePermiso('balance_cierre_diario', 'exportar', $cargoOperari
                                     Cajero
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="Faltante" data-type="number">
+                                <th data-column="FaltanteDesagregado" data-type="number">
                                     Sobrante / Faltante
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="Faltante" data-type="number">
+                                    Sobrante / Faltante Acumulado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="HoraInicial">
