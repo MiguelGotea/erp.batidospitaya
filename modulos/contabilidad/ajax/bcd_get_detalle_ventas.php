@@ -1,6 +1,6 @@
 <?php
 // ajax/bcd_get_detalle_ventas.php
-// Detalle de ventas para el modal — filas individuales + total correcto por MontoFactura
+// Detalle de ventas para el modal — agrupado por pedido, con todos los campos del historial
 require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
@@ -21,28 +21,34 @@ try {
         exit;
     }
 
-    // ── Query 1: filas de detalle (productos individuales) ──────────────────
-    // Mostramos todos los ítems para referencia visual, incluyendo anulados
+    // ── Query 1: filas agrupadas por pedido (estilo historial_ventas por_pedido) ─
+    $condHora = $hora_final ? "AND v.Hora <= :hora_final" : "";
+
     $sql = "SELECT
-                v.Hora,
+                MAX(v.Sucursal_Nombre)  AS Sucursal_Nombre,
                 v.CodPedido,
-                v.DBBatidos_Nombre,
-                v.NombreGrupo,
-                v.Precio,
-                v.MontoFactura,
-                v.Anulado,
-                v.Modalidad,
-                v.Medida,
-                v.Cantidad
+                v.local,
+                MAX(v.Fecha)            AS Fecha,
+                MIN(v.Hora)             AS Hora,
+                MAX(v.CodCliente)       AS CodCliente,
+                CASE
+                    WHEN MAX(v.CodCliente) > 0
+                    THEN CONCAT(MAX(c.nombre), ' ', MAX(c.apellido))
+                    ELSE ''
+                END                     AS NombreCliente,
+                SUM(v.Puntos)           AS Puntos,
+                MAX(v.Caja)             AS Caja,
+                MAX(v.MontoFactura)     AS MontoFactura,
+                MAX(v.Modalidad)        AS Modalidad,
+                MAX(v.Anulado)          AS Anulado
             FROM VentasGlobalesAccessCSV v
+            LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
             WHERE v.Fecha     = :fecha
               AND v.local     = :sucursal
-              AND v.Modalidad = :modalidad";
-
-    if ($hora_final) {
-        $sql .= " AND v.Hora <= :hora_final";
-    }
-    $sql .= " ORDER BY v.Hora ASC, v.CodPedido ASC";
+              AND v.Modalidad = :modalidad
+              $condHora
+            GROUP BY v.CodPedido, v.local
+            ORDER BY MIN(v.Hora) ASC, v.CodPedido ASC";
 
     $stmt = $conn->prepare($sql);
     $stmt->bindValue(':fecha',     $fecha);
@@ -54,10 +60,7 @@ try {
     $stmt->execute();
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // ── Query 2: total correcto usando MontoFactura deduplicado por CodPedido ─
-    // Cada CodPedido comparte el mismo MontoFactura en todas sus filas de detalle.
-    // DISTINCT CodPedido evita contar el mismo monto varias veces por pedido.
-    // Solo se cuentan pedidos no anulados (Anulado = 0).
+    // ── Query 2: total correcto usando MontoFactura deduplicado por CodPedido ──
     $sqlTotal = "SELECT SUM(sub.MontoFactura) AS total_factura,
                         COUNT(DISTINCT sub.CodPedido) AS total_pedidos
                  FROM (
@@ -66,11 +69,9 @@ try {
                      WHERE v.Fecha     = :fecha
                        AND v.local     = :sucursal
                        AND v.Modalidad = :modalidad
-                       AND v.Anulado   = 0";
-    if ($hora_final) {
-        $sqlTotal .= "   AND v.Hora <= :hora_final";
-    }
-    $sqlTotal .= " ) sub";
+                       AND v.Anulado   = 0
+                       $condHora
+                 ) sub";
 
     $stmtTotal = $conn->prepare($sqlTotal);
     $stmtTotal->bindValue(':fecha',     $fecha);
@@ -87,7 +88,7 @@ try {
         'datos'          => $datos,
         'total_factura'  => (float)($rowTotal['total_factura']  ?? 0),
         'total_pedidos'  => (int)  ($rowTotal['total_pedidos']  ?? 0),
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);

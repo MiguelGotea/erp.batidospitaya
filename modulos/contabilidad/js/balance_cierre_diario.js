@@ -444,9 +444,9 @@ function abrirDetalleVentas(modalidad) {
         'EFECTIVO': 'Efectivo'
     };
 
-    $('#modalDetalleVentasLabel').text(`Detalle de Ventas — ${labels[modalidad] || modalidad}`);
+    $('#modalDetalleVentasLabel').text(`Historial de Ventas — ${labels[modalidad] || modalidad}`);
     $('#modalDetalleVentasSubtitle').text(`Modalidad: ${modalidad}`);
-    $('#tbodyDetalleVentas').html('<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div> Cargando...</td></tr>');
+    $('#tbodyDetalleVentas').html('<tr><td colspan="12" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div> Cargando...</td></tr>');
     $('#modalTotalTx').text('...');
     $('#modalTotalMonto').text('...');
 
@@ -465,7 +465,7 @@ function abrirDetalleVentas(modalidad) {
         },
         success: function (resp) {
             if (!resp.success) {
-                $('#tbodyDetalleVentas').html(`<tr><td colspan="6" class="text-center text-danger py-3">${resp.message}</td></tr>`);
+                $('#tbodyDetalleVentas').html(`<tr><td colspan="12" class="text-center text-danger py-3">${resp.message}</td></tr>`);
                 return;
             }
 
@@ -473,24 +473,40 @@ function abrirDetalleVentas(modalidad) {
             let html = '';
 
             rows.forEach(function (r) {
-                const anulado = r.Anulado == 1
-                    ? '<span class="badge bg-danger">Anulado</span>'
-                    : '<span class="badge bg-success">OK</span>';
+                const esAnulado    = parseInt(r.Anulado) !== 0;
+                const badgeAnulado = esAnulado
+                    ? '<span class="badge bg-danger">SÍ</span>'
+                    : '<span class="badge bg-success">NO</span>';
+
+                const membresia    = r.CodCliente && parseInt(r.CodCliente) !== 0 ? r.CodCliente : '—';
+                const cliente      = r.NombreCliente || '—';
+                const fecha        = r.Fecha ? formatFecha(r.Fecha) : '—';
+                const hora         = r.Hora  ? formatHora(r.Hora)   : '—';
+                const monto        = fmt(parseFloat(r.MontoFactura) || 0);
+                const local        = encodeURIComponent(r.local || '');
+                const urlDetalle   = `/modulos/ventas/detalle_vista_pedido_global.php?cod_pedido=${r.CodPedido}&local=${local}`;
+                const btnVer       = `<a href="${urlDetalle}" target="_blank" class="btn btn-sm btn-outline-success py-0 px-2" title="Ver detalle de factura"><i class="bi bi-eye"></i></a>`;
 
                 html += `
-                    <tr class="${r.Anulado == 1 ? 'table-danger' : ''}">
-                        <td>${r.Hora || ''}</td>
-                        <td>${r.CodPedido || ''}</td>
-                        <td>${r.DBBatidos_Nombre || ''}</td>
-                        <td>${r.NombreGrupo || ''}</td>
-                        <td class="text-end fw-semibold">${fmt(parseFloat(r.Precio) || 0)}</td>
-                        <td class="text-center">${anulado}</td>
+                    <tr class="${esAnulado ? 'table-danger' : ''}">
+                        <td>${r.Sucursal_Nombre || '—'}</td>
+                        <td>${r.CodPedido || '—'}</td>
+                        <td>${fecha}</td>
+                        <td>${hora}</td>
+                        <td>${membresia}</td>
+                        <td>${cliente}</td>
+                        <td>${r.Puntos || 0}</td>
+                        <td>${r.Caja || '—'}</td>
+                        <td class="text-end fw-semibold">${monto}</td>
+                        <td>${r.Modalidad || '—'}</td>
+                        <td class="text-center">${badgeAnulado}</td>
+                        <td class="text-center">${btnVer}</td>
                     </tr>
                 `;
             });
 
             if (rows.length === 0) {
-                html = '<tr><td colspan="6" class="text-center text-muted py-4">Sin registros para esta modalidad</td></tr>';
+                html = '<tr><td colspan="12" class="text-center text-muted py-4">Sin registros para esta modalidad</td></tr>';
             }
 
             $('#tbodyDetalleVentas').html(html);
@@ -499,7 +515,7 @@ function abrirDetalleVentas(modalidad) {
             $('#modalTotalMonto').text(fmt(resp.total_factura));
         },
         error: function () {
-            $('#tbodyDetalleVentas').html('<tr><td colspan="6" class="text-center text-danger py-3">Error de conexión</td></tr>');
+            $('#tbodyDetalleVentas').html('<tr><td colspan="12" class="text-center text-danger py-3">Error de conexión</td></tr>');
         }
     });
 }

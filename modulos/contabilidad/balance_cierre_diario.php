@@ -293,7 +293,7 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
     ============================================================ -->
     <div class="modal fade" id="modalDetalleVentas" tabindex="-1" aria-labelledby="modalDetalleVentasLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
                 <div class="modal-header border-0 py-3 px-4" style="background:#0E544C; color:#fff;">
                     <div class="d-flex align-items-center">
@@ -302,7 +302,7 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
                             <i class="bi bi-search fs-5"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0" id="modalDetalleVentasLabel">Detalle de Ventas</h5>
+                            <h5 class="modal-title fw-bold mb-0" id="modalDetalleVentasLabel">Historial de Ventas</h5>
                             <p class="small mb-0 opacity-75" id="modalDetalleVentasSubtitle">Transacciones por modalidad
                             </p>
                         </div>
@@ -314,7 +314,7 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
                         <div class="row g-2">
                             <div class="col">
                                 <div class="bcd-modal-stat">
-                                    <span class="bcd-modal-stat-label">Total Transacciones</span>
+                                    <span class="bcd-modal-stat-label">Total Pedidos</span>
                                     <span class="bcd-modal-stat-value" id="modalTotalTx">0</span>
                                 </div>
                             </div>
@@ -330,17 +330,23 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
                         <table class="table table-sm table-hover mb-0" id="tablaDetalleVentas">
                             <thead class="table-dark">
                                 <tr>
+                                    <th>Sucursal</th>
+                                    <th>Pedido</th>
+                                    <th>Fecha</th>
                                     <th>Hora</th>
-                                    <th>Cod. Pedido</th>
-                                    <th>Producto</th>
-                                    <th>Grupo</th>
-                                    <th class="text-end">Precio</th>
+                                    <th>Membresía</th>
+                                    <th>Cliente</th>
+                                    <th>Puntos</th>
+                                    <th>Cajero</th>
+                                    <th class="text-end">Monto</th>
+                                    <th>Modalidad</th>
                                     <th class="text-center">Anulado</th>
+                                    <th class="text-center">Ver</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyDetalleVentas">
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">Cargando...</td>
+                                    <td colspan="12" class="text-center py-4 text-muted">Cargando...</td>
                                 </tr>
                             </tbody>
                         </table>
