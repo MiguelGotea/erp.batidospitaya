@@ -363,9 +363,9 @@ function renderizarDetalle() {
     elCalc.empty().hide();
 
     if (d.faltante_guardado !== undefined) {
-        // La tolerancia pedida es de +-1
-        const matchDirect = Math.abs(resultadoEfectivo - savedFaltante) <= 1;
-        const matchInverted = Math.abs(resultadoEfectivo + savedFaltante) <= 1;
+        // La tolerancia pedida es de +-5
+        const matchDirect = Math.abs(resultadoEfectivo - savedFaltante) <= 5;
+        const matchInverted = Math.abs(resultadoEfectivo + savedFaltante) <= 5;
         const coincide = matchDirect || matchInverted;
 
         // Texto del valor calculado
