@@ -145,18 +145,22 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                             <td class="text-end fw-semibold" id="vfPosSistema">—</td>
                                             <td class="text-center" id="vfPosDif">—</td>
                                             <td class="text-center">
-                                                <button class="bcd-btn-detail" onclick="abrirDetalleVentas('POS')" title="Ver detalle POS">
+                                                <button class="bcd-btn-detail" onclick="abrirDetalleVentas('POS')"
+                                                    title="Ver detalle POS">
                                                     <i class="bi bi-search"></i>
                                                 </button>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td><i class="bi bi-arrow-left-right me-2 text-muted"></i>Transferencias</td>
+                                            <td><i class="bi bi-arrow-left-right me-2 text-muted"></i>Transferencias
+                                            </td>
                                             <td class="text-end fw-semibold" id="vfTransFisico">—</td>
                                             <td class="text-end fw-semibold" id="vfTransSistema">—</td>
                                             <td class="text-center" id="vfTransDif">—</td>
                                             <td class="text-center">
-                                                <button class="bcd-btn-detail" onclick="abrirDetalleVentas('TRANSFERENCIA')" title="Ver detalle Transferencias">
+                                                <button class="bcd-btn-detail"
+                                                    onclick="abrirDetalleVentas('TRANSFERENCIA')"
+                                                    title="Ver detalle Transferencias">
                                                     <i class="bi bi-search"></i>
                                                 </button>
                                             </td>
@@ -167,7 +171,8 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                             <td class="text-end fw-semibold" id="vfPYSistema">—</td>
                                             <td class="text-center" id="vfPYDif">—</td>
                                             <td class="text-center">
-                                                <button class="bcd-btn-detail" onclick="abrirDetalleVentas('PEDIDOSYA')" title="Ver detalle Pedidos Ya">
+                                                <button class="bcd-btn-detail" onclick="abrirDetalleVentas('PEDIDOSYA')"
+                                                    title="Ver detalle Pedidos Ya">
                                                     <i class="bi bi-search"></i>
                                                 </button>
                                             </td>
@@ -178,7 +183,8 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                             <td class="text-end fw-semibold" id="vfEfecSistema">—</td>
                                             <td class="text-center" id="vfEfecDif">—</td>
                                             <td class="text-center">
-                                                <button class="bcd-btn-detail" onclick="abrirDetalleVentas('EFECTIVO')" title="Ver detalle Efectivo">
+                                                <button class="bcd-btn-detail" onclick="abrirDetalleVentas('EFECTIVO')"
+                                                    title="Ver detalle Efectivo">
                                                     <i class="bi bi-search"></i>
                                                 </button>
                                             </td>
@@ -214,7 +220,8 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                         <span class="bcd-efectivo-label">
                                             <span class="bcd-sign bcd-sign-plus">+</span>
                                             Ventas Efectivo
-                                            <button class="bcd-btn-detail ms-1" onclick="abrirDetalleVentas('EFECTIVO')" title="Ver detalle ventas efectivo">
+                                            <button class="bcd-btn-detail ms-1" onclick="abrirDetalleVentas('EFECTIVO')"
+                                                title="Ver detalle ventas efectivo">
                                                 <i class="bi bi-search"></i>
                                             </button>
                                         </span>
@@ -231,7 +238,8 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                         <span class="bcd-efectivo-label">
                                             <span class="bcd-sign bcd-sign-minus">−</span>
                                             Compras de Caja
-                                            <button class="bcd-btn-detail ms-1" onclick="abrirDetalleCompras()" title="Ver detalle compras">
+                                            <button class="bcd-btn-detail ms-1" onclick="abrirDetalleCompras()"
+                                                title="Ver detalle compras">
                                                 <i class="bi bi-search"></i>
                                             </button>
                                         </span>
@@ -269,6 +277,7 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                 </div>
                             </div>
 
+
                             <!-- Observaciones -->
                             <div class="bcd-obs-block" id="bcdObsBlock" style="display:none;">
                                 <i class="bi bi-chat-square-text me-2"></i>
@@ -284,7 +293,8 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                 <div class="bcd-empty-state" id="bcdEmptyState">
                     <i class="bi bi-journal-check"></i>
                     <h5>Balance Cierre Diario</h5>
-                    <p>Seleccioná una fecha y sucursal, luego presioná <strong>Buscar</strong> para cargar los cierres del día.</p>
+                    <p>Seleccioná una fecha y sucursal, luego presioná <strong>Buscar</strong> para cargar los cierres
+                        del día.</p>
                 </div>
 
                 <!-- Estado sin resultados -->
@@ -301,7 +311,8 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
     <!-- ============================================================
          MODAL: Detalle de Ventas por Modalidad
     ============================================================ -->
-    <div class="modal fade" id="modalDetalleVentas" tabindex="-1" aria-labelledby="modalDetalleVentasLabel" aria-hidden="true">
+    <div class="modal fade" id="modalDetalleVentas" tabindex="-1" aria-labelledby="modalDetalleVentasLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
                 <div class="modal-header border-0 py-3 px-4" style="background:#0E544C; color:#fff;">
@@ -312,7 +323,8 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                         </div>
                         <div>
                             <h5 class="modal-title fw-bold mb-0" id="modalDetalleVentasLabel">Detalle de Ventas</h5>
-                            <p class="small mb-0 opacity-75" id="modalDetalleVentasSubtitle">Transacciones por modalidad</p>
+                            <p class="small mb-0 opacity-75" id="modalDetalleVentasSubtitle">Transacciones por modalidad
+                            </p>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
@@ -347,7 +359,9 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                 </tr>
                             </thead>
                             <tbody id="tbodyDetalleVentas">
-                                <tr><td colspan="6" class="text-center py-4 text-muted">Cargando...</td></tr>
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">Cargando...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -390,7 +404,8 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                             <div class="col">
                                 <div class="bcd-modal-stat">
                                     <span class="bcd-modal-stat-label">Costo Total</span>
-                                    <span class="bcd-modal-stat-value text-pitaya" id="modalTotalCostoCompras">C$ 0.00</span>
+                                    <span class="bcd-modal-stat-value text-pitaya" id="modalTotalCostoCompras">C$
+                                        0.00</span>
                                 </div>
                             </div>
                         </div>
@@ -408,7 +423,9 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                 </tr>
                             </thead>
                             <tbody id="tbodyDetalleCompras">
-                                <tr><td colspan="6" class="text-center py-4 text-muted">Cargando...</td></tr>
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">Cargando...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
