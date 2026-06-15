@@ -522,6 +522,88 @@ function obtenerTiposFaltaConPorcentajes()
     <link rel="stylesheet" href="css/vacaciones.css?v=<?php echo mt_rand(1, 10000); ?>">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+    <style>
+        /* ── Cámara Premium (idéntica a reembolsos_ia_nuevo) ── */
+        #vac-camera-viewport {
+            position: relative;
+            background: #000;
+            min-height: 300px;
+            cursor: crosshair;
+            overflow: hidden;
+        }
+        #vac-video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #vac-focus-ring {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border: 2px solid #FFD700;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+        }
+        #vac-focus-ring.active  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        #vac-focus-ring.locked  { border-color: #00FF88; opacity: 0.7; }
+        #vac-focus-ring::before, #vac-focus-ring::after {
+            content: ''; position: absolute;
+            width: 10px; height: 10px;
+            border-color: inherit; border-style: solid;
+        }
+        #vac-focus-ring::before { top:-1px; left:-1px; border-width:2px 0 0 2px; }
+        #vac-focus-ring::after  { bottom:-1px; right:-1px; border-width:0 2px 2px 0; }
+        #vac-cam-grid {
+            position: absolute; inset: 0; pointer-events: none; opacity: 0.15;
+            background-image: linear-gradient(to right,#fff 1px,transparent 1px), linear-gradient(to bottom,#fff 1px,transparent 1px);
+            background-size: 33.33% 33.33%;
+        }
+        #vac-focus-toast {
+            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.65); color: #fff; font-size: 0.75rem;
+            padding: 4px 12px; border-radius: 20px; opacity: 0;
+            transition: opacity 0.3s; pointer-events: none; white-space: nowrap;
+        }
+        .vac-cam-controls { background: #111; padding: 10px 16px 14px; }
+        .vac-btn-torch {
+            background: transparent; border: 1.5px solid #555; color: #aaa;
+            border-radius: 50%; width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all 0.2s; cursor: pointer;
+        }
+        .vac-btn-torch.on { border-color: #FFD700; color: #FFD700; box-shadow: 0 0 8px rgba(255,215,0,0.5); }
+        .vac-btn-capture {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: #fff; border: 4px solid rgba(255,255,255,0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: #333;
+            transition: transform 0.1s, background 0.1s; cursor: pointer;
+        }
+        .vac-btn-capture:active { transform: scale(0.92); background: #ddd; }
+        /* Preview de foto capturada por cámara */
+        .vac-foto-preview {
+            display: none;
+            margin-top: 8px;
+            position: relative;
+        }
+        .vac-foto-preview img {
+            width: 100%; max-height: 160px;
+            object-fit: cover; border-radius: 8px;
+            border: 2px solid #0E544C;
+        }
+        .vac-foto-preview .vac-preview-remove {
+            position: absolute; top: 4px; right: 4px;
+            background: rgba(220,53,69,0.85); color:#fff;
+            border: none; border-radius: 50%;
+            width: 24px; height: 24px; font-size: 0.75rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+    </style>
 </head>
 
 <body>
@@ -825,9 +907,9 @@ function obtenerTiposFaltaConPorcentajes()
                                     endforeach; ?>
                                 </select>
                             <?php else: ?>
-                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly>
+                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly style="display:none;">
                                 <input type="hidden" id="subsidio_tipo" name="tipo_falta" value="Pendiente">
-                                <small class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
+                                <small class="form-text text-muted" style="display:none;"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
                             <?php endif; ?>
                             <small id="info-porcentaje-subsidio" class="form-text text-muted mt-1 d-block"></small>
                         </div>
@@ -870,9 +952,18 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
 
                         <div class="mb-3">
-                            <label for="subsidio_foto" class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
-                            <input type="file" id="subsidio_foto" name="foto_falta" class="form-control" accept="image/*" capture="environment" required>
-                            <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx. 5MB)</small>
+                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
+                            <div class="input-group">
+                                <input type="file" id="subsidio_foto" name="foto_falta" class="form-control" accept="image/*" required>
+                                <button type="button" class="btn btn-success" onclick="vacAbrirCamara('formNuevoSubsidio')" title="Tomar foto con cámara">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Selecciona una imagen o usa la cámara (máx. 5MB)</small>
+                            <div class="vac-foto-preview" id="subsidio_preview">
+                                <img id="subsidio_preview_img" src="" alt="Vista previa">
+                                <button type="button" class="vac-preview-remove" onclick="vacEliminarPreview('formNuevoSubsidio')" title="Eliminar foto">&times;</button>
+                            </div>
                         </div>
 
                         <div id="info-rango-subsidio" class="alert alert-info py-2" style="display: none;">
@@ -970,9 +1061,9 @@ function obtenerTiposFaltaConPorcentajes()
                                 </select>
                                 <small id="info-porcentaje-vacaciones" class="form-text text-muted mt-1 d-block" style="display: none;"></small>
                             <?php else: ?>
-                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly>
+                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly style="display:none;">
                                 <input type="hidden" id="nueva_tipo" name="tipo_falta" value="Pendiente">
-                                <small class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
+                                <small class="form-text text-muted" style="display:none;"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
                             <?php endif; ?>
                         </div>
 
@@ -1014,9 +1105,18 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
 
                         <div class="mb-3">
-                            <label for="nueva_foto" class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
-                            <input type="file" id="nueva_foto" name="foto_falta" class="form-control" accept="image/*" capture="environment" required>
-                            <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx. 5MB)</small>
+                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
+                            <div class="input-group">
+                                <input type="file" id="nueva_foto" name="foto_falta" class="form-control" accept="image/*" required>
+                                <button type="button" class="btn btn-success" onclick="vacAbrirCamara('formNuevaVacacion')" title="Tomar foto con cámara">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Selecciona una imagen o usa la cámara (máx. 5MB)</small>
+                            <div class="vac-foto-preview" id="vacacion_preview">
+                                <img id="vacacion_preview_img" src="" alt="Vista previa">
+                                <button type="button" class="vac-preview-remove" onclick="vacEliminarPreview('formNuevaVacacion')" title="Eliminar foto">&times;</button>
+                            </div>
                         </div>
 
                         <div id="info-rango" class="alert alert-info py-2" style="display: none;">
@@ -1056,7 +1156,54 @@ function obtenerTiposFaltaConPorcentajes()
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/vacaciones.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+
+    <!-- ===================== MODAL CÁMARA PREMIUM (vacaciones) ===================== -->
+    <div class="modal fade" id="vacModalCamara" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px !important; overflow: hidden;">
+
+                <!-- Header -->
+                <div class="modal-header bg-dark text-white border-0 py-2 px-3">
+                    <h6 class="modal-title mb-0"><i class="fas fa-camera me-2"></i> Tomar Evidencia</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="vac-cam-focus-status" class="badge bg-secondary" style="font-size:0.65rem;">AUTO</span>
+                        <button type="button" class="btn-close btn-close-white" onclick="vacCerrarCamara()"></button>
+                    </div>
+                </div>
+
+                <!-- Viewport -->
+                <div id="vac-camera-viewport" style="min-height: 320px;">
+                    <video id="vac-video" autoplay playsinline muted></video>
+                    <div id="vac-cam-grid"></div>
+                    <div id="vac-focus-ring"></div>
+                    <div id="vac-focus-toast">Toca para enfocar</div>
+                    <canvas id="vac-canvas" style="display:none;"></canvas>
+                </div>
+
+                <!-- Controles -->
+                <div class="vac-cam-controls">
+                    <div class="d-flex align-items-center justify-content-between mt-3">
+                        <!-- Cancelar -->
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 text-white border-secondary" onclick="vacCerrarCamara()">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+                        <!-- Capturar -->
+                        <button type="button" class="vac-btn-capture" onclick="vacCapturarFoto()" title="Tomar foto">
+                            <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                        </button>
+                        <!-- Linterna -->
+                        <button type="button" id="vac-btnTorch" class="vac-btn-torch" onclick="vacToggleLinterna()" title="Linterna" style="display:none;">
+                            <i class="fas fa-bolt"></i>
+                        </button>
+                        <div id="vac-btnTorchPlaceholder" style="width:42px;"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
     <!-- ===================== MODAL AYUDA ===================== -->
     <div class="modal fade" id="pageHelpModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -1177,10 +1324,10 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
                         <?php else: ?>
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Tipo de Falta/Permiso:</label>
-                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly>
+                                <label class="form-label small fw-bold text-muted text-uppercase" style="display:none;">Tipo de Falta/Permiso:</label>
+                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly style="display:none;">
                                 <input type="hidden" id="falta_tipo" name="tipo_falta" value="Pendiente">
-                                <small id="info-porcentaje-falta" class="form-text text-muted mt-1 d-block">
+                                <small id="info-porcentaje-falta" class="form-text text-muted mt-1 d-block" style="display:none;">
                                     ℹ️ El tipo de ausencia será determinado y clasificado por Recursos Humanos.
                                 </small>
                             </div>
@@ -1224,9 +1371,18 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
 
                         <div class="mb-3">
-                            <label for="falta_foto" class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
-                            <input type="file" id="falta_foto" name="foto_falta" class="form-control" accept="image/*" capture="environment" required>
-                            <small class="form-text text-muted">Toma una foto o selecciona una del dispositivo (máx. 5MB)</small>
+                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
+                            <div class="input-group">
+                                <input type="file" id="falta_foto" name="foto_falta" class="form-control" accept="image/*" required>
+                                <button type="button" class="btn btn-success" onclick="vacAbrirCamara('formNuevaFalta')" title="Tomar foto con cámara">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Selecciona una imagen o usa la cámara (máx. 5MB)</small>
+                            <div class="vac-foto-preview" id="falta_preview">
+                                <img id="falta_preview_img" src="" alt="Vista previa">
+                                <button type="button" class="vac-preview-remove" onclick="vacEliminarPreview('formNuevaFalta')" title="Eliminar foto">&times;</button>
+                            </div>
                         </div>
 
                         <div id="info-rango-falta" class="alert alert-info py-2" style="display: none;">
