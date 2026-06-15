@@ -16,9 +16,9 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
 }
 
 // Parámetros recibidos desde el Historial de Cierres
-$paramFecha    = isset($_GET['fecha'])    ? htmlspecialchars($_GET['fecha'])    : date('Y-m-d');
+$paramFecha = isset($_GET['fecha']) ? htmlspecialchars($_GET['fecha']) : date('Y-m-d');
 $paramSucursal = isset($_GET['sucursal']) ? htmlspecialchars($_GET['sucursal']) : '';
-$paramCierre   = isset($_GET['cierre'])   ? (int)$_GET['cierre']               : 0;
+$paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -47,11 +47,8 @@ $paramCierre   = isset($_GET['cierre'])   ? (int)$_GET['cierre']               :
             <div class="container-fluid p-3">
 
                 <!-- Inputs ocultos: cargados desde parámetros GET del Historial -->
-                <input type="hidden" id="filtroFecha"    value="<?php echo $paramFecha; ?>">
+                <input type="hidden" id="filtroFecha" value="<?php echo $paramFecha; ?>">
                 <input type="hidden" id="filtroSucursal" value="<?php echo $paramSucursal; ?>">
-
-
-
 
                 <!-- Layout principal: menú lateral + detalle -->
                 <div class="bcd-layout" id="bcdLayout" style="display:none;">
