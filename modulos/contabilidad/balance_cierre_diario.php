@@ -263,7 +263,10 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                             <!-- Resultado final efectivo -->
                             <div class="bcd-result-box" id="bcdResultBox">
                                 <div class="bcd-result-label" id="bcdResultLabel">EFECTIVO SOBRANTE</div>
-                                <div class="bcd-result-value" id="bcdResultValue">—</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="bcd-result-value" id="bcdResultValue">—</div>
+                                    <div id="bcdFaltanteSync" style="display: none;"></div>
+                                </div>
                             </div>
 
                             <!-- Observaciones -->

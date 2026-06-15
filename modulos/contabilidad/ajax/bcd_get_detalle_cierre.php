@@ -48,9 +48,9 @@ try {
         }
     }
 
-    // ── 3. Obtener hora_inicial del cierre ───────────────────────────────────
+    // ── 3. Obtener hora_inicial y Faltante del cierre ─────────────────────────
     $stmtCierre = $conn->prepare(
-        "SELECT HoraInicial FROM msaccess_masivo_CierreDiario
+        "SELECT HoraInicial, Faltante FROM msaccess_masivo_CierreDiario
          WHERE Sucursal = :sucursal AND CodigoCierre = :cod LIMIT 1"
     );
     $stmtCierre->bindValue(':sucursal', $sucursal);
@@ -58,6 +58,7 @@ try {
     $stmtCierre->execute();
     $rowCierre = $stmtCierre->fetch(PDO::FETCH_ASSOC);
     $hora_inicial_real = $rowCierre ? $rowCierre['HoraInicial'] : null;
+    $faltante_guardado = $rowCierre ? (float)$rowCierre['Faltante'] : 0.0;
 
     // ── 4. Estado Inicial (caja inicial + tipo de cambio) ─────────────────────
     $stmtEI = $conn->prepare(
@@ -184,6 +185,7 @@ try {
         'compras_caja'    => $compras_caja,
         'conteo_caja'     => $conteo_caja,
         'tipo_cambio'     => $tipo_cambio,
+        'faltante_guardado' => $faltante_guardado,
 
         // Observaciones
         'observaciones' => $observaciones,

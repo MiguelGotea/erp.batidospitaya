@@ -334,6 +334,49 @@ function renderizarDetalle() {
         $('#bcdResultValue').text('C$ 0.00');
     }
 
+    // Comparación con Faltante guardado
+    const elSync = $('#bcdFaltanteSync');
+    
+    // Destruir tooltip existente si lo hay para evitar fugas de memoria y tooltips huérfanos
+    const tooltipBtn = elSync.find('[data-bs-toggle="tooltip"]');
+    if (tooltipBtn.length) {
+        const tooltipInstance = bootstrap.Tooltip.getInstance(tooltipBtn[0]);
+        if (tooltipInstance) {
+            tooltipInstance.dispose();
+        }
+    }
+    elSync.empty().hide();
+
+    if (d.faltante_guardado !== undefined) {
+        const savedFaltante = parseFloat(d.faltante_guardado) || 0;
+        // La comparación tolera diferencias mínimas de decimales (menor a 0.1 Cordobas)
+        // y admite que se guarde con signo positivo o negativo (directo o invertido)
+        const matchDirect = Math.abs(resultadoEfectivo - savedFaltante) < 0.1;
+        const matchInverted = Math.abs(resultadoEfectivo + savedFaltante) < 0.1;
+        const coincide = matchDirect || matchInverted;
+
+        let tooltipTitle = '';
+        let iconHtml = '';
+
+        if (coincide) {
+            tooltipTitle = "El resultado coincide con el cierre guardado en el sistema.";
+            iconHtml = `<i class="bi bi-check-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="${tooltipTitle}" style="font-size: 1.25rem; cursor: pointer;"></i>`;
+        } else {
+            tooltipTitle = "El resultado NO coincide con el cierre guardado en el sistema.";
+            iconHtml = `<i class="bi bi-exclamation-triangle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="${tooltipTitle}" style="font-size: 1.25rem; cursor: pointer;"></i>`;
+        }
+
+        elSync.html(iconHtml).show();
+
+        // Inicializar el tooltip de Bootstrap 5
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const newTooltipEl = elSync.find('[data-bs-toggle="tooltip"]')[0];
+            if (newTooltipEl) {
+                new bootstrap.Tooltip(newTooltipEl);
+            }
+        }
+    }
+
     // Observaciones
     if (d.observaciones && d.observaciones.trim() !== '') {
         $('#bcdObsText').text(d.observaciones);
