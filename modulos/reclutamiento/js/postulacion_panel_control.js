@@ -46,10 +46,13 @@ async function cargarDatosSucursales() {
 
 
 function renderizarTablaSucursales(datos) {
-    const tbody = document.getElementById('tablaSucursalesBody');
-    tbody.innerHTML = '';
+    const table = document.getElementById('tablaSucursales');
+    // Eliminar los tbodys anteriores (excepto thead)
+    table.querySelectorAll('tbody').forEach(tb => tb.remove());
 
     datos.forEach(sucursal => {
+        const tbody = document.createElement('tbody');
+        tbody.className = 'store-group';
         // Fila Vendedores
         const vRow = document.createElement('tr');
         vRow.innerHTML = `
@@ -153,6 +156,7 @@ function renderizarTablaSucursales(datos) {
             </td>
         `;
         tbody.appendChild(lRow);
+        table.appendChild(tbody);
     });
 }
 
