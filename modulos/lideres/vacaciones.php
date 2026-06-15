@@ -609,9 +609,9 @@ function obtenerTiposFaltaConPorcentajes()
                                 <i class="fas fa-search"></i> Buscar
                             </button>
 
-                            <a href="imprimir_boleta.php" target="_blank" class="btn-aplicar">
+                            <button type="button" class="btn-aplicar" data-bs-toggle="modal" data-bs-target="#modalTipoBoleta">
                                 <i class="fas fa-print"></i> Imprimir Boleta
-                            </a>
+                            </button>
 
                             <?php if (tienePermiso('registro_vacaciones', 'exportar_excel', $cargoOperario)): ?>
                                 <a href="vacaciones.php?<?= http_build_query([
@@ -1354,6 +1354,79 @@ function obtenerTiposFaltaConPorcentajes()
             </div>
         </div>
     <?php endif; ?>
+
+    <!-- Modal para seleccionar tipo de boleta a imprimir -->
+    <div class="modal fade" id="modalTipoBoleta" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
+            <div class="modal-content border-0 shadow" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-print fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Imprimir Boleta</h5>
+                            <p class="small mb-0 opacity-75">Seleccione el tipo de boleta a generar</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <p class="text-muted text-center mb-4">¿Qué tipo de boleta de acción de personal desea imprimir?</p>
+                    <div class="d-flex flex-column gap-3">
+                        <a href="imprimir_boleta.php?tipo=vacaciones" target="_blank" class="btn-boleta-select" onclick="cerrarModalBoleta()">
+                            <div class="boleta-icon-wrapper bg-vacaciones-light text-vacaciones">
+                                <i class="fas fa-umbrella-beach"></i>
+                            </div>
+                            <div class="boleta-text-wrapper">
+                                <div class="boleta-title">Vacaciones</div>
+                                <div class="boleta-desc">Acción de personal para días de vacaciones</div>
+                            </div>
+                            <i class="fas fa-chevron-right arrow-icon"></i>
+                        </a>
+                        
+                        <a href="imprimir_boleta.php?tipo=subsidio" target="_blank" class="btn-boleta-select" onclick="cerrarModalBoleta()">
+                            <div class="boleta-icon-wrapper bg-subsidio-light text-subsidio">
+                                <i class="fas fa-notes-medical"></i>
+                            </div>
+                            <div class="boleta-text-wrapper">
+                                <div class="boleta-title">Subsidio</div>
+                                <div class="boleta-desc">Boleta para subsidios o reposos médicos</div>
+                            </div>
+                            <i class="fas fa-chevron-right arrow-icon"></i>
+                        </a>
+                        
+                        <a href="imprimir_boleta.php?tipo=permiso" target="_blank" class="btn-boleta-select" onclick="cerrarModalBoleta()">
+                            <div class="boleta-icon-wrapper bg-permiso-light text-permiso">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div class="boleta-text-wrapper">
+                                <div class="boleta-title">Permiso</div>
+                                <div class="boleta-desc">Boleta para faltas autorizadas o permisos</div>
+                            </div>
+                            <i class="fas fa-chevron-right arrow-icon"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-white justify-content-center">
+                    <button type="button" class="btn-modern btn-modern-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function cerrarModalBoleta() {
+            setTimeout(() => {
+                const modalEl = document.getElementById('modalTipoBoleta');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                }
+            }, 500);
+        }
+    </script>
 
     <!-- Botón Flotante con opciones -->
     <?php if (tienePermiso('registro_vacaciones', 'nuevo_registro', $cargoOperario)): ?>

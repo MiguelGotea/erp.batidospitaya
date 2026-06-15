@@ -516,15 +516,19 @@ async function guardarCambios() {
         // Recopilar datos de Administrativo
         const datosAdministrativo = [];
         document.querySelectorAll('#tablaAdministrativoBody tr').forEach(row => {
-            const inputs = row.querySelectorAll('input');
-            if (inputs.length === 0) return; // Saltar filas de encabezado de área
+            const cargoInput = row.querySelector('input[data-campo="salario_propuesto"]');
+            if (!cargoInput) return; // Saltar filas de encabezado de área
 
-            const cargo = inputs[0].dataset.cargo;
-            const area = inputs[0].dataset.area;
-            const cantidadReal = parseInt(inputs[0].value) || 0;
-            const cantidadAdicional = parseInt(inputs[1].value) || 0;
+            const cargo = cargoInput.dataset.cargo;
+            const area = cargoInput.dataset.area;
+            
+            const inputCantidadReal = row.querySelector('input[data-campo="cantidad_real"]');
+            const inputCantidadAdicional = row.querySelector('input[data-campo="cantidad_adicional"]');
+            const cantidadReal = inputCantidadReal ? (parseInt(inputCantidadReal.value) || 0) : 0;
+            const cantidadAdicional = inputCantidadAdicional ? (parseInt(inputCantidadAdicional.value) || 0) : 0;
+            
             const visibleWeb = row.querySelector('input[data-campo="visible_web"]').checked ? 1 : 0;
-            const salarioPropuesto = parseFloat(row.querySelector('input[data-campo="salario_propuesto"]').value) || 0;
+            const salarioPropuesto = parseFloat(cargoInput.value) || 0;
             const selectUrgencia = row.querySelector('select[data-campo="nivel_urgencia"]');
             const nivelUrgencia = selectUrgencia ? (parseInt(selectUrgencia.value) || 1) : 1;
 
@@ -543,15 +547,19 @@ async function guardarCambios() {
         // Recopilar datos de Producción
         const datosProduccion = [];
         document.querySelectorAll('#tablaProduccionBody tr').forEach(row => {
-            const inputs = row.querySelectorAll('input');
-            if (inputs.length === 0) return; // Saltar filas de encabezado de área
+            const cargoInput = row.querySelector('input[data-campo="salario_propuesto"]');
+            if (!cargoInput) return; // Saltar filas de encabezado de área
 
-            const cargo = inputs[0].dataset.cargo;
-            const area = inputs[0].dataset.area;
-            const cantidadReal = parseInt(inputs[0].value) || 0;
-            const cantidadAdicional = parseInt(inputs[1].value) || 0;
+            const cargo = cargoInput.dataset.cargo;
+            const area = cargoInput.dataset.area;
+            
+            const inputCantidadReal = row.querySelector('input[data-campo="cantidad_real"]');
+            const inputCantidadAdicional = row.querySelector('input[data-campo="cantidad_adicional"]');
+            const cantidadReal = inputCantidadReal ? (parseInt(inputCantidadReal.value) || 0) : 0;
+            const cantidadAdicional = inputCantidadAdicional ? (parseInt(inputCantidadAdicional.value) || 0) : 0;
+            
             const visibleWeb = row.querySelector('input[data-campo="visible_web"]').checked ? 1 : 0;
-            const salarioPropuesto = parseFloat(row.querySelector('input[data-campo="salario_propuesto"]').value) || 0;
+            const salarioPropuesto = parseFloat(cargoInput.value) || 0;
             const selectUrgencia = row.querySelector('select[data-campo="nivel_urgencia"]');
             const nivelUrgencia = selectUrgencia ? (parseInt(selectUrgencia.value) || 1) : 1;
 
