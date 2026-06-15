@@ -282,7 +282,6 @@ function abrirDetalleVentas(modalidad) {
             }
 
             const rows = resp.datos;
-            let totalMonto = 0;
             let html = '';
 
             rows.forEach(function (r) {
@@ -291,7 +290,7 @@ function abrirDetalleVentas(modalidad) {
                     : '<span class="badge bg-success">OK</span>';
 
                 html += `
-                    <tr>
+                    <tr class="${r.Anulado == 1 ? 'table-danger' : ''}">
                         <td>${r.Hora || ''}</td>
                         <td>${r.CodPedido || ''}</td>
                         <td>${r.DBBatidos_Nombre || ''}</td>
@@ -300,7 +299,6 @@ function abrirDetalleVentas(modalidad) {
                         <td class="text-center">${anulado}</td>
                     </tr>
                 `;
-                if (r.Anulado != 1) totalMonto += parseFloat(r.Precio) || 0;
             });
 
             if (rows.length === 0) {
@@ -308,8 +306,9 @@ function abrirDetalleVentas(modalidad) {
             }
 
             $('#tbodyDetalleVentas').html(html);
-            $('#modalTotalTx').text(rows.length);
-            $('#modalTotalMonto').text(fmt(totalMonto));
+            // Total correcto: suma de MontoFactura deduplicado por CodPedido (Anulado=0)
+            $('#modalTotalTx').text(resp.total_pedidos + ' pedido(s)');
+            $('#modalTotalMonto').text(fmt(resp.total_factura));
         },
         error: function () {
             $('#tbodyDetalleVentas').html('<tr><td colspan="6" class="text-center text-danger py-3">Error de conexión</td></tr>');

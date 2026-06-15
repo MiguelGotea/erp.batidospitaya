@@ -75,17 +75,21 @@ try {
     if ($tipo_cambio <= 0) $tipo_cambio = 1; // protección contra división por cero
 
     // ── 5. Ventas por modalidad (≤ HoraFinal) ────────────────────────────────
-    // Usamos SUM agrupado por modalidad en una sola consulta
-    $sqlVentas = "SELECT
-                    v.Modalidad,
-                    SUM(CASE WHEN v.Anulado = 1 THEN 0 ELSE COALESCE(v.Precio, 0) END) AS total
-                  FROM VentasGlobalesAccessCSV v
-                  WHERE v.Fecha   = :fecha
-                    AND v.local   = :sucursal";
+    // Cada CodPedido comparte el mismo MontoFactura en todas sus filas de detalle.
+    // Se deduplica por CodPedido con DISTINCT para sumar MontoFactura una sola vez
+    // por pedido. Solo pedidos no anulados (Anulado = 0).
+    $sqlVentas = "SELECT sub.Modalidad, SUM(sub.MontoFactura) AS total
+                  FROM (
+                      SELECT DISTINCT v.CodPedido, v.Modalidad, v.MontoFactura
+                      FROM VentasGlobalesAccessCSV v
+                      WHERE v.Fecha   = :fecha
+                        AND v.local   = :sucursal
+                        AND v.Anulado = 0";
     if ($hora_final) {
-        $sqlVentas .= " AND v.Hora <= :hora_final";
+        $sqlVentas .= "   AND v.Hora <= :hora_final";
     }
-    $sqlVentas .= " GROUP BY v.Modalidad";
+    $sqlVentas .= "   ) sub
+                  GROUP BY sub.Modalidad";
 
     $stmtV = $conn->prepare($sqlVentas);
     $stmtV->bindValue(':fecha',    $fecha);
@@ -97,10 +101,10 @@ try {
     $rowsVentas = $stmtV->fetchAll(PDO::FETCH_ASSOC);
 
     $ventas = [
-        'POS'          => 0,
+        'POS'           => 0,
         'TRANSFERENCIA' => 0,
-        'PEDIDOSYA'    => 0,
-        'EFECTIVO'     => 0,
+        'PEDIDOSYA'     => 0,
+        'EFECTIVO'      => 0,
     ];
     foreach ($rowsVentas as $rv) {
         $mod = strtoupper(trim($rv['Modalidad']));
