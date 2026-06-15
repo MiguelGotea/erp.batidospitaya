@@ -23,16 +23,10 @@ try {
         exit;
     }
 
-    // ── 1. Obtener id interno de sucursal ────────────────────────────────────
-    $stmtSuc = $conn->prepare("SELECT id FROM sucursales WHERE codigo = :codigo LIMIT 1");
-    $stmtSuc->bindValue(':codigo', $sucursal);
-    $stmtSuc->execute();
-    $rowSuc = $stmtSuc->fetch(PDO::FETCH_ASSOC);
-    if (!$rowSuc) {
-        echo json_encode(['success' => false, 'message' => 'Sucursal no encontrada.']);
-        exit;
-    }
-    $sucursal_id = (int)$rowSuc['id'];
+    // ── 1. Nota de relación de sucursal ──────────────────────────────────────
+    // Las tablas msaccess_masivo usan Sucursal = sucursales.codigo (valor numérico).
+    // Se usa $sucursal directamente en todos los filtros; MySQL hace cast implícito.
+    // NUNCA se usa sucursales.id.
 
     // ── 2. Nombre completo del cajero ─────────────────────────────────────────
     $cajero = 'Desconocido';
@@ -57,10 +51,10 @@ try {
     // ── 3. Obtener hora_inicial del cierre ───────────────────────────────────
     $stmtCierre = $conn->prepare(
         "SELECT HoraInicial FROM msaccess_masivo_CierreDiario
-         WHERE Sucursal = :suc AND CodigoCierre = :cod LIMIT 1"
+         WHERE Sucursal = :sucursal AND CodigoCierre = :cod LIMIT 1"
     );
-    $stmtCierre->bindValue(':suc', $sucursal_id, PDO::PARAM_INT);
-    $stmtCierre->bindValue(':cod', $cod_cierre,  PDO::PARAM_INT);
+    $stmtCierre->bindValue(':sucursal', $sucursal);
+    $stmtCierre->bindValue(':cod', $cod_cierre, PDO::PARAM_INT);
     $stmtCierre->execute();
     $rowCierre = $stmtCierre->fetch(PDO::FETCH_ASSOC);
     $hora_inicial_real = $rowCierre ? $rowCierre['HoraInicial'] : null;
@@ -69,13 +63,13 @@ try {
     $stmtEI = $conn->prepare(
         "SELECT Dinero, TipoCambio_C
          FROM msaccess_masivo_EstadoInicial
-         WHERE Fecha = :fecha AND Sucursal = :suc
+         WHERE Fecha = :fecha AND Sucursal = :sucursal
          LIMIT 1"
     );
-    $stmtEI->bindValue(':fecha', $fecha);
-    $stmtEI->bindValue(':suc',   $sucursal_id, PDO::PARAM_INT);
+    $stmtEI->bindValue(':fecha',    $fecha);
+    $stmtEI->bindValue(':sucursal', $sucursal);
     $stmtEI->execute();
-    $rowEI       = $stmtEI->fetch(PDO::FETCH_ASSOC);
+    $rowEI        = $stmtEI->fetch(PDO::FETCH_ASSOC);
     $caja_inicial = $rowEI ? (float)$rowEI['Dinero']       : 0;
     $tipo_cambio  = $rowEI ? (float)$rowEI['TipoCambio_C'] : 0;
     if ($tipo_cambio <= 0) $tipo_cambio = 1; // protección contra división por cero
@@ -120,10 +114,10 @@ try {
         "SELECT d.Monto, d.Denominacion
          FROM msaccess_masivo_Depositos d
          WHERE d.Fecha    = :fecha
-           AND d.Sucursal = :suc"
+           AND d.Sucursal = :sucursal"
     );
-    $stmtDep->bindValue(':fecha', $fecha);
-    $stmtDep->bindValue(':suc',   $sucursal_id, PDO::PARAM_INT);
+    $stmtDep->bindValue(':fecha',    $fecha);
+    $stmtDep->bindValue(':sucursal', $sucursal);
     $stmtDep->execute();
     $rowsDep = $stmtDep->fetchAll(PDO::FETCH_ASSOC);
 
@@ -142,13 +136,13 @@ try {
         "SELECT SUM(COALESCE(CostoTotal, 0)) AS total
          FROM msaccess_masivo_Compras
          WHERE Fecha    = :fecha
-           AND Sucursal = :suc
+           AND Sucursal = :sucursal
            AND Tipo     = 'CAJA'"
     );
-    $stmtComp->bindValue(':fecha', $fecha);
-    $stmtComp->bindValue(':suc',   $sucursal_id, PDO::PARAM_INT);
+    $stmtComp->bindValue(':fecha',    $fecha);
+    $stmtComp->bindValue(':sucursal', $sucursal);
     $stmtComp->execute();
-    $rowComp     = $stmtComp->fetch(PDO::FETCH_ASSOC);
+    $rowComp      = $stmtComp->fetch(PDO::FETCH_ASSOC);
     $compras_caja = (float)($rowComp['total'] ?? 0);
 
     // ── 8. Conteo de Caja ─────────────────────────────────────────────────────
