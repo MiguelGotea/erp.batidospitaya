@@ -16,6 +16,9 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
+
+// Permiso para exportar Excel
+$puedeExportar = tienePermiso('balance_cierre_diario', 'exportar', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -109,6 +112,7 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
         </div><!-- /sub-container -->
     </div><!-- /main-container -->
 
+    <?php if ($puedeExportar): ?>
     <!-- FAB: Botón flotante de herramientas -->
     <div class="fab-container">
         <div class="fab-options">
@@ -121,6 +125,7 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
             <i class="fas fa-wrench"></i>
         </div>
     </div>
+    <?php endif; ?>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
