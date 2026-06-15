@@ -58,12 +58,15 @@ function horaAMinutos(h) {
 
 // ── Inicialización ───────────────────────────────────────────
 $(document).ready(function () {
-    cargarSucursales();
+    // Leer parámetros que vienen del Historial de Cierres
+    const params     = new URLSearchParams(window.location.search);
+    const pSucursal  = params.get('sucursal') || '';
+    const pCierre    = parseInt(params.get('cierre')) || 0;
 
-    // Tecla Enter en filtros → buscar
-    $('#filtroFecha, #filtroSucursal').on('keydown', function (e) {
-        if (e.key === 'Enter') buscarCierres();
-    });
+    // Si hay sucursal en la URL → auto-buscar y auto-seleccionar
+    if (pSucursal) {
+        buscarCierres(pCierre);
+    }
 });
 
 // ── Carga el selector de sucursales ─────────────────────────
@@ -83,12 +86,13 @@ function cargarSucursales() {
 }
 
 // ── Busca los cierres del día ────────────────────────────────
-function buscarCierres() {
+// autoSelectCierre: CodigoCierre a pre-seleccionar (0 = seleccionar el primero)
+function buscarCierres(autoSelectCierre = 0) {
     const fecha    = $('#filtroFecha').val();
     const sucursal = $('#filtroSucursal').val();
 
     if (!fecha || !sucursal) {
-        mostrarAlerta('Seleccioná una fecha y una sucursal antes de buscar.', 'warning');
+        // Sin parámetros válidos → no hacer nada (la página se abrió sin contexto)
         return;
     }
 
@@ -131,9 +135,16 @@ function buscarCierres() {
             renderizarSidebar();
             $('#bcdLayout').show();
 
-            // Auto-seleccionar primer grupo
+            // Auto-seleccionar: el cierre indicado por URL, o el primero
             if (gruposCierres.length > 0) {
-                seleccionarGrupo(0);
+                if (autoSelectCierre > 0) {
+                    const idxAuto = gruposCierres.findIndex(
+                        g => parseInt(g.final.CodigoCierre) === autoSelectCierre
+                    );
+                    seleccionarGrupo(idxAuto >= 0 ? idxAuto : 0);
+                } else {
+                    seleccionarGrupo(0);
+                }
             }
         },
         error: function () {
