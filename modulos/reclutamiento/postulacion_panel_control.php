@@ -123,10 +123,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="text-muted small mt-2">
-                                    <i class="bi bi-info-circle"></i> Mostrando <span id="countSucursales">0</span>
-                                    sucursales configuradas
-                                </div>
+
                             </div>
 
                             <!-- Pestaña Administrativo -->
@@ -140,13 +137,11 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 100px;">Obligatorio</th>
                                                 <th style="width: 120px;">Plaza Temporal</th>
                                                 <th style="width: 100px;">
-                                                    <i class="bi bi-info-circle" data-bs-toggle="tooltip"
-                                                        title="Plazas Activas Actuales"></i>
                                                     Personal Contratado
                                                 </th>
-                                                <th style="width: 120px;">Web</th>
+                                                <th style="width: 120px;">Mostrar en Web</th>
                                                 <th style="width: 150px;">Urgencia</th>
-                                                <th style="width: 80px;">PDF</th>
+                                                <th style="width: 80px;">Perfil de Puesto</th>
                                                 <th style="width: 80px;">Banner</th>
                                                 <th style="width: 75px;" class="text-center">Activo</th>
                                             </tr>
@@ -156,10 +151,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="text-muted small mt-2">
-                                    <i class="bi bi-info-circle"></i> Mostrando <span id="countAdministrativo">0</span>
-                                    cargos de administración activos
-                                </div>
+
 
                                 <!-- Cargos Inactivos Administrativo -->
                                 <div id="inactivosAdministrativoContainer" class="mt-4 d-none">
@@ -183,13 +175,11 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 100px;">Obligatorio</th>
                                                 <th style="width: 110px;">Plaza Temporal</th>
                                                 <th style="width: 100px;">
-                                                    <i class="bi bi-info-circle" data-bs-toggle="tooltip"
-                                                        title="Plazas Activas Actuales"></i>
                                                     Personal Contratado
                                                 </th>
-                                                <th style="width: 150px;">Web</th>
+                                                <th style="width: 150px;">Mostrar en Web</th>
                                                 <th style="width: 150px;">Urgencia</th>
-                                                <th style="width: 80px;">PDF</th>
+                                                <th style="width: 80px;">Perfil de Puesto</th>
                                                 <th style="width: 80px;">Banner</th>
                                                 <th style="width: 75px;" class="text-center">Activo</th>
                                             </tr>
@@ -199,10 +189,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="text-muted small mt-2">
-                                    <i class="bi bi-info-circle"></i> Mostrando <span id="countProduccion">0</span>
-                                    cargos de CDS activos
-                                </div>
+
 
                                 <!-- Cargos Inactivos CDS -->
                                 <div id="inactivosCDSContainer" class="mt-4 d-none">
