@@ -655,7 +655,19 @@ body {
     width: 100%;
 }
 
-<<<<<<< Updated upstream
+/* Loader centrado mientras carga la foto */
+.carousel-foto-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
 /* Botones de navegación del carousel — siempre visibles */
 .carousel-control-prev,
 .carousel-control-next {
@@ -684,47 +696,13 @@ body {
     background-color: #51B8AC;
     box-shadow: 0 6px 20px rgba(14, 84, 76, 0.55);
     transform: translateY(-50%) scale(1.08);
-=======
-/* Loader centrado mientras carga la foto */
-.carousel-foto-loader {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-}
-
-/* Flechas del carrusel visibles sobre fondo blanco */
-.carousel-control-prev,
-.carousel-control-next {
-    width: 10%;
->>>>>>> Stashed changes
-    opacity: 1;
 }
 
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
-<<<<<<< Updated upstream
     width: 20px;
     height: 20px;
     filter: brightness(0) invert(1);
-=======
-    background-color: rgba(14, 84, 76, 0.85);
-    border-radius: 50%;
-    padding: 20px;
-    background-size: 50% 50%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-    transition: background-color 0.2s;
-}
-
-.carousel-control-prev:hover .carousel-control-prev-icon,
-.carousel-control-next:hover .carousel-control-next-icon {
-    background-color: rgba(14, 84, 76, 1);
->>>>>>> Stashed changes
 }
 
 /* Scrollbar personalizada */
