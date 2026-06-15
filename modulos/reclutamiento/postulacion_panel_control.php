@@ -46,6 +46,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
 
 
                         <!-- Navegación por pestañas -->
+
                         <ul class="nav nav-tabs nav-fill mb-4" id="panelTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="sucursales-tab" data-bs-toggle="tab"
@@ -76,7 +77,9 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                         <thead class="table-header">
                                             <tr>
                                                 <th colspan="2" class="text-start ps-3 py-2">
-                                                    <i class="bi bi-globe me-2"></i>Perfiles de Puesto Globales <span class="text-muted small fw-normal ms-2">(Aplica a todas las tiendas)</span>
+                                                    <i class="bi bi-globe me-2"></i>Perfiles de Puesto Globales <span
+                                                        class="text-muted small fw-normal ms-2">(Aplica a todas las
+                                                        tiendas)</span>
                                                 </th>
                                             </tr>
                                             <tr>
@@ -102,7 +105,8 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                 </div>
 
                                 <div class="table-responsive">
-                                    <table class="table table-hover panel-control-table align-middle" id="tablaSucursales">
+                                    <table class="table table-hover panel-control-table align-middle"
+                                        id="tablaSucursales">
                                         <thead class="table-header text-center">
                                             <tr>
                                                 <th style="width: 200px;">Grupo</th>
@@ -164,7 +168,8 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                             <!-- Pestaña CDS -->
                             <div class="tab-pane fade" id="produccion" role="tabpanel">
                                 <div class="table-responsive">
-                                    <table class="table table-hover panel-control-table align-middle" id="tablaProduccion">
+                                    <table class="table table-hover panel-control-table align-middle"
+                                        id="tablaProduccion">
                                         <thead class="table-header">
                                             <tr>
                                                 <th>Cargo</th>
@@ -274,8 +279,10 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                     </h6>
                                     <p class="small text-muted mb-0">
                                         Gestiona los cargos de producción. <strong>Cantidad</strong> es la base
-                                        necesaria, <strong>Plaza Temporal</strong> permite abrir más plazas temporalmente, y
-                                        <strong>Personal Contratado</strong> muestra cuántos están actualmente en el cargo.
+                                        necesaria, <strong>Plaza Temporal</strong> permite abrir más plazas
+                                        temporalmente, y
+                                        <strong>Personal Contratado</strong> muestra cuántos están actualmente en el
+                                        cargo.
                                     </p>
                                 </div>
                             </div>
@@ -300,7 +307,8 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                         <strong><i class="fas fa-info-circle me-1"></i> Nota:</strong>
                         <br>
                         Los cambios solo se guardan al presionar el botón "Guardar Cambios". La columna
-                        <strong>Personal Contratado/Activas</strong> se actualiza automáticamente según los operarios activos en el
+                        <strong>Personal Contratado/Activas</strong> se actualiza automáticamente según los operarios
+                        activos en el
                         sistema.
                     </div>
                 </div>
@@ -330,23 +338,28 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
             opacity: 0.78;
             transition: opacity .2s;
         }
+
         .inactive-cargo-item:hover {
             opacity: 0.95;
         }
+
         .inactive-cargo-item .cargo-info {
             display: flex;
             align-items: center;
             gap: 8px;
         }
+
         .inactive-cargo-item .cargo-nombre {
             color: #6c757d;
             font-weight: 600;
             font-size: .875rem;
         }
+
         .inactive-cargo-item .cargo-area {
             color: #adb5bd;
             font-size: .78rem;
         }
+
         /* Toggle Activo en filas activas ─────────── */
         .operativo-toggle {
             cursor: pointer;
