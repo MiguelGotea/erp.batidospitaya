@@ -1596,11 +1596,13 @@ function obtenerTiposFaltaConPorcentajes()
                     <span class="fab-label">Vacaciones</span>
                     <div class="fab-icon-holder"><i class="fas fa-umbrella-beach"></i></div>
                 </div>
-                <div class="fab-option" onclick="mostrarModalNuevoSubsidio()">
+                <!-- TEMPORALMENTE OCULTO -->
+                <div class="fab-option" onclick="mostrarModalNuevoSubsidio()" style="display:none;">
                     <span class="fab-label">Subsidio</span>
                     <div class="fab-icon-holder"><i class="fas fa-notes-medical"></i></div>
                 </div>
-                <div class="fab-option" onclick="mostrarModalNuevaFaltaPermiso()">
+                <!-- TEMPORALMENTE OCULTO -->
+                <div class="fab-option" onclick="mostrarModalNuevaFaltaPermiso()" style="display:none;">
                     <span class="fab-label">Falta / Permiso</span>
                     <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
                 </div>
