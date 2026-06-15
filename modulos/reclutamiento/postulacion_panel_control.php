@@ -31,6 +31,12 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/postulacion_panel_control.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <style>
+        /* Hover agrupado para que ambas filas de una tienda se resalten juntas */
+        .store-group:hover > tr > td {
+            background-color: var(--bs-table-hover-bg, rgba(0, 0, 0, 0.05)) !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -87,9 +93,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 80px;">Banner</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="tablaSucursalesBody">
-                                            <!-- Cargado dinámicamente -->
-                                        </tbody>
+                                        <!-- TBODYs generados dinámicamente por JS -->
                                     </table>
                                 </div>
 
@@ -103,8 +107,8 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 </th>
                                             </tr>
                                             <tr class="bg-light text-secondary">
-                                                <th class="ps-3 border-bottom">Cargo</th>
-                                                <th style="width: 150px;" class="text-center border-bottom">Perfil de Puesto</th>
+                                                <th class="ps-3 border-bottom" style="background-color: #f8f9fa !important; color: #495057 !important; border-top: none;">Cargo</th>
+                                                <th style="width: 150px; background-color: #f8f9fa !important; color: #495057 !important; border-top: none;" class="text-center border-bottom">Perfil de Puesto</th>
                                             </tr>
                                         </thead>
                                         <tbody>
