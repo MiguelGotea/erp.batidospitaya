@@ -21,6 +21,11 @@ $(document).ready(function () {
         if (!$(e.target).closest('.filter-panel, .filter-icon').length) {
             cerrarTodosFiltros();
         }
+        // Cerrar FAB si se hace clic fuera
+        if (!$(e.target).closest('.fab-container').length) {
+            $('.fab-container').removeClass('active');
+            $('.btn-floating-pitaya').removeClass('active');
+        }
     });
 
     // Cerrar filtros al hacer scroll significativo
@@ -37,6 +42,15 @@ $(document).ready(function () {
     // No cerrar filtros al scrollear dentro de la tabla
     $('.table-responsive').on('scroll', function (e) {
         e.stopPropagation();
+    });
+
+    // Toggle FAB al hacer clic en el botón flotante
+    $(document).on('click', '.btn-floating-pitaya', function (e) {
+        const container = $(this).closest('.fab-container');
+        if (container.length) {
+            container.toggleClass('active');
+            $(this).toggleClass('active');
+        }
     });
 });
 
@@ -91,14 +105,13 @@ function renderizarTabla(datos) {
     }
 
     datos.forEach(function (row) {
-        const faltante   = parseInt(row.Faltante) || 0;
-        const badgeSF    = buildBadgeSF(faltante);
-        const obs        = (row.Observaciones || '').trim();
-        const obsCorta   = obs.length > 45 ? obs.substring(0, 45) + '…' : (obs || '—');
-        const hiStr      = row.HoraInicial ? row.HoraInicial.substring(0, 5) : '—';
-        const hfStr      = row.HoraFinal   ? row.HoraFinal.substring(0, 5)   : '—';
-        const fechaStr   = formatFecha(row.Fecha);
-        const cajeroStr  = row.cajero || 'Sin cajero';
+        const faltante  = parseInt(row.Faltante) || 0;
+        const badgeSF   = buildBadgeSF(faltante);
+        const obs       = (row.Observaciones || '').trim();
+        const hiStr     = row.HoraInicial ? row.HoraInicial.substring(0, 5) : '—';
+        const hfStr     = row.HoraFinal   ? row.HoraFinal.substring(0, 5)   : '—';
+        const fechaStr  = formatFecha(row.Fecha);
+        const cajeroStr = row.cajero || 'Sin cajero';
 
         // URL para botón Ver: pasa fecha, sucursal y código de cierre
         const urlVer = `balance_cierre_diario.php?fecha=${encodeURIComponent(row.Fecha)}&sucursal=${encodeURIComponent(row.Sucursal)}&cierre=${encodeURIComponent(row.CodigoCierre)}`;
@@ -112,7 +125,7 @@ function renderizarTabla(datos) {
                 <td>${badgeSF}</td>
                 <td class="text-nowrap">${hiStr}</td>
                 <td class="text-nowrap">${hfStr}</td>
-                <td title="${escHtml(obs)}">${escHtml(obsCorta)}</td>
+                <td>${escHtml(obs || '—')}</td>
                 <td class="text-center">
                     <a href="${urlVer}" target="_blank" class="btn-hcd-ver">
                         <i class="bi bi-eye"></i> Ver
@@ -515,4 +528,32 @@ function escHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+// ── Descargar Excel (con filtros activos) ─────────────────────
+function descargarExcel() {
+    // Cerrar el FAB
+    $('.fab-container').removeClass('active');
+    $('.btn-floating-pitaya').removeClass('active');
+
+    // Crear un form temporal y enviar los filtros + orden al endpoint PHP
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'ajax/hcd_exportar_excel.php';
+    form.target = '_blank';  // abre/descarga en nueva pestaña sin salir de la página
+
+    const addField = (name, value) => {
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = name;
+        input.value = value;
+        form.appendChild(input);
+    };
+
+    addField('filtros', JSON.stringify(filtrosActivos));
+    addField('orden',   JSON.stringify(ordenActivo));
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 }
