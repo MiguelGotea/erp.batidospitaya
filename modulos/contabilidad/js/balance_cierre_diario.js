@@ -298,7 +298,7 @@ function renderizarDetalle() {
     // Totales ventas
     const totalFisico  = d.total_pos_fisico + d.total_transfer_fisico + d.total_py_fisico + d.efectivo_fisico;
     const totalSistema = d.pos_sistema + d.transfer_sistema + d.py_sistema + d.efectivo_sistema;
-    const totalDif     = totalSistema - totalFisico;
+    const totalDif     = totalFisico - totalSistema;
     $('#vfTotalFisico').text(fmt(totalFisico));
     $('#vfTotalSistema').text(fmt(totalSistema));
     setDiferencia('#vfTotalDif', totalDif);
@@ -347,7 +347,7 @@ function renderizarDetalle() {
 
 // ── Helper: renderiza una fila de ventas ─────────────────────
 function setVentaFila(prefix, fisico, sistema) {
-    const dif = sistema - fisico;
+    const dif = fisico - sistema;
     $(`#vf${prefix}Fisico`).text(fmt(fisico));
     $(`#vf${prefix}Sistema`).text(fmt(sistema));
     setDiferencia(`#vf${prefix}Dif`, dif);
