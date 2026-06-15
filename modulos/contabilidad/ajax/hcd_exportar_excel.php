@@ -9,7 +9,7 @@ require_once '../../../core/database/conexion.php';
 $usuario       = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
+if (!tienePermiso('balance_cierre_diario', 'exportar', $cargoOperario)) {
     die('Sin permiso para descargar este reporte.');
 }
 
