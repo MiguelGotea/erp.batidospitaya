@@ -14,6 +14,11 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
     header('Location: /login.php');
     exit();
 }
+
+// Parámetros recibidos desde el Historial de Cierres
+$paramFecha    = isset($_GET['fecha'])    ? htmlspecialchars($_GET['fecha'])    : date('Y-m-d');
+$paramSucursal = isset($_GET['sucursal']) ? htmlspecialchars($_GET['sucursal']) : '';
+$paramCierre   = isset($_GET['cierre'])   ? (int)$_GET['cierre']               : 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -41,37 +46,21 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
 
             <div class="container-fluid p-3">
 
-                <!-- Filtros superiores -->
-                <div class="bcd-filter-bar card shadow-sm mb-4">
-                    <div class="card-body py-3">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-auto">
-                                <label class="form-label small fw-bold text-uppercase text-muted mb-1">
-                                    <i class="bi bi-calendar3 me-1"></i>Fecha
-                                </label>
-                                <input type="date" class="form-control form-control-sm bcd-input" id="filtroFecha"
-                                    value="<?php echo date('Y-m-d'); ?>">
-                            </div>
-                            <div class="col-auto">
-                                <label class="form-label small fw-bold text-uppercase text-muted mb-1">
-                                    <i class="bi bi-shop me-1"></i>Sucursal
-                                </label>
-                                <select class="form-select form-select-sm bcd-input" id="filtroSucursal"
-                                    style="min-width:200px;">
-                                    <option value="">Seleccionar sucursal...</option>
-                                </select>
-                            </div>
-                            <div class="col-auto">
-                                <button class="btn btn-pitaya btn-sm" id="btnBuscar" onclick="buscarCierres()">
-                                    <i class="bi bi-search me-1"></i>Buscar
-                                </button>
-                            </div>
-                            <div class="col-auto ms-auto">
-                                <span class="badge bcd-badge-info" id="badgeResultados" style="display:none;"></span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Inputs ocultos: cargados desde parámetros GET del Historial -->
+                <input type="hidden" id="filtroFecha"    value="<?php echo $paramFecha; ?>">
+                <input type="hidden" id="filtroSucursal" value="<?php echo $paramSucursal; ?>">
+                <!-- Badge de resultados (se usa internamente por el JS) -->
+                <span class="badge bcd-badge-info" id="badgeResultados" style="display:none;"></span>
+
+                <!-- Encabezado de contexto -->
+                <?php if ($paramSucursal): ?>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <a href="historial_cierres_diarios.php" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Volver al Historial
+                    </a>
+                    <span class="text-muted small">Cierre <strong>#<?php echo $paramCierre; ?></strong> &mdash; <?php echo date('d/m/Y', strtotime($paramFecha)); ?></span>
                 </div>
+                <?php endif; ?>
 
                 <!-- Layout principal: menú lateral + detalle -->
                 <div class="bcd-layout" id="bcdLayout" style="display:none;">
