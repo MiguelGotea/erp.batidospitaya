@@ -12,6 +12,8 @@ try {
         exit;
     }
 
+    // cd.Sucursal almacena el mismo valor numérico que sucursales.codigo
+    // Se filtra directo usando el codigo recibido; MySQL hace cast implícito varchar→int
     $sql = "SELECT
                 cd.CodigoCierre,
                 cd.HoraInicial,
@@ -27,9 +29,8 @@ try {
                 cd.Observaciones,
                 cd.Fecha
             FROM msaccess_masivo_CierreDiario cd
-            INNER JOIN sucursales s ON s.codigo = :sucursal
-            WHERE cd.Fecha = :fecha
-              AND cd.Sucursal = s.id
+            WHERE cd.Fecha     = :fecha
+              AND cd.Sucursal  = :sucursal
             ORDER BY cd.HoraInicial ASC";
 
     $stmt = $conn->prepare($sql);

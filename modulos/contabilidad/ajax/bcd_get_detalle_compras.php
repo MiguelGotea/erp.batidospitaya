@@ -12,17 +12,8 @@ try {
         exit;
     }
 
-    // Obtener el id interno de la sucursal a partir del codigo
-    $stmtSuc = $conn->prepare("SELECT id FROM sucursales WHERE codigo = :codigo LIMIT 1");
-    $stmtSuc->bindValue(':codigo', $sucursal);
-    $stmtSuc->execute();
-    $rowSuc = $stmtSuc->fetch(PDO::FETCH_ASSOC);
-
-    if (!$rowSuc) {
-        echo json_encode(['success' => false, 'message' => 'Sucursal no encontrada.']);
-        exit;
-    }
-    $sucursal_id = $rowSuc['id'];
+    // msaccess_masivo_Compras.Sucursal usa el mismo valor que sucursales.codigo.
+    // Se filtra directo sin pasar por sucursales.id (NUNCA usar sucursales.id).
 
     $sql = "SELECT
                 c.CodIngresoAlmacen,
@@ -35,14 +26,14 @@ try {
                 c.Tipo,
                 c.Fecha
             FROM msaccess_masivo_Compras c
-            WHERE c.Fecha     = :fecha
-              AND c.Sucursal  = :sucursal_id
-              AND c.Tipo      = 'CAJA'
+            WHERE c.Fecha    = :fecha
+              AND c.Sucursal = :sucursal
+              AND c.Tipo     = 'CAJA'
             ORDER BY c.CodIngresoAlmacen ASC";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bindValue(':fecha',       $fecha);
-    $stmt->bindValue(':sucursal_id', $sucursal_id, PDO::PARAM_INT);
+    $stmt->bindValue(':fecha',    $fecha);
+    $stmt->bindValue(':sucursal', $sucursal);
     $stmt->execute();
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
