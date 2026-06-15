@@ -49,8 +49,7 @@ $paramCierre   = isset($_GET['cierre'])   ? (int)$_GET['cierre']               :
                 <!-- Inputs ocultos: cargados desde parámetros GET del Historial -->
                 <input type="hidden" id="filtroFecha"    value="<?php echo $paramFecha; ?>">
                 <input type="hidden" id="filtroSucursal" value="<?php echo $paramSucursal; ?>">
-                <!-- Badge de resultados (se usa internamente por el JS) -->
-                <span class="badge bcd-badge-info" id="badgeResultados" style="display:none;"></span>
+
 
 
 
