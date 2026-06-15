@@ -148,6 +148,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 150px;">Urgencia</th>
                                                 <th style="width: 80px;">PDF</th>
                                                 <th style="width: 80px;">Banner</th>
+                                                <th style="width: 75px;" class="text-center">Activo</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tablaAdministrativoBody">
@@ -157,11 +158,22 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                 </div>
                                 <div class="text-muted small mt-2">
                                     <i class="bi bi-info-circle"></i> Mostrando <span id="countAdministrativo">0</span>
-                                    cargos de administración configurados
+                                    cargos de administración activos
+                                </div>
+
+                                <!-- Cargos Inactivos Administrativo -->
+                                <div id="inactivosAdministrativoContainer" class="mt-4 d-none">
+                                    <div class="d-flex align-items-center mb-2 gap-2">
+                                        <i class="bi bi-archive text-muted"></i>
+                                        <span class="text-muted fw-semibold small">Cargos Inactivos
+                                            (<span id="countInactivosAdmin">0</span>)
+                                        </span>
+                                    </div>
+                                    <div id="listaInactivosAdmin"></div>
                                 </div>
                             </div>
 
-                            <!-- Pestaña Producción -->
+                            <!-- Pestaña CDS -->
                             <div class="tab-pane fade" id="produccion" role="tabpanel">
                                 <div class="table-responsive">
                                     <table class="table table-hover panel-control-table align-middle" id="tablaProduccion">
@@ -179,6 +191,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 150px;">Urgencia</th>
                                                 <th style="width: 80px;">PDF</th>
                                                 <th style="width: 80px;">Banner</th>
+                                                <th style="width: 75px;" class="text-center">Activo</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tablaProduccionBody">
@@ -188,7 +201,18 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                 </div>
                                 <div class="text-muted small mt-2">
                                     <i class="bi bi-info-circle"></i> Mostrando <span id="countProduccion">0</span>
-                                    cargos de CDS configurados
+                                    cargos de CDS activos
+                                </div>
+
+                                <!-- Cargos Inactivos CDS -->
+                                <div id="inactivosCDSContainer" class="mt-4 d-none">
+                                    <div class="d-flex align-items-center mb-2 gap-2">
+                                        <i class="bi bi-archive text-muted"></i>
+                                        <span class="text-muted fw-semibold small">Cargos Inactivos
+                                            (<span id="countInactivosCDS">0</span>)
+                                        </span>
+                                    </div>
+                                    <div id="listaInactivosCDS"></div>
                                 </div>
                             </div>
                         </div>
@@ -308,6 +332,41 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
 
         .modal-backdrop {
             z-index: 1050 !important;
+        }
+
+        /* ── Cargos Inactivos ─────────────────────── */
+        .inactive-cargo-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 8px 14px;
+            margin-bottom: 6px;
+            opacity: 0.78;
+            transition: opacity .2s;
+        }
+        .inactive-cargo-item:hover {
+            opacity: 0.95;
+        }
+        .inactive-cargo-item .cargo-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .inactive-cargo-item .cargo-nombre {
+            color: #6c757d;
+            font-weight: 600;
+            font-size: .875rem;
+        }
+        .inactive-cargo-item .cargo-area {
+            color: #adb5bd;
+            font-size: .78rem;
+        }
+        /* Toggle Activo en filas activas ─────────── */
+        .operativo-toggle {
+            cursor: pointer;
         }
     </style>
 
