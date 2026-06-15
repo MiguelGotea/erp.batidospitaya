@@ -240,6 +240,17 @@ verificarPermisoORedireccionar('index_contabilidad', 'vista', $cargoOperario, '.
                 </a>
             </div>
             
+            <!-- Grupo Caja y Cierres -->
+            <h2 class="category-title">Caja y Cierres</h2>
+            <div class="modules">
+                <a href="balance_cierre_diario.php" class="module-card">
+                    <div class="module-icon">
+                        <i class="fas fa-cash-register"></i>
+                    </div>
+                    <h3 class="module-title">Balance Cierre Diario</h3>
+                </a>
+            </div>
+
             <!-- Grupo 2 -->
             <h2 class="category-title">Supervisión</h2>
             <div class="modules">
