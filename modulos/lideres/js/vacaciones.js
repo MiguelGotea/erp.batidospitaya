@@ -1328,3 +1328,266 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('DOMContentLoaded', initDraggableFab);
 })();
+
+// =====================================================
+// CÁMARA PREMIUM — Módulo Vacaciones / Faltas / Subsidios
+// =====================================================
+
+(function () {
+    let vacStream       = null;
+    let vacVideoTrack   = null;
+    let vacTorchActivo  = false;
+    let vacFocusTimer   = null;
+    let vacModalCamara  = null;
+    // ID del formulario que activó la cámara ('formNuevoSubsidio' | 'formNuevaVacacion' | 'formNuevaFalta')
+    let vacFormActivo   = null;
+
+    // Map: formId → { inputId, previewId, previewImgId }
+    const VAC_FOTO_MAP = {
+        formNuevoSubsidio : { inputId: 'subsidio_foto', previewId: 'subsidio_preview', previewImgId: 'subsidio_preview_img' },
+        formNuevaVacacion : { inputId: 'nueva_foto',    previewId: 'vacacion_preview', previewImgId: 'vacacion_preview_img' },
+        formNuevaFalta    : { inputId: 'falta_foto',    previewId: 'falta_preview',    previewImgId: 'falta_preview_img'    }
+    };
+
+    // Inicializar modal Bootstrap cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function () {
+        const el = document.getElementById('vacModalCamara');
+        if (el) {
+            vacModalCamara = new bootstrap.Modal(el);
+            // Elevar backdrop cuando el modal de cámara se muestra (aparece encima de otros modales)
+            el.addEventListener('show.bs.modal', function () {
+                setTimeout(function () {
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    if (backdrops.length > 0) {
+                        backdrops[backdrops.length - 1].style.zIndex = '1079';
+                    }
+                }, 10);
+            });
+        }
+    });
+
+    // ── Abrir cámara ─────────────────────────────────────────────────────────
+    window.vacAbrirCamara = function (formId) {
+        vacFormActivo = formId;
+        const video = document.getElementById('vac-video');
+
+        const constraints = {
+            audio: false,
+            video: {
+                facingMode: { ideal: 'environment' },
+                width:  { ideal: 3840 },
+                height: { ideal: 2160 },
+                focusMode: { ideal: 'continuous' }
+            }
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(function (s) {
+                vacStream     = s;
+                vacVideoTrack = s.getVideoTracks()[0];
+                video.srcObject = s;
+
+                if (vacModalCamara) vacModalCamara.show();
+
+                video.onloadedmetadata = function () {
+                    vacInicializarControles();
+                };
+
+                // Enfoque táctil
+                const vp = document.getElementById('vac-camera-viewport');
+                if (vp) vp.addEventListener('click', vacEnfocarEnPunto);
+            })
+            .catch(function (err) {
+                console.error('Error al acceder a la cámara:', err);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Cámara', 'No se pudo acceder a la cámara. Verifica los permisos.', 'error');
+                } else {
+                    alert('No se pudo acceder a la cámara. Verifica los permisos.');
+                }
+            });
+    };
+
+    // ── Inicializar controles tras metadata ───────────────────────────────────
+    function vacInicializarControles() {
+        if (!vacVideoTrack) return;
+        const caps = vacVideoTrack.getCapabilities ? vacVideoTrack.getCapabilities() : {};
+
+        // Linterna
+        const btnTorch       = document.getElementById('vac-btnTorch');
+        const btnPlaceholder = document.getElementById('vac-btnTorchPlaceholder');
+        if (caps.torch && btnTorch && btnPlaceholder) {
+            btnTorch.style.display       = 'flex';
+            btnPlaceholder.style.display = 'none';
+        }
+
+        // Enfoque continuo
+        const focusStatus = document.getElementById('vac-cam-focus-status');
+        if (caps.focusMode && caps.focusMode.includes('continuous')) {
+            vacVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+            if (focusStatus) {
+                focusStatus.textContent = 'CONTINUO';
+                focusStatus.className   = 'badge bg-success';
+            }
+        }
+
+        vacMostrarFocusToast('Toca la pantalla para enfocar', 2000);
+    }
+
+    // ── Enfoque por toque ─────────────────────────────────────────────────────
+    function vacEnfocarEnPunto(e) {
+        const vp   = document.getElementById('vac-camera-viewport');
+        const ring = document.getElementById('vac-focus-ring');
+        if (!vp || !ring) return;
+
+        const rect = vp.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ring.style.left = x + 'px';
+        ring.style.top  = y + 'px';
+        ring.classList.remove('active', 'locked');
+        void ring.offsetWidth; // reflow
+        ring.classList.add('active');
+
+        const focusStatus = document.getElementById('vac-cam-focus-status');
+        if (focusStatus) {
+            focusStatus.textContent = 'ENFOCANDO...';
+            focusStatus.className   = 'badge bg-warning text-dark';
+        }
+
+        if (vacVideoTrack) {
+            const xRatio = x / rect.width;
+            const yRatio = y / rect.height;
+
+            vacVideoTrack.applyConstraints({
+                advanced: [{ pointsOfInterest: [{ x: xRatio, y: yRatio }], focusMode: 'single-shot' }]
+            }).then(function () {
+                ring.classList.add('locked');
+                if (focusStatus) { focusStatus.textContent = 'ENFOCADO'; focusStatus.className = 'badge bg-success'; }
+                vacMostrarFocusToast('✓ Enfocado', 1500);
+                setTimeout(function () {
+                    if (vacVideoTrack) vacVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+                    if (focusStatus) focusStatus.textContent = 'CONTINUO';
+                }, 2000);
+            }).catch(function () {
+                ring.classList.add('locked');
+                vacMostrarFocusToast('Enfoque ajustado', 1200);
+                if (focusStatus) { focusStatus.textContent = 'AUTO'; focusStatus.className = 'badge bg-secondary'; }
+            });
+        }
+
+        setTimeout(function () { ring.classList.remove('active', 'locked'); }, 2500);
+    }
+
+    // ── Toast de enfoque ──────────────────────────────────────────────────────
+    function vacMostrarFocusToast(msg, duracion) {
+        const toast = document.getElementById('vac-focus-toast');
+        if (!toast) return;
+        if (vacFocusTimer) clearTimeout(vacFocusTimer);
+        toast.textContent = msg;
+        toast.style.opacity = '1';
+        vacFocusTimer = setTimeout(function () { toast.style.opacity = '0'; }, duracion || 1500);
+    }
+
+    // ── Linterna ──────────────────────────────────────────────────────────────
+    window.vacToggleLinterna = function () {
+        if (!vacVideoTrack) return;
+        vacTorchActivo = !vacTorchActivo;
+        vacVideoTrack.applyConstraints({ advanced: [{ torch: vacTorchActivo }] })
+            .then(function () {
+                const btn = document.getElementById('vac-btnTorch');
+                if (btn) btn.classList.toggle('on', vacTorchActivo);
+            })
+            .catch(function () {
+                vacTorchActivo = false;
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Linterna', 'Este dispositivo no soporta linterna.', 'info');
+                }
+            });
+    };
+
+    // ── Cerrar cámara ─────────────────────────────────────────────────────────
+    window.vacCerrarCamara = function () {
+        if (vacTorchActivo && vacVideoTrack) {
+            vacVideoTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+            vacTorchActivo = false;
+        }
+        if (vacStream) {
+            vacStream.getTracks().forEach(function (t) { t.stop(); });
+            vacStream     = null;
+            vacVideoTrack = null;
+        }
+
+        // Limpiar listener de enfoque táctil clonando el nodo
+        const vp = document.getElementById('vac-camera-viewport');
+        if (vp) vp.replaceWith(vp.cloneNode(true));
+
+        if (vacModalCamara) vacModalCamara.hide();
+
+        // Resetear controles
+        const btnTorch       = document.getElementById('vac-btnTorch');
+        const btnPlaceholder = document.getElementById('vac-btnTorchPlaceholder');
+        const focusStatus    = document.getElementById('vac-cam-focus-status');
+        const ring           = document.getElementById('vac-focus-ring');
+        if (btnTorch)       btnTorch.style.display = 'none';
+        if (btnPlaceholder) btnPlaceholder.style.display = 'block';
+        if (focusStatus)    { focusStatus.textContent = 'AUTO'; focusStatus.className = 'badge bg-secondary'; }
+        if (ring)           ring.className = '';
+    };
+
+    // ── Capturar foto ─────────────────────────────────────────────────────────
+    window.vacCapturarFoto = function () {
+        const video  = document.getElementById('vac-video');
+        const canvas = document.getElementById('vac-canvas');
+        if (!video || !canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        canvas.width  = video.videoWidth  || video.clientWidth;
+        canvas.height = video.videoHeight || video.clientHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(function (blob) {
+            const file = new File([blob], 'evidencia_camara.jpg', { type: 'image/jpeg' });
+            vacCerrarCamara();
+            vacAsignarFotoAlForm(file);
+        }, 'image/jpeg', 0.92);
+    };
+
+    // ── Asignar el blob capturado al input[file] del formulario activo ─────────
+    function vacAsignarFotoAlForm(file) {
+        const cfg = VAC_FOTO_MAP[vacFormActivo];
+        if (!cfg) return;
+
+        const input = document.getElementById(cfg.inputId);
+        if (input) {
+            // Reemplazar el FileList del input con el archivo capturado
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+        }
+
+        // Mostrar preview
+        const preview    = document.getElementById(cfg.previewId);
+        const previewImg = document.getElementById(cfg.previewImgId);
+        if (preview && previewImg) {
+            previewImg.src        = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        }
+    }
+
+    // ── Eliminar preview y limpiar input ──────────────────────────────────────
+    window.vacEliminarPreview = function (formId) {
+        const cfg = VAC_FOTO_MAP[formId];
+        if (!cfg) return;
+
+        const input = document.getElementById(cfg.inputId);
+        if (input) input.value = '';
+
+        const preview = document.getElementById(cfg.previewId);
+        if (preview) preview.style.display = 'none';
+
+        const previewImg = document.getElementById(cfg.previewImgId);
+        if (previewImg) previewImg.src = '';
+    };
+
+})();

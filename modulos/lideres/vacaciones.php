@@ -521,6 +521,10 @@ function obtenerTiposFaltaConPorcentajes()
     <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/vacaciones.css?v=<?php echo mt_rand(1, 10000); ?>">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Cámara encima de otros modales Bootstrap */
+        #vacModalCamara { z-index: 1080 !important; }
+    </style>
 
     <style>
         /* ── Cámara Premium (idéntica a reembolsos_ia_nuevo) ── */
