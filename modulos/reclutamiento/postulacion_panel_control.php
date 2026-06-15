@@ -51,7 +51,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="sucursales-tab" data-bs-toggle="tab"
                                     data-bs-target="#sucursales" type="button" role="tab">
-                                    <i class="bi bi-shop me-2"></i>Sucursales
+                                    <i class="bi bi-shop me-2"></i>Tiendas
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -70,14 +70,15 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
 
                         <!-- Contenido de las pestañas -->
                         <div class="tab-content" id="panelTabsContent">
-                            <!-- Pestaña Sucursales -->
+                            <!-- Pestaña Tiendas -->
                             <div class="tab-pane fade show active" id="sucursales" role="tabpanel">
                                 <div class="table-responsive mb-5">
                                     <table class="table table-hover panel-control-table align-middle"
                                         id="tablaSucursales">
                                         <thead class="table-header text-center">
                                             <tr>
-                                                <th style="width: 200px;">Grupo</th>
+                                                <th style="width: 200px;" class="text-start ps-4">Tienda</th>
+                                                <th style="width: 150px;">Cargo</th>
                                                 <th style="width: 100px;">Obligatorio</th>
                                                 <th style="width: 100px;">Plaza Temporal</th>
                                                 <th style="width: 100px;">Personal Contratado</th>
