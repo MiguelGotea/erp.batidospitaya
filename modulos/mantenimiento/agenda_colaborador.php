@@ -516,8 +516,8 @@ $sucursales = $ticketModel->getSucursales();
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label required">📋 Describe el trabajo realizado</label>
-                            <textarea name="trabajo_realizado" class="form-control" rows="3" required
+                            <label class="form-label">📋 Describe el trabajo realizado</label>
+                            <textarea name="trabajo_realizado" class="form-control" rows="3"
                                 placeholder="Ej: Se reparó la llave del lavamanos del área de producción. Se cambió empaque y ajustaron conexiones."></textarea>
                         </div>
                         <div class="mb-0">
