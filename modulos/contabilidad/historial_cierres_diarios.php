@@ -43,12 +43,8 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
 
             <div class="container-fluid p-3">
 
-                <!-- Barra superior: contador + registros por página -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-clock-history text-success fs-5"></i>
-                        <span class="fw-semibold text-muted" id="hcdContador">Cargando...</span>
-                    </div>
+                <!-- Barra superior: registros por página -->
+                <div class="d-flex justify-content-end align-items-center mb-3">
                     <div class="d-flex align-items-center gap-2">
                         <label class="mb-0 small text-muted">Mostrar:</label>
                         <select class="form-select form-select-sm" id="hcdPorPagina"
@@ -82,13 +78,11 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
                                     Sobrante / Faltante
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="HoraInicial" data-type="text">
+                                <th data-column="HoraInicial">
                                     Hora Inicial
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="HoraFinal" data-type="text">
+                                <th data-column="HoraFinal">
                                     Hora Final
-                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="Fecha" data-type="daterange">
                                     Fecha
