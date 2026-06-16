@@ -1894,4 +1894,5 @@ function obtenerTiposFaltaConPorcentajes()
     <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
+
 </html>
