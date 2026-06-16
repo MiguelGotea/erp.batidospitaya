@@ -1658,7 +1658,7 @@ function obtenerTiposFaltaConPorcentajes()
 
     <!-- Botón Flotante con opciones -->
     <?php if (tienePermiso('registro_vacaciones', 'nuevo_registro', $cargoOperario)): ?>
-        <div class="fab-container" id="fabContainer">
+        <div class="fab-container">
             <div class="fab-options">
                 <div class="fab-option" onclick="mostrarModalNuevaVacacion()">
                     <span class="fab-label">Vacaciones</span>
@@ -1673,22 +1673,10 @@ function obtenerTiposFaltaConPorcentajes()
                     <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
                 </div>
             </div>
-            <div class="btn-floating-pitaya" title="Nuevo Registro" onclick="toggleFab(event)">
-                <i class="fas fa-plus"></i>
+            <div class="btn-floating-pitaya" title="Herramientas">
+                <i class="fas fa-wrench"></i>
             </div>
         </div>
-        <script>
-            function toggleFab(event) {
-                event.stopPropagation();
-                document.getElementById('fabContainer').classList.toggle('active');
-            }
-            document.addEventListener('click', function(event) {
-                const fab = document.getElementById('fabContainer');
-                if (fab && fab.classList.contains('active') && !fab.contains(event.target)) {
-                    fab.classList.remove('active');
-                }
-            });
-        </script>
     <?php endif; ?>
     <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
     <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
