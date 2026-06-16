@@ -577,13 +577,7 @@ tr:nth-child(even) {
     transform: translateX(0);
 }
 
-/* Cursor grab en el botón principal cuando la función drag está activa */
-#fabContainer .btn-floating-pitaya {
-    cursor: grab;
-}
-#fabContainer .btn-floating-pitaya:active {
-    cursor: grabbing;
-}
+/* Cursor grab en el botón principal cuando la función drag está activa (manejado por fab_button.js) */
 
 /* =====================================================
    FAB ARRASTRABLE — Esquinas superiores (opciones hacia abajo)
@@ -620,23 +614,7 @@ tr:nth-child(even) {
     transform: translateY(-20px) !important;
 }
 
-/* =====================================================
-   FAB — Solo clic despliega las opciones (no hover)
-   Override del comportamiento global de fab_button.css
-   para que el toggle por clic funcione correctamente:
-   el hover solo aplica cuando ya está .active.
-   ===================================================== */
-.fab-container:hover:not(.active) .fab-options {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    transform: translateY(20px) !important;
-}
-
-/* Variante top-side: animación invertida también al hacer hover sin active */
-.fab-container.fab-top-side:hover:not(.active) .fab-options {
-    transform: translateY(-20px) !important;
-}
+/* El FAB usa hover nativo de fab_button.css (igual que cupones.php) */
 
 /* =====================================================
    Botones de selección de tipo de boleta (Modal de impresión)
