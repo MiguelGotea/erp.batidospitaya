@@ -754,6 +754,59 @@ if (
         ob_end_clean();
     }
 
+    // Aplicar filtro de sucursal del panel de columna JS si viene en GET
+    // El parámetro sucursal_filtro[] contiene los CÓDIGOS de sucursal seleccionados
+    if (!empty($_GET['sucursal_filtro']) && is_array($_GET['sucursal_filtro'])) {
+        $sucursalesFiltroExport = array_map('strval', $_GET['sucursal_filtro']);
+        $marcaciones = array_filter($marcaciones, function($m) use ($sucursalesFiltroExport) {
+            return in_array(strval($m['sucursal_codigo']), $sucursalesFiltroExport);
+        });
+        $marcaciones = array_values($marcaciones);
+    }
+
+    // Aplicar filtro de semana si viene en GET
+    if (isset($_GET['semana_min']) && $_GET['semana_min'] !== '') {
+        $semanaMin = intval($_GET['semana_min']);
+        $marcaciones = array_filter($marcaciones, function($m) use ($semanaMin) {
+            return intval($m['numero_semana']) >= $semanaMin;
+        });
+        $marcaciones = array_values($marcaciones);
+    }
+    if (isset($_GET['semana_max']) && $_GET['semana_max'] !== '') {
+        $semanaMax = intval($_GET['semana_max']);
+        $marcaciones = array_filter($marcaciones, function($m) use ($semanaMax) {
+            return intval($m['numero_semana']) <= $semanaMax;
+        });
+        $marcaciones = array_values($marcaciones);
+    }
+
+    // Aplicar filtro de colaborador si viene en GET
+    if (!empty($_GET['colaborador_filtro']) && is_array($_GET['colaborador_filtro'])) {
+        $colaboradoresFiltroExport = array_map('strval', $_GET['colaborador_filtro']);
+        $marcaciones = array_filter($marcaciones, function($m) use ($colaboradoresFiltroExport) {
+            return in_array(strval($m['CodOperario']), $colaboradoresFiltroExport);
+        });
+        $marcaciones = array_values($marcaciones);
+    }
+
+    // Aplicar filtro de cargo si viene en GET
+    if (!empty($_GET['cargo_filtro']) && is_array($_GET['cargo_filtro'])) {
+        $cargosFiltroExport = array_map('strval', $_GET['cargo_filtro']);
+        $marcaciones = array_filter($marcaciones, function($m) use ($cargosFiltroExport) {
+            return in_array(strval($m['codigo_cargo']), $cargosFiltroExport);
+        });
+        $marcaciones = array_values($marcaciones);
+    }
+
+    // Aplicar filtro de estado_dia (Turno Programado) si viene en GET
+    if (!empty($_GET['estado_dia_filtro']) && is_array($_GET['estado_dia_filtro'])) {
+        $estadosFiltroExport = array_map('strval', $_GET['estado_dia_filtro']);
+        $marcaciones = array_filter($marcaciones, function($m) use ($estadosFiltroExport) {
+            return in_array(strval($m['estado_dia']), $estadosFiltroExport);
+        });
+        $marcaciones = array_values($marcaciones);
+    }
+
     // Verificar si se solicitó la exportación a Excel
     if (isset($_GET['exportar_excel'])) {
         if (!$canExportMarcacionesBd) {
@@ -761,7 +814,9 @@ if (
             exit();
         }
         // Configurar headers para descarga de archivo Excel con rango de fechas
-        $labelSucursal = $modoVista === 'todas' ? 'todas_sucursales' : preg_replace('/[^a-zA-Z0-9_\-]/', '_', $nombreSucursal ?? 'sucursal');
+        $labelSucursal = (!empty($_GET['sucursal_filtro']) && is_array($_GET['sucursal_filtro']))
+            ? implode('_', array_map(function($s) { return preg_replace('/[^a-zA-Z0-9]/', '', $s); }, $_GET['sucursal_filtro']))
+            : ($modoVista === 'todas' ? 'todas_sucursales' : preg_replace('/[^a-zA-Z0-9_\-]/', '_', $nombreSucursal ?? 'sucursal'));
         $nombreArchivo = "marcaciones_{$labelSucursal}_{$fechaDesde}_a_{$fechaHasta}.xls";
         header('Content-Type: application/vnd.ms-excel; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
@@ -1514,7 +1569,8 @@ function verificarTardanzaYaRegistrada(
                     <div class="toolbar-container"
                         style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
                         <?php if ($canExportMarcacionesBd): ?>
-                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                            <a id="btn-exportar-excel"
+                               href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
                                 'desde' => $fechaDesde,
@@ -1522,12 +1578,13 @@ function verificarTardanzaYaRegistrada(
                                 'activo' => $filtroActivo,
                                 'operario_id' => $operario_id,
                                 'exportar_excel' => 1
-                            ]) ?>" class="btn btn-sm btn-success" title="Exportar Todo">
+                            ]) ?>" class="btn btn-sm btn-success" title="Exportar Todo (aplica filtros activos)">
                                 <i class="fas fa-file-excel"></i> Todo
                             </a>
                         <?php endif; ?>
                         <?php if ($esContabilidad): ?>
-                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                            <a id="btn-exportar-faltas"
+                               href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
                                 'desde' => $fechaDesde,
@@ -1538,7 +1595,8 @@ function verificarTardanzaYaRegistrada(
                             ]) ?>" class="btn btn-sm btn-danger" title="Exportar Faltas">
                                 <i class="fas fa-user-slash"></i> Faltas
                             </a>
-                            <a href="ver_marcaciones_todas.php?<?= http_build_query([
+                            <a id="btn-exportar-tardanzas"
+                               href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
                                 'modo' => $modoVista,
                                 'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
                                 'desde' => $fechaDesde,

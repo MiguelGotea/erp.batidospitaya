@@ -286,6 +286,15 @@ function renderizarTabla(datos) {
                 btnAccion += `<a href="postulacion_evaluacion_jefe.php?id=${c.id}" class="btn-ia-validar px-2 py-1 bg-primary border-primary" style="font-size: 11px;">Entrevista Jefe</a>`;
             }
 
+            // Botón para seleccionar directamente (saltar evaluación del jefe)
+            if (puedeSeleccionarDirecto) {
+                btnAccion += `<button class="btn-accion-icono text-success" 
+                                      onclick="seleccionarDirecto(${c.id}, '${(c.nombre || '').replace(/'/g, "\\'")}')"
+                                      title="Seleccionar directamente (sin evaluación de jefe)">
+                                 <i class="bi bi-check-circle-fill"></i>
+                             </button>`;
+            }
+
             const row = document.createElement('tr');
             row.innerHTML = `
                 ${getCandidatoCell(c)}
@@ -685,4 +694,115 @@ function cambiarRegistrosPorPagina() {
     registrosPorPagina = parseInt(document.getElementById('registrosPorPagina').value);
     paginaActual = 1;
     renderizarPaginaG1();
+}
+
+async function seleccionarDirecto(idPostulacion, nombre) {
+    const result = await Swal.fire({
+        title: '¿Seleccionar candidato directamente?',
+        html: `<b>${nombre}</b> pasará al grupo <b>Candidatos Seleccionados (Fase Contratación)</b> sin requerir la evaluación del jefe directo.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, seleccionar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#6b7280'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        Swal.fire({
+            title: 'Procesando...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        const response = await fetch('ajax/postulacion_seleccionar_directo.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_postulacion: idPostulacion })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Seleccionado!',
+                text: data.message,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            cargarCandidatos();
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        console.error('Error al seleccionar directamente:', error);
+        Swal.fire('Error', 'No se pudo completar la operación: ' + error.message, 'error');
+    }
+}
+
+async function agregarCandidatoInmediato(event) {
+    event.preventDefault();
+    
+    const nombre = document.getElementById('candiNombre').value;
+    const correo = document.getElementById('candiCorreo').value;
+    const telefono = document.getElementById('candiTelefono').value;
+    
+    try {
+        Swal.fire({
+            title: 'Procesando...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+        
+        const response = await fetch('ajax/postulacion_agregar_candidato_inmediato.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id_plaza: idPlaza,
+                nombre: nombre,
+                correo: correo,
+                telefono: telefono
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Cerrar modal usando bootstrap
+            const modalEl = document.getElementById('modalAgregarCandidatoInmediato');
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.hide();
+            
+            // Forzar el remover cualquier modal-backdrop huérfano si se congela
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            
+            // Reset form
+            document.getElementById('formAgregarCandidatoInmediato').reset();
+            
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Candidato Agregado!',
+                html: `
+                    <p>El candidato se ha agregado directamente al grupo de finalistas.</p>
+                    <div class="alert alert-info border-0 shadow-sm p-3 mt-3">
+                        <label class="small text-muted d-block mb-1 fw-bold">Código de Acceso:</label>
+                        <h3 class="mb-0 fw-bold letter-spacing-2 text-primary" style="font-size: 28px; letter-spacing: 3px;">${data.codigo_acceso}</h3>
+                    </div>
+                    <p class="small text-muted mt-3">Se generó el enlace de solicitud para el llenado de documentos.</p>
+                `,
+                confirmButtonText: 'Entendido'
+            });
+            cargarCandidatos();
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        console.error('Error al agregar candidato inmediato:', error);
+        Swal.fire('Error', 'No se pudo agregar al candidato: ' + error.message, 'error');
+    }
 }

@@ -722,7 +722,7 @@ function obtenerTiposFaltaConPorcentajes()
                 <!-- Filtros -->
                 <div class="filtros-container">
                     <form method="get" action="vacaciones.php" class="filtros-form">
-                        <?php if (tienePermiso('registro_vacaciones', 'ver_filtro_sucursal', $cargoOperario)): ?>
+                        <?php if (count($sucursales) > 1): ?>
                             <div class="filtro-group">
                                 <label for="sucursal">Sucursal</label>
                                 <select id="sucursal" name="sucursal">
