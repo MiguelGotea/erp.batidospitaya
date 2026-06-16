@@ -26,6 +26,7 @@ $fecha_inicio = $_GET['fecha_inicio'] ?? '';
 $fecha_fin = $_GET['fecha_fin'] ?? '';
 $total_dias = $_GET['total_dias'] ?? '';
 
+
 // Formatear fechas para mostrar (de Y-m-d a d/m/Y)
 function formatarFecha($fecha)
 {
