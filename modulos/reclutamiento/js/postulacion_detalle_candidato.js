@@ -354,3 +354,91 @@ function formatearFechaLegible(fecha) {
     const d = new Date(fecha + 'T00:00:00');
     return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
 }
+
+let modalCambiarPlazaInstance = null;
+
+function mostrarModalCambiarPlaza() {
+    const select = document.getElementById('selectPlazasActivas');
+    select.innerHTML = '<option value="">Cargando plazas...</option>';
+    
+    // Cargar las plazas activas
+    fetch('ajax/postulacion_get_plazas_activas.php')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                select.innerHTML = '<option value="">Seleccione plaza de destino...</option>';
+                data.datos.forEach(plaza => {
+                    const opt = document.createElement('option');
+                    opt.value = plaza.id;
+                    opt.textContent = `${plaza.nombre_cargo} - ${plaza.sucursal_nombre || 'Sin sucursal asignada'}`;
+                    select.appendChild(opt);
+                });
+            } else {
+                select.innerHTML = '<option value="">Error al cargar plazas</option>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            select.innerHTML = '<option value="">Error al cargar plazas</option>';
+        });
+        
+    const modalEl = document.getElementById('modalCambiarPlaza');
+    modalCambiarPlazaInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modalCambiarPlazaInstance.show();
+}
+
+async function cambiarPlazaCandidato(event) {
+    event.preventDefault();
+    const select = document.getElementById('selectPlazasActivas');
+    const idPlaza = select.value;
+    if (!idPlaza) {
+        Swal.fire('Atención', 'Debe seleccionar una plaza de destino', 'warning');
+        return;
+    }
+    
+    const result = await Swal.fire({
+        title: '¿Confirmar cambio de plaza?',
+        text: 'Se modificará el cargo y sucursal a los que aplica este candidato.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cambiar',
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    try {
+        Swal.fire({
+            title: 'Procesando...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+        
+        const response = await fetch('ajax/postulacion_cambiar_plaza.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id_candidato: idCandidato,
+                id_plaza: idPlaza
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            if (modalCambiarPlazaInstance) modalCambiarPlazaInstance.hide();
+            
+            // Remover backdrop huérfano si existiera
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+
+            await Swal.fire('Éxito', data.message, 'success');
+            window.location.reload();
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        console.error('Error al cambiar de plaza:', error);
+        Swal.fire('Error', error.message, 'error');
+    }
+}

@@ -65,6 +65,7 @@ function cargarDatos() {
                 renderizarTabla(response.datos);
                 renderizarPaginacion(response.total_registros);
                 actualizarIndicadoresFiltros();
+                actualizarBotonesExportar(); // Sincronizar filtros activos con botones de exportar
             } else {
                 console.error('Error:', response.message);
                 alert('Error al cargar datos: ' + response.message);
@@ -167,6 +168,12 @@ function renderizarTabla(datos) {
         } else if (row.hora_ingreso) {
             horarioMarcado = `<div class="d-flex flex-column align-items-center">
                 <span class="compact-time">${formatearHora(row.hora_ingreso)} - -</span>
+                ${tagSucursal}
+            </div>`;
+        } else if (row.hora_salida) {
+            // Solo tiene hora de salida (sin entrada registrada)
+            horarioMarcado = `<div class="d-flex flex-column align-items-center">
+                <span class="compact-time">- - ${formatearHora(row.hora_salida)}</span>
                 ${tagSucursal}
             </div>`;
         } else if (tagSucursal) {
@@ -894,6 +901,91 @@ function calcularMinutosDiferencia(programada, marcada) {
 function verDetalle(codOperario, fecha) {
     // Placeholder para ver detalle de marcación
     alert(`Ver detalle de marcación:\nOperario: ${codOperario}\nFecha: ${fecha}`);
+}
+
+/**
+ * Actualiza el href de los botones de exportar para reflejar todos los filtros
+ * activos del panel de columnas en el JS (filtrosActivos).
+ */
+function actualizarBotonesExportar() {
+    const botonesExportar = [
+        { id: 'btn-exportar-excel' },
+        { id: 'btn-exportar-faltas' },
+        { id: 'btn-exportar-tardanzas' }
+    ];
+
+    botonesExportar.forEach(function(btnInfo) {
+        const btn = document.getElementById(btnInfo.id);
+        if (!btn) return;
+
+        const url = new URL(btn.href, window.location.origin);
+        const params = url.searchParams;
+
+        // 1. Limpiar parámetros dinámicos anteriores (que terminen en [] o específicos)
+        const keysToDelete = [];
+        params.forEach(function(v, k) {
+            if (k.endsWith('[]') || k === 'semana_min' || k === 'semana_max') {
+                keysToDelete.push(k);
+            }
+        });
+        keysToDelete.forEach(function(k) { params.delete(k); });
+
+        // 2. Sincronizar fechas si hay filtro de fecha activo en columnas
+        if (filtrosActivos['fecha'] && filtrosActivos['fecha'].desde) {
+            params.set('desde', filtrosActivos['fecha'].desde);
+        }
+        if (filtrosActivos['fecha'] && filtrosActivos['fecha'].hasta) {
+            params.set('hasta', filtrosActivos['fecha'].hasta);
+        }
+
+        // Construir string de parámetros iniciales
+        let queryStr = params.toString();
+
+        // 3. Filtro de Semana (Rango Mínimo / Máximo)
+        if (filtrosActivos['numero_semana']) {
+            if (filtrosActivos['numero_semana'].min !== undefined && filtrosActivos['numero_semana'].min !== '') {
+                queryStr += (queryStr ? '&' : '') + 'semana_min=' + encodeURIComponent(filtrosActivos['numero_semana'].min);
+            }
+            if (filtrosActivos['numero_semana'].max !== undefined && filtrosActivos['numero_semana'].max !== '') {
+                queryStr += (queryStr ? '&' : '') + 'semana_max=' + encodeURIComponent(filtrosActivos['numero_semana'].max);
+            }
+        }
+
+        // 4. Filtro de Sucursal (Lista de códigos)
+        const sucursalesFiltradas = filtrosActivos['nombre_sucursal'];
+        if (sucursalesFiltradas && Array.isArray(sucursalesFiltradas) && sucursalesFiltradas.length > 0) {
+            sucursalesFiltradas.forEach(function(cod) {
+                queryStr += (queryStr ? '&' : '') + encodeURIComponent('sucursal_filtro[]') + '=' + encodeURIComponent(cod);
+            });
+        }
+
+        // 5. Filtro de Colaborador (Lista de IDs)
+        const colaboradoresFiltrados = filtrosActivos['nombre_completo'];
+        if (colaboradoresFiltrados && Array.isArray(colaboradoresFiltrados) && colaboradoresFiltrados.length > 0) {
+            colaboradoresFiltrados.forEach(function(cod) {
+                queryStr += (queryStr ? '&' : '') + encodeURIComponent('colaborador_filtro[]') + '=' + encodeURIComponent(cod);
+            });
+        }
+
+        // 6. Filtro de Cargo (Lista de IDs)
+        const cargosFiltrados = filtrosActivos['nombre_cargo'];
+        if (cargosFiltrados && Array.isArray(cargosFiltrados) && cargosFiltrados.length > 0) {
+            cargosFiltrados.forEach(function(cod) {
+                queryStr += (queryStr ? '&' : '') + encodeURIComponent('cargo_filtro[]') + '=' + encodeURIComponent(cod);
+            });
+        }
+
+        // 7. Filtro de Turno Programado / Estado del Día (Lista de estados)
+        const estadosFiltrados = filtrosActivos['estado_dia'];
+        if (estadosFiltrados && Array.isArray(estadosFiltrados) && estadosFiltrados.length > 0) {
+            estadosFiltrados.forEach(function(estado) {
+                queryStr += (queryStr ? '&' : '') + encodeURIComponent('estado_dia_filtro[]') + '=' + encodeURIComponent(estado);
+            });
+        }
+
+        // Asignar el nuevo href reconstruido
+        btn.href = url.pathname + '?' + queryStr;
+    });
 }
 
 // Función para establecer el filtro de incidencias (Tri-state discriminado)

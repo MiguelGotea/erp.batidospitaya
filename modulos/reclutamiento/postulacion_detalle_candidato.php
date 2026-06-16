@@ -155,6 +155,12 @@ if (count($analisisIA) > 0) {
                                                 <i class="bi bi-whatsapp me-2"></i>WhatsApp
                                             </a>
                                         <?php endif; ?>
+
+                                        <?php if ($puedeAprobar): ?>
+                                            <button class="btn btn-warning ms-2 text-dark fw-bold" onclick="mostrarModalCambiarPlaza()" style="font-weight: 600;">
+                                                <i class="bi bi-arrow-left-right me-2"></i>Cambiar Plaza
+                                            </button>
+                                        <?php endif; ?>
                                     </div>
 
                                     <?php if ($matchPromedio > 0): ?>
@@ -521,6 +527,37 @@ if (count($analisisIA) > 0) {
                 </div>
             </div>
 
+            <!-- Modal Cambiar Plaza -->
+            <div class="modal fade" id="modalCambiarPlaza" tabindex="-1" aria-labelledby="modalCambiarPlazaLabel" aria-hidden="true" data-bs-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title" id="modalCambiarPlazaLabel">
+                                <i class="bi bi-arrow-left-right me-2"></i> Cambiar de Plaza al Candidato
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="formCambiarPlaza" onsubmit="cambiarPlazaCandidato(event)">
+                            <div class="modal-body">
+                                <p class="small text-muted">Mover a este candidato a otra plaza disponible. Su progreso, entrevistas y evaluaciones registradas se mantendrán intactas, pero pasará a aplicar al nuevo puesto/sucursal.</p>
+                                <div class="mb-3">
+                                    <label for="selectPlazasActivas" class="form-label fw-bold">Seleccionar Plaza de Destino *</label>
+                                    <select class="form-select" id="selectPlazasActivas" required>
+                                        <option value="">Cargando plazas...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-warning text-dark" style="font-weight: 600;">
+                                    <i class="bi bi-check-circle me-1"></i> Confirmar Cambio
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <style>
                 #pageHelpModal {
                     z-index: 1060 !important;
@@ -536,6 +573,7 @@ if (count($analisisIA) > 0) {
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             <script>
                 const idCandidato = <?php echo $idCandidato; ?>;
+                const puedeAprobar = <?php echo $puedeAprobar ? 'true' : 'false'; ?>;
             </script>
             <script src="js/postulacion_detalle_candidato.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>

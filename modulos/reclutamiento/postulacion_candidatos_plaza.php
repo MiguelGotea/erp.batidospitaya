@@ -15,6 +15,10 @@ if (!tienePermiso('postulacion_plazas_activas', 'vista', $cargoOperario)) {
     exit();
 }
 
+// Permiso para selección directa (saltar evaluación del jefe)
+$puedeSeleccionarDirecto = tienePermiso('postulacion_plazas_activas', 'seleccionar_directo', $cargoOperario);
+$puedeAprobar = tienePermiso('postulacion_plazas_activas', 'aprobar', $cargoOperario);
+
 // Obtener ID de plaza
 $idPlaza = isset($_GET['plaza_id']) ? (int) $_GET['plaza_id'] : 0;
 
@@ -94,7 +98,14 @@ if (!$plaza) {
                             <span class="borde-color borde-verde"></span>
                             Candidatos Seleccionados (Fase Contratación)
                         </h5>
-                        <span class="badge-conteo badge-finalistas" id="badgeSeleccionados">0 FINALISTAS</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge-conteo badge-finalistas" id="badgeSeleccionados">0 FINALISTAS</span>
+                            <?php if ($puedeAprobar): ?>
+                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarCandidatoInmediato" style="background-color: #10b981; border-color: #10b981; font-weight: 600;">
+                                <i class="bi bi-person-plus-fill me-1"></i> Agregar Candidato
+                            </button>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="tabla-candidatos" id="tablaSeleccionados">
@@ -259,6 +270,42 @@ if (!$plaza) {
         </div>
     </div>
 
+    <!-- Modal Agregar Candidato Inmediato -->
+    <div class="modal fade" id="modalAgregarCandidatoInmediato" tabindex="-1" aria-labelledby="modalAgregarCandidatoInmediatoLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalAgregarCandidatoInmediatoLabel">
+                        <i class="bi bi-person-plus-fill me-2"></i> Agregar Candidato Inmediato
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formAgregarCandidatoInmediato" onsubmit="agregarCandidatoInmediato(event)">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="candiNombre" class="form-label fw-bold">Nombre Completo *</label>
+                            <input type="text" class="form-control" id="candiNombre" required placeholder="Ej: Juan Pérez">
+                        </div>
+                        <div class="mb-3">
+                            <label for="candiCorreo" class="form-label fw-bold">Correo Electrónico *</label>
+                            <input type="email" class="form-control" id="candiCorreo" required placeholder="Ej: juan.perez@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="candiTelefono" class="form-label fw-bold">Número de Teléfono *</label>
+                            <input type="text" class="form-control" id="candiTelefono" required placeholder="Ej: 88888888">
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success" style="background-color: #10b981; border-color: #10b981;">
+                            <i class="bi bi-save me-1"></i> Guardar y Crear Solicitud
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <style>
         #pageHelpModal {
             z-index: 1060 !important;
@@ -274,6 +321,8 @@ if (!$plaza) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const idPlaza = <?php echo $idPlaza; ?>;
+        const puedeSeleccionarDirecto = <?php echo $puedeSeleccionarDirecto ? 'true' : 'false'; ?>;
+        const puedeAprobar = <?php echo $puedeAprobar ? 'true' : 'false'; ?>;
     </script>
     <script src="js/postulacion_candidatos_plaza.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
