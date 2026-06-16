@@ -17,6 +17,7 @@ if (empty($cargosUsuario)) {
     exit();
 }
 
+// Se autorellena con el valor en bd traída de NivelesCargos, que es donde se debe configurar
 $moduloDestino = '';
 
 if (isset($_SESSION['modulo_ruta']) && !empty($_SESSION['modulo_ruta'])) {
