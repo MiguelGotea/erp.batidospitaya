@@ -1673,10 +1673,19 @@ function obtenerTiposFaltaConPorcentajes()
                     <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
                 </div>
             </div>
-            <div class="btn-floating-pitaya" title="Herramientas">
+            <div class="btn-floating-pitaya" title="Herramientas"
+                 onclick="this.closest('.fab-container').classList.toggle('active')">
                 <i class="fas fa-wrench"></i>
             </div>
         </div>
+        <script>
+            // Cerrar el FAB al hacer clic fuera de él (compatible con fab_button.js que mueve el elemento al body)
+            document.addEventListener('click', function (e) {
+                document.querySelectorAll('.fab-container.active').forEach(function (fab) {
+                    if (!fab.contains(e.target)) fab.classList.remove('active');
+                });
+            });
+        </script>
     <?php endif; ?>
     <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
     <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
