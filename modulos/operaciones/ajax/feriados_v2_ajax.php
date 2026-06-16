@@ -22,6 +22,37 @@ $action = $_GET['action'] ?? '';
 
 try {
     switch ($action) {
+        case 'obtener_feriados_sucursal':
+            $codSucursal = $_GET['sucursal'] ?? '';
+            if (empty($codSucursal)) {
+                throw new Exception('Debe especificar una sucursal');
+            }
+
+            // Obtener el cod_departamento de la sucursal
+            $stmtSuc = $conn->prepare("SELECT cod_departamento FROM sucursales WHERE codigo = ? LIMIT 1");
+            $stmtSuc->execute([$codSucursal]);
+            $sucRow = $stmtSuc->fetch(PDO::FETCH_ASSOC);
+            if (!$sucRow) {
+                throw new Exception('Sucursal no encontrada');
+            }
+            $codDepartamento = $sucRow['cod_departamento'];
+
+            // Obtener feriados: nacionales + los del departamento de la sucursal
+            // Ordenados por fecha desc para mostrar los más recientes primero
+            $stmtFeriados = $conn->prepare("
+                SELECT f.id, f.fecha, f.nombre, f.tipo,
+                       d.nombre AS departamento_nombre
+                FROM feriadosnic f
+                LEFT JOIN departamentos d ON f.departamento_codigo = d.codigo
+                WHERE (f.departamento_codigo IS NULL OR f.departamento_codigo = ?)
+                ORDER BY f.fecha DESC
+            ");
+            $stmtFeriados->execute([$codDepartamento]);
+            $feriados = $stmtFeriados->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode($feriados);
+            break;
+
         case 'obtener_operarios':
             $codSucursal = $_GET['sucursal'] ?? '';
             if (empty($codSucursal)) {

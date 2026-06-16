@@ -560,7 +560,7 @@ function getEstadoBadgeClass($estado) {
         <div class="modal" id="modalSolicitud">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Nueva Solicitud de Feriado</h5>
+                    <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Nueva Solicitud de Pago de Feriado</h5>
                     <button class="modal-close" onclick="cerrarModalSolicitud()">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -582,8 +582,11 @@ function getEstadoBadgeClass($estado) {
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="solicitud_fecha">Fecha del Feriado Trabajado:</label>
-                            <input type="date" id="solicitud_fecha" name="fecha_feriado" class="form-input" required>
+                            <label class="form-label" for="solicitud_fecha">Feriado Trabajado:</label>
+                            <select id="solicitud_fecha" name="fecha_feriado" class="form-select" required>
+                                <option value="">⏳ Seleccione primero una sucursal...</option>
+                            </select>
+                            <small class="text-muted" style="font-size:0.78rem; margin-top:4px; display:block;">Solo se muestran feriados registrados en el sistema aplicables al departamento de la sucursal seleccionada.</small>
                         </div>
 
                         <div class="form-group">

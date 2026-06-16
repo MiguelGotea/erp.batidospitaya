@@ -116,9 +116,9 @@ function cargarOperariosSucursal(codSucursal, selectId, fechaRef = '') {
 
 function recargarOperariosModal() {
     const sucSel = document.getElementById('solicitud_sucursal');
-    const fechaInput = document.getElementById('solicitud_fecha');
-    if (sucSel && fechaInput) {
-        cargarOperariosSucursal(sucSel.value, 'solicitud_operario', fechaInput.value);
+    const fechaSel = document.getElementById('solicitud_fecha');
+    if (sucSel && fechaSel) {
+        cargarOperariosSucursal(sucSel.value, 'solicitud_operario', fechaSel.value);
     }
 }
 
@@ -129,16 +129,17 @@ function mostrarModalSolicitud() {
     const modal = document.getElementById('modalSolicitud');
     const form = document.getElementById('formNuevaSolicitud');
     if (form) form.reset();
-    
-    // Predeterminar fecha de hoy
-    const hoyStr = new Date().toISOString().split('T')[0];
-    const fechaInput = document.getElementById('solicitud_fecha');
-    if (fechaInput) {
-        fechaInput.value = hoyStr;
+
+    // Cargar feriados para la sucursal actualmente seleccionada en el modal
+    const sucSel = document.getElementById('solicitud_sucursal');
+    if (sucSel && sucSel.value) {
+        cargarFeriadosSucursal(sucSel.value);
+    } else {
+        const fechaSel = document.getElementById('solicitud_fecha');
+        if (fechaSel) fechaSel.innerHTML = '<option value="">Seleccione primero una sucursal...</option>';
     }
 
     if (modal) modal.style.display = 'flex';
-    recargarOperariosModal();
 }
 
 function cerrarModalSolicitud() {
