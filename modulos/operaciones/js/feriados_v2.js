@@ -114,6 +114,55 @@ function cargarOperariosSucursal(codSucursal, selectId, fechaRef = '') {
         });
 }
 
+// =====================================================
+// CARGAR FERIADOS DISPONIBLES POR SUCURSAL (MODAL)
+// =====================================================
+function cargarFeriadosSucursal(codSucursal) {
+    const selectFecha = document.getElementById('solicitud_fecha');
+    const selectOperario = document.getElementById('solicitud_operario');
+    if (!selectFecha) return;
+
+    if (!codSucursal) {
+        selectFecha.innerHTML = '<option value="">Seleccione primero una sucursal...</option>';
+        if (selectOperario) selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
+        return;
+    }
+
+    selectFecha.innerHTML = '<option value="">⏳ Cargando feriados...</option>';
+
+    fetch(`ajax/feriados_v2_ajax.php?action=obtener_feriados_sucursal&sucursal=${encodeURIComponent(codSucursal)}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Error en el servidor');
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+
+            if (data.length === 0) {
+                selectFecha.innerHTML = '<option value="">No hay feriados registrados para esta sucursal</option>';
+                if (selectOperario) selectOperario.innerHTML = '<option value="">Seleccione un colaborador</option>';
+                return;
+            }
+
+            const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+            let options = '<option value="">Seleccione el feriado trabajado</option>';
+            data.forEach(f => {
+                const parts = f.fecha.split('-');
+                const label = `${parts[2]}-${months[parseInt(parts[1],10)-1]}-${parts[0]} — ${f.nombre}`
+                            + (f.tipo === 'Departamental' && f.departamento_nombre ? ` (${f.departamento_nombre})` : '');
+                options += `<option value="${f.fecha}">${label}</option>`;
+            });
+            selectFecha.innerHTML = options;
+
+            // Después de cargar feriados, recargar colaboradores con la primera fecha disponible
+            recargarOperariosModal();
+        })
+        .catch(error => {
+            console.error('Error al cargar feriados:', error);
+            selectFecha.innerHTML = '<option value="">❌ Error al cargar feriados</option>';
+        });
+}
+
 function recargarOperariosModal() {
     const sucSel = document.getElementById('solicitud_sucursal');
     const fechaSel = document.getElementById('solicitud_fecha');
@@ -214,10 +263,13 @@ function limpiarFiltros() {
 // PROCESAMIENTO AJAX
 // =====================================================
 document.addEventListener('DOMContentLoaded', function () {
-    // Escuchar cambios en la sucursal o la fecha del modal para recargar colaboradores
+    // Cambio de sucursal: recargar lista de feriados (que a su vez recarga colaboradores)
     const sucModal = document.getElementById('solicitud_sucursal');
-    if (sucModal) sucModal.addEventListener('change', recargarOperariosModal);
-    
+    if (sucModal) sucModal.addEventListener('change', function () {
+        cargarFeriadosSucursal(this.value);
+    });
+
+    // Cambio de feriado seleccionado: recargar colaboradores con esa fecha
     const fechaModal = document.getElementById('solicitud_fecha');
     if (fechaModal) fechaModal.addEventListener('change', recargarOperariosModal);
 
