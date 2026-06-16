@@ -523,7 +523,9 @@ function obtenerTiposFaltaConPorcentajes()
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         /* Cámara encima de otros modales Bootstrap */
-        #vacModalCamara { z-index: 1080 !important; }
+        #vacModalCamara {
+            z-index: 1080 !important;
+        }
     </style>
 
     <style>
@@ -535,12 +537,14 @@ function obtenerTiposFaltaConPorcentajes()
             cursor: crosshair;
             overflow: hidden;
         }
+
         #vac-video {
             display: block;
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
         #vac-focus-ring {
             position: absolute;
             width: 70px;
@@ -551,61 +555,142 @@ function obtenerTiposFaltaConPorcentajes()
             opacity: 0;
             pointer-events: none;
             transition: transform 0.25s ease, opacity 0.25s ease;
-            box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
         }
-        #vac-focus-ring.active  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        #vac-focus-ring.locked  { border-color: #00FF88; opacity: 0.7; }
-        #vac-focus-ring::before, #vac-focus-ring::after {
-            content: ''; position: absolute;
-            width: 10px; height: 10px;
-            border-color: inherit; border-style: solid;
+
+        #vac-focus-ring.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
         }
-        #vac-focus-ring::before { top:-1px; left:-1px; border-width:2px 0 0 2px; }
-        #vac-focus-ring::after  { bottom:-1px; right:-1px; border-width:0 2px 2px 0; }
+
+        #vac-focus-ring.locked {
+            border-color: #00FF88;
+            opacity: 0.7;
+        }
+
+        #vac-focus-ring::before,
+        #vac-focus-ring::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: inherit;
+            border-style: solid;
+        }
+
+        #vac-focus-ring::before {
+            top: -1px;
+            left: -1px;
+            border-width: 2px 0 0 2px;
+        }
+
+        #vac-focus-ring::after {
+            bottom: -1px;
+            right: -1px;
+            border-width: 0 2px 2px 0;
+        }
+
         #vac-cam-grid {
-            position: absolute; inset: 0; pointer-events: none; opacity: 0.15;
-            background-image: linear-gradient(to right,#fff 1px,transparent 1px), linear-gradient(to bottom,#fff 1px,transparent 1px);
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.15;
+            background-image: linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px);
             background-size: 33.33% 33.33%;
         }
+
         #vac-focus-toast {
-            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.65); color: #fff; font-size: 0.75rem;
-            padding: 4px 12px; border-radius: 20px; opacity: 0;
-            transition: opacity 0.3s; pointer-events: none; white-space: nowrap;
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.65);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
         }
-        .vac-cam-controls { background: #111; padding: 10px 16px 14px; }
+
+        .vac-cam-controls {
+            background: #111;
+            padding: 10px 16px 14px;
+        }
+
         .vac-btn-torch {
-            background: transparent; border: 1.5px solid #555; color: #aaa;
-            border-radius: 50%; width: 42px; height: 42px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; transition: all 0.2s; cursor: pointer;
+            background: transparent;
+            border: 1.5px solid #555;
+            color: #aaa;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s;
+            cursor: pointer;
         }
-        .vac-btn-torch.on { border-color: #FFD700; color: #FFD700; box-shadow: 0 0 8px rgba(255,215,0,0.5); }
+
+        .vac-btn-torch.on {
+            border-color: #FFD700;
+            color: #FFD700;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+        }
+
         .vac-btn-capture {
-            width: 64px; height: 64px; border-radius: 50%;
-            background: #fff; border: 4px solid rgba(255,255,255,0.4);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; color: #333;
-            transition: transform 0.1s, background 0.1s; cursor: pointer;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #fff;
+            border: 4px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #333;
+            transition: transform 0.1s, background 0.1s;
+            cursor: pointer;
         }
-        .vac-btn-capture:active { transform: scale(0.92); background: #ddd; }
+
+        .vac-btn-capture:active {
+            transform: scale(0.92);
+            background: #ddd;
+        }
+
         /* Preview de foto capturada por cámara */
         .vac-foto-preview {
             display: none;
             margin-top: 8px;
             position: relative;
         }
+
         .vac-foto-preview img {
-            width: 100%; max-height: 160px;
-            object-fit: cover; border-radius: 8px;
+            width: 100%;
+            max-height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
             border: 2px solid #0E544C;
         }
+
         .vac-foto-preview .vac-preview-remove {
-            position: absolute; top: 4px; right: 4px;
-            background: rgba(220,53,69,0.85); color:#fff;
-            border: none; border-radius: 50%;
-            width: 24px; height: 24px; font-size: 0.75rem;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(220, 53, 69, 0.85);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -652,18 +737,19 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <div class="filtro-group">
                             <label for="operario">Colaborador</label>
-                            <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..." value="<?php
-                                                                                                                            if ($operarioSeleccionado > 0) {
-                                                                                                                                foreach ($operarios as $op) {
-                                                                                                                                    if ($op['CodOperario'] == $operarioSeleccionado) {
-                                                                                                                                        echo htmlspecialchars($op['nombre_completo']);
-                                                                                                                                        break;
-                                                                                                                                    }
-                                                                                                                                }
-                                                                                                                            } else {
-                                                                                                                                echo 'Todos los colaboradores';
-                                                                                                                            }
-                                                                                                                            ?>">
+                            <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..."
+                                value="<?php
+                                if ($operarioSeleccionado > 0) {
+                                    foreach ($operarios as $op) {
+                                        if ($op['CodOperario'] == $operarioSeleccionado) {
+                                            echo htmlspecialchars($op['nombre_completo']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo 'Todos los colaboradores';
+                                }
+                                ?>">
                             <input type="hidden" id="operario_id" name="operario"
                                 value="<?php echo $operarioSeleccionado; ?>">
                             <div id="operarios-sugerencias" style="display: none;"></div>
@@ -683,10 +769,14 @@ function obtenerTiposFaltaConPorcentajes()
                             <label for="tipo_filtro">Tipo de Ausencia</label>
                             <select id="tipo_filtro" name="tipo_filtro">
                                 <option value="todos" <?= $tipoFiltro === 'todos' ? 'selected' : '' ?>>Todos</option>
-                                <option value="pendiente" <?= $tipoFiltro === 'pendiente' ? 'selected' : '' ?>>Pendientes</option>
-                                <option value="vacaciones" <?= $tipoFiltro === 'vacaciones' ? 'selected' : '' ?>>Vacaciones</option>
-                                <option value="subsidio" <?= $tipoFiltro === 'subsidio' ? 'selected' : '' ?>>Subsidios</option>
-                                <option value="faltas_permisos" <?= $tipoFiltro === 'faltas_permisos' ? 'selected' : '' ?>>Faltas y Permisos</option>
+                                <option value="pendiente" <?= $tipoFiltro === 'pendiente' ? 'selected' : '' ?>>Pendientes
+                                </option>
+                                <option value="vacaciones" <?= $tipoFiltro === 'vacaciones' ? 'selected' : '' ?>>Vacaciones
+                                </option>
+                                <option value="subsidio" <?= $tipoFiltro === 'subsidio' ? 'selected' : '' ?>>Subsidios
+                                </option>
+                                <option value="faltas_permisos" <?= $tipoFiltro === 'faltas_permisos' ? 'selected' : '' ?>>
+                                    Faltas y Permisos</option>
                             </select>
                         </div>
 
@@ -695,19 +785,20 @@ function obtenerTiposFaltaConPorcentajes()
                                 <i class="fas fa-search"></i> Buscar
                             </button>
 
-                            <button type="button" class="btn-aplicar" data-bs-toggle="modal" data-bs-target="#modalTipoBoleta">
+                            <button type="button" class="btn-aplicar" data-bs-toggle="modal"
+                                data-bs-target="#modalTipoBoleta">
                                 <i class="fas fa-print"></i> Imprimir Boleta
                             </button>
 
                             <?php if (tienePermiso('registro_vacaciones', 'exportar_excel', $cargoOperario)): ?>
                                 <a href="vacaciones.php?<?= http_build_query([
-                                                            'sucursal' => $sucursalSeleccionada ?? '',
-                                                            'desde' => $fechaDesde,
-                                                            'hasta' => $fechaHasta,
-                                                            'operario' => $operarioSeleccionado,
-                                                            'tipo_filtro' => $tipoFiltro,
-                                                            'exportar_excel' => 1
-                                                        ]) ?>" class="btn-agregar">
+                                    'sucursal' => $sucursalSeleccionada ?? '',
+                                    'desde' => $fechaDesde,
+                                    'hasta' => $fechaHasta,
+                                    'operario' => $operarioSeleccionado,
+                                    'tipo_filtro' => $tipoFiltro,
+                                    'exportar_excel' => 1
+                                ]) ?>" class="btn-agregar">
                                     <i class="fas fa-file-excel"></i> Exportar
                                 </a>
                             <?php endif; ?>
@@ -719,11 +810,16 @@ function obtenerTiposFaltaConPorcentajes()
                 // Helper: badge CSS class based on tipo_falta
                 function getBadgeClass($tipo)
                 {
-                    if ($tipo === 'Pendiente') return 'badge-status badge-pendiente';
-                    if ($tipo === 'Vacaciones') return 'badge-status badge-vacaciones';
-                    if (str_starts_with($tipo, 'Subsidio') || str_starts_with($tipo, 'Reposo')) return 'badge-status badge-subsidio';
-                    if (str_starts_with($tipo, 'No_Pagado')) return 'badge-status badge-nopagado';
-                    if (str_starts_with($tipo, 'Compensacion') || str_starts_with($tipo, 'Dia_mas')) return 'badge-status badge-compensacion';
+                    if ($tipo === 'Pendiente')
+                        return 'badge-status badge-pendiente';
+                    if ($tipo === 'Vacaciones')
+                        return 'badge-status badge-vacaciones';
+                    if (str_starts_with($tipo, 'Subsidio') || str_starts_with($tipo, 'Reposo'))
+                        return 'badge-status badge-subsidio';
+                    if (str_starts_with($tipo, 'No_Pagado'))
+                        return 'badge-status badge-nopagado';
+                    if (str_starts_with($tipo, 'Compensacion') || str_starts_with($tipo, 'Dia_mas'))
+                        return 'badge-status badge-compensacion';
                     return 'badge-status badge-permiso';
                 }
                 ?>
@@ -739,16 +835,19 @@ function obtenerTiposFaltaConPorcentajes()
                                     <th>% Pago</th>
                                     <th>Días</th>
                                     <th>Observaciones</th>
-                                    <?php if ($puedeAprobar): ?><th>Obs. RRHH</th><?php endif; ?>
+                                    <?php if ($puedeAprobar): ?>
+                                        <th>Obs. RRHH</th><?php endif; ?>
                                     <th>Registrado por</th>
                                     <th>Foto</th>
-                                    <?php if ($puedeAprobar): ?><th>Acciones</th><?php endif; ?>
+                                    <?php if ($puedeAprobar): ?>
+                                        <th>Acciones</th><?php endif; ?>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($vacaciones as $vacacion): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars(trim($vacacion['operario_nombre'] . ' ' . ($vacacion['operario_nombre2'] ?? '') . ' ' . $vacacion['operario_apellido'] . ' ' . ($vacacion['operario_apellido2'] ?? ''))) ?></td>
+                                        <td><?= htmlspecialchars(trim($vacacion['operario_nombre'] . ' ' . ($vacacion['operario_nombre2'] ?? '') . ' ' . $vacacion['operario_apellido'] . ' ' . ($vacacion['operario_apellido2'] ?? ''))) ?>
+                                        </td>
                                         <td><?= htmlspecialchars($vacacion['sucursal_nombre']) ?></td>
                                         <td><?= formatoFechaCorta($vacacion['fecha_falta']) ?></td>
                                         <td>
@@ -756,10 +855,11 @@ function obtenerTiposFaltaConPorcentajes()
                                                 <?= htmlspecialchars($vacacion['tipo_falta_nombre'] ?? str_replace('_', ' ', $vacacion['tipo_falta'])) ?>
                                             </span>
                                         </td>
-                                        <td style="text-align:center;"><?= number_format($vacacion['porcentaje_pago'] ?? 0, 0) ?>%</td>
+                                        <td style="text-align:center;">
+                                            <?= number_format($vacacion['porcentaje_pago'] ?? 0, 0) ?>%</td>
                                         <td style="text-align:center;">
                                             <?php
-                                            $cantDias = isset($vacacion['cantidad_dias']) ? (float)$vacacion['cantidad_dias'] : 1.0;
+                                            $cantDias = isset($vacacion['cantidad_dias']) ? (float) $vacacion['cantidad_dias'] : 1.0;
                                             echo number_format($cantDias, 2);
                                             ?>
                                         </td>
@@ -771,10 +871,13 @@ function obtenerTiposFaltaConPorcentajes()
                                                 <?= $vacacion['observaciones_rrhh'] ? htmlspecialchars(recortarTexto($vacacion['observaciones_rrhh'], 25)) : '<span class="text-muted small">-</span>' ?>
                                             </td>
                                         <?php endif; ?>
-                                        <td><?= htmlspecialchars($vacacion['registrador_nombre'] . ' ' . $vacacion['registrador_apellido']) ?></td>
+                                        <td><?= htmlspecialchars($vacacion['registrador_nombre'] . ' ' . $vacacion['registrador_apellido']) ?>
+                                        </td>
                                         <td style="text-align:center;">
                                             <?php if ($vacacion['foto_path']): ?>
-                                                <button type="button" onclick="mostrarFoto('<?= htmlspecialchars($vacacion['foto_path']) ?>')" class="btn btn-sm btn-foto">
+                                                <button type="button"
+                                                    onclick="mostrarFoto('<?= htmlspecialchars($vacacion['foto_path']) ?>')"
+                                                    class="btn btn-sm btn-foto">
                                                     <i class="fas fa-camera" style="color: #51B8AC; font-size: 18px;"></i>
                                                 </button>
                                             <?php endif; ?>
@@ -782,8 +885,7 @@ function obtenerTiposFaltaConPorcentajes()
                                         <?php if ($puedeAprobar): ?>
                                             <td>
                                                 <div class="action-buttons-cell">
-                                                    <button type="button" class="btn-action-table btn-action-edit"
-                                                        onclick="mostrarModalEditarAprobar(
+                                                    <button type="button" class="btn-action-table btn-action-edit" onclick="mostrarModalEditarAprobar(
                                                         <?= $vacacion['id'] ?>,
                                                         '<?= htmlspecialchars(addslashes(trim($vacacion['operario_nombre'] . ' ' . $vacacion['operario_apellido']))) ?>',
                                                         '<?= htmlspecialchars(addslashes($vacacion['sucursal_nombre'])) ?>',
@@ -792,11 +894,12 @@ function obtenerTiposFaltaConPorcentajes()
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones'] ?? '')) ?>',
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones_rrhh'] ?? '')) ?>',
                                                         '<?= htmlspecialchars($vacacion['foto_path'] ?? '') ?>',
-                                                        <?= number_format(isset($vacacion['cantidad_dias']) ? (float)$vacacion['cantidad_dias'] : 1.0, 2) ?>
+                                                        <?= number_format(isset($vacacion['cantidad_dias']) ? (float) $vacacion['cantidad_dias'] : 1.0, 2) ?>
                                                     )">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
-                                                    <button style="display: none;" type="button" class="btn-action-table btn-action-delete"
+                                                    <button style="display: none;" type="button"
+                                                        class="btn-action-table btn-action-delete"
                                                         onclick="eliminarSolicitud(<?= $vacacion['id'] ?>)">
                                                         <i class="fas fa-times"></i>
                                                     </button>
@@ -822,7 +925,8 @@ function obtenerTiposFaltaConPorcentajes()
                         <div class="paginacion-toolbar">
                             <div class="d-flex align-items-center gap-2">
                                 <label class="mb-0 small">Mostrar:</label>
-                                <select class="form-select form-select-sm" id="registrosPorPaginaVac" style="width: auto;" onchange="vacPaginaActual=1; vacRenderizar();">
+                                <select class="form-select form-select-sm" id="registrosPorPaginaVac" style="width: auto;"
+                                    onchange="vacPaginaActual=1; vacRenderizar();">
                                     <option value="25" selected>25</option>
                                     <option value="50">50</option>
                                     <option value="100">100</option>
@@ -859,7 +963,8 @@ function obtenerTiposFaltaConPorcentajes()
                         <input type="hidden" name="registrar_vacaciones" value="1">
 
                         <div class="mb-3">
-                            <label for="subsidio_sucursal" class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
+                            <label for="subsidio_sucursal"
+                                class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
                             <select id="subsidio_sucursal" name="cod_sucursal" class="form-select" required>
                                 <?php if ($esRH): ?>
                                     <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
@@ -879,49 +984,62 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="subsidio_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
-                                <input type="date" id="subsidio_fecha_inicio" name="fecha_inicio" class="form-control" required>
+                                <label for="subsidio_fecha_inicio"
+                                    class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="subsidio_fecha_inicio" name="fecha_inicio" class="form-control"
+                                    required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="subsidio_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
-                                <input type="date" id="subsidio_fecha_fin" name="fecha_fin" class="form-control" required>
+                                <label for="subsidio_fecha_fin"
+                                    class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <input type="date" id="subsidio_fecha_fin" name="fecha_fin" class="form-control"
+                                    required>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="subsidio_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                            <label for="subsidio_operario"
+                                class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
                             <select id="subsidio_operario" name="cod_operario" class="form-select" required>
                                 <option value="">Seleccione un colaborador</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label for="subsidio_tipo" class="form-label small fw-bold text-muted text-uppercase"<?php if (!$puedeAprobar): ?> style="display:none;"<?php endif; ?>>Tipo de Subsidio:</label>
+                            <label for="subsidio_tipo" class="form-label small fw-bold text-muted text-uppercase" <?php if (!$puedeAprobar): ?> style="display:none;" <?php endif; ?>>Tipo de Subsidio:</label>
                             <?php if ($puedeAprobar): ?>
-                                <select id="subsidio_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeSubsidio(this.value)">
+                                <select id="subsidio_tipo" name="tipo_falta" class="form-select" required
+                                    onchange="actualizarPorcentajeSubsidio(this.value)">
                                     <?php
                                     $tiposSubsidio = ['Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Cuido_materno'];
                                     foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
                                         if (in_array($tipo['codigo'], $tiposSubsidio)):
                                             $pct = $tipo['porcentaje_pago'];
                                             $label = $tipo['nombre'] . ' (Paga ' . $pct . '%)';
-                                    ?>
-                                            <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>"><?= htmlspecialchars($label) ?></option>
-                                    <?php endif;
+                                            ?>
+                                            <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>">
+                                                <?= htmlspecialchars($label) ?></option>
+                                        <?php endif;
                                     endforeach; ?>
                                 </select>
                             <?php else: ?>
-                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly style="display:none;">
+                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH"
+                                    readonly style="display:none;">
                                 <input type="hidden" id="subsidio_tipo" name="tipo_falta" value="Pendiente">
-                                <small class="form-text text-muted" style="display:none;"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
+                                <small class="form-text text-muted" style="display:none;"><i
+                                        class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al
+                                    revisar el registro.</small>
                             <?php endif; ?>
                             <small id="info-porcentaje-subsidio" class="form-text text-muted mt-1 d-block"></small>
                         </div>
 
                         <?php if ($puedeAprobar): ?>
                             <div class="mb-3">
-                                <label for="subsidio_cantidad_dias" class="form-label small fw-bold text-muted text-uppercase">Duración de la Ausencia:</label>
-                                <select id="subsidio_cantidad_dias" name="cantidad_dias" class="form-select" onchange="manejarCantidadDias(this, 'subsidio_custom_dias')">
+                                <label for="subsidio_cantidad_dias"
+                                    class="form-label small fw-bold text-muted text-uppercase">Duración de la
+                                    Ausencia:</label>
+                                <select id="subsidio_cantidad_dias" name="cantidad_dias" class="form-select"
+                                    onchange="manejarCantidadDias(this, 'subsidio_custom_dias')">
                                     <!-- 1.00 = 8 horas -->
                                     <option value="1.00">Día completo (1 día - 8 horas)</option>
                                     <!-- 0.88 = 7 horas -->
@@ -941,9 +1059,11 @@ function obtenerTiposFaltaConPorcentajes()
                                     <option value="custom">Personalizado...</option>
                                 </select>
                                 <div id="subsidio_custom_dias" class="mt-2" style="display:none;">
-                                    <input type="number" id="subsidio_custom_input" class="form-control" placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
+                                    <input type="number" id="subsidio_custom_input" class="form-control"
+                                        placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
                                         oninput="actualizarCantidadPersonalizada(this, 'subsidio_cantidad_dias')">
-                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas ÷ 8)</small>
+                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas
+                                        ÷ 8)</small>
                                 </div>
                             </div>
                         <?php else: ?>
@@ -951,22 +1071,29 @@ function obtenerTiposFaltaConPorcentajes()
                         <?php endif; ?>
 
                         <div class="mb-3">
-                            <label for="subsidio_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
-                            <textarea id="subsidio_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;"></textarea>
+                            <label for="subsidio_observaciones"
+                                class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                            <textarea id="subsidio_observaciones" name="observaciones" class="form-control" rows="2"
+                                style="resize: none;"></textarea>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
+                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia
+                                (Obligatoria):</label>
                             <div class="input-group">
-                                <input type="file" id="subsidio_foto" name="foto_falta" class="form-control" accept="image/*" required>
-                                <button type="button" class="btn btn-success" onclick="vacAbrirCamara('formNuevoSubsidio')" title="Tomar foto con cámara">
+                                <input type="file" id="subsidio_foto" name="foto_falta" class="form-control"
+                                    accept="image/*" required>
+                                <button type="button" class="btn btn-success"
+                                    onclick="vacAbrirCamara('formNuevoSubsidio')" title="Tomar foto con cámara">
                                     <i class="fas fa-camera"></i>
                                 </button>
                             </div>
                             <small class="form-text text-muted">Selecciona una imagen o usa la cámara (máx. 5MB)</small>
                             <div class="vac-foto-preview" id="subsidio_preview">
                                 <img id="subsidio_preview_img" src="" alt="Vista previa">
-                                <button type="button" class="vac-preview-remove" onclick="vacEliminarPreview('formNuevoSubsidio')" title="Eliminar foto">&times;</button>
+                                <button type="button" class="vac-preview-remove"
+                                    onclick="vacEliminarPreview('formNuevoSubsidio')"
+                                    title="Eliminar foto">&times;</button>
                             </div>
                         </div>
 
@@ -978,7 +1105,8 @@ function obtenerTiposFaltaConPorcentajes()
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
-                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-modern btn-modern-secondary"
+                        data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="formNuevoSubsidio" class="btn-modern btn-modern-primary">
                         <i class="fas fa-save me-2"></i>Registrar Subsidio
                     </button>
@@ -1009,7 +1137,8 @@ function obtenerTiposFaltaConPorcentajes()
                         <input type="hidden" name="registrar_vacaciones" value="1">
 
                         <div class="mb-3">
-                            <label for="nueva_sucursal" class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
+                            <label for="nueva_sucursal"
+                                class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
                             <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
                                 <?php if ($esRH): ?>
                                     <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
@@ -1029,52 +1158,65 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="nueva_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
-                                <input type="date" id="nueva_fecha_inicio" name="fecha_inicio" class="form-control" required>
+                                <label for="nueva_fecha_inicio"
+                                    class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="nueva_fecha_inicio" name="fecha_inicio" class="form-control"
+                                    required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="nueva_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <label for="nueva_fecha_fin"
+                                    class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
                                 <input type="date" id="nueva_fecha_fin" name="fecha_fin" class="form-control" required>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="nueva_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                            <label for="nueva_operario"
+                                class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
                             <select id="nueva_operario" name="cod_operario" class="form-select" required>
                                 <option value="">Seleccione un colaborador</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label for="nueva_tipo" class="form-label small fw-bold text-muted text-uppercase"<?php if (!$puedeAprobar): ?> style="display:none;"<?php endif; ?>>Tipo:</label>
+                            <label for="nueva_tipo" class="form-label small fw-bold text-muted text-uppercase" <?php if (!$puedeAprobar): ?> style="display:none;" <?php endif; ?>>Tipo:</label>
                             <?php if ($puedeAprobar): ?>
-                                <select id="nueva_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeVacaciones(this.value)">
+                                <select id="nueva_tipo" name="tipo_falta" class="form-select" required
+                                    onchange="actualizarPorcentajeVacaciones(this.value)">
                                     <?php
                                     $tiposFalta = obtenerTiposFaltaConPorcentajes();
                                     foreach ($tiposFalta as $tipo):
                                         if ($tipo['codigo'] === 'Vacaciones'):
                                             $porcentajeTexto = ($tipo['porcentaje_pago'] == -100) ? 'Deducción 100%' : 'Paga ' . $tipo['porcentaje_pago'] . '%';
-                                    ?>
-                                            <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>" selected>
+                                            ?>
+                                            <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $tipo['porcentaje_pago'] ?>"
+                                                selected>
                                                 <?= htmlspecialchars($tipo['nombre']) ?> (<?= $porcentajeTexto ?>)
                                             </option>
-                                    <?php
+                                            <?php
                                         endif;
                                     endforeach;
                                     ?>
                                 </select>
-                                <small id="info-porcentaje-vacaciones" class="form-text text-muted mt-1 d-block" style="display: none;"></small>
+                                <small id="info-porcentaje-vacaciones" class="form-text text-muted mt-1 d-block"
+                                    style="display: none;"></small>
                             <?php else: ?>
-                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly style="display:none;">
+                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH"
+                                    readonly style="display:none;">
                                 <input type="hidden" id="nueva_tipo" name="tipo_falta" value="Pendiente">
-                                <small class="form-text text-muted" style="display:none;"><i class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al revisar el registro.</small>
+                                <small class="form-text text-muted" style="display:none;"><i
+                                        class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al
+                                    revisar el registro.</small>
                             <?php endif; ?>
                         </div>
 
                         <?php if ($puedeAprobar): ?>
                             <div class="mb-3">
-                                <label for="nueva_cantidad_dias" class="form-label small fw-bold text-muted text-uppercase">Duración de la Ausencia:</label>
-                                <select id="nueva_cantidad_dias" name="cantidad_dias" class="form-select" onchange="manejarCantidadDias(this, 'nueva_custom_dias')">
+                                <label for="nueva_cantidad_dias"
+                                    class="form-label small fw-bold text-muted text-uppercase">Duración de la
+                                    Ausencia:</label>
+                                <select id="nueva_cantidad_dias" name="cantidad_dias" class="form-select"
+                                    onchange="manejarCantidadDias(this, 'nueva_custom_dias')">
                                     <!-- 1.00 = 8 horas -->
                                     <option value="1.00">Día completo (1 día - 8 horas)</option>
                                     <!-- 0.88 = 7 horas -->
@@ -1094,9 +1236,11 @@ function obtenerTiposFaltaConPorcentajes()
                                     <option value="custom">Personalizado...</option>
                                 </select>
                                 <div id="nueva_custom_dias" class="mt-2" style="display:none;">
-                                    <input type="number" id="nueva_custom_input" class="form-control" placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
+                                    <input type="number" id="nueva_custom_input" class="form-control"
+                                        placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
                                         oninput="actualizarCantidadPersonalizada(this, 'nueva_cantidad_dias')">
-                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas ÷ 8)</small>
+                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas
+                                        ÷ 8)</small>
                                 </div>
                             </div>
                         <?php else: ?>
@@ -1104,22 +1248,29 @@ function obtenerTiposFaltaConPorcentajes()
                         <?php endif; ?>
 
                         <div class="mb-3">
-                            <label for="nueva_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
-                            <textarea id="nueva_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;"></textarea>
+                            <label for="nueva_observaciones"
+                                class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                            <textarea id="nueva_observaciones" name="observaciones" class="form-control" rows="2"
+                                style="resize: none;"></textarea>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
+                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia
+                                (Obligatoria):</label>
                             <div class="input-group">
-                                <input type="file" id="nueva_foto" name="foto_falta" class="form-control" accept="image/*" required>
-                                <button type="button" class="btn btn-success" onclick="vacAbrirCamara('formNuevaVacacion')" title="Tomar foto con cámara">
+                                <input type="file" id="nueva_foto" name="foto_falta" class="form-control"
+                                    accept="image/*" required>
+                                <button type="button" class="btn btn-success"
+                                    onclick="vacAbrirCamara('formNuevaVacacion')" title="Tomar foto con cámara">
                                     <i class="fas fa-camera"></i>
                                 </button>
                             </div>
                             <small class="form-text text-muted">Selecciona una imagen o usa la cámara (máx. 5MB)</small>
                             <div class="vac-foto-preview" id="vacacion_preview">
                                 <img id="vacacion_preview_img" src="" alt="Vista previa">
-                                <button type="button" class="vac-preview-remove" onclick="vacEliminarPreview('formNuevaVacacion')" title="Eliminar foto">&times;</button>
+                                <button type="button" class="vac-preview-remove"
+                                    onclick="vacEliminarPreview('formNuevaVacacion')"
+                                    title="Eliminar foto">&times;</button>
                             </div>
                         </div>
 
@@ -1133,8 +1284,10 @@ function obtenerTiposFaltaConPorcentajes()
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-wrap gap-2">
-                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn-modern" style="background:#17a2b8;color:#fff;" onclick="imprimirBoletaVacacionesV2()">
+                    <button type="button" class="btn-modern btn-modern-secondary"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-modern" style="background:#17a2b8;color:#fff;"
+                        onclick="imprimirBoletaVacacionesV2()">
                         <i class="fas fa-print me-2"></i>Imprimir Boleta
                     </button>
                     <button type="submit" form="formNuevaVacacion" class="btn-modern btn-modern-primary">
@@ -1149,13 +1302,13 @@ function obtenerTiposFaltaConPorcentajes()
         // CONFIG de datos para vacaciones.js
         window.CONFIG_VACACIONES = {
             operariosData: [{
-                    id: 0,
-                    nombre: 'Todos los colaboradores'
-                },
+                id: 0,
+                nombre: 'Todos los colaboradores'
+            },
                 <?php foreach ($operarios as $op): ?> {
-                        id: <?php echo $op['CodOperario']; ?>,
-                        nombre: '<?php echo addslashes($op['nombre_completo']); ?>'
-                    },
+                    id: <?php echo $op['CodOperario']; ?>,
+                    nombre: '<?php echo addslashes($op['nombre_completo']); ?>'
+                },
                 <?php endforeach; ?>
             ],
             puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
@@ -1176,7 +1329,8 @@ function obtenerTiposFaltaConPorcentajes()
                 <div class="modal-header bg-dark text-white border-0 py-2 px-3">
                     <h6 class="modal-title mb-0"><i class="fas fa-camera me-2"></i> Tomar Evidencia</h6>
                     <div class="d-flex align-items-center gap-2">
-                        <span id="vac-cam-focus-status" class="badge bg-secondary" style="font-size:0.65rem;">AUTO</span>
+                        <span id="vac-cam-focus-status" class="badge bg-secondary"
+                            style="font-size:0.65rem;">AUTO</span>
                         <button type="button" class="btn-close btn-close-white" onclick="vacCerrarCamara()"></button>
                     </div>
                 </div>
@@ -1194,7 +1348,9 @@ function obtenerTiposFaltaConPorcentajes()
                 <div class="vac-cam-controls">
                     <div class="d-flex align-items-center justify-content-between mt-3">
                         <!-- Cancelar -->
-                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 text-white border-secondary" onclick="vacCerrarCamara()">
+                        <button type="button"
+                            class="btn btn-outline-secondary btn-sm rounded-pill px-3 text-white border-secondary"
+                            onclick="vacCerrarCamara()">
                             <i class="fas fa-times me-1"></i>Cancelar
                         </button>
                         <!-- Capturar -->
@@ -1202,7 +1358,8 @@ function obtenerTiposFaltaConPorcentajes()
                             <i class="fas fa-circle" style="color:#e74c3c;"></i>
                         </button>
                         <!-- Linterna -->
-                        <button type="button" id="vac-btnTorch" class="vac-btn-torch" onclick="vacToggleLinterna()" title="Linterna" style="display:none;">
+                        <button type="button" id="vac-btnTorch" class="vac-btn-torch" onclick="vacToggleLinterna()"
+                            title="Linterna" style="display:none;">
                             <i class="fas fa-bolt"></i>
                         </button>
                         <div id="vac-btnTorchPlaceholder" style="width:42px;"></div>
@@ -1218,7 +1375,8 @@ function obtenerTiposFaltaConPorcentajes()
             <div class="modal-content border-0 shadow" style="border-radius: 8px;">
                 <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
-                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
                             <i class="fas fa-question fs-4"></i>
                         </div>
                         <div>
@@ -1229,28 +1387,36 @@ function obtenerTiposFaltaConPorcentajes()
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-3 bg-light">
-                    <h6 class="fw-bold text-success"><i class="fas fa-info-circle me-2"></i>¿Para qué sirve este módulo?</h6>
-                    <p>Este módulo permite registrar, visualizar y exportar las ausencias del personal: <strong>Vacaciones</strong>, <strong>Subsidios</strong> y <strong>Faltas/Permisos</strong>, ya sea para aplicarlos o deducirlos del cálculo de nómina.</p>
+                    <h6 class="fw-bold text-success"><i class="fas fa-info-circle me-2"></i>¿Para qué sirve este módulo?
+                    </h6>
+                    <p>Este módulo permite registrar, visualizar y exportar las ausencias del personal:
+                        <strong>Vacaciones</strong>, <strong>Subsidios</strong> y <strong>Faltas/Permisos</strong>, ya
+                        sea para aplicarlos o deducirlos del cálculo de nómina.</p>
                     <h6 class="fw-bold text-success mt-4"><i class="fas fa-umbrella-beach me-2"></i>Vacaciones</h6>
                     <ul class="mb-0">
                         <li>Permite registrar vacaciones seleccionando un rango de fechas.</li>
-                        <li>Si eres líder, la solicitud queda como <strong>Pendiente</strong> hasta ser aprobada por RRHH.</li>
+                        <li>Si eres líder, la solicitud queda como <strong>Pendiente</strong> hasta ser aprobada por
+                            RRHH.</li>
                     </ul>
                     <h6 class="fw-bold text-success mt-4"><i class="fas fa-notes-medical me-2"></i>Subsidios</h6>
                     <ul class="mb-0">
                         <li><strong>Subsidio 3 días:</strong> Asume el pago al 100% por cuenta de la empresa.</li>
-                        <li><strong>Subsidio INSS:</strong> Asume el 0% por cuenta de la empresa (lo cubre el INSS).</li>
+                        <li><strong>Subsidio INSS:</strong> Asume el 0% por cuenta de la empresa (lo cubre el INSS).
+                        </li>
                     </ul>
-                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-exclamation-triangle me-2"></i>Faltas y Permisos</h6>
+                    <h6 class="fw-bold text-success mt-4"><i class="fas fa-exclamation-triangle me-2"></i>Faltas y
+                        Permisos</h6>
                     <ul class="mb-0">
                         <li>Solo se permiten fechas anteriores al día actual (no futuras).</li>
                         <li>El sistema verifica que no existan marcaciones el día seleccionado.</li>
                     </ul>
                     <h6 class="fw-bold text-success mt-4"><i class="fas fa-camera me-2"></i>Evidencias</h6>
-                    <p class="mb-0">Todo registro requiere de manera <strong>obligatoria</strong> adjuntar una foto de evidencia (máx. 5MB).</p>
+                    <p class="mb-0">Todo registro requiere de manera <strong>obligatoria</strong> adjuntar una foto de
+                        evidencia (máx. 5MB).</p>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-end">
-                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn-modern btn-modern-secondary"
+                        data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -1262,7 +1428,8 @@ function obtenerTiposFaltaConPorcentajes()
             <div class="modal-content border-0 shadow" style="border-radius: 8px;">
                 <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
-                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
                             <i class="fas fa-exclamation-triangle fs-4"></i>
                         </div>
                         <div>
@@ -1277,16 +1444,19 @@ function obtenerTiposFaltaConPorcentajes()
                         <input type="hidden" name="categoria_falta" value="falta_permiso">
 
                         <div class="mb-3">
-                            <label for="falta_sucursal" class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
+                            <label for="falta_sucursal"
+                                class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
                             <select id="falta_sucursal" name="cod_sucursal" class="form-select" required
                                 onchange="cargarOperariosSucursal(this.value, 'falta_operario')">
                                 <?php if ($esRH): ?>
                                     <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
-                                        <option value="<?= $sucursal['codigo'] ?>"><?= htmlspecialchars($sucursal['nombre']) ?></option>
+                                        <option value="<?= $sucursal['codigo'] ?>"><?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <?php foreach (obtenerSucursalesLider($_SESSION['usuario_id']) as $sucursal): ?>
-                                        <option value="<?= $sucursal['codigo'] ?>"><?= htmlspecialchars($sucursal['nombre']) ?></option>
+                                        <option value="<?= $sucursal['codigo'] ?>"><?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
@@ -1294,19 +1464,22 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="falta_fecha_inicio" class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
-                                <input type="date" id="falta_fecha_inicio" name="fecha_inicio" class="form-control" required
-                                    onchange="actualizarInfoRangoFaltaPermiso()">
+                                <label for="falta_fecha_inicio"
+                                    class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="falta_fecha_inicio" name="fecha_inicio" class="form-control"
+                                    required onchange="actualizarInfoRangoFaltaPermiso()">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="falta_fecha_fin" class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <label for="falta_fecha_fin"
+                                    class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
                                 <input type="date" id="falta_fecha_fin" name="fecha_fin" class="form-control" required
                                     onchange="actualizarInfoRangoFaltaPermiso()">
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="falta_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                            <label for="falta_operario"
+                                class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
                             <select id="falta_operario" name="cod_operario" class="form-select" required>
                                 <option value="">Seleccione un colaborador</option>
                             </select>
@@ -1314,28 +1487,33 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <?php if ($puedeAprobar): ?>
                             <div class="mb-3">
-                                <label for="falta_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de Falta/Permiso:</label>
-                                <select id="falta_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeFaltaPermiso(this.value)">
+                                <label for="falta_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de
+                                    Falta/Permiso:</label>
+                                <select id="falta_tipo" name="tipo_falta" class="form-select" required
+                                    onchange="actualizarPorcentajeFaltaPermiso(this.value)">
                                     <?php
                                     $tiposExcluidos = ['Vacaciones', 'Pendiente', 'Subsidio_3dias', 'Subsidio_INSS', 'Subsidio_maternidad', 'Reposo_hasta_3dias', 'Cuido_materno'];
                                     foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
                                         if (!in_array($tipo['codigo'], $tiposExcluidos)):
                                             $pct = $tipo['porcentaje_pago'];
-                                    ?>
+                                            ?>
                                             <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>">
                                                 <?= htmlspecialchars($tipo['nombre']) ?> (Paga <?= $pct ?>%)
                                             </option>
-                                    <?php endif;
+                                        <?php endif;
                                     endforeach; ?>
                                 </select>
                                 <small id="info-porcentaje-falta" class="form-text text-muted mt-1 d-block"></small>
                             </div>
                         <?php else: ?>
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted text-uppercase" style="display:none;">Tipo de Falta/Permiso:</label>
-                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH" readonly style="display:none;">
+                                <label class="form-label small fw-bold text-muted text-uppercase" style="display:none;">Tipo
+                                    de Falta/Permiso:</label>
+                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH"
+                                    readonly style="display:none;">
                                 <input type="hidden" id="falta_tipo" name="tipo_falta" value="Pendiente">
-                                <small id="info-porcentaje-falta" class="form-text text-muted mt-1 d-block" style="display:none;">
+                                <small id="info-porcentaje-falta" class="form-text text-muted mt-1 d-block"
+                                    style="display:none;">
                                     ℹ️ El tipo de ausencia será determinado y clasificado por Recursos Humanos.
                                 </small>
                             </div>
@@ -1343,8 +1521,11 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <?php if ($puedeAprobar): ?>
                             <div class="mb-3">
-                                <label for="falta_cantidad_dias" class="form-label small fw-bold text-muted text-uppercase">Duración de la Ausencia:</label>
-                                <select id="falta_cantidad_dias" name="cantidad_dias" class="form-select" onchange="manejarCantidadDias(this, 'falta_custom_dias')">
+                                <label for="falta_cantidad_dias"
+                                    class="form-label small fw-bold text-muted text-uppercase">Duración de la
+                                    Ausencia:</label>
+                                <select id="falta_cantidad_dias" name="cantidad_dias" class="form-select"
+                                    onchange="manejarCantidadDias(this, 'falta_custom_dias')">
                                     <!-- 1.00 = 8 horas -->
                                     <option value="1.00">Día completo (1 día - 8 horas)</option>
                                     <!-- 0.88 = 7 horas -->
@@ -1364,9 +1545,11 @@ function obtenerTiposFaltaConPorcentajes()
                                     <option value="custom">Personalizado...</option>
                                 </select>
                                 <div id="falta_custom_dias" class="mt-2" style="display:none;">
-                                    <input type="number" id="falta_custom_input" class="form-control" placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
+                                    <input type="number" id="falta_custom_input" class="form-control"
+                                        placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
                                         oninput="actualizarCantidadPersonalizada(this, 'falta_cantidad_dias')">
-                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas ÷ 8)</small>
+                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas
+                                        ÷ 8)</small>
                                 </div>
                             </div>
                         <?php else: ?>
@@ -1374,22 +1557,29 @@ function obtenerTiposFaltaConPorcentajes()
                         <?php endif; ?>
 
                         <div class="mb-3">
-                            <label for="falta_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
-                            <textarea id="falta_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;"></textarea>
+                            <label for="falta_observaciones"
+                                class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                            <textarea id="falta_observaciones" name="observaciones" class="form-control" rows="2"
+                                style="resize: none;"></textarea>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia (Obligatoria):</label>
+                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia
+                                (Obligatoria):</label>
                             <div class="input-group">
-                                <input type="file" id="falta_foto" name="foto_falta" class="form-control" accept="image/*" required>
-                                <button type="button" class="btn btn-success" onclick="vacAbrirCamara('formNuevaFalta')" title="Tomar foto con cámara">
+                                <input type="file" id="falta_foto" name="foto_falta" class="form-control"
+                                    accept="image/*" required>
+                                <button type="button" class="btn btn-success" onclick="vacAbrirCamara('formNuevaFalta')"
+                                    title="Tomar foto con cámara">
                                     <i class="fas fa-camera"></i>
                                 </button>
                             </div>
                             <small class="form-text text-muted">Selecciona una imagen o usa la cámara (máx. 5MB)</small>
                             <div class="vac-foto-preview" id="falta_preview">
                                 <img id="falta_preview_img" src="" alt="Vista previa">
-                                <button type="button" class="vac-preview-remove" onclick="vacEliminarPreview('formNuevaFalta')" title="Eliminar foto">&times;</button>
+                                <button type="button" class="vac-preview-remove"
+                                    onclick="vacEliminarPreview('formNuevaFalta')"
+                                    title="Eliminar foto">&times;</button>
                             </div>
                         </div>
 
@@ -1401,7 +1591,8 @@ function obtenerTiposFaltaConPorcentajes()
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap">
-                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-modern btn-modern-secondary"
+                        data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="formNuevaFalta" class="btn-modern btn-modern-primary">
                         <i class="fas fa-save me-2"></i>Registrar Falta/Permiso
                     </button>
@@ -1417,7 +1608,8 @@ function obtenerTiposFaltaConPorcentajes()
                 <div class="modal-content border-0 shadow" style="border-radius: 8px;">
                     <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
                         <div class="d-flex align-items-center">
-                            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
                                 <i class="fas fa-check-circle fs-4"></i>
                             </div>
                             <div>
@@ -1447,25 +1639,30 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Observaciones del líder:</label>
+                                <label class="form-label small fw-bold text-muted text-uppercase">Observaciones del
+                                    líder:</label>
                                 <p class="form-control-plaintext text-muted small" id="editar_observaciones_lider">-</p>
                             </div>
 
                             <div id="preview-container" class="mb-3" style="display: none;">
                                 <label class="form-label small fw-bold text-muted text-uppercase">Foto de evidencia:</label>
                                 <div>
-                                    <img id="preview-image" src="" alt="Foto evidencia" style="max-height: 120px; border-radius: 8px; cursor: pointer;"
+                                    <img id="preview-image" src="" alt="Foto evidencia"
+                                        style="max-height: 120px; border-radius: 8px; cursor: pointer;"
                                         onclick="ampliarImagen(this.src)">
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="editar_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de Falta (Aprobación):</label>
-                                <select id="editar_tipo" name="tipo_falta" class="form-select" required onchange="actualizarPorcentajeEdicion(this.value)">
+                                <label for="editar_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de
+                                    Falta (Aprobación):</label>
+                                <select id="editar_tipo" name="tipo_falta" class="form-select" required
+                                    onchange="actualizarPorcentajeEdicion(this.value)">
                                     <?php foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
-                                        if ($tipo['codigo'] === 'Pendiente') continue;
+                                        if ($tipo['codigo'] === 'Pendiente')
+                                            continue;
                                         $pct = $tipo['porcentaje_pago'];
-                                    ?>
+                                        ?>
                                         <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>">
                                             <?= htmlspecialchars($tipo['nombre']) ?> (<?= $pct ?>%)
                                         </option>
@@ -1475,8 +1672,11 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
 
                             <div class="mb-3">
-                                <label for="editar_cantidad_dias" class="form-label small fw-bold text-muted text-uppercase">Duración de la Ausencia:</label>
-                                <select id="editar_cantidad_dias" name="cantidad_dias" class="form-select" onchange="manejarCantidadDias(this, 'editar_custom_dias')">
+                                <label for="editar_cantidad_dias"
+                                    class="form-label small fw-bold text-muted text-uppercase">Duración de la
+                                    Ausencia:</label>
+                                <select id="editar_cantidad_dias" name="cantidad_dias" class="form-select"
+                                    onchange="manejarCantidadDias(this, 'editar_custom_dias')">
                                     <!-- 1.00 = 8 horas -->
                                     <option value="1.00">Día completo (1 día - 8 horas)</option>
                                     <!-- 0.88 = 7 horas -->
@@ -1496,20 +1696,26 @@ function obtenerTiposFaltaConPorcentajes()
                                     <option value="custom">Personalizado...</option>
                                 </select>
                                 <div id="editar_custom_dias" class="mt-2" style="display:none;">
-                                    <input type="number" id="editar_custom_input" class="form-control" placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
+                                    <input type="number" id="editar_custom_input" class="form-control"
+                                        placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
                                         oninput="actualizarCantidadPersonalizada(this, 'editar_cantidad_dias')">
-                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas ÷ 8)</small>
+                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas
+                                        ÷ 8)</small>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="editar_observaciones_rrhh" class="form-label small fw-bold text-muted text-uppercase">Observaciones RRHH (Obligatorio):</label>
-                                <textarea id="editar_observaciones_rrhh" name="observaciones_rrhh" class="form-control" rows="3" style="resize: none;" required></textarea>
+                                <label for="editar_observaciones_rrhh"
+                                    class="form-label small fw-bold text-muted text-uppercase">Observaciones RRHH
+                                    (Obligatorio):</label>
+                                <textarea id="editar_observaciones_rrhh" name="observaciones_rrhh" class="form-control"
+                                    rows="3" style="resize: none;" required></textarea>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
-                        <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn-modern btn-modern-secondary"
+                            data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" form="formEditarFalta" class="btn-modern btn-modern-primary">
                             <i class="fas fa-check me-2"></i>Aprobar / Guardar
                         </button>
@@ -1539,7 +1745,8 @@ function obtenerTiposFaltaConPorcentajes()
                 <div class="modal-body p-4 bg-light">
                     <p class="text-muted text-center mb-4">¿Qué tipo de boleta de acción de personal desea imprimir?</p>
                     <div class="d-flex flex-column gap-3">
-                        <a href="imprimir_boleta.php?tipo=vacaciones" target="_blank" class="btn-boleta-select" onclick="cerrarModalBoleta()">
+                        <a href="imprimir_boleta.php?tipo=vacaciones" target="_blank" class="btn-boleta-select"
+                            onclick="cerrarModalBoleta()">
                             <div class="boleta-icon-wrapper bg-vacaciones-light text-vacaciones">
                                 <i class="fas fa-umbrella-beach"></i>
                             </div>
@@ -1549,8 +1756,9 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
                             <i class="fas fa-chevron-right arrow-icon"></i>
                         </a>
-                        
-                        <a href="imprimir_boleta.php?tipo=subsidio" target="_blank" class="btn-boleta-select" onclick="cerrarModalBoleta()">
+
+                        <a href="imprimir_boleta.php?tipo=subsidio" target="_blank" class="btn-boleta-select"
+                            onclick="cerrarModalBoleta()">
                             <div class="boleta-icon-wrapper bg-subsidio-light text-subsidio">
                                 <i class="fas fa-notes-medical"></i>
                             </div>
@@ -1560,8 +1768,9 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
                             <i class="fas fa-chevron-right arrow-icon"></i>
                         </a>
-                        
-                        <a href="imprimir_boleta.php?tipo=permiso" target="_blank" class="btn-boleta-select" onclick="cerrarModalBoleta()">
+
+                        <a href="imprimir_boleta.php?tipo=permiso" target="_blank" class="btn-boleta-select"
+                            onclick="cerrarModalBoleta()">
                             <div class="boleta-icon-wrapper bg-permiso-light text-permiso">
                                 <i class="fas fa-clipboard-check"></i>
                             </div>
@@ -1574,7 +1783,8 @@ function obtenerTiposFaltaConPorcentajes()
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-white justify-content-center">
-                    <button type="button" class="btn-modern btn-modern-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-modern btn-modern-secondary px-4"
+                        data-bs-dismiss="modal">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -1616,13 +1826,13 @@ function obtenerTiposFaltaConPorcentajes()
 
             // Fechas de inicio y fin
             const fechaInicio = document.getElementById('nueva_fecha_inicio')?.value || '';
-            const fechaFin    = document.getElementById('nueva_fecha_fin')?.value || '';
+            const fechaFin = document.getElementById('nueva_fecha_fin')?.value || '';
 
             // Total de días (diferencia inclusiva)
             let totalDias = '';
             if (fechaInicio && fechaFin) {
                 const d1 = new Date(fechaInicio + 'T00:00:00');
-                const d2 = new Date(fechaFin    + 'T00:00:00');
+                const d2 = new Date(fechaFin + 'T00:00:00');
                 if (d2 >= d1) {
                     const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
                     totalDias = diff + (diff === 1 ? ' día' : ' días');
@@ -1681,5 +1891,6 @@ function obtenerTiposFaltaConPorcentajes()
     <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
     <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
+
 
 </html>
