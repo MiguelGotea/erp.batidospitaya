@@ -737,19 +737,18 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <div class="filtro-group">
                             <label for="operario">Colaborador</label>
-                            <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..."
-                                value="<?php
-                                if ($operarioSeleccionado > 0) {
-                                    foreach ($operarios as $op) {
-                                        if ($op['CodOperario'] == $operarioSeleccionado) {
-                                            echo htmlspecialchars($op['nombre_completo']);
-                                            break;
-                                        }
+                            <input type="text" id="operario" name="operario" placeholder="Escriba para buscar..." value="<?php
+                            if ($operarioSeleccionado > 0) {
+                                foreach ($operarios as $op) {
+                                    if ($op['CodOperario'] == $operarioSeleccionado) {
+                                        echo htmlspecialchars($op['nombre_completo']);
+                                        break;
                                     }
-                                } else {
-                                    echo 'Todos los colaboradores';
                                 }
-                                ?>">
+                            } else {
+                                echo 'Todos los colaboradores';
+                            }
+                            ?>">
                             <input type="hidden" id="operario_id" name="operario"
                                 value="<?php echo $operarioSeleccionado; ?>">
                             <div id="operarios-sugerencias" style="display: none;"></div>
@@ -856,7 +855,8 @@ function obtenerTiposFaltaConPorcentajes()
                                             </span>
                                         </td>
                                         <td style="text-align:center;">
-                                            <?= number_format($vacacion['porcentaje_pago'] ?? 0, 0) ?>%</td>
+                                            <?= number_format($vacacion['porcentaje_pago'] ?? 0, 0) ?>%
+                                        </td>
                                         <td style="text-align:center;">
                                             <?php
                                             $cantDias = isset($vacacion['cantidad_dias']) ? (float) $vacacion['cantidad_dias'] : 1.0;
@@ -1018,7 +1018,8 @@ function obtenerTiposFaltaConPorcentajes()
                                             $label = $tipo['nombre'] . ' (Paga ' . $pct . '%)';
                                             ?>
                                             <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>">
-                                                <?= htmlspecialchars($label) ?></option>
+                                                <?= htmlspecialchars($label) ?>
+                                            </option>
                                         <?php endif;
                                     endforeach; ?>
                                 </select>
@@ -1391,7 +1392,8 @@ function obtenerTiposFaltaConPorcentajes()
                     </h6>
                     <p>Este módulo permite registrar, visualizar y exportar las ausencias del personal:
                         <strong>Vacaciones</strong>, <strong>Subsidios</strong> y <strong>Faltas/Permisos</strong>, ya
-                        sea para aplicarlos o deducirlos del cálculo de nómina.</p>
+                        sea para aplicarlos o deducirlos del cálculo de nómina.
+                    </p>
                     <h6 class="fw-bold text-success mt-4"><i class="fas fa-umbrella-beach me-2"></i>Vacaciones</h6>
                     <ul class="mb-0">
                         <li>Permite registrar vacaciones seleccionando un rango de fechas.</li>
@@ -1891,6 +1893,5 @@ function obtenerTiposFaltaConPorcentajes()
     <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
     <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
-
 
 </html>
