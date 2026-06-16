@@ -48,7 +48,9 @@ $label_total_dias = 'Total días de vacaciones:';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imprimir <?= htmlspecialchars($titulo_boleta) ?> - Batidos Pitaya</title>
+    <title>Imprimir
+        <?= htmlspecialchars($titulo_boleta) ?> - Batidos Pitaya
+    </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         /* Estilos generales de pantalla */
@@ -295,7 +297,9 @@ $label_total_dias = 'Total días de vacaciones:';
         <!-- Cabecera -->
         <div class="ticket-header">
             <div class="header-left">
-                <span class="header-title"><?= htmlspecialchars($titulo_boleta) ?></span>
+                <span class="header-title">
+                    <?= htmlspecialchars($titulo_boleta) ?>
+                </span>
                 <span class="header-subtitle">BATIDOS PITAYA</span>
             </div>
             <div class="header-logo">Pitaya</div>
@@ -304,15 +308,21 @@ $label_total_dias = 'Total días de vacaciones:';
         <!-- Campos Generales -->
         <div class="field-row">
             <span class="field-label">Tienda:</span>
-            <span class="field-value"><?= htmlspecialchars($tienda) ?></span>
+            <span class="field-value">
+                <?= htmlspecialchars($tienda) ?>
+            </span>
         </div>
         <div class="field-row">
             <span class="field-label">Jefe Inmediato:</span>
-            <span class="field-value"><?= htmlspecialchars($jefe) ?></span>
+            <span class="field-value">
+                <?= htmlspecialchars($jefe) ?>
+            </span>
         </div>
         <div class="field-row">
             <span class="field-label">Fecha:</span>
-            <span class="field-value"><?= htmlspecialchars($fecha_emision) ?></span>
+            <span class="field-value">
+                <?= htmlspecialchars($fecha_emision) ?>
+            </span>
         </div>
 
         <!-- Datos del Colaborador -->
@@ -320,28 +330,40 @@ $label_total_dias = 'Total días de vacaciones:';
 
         <div class="field-row">
             <span class="field-label">Nombre:</span>
-            <span class="field-value"><?= htmlspecialchars($nombre) ?></span>
+            <span class="field-value">
+                <?= htmlspecialchars($nombre) ?>
+            </span>
         </div>
         <div class="field-row">
             <span class="field-label">Puesto:</span>
-            <span class="field-value"><?= htmlspecialchars($puesto) ?></span>
+            <span class="field-value">
+                <?= htmlspecialchars($puesto) ?>
+            </span>
         </div>
 
         <!-- Rango de Fechas -->
         <div class="flex-row">
             <div class="flex-col">
                 <span class="field-label">Desde:</span>
-                <span class="field-value"><?= htmlspecialchars($fecha_inicio_fmt) ?></span>
+                <span class="field-value">
+                    <?= htmlspecialchars($fecha_inicio_fmt) ?>
+                </span>
             </div>
             <div class="flex-col">
                 <span class="field-label">Hasta:</span>
-                <span class="field-value"><?= htmlspecialchars($fecha_fin_fmt) ?></span>
+                <span class="field-value">
+                    <?= htmlspecialchars($fecha_fin_fmt) ?>
+                </span>
             </div>
         </div>
 
         <div class="field-row" style="margin-top: 6px;">
-            <span class="field-label"><?= htmlspecialchars($label_total_dias) ?></span>
-            <span class="field-value"><?= htmlspecialchars($total_dias) ?></span>
+            <span class="field-label">
+                <?= htmlspecialchars($label_total_dias) ?>
+            </span>
+            <span class="field-value">
+                <?= htmlspecialchars($total_dias) ?>
+            </span>
         </div>
 
         <!-- Firmas -->
