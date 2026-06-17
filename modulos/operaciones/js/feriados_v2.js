@@ -146,12 +146,27 @@ function cargarFeriadosSucursal(codSucursal) {
 
             const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
             let options = '<option value="">Seleccione el feriado trabajado</option>';
+            
+            // Obtener fecha de hoy a las 00:00:00
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             data.forEach(f => {
                 const parts = f.fecha.split('-');
-                const label = `${parts[2]}-${months[parseInt(parts[1],10)-1]}-${parts[0]} — ${f.nombre}`
-                            + (f.tipo === 'Departamental' && f.departamento_nombre ? ` (${f.departamento_nombre})` : '');
-                options += `<option value="${f.fecha}">${label}</option>`;
+                const fDate = new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
+                
+                // Filtrar solo fechas desde hoy (no ayer hacia atrás)
+                if (fDate >= today) {
+                    const label = `${parts[2]}-${months[parseInt(parts[1],10)-1]}-${parts[0]} — ${f.nombre}`
+                                + (f.tipo === 'Departamental' && f.departamento_nombre ? ` (${f.departamento_nombre})` : '');
+                    options += `<option value="${f.fecha}">${label}</option>`;
+                }
             });
+            
+            if (options === '<option value="">Seleccione el feriado trabajado</option>') {
+                options = '<option value="">No hay feriados futuros disponibles</option>';
+            }
+            
             selectFecha.innerHTML = options;
 
             // Después de cargar feriados, recargar colaboradores con la primera fecha disponible
@@ -175,7 +190,7 @@ function recargarOperariosModal() {
 // MOSTRAR U OCULTAR MODALES
 // =====================================================
 function mostrarModalSolicitud() {
-    const modal = document.getElementById('modalSolicitud');
+    const modalEl = document.getElementById('modalSolicitud');
     const form = document.getElementById('formNuevaSolicitud');
     if (form) form.reset();
 
@@ -188,12 +203,19 @@ function mostrarModalSolicitud() {
         if (fechaSel) fechaSel.innerHTML = '<option value="">Seleccione primero una sucursal...</option>';
     }
 
-    if (modal) modal.style.display = 'flex';
+    if (modalEl) {
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
 }
 
 function cerrarModalSolicitud() {
-    const modal = document.getElementById('modalSolicitud');
-    if (modal) modal.style.display = 'none';
+    const modalEl = document.getElementById('modalSolicitud');
+    if (modalEl) {
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
 }
 
 function mostrarModalAprobacion(id, nombre, sucursal, fecha, horas, estado, observaciones) {
@@ -214,26 +236,21 @@ function mostrarModalAprobacion(id, nombre, sucursal, fecha, horas, estado, obse
     const obsInput = document.getElementById('aprobacion_observaciones');
     if (obsInput) obsInput.value = observaciones || '';
 
-    const modal = document.getElementById('modalAprobacion');
-    if (modal) modal.style.display = 'flex';
+    const modalEl = document.getElementById('modalAprobacion');
+    if (modalEl) {
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
 }
 
 function cerrarModalAprobacion() {
-    const modal = document.getElementById('modalAprobacion');
-    if (modal) modal.style.display = 'none';
+    const modalEl = document.getElementById('modalAprobacion');
+    if (modalEl) {
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
 }
-
-// Cerrar modales haciendo clic fuera del contenido
-window.addEventListener('click', function (e) {
-    const modalSolicitud = document.getElementById('modalSolicitud');
-    const modalAprobacion = document.getElementById('modalAprobacion');
-    if (e.target === modalSolicitud) {
-        cerrarModalSolicitud();
-    }
-    if (e.target === modalAprobacion) {
-        cerrarModalAprobacion();
-    }
-});
 
 // =====================================================
 // FILTROS Y RECARGA

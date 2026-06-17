@@ -557,54 +557,70 @@ function getEstadoBadgeClass($estado) {
 
     <!-- MODAL 1: REGISTRAR SOLICITUD (Líder / RH) -->
     <?php if ($puedeCrear): ?>
-        <div class="modal" id="modalSolicitud">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Nueva Solicitud de Pago de Feriado</h5>
-                    <button class="modal-close" onclick="cerrarModalSolicitud()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="formNuevaSolicitud">
-                        <div class="form-group">
-                            <label class="form-label" for="solicitud_sucursal">Sucursal / Tienda:</label>
-                            <select id="solicitud_sucursal" name="cod_sucursal" class="form-select" required>
-                                <?php if ($puedeVerTodasSucursales): ?>
-                                    <option value="">Seleccione una tienda</option>
-                                    <?php foreach (obtenerTodasSucursales() as $suc): ?>
-                                        <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <?php foreach ($sucursales as $suc): ?>
-                                        <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
-                            </select>
+        <div class="modal fade" id="modalSolicitud" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                    <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-plus-circle fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0 text-white">Solicitud de Pago de Feriado</h5>
+                            </div>
                         </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-3 bg-light">
+                        <form id="formNuevaSolicitud">
+                            <div class="mb-3">
+                                <label for="solicitud_sucursal"
+                                    class="form-label small fw-bold text-muted text-uppercase">Tienda:</label>
+                                <select id="solicitud_sucursal" name="cod_sucursal" class="form-select" required>
+                                    <?php if ($puedeVerTodasSucursales): ?>
+                                        <option value="">Seleccione una tienda</option>
+                                        <?php foreach (obtenerTodasSucursales() as $suc): ?>
+                                            <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <?php foreach ($sucursales as $suc): ?>
+                                            <option value="<?= $suc['codigo'] ?>"><?= htmlspecialchars($suc['nombre']) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="solicitud_fecha">Feriado Trabajado:</label>
-                            <select id="solicitud_fecha" name="fecha_feriado" class="form-select" required>
-                                <option value="">⏳ Seleccione primero una sucursal...</option>
-                            </select>
-                            <small class="text-muted" style="font-size:0.78rem; margin-top:4px; display:block;">Solo se muestran feriados registrados en el sistema aplicables al departamento de la sucursal seleccionada.</small>
-                        </div>
+                            <div class="mb-3">
+                                <label for="solicitud_fecha"
+                                    class="form-label small fw-bold text-muted text-uppercase">Feriado Trabajado:</label>
+                                <select id="solicitud_fecha" name="fecha_feriado" class="form-select" required>
+                                    <option value="">⏳ Seleccione primero una sucursal...</option>
+                                </select>
+                                <small class="text-muted" style="font-size:0.78rem; margin-top:4px; display:block;">Solo se muestran feriados registrados en el sistema aplicables al departamento de la sucursal seleccionada.</small>
+                            </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="solicitud_operario">Colaborador:</label>
-                            <select id="solicitud_operario" name="cod_operario" class="form-select" required>
-                                <option value="">Seleccione un colaborador</option>
-                            </select>
-                        </div>
+                            <div class="mb-3">
+                                <label for="solicitud_operario"
+                                    class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                                <select id="solicitud_operario" name="cod_operario" class="form-select" required>
+                                    <option value="">Seleccione un colaborador</option>
+                                </select>
+                            </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="solicitud_observaciones">Observaciones / Justificación:</label>
-                            <textarea id="solicitud_observaciones" name="observaciones" class="form-textarea" placeholder="Escriba aquí los detalles..." required></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-limpiar" onclick="cerrarModalSolicitud()">Cancelar</button>
-                    <button type="submit" form="formNuevaSolicitud" class="btn-solicitar">Registrar Solicitud</button>
+                            <div class="mb-3">
+                                <label for="solicitud_observaciones"
+                                    class="form-label small fw-bold text-muted text-uppercase">Observaciones / Justificación:</label>
+                                <textarea id="solicitud_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;" placeholder="Escriba aquí los detalles..." required></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
+                        <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" form="formNuevaSolicitud" class="btn-modern btn-modern-primary">
+                            <i class="fas fa-save me-2"></i>Registrar Solicitud
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -612,41 +628,53 @@ function getEstadoBadgeClass($estado) {
 
     <!-- MODAL 2: APROBAR / GESTIONAR (RH / Aprobadores) -->
     <?php if ($puedeAprobar): ?>
-        <div class="modal" id="modalAprobacion">
-            <div class="modal-content">
-                <div class="modal-header" style="background-color: #0E544C;">
-                    <h5 class="modal-title" style="color: white;"><i class="fas fa-check-double me-2"></i>Gestionar Solicitud de Feriado</h5>
-                    <button class="modal-close" style="color: white;" onclick="cerrarModalAprobacion()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="info-resumen">
-                        <p><strong>Colaborador:</strong> <span id="aprobacion_nombre">-</span></p>
-                        <p><strong>Sucursal:</strong> <span id="aprobacion_sucursal">-</span></p>
-                        <p><strong>Fecha Feriado:</strong> <span id="aprobacion_fecha">-</span></p>
-                        <p><strong>Horas Laboradas (Marcación):</strong> <span id="aprobacion_horas">0.00</span> hrs</p>
+        <div class="modal fade" id="modalAprobacion" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                    <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-check-double fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0 text-white">Gestionar Solicitud de Feriado</h5>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-
-                    <form id="formAprobacionSolicitud">
-                        <input type="hidden" id="aprobacion_id" name="id">
-
-                        <div class="form-group">
-                            <label class="form-label" for="aprobacion_estado">Acción / Estado del Feriado:</label>
-                            <select id="aprobacion_estado" name="estado" class="form-select" required>
-                                <option value="Pendiente">Pendiente</option>
-                                <option value="Pagado">Pagado (100% Recargo)</option>
-                                <option value="Descansado">Compensado (Día de descanso)</option>
-                            </select>
+                    <div class="modal-body p-3 bg-light">
+                        <div class="info-resumen alert alert-info py-2 mb-3">
+                            <p class="mb-1"><strong>Colaborador:</strong> <span id="aprobacion_nombre">-</span></p>
+                            <p class="mb-1"><strong>Sucursal:</strong> <span id="aprobacion_sucursal">-</span></p>
+                            <p class="mb-1"><strong>Fecha Feriado:</strong> <span id="aprobacion_fecha">-</span></p>
+                            <p class="mb-0"><strong>Horas Laboradas (Marcación):</strong> <span id="aprobacion_horas">0.00</span> hrs</p>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="aprobacion_observaciones">Observaciones / Comentario Aprobación:</label>
-                            <textarea id="aprobacion_observaciones" name="observaciones" class="form-textarea" placeholder="Escriba comentarios u observaciones..." required></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-limpiar" onclick="cerrarModalAprobacion()">Cancelar</button>
-                    <button type="submit" form="formAprobacionSolicitud" class="btn-solicitar">Aplicar Cambios</button>
+                        <form id="formAprobacionSolicitud">
+                            <input type="hidden" id="aprobacion_id" name="id">
+
+                            <div class="mb-3">
+                                <label for="aprobacion_estado" class="form-label small fw-bold text-muted text-uppercase">Acción / Estado del Feriado:</label>
+                                <select id="aprobacion_estado" name="estado" class="form-select" required>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Pagado">Pagado (100% Recargo)</option>
+                                    <option value="Descansado">Compensado (Día de descanso)</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="aprobacion_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones / Comentario Aprobación:</label>
+                                <textarea id="aprobacion_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;" placeholder="Escriba comentarios u observaciones..." required></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
+                        <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" form="formAprobacionSolicitud" class="btn-modern btn-modern-primary">
+                            <i class="fas fa-save me-2"></i>Aplicar Cambios
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -672,6 +700,7 @@ function getEstadoBadgeClass($estado) {
             window.location.href = 'feriados_v2.php?' + params.toString();
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/feriados_v2.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 
     <!-- Botón Flotante con opciones -->
