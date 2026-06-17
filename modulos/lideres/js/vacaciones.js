@@ -382,8 +382,20 @@ function actualizarInfoRangoFaltaPermiso() {
 
     const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
     
-    document.getElementById('info-dias-totales-falta').textContent = `Días totales en rango: ${diasLaborables}`;
-    document.getElementById('info-dias-falta').textContent = `Días a registrar como falta/permiso: ${diasLaborables}`;
+    const inputDiasIntervalo = document.getElementById('falta_dias_intervalo');
+    if (inputDiasIntervalo) {
+        inputDiasIntervalo.value = diasLaborables;
+    }
+    
+    const infoDiasTotales = document.getElementById('info-dias-totales-falta');
+    if (infoDiasTotales) {
+        infoDiasTotales.textContent = `Días totales en rango: ${diasLaborables}`;
+    }
+    
+    const infoDiasFalta = document.getElementById('info-dias-falta');
+    if (infoDiasFalta) {
+        infoDiasFalta.textContent = `Días a registrar como falta/permiso: ${diasLaborables}`;
+    }
     
     if (infoRango) infoRango.style.display = 'block';
 }
