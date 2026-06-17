@@ -65,20 +65,24 @@ if (!$reg) {
 }
 
 // Formatear fecha
-function fmtFecha($fecha) {
-    if (empty($fecha) || $fecha === '0000-00-00') return '-';
+function fmtFecha($fecha)
+{
+    if (empty($fecha) || $fecha === '0000-00-00')
+        return '-';
     try {
         $d = new DateTime($fecha);
         // Mapear mes en español
-        $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-        return $d->format('d') . ' de ' . $meses[(int)$d->format('n') - 1] . ' de ' . $d->format('Y');
+        $meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        return $d->format('d') . ' de ' . $meses[(int) $d->format('n') - 1] . ' de ' . $d->format('Y');
     } catch (Exception $e) {
         return $fecha;
     }
 }
 
-function fmtFechaCorta($fecha) {
-    if (empty($fecha) || $fecha === '0000-00-00') return '-';
+function fmtFechaCorta($fecha)
+{
+    if (empty($fecha) || $fecha === '0000-00-00')
+        return '-';
     try {
         $d = new DateTime($fecha);
         return $d->format('d/m/Y');
@@ -87,16 +91,16 @@ function fmtFechaCorta($fecha) {
     }
 }
 
-$fechaFeriado      = fmtFecha($reg['fecha_feriado']);
+$fechaFeriado = fmtFecha($reg['fecha_feriado']);
 $fechaFeriadoCorta = fmtFechaCorta($reg['fecha_feriado']);
-$fechaCreacion     = $reg['fecha_creacion'] ? fmtFechaCorta(substr($reg['fecha_creacion'], 0, 10)) : '-';
-$fechaEmision      = fmtFechaCorta(date('Y-m-d'));
+$fechaCreacion = $reg['fecha_creacion'] ? fmtFechaCorta(substr($reg['fecha_creacion'], 0, 10)) : '-';
+$fechaEmision = fmtFechaCorta(date('Y-m-d'));
 
-$estadoLabel = match($reg['estado']) {
-    'Pagado'     => 'PAGADO',
+$estadoLabel = match ($reg['estado']) {
+    'Pagado' => 'PAGADO',
     'Descansado' => 'COMPENSADO (DESCANSO)',
-    'Pendiente'  => 'PENDIENTE',
-    default      => strtoupper($reg['estado'] ?? '-')
+    'Pendiente' => 'PENDIENTE',
+    default => strtoupper($reg['estado'] ?? '-')
 };
 
 $feriadoNombre = $reg['feriado_nombre'] ?? 'Feriado no registrado';
@@ -217,7 +221,7 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
             font-family: Arial, sans-serif;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border: 1px solid rgba(255,255,255,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             padding: 2px 6px;
             border-radius: 2px;
             margin-top: 2px;
@@ -275,9 +279,23 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
             letter-spacing: 0.5px;
         }
 
-        .status-pendiente { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
-        .status-pagado    { background: #d1e7dd; color: #0a3622; border: 1px solid #198754; }
-        .status-compensado{ background: #cff4fc; color: #055160; border: 1px solid #0dcaf0; }
+        .status-pendiente {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+
+        .status-pagado {
+            background: #d1e7dd;
+            color: #0a3622;
+            border: 1px solid #198754;
+        }
+
+        .status-compensado {
+            background: #cff4fc;
+            color: #055160;
+            border: 1px solid #0dcaf0;
+        }
 
         /* Firmas */
         .signatures-section {
@@ -379,7 +397,8 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
         </div>
 
         <!-- ID del registro -->
-        <div class="id-badge">Ref. #<?= htmlspecialchars($reg['id']) ?> &nbsp;|&nbsp; Emitido: <?= $fechaEmision ?></div>
+        <div class="id-badge">Ref. #<?= htmlspecialchars($reg['id']) ?> &nbsp;|&nbsp; Emitido: <?= $fechaEmision ?>
+        </div>
 
         <!-- Datos Generales -->
         <div class="field-row">
@@ -403,10 +422,10 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
             <span class="field-value bold"><?= htmlspecialchars($reg['nombre_completo']) ?></span>
         </div>
         <?php if (!empty($reg['cargo_nombre'])): ?>
-        <div class="field-row">
-            <span class="field-label">Puesto:</span>
-            <span class="field-value"><?= htmlspecialchars($reg['cargo_nombre']) ?></span>
-        </div>
+            <div class="field-row">
+                <span class="field-label">Puesto:</span>
+                <span class="field-value"><?= htmlspecialchars($reg['cargo_nombre']) ?></span>
+            </div>
         <?php endif; ?>
 
 
@@ -426,10 +445,10 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
             <span class="field-label">Estado:</span>
             <span class="field-value">
                 <?php
-                $badgeClass = match($reg['estado']) {
-                    'Pagado'     => 'status-pagado',
+                $badgeClass = match ($reg['estado']) {
+                    'Pagado' => 'status-pagado',
                     'Descansado' => 'status-compensado',
-                    default      => 'status-pendiente'
+                    default => 'status-pendiente'
                 };
                 ?>
                 <span class="status-badge <?= $badgeClass ?>"><?= $estadoLabel ?></span>
@@ -437,10 +456,10 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
         </div>
 
         <?php if (!empty($reg['observaciones'])): ?>
-        <div class="section-title" style="margin-top: 10px;">Observaciones</div>
-        <div style="font-size: 11px; padding: 2px 0; word-break: break-word;">
-            <?= htmlspecialchars($reg['observaciones']) ?>
-        </div>
+            <div class="section-title" style="margin-top: 10px;">Observaciones</div>
+            <div style="font-size: 11px; padding: 2px 0; word-break: break-word;">
+                <?= htmlspecialchars($reg['observaciones']) ?>
+            </div>
         <?php endif; ?>
 
         <div class="dashed-separator"></div>
@@ -475,5 +494,6 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
         });
     </script>
 </body>
+
 
 </html>
