@@ -603,9 +603,6 @@ function getEstadoBadgeClass($estado)
                                 <select id="solicitud_fecha" name="fecha_feriado" class="form-select" required>
                                     <option value="">⏳ Seleccione primero una sucursal...</option>
                                 </select>
-                                <small class="text-muted" style="font-size:0.78rem; margin-top:4px; display:block;">Solo se
-                                    muestran feriados registrados en el sistema aplicables al departamento de la sucursal
-                                    seleccionada.</small>
                             </div>
 
                             <div class="mb-3">
