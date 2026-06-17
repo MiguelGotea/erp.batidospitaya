@@ -323,8 +323,20 @@ function actualizarInfoRangoSubsidio() {
 
     const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
     
-    document.getElementById('info-dias-totales-subsidio').textContent = `Días totales en rango: ${diasLaborables}`;
-    document.getElementById('info-dias-subsidio').textContent = `Días a registrar como subsidio: ${diasLaborables}`;
+    const inputDiasIntervalo = document.getElementById('subsidio_dias_intervalo');
+    if (inputDiasIntervalo) {
+        inputDiasIntervalo.value = diasLaborables;
+    }
+    
+    const infoDiasTotalesSubsidio = document.getElementById('info-dias-totales-subsidio');
+    if (infoDiasTotalesSubsidio) {
+        infoDiasTotalesSubsidio.textContent = `Días totales en rango: ${diasLaborables}`;
+    }
+    
+    const infoDiasSubsidio = document.getElementById('info-dias-subsidio');
+    if (infoDiasSubsidio) {
+        infoDiasSubsidio.textContent = `Días a registrar como subsidio: ${diasLaborables}`;
+    }
     
     if (infoRango) infoRango.style.display = 'block';
 }

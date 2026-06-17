@@ -985,7 +985,6 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
                         <div>
                             <h5 class="modal-title fw-bold mb-0 text-white">Registrar Subsidio</h5>
-                            <p class="small mb-0 opacity-75">Registro de subsidio por rango de fechas</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -1015,17 +1014,22 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="subsidio_fecha_inicio"
                                     class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
                                 <input type="date" id="subsidio_fecha_inicio" name="fecha_inicio" class="form-control"
-                                    required>
+                                    required onchange="actualizarInfoRangoSubsidio()">
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="subsidio_fecha_fin"
                                     class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
                                 <input type="date" id="subsidio_fecha_fin" name="fecha_fin" class="form-control"
-                                    required>
+                                    required onchange="actualizarInfoRangoSubsidio()">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="subsidio_dias_intervalo"
+                                    class="form-label small fw-bold text-muted text-uppercase">Días intervalo:</label>
+                                <input type="text" id="subsidio_dias_intervalo" class="form-control bg-light" readonly value="0">
                             </div>
                         </div>
 
@@ -1130,18 +1134,14 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
                         </div>
 
-                        <div id="info-rango-subsidio" class="alert alert-info py-2" style="display: none;">
-                            <p class="mb-1"><strong>Resumen del rango seleccionado:</strong></p>
-                            <p class="mb-0 small" id="info-dias-totales-subsidio">Días totales en rango: 0</p>
-                            <p class="mb-0 small fw-bold" id="info-dias-subsidio">Días a registrar como subsidio: 0</p>
-                        </div>
+
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
                     <button type="button" class="btn-modern btn-modern-secondary"
                         data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="formNuevoSubsidio" class="btn-modern btn-modern-primary">
-                        <i class="fas fa-save me-2"></i>Registrar Subsidio
+                        <i class="fas fa-save me-2"></i>Guardar
                     </button>
                 </div>
             </div>
