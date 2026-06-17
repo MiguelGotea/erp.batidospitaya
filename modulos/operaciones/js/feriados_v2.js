@@ -144,9 +144,9 @@ function cargarFeriadosSucursal(codSucursal) {
                 return;
             }
 
-            const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+            const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
             let options = '<option value="">Seleccione el feriado trabajado</option>';
-            
+
             // Obtener fecha de hoy a las 00:00:00
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -154,19 +154,19 @@ function cargarFeriadosSucursal(codSucursal) {
             data.forEach(f => {
                 const parts = f.fecha.split('-');
                 const fDate = new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
-                
+
                 // Filtrar solo fechas desde hoy (no ayer hacia atrás)
                 if (fDate >= today) {
-                    const label = `${parts[2]}-${months[parseInt(parts[1],10)-1]}-${parts[0]} — ${f.nombre}`
-                                + (f.tipo === 'Departamental' && f.departamento_nombre ? ` (${f.departamento_nombre})` : '');
+                    const label = `${parts[2]}-${months[parseInt(parts[1], 10) - 1]}-${parts[0]} — ${f.nombre}`
+                        + (f.tipo === 'Departamental' && f.departamento_nombre ? ` (${f.departamento_nombre})` : '');
                     options += `<option value="${f.fecha}">${label}</option>`;
                 }
             });
-            
+
             if (options === '<option value="">Seleccione el feriado trabajado</option>') {
                 options = '<option value="">No hay feriados futuros disponibles</option>';
             }
-            
+
             selectFecha.innerHTML = options;
 
             // Después de cargar feriados, recargar colaboradores con la primera fecha disponible
@@ -203,6 +203,7 @@ function mostrarModalSolicitud() {
         if (fechaSel) fechaSel.innerHTML = '<option value="">Seleccione primero una sucursal...</option>';
     }
 
+
     if (modalEl) {
         let modal = bootstrap.Modal.getInstance(modalEl);
         if (!modal) modal = new bootstrap.Modal(modalEl);
@@ -229,7 +230,7 @@ function mostrarModalAprobacion(id, nombre, sucursal, fecha, horas, estado, obse
     });
     document.getElementById('aprobacion_fecha').textContent = fLocal;
     document.getElementById('aprobacion_horas').textContent = parseFloat(horas).toFixed(2);
-    
+
     const selectEstado = document.getElementById('aprobacion_estado');
     if (selectEstado) selectEstado.value = estado;
 
@@ -322,27 +323,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + data.error);
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                        if (submitBtn) {
+                            submitBtn.innerHTML = originalText;
+                            submitBtn.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error de conexión al guardar la solicitud. Intente nuevamente.');
                     if (submitBtn) {
                         submitBtn.innerHTML = originalText;
                         submitBtn.disabled = false;
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error de conexión al guardar la solicitud. Intente nuevamente.');
-                if (submitBtn) {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            });
+                });
 
             return false;
         });
@@ -380,27 +381,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + data.error);
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                        if (submitBtn) {
+                            submitBtn.innerHTML = originalText;
+                            submitBtn.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al actualizar el registro.');
                     if (submitBtn) {
                         submitBtn.innerHTML = originalText;
                         submitBtn.disabled = false;
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al actualizar el registro.');
-                if (submitBtn) {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            });
+                });
 
             return false;
         });
@@ -420,17 +421,17 @@ function eliminarSolicitud(id) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            window.location.reload();
-        } else {
-            alert('Error: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al intentar eliminar el registro.');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al intentar eliminar el registro.');
+        });
 }
