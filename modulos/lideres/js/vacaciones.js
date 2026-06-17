@@ -215,7 +215,7 @@ function calcularDiasLaborables(fechaInicio, fechaFin) {
     const inicio = new Date(fechaInicio + 'T00:00:00');
     const fin = new Date(fechaFin + 'T00:00:00');
     if (inicio > fin) return 0;
-    
+
     let diasTotales = 0;
     const fechaActual = new Date(inicio);
     while (fechaActual <= fin) {
@@ -248,22 +248,22 @@ function actualizarInfoRangoVacacion() {
     }
 
     const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
-    
+
     const inputDiasIntervalo = document.getElementById('nueva_dias_intervalo');
     if (inputDiasIntervalo) {
         inputDiasIntervalo.value = diasLaborables;
     }
-    
+
     const infoDiasTotales = document.getElementById('info-dias-totales');
     if (infoDiasTotales) {
         infoDiasTotales.textContent = `Días totales en rango: ${diasLaborables}`;
     }
-    
+
     const infoVacaciones = document.getElementById('info-vacaciones');
     if (infoVacaciones) {
         infoVacaciones.textContent = `Días a registrar como vacaciones: ${diasLaborables}`;
     }
-    
+
     if (infoRango) infoRango.style.display = 'block';
 }
 
@@ -322,22 +322,22 @@ function actualizarInfoRangoSubsidio() {
     }
 
     const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
-    
+
     const inputDiasIntervalo = document.getElementById('subsidio_dias_intervalo');
     if (inputDiasIntervalo) {
         inputDiasIntervalo.value = diasLaborables;
     }
-    
+
     const infoDiasTotalesSubsidio = document.getElementById('info-dias-totales-subsidio');
     if (infoDiasTotalesSubsidio) {
         infoDiasTotalesSubsidio.textContent = `Días totales en rango: ${diasLaborables}`;
     }
-    
+
     const infoDiasSubsidio = document.getElementById('info-dias-subsidio');
     if (infoDiasSubsidio) {
         infoDiasSubsidio.textContent = `Días a registrar como subsidio: ${diasLaborables}`;
     }
-    
+
     if (infoRango) infoRango.style.display = 'block';
 }
 
@@ -393,22 +393,22 @@ function actualizarInfoRangoFaltaPermiso() {
     }
 
     const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
-    
+
     const inputDiasIntervalo = document.getElementById('falta_dias_intervalo');
     if (inputDiasIntervalo) {
         inputDiasIntervalo.value = diasLaborables;
     }
-    
+
     const infoDiasTotales = document.getElementById('info-dias-totales-falta');
     if (infoDiasTotales) {
         infoDiasTotales.textContent = `Días totales en rango: ${diasLaborables}`;
     }
-    
+
     const infoDiasFalta = document.getElementById('info-dias-falta');
     if (infoDiasFalta) {
         infoDiasFalta.textContent = `Días a registrar como falta/permiso: ${diasLaborables}`;
     }
-    
+
     if (infoRango) infoRango.style.display = 'block';
 }
 
@@ -585,18 +585,18 @@ function mostrarModalNuevaFaltaPermiso() {
         const ayerStr = ayerObj.toISOString().split('T')[0];
 
         const fechaInicioInput = document.getElementById('falta_fecha_inicio');
-        const fechaFinInput   = document.getElementById('falta_fecha_fin');
+        const fechaFinInput = document.getElementById('falta_fecha_fin');
 
         if (esRRHH) {
             fechaInicioInput.value = hoyStr;
-            fechaFinInput.value   = hoyStr;
-            fechaInicioInput.max  = hoyStr;
-            fechaFinInput.max     = hoyStr;
+            fechaFinInput.value = hoyStr;
+            fechaInicioInput.max = hoyStr;
+            fechaFinInput.max = hoyStr;
         } else {
             fechaInicioInput.value = ayerStr;
-            fechaFinInput.value   = ayerStr;
-            fechaInicioInput.max  = ayerStr;
-            fechaFinInput.max     = ayerStr;
+            fechaFinInput.value = ayerStr;
+            fechaInicioInput.max = ayerStr;
+            fechaFinInput.max = ayerStr;
         }
 
         recargarOperariosModal('falta');
@@ -650,6 +650,7 @@ function mostrarModalEditarAprobar(ids, nombre, sucursal, fechaDesde, fechaHasta
         const botonesVacacion = document.getElementById('editar_botones_vacacion');
         if (botonesNormal) botonesNormal.style.display = esVacacion ? 'none' : 'block';
         if (botonesVacacion) botonesVacacion.style.display = esVacacion ? 'flex' : 'none';
+
 
         // Obs RRHH: no requerida para vacaciones pendientes
         const obsRrhh = document.getElementById('editar_observaciones_rrhh');
@@ -734,20 +735,20 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
         // Si es falta manual, validar que no sean futuras
         if (categoriaFalta === 'falta_permiso') {
             const esRRHH = window.CONFIG_VACACIONES && (window.CONFIG_VACACIONES.esRH || window.CONFIG_VACACIONES.puedeAprobar);
-            
+
             const limite = new Date();
             if (!esRRHH) {
                 // Líderes solo hasta ayer
                 limite.setDate(limite.getDate() - 1);
             }
             limite.setHours(23, 59, 59, 999);
-            
+
             const fInicioObj = new Date(fechaInicio + 'T00:00:00');
             const fFinObj = new Date(fechaFin + 'T00:00:00');
 
             if (fInicioObj > limite || fFinObj > limite) {
-                const mensaje = esRRHH ? 
-                    'Para faltas y permisos no se permiten fechas futuras.' : 
+                const mensaje = esRRHH ?
+                    'Para faltas y permisos no se permiten fechas futuras.' :
                     'Para faltas y permisos no se permiten fechas futuras ni el día actual.';
                 alert(mensaje);
                 return false;
@@ -762,7 +763,7 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
         const selectIdMap = {
             'formNuevaVacacion': 'nueva_cantidad_dias',
             'formNuevoSubsidio': 'subsidio_cantidad_dias',
-            'formNuevaFalta':    'falta_cantidad_dias'
+            'formNuevaFalta': 'falta_cantidad_dias'
         };
         const selectCantId = selectIdMap[formId] || null;
 
@@ -845,27 +846,27 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                window.location.reload();
-            } else {
-                alert('Error: ' + data.error);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                    if (submitBtn) {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de conexión al guardar el registro. Intente nuevamente.');
                 if (submitBtn) {
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
                 }
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error de conexión al guardar el registro. Intente nuevamente.');
-            if (submitBtn) {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        });
+            });
 
         return false;
     });
@@ -996,27 +997,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + data.error);
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                        if (submitBtn) {
+                            submitBtn.innerHTML = originalText;
+                            submitBtn.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al actualizar el registro.');
                     if (submitBtn) {
                         submitBtn.innerHTML = originalText;
                         submitBtn.disabled = false;
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al actualizar el registro.');
-                if (submitBtn) {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            });
+                });
 
             return false;
         });
@@ -1038,22 +1039,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ id })
             })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + data.error);
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                        this.innerHTML = '<i class="fas fa-check me-2"></i>Aprobar';
+                        this.disabled = false;
+                    }
+                })
+                .catch(() => {
+                    alert('Error de conexión al procesar la solicitud.');
                     this.innerHTML = '<i class="fas fa-check me-2"></i>Aprobar';
                     this.disabled = false;
-                }
-            })
-            .catch(() => {
-                alert('Error de conexión al procesar la solicitud.');
-                this.innerHTML = '<i class="fas fa-check me-2"></i>Aprobar';
-                this.disabled = false;
-            });
+                });
         });
     }
 
@@ -1072,22 +1073,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ id })
             })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + data.error);
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                        this.innerHTML = '<i class="fas fa-times me-2"></i>Rechazar';
+                        this.disabled = false;
+                    }
+                })
+                .catch(() => {
+                    alert('Error de conexión al procesar la solicitud.');
                     this.innerHTML = '<i class="fas fa-times me-2"></i>Rechazar';
                     this.disabled = false;
-                }
-            })
-            .catch(() => {
-                alert('Error de conexión al procesar la solicitud.');
-                this.innerHTML = '<i class="fas fa-times me-2"></i>Rechazar';
-                this.disabled = false;
-            });
+                });
         });
     }
 });
@@ -1105,19 +1106,19 @@ function eliminarSolicitud(id) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            window.location.reload();
-        } else {
-            alert('Error: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al intentar eliminar el registro.');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al intentar eliminar el registro.');
+        });
 }
 
 // Ampliar Imagen (Evidencias)
@@ -1286,16 +1287,16 @@ document.addEventListener('DOMContentLoaded', function () {
     function applyCorner(el, corner) {
         // Anular posiciones anteriores usando 'auto' para que no hereden 
         // valores de la hoja de estilos global (evitando conflictos top/bottom o left/right)
-        el.style.top    = 'auto';
+        el.style.top = 'auto';
         el.style.bottom = 'auto';
-        el.style.left   = 'auto';
-        el.style.right  = 'auto';
+        el.style.left = 'auto';
+        el.style.right = 'auto';
 
         const m = MARGIN + 'px';
-        if (corner === 'top-left')          { el.style.top = m;    el.style.left  = m; }
-        else if (corner === 'top-right')    { el.style.top = m;    el.style.right = m; }
-        else if (corner === 'bottom-left')  { el.style.bottom = m; el.style.left  = m; }
-        else                               { el.style.bottom = m; el.style.right = m; }
+        if (corner === 'top-left') { el.style.top = m; el.style.left = m; }
+        else if (corner === 'top-right') { el.style.top = m; el.style.right = m; }
+        else if (corner === 'bottom-left') { el.style.bottom = m; el.style.left = m; }
+        else { el.style.bottom = m; el.style.right = m; }
 
         // Lado izquierdo → opciones se abren hacia la derecha
         if (corner === 'top-left' || corner === 'bottom-left') {
@@ -1314,13 +1315,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function getCornerFromCenter(el) {
         const rect = el.getBoundingClientRect();
-        const cx = rect.left + rect.width  / 2;
-        const cy = rect.top  + rect.height / 2;
-        const isLeft = cx < window.innerWidth  / 2;
-        const isTop  = cy < window.innerHeight / 2;
-        if (isTop  && isLeft)  return 'top-left';
-        if (isTop  && !isLeft) return 'top-right';
-        if (!isTop && isLeft)  return 'bottom-left';
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const isLeft = cx < window.innerWidth / 2;
+        const isTop = cy < window.innerHeight / 2;
+        if (isTop && isLeft) return 'top-left';
+        if (isTop && !isLeft) return 'top-right';
+        if (!isTop && isLeft) return 'bottom-left';
         return 'bottom-right';
     }
 
@@ -1337,9 +1338,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const btn = fab.querySelector('.btn-floating-pitaya');
         if (!btn) return;
 
-        let isDragging  = false;
+        let isDragging = false;
         let dragStarted = false;
-        let wasDragged  = false;
+        let wasDragged = false;
         let startX, startY, startLeft, startTop;
 
         // Restaurar esquina guardada (o default bottom-right)
@@ -1354,9 +1355,9 @@ document.addEventListener('DOMContentLoaded', function () {
             // Solo botón izquierdo del ratón
             if (e.button !== undefined && e.button !== 0) return;
 
-            isDragging  = true;
+            isDragging = true;
             dragStarted = false;
-            wasDragged  = false;
+            wasDragged = false;
 
             // Bloquear el :hover CSS y ocultar opciones durante el arrastre
             // (NO se toca .active — el CSS fab-dragging lo suprime con !important
@@ -1376,13 +1377,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const rect = fab.getBoundingClientRect();
             startLeft = rect.left;
-            startTop  = rect.top;
+            startTop = rect.top;
 
             // Congelar transiciones y fijar posición con top/left
             fab.style.transition = 'none';
-            fab.style.top    = startTop  + 'px';
-            fab.style.left   = startLeft + 'px';
-            fab.style.right  = 'auto';
+            fab.style.top = startTop + 'px';
+            fab.style.left = startLeft + 'px';
+            fab.style.right = 'auto';
             fab.style.bottom = 'auto';
 
             btn.style.cursor = 'grabbing';
@@ -1405,13 +1406,13 @@ document.addEventListener('DOMContentLoaded', function () {
             wasDragged = true;
 
             // Calcular nueva posición con límites de pantalla
-            const fabW   = fab.getBoundingClientRect().width  || 75;
-            const fabH   = fab.getBoundingClientRect().height || 75;
-            const maxLeft = window.innerWidth  - fabW  - MARGIN;
-            const maxTop  = window.innerHeight - fabH  - MARGIN;
+            const fabW = fab.getBoundingClientRect().width || 75;
+            const fabH = fab.getBoundingClientRect().height || 75;
+            const maxLeft = window.innerWidth - fabW - MARGIN;
+            const maxTop = window.innerHeight - fabH - MARGIN;
 
             fab.style.left = Math.max(MARGIN, Math.min(startLeft + dx, maxLeft)) + 'px';
-            fab.style.top  = Math.max(MARGIN, Math.min(startTop  + dy, maxTop))  + 'px';
+            fab.style.top = Math.max(MARGIN, Math.min(startTop + dy, maxTop)) + 'px';
 
             e.preventDefault();
         }
@@ -1459,12 +1460,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }, true); // captura antes que el onclick inline
 
         // ── Registrar eventos ─────────────────────────────────────
-        btn.addEventListener('mousedown',  onDragStart);
+        btn.addEventListener('mousedown', onDragStart);
         btn.addEventListener('touchstart', onDragStart, { passive: false });
-        document.addEventListener('mousemove',  onDragMove);
-        document.addEventListener('touchmove',  onDragMove, { passive: false });
-        document.addEventListener('mouseup',    onDragEnd);
-        document.addEventListener('touchend',   onDragEnd);
+        document.addEventListener('mousemove', onDragMove);
+        document.addEventListener('touchmove', onDragMove, { passive: false });
+        document.addEventListener('mouseup', onDragEnd);
+        document.addEventListener('touchend', onDragEnd);
     }
 
     document.addEventListener('DOMContentLoaded', initDraggableFab);
@@ -1475,19 +1476,19 @@ document.addEventListener('DOMContentLoaded', function () {
 // =====================================================
 
 (function () {
-    let vacStream       = null;
-    let vacVideoTrack   = null;
-    let vacTorchActivo  = false;
-    let vacFocusTimer   = null;
-    let vacModalCamara  = null;
+    let vacStream = null;
+    let vacVideoTrack = null;
+    let vacTorchActivo = false;
+    let vacFocusTimer = null;
+    let vacModalCamara = null;
     // ID del formulario que activó la cámara ('formNuevoSubsidio' | 'formNuevaVacacion' | 'formNuevaFalta')
-    let vacFormActivo   = null;
+    let vacFormActivo = null;
 
     // Map: formId → { inputId, previewId, previewImgId }
     const VAC_FOTO_MAP = {
-        formNuevoSubsidio : { inputId: 'subsidio_foto', previewId: 'subsidio_preview', previewImgId: 'subsidio_preview_img' },
-        formNuevaVacacion : { inputId: 'nueva_foto',    previewId: 'vacacion_preview', previewImgId: 'vacacion_preview_img' },
-        formNuevaFalta    : { inputId: 'falta_foto',    previewId: 'falta_preview',    previewImgId: 'falta_preview_img'    }
+        formNuevoSubsidio: { inputId: 'subsidio_foto', previewId: 'subsidio_preview', previewImgId: 'subsidio_preview_img' },
+        formNuevaVacacion: { inputId: 'nueva_foto', previewId: 'vacacion_preview', previewImgId: 'vacacion_preview_img' },
+        formNuevaFalta: { inputId: 'falta_foto', previewId: 'falta_preview', previewImgId: 'falta_preview_img' }
     };
 
     // Inicializar modal Bootstrap cuando el DOM esté listo
@@ -1516,7 +1517,7 @@ document.addEventListener('DOMContentLoaded', function () {
             audio: false,
             video: {
                 facingMode: { ideal: 'environment' },
-                width:  { ideal: 3840 },
+                width: { ideal: 3840 },
                 height: { ideal: 2160 },
                 focusMode: { ideal: 'continuous' }
             }
@@ -1524,7 +1525,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         navigator.mediaDevices.getUserMedia(constraints)
             .then(function (s) {
-                vacStream     = s;
+                vacStream = s;
                 vacVideoTrack = s.getVideoTracks()[0];
                 video.srcObject = s;
 
@@ -1554,20 +1555,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const caps = vacVideoTrack.getCapabilities ? vacVideoTrack.getCapabilities() : {};
 
         // Linterna
-        const btnTorch       = document.getElementById('vac-btnTorch');
+        const btnTorch = document.getElementById('vac-btnTorch');
         const btnPlaceholder = document.getElementById('vac-btnTorchPlaceholder');
         if (caps.torch && btnTorch && btnPlaceholder) {
-            btnTorch.style.display       = 'flex';
+            btnTorch.style.display = 'flex';
             btnPlaceholder.style.display = 'none';
         }
 
         // Enfoque continuo
         const focusStatus = document.getElementById('vac-cam-focus-status');
         if (caps.focusMode && caps.focusMode.includes('continuous')) {
-            vacVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+            vacVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => { });
             if (focusStatus) {
                 focusStatus.textContent = 'CONTINUO';
-                focusStatus.className   = 'badge bg-success';
+                focusStatus.className = 'badge bg-success';
             }
         }
 
@@ -1576,7 +1577,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Enfoque por toque ─────────────────────────────────────────────────────
     function vacEnfocarEnPunto(e) {
-        const vp   = document.getElementById('vac-camera-viewport');
+        const vp = document.getElementById('vac-camera-viewport');
         const ring = document.getElementById('vac-focus-ring');
         if (!vp || !ring) return;
 
@@ -1585,7 +1586,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const y = e.clientY - rect.top;
 
         ring.style.left = x + 'px';
-        ring.style.top  = y + 'px';
+        ring.style.top = y + 'px';
         ring.classList.remove('active', 'locked');
         void ring.offsetWidth; // reflow
         ring.classList.add('active');
@@ -1593,7 +1594,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const focusStatus = document.getElementById('vac-cam-focus-status');
         if (focusStatus) {
             focusStatus.textContent = 'ENFOCANDO...';
-            focusStatus.className   = 'badge bg-warning text-dark';
+            focusStatus.className = 'badge bg-warning text-dark';
         }
 
         if (vacVideoTrack) {
@@ -1607,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (focusStatus) { focusStatus.textContent = 'ENFOCADO'; focusStatus.className = 'badge bg-success'; }
                 vacMostrarFocusToast('✓ Enfocado', 1500);
                 setTimeout(function () {
-                    if (vacVideoTrack) vacVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+                    if (vacVideoTrack) vacVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => { });
                     if (focusStatus) focusStatus.textContent = 'CONTINUO';
                 }, 2000);
             }).catch(function () {
@@ -1650,12 +1651,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Cerrar cámara ─────────────────────────────────────────────────────────
     window.vacCerrarCamara = function () {
         if (vacTorchActivo && vacVideoTrack) {
-            vacVideoTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+            vacVideoTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => { });
             vacTorchActivo = false;
         }
         if (vacStream) {
             vacStream.getTracks().forEach(function (t) { t.stop(); });
-            vacStream     = null;
+            vacStream = null;
             vacVideoTrack = null;
         }
 
@@ -1666,24 +1667,24 @@ document.addEventListener('DOMContentLoaded', function () {
         if (vacModalCamara) vacModalCamara.hide();
 
         // Resetear controles
-        const btnTorch       = document.getElementById('vac-btnTorch');
+        const btnTorch = document.getElementById('vac-btnTorch');
         const btnPlaceholder = document.getElementById('vac-btnTorchPlaceholder');
-        const focusStatus    = document.getElementById('vac-cam-focus-status');
-        const ring           = document.getElementById('vac-focus-ring');
-        if (btnTorch)       btnTorch.style.display = 'none';
+        const focusStatus = document.getElementById('vac-cam-focus-status');
+        const ring = document.getElementById('vac-focus-ring');
+        if (btnTorch) btnTorch.style.display = 'none';
         if (btnPlaceholder) btnPlaceholder.style.display = 'block';
-        if (focusStatus)    { focusStatus.textContent = 'AUTO'; focusStatus.className = 'badge bg-secondary'; }
-        if (ring)           ring.className = '';
+        if (focusStatus) { focusStatus.textContent = 'AUTO'; focusStatus.className = 'badge bg-secondary'; }
+        if (ring) ring.className = '';
     };
 
     // ── Capturar foto ─────────────────────────────────────────────────────────
     window.vacCapturarFoto = function () {
-        const video  = document.getElementById('vac-video');
+        const video = document.getElementById('vac-video');
         const canvas = document.getElementById('vac-canvas');
         if (!video || !canvas) return;
 
         const ctx = canvas.getContext('2d');
-        canvas.width  = video.videoWidth  || video.clientWidth;
+        canvas.width = video.videoWidth || video.clientWidth;
         canvas.height = video.videoHeight || video.clientHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -1708,10 +1709,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Mostrar preview
-        const preview    = document.getElementById(cfg.previewId);
+        const preview = document.getElementById(cfg.previewId);
         const previewImg = document.getElementById(cfg.previewImgId);
         if (preview && previewImg) {
-            previewImg.src        = URL.createObjectURL(file);
+            previewImg.src = URL.createObjectURL(file);
             preview.style.display = 'block';
         }
     }
