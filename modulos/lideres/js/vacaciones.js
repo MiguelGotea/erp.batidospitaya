@@ -651,7 +651,6 @@ function mostrarModalEditarAprobar(ids, nombre, sucursal, fechaDesde, fechaHasta
         if (botonesNormal) botonesNormal.style.display = esVacacion ? 'none' : 'block';
         if (botonesVacacion) botonesVacacion.style.display = esVacacion ? 'flex' : 'none';
 
-
         // Obs RRHH: no requerida para vacaciones pendientes
         const obsRrhh = document.getElementById('editar_observaciones_rrhh');
         if (obsRrhh) {
