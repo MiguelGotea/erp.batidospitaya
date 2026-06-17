@@ -1158,8 +1158,7 @@ function obtenerTiposFaltaConPorcentajes()
                             <i class="fas fa-umbrella-beach fs-4"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">Registrar Vacaciones</h5>
-                            <p class="small mb-0 opacity-75">Registro de vacaciones por rango de fechas</p>
+                            <h5 class="modal-title fw-bold mb-0">Solicitud de vacaciones</h5>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -1170,7 +1169,7 @@ function obtenerTiposFaltaConPorcentajes()
 
                         <div class="mb-3">
                             <label for="nueva_sucursal"
-                                class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
+                                class="form-label small fw-bold text-muted text-uppercase">Tienda:</label>
                             <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
                                 <?php if ($esRH): ?>
                                     <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
@@ -1235,10 +1234,6 @@ function obtenerTiposFaltaConPorcentajes()
                             <?php else: ?>
                                 <input type="hidden" id="nueva_tipo" name="tipo_falta" value="Vacaciones">
                                 <input type="hidden" name="aprobado" value="0">
-                                <div class="alert alert-info py-2 small mb-0">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Tu solicitud quedará como <strong>Pendiente</strong> hasta ser aprobada por RRHH.
-                                </div>
                             <?php endif; ?>
                         </div>
 
@@ -1279,11 +1274,11 @@ function obtenerTiposFaltaConPorcentajes()
                             <input type="hidden" name="cantidad_dias" value="1.00">
                         <?php endif; ?>
 
-                        <div class="mb-3">
+                        <div class="mb-3" style="display: none;">
                             <label for="nueva_observaciones"
                                 class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
                             <textarea id="nueva_observaciones" name="observaciones" class="form-control" rows="2"
-                                style="resize: none;"></textarea>
+                                style="resize: none;">solicitud de vacaciones</textarea>
                         </div>
 
                         <div class="mb-3">
@@ -1315,7 +1310,7 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-wrap gap-2">
+                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap gap-2">
                     <button type="button" class="btn-modern btn-modern-secondary"
                         data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn-modern" style="background:#17a2b8;color:#fff;"
@@ -1323,7 +1318,7 @@ function obtenerTiposFaltaConPorcentajes()
                         <i class="fas fa-print me-2"></i>Imprimir Boleta
                     </button>
                     <button type="submit" form="formNuevaVacacion" class="btn-modern btn-modern-primary">
-                        <i class="fas fa-save me-2"></i>Registrar Vacaciones
+                        <i class="fas fa-save me-2"></i>Guardar
                     </button>
                 </div>
             </div>
