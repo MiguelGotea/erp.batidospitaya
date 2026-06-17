@@ -1463,8 +1463,7 @@ function obtenerTiposFaltaConPorcentajes()
                             <i class="fas fa-exclamation-triangle fs-4"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">Registrar Falta o Permiso</h5>
-                            <p class="small mb-0 opacity-75">Registro por rango de fechas (no futuras)</p>
+                            <h5 class="modal-title fw-bold mb-0">Justificación de Falta</h5>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -1544,7 +1543,6 @@ function obtenerTiposFaltaConPorcentajes()
                                 <input type="hidden" id="falta_tipo" name="tipo_falta" value="Pendiente">
                                 <small id="info-porcentaje-falta" class="form-text text-muted mt-1 d-block"
                                     style="display:none;">
-                                    ℹ️ El tipo de ausencia será determinado y clasificado por Recursos Humanos.
                                 </small>
                             </div>
                         <?php endif; ?>
@@ -1613,18 +1611,14 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
                         </div>
 
-                        <div id="info-rango-falta" class="alert alert-info py-2" style="display: none;">
-                            <p class="mb-1"><strong>Resumen del rango seleccionado:</strong></p>
-                            <p class="mb-0 small" id="info-dias-totales-falta">Días totales en rango: 0</p>
-                            <p class="mb-0 small fw-bold" id="info-dias-falta">Días a registrar: 0</p>
-                        </div>
+
                     </form>
                 </div>
                 <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap">
                     <button type="button" class="btn-modern btn-modern-secondary"
                         data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="formNuevaFalta" class="btn-modern btn-modern-primary">
-                        <i class="fas fa-save me-2"></i>Registrar Falta/Permiso
+                        <i class="fas fa-save me-2"></i>Guardar
                     </button>
                 </div>
             </div>
