@@ -26,6 +26,7 @@ $puedeImprimir = tienePermiso('feriados_v2', 'aprobar', $cargoOperario); // Solo
 
 $puedeVerTodasSucursales = tienePermiso('feriados_v2', 'ver_todas_sucursales', $cargoOperario);
 
+
 // Obtener sucursales según el permiso (patrón idéntico a vacaciones.php)
 if ($puedeVerTodasSucursales) {
     $sucursales = obtenerTodasSucursales();
@@ -711,7 +712,7 @@ function getEstadoBadgeClass($estado)
                             <label class="form-label small fw-bold text-muted text-uppercase">Año:</label>
                             <select id="imprimir_anio" class="form-select" onchange="cargarFeriadosParaImprimir()">
                                 <?php
-                                $anioActual = (int)date('Y');
+                                $anioActual = (int) date('Y');
                                 for ($a = $anioActual; $a >= $anioActual - 2; $a--) {
                                     $sel = ($a === $anioActual) ? 'selected' : '';
                                     echo "<option value=\"$a\" $sel>$a</option>";
@@ -725,7 +726,8 @@ function getEstadoBadgeClass($estado)
                                 <option value="">Cargando registros...</option>
                             </select>
                         </div>
-                        <div id="imprimir_preview" class="p-2 bg-white rounded border d-none" style="font-size: 12px; line-height: 1.6;"></div>
+                        <div id="imprimir_preview" class="p-2 bg-white rounded border d-none"
+                            style="font-size: 12px; line-height: 1.6;"></div>
                     </div>
                     <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
                         <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">
@@ -745,7 +747,7 @@ function getEstadoBadgeClass($estado)
         window.CONFIG_FERIADOS = {
             operariosData: [
                 <?php foreach ($operarios as $op): ?>
-                            { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
+                                { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
                 <?php endforeach; ?>
             ],
             puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
