@@ -345,28 +345,16 @@ try {
                 throw new Exception('Método no permitido');
             }
 
-            $id = (int) $_POST['id'];
+            $ids_raw = $_POST['id'] ?? '';
+            $ids = array_filter(array_map('intval', explode(',', $ids_raw)));
             $tipoFalta = $_POST['tipo_falta'];
             $observaciones_rrhh = $_POST['observaciones_rrhh'] ?? '';
 
+            if (empty($ids)) {
+                throw new Exception('ID no válido');
+            }
             if (empty($observaciones_rrhh)) {
                 throw new Exception('Las observaciones de RRHH son obligatorias al editar/aprobar');
-            }
-
-            $stmt = $conn->prepare("SELECT cod_operario, fecha_falta FROM faltas_manual WHERE id = ?");
-            $stmt->execute([$id]);
-            $falta = $stmt->fetch();
-
-            if (!$falta) {
-                throw new Exception('Registro no encontrado');
-            }
-
-            // Validar liquidación y contrato
-            if (fechaPosteriorLiquidacion($falta['cod_operario'], $falta['fecha_falta'])) {
-                throw new Exception('No se puede editar: posterior a la liquidación del colaborador');
-            }
-            if (!operarioTieneContrato($falta['cod_operario'])) {
-                throw new Exception('El colaborador no tiene un contrato registrado.');
             }
 
             $porcentajePago = obtenerPorcentajePagoTipoFalta($tipoFalta);
@@ -379,38 +367,56 @@ try {
                 $cantidadDiasEdit = round($cantidadDiasEdit, 2);
             }
 
-            // Verificar que la suma de otros registros del mismo día no supere 1.00
-            $stmtSumEdit = $conn->prepare("
-                SELECT COALESCE(SUM(cantidad_dias), 0) AS total_dias
-                FROM faltas_manual
-                WHERE cod_operario = ? AND fecha_falta = ? AND id != ?
-            ");
-            $stmtSumEdit->execute([$falta['cod_operario'], $falta['fecha_falta'], $id]);
-            $totalOtros = (float) $stmtSumEdit->fetch()['total_dias'];
-            if ($totalOtros + $cantidadDiasEdit > 1.0) {
-                throw new Exception('La duración ingresada (' . number_format($cantidadDiasEdit, 2) . ' días) supera el límite: ya hay ' . number_format($totalOtros, 2) . ' día(s) registrado(s) en esa fecha para este colaborador');
+            foreach ($ids as $id) {
+                $stmt = $conn->prepare("SELECT cod_operario, fecha_falta FROM faltas_manual WHERE id = ?");
+                $stmt->execute([$id]);
+                $falta = $stmt->fetch();
+
+                if (!$falta) {
+                    continue;
+                }
+
+                // Validar liquidación y contrato
+                if (fechaPosteriorLiquidacion($falta['cod_operario'], $falta['fecha_falta'])) {
+                    throw new Exception('No se puede editar: posterior a la liquidación del colaborador');
+                }
+                if (!operarioTieneContrato($falta['cod_operario'])) {
+                    throw new Exception('El colaborador no tiene un contrato registrado.');
+                }
+
+                // Verificar que la suma de otros registros del mismo día no supere 1.00
+                $stmtSumEdit = $conn->prepare("
+                    SELECT COALESCE(SUM(cantidad_dias), 0) AS total_dias
+                    FROM faltas_manual
+                    WHERE cod_operario = ? AND fecha_falta = ? AND id != ?
+                ");
+                $stmtSumEdit->execute([$falta['cod_operario'], $falta['fecha_falta'], $id]);
+                $totalOtros = (float) $stmtSumEdit->fetch()['total_dias'];
+                if ($totalOtros + $cantidadDiasEdit > 1.0) {
+                    throw new Exception('La duración ingresada (' . number_format($cantidadDiasEdit, 2) . ' días) supera el límite: ya hay ' . number_format($totalOtros, 2) . ' día(s) registrado(s) en esa fecha para este colaborador');
+                }
+
+                $stmt = $conn->prepare("
+                    UPDATE faltas_manual 
+                    SET tipo_falta = ?, 
+                        observaciones_rrhh = ?,
+                        porcentaje_pago = ?,
+                        cantidad_dias = ?,
+                        actualizado_por = ?,
+                        fecha_actualizacion = NOW()
+                    WHERE id = ?
+                ");
+                $stmt->execute([
+                    $tipoFalta,
+                    $observaciones_rrhh,
+                    $porcentajePago,
+                    $cantidadDiasEdit,
+                    $_SESSION['usuario_id'],
+                    $id
+                ]);
             }
 
-            $stmt = $conn->prepare("
-                UPDATE faltas_manual 
-                SET tipo_falta = ?, 
-                    observaciones_rrhh = ?,
-                    porcentaje_pago = ?,
-                    cantidad_dias = ?,
-                    actualizado_por = ?,
-                    fecha_actualizacion = NOW()
-                WHERE id = ?
-            ");
-            $stmt->execute([
-                $tipoFalta,
-                $observaciones_rrhh,
-                $porcentajePago,
-                $cantidadDiasEdit,
-                $_SESSION['usuario_id'],
-                $id
-            ]);
-
-            echo json_encode(['success' => true, 'message' => 'Registro actualizado y aprobado correctamente']);
+            echo json_encode(['success' => true, 'message' => 'Registros actualizados y aprobados correctamente']);
             break;
 
         case 'aprobar_vacacion':
@@ -420,25 +426,30 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            $id = (int) ($_POST['id'] ?? 0);
-            if (!$id)
+            $ids_raw = $_POST['id'] ?? '';
+            $ids = array_filter(array_map('intval', explode(',', $ids_raw)));
+            if (empty($ids))
                 throw new Exception('ID no válido');
 
-            $stmt = $conn->prepare("
-                UPDATE faltas_manual
-                SET aprobado = 1,
-                    actualizado_por = ?,
-                    fecha_actualizacion = NOW()
-                WHERE id = ?
-                  AND tipo_falta = 'Vacaciones'
-                  AND aprobado = 0
-            ");
-            $stmt->execute([$_SESSION['usuario_id'], $id]);
-
-            if ($stmt->rowCount() === 0) {
-                throw new Exception('Registro no encontrado o ya fue procesado anteriormente');
+            $count = 0;
+            foreach ($ids as $id) {
+                $stmt = $conn->prepare("
+                    UPDATE faltas_manual
+                    SET aprobado = 1,
+                        actualizado_por = ?,
+                        fecha_actualizacion = NOW()
+                    WHERE id = ?
+                      AND tipo_falta = 'Vacaciones'
+                      AND aprobado = 0
+                ");
+                $stmt->execute([$_SESSION['usuario_id'], $id]);
+                if ($stmt->rowCount() > 0) $count++;
             }
-            echo json_encode(['success' => true, 'message' => 'Vacación aprobada correctamente']);
+
+            if ($count === 0) {
+                throw new Exception('Registros no encontrados o ya fueron procesados anteriormente');
+            }
+            echo json_encode(['success' => true, 'message' => 'Vacación(es) aprobada(s) correctamente']);
             break;
 
         case 'rechazar_vacacion':
@@ -448,26 +459,31 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            $id = (int) ($_POST['id'] ?? 0);
-            if (!$id)
+            $ids_raw = $_POST['id'] ?? '';
+            $ids = array_filter(array_map('intval', explode(',', $ids_raw)));
+            if (empty($ids))
                 throw new Exception('ID no válido');
 
-            $stmt = $conn->prepare("
-                UPDATE faltas_manual
-                SET tipo_falta = 'No_Pagado',
-                    aprobado   = 1,
-                    actualizado_por = ?,
-                    fecha_actualizacion = NOW()
-                WHERE id = ?
-                  AND tipo_falta = 'Vacaciones'
-                  AND aprobado = 0
-            ");
-            $stmt->execute([$_SESSION['usuario_id'], $id]);
-
-            if ($stmt->rowCount() === 0) {
-                throw new Exception('Registro no encontrado o ya fue procesado anteriormente');
+            $count = 0;
+            foreach ($ids as $id) {
+                $stmt = $conn->prepare("
+                    UPDATE faltas_manual
+                    SET tipo_falta = 'No_Pagado',
+                        aprobado   = 1,
+                        actualizado_por = ?,
+                        fecha_actualizacion = NOW()
+                    WHERE id = ?
+                      AND tipo_falta = 'Vacaciones'
+                      AND aprobado = 0
+                ");
+                $stmt->execute([$_SESSION['usuario_id'], $id]);
+                if ($stmt->rowCount() > 0) $count++;
             }
-            echo json_encode(['success' => true, 'message' => 'Solicitud rechazada y registrada como No Pagado']);
+
+            if ($count === 0) {
+                throw new Exception('Registros no encontrados o ya fueron procesados anteriormente');
+            }
+            echo json_encode(['success' => true, 'message' => 'Solicitud(es) rechazada(s) y registrada(s) como No Pagado']);
             break;
 
         case 'eliminar_rechazar':
@@ -475,36 +491,41 @@ try {
                 throw new Exception('Método no permitido');
             }
 
-            $id = (int) $_POST['id'];
+            $ids_raw = $_POST['id'] ?? '';
+            $ids = array_filter(array_map('intval', explode(',', $ids_raw)));
+            if (empty($ids))
+                throw new Exception('ID no válido');
 
-            // Cargar falta
-            $stmt = $conn->prepare("SELECT registrado_por, foto_path FROM faltas_manual WHERE id = ?");
-            $stmt->execute([$id]);
-            $falta = $stmt->fetch();
+            foreach ($ids as $id) {
+                // Cargar falta
+                $stmt = $conn->prepare("SELECT registrado_por, foto_path FROM faltas_manual WHERE id = ?");
+                $stmt->execute([$id]);
+                $falta = $stmt->fetch();
 
-            if (!$falta) {
-                throw new Exception('Registro no encontrado');
-            }
-
-            // Los líderes solo pueden eliminar sus propias solicitudes si están en 'Pendiente' o vacacion pendiente
-            if (!$puedeAprobar) {
-                $stmt_check = $conn->prepare("SELECT tipo_falta, aprobado FROM faltas_manual WHERE id = ? AND registrado_por = ?");
-                $stmt_check->execute([$id, $_SESSION['usuario_id']]);
-                $miFalta = $stmt_check->fetch();
-                $esPendientePropia = $miFalta && (
-                    $miFalta['tipo_falta'] === 'Pendiente' ||
-                    ($miFalta['tipo_falta'] === 'Vacaciones' && (int) $miFalta['aprobado'] === 0)
-                );
-                if (!$esPendientePropia) {
-                    throw new Exception('No tiene permisos para eliminar este registro.');
+                if (!$falta) {
+                    continue;
                 }
+
+                // Los líderes solo pueden eliminar sus propias solicitudes si están en 'Pendiente' o vacacion pendiente
+                if (!$puedeAprobar) {
+                    $stmt_check = $conn->prepare("SELECT tipo_falta, aprobado FROM faltas_manual WHERE id = ? AND registrado_por = ?");
+                    $stmt_check->execute([$id, $_SESSION['usuario_id']]);
+                    $miFalta = $stmt_check->fetch();
+                    $esPendientePropia = $miFalta && (
+                        $miFalta['tipo_falta'] === 'Pendiente' ||
+                        ($miFalta['tipo_falta'] === 'Vacaciones' && (int) $miFalta['aprobado'] === 0)
+                    );
+                    if (!$esPendientePropia) {
+                        throw new Exception('No tiene permisos para eliminar uno o más registros seleccionados.');
+                    }
+                }
+
+                // Eliminar registro
+                $stmt = $conn->prepare("DELETE FROM faltas_manual WHERE id = ?");
+                $stmt->execute([$id]);
             }
 
-            // Eliminar registro
-            $stmt = $conn->prepare("DELETE FROM faltas_manual WHERE id = ?");
-            $stmt->execute([$id]);
-
-            echo json_encode(['success' => true, 'message' => 'Registro eliminado/rechazado correctamente']);
+            echo json_encode(['success' => true, 'message' => 'Registros eliminados/rechazados correctamente']);
             break;
 
         default:

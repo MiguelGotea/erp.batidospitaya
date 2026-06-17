@@ -578,17 +578,20 @@ function mostrarModalNuevaFaltaPermiso() {
     });
 }
 
-function mostrarModalEditarAprobar(id, nombre, sucursal, fecha, tipoFalta, observaciones, observacionesRrhh, fotoPath, cantidadDias, aprobado = 1) {
+function mostrarModalEditarAprobar(ids, nombre, sucursal, fechaDesde, fechaHasta, tipoFalta, observaciones, observacionesRrhh, fotoPath, cantidadDias, aprobado = 1) {
     cerrarTodosLosModales(function () {
-        document.getElementById('editar_id').value = id;
+        document.getElementById('editar_id').value = ids;
         document.getElementById('editar_nombre').textContent = nombre;
         document.getElementById('editar_sucursal').textContent = sucursal;
 
         // Formatear fecha local
-        const fLocal = new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {
+        const fLocalDesde = new Date(fechaDesde + 'T00:00:00').toLocaleDateString('es-ES', {
             day: '2-digit', month: 'short', year: 'numeric'
         });
-        document.getElementById('editar_fecha').textContent = fLocal;
+        const fLocalHasta = new Date(fechaHasta + 'T00:00:00').toLocaleDateString('es-ES', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
+        document.getElementById('editar_fecha').textContent = (fechaDesde === fechaHasta) ? fLocalDesde : fLocalDesde + ' - ' + fLocalHasta;
         document.getElementById('editar_observaciones_lider').textContent = observaciones || '(Sin observaciones)';
 
         // Detectar si es solicitud de vacación pendiente de aprobación

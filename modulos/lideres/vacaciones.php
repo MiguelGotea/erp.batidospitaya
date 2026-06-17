@@ -98,7 +98,7 @@ $modoVista = ($sucursalSeleccionada === 'todas') ? 'todas' : 'sucursal';
 // Obtener registros si hay sucursal y fechas seleccionadas
 $vacaciones = [];
 if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHasta) {
-    $vacaciones = obtenerVacaciones(
+    $vacaciones_raw = obtenerVacaciones(
         ($modoVista === 'todas') ? null : $sucursalSeleccionada,
         $fechaDesde,
         $fechaHasta,
@@ -107,6 +107,38 @@ if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHa
         $operarioSeleccionado,
         $tipoFiltro
     );
+
+    $vacacionesAgrupadas = [];
+    foreach ($vacaciones_raw as $vac) {
+        $groupKey = implode('|', [
+            $vac['tipo_falta'],
+            $vac['cod_operario'],
+            $vac['cod_sucursal'],
+            $vac['aprobado'],
+            $vac['observaciones'],
+            $vac['registrado_por']
+        ]);
+
+        if (!isset($vacacionesAgrupadas[$groupKey])) {
+            $vacacionesAgrupadas[$groupKey] = $vac;
+            $vacacionesAgrupadas[$groupKey]['ids'] = [$vac['id']];
+            $vacacionesAgrupadas[$groupKey]['fechas'] = [$vac['fecha_falta']];
+            $vacacionesAgrupadas[$groupKey]['cantidad_dias_total'] = isset($vac['cantidad_dias']) ? (float)$vac['cantidad_dias'] : 1.0;
+        } else {
+            $vacacionesAgrupadas[$groupKey]['ids'][] = $vac['id'];
+            $vacacionesAgrupadas[$groupKey]['fechas'][] = $vac['fecha_falta'];
+            $vacacionesAgrupadas[$groupKey]['cantidad_dias_total'] += isset($vac['cantidad_dias']) ? (float)$vac['cantidad_dias'] : 1.0;
+        }
+    }
+
+    foreach ($vacacionesAgrupadas as &$grupo) {
+        sort($grupo['fechas']);
+        $grupo['fecha_desde'] = $grupo['fechas'][0];
+        $grupo['fecha_hasta'] = end($grupo['fechas']);
+        $grupo['ids_str'] = implode(',', $grupo['ids']);
+    }
+    unset($grupo);
+    $vacaciones = array_values($vacacionesAgrupadas);
 }
 
 // Función para obtener operarios para el filtro
@@ -477,7 +509,7 @@ if (isset($_GET['exportar_excel'])) {
         echo '<td>' . ($vacacion['cod_contrato'] ?? '') . '</td>';
         echo '<td>' . htmlspecialchars($nombreCompleto) . '</td>';
         echo '<td>' . htmlspecialchars($vacacion['sucursal_nombre']) . '</td>';
-        echo '<td>' . formatoFechaCorta($vacacion['fecha_falta']) . '</td>';
+        echo '<td>' . formatoFechaCorta($vacacion['fecha_desde']) . ' - ' . formatoFechaCorta($vacacion['fecha_hasta']) . '</td>';
         $obsDisplay = !empty($vacacion['observaciones_rrhh']) ? $vacacion['observaciones_rrhh'] : $vacacion['observaciones'];
         echo '<td>' . ($obsDisplay ? htmlspecialchars($obsDisplay) : '-') . '</td>';
         echo '<td>' . htmlspecialchars($vacacion['registrador_nombre'] . ' ' . $vacacion['registrador_apellido']) . '</td>';
@@ -817,7 +849,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 <tr>
                                     <th>Colaborador</th>
                                     <th>Sucursal</th>
-                                    <th>Fecha</th>
+                                    <th>Fechas</th>
                                     <th>Tipo</th>
                                     <th>% Pago</th>
                                     <th>Días</th>
@@ -836,7 +868,7 @@ function obtenerTiposFaltaConPorcentajes()
                                         <td><?= htmlspecialchars(trim($vacacion['operario_nombre'] . ' ' . ($vacacion['operario_nombre2'] ?? '') . ' ' . $vacacion['operario_apellido'] . ' ' . ($vacacion['operario_apellido2'] ?? ''))) ?>
                                         </td>
                                         <td><?= htmlspecialchars($vacacion['sucursal_nombre']) ?></td>
-                                        <td><?= formatoFechaCorta($vacacion['fecha_falta']) ?></td>
+                                        <td><?= formatoFechaCorta($vacacion['fecha_desde']) . ' - ' . formatoFechaCorta($vacacion['fecha_hasta']) ?></td>
                                         <td>
                                             <?php
                                             $esVacPendiente = ($vacacion['tipo_falta'] === 'Vacaciones' && (int)$vacacion['aprobado'] === 0);
@@ -853,7 +885,7 @@ function obtenerTiposFaltaConPorcentajes()
                                         </td>
                                         <td style="text-align:center;">
                                             <?php
-                                            $cantDias = isset($vacacion['cantidad_dias']) ? (float) $vacacion['cantidad_dias'] : 1.0;
+                                            $cantDias = isset($vacacion['cantidad_dias_total']) ? (float) $vacacion['cantidad_dias_total'] : 1.0;
                                             echo number_format($cantDias, 2);
                                             ?>
                                         </td>
@@ -880,10 +912,11 @@ function obtenerTiposFaltaConPorcentajes()
                                             <td>
                                                 <div class="action-buttons-cell">
                                                     <button type="button" class="btn-action-table btn-action-edit" onclick="mostrarModalEditarAprobar(
-                                                        <?= $vacacion['id'] ?>,
+                                                        '<?= $vacacion['ids_str'] ?>',
                                                         '<?= htmlspecialchars(addslashes(trim($vacacion['operario_nombre'] . ' ' . $vacacion['operario_apellido']))) ?>',
                                                         '<?= htmlspecialchars(addslashes($vacacion['sucursal_nombre'])) ?>',
-                                                        '<?= $vacacion['fecha_falta'] ?>',
+                                                        '<?= $vacacion['fecha_desde'] ?>',
+                                                        '<?= $vacacion['fecha_hasta'] ?>',
                                                         '<?= $vacacion['tipo_falta'] ?>',
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones'] ?? '')) ?>',
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones_rrhh'] ?? '')) ?>',
@@ -895,7 +928,7 @@ function obtenerTiposFaltaConPorcentajes()
                                                     </button>
                                                     <button style="display: none;" type="button"
                                                         class="btn-action-table btn-action-delete"
-                                                        onclick="eliminarSolicitud(<?= $vacacion['id'] ?>)">
+                                                        onclick="eliminarSolicitud('<?= $vacacion['ids_str'] ?>')">
                                                         <i class="fas fa-times"></i>
                                                     </button>
                                                 </div>
@@ -1630,7 +1663,7 @@ function obtenerTiposFaltaConPorcentajes()
                                     <p class="form-control-plaintext" id="editar_sucursal">-</p>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">Fecha:</label>
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Fechas:</label>
                                     <p class="form-control-plaintext" id="editar_fecha">-</p>
                                 </div>
                             </div>
