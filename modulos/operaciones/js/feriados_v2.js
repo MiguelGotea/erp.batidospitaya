@@ -218,6 +218,7 @@ function cerrarModalSolicitud() {
     }
 }
 
+
 function mostrarModalAprobacion(id, nombre, sucursal, fecha, horas, estado, observaciones) {
     document.getElementById('aprobacion_id').value = id;
     document.getElementById('aprobacion_nombre').textContent = nombre;
@@ -378,21 +379,21 @@ function submitAprobacion(nuevoEstado) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params
     })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            window.location.reload();
-        } else {
-            alert('Error: ' + data.error);
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.error);
+                btns.forEach(b => b.disabled = false);
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Error de conexión al actualizar el registro.');
             btns.forEach(b => b.disabled = false);
-        }
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        alert('Error de conexión al actualizar el registro.');
-        btns.forEach(b => b.disabled = false);
-    });
+        });
 }
 
 // Eliminar o rechazar solicitud
