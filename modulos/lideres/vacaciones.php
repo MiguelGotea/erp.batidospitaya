@@ -1818,24 +1818,27 @@ function obtenerTiposFaltaConPorcentajes()
 
     <!-- Botón Flotante con opciones -->
     <?php 
-    $puedeNuevoRegistro = tienePermiso('registro_vacaciones', 'nuevo_registro', $cargoOperario);
+    $puedeNuevoRegistroOperativo = tienePermiso('registro_vacaciones', 'nuevo_registro_operativo', $cargoOperario);
+    $puedeNuevoRegistroRRHH = tienePermiso('registro_vacaciones', 'nuevo_registro_rrhh', $cargoOperario);
     $puedeExportarExcel = tienePermiso('registro_vacaciones', 'exportar_excel', $cargoOperario);
-    if ($puedeNuevoRegistro || $puedeExportarExcel): 
+    if ($puedeNuevoRegistroOperativo || $puedeNuevoRegistroRRHH || $puedeExportarExcel): 
     ?>
         <div class="fab-container">
             <div class="fab-options">
-                <?php if ($puedeNuevoRegistro): ?>
+                <?php if ($puedeNuevoRegistroOperativo): ?>
                 <div class="fab-option" onclick="mostrarModalNuevaVacacion()">
                     <span class="fab-label">Vacaciones</span>
                     <div class="fab-icon-holder"><i class="fas fa-umbrella-beach"></i></div>
                 </div>
-                <div class="fab-option" onclick="mostrarModalNuevoSubsidio()">
-                    <span class="fab-label">Subsidio</span>
-                    <div class="fab-icon-holder"><i class="fas fa-notes-medical"></i></div>
-                </div>
                 <div class="fab-option" onclick="mostrarModalNuevaFaltaPermiso()">
                     <span class="fab-label">Falta / Permiso</span>
                     <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
+                </div>
+                <?php endif; ?>
+                <?php if ($puedeNuevoRegistroRRHH): ?>
+                <div class="fab-option" onclick="mostrarModalNuevoSubsidio()">
+                    <span class="fab-label">Subsidio</span>
+                    <div class="fab-icon-holder"><i class="fas fa-notes-medical"></i></div>
                 </div>
                 <?php endif; ?>
                 <?php if ($puedeExportarExcel): ?>
