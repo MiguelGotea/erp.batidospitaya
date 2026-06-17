@@ -386,20 +386,6 @@ function getEstadoBadgeClass($estado)
                                 <i class="fas fa-search"></i> Buscar
                             </button>
 
-                            <?php if ($puedeExportar): ?>
-                                <a href="feriados_v2.php?<?= http_build_query([
-                                    'sucursal' => $sucursalSeleccionada ?? '',
-                                    'desde' => $fechaDesde,
-                                    'hasta' => $fechaHasta,
-                                    'operario' => $operarioSeleccionado,
-                                    'estado' => $estadoSeleccionado,
-                                    'exportar_excel' => 1
-                                ]) ?>" class="btn-aplicar" style="background-color: #28a745; color: white;">
-                                    <i class="fas fa-file-excel"></i> Exportar
-                                </a>
-                            <?php endif; ?>
-
-
                         </div>
                     </div>
                 </div>
