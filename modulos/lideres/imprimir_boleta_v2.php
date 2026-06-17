@@ -39,7 +39,7 @@ function formatarFecha($fecha)
 $fecha_inicio_fmt = formatarFecha($fecha_inicio);
 $fecha_fin_fmt = formatarFecha($fecha_fin);
 
-$titulo_boleta = 'Acción de Personal - Vacaciones';
+$titulo_boleta = 'Solicitud de Vacaciones';
 $label_total_dias = 'Total días de vacaciones:';
 ?>
 <!DOCTYPE html>
@@ -131,14 +131,16 @@ $label_total_dias = 'Total días de vacaciones:';
             color: #fff;
             padding: 6px 8px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-bottom: 12px;
+            text-align: center;
         }
 
         .header-left {
             display: flex;
             flex-direction: column;
+            align-items: center;
         }
 
         .header-title {
@@ -302,7 +304,6 @@ $label_total_dias = 'Total días de vacaciones:';
                 </span>
                 <span class="header-subtitle">BATIDOS PITAYA</span>
             </div>
-            <div class="header-logo">Pitaya</div>
         </div>
 
         <!-- Campos Generales -->
