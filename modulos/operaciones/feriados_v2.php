@@ -48,14 +48,17 @@ $ultimoDiaMes = $hoy->format('Y-m-t');
 $fechaDesde = $_GET['desde'] ?? $primerDiaMes;
 $fechaHasta = $_GET['hasta'] ?? $ultimoDiaMes;
 
-if (empty($fechaDesde)) $fechaDesde = $primerDiaMes;
-if (empty($fechaHasta)) $fechaHasta = $ultimoDiaMes;
+if (empty($fechaDesde))
+    $fechaDesde = $primerDiaMes;
+if (empty($fechaHasta))
+    $fechaHasta = $ultimoDiaMes;
 
 $operarioSeleccionado = isset($_GET['operario']) ? intval($_GET['operario']) : 0;
 $estadoSeleccionado = $_GET['estado'] ?? 'todos';
 
 // Obtener operarios para el filtro
-function obtenerTodosOperarios() {
+function obtenerTodosOperarios()
+{
     global $conn;
     $sql = "SELECT o.CodOperario, 
                    CONCAT_WS(' ', 
@@ -90,7 +93,8 @@ if ($puedeVerTodasSucursales) {
         $params[] = $sucursalSeleccionada;
     }
 } else {
-    $codigosSucursalesLider = array_map(function($suc) { return $suc['codigo']; }, $sucursales);
+    $codigosSucursalesLider = array_map(function ($suc) {
+        return $suc['codigo']; }, $sucursales);
     if (!empty($codigosSucursalesLider)) {
         if ($sucursalSeleccionada && in_array($sucursalSeleccionada, $codigosSucursalesLider)) {
             $where .= " AND COALESCE(c.cod_sucursal_contrato, anc.Sucursal) = ?";
@@ -122,7 +126,7 @@ if (isset($_GET['exportar_excel'])) {
     if (!$puedeExportar) {
         die("No tiene permisos para exportar.");
     }
-    
+
     // Obtener todos los registros sin paginación
     $sqlExport = "
         SELECT fs.id, fs.fecha_feriado, fs.horas_trabajadas, fs.estado, fs.observaciones, fs.fecha_creacion,
@@ -152,7 +156,7 @@ if (isset($_GET['exportar_excel'])) {
         GROUP BY fs.id
         ORDER BY fs.fecha_feriado DESC, nombre_completo ASC
     ";
-    
+
     $stmtExport = $conn->prepare($sqlExport);
     $stmtExport->execute($params);
     $recordsExport = $stmtExport->fetchAll();
@@ -184,7 +188,7 @@ if (isset($_GET['exportar_excel'])) {
         $fechaF = date('d-m-Y', strtotime($r['fecha_feriado']));
         $fechaC = date('d-m-Y H:i', strtotime($r['fecha_creacion']));
         $fechaA = $r['fecha_actualizacion'] ? date('d-m-Y H:i', strtotime($r['fecha_actualizacion'])) : '-';
-        
+
         echo '<tr>';
         echo '<td>' . htmlspecialchars($r['CodOperario']) . '</td>';
         echo '<td>' . htmlspecialchars($r['CodContrato'] ?? '') . '</td>';
@@ -207,7 +211,7 @@ if (isset($_GET['exportar_excel'])) {
 // PAGINACIÓN LÓGICA
 $paginaActual = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
 $limitesValidos = [25, 50, 100];
-$registrosPorPagina = in_array((int)($_GET['limit'] ?? 25), $limitesValidos) ? (int)($_GET['limit'] ?? 25) : 25;
+$registrosPorPagina = in_array((int) ($_GET['limit'] ?? 25), $limitesValidos) ? (int) ($_GET['limit'] ?? 25) : 25;
 $offset = ($paginaActual - 1) * $registrosPorPagina;
 
 // Conteo total
@@ -262,8 +266,10 @@ $stmtList->execute($params);
 $records = $stmtList->fetchAll();
 
 // Formato de fechas amigable
-function formatoFechaLocal($fecha) {
-    if (empty($fecha) || $fecha === '0000-00-00') return '-';
+function formatoFechaLocal($fecha)
+{
+    if (empty($fecha) || $fecha === '0000-00-00')
+        return '-';
     try {
         $d = new DateTime($fecha);
         return $d->format('d-m-Y');
@@ -272,15 +278,20 @@ function formatoFechaLocal($fecha) {
     }
 }
 
-function getEstadoBadgeClass($estado) {
-    if ($estado === 'Pendiente') return 'badge-status badge-pendiente';
-    if ($estado === 'Pagado') return 'badge-status badge-pagado';
-    if ($estado === 'Descansado') return 'badge-status badge-descansado';
+function getEstadoBadgeClass($estado)
+{
+    if ($estado === 'Pendiente')
+        return 'badge-status badge-pendiente';
+    if ($estado === 'Pagado')
+        return 'badge-status badge-pagado';
+    if ($estado === 'Descansado')
+        return 'badge-status badge-descansado';
     return 'badge-status';
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -294,6 +305,7 @@ function getEstadoBadgeClass($estado) {
     <link rel="stylesheet" href="css/feriados_v2.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
+
 <body>
     <?php echo renderMenuLateral($cargoOperario); ?>
 
@@ -302,7 +314,7 @@ function getEstadoBadgeClass($estado) {
             <?php echo renderHeader($usuario, 'Solicitudes de Feriados Trabajados'); ?>
 
             <div class="container-fluid p-3">
-                
+
                 <!-- Buscador / Filtros -->
                 <div class="filtros-container">
                     <div class="filtros-form">
@@ -319,7 +331,8 @@ function getEstadoBadgeClass($estado) {
 
                         <div class="filtro-group">
                             <label for="operario">Colaborador</label>
-                            <input type="text" id="operario" placeholder="Buscar colaborador..." autocomplete="off" value="<?php
+                            <input type="text" id="operario" placeholder="Buscar colaborador..." autocomplete="off"
+                                value="<?php
                                 if ($operarioSeleccionado > 0) {
                                     foreach ($operarios as $op) {
                                         if ($op['CodOperario'] == $operarioSeleccionado) {
@@ -328,28 +341,34 @@ function getEstadoBadgeClass($estado) {
                                         }
                                     }
                                 }
-                            ?>">
+                                ?>">
                             <input type="hidden" id="operario_id" name="operario" value="<?= $operarioSeleccionado ?>">
                             <div id="operarios-sugerencias" class="sugerencias-lista" style="display: none;"></div>
                         </div>
 
                         <div class="filtro-group">
                             <label for="desde">Desde</label>
-                            <input type="date" id="desde" name="desde" value="<?= htmlspecialchars($fechaDesde) ?>" onchange="actualizarFiltros()">
+                            <input type="date" id="desde" name="desde" value="<?= htmlspecialchars($fechaDesde) ?>"
+                                onchange="actualizarFiltros()">
                         </div>
 
                         <div class="filtro-group">
                             <label for="hasta">Hasta</label>
-                            <input type="date" id="hasta" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>" onchange="actualizarFiltros()">
+                            <input type="date" id="hasta" name="hasta" value="<?= htmlspecialchars($fechaHasta) ?>"
+                                onchange="actualizarFiltros()">
                         </div>
 
                         <div class="filtro-group">
                             <label for="estado_filtro">Estado</label>
                             <select id="estado_filtro" name="estado" onchange="actualizarFiltros()">
-                                <option value="todos" <?= $estadoSeleccionado === 'todos' ? 'selected' : '' ?>>Todos</option>
-                                <option value="Pendiente" <?= $estadoSeleccionado === 'Pendiente' ? 'selected' : '' ?>>Pendientes</option>
-                                <option value="Pagado" <?= $estadoSeleccionado === 'Pagado' ? 'selected' : '' ?>>Pagados</option>
-                                <option value="Descansado" <?= $estadoSeleccionado === 'Descansado' ? 'selected' : '' ?>>Compensados (Descanso)</option>
+                                <option value="todos" <?= $estadoSeleccionado === 'todos' ? 'selected' : '' ?>>Todos
+                                </option>
+                                <option value="Pendiente" <?= $estadoSeleccionado === 'Pendiente' ? 'selected' : '' ?>>
+                                    Pendientes</option>
+                                <option value="Pagado" <?= $estadoSeleccionado === 'Pagado' ? 'selected' : '' ?>>Pagados
+                                </option>
+                                <option value="Descansado" <?= $estadoSeleccionado === 'Descansado' ? 'selected' : '' ?>>
+                                    Compensados (Descanso)</option>
                             </select>
                         </div>
 
@@ -395,7 +414,8 @@ function getEstadoBadgeClass($estado) {
                 // Calcular total de columnas visibles para el colspan del mensaje vacío
                 // Columnas fijas: Colaborador, Sucursal, Fecha Feriado, Estado, Observaciones, Registrado por = 6
                 $totalColumnas = 6;
-                if ($mostrarColumnaAcciones) $totalColumnas += 1; // Acciones
+                if ($mostrarColumnaAcciones)
+                    $totalColumnas += 1; // Acciones
                 ?>
                 <div class="table-container">
                     <?php if (!empty($records)): ?>
@@ -433,8 +453,8 @@ function getEstadoBadgeClass($estado) {
                                             <td style="text-align: center;">
                                                 <div class="action-buttons-cell">
                                                     <?php if ($puedeAprobar): ?>
-                                                        <button type="button" class="btn-action-table btn-action-edit" title="Gestionar solicitud"
-                                                                onclick="mostrarModalAprobacion(
+                                                        <button type="button" class="btn-action-table btn-action-edit"
+                                                            title="Gestionar solicitud" onclick="mostrarModalAprobacion(
                                                                     <?= $r['id'] ?>,
                                                                     '<?= htmlspecialchars(addslashes($r['nombre_completo'])) ?>',
                                                                     '<?= htmlspecialchars(addslashes($r['sucursal_nombre'])) ?>',
@@ -455,11 +475,16 @@ function getEstadoBadgeClass($estado) {
                         </table>
                     <?php else: ?>
                         <table>
-                            <thead><tr><?php for ($ci = 0; $ci < $totalColumnas; $ci++): ?><th></th><?php endfor; ?></tr></thead>
+                            <thead>
+                                <tr><?php for ($ci = 0; $ci < $totalColumnas; $ci++): ?>
+                                        <th></th><?php endfor; ?>
+                                </tr>
+                            </thead>
                             <tbody>
                                 <tr>
                                     <td colspan="<?= $totalColumnas ?>" class="text-center text-muted p-4">
-                                        No se encontraron solicitudes registradas para los filtros seleccionados en este rango de fechas.
+                                        No se encontraron solicitudes registradas para los filtros seleccionados en este
+                                        rango de fechas.
                                     </td>
                                 </tr>
                             </tbody>
@@ -479,41 +504,44 @@ function getEstadoBadgeClass($estado) {
                             <span class="small text-muted">registros</span>
                             <?php if ($totalRegistros > 0): ?>
                                 <span class="small text-muted ms-2">
-                                    (<?= $offset + 1 ?>–<?= min($offset + $registrosPorPagina, $totalRegistros) ?> de <?= $totalRegistros ?>)
+                                    (<?= $offset + 1 ?>–<?= min($offset + $registrosPorPagina, $totalRegistros) ?> de
+                                    <?= $totalRegistros ?>)
                                 </span>
                             <?php endif; ?>
                         </div>
                         <?php if ($totalPaginas > 1): ?>
-                        <div id="paginacion" class="d-flex gap-1">
-                            <button class="pagination-btn" <?= $paginaActual <= 1 ? 'disabled' : '' ?>
-                                onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $paginaActual - 1])) ?>'">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-                            <?php
-                            $inicio = max(1, $paginaActual - 2);
-                            $fin    = min($totalPaginas, $paginaActual + 2);
-                            if ($inicio > 1):
-                            ?>
-                                <button class="pagination-btn" onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => 1])) ?>'">1</button>
-                                <?php if ($inicio > 2): ?>
-                                    <span class="pagination-btn" style="cursor:default;">...</span>
+                            <div id="paginacion" class="d-flex gap-1">
+                                <button class="pagination-btn" <?= $paginaActual <= 1 ? 'disabled' : '' ?>
+                                    onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $paginaActual - 1])) ?>'">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                                <?php
+                                $inicio = max(1, $paginaActual - 2);
+                                $fin = min($totalPaginas, $paginaActual + 2);
+                                if ($inicio > 1):
+                                    ?>
+                                    <button class="pagination-btn"
+                                        onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => 1])) ?>'">1</button>
+                                    <?php if ($inicio > 2): ?>
+                                        <span class="pagination-btn" style="cursor:default;">...</span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
-                            <?php endif; ?>
-                            <?php for ($i = $inicio; $i <= $fin; $i++): ?>
-                                <button class="pagination-btn <?= $paginaActual == $i ? 'active' : '' ?>"
-                                    onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $i])) ?>'"><?= $i ?></button>
-                            <?php endfor; ?>
-                            <?php if ($fin < $totalPaginas):
-                                if ($fin < $totalPaginas - 1): ?>
-                                    <span class="pagination-btn" style="cursor:default;">...</span>
+                                <?php for ($i = $inicio; $i <= $fin; $i++): ?>
+                                    <button class="pagination-btn <?= $paginaActual == $i ? 'active' : '' ?>"
+                                        onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $i])) ?>'"><?= $i ?></button>
+                                <?php endfor; ?>
+                                <?php if ($fin < $totalPaginas):
+                                    if ($fin < $totalPaginas - 1): ?>
+                                        <span class="pagination-btn" style="cursor:default;">...</span>
+                                    <?php endif; ?>
+                                    <button class="pagination-btn"
+                                        onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $totalPaginas])) ?>'"><?= $totalPaginas ?></button>
                                 <?php endif; ?>
-                                <button class="pagination-btn" onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $totalPaginas])) ?>'"><?= $totalPaginas ?></button>
-                            <?php endif; ?>
-                            <button class="pagination-btn" <?= $paginaActual >= $totalPaginas ? 'disabled' : '' ?>
-                                onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $paginaActual + 1])) ?>'">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                        </div>
+                                <button class="pagination-btn" <?= $paginaActual >= $totalPaginas ? 'disabled' : '' ?>
+                                    onclick="window.location.href='feriados_v2.php?<?= http_build_query(array_merge($_GET, ['p' => $paginaActual + 1])) ?>'">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -564,7 +592,9 @@ function getEstadoBadgeClass($estado) {
                                 <select id="solicitud_fecha" name="fecha_feriado" class="form-select" required>
                                     <option value="">⏳ Seleccione primero una sucursal...</option>
                                 </select>
-                                <small class="text-muted" style="font-size:0.78rem; margin-top:4px; display:block;">Solo se muestran feriados registrados en el sistema aplicables al departamento de la sucursal seleccionada.</small>
+                                <small class="text-muted" style="font-size:0.78rem; margin-top:4px; display:block;">Solo se
+                                    muestran feriados registrados en el sistema aplicables al departamento de la sucursal
+                                    seleccionada.</small>
                             </div>
 
                             <div class="mb-3">
@@ -577,13 +607,16 @@ function getEstadoBadgeClass($estado) {
 
                             <div class="mb-3">
                                 <label for="solicitud_observaciones"
-                                    class="form-label small fw-bold text-muted text-uppercase">Observaciones / Justificación:</label>
-                                <textarea id="solicitud_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;" placeholder="Escriba aquí los detalles..." required></textarea>
+                                    class="form-label small fw-bold text-muted text-uppercase">Observaciones /
+                                    Justificación:</label>
+                                <textarea id="solicitud_observaciones" name="observaciones" class="form-control" rows="2"
+                                    style="resize: none;" placeholder="Escriba aquí los detalles..." required></textarea>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
-                        <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn-modern btn-modern-secondary"
+                            data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" form="formNuevaSolicitud" class="btn-modern btn-modern-primary">
                             <i class="fas fa-save me-2"></i>Registrar Solicitud
                         </button>
@@ -623,7 +656,8 @@ function getEstadoBadgeClass($estado) {
 
                             <div class="mb-3">
                                 <label class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
-                                <textarea id="aprobacion_observaciones" name="observaciones" class="form-control bg-white" rows="3" style="resize: none;" readonly></textarea>
+                                <textarea id="aprobacion_observaciones" name="observaciones" class="form-control bg-white"
+                                    rows="3" style="resize: none;" readonly></textarea>
                             </div>
                         </form>
                     </div>
@@ -631,8 +665,8 @@ function getEstadoBadgeClass($estado) {
                         <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">
                             <i class="fas fa-times me-1"></i>Cancelar
                         </button>
-                        <button id="btn-rechazar-feriado" type="button" class="btn-modern" style="background:#dc3545;color:#fff;"
-                            onclick="submitAprobacion('Descansado')">
+                        <button id="btn-rechazar-feriado" type="button" class="btn-modern"
+                            style="background:#dc3545;color:#fff;" onclick="submitAprobacion('Descansado')">
                             <i class="fas fa-ban me-1"></i>Rechazar
                         </button>
                         <button id="btn-aprobar-feriado" type="button" class="btn-modern btn-modern-primary"
@@ -645,12 +679,13 @@ function getEstadoBadgeClass($estado) {
         </div>
     <?php endif; ?>
 
+
     <script>
         // Config de autocompletado para el buscador de filtros
         window.CONFIG_FERIADOS = {
             operariosData: [
                 <?php foreach ($operarios as $op): ?>
-                    { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
+                        { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
                 <?php endforeach; ?>
             ],
             puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
@@ -685,4 +720,5 @@ function getEstadoBadgeClass($estado) {
     <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
     <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
+
 </html>
