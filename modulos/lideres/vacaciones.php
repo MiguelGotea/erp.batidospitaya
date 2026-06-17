@@ -1189,16 +1189,21 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="nueva_fecha_inicio"
                                     class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
                                 <input type="date" id="nueva_fecha_inicio" name="fecha_inicio" class="form-control"
-                                    required>
+                                    required onchange="actualizarInfoRangoVacacion()">
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="nueva_fecha_fin"
                                     class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
-                                <input type="date" id="nueva_fecha_fin" name="fecha_fin" class="form-control" required>
+                                <input type="date" id="nueva_fecha_fin" name="fecha_fin" class="form-control" required onchange="actualizarInfoRangoVacacion()">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="nueva_dias_intervalo"
+                                    class="form-label small fw-bold text-muted text-uppercase">Días intervalo:</label>
+                                <input type="text" id="nueva_dias_intervalo" class="form-control bg-light" readonly value="0">
                             </div>
                         </div>
 

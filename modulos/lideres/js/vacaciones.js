@@ -249,6 +249,11 @@ function actualizarInfoRangoVacacion() {
 
     const diasLaborables = calcularDiasLaborables(fechaInicio, fechaFin);
     
+    const inputDiasIntervalo = document.getElementById('nueva_dias_intervalo');
+    if (inputDiasIntervalo) {
+        inputDiasIntervalo.value = diasLaborables;
+    }
+    
     const infoDiasTotales = document.getElementById('info-dias-totales');
     if (infoDiasTotales) {
         infoDiasTotales.textContent = `Días totales en rango: ${diasLaborables}`;
