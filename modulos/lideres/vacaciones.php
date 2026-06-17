@@ -123,11 +123,11 @@ if (($sucursalSeleccionada || $modoVista === 'todas') && $fechaDesde && $fechaHa
             $vacacionesAgrupadas[$groupKey] = $vac;
             $vacacionesAgrupadas[$groupKey]['ids'] = [$vac['id']];
             $vacacionesAgrupadas[$groupKey]['fechas'] = [$vac['fecha_falta']];
-            $vacacionesAgrupadas[$groupKey]['cantidad_dias_total'] = isset($vac['cantidad_dias']) ? (float)$vac['cantidad_dias'] : 1.0;
+            $vacacionesAgrupadas[$groupKey]['cantidad_dias_total'] = isset($vac['cantidad_dias']) ? (float) $vac['cantidad_dias'] : 1.0;
         } else {
             $vacacionesAgrupadas[$groupKey]['ids'][] = $vac['id'];
             $vacacionesAgrupadas[$groupKey]['fechas'][] = $vac['fecha_falta'];
-            $vacacionesAgrupadas[$groupKey]['cantidad_dias_total'] += isset($vac['cantidad_dias']) ? (float)$vac['cantidad_dias'] : 1.0;
+            $vacacionesAgrupadas[$groupKey]['cantidad_dias_total'] += isset($vac['cantidad_dias']) ? (float) $vac['cantidad_dias'] : 1.0;
         }
     }
 
@@ -869,7 +869,8 @@ function obtenerTiposFaltaConPorcentajes()
                                         <td><?= htmlspecialchars(trim($vacacion['operario_nombre'] . ' ' . ($vacacion['operario_nombre2'] ?? '') . ' ' . $vacacion['operario_apellido'] . ' ' . ($vacacion['operario_apellido2'] ?? ''))) ?>
                                         </td>
                                         <td><?= htmlspecialchars($vacacion['sucursal_nombre']) ?></td>
-                                        <td><?= formatoFechaCorta($vacacion['fecha_desde']) . ' - ' . formatoFechaCorta($vacacion['fecha_hasta']) ?></td>
+                                        <td><?= formatoFechaCorta($vacacion['fecha_desde']) . ' - ' . formatoFechaCorta($vacacion['fecha_hasta']) ?>
+                                        </td>
                                         <td style="text-align:center;">
                                             <?php
                                             $cantDias = isset($vacacion['cantidad_dias_total']) ? (float) $vacacion['cantidad_dias_total'] : 1.0;
@@ -878,7 +879,7 @@ function obtenerTiposFaltaConPorcentajes()
                                         </td>
                                         <td>
                                             <?php
-                                            $esVacPendiente = ($vacacion['tipo_falta'] === 'Vacaciones' && (int)$vacacion['aprobado'] === 0);
+                                            $esVacPendiente = ($vacacion['tipo_falta'] === 'Vacaciones' && (int) $vacacion['aprobado'] === 0);
                                             $displayLabel = $esVacPendiente
                                                 ? 'Pendiente'
                                                 : ($vacacion['tipo_falta_nombre'] ?? str_replace('_', ' ', $vacacion['tipo_falta']));
@@ -925,7 +926,7 @@ function obtenerTiposFaltaConPorcentajes()
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones_rrhh'] ?? '')) ?>',
                                                         '<?= htmlspecialchars($vacacion['foto_path'] ?? '') ?>',
                                                         <?= number_format(isset($vacacion['cantidad_dias']) ? (float) $vacacion['cantidad_dias'] : 1.0, 2) ?>,
-                                                        <?= (int)$vacacion['aprobado'] ?>
+                                                        <?= (int) $vacacion['aprobado'] ?>
                                                     )">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
@@ -1200,6 +1201,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 <input type="date" id="nueva_fecha_fin" name="fecha_fin" class="form-control" required>
                             </div>
                         </div>
+
 
                         <div class="mb-3">
                             <label for="nueva_operario"
@@ -1683,7 +1685,8 @@ function obtenerTiposFaltaConPorcentajes()
 
                             <div id="editar_tipo_container">
                                 <div class="mb-3">
-                                    <label for="editar_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de
+                                    <label for="editar_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo
+                                        de
                                         Falta (Aprobación):</label>
                                     <select id="editar_tipo" name="tipo_falta" class="form-select" required
                                         onchange="actualizarPorcentajeEdicion(this.value)">
@@ -1702,7 +1705,8 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
 
                             <!-- Info visible solo para vacaciones pendientes de aprobacion -->
-                            <div id="editar_vacacion_pendiente_info" style="display:none;" class="alert alert-warning py-2 small mb-3">
+                            <div id="editar_vacacion_pendiente_info" style="display:none;"
+                                class="alert alert-warning py-2 small mb-3">
                                 <i class="fas fa-umbrella-beach me-1"></i>
                                 <strong>Solicitud de Vacaciones</strong> — El colaborador solicita vacaciones.
                                 Al aprobar, se registrará como <strong>Vacaciones</strong>.
@@ -1714,37 +1718,39 @@ function obtenerTiposFaltaConPorcentajes()
                                     <label for="editar_cantidad_dias"
                                         class="form-label small fw-bold text-muted text-uppercase">Duración de la
                                         Ausencia:</label>
-                                <select id="editar_cantidad_dias" name="cantidad_dias" class="form-select"
-                                    onchange="manejarCantidadDias(this, 'editar_custom_dias')">
-                                    <!-- 1.00 = 8 horas -->
-                                    <option value="1.00">Día completo (1 día - 8 horas)</option>
-                                    <!-- 0.88 = 7 horas -->
-                                    <option value="0.88">Casi el día completo (0.88 días - 7 horas)</option>
-                                    <!-- 0.75 = 6 horas -->
-                                    <option value="0.75">Tres cuartos de jornada (0.75 días - 6 horas)</option>
-                                    <!-- 0.63 = 5 horas -->
-                                    <option value="0.63">Más de medio día (0.63 días - 5 horas)</option>
-                                    <!-- 0.50 = 4 horas -->
-                                    <option value="0.50">Medio día (0.50 días - 4 horas)</option>
-                                    <!-- 0.38 = 3 horas -->
-                                    <option value="0.38">Menos de medio día (0.38 días - 3 horas)</option>
-                                    <!-- 0.25 = 2 horas -->
-                                    <option value="0.25">Dos horas (0.25 días - 2 horas)</option>
-                                    <!-- 0.13 = 1 hora -->
-                                    <option value="0.13">Una hora (0.13 días - 1 hora)</option>
-                                    <option value="custom">Personalizado...</option>
-                                </select>
-                                <div id="editar_custom_dias" class="mt-2" style="display:none;">
-                                    <input type="number" id="editar_custom_input" class="form-control"
-                                        placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00" step="0.01"
-                                        oninput="actualizarCantidadPersonalizada(this, 'editar_cantidad_dias')">
-                                    <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas
-                                        ÷ 8)</small>
-                                </div>
-                            </div><!-- /editar_duracion_container -->
+                                    <select id="editar_cantidad_dias" name="cantidad_dias" class="form-select"
+                                        onchange="manejarCantidadDias(this, 'editar_custom_dias')">
+                                        <!-- 1.00 = 8 horas -->
+                                        <option value="1.00">Día completo (1 día - 8 horas)</option>
+                                        <!-- 0.88 = 7 horas -->
+                                        <option value="0.88">Casi el día completo (0.88 días - 7 horas)</option>
+                                        <!-- 0.75 = 6 horas -->
+                                        <option value="0.75">Tres cuartos de jornada (0.75 días - 6 horas)</option>
+                                        <!-- 0.63 = 5 horas -->
+                                        <option value="0.63">Más de medio día (0.63 días - 5 horas)</option>
+                                        <!-- 0.50 = 4 horas -->
+                                        <option value="0.50">Medio día (0.50 días - 4 horas)</option>
+                                        <!-- 0.38 = 3 horas -->
+                                        <option value="0.38">Menos de medio día (0.38 días - 3 horas)</option>
+                                        <!-- 0.25 = 2 horas -->
+                                        <option value="0.25">Dos horas (0.25 días - 2 horas)</option>
+                                        <!-- 0.13 = 1 hora -->
+                                        <option value="0.13">Una hora (0.13 días - 1 hora)</option>
+                                        <option value="custom">Personalizado...</option>
+                                    </select>
+                                    <div id="editar_custom_dias" class="mt-2" style="display:none;">
+                                        <input type="number" id="editar_custom_input" class="form-control"
+                                            placeholder="Ingrese fracción de día (ej. 0.60)" min="0.01" max="1.00"
+                                            step="0.01"
+                                            oninput="actualizarCantidadPersonalizada(this, 'editar_cantidad_dias')">
+                                        <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a
+                                            horas
+                                            ÷ 8)</small>
+                                    </div>
+                                </div><!-- /editar_duracion_container -->
                             </div><!-- /editar_duracion_container outer -->
 
-                             <div class="mb-3">
+                            <div class="mb-3">
                                 <label for="editar_observaciones_rrhh"
                                     class="form-label small fw-bold text-muted text-uppercase">Observaciones RRHH
                                     (Obligatorio):</label>
@@ -1764,12 +1770,11 @@ function obtenerTiposFaltaConPorcentajes()
                         </div>
                         <!-- Botones para vacaciones pendientes de aprobacion -->
                         <div id="editar_botones_vacacion" style="display:none;" class="d-flex gap-2">
-                            <button type="button" id="btn_rechazar_vacacion"
-                                class="btn-modern" style="background:#dc3545;color:#fff;">
+                            <button type="button" id="btn_rechazar_vacacion" class="btn-modern"
+                                style="background:#dc3545;color:#fff;">
                                 <i class="fas fa-times me-2"></i>Rechazar
                             </button>
-                            <button type="button" id="btn_aprobar_vacacion"
-                                class="btn-modern btn-modern-primary">
+                            <button type="button" id="btn_aprobar_vacacion" class="btn-modern btn-modern-primary">
                                 <i class="fas fa-check me-2"></i>Aprobar Vacación
                             </button>
                         </div>
@@ -1848,42 +1853,42 @@ function obtenerTiposFaltaConPorcentajes()
     </script>
 
     <!-- Botón Flotante con opciones -->
-    <?php 
+    <?php
     $puedeNuevoRegistroOperativo = tienePermiso('registro_vacaciones', 'nuevo_registro_operativo', $cargoOperario);
     $puedeNuevoRegistroRRHH = tienePermiso('registro_vacaciones', 'nuevo_registro_rrhh', $cargoOperario);
     $puedeExportarExcel = tienePermiso('registro_vacaciones', 'exportar_excel', $cargoOperario);
-    if ($puedeNuevoRegistroOperativo || $puedeNuevoRegistroRRHH || $puedeExportarExcel): 
-    ?>
+    if ($puedeNuevoRegistroOperativo || $puedeNuevoRegistroRRHH || $puedeExportarExcel):
+        ?>
         <div class="fab-container">
             <div class="fab-options">
                 <?php if ($puedeNuevoRegistroOperativo): ?>
-                <div class="fab-option" onclick="mostrarModalNuevaVacacion()">
-                    <span class="fab-label">Vacaciones</span>
-                    <div class="fab-icon-holder"><i class="fas fa-umbrella-beach"></i></div>
-                </div>
-                <div class="fab-option" onclick="mostrarModalNuevaFaltaPermiso()">
-                    <span class="fab-label">Falta / Permiso</span>
-                    <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
-                </div>
+                    <div class="fab-option" onclick="mostrarModalNuevaVacacion()">
+                        <span class="fab-label">Vacaciones</span>
+                        <div class="fab-icon-holder"><i class="fas fa-umbrella-beach"></i></div>
+                    </div>
+                    <div class="fab-option" onclick="mostrarModalNuevaFaltaPermiso()">
+                        <span class="fab-label">Falta / Permiso</span>
+                        <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
+                    </div>
                 <?php endif; ?>
                 <?php if ($puedeNuevoRegistroRRHH): ?>
-                <div class="fab-option" onclick="mostrarModalNuevoSubsidio()">
-                    <span class="fab-label">Subsidio</span>
-                    <div class="fab-icon-holder"><i class="fas fa-notes-medical"></i></div>
-                </div>
+                    <div class="fab-option" onclick="mostrarModalNuevoSubsidio()">
+                        <span class="fab-label">Subsidio</span>
+                        <div class="fab-icon-holder"><i class="fas fa-notes-medical"></i></div>
+                    </div>
                 <?php endif; ?>
                 <?php if ($puedeExportarExcel): ?>
-                <div class="fab-option" onclick="window.location.href='vacaciones.php?<?= http_build_query([
-                    'sucursal' => $sucursalSeleccionada ?? '',
-                    'desde' => $fechaDesde,
-                    'hasta' => $fechaHasta,
-                    'operario' => $operarioSeleccionado,
-                    'tipo_filtro' => $tipoFiltro,
-                    'exportar_excel' => 1
-                ]) ?>'">
-                    <span class="fab-label">Exportar</span>
-                    <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
-                </div>
+                    <div class="fab-option" onclick="window.location.href='vacaciones.php?<?= http_build_query([
+                        'sucursal' => $sucursalSeleccionada ?? '',
+                        'desde' => $fechaDesde,
+                        'hasta' => $fechaHasta,
+                        'operario' => $operarioSeleccionado,
+                        'tipo_filtro' => $tipoFiltro,
+                        'exportar_excel' => 1
+                    ]) ?>'">
+                        <span class="fab-label">Exportar</span>
+                        <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
+                    </div>
                 <?php endif; ?>
             </div>
             <div class="btn-floating-pitaya" title="Herramientas">
