@@ -94,7 +94,8 @@ if ($puedeVerTodasSucursales) {
     }
 } else {
     $codigosSucursalesLider = array_map(function ($suc) {
-        return $suc['codigo']; }, $sucursales);
+        return $suc['codigo'];
+    }, $sucursales);
     if (!empty($codigosSucursalesLider)) {
         if ($sucursalSeleccionada && in_array($sucursalSeleccionada, $codigosSucursalesLider)) {
             $where .= " AND COALESCE(c.cod_sucursal_contrato, anc.Sucursal) = ?";
@@ -706,7 +707,7 @@ function getEstadoBadgeClass($estado)
         window.CONFIG_FERIADOS = {
             operariosData: [
                 <?php foreach ($operarios as $op): ?>
-                        { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
+                            { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
                 <?php endforeach; ?>
             ],
             puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
@@ -724,14 +725,30 @@ function getEstadoBadgeClass($estado)
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/feriados_v2.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 
+
     <!-- Botón Flotante con opciones -->
-    <?php if ($puedeCrear): ?>
+    <?php if ($puedeCrear || $puedeExportar): ?>
         <div class="fab-container">
             <div class="fab-options">
-                <div class="fab-option" onclick="mostrarModalSolicitud()">
-                    <span class="fab-label">Nueva Solicitud</span>
-                    <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
-                </div>
+                <?php if ($puedeExportar): ?>
+                    <div class="fab-option" onclick="window.location.href='feriados_v2.php?<?= http_build_query([
+                        'sucursal' => $sucursalSeleccionada ?? '',
+                        'desde' => $fechaDesde,
+                        'hasta' => $fechaHasta,
+                        'operario' => $operarioSeleccionado,
+                        'estado' => $estadoSeleccionado,
+                        'exportar_excel' => 1
+                    ]) ?>'">
+                        <span class="fab-label">Exportar a Excel</span>
+                        <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
+                    </div>
+                <?php endif; ?>
+                <?php if ($puedeCrear): ?>
+                    <div class="fab-option" onclick="mostrarModalSolicitud()">
+                        <span class="fab-label">Nueva Solicitud</span>
+                        <div class="fab-icon-holder"><i class="fas fa-plus"></i></div>
+                    </div>
+                <?php endif; ?>
             </div>
             <div class="btn-floating-pitaya" title="Herramientas">
                 <i class="fas fa-wrench"></i>
