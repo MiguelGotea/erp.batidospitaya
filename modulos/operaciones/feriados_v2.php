@@ -470,8 +470,9 @@ function getEstadoBadgeClass($estado)
                                                                     '<?= htmlspecialchars(addslashes($r['sucursal_nombre'])) ?>',
                                                                     '<?= $r['fecha_feriado'] ?>',
                                                                     '<?= $r['horas_trabajadas'] ?>',
-                                                                    '<?= $r['estado'] ?>',
-                                                                    '<?= htmlspecialchars(addslashes($r['observaciones'] ?? '')) ?>'
+                                                                    '<?= htmlspecialchars(addslashes($r['estado'])) ?>',
+                                                                    '<?= htmlspecialchars(addslashes($r['observaciones'] ?? '')) ?>',
+                                                                    '<?= htmlspecialchars(addslashes($r['feriado_nombre'] ?? 'Feriado no registrado')) ?>'
                                                                 )">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
@@ -654,10 +655,23 @@ function getEstadoBadgeClass($estado)
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-3 bg-light">
-                        <div class="info-resumen alert alert-info py-2 mb-3">
-                            <p class="mb-1"><strong>Colaborador:</strong> <span id="aprobacion_nombre">-</span></p>
-                            <p class="mb-1"><strong>Sucursal:</strong> <span id="aprobacion_sucursal">-</span></p>
-                            <p class="mb-0"><strong>Fecha Feriado:</strong> <span id="aprobacion_fecha">-</span></p>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                            <input type="text" id="aprobacion_nombre" class="form-control bg-white" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
+                            <input type="text" id="aprobacion_sucursal" class="form-control bg-white" readonly>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-8 mb-3 mb-sm-0">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Feriado:</label>
+                                <input type="text" id="aprobacion_nombre_feriado" class="form-control bg-white" readonly>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Fecha:</label>
+                                <input type="text" id="aprobacion_fecha" class="form-control bg-white" readonly>
+                            </div>
                         </div>
 
                         <form id="formAprobacionSolicitud">
@@ -671,7 +685,7 @@ function getEstadoBadgeClass($estado)
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-end gap-2">
+                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-end gap-2 flex-nowrap">
                         <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">
                             <i class="fas fa-times me-1"></i>Cancelar
                         </button>

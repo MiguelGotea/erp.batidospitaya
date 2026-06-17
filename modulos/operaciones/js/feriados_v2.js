@@ -219,16 +219,19 @@ function cerrarModalSolicitud() {
 }
 
 
-function mostrarModalAprobacion(id, nombre, sucursal, fecha, horas, estado, observaciones) {
+function mostrarModalAprobacion(id, nombre, sucursal, fecha, horas, estado, observaciones, nombreFeriado) {
     document.getElementById('aprobacion_id').value = id;
-    document.getElementById('aprobacion_nombre').textContent = nombre;
-    document.getElementById('aprobacion_sucursal').textContent = sucursal;
+    document.getElementById('aprobacion_nombre').value = nombre;
+    document.getElementById('aprobacion_sucursal').value = sucursal;
 
     // Formatear fecha local
     const fLocal = new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {
         day: '2-digit', month: 'short', year: 'numeric'
     });
-    document.getElementById('aprobacion_fecha').textContent = fLocal;
+    document.getElementById('aprobacion_fecha').value = fLocal;
+    
+    const feriadoInput = document.getElementById('aprobacion_nombre_feriado');
+    if (feriadoInput) feriadoInput.value = nombreFeriado || 'Feriado no registrado';
 
     const obsInput = document.getElementById('aprobacion_observaciones');
     if (obsInput) obsInput.value = observaciones || '';
