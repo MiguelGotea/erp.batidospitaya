@@ -141,7 +141,8 @@ if (isset($_GET['exportar_excel'])) {
                COALESCE(s.nombre, s_actual.nombre, 'Sin sucursal') as sucursal_nombre,
                CONCAT_WS(' ', TRIM(creado.Nombre), TRIM(creado.Apellido)) as creador_nombre,
                CONCAT_WS(' ', TRIM(act.Nombre), TRIM(act.Apellido)) as actualizador_nombre,
-               fs.fecha_actualizacion
+               fs.fecha_actualizacion,
+               GROUP_CONCAT(DISTINCT fn.nombre SEPARATOR ' / ') as feriado_nombre
         FROM FeriadosStatus fs
         INNER JOIN Operarios o ON fs.cod_operario = o.CodOperario
         LEFT JOIN Contratos c ON fs.cod_contrato = c.CodContrato
@@ -152,6 +153,8 @@ if (isset($_GET['exportar_excel'])) {
         LEFT JOIN sucursales s_actual ON anc.Sucursal = s_actual.codigo
         LEFT JOIN Operarios creado ON fs.creado_por = creado.CodOperario
         LEFT JOIN Operarios act ON fs.actualizado_por = act.CodOperario
+        LEFT JOIN feriadosnic fn ON fs.fecha_feriado = fn.fecha
+            AND (fn.departamento_codigo IS NULL OR fn.departamento_codigo = COALESCE(s.cod_departamento, s_actual.cod_departamento))
         $where
         GROUP BY fs.id
         ORDER BY fs.fecha_feriado DESC, nombre_completo ASC
@@ -174,6 +177,7 @@ if (isset($_GET['exportar_excel'])) {
     echo '<th>CÓDIGO CONTRATO</th>';
     echo '<th>COLABORADOR</th>';
     echo '<th>SUCURSAL</th>';
+    echo '<th>FERIADO</th>';
     echo '<th>FECHA FERIADO</th>';
     echo '<th>HORAS LABORADAS</th>';
     echo '<th>ESTADO</th>';
@@ -194,6 +198,7 @@ if (isset($_GET['exportar_excel'])) {
         echo '<td>' . htmlspecialchars($r['CodContrato'] ?? '') . '</td>';
         echo '<td>' . htmlspecialchars($r['nombre_completo']) . '</td>';
         echo '<td>' . htmlspecialchars($r['sucursal_nombre']) . '</td>';
+        echo '<td>' . htmlspecialchars($r['feriado_nombre'] ?? 'Feriado no registrado') . '</td>';
         echo '<td>' . $fechaF . '</td>';
         echo '<td>' . number_format($r['horas_trabajadas'] ?? 0, 2) . '</td>';
         echo '<td>' . htmlspecialchars($r['estado']) . '</td>';
@@ -246,7 +251,8 @@ $sqlList = "
            COALESCE(s.nombre, s_actual.nombre, 'Sin sucursal') as sucursal_nombre,
            COALESCE(s.codigo, s_actual.codigo) as sucursal_codigo,
            CONCAT_WS(' ', TRIM(creado.Nombre), TRIM(creado.Apellido)) as creador_nombre,
-           fs.creado_por
+           fs.creado_por,
+           GROUP_CONCAT(DISTINCT fn.nombre SEPARATOR ' / ') as feriado_nombre
     FROM FeriadosStatus fs
     INNER JOIN Operarios o ON fs.cod_operario = o.CodOperario
     LEFT JOIN Contratos c ON fs.cod_contrato = c.CodContrato
@@ -256,6 +262,8 @@ $sqlList = "
         AND (anc.Fin IS NULL OR anc.Fin = '0000-00-00' OR fs.fecha_feriado <= anc.Fin)
     LEFT JOIN sucursales s_actual ON anc.Sucursal = s_actual.codigo
     LEFT JOIN Operarios creado ON fs.creado_por = creado.CodOperario
+    LEFT JOIN feriadosnic fn ON fs.fecha_feriado = fn.fecha
+        AND (fn.departamento_codigo IS NULL OR fn.departamento_codigo = COALESCE(s.cod_departamento, s_actual.cod_departamento))
     $where
     GROUP BY fs.id
     ORDER BY fs.fecha_feriado DESC, nombre_completo ASC
@@ -412,8 +420,8 @@ function getEstadoBadgeClass($estado)
                 ?>
                 <?php
                 // Calcular total de columnas visibles para el colspan del mensaje vacío
-                // Columnas fijas: Colaborador, Sucursal, Fecha Feriado, Estado, Observaciones, Registrado por = 6
-                $totalColumnas = 6;
+                // Columnas fijas: Colaborador, Sucursal, Feriado, Fecha Feriado, Estado, Observaciones, Registrado por = 7
+                $totalColumnas = 7;
                 if ($mostrarColumnaAcciones)
                     $totalColumnas += 1; // Acciones
                 ?>
@@ -424,6 +432,7 @@ function getEstadoBadgeClass($estado)
                                 <tr>
                                     <th>Colaborador</th>
                                     <th>Sucursal</th>
+                                    <th>Feriado</th>
                                     <th>Fecha Feriado</th>
                                     <th>Estado</th>
                                     <th>Observaciones</th>
@@ -438,6 +447,7 @@ function getEstadoBadgeClass($estado)
                                     <tr>
                                         <td><strong><?= htmlspecialchars($r['nombre_completo']) ?></strong></td>
                                         <td><?= htmlspecialchars($r['sucursal_nombre']) ?></td>
+                                        <td><?= htmlspecialchars($r['feriado_nombre'] ?? 'Feriado') ?></td>
                                         <td><?= formatoFechaLocal($r['fecha_feriado']) ?></td>
                                         <td>
                                             <span class="<?= getEstadoBadgeClass($r['estado']) ?>">
