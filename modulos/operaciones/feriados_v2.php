@@ -627,20 +627,18 @@ function getEstadoBadgeClass($estado) {
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between gap-2">
+                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-end gap-2">
                         <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">
                             <i class="fas fa-times me-1"></i>Cancelar
                         </button>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn-modern" style="background:#dc3545;color:#fff;"
-                                onclick="submitAprobacion('Descansado')">
-                                <i class="fas fa-ban me-1"></i>Rechazar
-                            </button>
-                            <button type="button" class="btn-modern btn-modern-primary"
-                                onclick="submitAprobacion('Pagado')">
-                                <i class="fas fa-check me-1"></i>Aprobar
-                            </button>
-                        </div>
+                        <button id="btn-rechazar-feriado" type="button" class="btn-modern" style="background:#dc3545;color:#fff;"
+                            onclick="submitAprobacion('Descansado')">
+                            <i class="fas fa-ban me-1"></i>Rechazar
+                        </button>
+                        <button id="btn-aprobar-feriado" type="button" class="btn-modern btn-modern-primary"
+                            onclick="submitAprobacion('Pagado')">
+                            <i class="fas fa-check me-1"></i>Aprobar
+                        </button>
                     </div>
                 </div>
             </div>

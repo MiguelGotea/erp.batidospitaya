@@ -233,9 +233,16 @@ function mostrarModalAprobacion(id, nombre, sucursal, fecha, horas, estado, obse
     const obsInput = document.getElementById('aprobacion_observaciones');
     if (obsInput) obsInput.value = observaciones || '';
 
-    // Reset estado a Pendiente al abrir
+    // Fijar el estado actual
     const estadoInput = document.getElementById('aprobacion_estado');
-    if (estadoInput) estadoInput.value = 'Pendiente';
+    if (estadoInput) estadoInput.value = estado || 'Pendiente';
+
+    // Mostrar u ocultar botones Aprobar/Rechazar según el estado actual
+    const esPendiente = (estado === 'Pendiente' || !estado);
+    const btnAprobar  = document.getElementById('btn-aprobar-feriado');
+    const btnRechazar = document.getElementById('btn-rechazar-feriado');
+    if (btnAprobar)  btnAprobar.style.display  = esPendiente ? '' : 'none';
+    if (btnRechazar) btnRechazar.style.display = esPendiente ? '' : 'none';
 
     const modalEl = document.getElementById('modalAprobacion');
     if (modalEl) {
