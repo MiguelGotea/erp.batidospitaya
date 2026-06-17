@@ -392,29 +392,19 @@ function getEstadoBadgeClass($estado) {
                 }
                 ?>
                 <?php
-                // Columnas extra visibles solo para quienes ven Acciones
-                $mostrarColumnasDetalle = $mostrarColumnaAcciones;
                 // Calcular total de columnas visibles para el colspan del mensaje vacío
                 // Columnas fijas: Colaborador, Sucursal, Fecha Feriado, Estado, Observaciones, Registrado por = 6
                 $totalColumnas = 6;
-                if ($mostrarColumnasDetalle) $totalColumnas += 3; // Cód. Operario, Cód. Contrato, Horas Laboradas
-                if ($mostrarColumnaAcciones)  $totalColumnas += 1; // Acciones
+                if ($mostrarColumnaAcciones) $totalColumnas += 1; // Acciones
                 ?>
                 <div class="table-container">
                     <?php if (!empty($records)): ?>
                         <table>
                             <thead>
                                 <tr>
-                                    <?php if ($mostrarColumnasDetalle): ?>
-                                        <th>Cód. Operario</th>
-                                        <th>Cód. Contrato</th>
-                                    <?php endif; ?>
                                     <th>Colaborador</th>
                                     <th>Sucursal</th>
                                     <th>Fecha Feriado</th>
-                                    <?php if ($mostrarColumnasDetalle): ?>
-                                        <th>Horas Laboradas</th>
-                                    <?php endif; ?>
                                     <th>Estado</th>
                                     <th>Observaciones</th>
                                     <th>Registrado por</th>
@@ -426,16 +416,9 @@ function getEstadoBadgeClass($estado) {
                             <tbody>
                                 <?php foreach ($records as $r): ?>
                                     <tr>
-                                        <?php if ($mostrarColumnasDetalle): ?>
-                                            <td><?= htmlspecialchars($r['CodOperario']) ?></td>
-                                            <td><?= htmlspecialchars($r['CodContrato'] ?? '-') ?></td>
-                                        <?php endif; ?>
                                         <td><strong><?= htmlspecialchars($r['nombre_completo']) ?></strong></td>
                                         <td><?= htmlspecialchars($r['sucursal_nombre']) ?></td>
                                         <td><?= formatoFechaLocal($r['fecha_feriado']) ?></td>
-                                        <?php if ($mostrarColumnasDetalle): ?>
-                                            <td><?= number_format($r['horas_trabajadas'] ?? 0, 2) ?> hrs</td>
-                                        <?php endif; ?>
                                         <td>
                                             <span class="<?= getEstadoBadgeClass($r['estado']) ?>">
                                                 <?= $r['estado'] === 'Descansado' ? 'COMPENSADO' : htmlspecialchars($r['estado']) ?>
@@ -445,12 +428,12 @@ function getEstadoBadgeClass($estado) {
                                             <?= $r['observaciones'] ? htmlspecialchars(substr($r['observaciones'], 0, 40)) . (strlen($r['observaciones']) > 40 ? '...' : '') : '-' ?>
                                         </td>
                                         <td><?= htmlspecialchars($r['creador_nombre'] ?? 'Sistema') ?></td>
-                                        
+
                                         <?php if ($mostrarColumnaAcciones): ?>
-                                            <td>
+                                            <td style="text-align: center;">
                                                 <div class="action-buttons-cell">
                                                     <?php if ($puedeAprobar): ?>
-                                                        <button type="button" class="btn-action-table btn-action-edit" title="Aprobar / Editar"
+                                                        <button type="button" class="btn-action-table btn-action-edit" title="Gestionar solicitud"
                                                                 onclick="mostrarModalAprobacion(
                                                                     <?= $r['id'] ?>,
                                                                     '<?= htmlspecialchars(addslashes($r['nombre_completo'])) ?>',
@@ -460,23 +443,7 @@ function getEstadoBadgeClass($estado) {
                                                                     '<?= $r['estado'] ?>',
                                                                     '<?= htmlspecialchars(addslashes($r['observaciones'] ?? '')) ?>'
                                                                 )">
-                                                            <i class="fas fa-check-double"></i> Gestionar
-                                                        </button>
-                                                    <?php endif; ?>
-
-                                                    <?php 
-                                                    // Líderes solo pueden eliminar si sigue en estado "Pendiente" y ellos mismos lo crearon
-                                                    $puedeEliminar = false;
-                                                    if ($puedeAprobar) {
-                                                        $puedeEliminar = true;
-                                                    } else if ($puedeCrear && $r['estado'] === 'Pendiente' && $r['creado_por'] == $_SESSION['usuario_id']) {
-                                                        $puedeEliminar = true;
-                                                    }
-                                                    if ($puedeEliminar): 
-                                                    ?>
-                                                        <button type="button" class="btn-action-table btn-action-delete" title="Rechazar / Eliminar"
-                                                                onclick="eliminarSolicitud(<?= $r['id'] ?>)">
-                                                            <i class="fas fa-trash-alt"></i>
+                                                            <i class="fas fa-edit"></i>
                                                         </button>
                                                     <?php endif; ?>
                                                 </div>
