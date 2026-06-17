@@ -626,6 +626,12 @@ function mostrarModalEditarAprobar(ids, nombre, sucursal, fechaDesde, fechaHasta
         // Detectar si es solicitud de vacación pendiente de aprobación
         const esPendienteVacacion = (tipoFalta === 'Vacaciones' && parseInt(aprobado) === 0);
 
+        // Ocultar observaciones del líder si es Vacaciones
+        const obsLiderContainer = document.getElementById('editar_observaciones_lider_container');
+        if (obsLiderContainer) {
+            obsLiderContainer.style.display = (tipoFalta === 'Vacaciones') ? 'none' : 'block';
+        }
+
         // Mostrar/ocultar tipo select
         const tipoContainer = document.getElementById('editar_tipo_container');
         if (tipoContainer) tipoContainer.style.display = esPendienteVacacion ? 'none' : 'block';

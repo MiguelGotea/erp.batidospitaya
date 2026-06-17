@@ -1672,7 +1672,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 </div>
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-3" id="editar_observaciones_lider_container">
                                 <label class="form-label small fw-bold text-muted text-uppercase">Observaciones del
                                     líder:</label>
                                 <p class="form-control-plaintext text-muted small" id="editar_observaciones_lider">-</p>
@@ -1763,22 +1763,22 @@ function obtenerTiposFaltaConPorcentajes()
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
-                        <button type="button" class="btn-modern btn-modern-secondary"
+                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap align-items-center">
+                        <button type="button" class="btn-modern btn-modern-secondary text-nowrap"
                             data-bs-dismiss="modal">Cancelar</button>
                         <!-- Botones para registros normales (Subsidio/Falta pendiente) -->
                         <div id="editar_botones_normal">
-                            <button type="submit" form="formEditarFalta" class="btn-modern btn-modern-primary">
+                            <button type="submit" form="formEditarFalta" class="btn-modern btn-modern-primary text-nowrap">
                                 <i class="fas fa-check me-2"></i>Aprobar / Guardar
                             </button>
                         </div>
                         <!-- Botones para vacaciones pendientes de aprobacion -->
-                        <div id="editar_botones_vacacion" style="display:none;" class="d-flex gap-2">
-                            <button type="button" id="btn_rechazar_vacacion" class="btn-modern"
+                        <div id="editar_botones_vacacion" style="display:none;" class="d-flex gap-2 flex-nowrap">
+                            <button type="button" id="btn_rechazar_vacacion" class="btn-modern text-nowrap"
                                 style="background:#dc3545;color:#fff;">
                                 <i class="fas fa-times me-2"></i>Rechazar
                             </button>
-                            <button type="button" id="btn_aprobar_vacacion" class="btn-modern btn-modern-primary">
+                            <button type="button" id="btn_aprobar_vacacion" class="btn-modern btn-modern-primary text-nowrap">
                                 <i class="fas fa-check me-2"></i>Aprobar Vacación
                             </button>
                         </div>
