@@ -203,7 +203,6 @@ function mostrarModalSolicitud() {
         if (fechaSel) fechaSel.innerHTML = '<option value="">Seleccione primero una sucursal...</option>';
     }
 
-
     if (modalEl) {
         let modal = bootstrap.Modal.getInstance(modalEl);
         if (!modal) modal = new bootstrap.Modal(modalEl);
