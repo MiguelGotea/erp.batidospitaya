@@ -578,7 +578,7 @@ function mostrarModalNuevaFaltaPermiso() {
     });
 }
 
-function mostrarModalEditarAprobar(id, nombre, sucursal, fecha, tipoFalta, observaciones, observacionesRrhh, fotoPath, cantidadDias) {
+function mostrarModalEditarAprobar(id, nombre, sucursal, fecha, tipoFalta, observaciones, observacionesRrhh, fotoPath, cantidadDias, aprobado = 1) {
     cerrarTodosLosModales(function () {
         document.getElementById('editar_id').value = id;
         document.getElementById('editar_nombre').textContent = nombre;
@@ -591,8 +591,39 @@ function mostrarModalEditarAprobar(id, nombre, sucursal, fecha, tipoFalta, obser
         document.getElementById('editar_fecha').textContent = fLocal;
         document.getElementById('editar_observaciones_lider').textContent = observaciones || '(Sin observaciones)';
 
+        // Detectar si es solicitud de vacación pendiente de aprobación
+        const esPendienteVacacion = (tipoFalta === 'Vacaciones' && parseInt(aprobado) === 0);
+
+        // Mostrar/ocultar tipo select
+        const tipoContainer = document.getElementById('editar_tipo_container');
+        if (tipoContainer) tipoContainer.style.display = esPendienteVacacion ? 'none' : 'block';
+
+        // Mostrar/ocultar info panel de vacación pendiente
+        const infoPanel = document.getElementById('editar_vacacion_pendiente_info');
+        if (infoPanel) infoPanel.style.display = esPendienteVacacion ? 'block' : 'none';
+
+        // Mostrar/ocultar duración (no relevante para aprobación de vacaciones)
+        const duracionContainer = document.getElementById('editar_duracion_container');
+        if (duracionContainer) duracionContainer.style.display = esPendienteVacacion ? 'none' : 'block';
+
+        // Conmutar grupos de botones del footer
+        const botonesNormal = document.getElementById('editar_botones_normal');
+        const botonesVacacion = document.getElementById('editar_botones_vacacion');
+        if (botonesNormal) botonesNormal.style.display = esPendienteVacacion ? 'none' : 'block';
+        if (botonesVacacion) botonesVacacion.style.display = esPendienteVacacion ? 'flex' : 'none';
+
+        // Obs RRHH: no requerida para vacaciones pendientes
+        const obsRrhh = document.getElementById('editar_observaciones_rrhh');
+        if (obsRrhh) {
+            if (esPendienteVacacion) {
+                obsRrhh.removeAttribute('required');
+            } else {
+                obsRrhh.setAttribute('required', '');
+            }
+        }
+
         const selectTipo = document.getElementById('editar_tipo');
-        if (selectTipo) {
+        if (selectTipo && !esPendienteVacacion) {
             selectTipo.value = tipoFalta;
             actualizarPorcentajeEdicion(tipoFalta);
         }
@@ -615,12 +646,14 @@ function mostrarModalEditarAprobar(id, nombre, sucursal, fecha, tipoFalta, obser
         }
 
         // Inicializar el selector de duración con el valor actual
-        inicializarSelectorDuracion(
-            'editar_cantidad_dias',
-            'editar_custom_dias',
-            'editar_custom_input',
-            cantidadDias || 1.0
-        );
+        if (!esPendienteVacacion) {
+            inicializarSelectorDuracion(
+                'editar_cantidad_dias',
+                'editar_custom_dias',
+                'editar_custom_input',
+                cantidadDias || 1.0
+            );
+        }
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarFalta'));
         modal.show();
@@ -947,6 +980,75 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             return false;
+        });
+    } // cierre if(formEditar)
+
+    // ── Botones aprobar/rechazar vacación pendiente ────────────────
+    const btnAprobarVacacion = document.getElementById('btn_aprobar_vacacion');
+    if (btnAprobarVacacion) {
+        btnAprobarVacacion.addEventListener('click', function () {
+            const id = document.getElementById('editar_id').value;
+            const nombre = document.getElementById('editar_nombre')?.textContent || '';
+            if (!confirm(`¿Confirmar la aprobación de vacaciones para ${nombre}?`)) return;
+
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+            this.disabled = true;
+
+            fetch('ajax/vacaciones_ajax.php?action=aprobar_vacacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                    this.innerHTML = '<i class="fas fa-check me-2"></i>Aprobar Vacación';
+                    this.disabled = false;
+                }
+            })
+            .catch(() => {
+                alert('Error de conexión al procesar la solicitud.');
+                this.innerHTML = '<i class="fas fa-check me-2"></i>Aprobar Vacación';
+                this.disabled = false;
+            });
+        });
+    }
+
+    const btnRechazarVacacion = document.getElementById('btn_rechazar_vacacion');
+    if (btnRechazarVacacion) {
+        btnRechazarVacacion.addEventListener('click', function () {
+            const id = document.getElementById('editar_id').value;
+            const nombre = document.getElementById('editar_nombre')?.textContent || '';
+            if (!confirm(`¿Rechazar la solicitud de vacaciones de ${nombre}?\nQuedará registrada como No Pagado.`)) return;
+
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+            this.disabled = true;
+
+            fetch('ajax/vacaciones_ajax.php?action=rechazar_vacacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                    this.innerHTML = '<i class="fas fa-times me-2"></i>Rechazar';
+                    this.disabled = false;
+                }
+            })
+            .catch(() => {
+                alert('Error de conexión al procesar la solicitud.');
+                this.innerHTML = '<i class="fas fa-times me-2"></i>Rechazar';
+                this.disabled = false;
+            });
         });
     }
 });

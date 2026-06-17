@@ -222,18 +222,24 @@ try {
             }
             
             // Determinar tipo de falta final y observaciones según permisos
-            // Si es aprobador, se sube directo con su tipo real.
-            // Si es líder común, se sube como 'Pendiente' con prefijo en observaciones.
             if ($puedeAprobar) {
+                // Aprobador: registra directo con tipo real y aprobado=1
                 $tipoFaltaFinal = $tipoFaltaOriginal;
+                $aprobadoFinal  = 1;
                 $obsFinal = $observaciones;
                 $obsRRHH = $observaciones;
+            } elseif ($categoriaFalta === 'vacaciones') {
+                // Líder registra vacaciones: guardar como Vacaciones + aprobado=0 (pendiente de RRHH)
+                $tipoFaltaFinal = 'Vacaciones';
+                $aprobadoFinal  = 0;
+                $obsFinal = $observaciones;
+                $obsRRHH = null;
             } else {
+                // Líder registra subsidio o falta: flujo existente, RRHH asigna tipo luego
                 $tipoFaltaFinal = 'Pendiente';
+                $aprobadoFinal  = 1; // default, no necesita doble aprobación
                 $prefijo = '';
-                if ($categoriaFalta === 'vacaciones') {
-                    $prefijo = '[Vacaciones] ';
-                } elseif ($categoriaFalta === 'subsidio') {
+                if ($categoriaFalta === 'subsidio') {
                     $prefijo = '[Subsidio: ' . str_replace('_', ' ', $tipoFaltaOriginal) . '] ';
                 } else {
                     $prefijo = '[Falta/Permiso: ' . str_replace('_', ' ', $tipoFaltaOriginal) . '] ';
@@ -290,8 +296,8 @@ try {
                 $stmt = $conn->prepare("
                     INSERT INTO faltas_manual (
                         cod_operario, fecha_falta, cod_sucursal, 
-                        tipo_falta, observaciones, observaciones_rrhh, foto_path, registrado_por, cod_contrato, porcentaje_pago, cantidad_dias
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        tipo_falta, aprobado, observaciones, observaciones_rrhh, foto_path, registrado_por, cod_contrato, porcentaje_pago, cantidad_dias
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 
                 $ok = $stmt->execute([
@@ -299,6 +305,7 @@ try {
                     $dia,
                     $codSucursal,
                     $tipoFaltaFinal,
+                    $aprobadoFinal,
                     $obsFinal,
                     $obsRRHH,
                     $rutaRelativa,
@@ -406,6 +413,61 @@ try {
             echo json_encode(['success' => true, 'message' => 'Registro actualizado y aprobado correctamente']);
             break;
 
+        case 'aprobar_vacacion':
+            if (!$puedeAprobar) {
+                throw new Exception('No tiene permisos para aprobar solicitudes');
+            }
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Método no permitido');
+            }
+            $id = (int)($_POST['id'] ?? 0);
+            if (!$id) throw new Exception('ID no válido');
+
+            $stmt = $conn->prepare("
+                UPDATE faltas_manual
+                SET aprobado = 1,
+                    actualizado_por = ?,
+                    fecha_actualizacion = NOW()
+                WHERE id = ?
+                  AND tipo_falta = 'Vacaciones'
+                  AND aprobado = 0
+            ");
+            $stmt->execute([$_SESSION['usuario_id'], $id]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new Exception('Registro no encontrado o ya fue procesado anteriormente');
+            }
+            echo json_encode(['success' => true, 'message' => 'Vacación aprobada correctamente']);
+            break;
+
+        case 'rechazar_vacacion':
+            if (!$puedeAprobar) {
+                throw new Exception('No tiene permisos para rechazar solicitudes');
+            }
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Método no permitido');
+            }
+            $id = (int)($_POST['id'] ?? 0);
+            if (!$id) throw new Exception('ID no válido');
+
+            $stmt = $conn->prepare("
+                UPDATE faltas_manual
+                SET tipo_falta = 'No_Pagado',
+                    aprobado   = 1,
+                    actualizado_por = ?,
+                    fecha_actualizacion = NOW()
+                WHERE id = ?
+                  AND tipo_falta = 'Vacaciones'
+                  AND aprobado = 0
+            ");
+            $stmt->execute([$_SESSION['usuario_id'], $id]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new Exception('Registro no encontrado o ya fue procesado anteriormente');
+            }
+            echo json_encode(['success' => true, 'message' => 'Solicitud rechazada y registrada como No Pagado']);
+            break;
+
         case 'eliminar_rechazar':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
@@ -422,12 +484,16 @@ try {
                 throw new Exception('Registro no encontrado');
             }
             
-            // Los líderes solo pueden eliminar sus propias solicitudes si están en 'Pendiente'
+            // Los líderes solo pueden eliminar sus propias solicitudes si están en 'Pendiente' o vacacion pendiente
             if (!$puedeAprobar) {
-                $stmt_check = $conn->prepare("SELECT tipo_falta FROM faltas_manual WHERE id = ? AND registrado_por = ?");
+                $stmt_check = $conn->prepare("SELECT tipo_falta, aprobado FROM faltas_manual WHERE id = ? AND registrado_por = ?");
                 $stmt_check->execute([$id, $_SESSION['usuario_id']]);
                 $miFalta = $stmt_check->fetch();
-                if (!$miFalta || $miFalta['tipo_falta'] !== 'Pendiente') {
+                $esPendientePropia = $miFalta && (
+                    $miFalta['tipo_falta'] === 'Pendiente' ||
+                    ($miFalta['tipo_falta'] === 'Vacaciones' && (int)$miFalta['aprobado'] === 0)
+                );
+                if (!$esPendientePropia) {
                     throw new Exception('No tiene permisos para eliminar este registro.');
                 }
             }

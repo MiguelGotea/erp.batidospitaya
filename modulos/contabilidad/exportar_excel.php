@@ -57,12 +57,13 @@ function exportarFaltasAutoSeptimo($codSucursal, $fechaDesde, $fechaHasta) {
     // 1. Obtener todas las faltas automáticas (detectadas por el sistema) - RESPETANDO RANGO DE FECHAS
     $faltasAutomaticas = obtenerFaltasAutomaticasParaContabilidad($codSucursal, $fechaDesde, $fechaHasta);
     
-    // 2. Obtener todas las faltas manuales que JUSTIFICAN faltas (excluyendo Pendiente y No_Pagado) - RESPETANDO RANGO
+    // 2. Obtener todas las faltas manuales que JUSTIFICAN faltas (excluyendo Pendiente, No_Pagado y vacaciones pendientes)
     $sqlFaltasJustificadas = "
         SELECT fm.cod_operario, fm.fecha_falta
         FROM faltas_manual fm
         WHERE fm.fecha_falta BETWEEN ? AND ?
         AND fm.tipo_falta NOT IN ('Pendiente', 'No_Pagado')
+        AND (fm.tipo_falta != 'Vacaciones' OR fm.aprobado = 1)
     ";
     
     $paramsJustificadas = [$fechaDesde, $fechaHasta];
@@ -321,6 +322,7 @@ function exportarVacaciones($codSucursal, $fechaDesde, $fechaHasta) {
         JOIN Operarios o ON fm.cod_operario = o.CodOperario
         JOIN sucursales s ON fm.cod_sucursal = s.codigo
         WHERE fm.tipo_falta = 'Vacaciones'
+        AND fm.aprobado = 1
         AND fm.fecha_falta BETWEEN ? AND ?
     ";
     

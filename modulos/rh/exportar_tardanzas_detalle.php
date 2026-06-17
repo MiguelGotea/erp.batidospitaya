@@ -329,7 +329,8 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                                FROM faltas_manual 
                                WHERE cod_operario = ? 
                                AND fecha_falta BETWEEN ? AND ?
-                               AND tipo_falta NOT IN ('No_Pagado', 'Pendiente')";
+                               AND tipo_falta NOT IN ('No_Pagado', 'Pendiente')
+                               AND (tipo_falta != 'Vacaciones' OR aprobado = 1)";
 
             $stmtJustificadas = $conn->prepare($sqlJustificadas);
             $stmtJustificadas->execute([$codOperario, $fechaDesdeMes, $fechaHastaMes]);

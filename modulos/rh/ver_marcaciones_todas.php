@@ -1202,7 +1202,8 @@ function generarReporteFaltas($modoVista, $codSucursal, $fechaDesde, $fechaHasta
                                 FROM faltas_manual
                                 WHERE cod_operario = ?
                                 AND fecha_falta BETWEEN ? AND ?
-                                AND tipo_falta NOT IN ('No_Pagado', 'Pendiente')";
+                                AND tipo_falta NOT IN ('No_Pagado', 'Pendiente')
+                                AND (tipo_falta != 'Vacaciones' OR aprobado = 1)";
 
             $stmtJustificadas = $conn->prepare($sqlFaltasJustificadas);
             $stmtJustificadas->execute([$operario['CodOperario'], $fechaDesde, $fechaHasta]);

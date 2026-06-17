@@ -179,9 +179,11 @@ function obtenerVacaciones($codSucursal, $fechaDesde, $fechaHasta, $esRH = false
 
         // Filtrar por tipo de ausencia
         if ($tipoFiltro === 'pendiente') {
-            $sql .= " AND fm.tipo_falta = 'Pendiente'";
+            // Muestra Pendientes de subsidio/falta + vacaciones aun no aprobadas
+            $sql .= " AND (fm.tipo_falta = 'Pendiente' OR (fm.tipo_falta = 'Vacaciones' AND fm.aprobado = 0))";
         } elseif ($tipoFiltro === 'vacaciones') {
-            $sql .= " AND fm.tipo_falta = 'Vacaciones'";
+            // Solo vacaciones ya aprobadas
+            $sql .= " AND fm.tipo_falta = 'Vacaciones' AND fm.aprobado = 1";
         } elseif ($tipoFiltro === 'subsidio') {
             $sql .= " AND fm.tipo_falta IN ('Subsidio_3dias','Subsidio_INSS','Subsidio_maternidad','Reposo_hasta_3dias')";
         } elseif ($tipoFiltro === 'faltas_permisos') {
@@ -804,9 +806,9 @@ function obtenerTiposFaltaConPorcentajes()
 
                 <?php
                 // Helper: badge CSS class based on tipo_falta
-                function getBadgeClass($tipo)
+                function getBadgeClass($tipo, $aprobado = 1)
                 {
-                    if ($tipo === 'Pendiente')
+                    if ($tipo === 'Pendiente' || ($tipo === 'Vacaciones' && $aprobado == 0))
                         return 'badge-status badge-pendiente';
                     if ($tipo === 'Vacaciones')
                         return 'badge-status badge-vacaciones';
@@ -847,8 +849,14 @@ function obtenerTiposFaltaConPorcentajes()
                                         <td><?= htmlspecialchars($vacacion['sucursal_nombre']) ?></td>
                                         <td><?= formatoFechaCorta($vacacion['fecha_falta']) ?></td>
                                         <td>
-                                            <span class="<?= getBadgeClass($vacacion['tipo_falta']) ?>">
-                                                <?= htmlspecialchars($vacacion['tipo_falta_nombre'] ?? str_replace('_', ' ', $vacacion['tipo_falta'])) ?>
+                                            <?php
+                                            $esVacPendiente = ($vacacion['tipo_falta'] === 'Vacaciones' && (int)$vacacion['aprobado'] === 0);
+                                            $displayLabel = $esVacPendiente
+                                                ? 'Pendiente'
+                                                : ($vacacion['tipo_falta_nombre'] ?? str_replace('_', ' ', $vacacion['tipo_falta']));
+                                            ?>
+                                            <span class="<?= getBadgeClass($vacacion['tipo_falta'], $vacacion['aprobado']) ?>">
+                                                <?= htmlspecialchars($displayLabel) ?>
                                             </span>
                                         </td>
                                         <td style="text-align:center;">
@@ -891,7 +899,8 @@ function obtenerTiposFaltaConPorcentajes()
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones'] ?? '')) ?>',
                                                         '<?= htmlspecialchars(addslashes($vacacion['observaciones_rrhh'] ?? '')) ?>',
                                                         '<?= htmlspecialchars($vacacion['foto_path'] ?? '') ?>',
-                                                        <?= number_format(isset($vacacion['cantidad_dias']) ? (float) $vacacion['cantidad_dias'] : 1.0, 2) ?>
+                                                        <?= number_format(isset($vacacion['cantidad_dias']) ? (float) $vacacion['cantidad_dias'] : 1.0, 2) ?>,
+                                                        <?= (int)$vacacion['aprobado'] ?>
                                                     )">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
@@ -1199,12 +1208,12 @@ function obtenerTiposFaltaConPorcentajes()
                                 <small id="info-porcentaje-vacaciones" class="form-text text-muted mt-1 d-block"
                                     style="display: none;"></small>
                             <?php else: ?>
-                                <input type="text" class="form-control bg-light" value="Pendiente de Revisión por RRHH"
-                                    readonly style="display:none;">
-                                <input type="hidden" id="nueva_tipo" name="tipo_falta" value="Pendiente">
-                                <small class="form-text text-muted" style="display:none;"><i
-                                        class="fas fa-info-circle me-1"></i>El tipo será definido por Recursos Humanos al
-                                    revisar el registro.</small>
+                                <input type="hidden" id="nueva_tipo" name="tipo_falta" value="Vacaciones">
+                                <input type="hidden" name="aprobado" value="0">
+                                <div class="alert alert-info py-2 small mb-0">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Tu solicitud quedará como <strong>Pendiente</strong> hasta ser aprobada por RRHH.
+                                </div>
                             <?php endif; ?>
                         </div>
 
@@ -1652,28 +1661,39 @@ function obtenerTiposFaltaConPorcentajes()
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="editar_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de
-                                    Falta (Aprobación):</label>
-                                <select id="editar_tipo" name="tipo_falta" class="form-select" required
-                                    onchange="actualizarPorcentajeEdicion(this.value)">
-                                    <?php foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
-                                        if ($tipo['codigo'] === 'Pendiente')
-                                            continue;
-                                        $pct = $tipo['porcentaje_pago'];
-                                        ?>
-                                        <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>">
-                                            <?= htmlspecialchars($tipo['nombre']) ?> (<?= $pct ?>%)
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <small id="info-porcentaje-edicion" class="form-text mt-1 d-block"></small>
+                            <div id="editar_tipo_container">
+                                <div class="mb-3">
+                                    <label for="editar_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo de
+                                        Falta (Aprobación):</label>
+                                    <select id="editar_tipo" name="tipo_falta" class="form-select" required
+                                        onchange="actualizarPorcentajeEdicion(this.value)">
+                                        <?php foreach (obtenerTiposFaltaConPorcentajes() as $tipo):
+                                            if ($tipo['codigo'] === 'Pendiente')
+                                                continue;
+                                            $pct = $tipo['porcentaje_pago'];
+                                            ?>
+                                            <option value="<?= $tipo['codigo'] ?>" data-porcentaje="<?= $pct ?>">
+                                                <?= htmlspecialchars($tipo['nombre']) ?> (<?= $pct ?>%)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small id="info-porcentaje-edicion" class="form-text mt-1 d-block"></small>
+                                </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="editar_cantidad_dias"
-                                    class="form-label small fw-bold text-muted text-uppercase">Duración de la
-                                    Ausencia:</label>
+                            <!-- Info visible solo para vacaciones pendientes de aprobacion -->
+                            <div id="editar_vacacion_pendiente_info" style="display:none;" class="alert alert-warning py-2 small mb-3">
+                                <i class="fas fa-umbrella-beach me-1"></i>
+                                <strong>Solicitud de Vacaciones</strong> — El colaborador solicita vacaciones.
+                                Al aprobar, se registrará como <strong>Vacaciones</strong>.
+                                Al rechazar, se registrará como <strong>No Pagado</strong>.
+                            </div>
+
+                            <div id="editar_duracion_container">
+                                <div class="mb-3">
+                                    <label for="editar_cantidad_dias"
+                                        class="form-label small fw-bold text-muted text-uppercase">Duración de la
+                                        Ausencia:</label>
                                 <select id="editar_cantidad_dias" name="cantidad_dias" class="form-select"
                                     onchange="manejarCantidadDias(this, 'editar_custom_dias')">
                                     <!-- 1.00 = 8 horas -->
@@ -1701,9 +1721,10 @@ function obtenerTiposFaltaConPorcentajes()
                                     <small class="form-text text-muted">Ingresa un valor entre 0.01 y 1.00 (equivale a horas
                                         ÷ 8)</small>
                                 </div>
-                            </div>
+                            </div><!-- /editar_duracion_container -->
+                            </div><!-- /editar_duracion_container outer -->
 
-                            <div class="mb-3">
+                             <div class="mb-3">
                                 <label for="editar_observaciones_rrhh"
                                     class="form-label small fw-bold text-muted text-uppercase">Observaciones RRHH
                                     (Obligatorio):</label>
@@ -1715,9 +1736,23 @@ function obtenerTiposFaltaConPorcentajes()
                     <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
                         <button type="button" class="btn-modern btn-modern-secondary"
                             data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" form="formEditarFalta" class="btn-modern btn-modern-primary">
-                            <i class="fas fa-check me-2"></i>Aprobar / Guardar
-                        </button>
+                        <!-- Botones para registros normales (Subsidio/Falta pendiente) -->
+                        <div id="editar_botones_normal">
+                            <button type="submit" form="formEditarFalta" class="btn-modern btn-modern-primary">
+                                <i class="fas fa-check me-2"></i>Aprobar / Guardar
+                            </button>
+                        </div>
+                        <!-- Botones para vacaciones pendientes de aprobacion -->
+                        <div id="editar_botones_vacacion" style="display:none;" class="d-flex gap-2">
+                            <button type="button" id="btn_rechazar_vacacion"
+                                class="btn-modern" style="background:#dc3545;color:#fff;">
+                                <i class="fas fa-times me-2"></i>Rechazar
+                            </button>
+                            <button type="button" id="btn_aprobar_vacacion"
+                                class="btn-modern btn-modern-primary">
+                                <i class="fas fa-check me-2"></i>Aprobar Vacación
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
