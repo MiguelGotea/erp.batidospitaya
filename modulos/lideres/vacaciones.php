@@ -1769,7 +1769,7 @@ function obtenerTiposFaltaConPorcentajes()
                         <!-- Botones para registros normales (Subsidio/Falta pendiente) -->
                         <div id="editar_botones_normal">
                             <button type="submit" form="formEditarFalta" class="btn-modern btn-modern-primary text-nowrap">
-                                <i class="fas fa-check me-2"></i>Aprobar / Guardar
+                                <i class="fas fa-save me-2"></i>Guardar
                             </button>
                         </div>
                         <!-- Botones para vacaciones pendientes de aprobacion -->
