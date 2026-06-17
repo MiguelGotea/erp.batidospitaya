@@ -27,12 +27,12 @@ try {
             if (empty($codSucursal)) {
                 throw new Exception('Debe especificar una sucursal');
             }
-            
+
             $fechaReferencia = $_GET['fecha'] ?? date('Y-m-d');
             if (empty($fechaReferencia)) {
                 $fechaReferencia = date('Y-m-d');
             }
-            
+
             // Traer colaboradores filtrando por fecha de liquidación activa y rango de asignación
             $stmt = $conn->prepare("
                 SELECT DISTINCT o.CodOperario, o.Nombre, o.Apellido, o.Apellido2
@@ -73,7 +73,7 @@ try {
             break;
 
         case 'obtener_cargo_operario':
-            $codOperario = (int)($_GET['cod_operario'] ?? 0);
+            $codOperario = (int) ($_GET['cod_operario'] ?? 0);
             if (!$codOperario) {
                 throw new Exception('Debe especificar un colaborador');
             }
@@ -95,15 +95,15 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            
-            $codOperario = (int)$_POST['cod_operario'];
+
+            $codOperario = (int) $_POST['cod_operario'];
             $codSucursal = $_POST['cod_sucursal'];
             $fechaFalta = $_POST['fecha_falta'];
-            
+
             if (!$codOperario || !$codSucursal || !$fechaFalta) {
                 throw new Exception('Parámetros incompletos');
             }
-            
+
             // Verificar liquidación
             if (fechaPosteriorLiquidacion($codOperario, $fechaFalta)) {
                 echo json_encode([
@@ -112,7 +112,7 @@ try {
                 ]);
                 exit;
             }
-            
+
             // Verificar contrato
             if (!operarioTieneContrato($codOperario)) {
                 echo json_encode([
@@ -121,14 +121,14 @@ try {
                 ]);
                 exit;
             }
-            
+
             // Excepción para sucursales 6 y 18 con rol de aprobador
             $esSucursalEspecial = in_array($codSucursal, ['6', '18']);
             if ($esSucursalEspecial && $puedeAprobar) {
                 echo json_encode(['existe_falta' => true]);
                 exit;
             }
-            
+
             $existeFalta = verificarFaltaReal($codOperario, $codSucursal, $fechaFalta);
             echo json_encode(['existe_falta' => $existeFalta]);
             break;
@@ -137,8 +137,8 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            
-            $codOperario = (int)$_POST['cod_operario'];
+
+            $codOperario = (int) $_POST['cod_operario'];
             $codSucursal = $_POST['cod_sucursal'];
             $fechaInicio = $_POST['fecha_inicio'];
             $fechaFin = $_POST['fecha_fin'];
@@ -147,52 +147,52 @@ try {
             $tipoFaltaOriginal = $_POST['tipo_falta'] ?? 'Vacaciones';
 
             // Cantidad de días fraccional: solo aprobadores pueden enviar menos de 1
-            $cantidadDiasInput = isset($_POST['cantidad_dias']) ? (float)$_POST['cantidad_dias'] : 1.0;
+            $cantidadDiasInput = isset($_POST['cantidad_dias']) ? (float) $_POST['cantidad_dias'] : 1.0;
             if (!$puedeAprobar || $cantidadDiasInput <= 0 || $cantidadDiasInput > 1) {
                 $cantidadDias = 1.0;
             } else {
                 $cantidadDias = round($cantidadDiasInput, 2);
             }
-            
+
             if (!$codOperario || !$codSucursal || !$fechaInicio || !$fechaFin) {
                 throw new Exception('Todos los campos son obligatorios');
             }
-            
+
             if ($fechaInicio > $fechaFin) {
                 throw new Exception('La fecha de inicio no puede ser mayor que la fecha fin');
             }
-            
+
             // Determinar si es una falta manual (no vacaciones/subsidio)
             $esFaltaManual = ($categoriaFalta === 'falta_permiso');
-            
+
             // Validaciones específicas para faltas manuales de tipo normal
             if ($esFaltaManual) {
                 $esRRHH = ($esRH || $puedeAprobar);
                 $fechaMaximaPermitida = $esRRHH ? date('Y-m-d') : date('Y-m-d', strtotime('-1 day'));
-                
+
                 if ($fechaInicio > $fechaMaximaPermitida || $fechaFin > $fechaMaximaPermitida) {
-                    $mensajeExcepcion = $esRRHH ? 
-                        'Para faltas/permisos no se permiten fechas futuras. Solo hasta: ' . formatoFechaCorta($fechaMaximaPermitida) : 
+                    $mensajeExcepcion = $esRRHH ?
+                        'Para faltas/permisos no se permiten fechas futuras. Solo hasta: ' . formatoFechaCorta($fechaMaximaPermitida) :
                         'Para faltas/permisos no se permiten fechas futuras ni el día actual. Solo hasta: ' . formatoFechaCorta($fechaMaximaPermitida);
                     throw new Exception($mensajeExcepcion);
                 }
             }
-            
+
             // Validar foto obligatoria
             if (!isset($_FILES['foto_falta']) || $_FILES['foto_falta']['error'] !== UPLOAD_ERR_OK) {
                 throw new Exception('Debe subir una foto como evidencia obligatoria');
             }
-            
+
             $foto = $_FILES['foto_falta'];
             if ($foto['size'] > 5 * 1024 * 1024) {
                 throw new Exception('La foto de evidencia no debe exceder los 5MB');
             }
-            
+
             $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
             if (!in_array($foto['type'], $allowedTypes)) {
                 throw new Exception('Solo se permiten imágenes JPEG, PNG o GIF');
             }
-            
+
             // Obtener el código de contrato
             $codContrato = null;
             $stmt_contrato = $conn->prepare("
@@ -207,7 +207,7 @@ try {
             if ($contrato) {
                 $codContrato = $contrato['CodContrato'];
             }
-            
+
             // Obtener todos los días en el rango
             $diasRango = [];
             $fechaActual = new DateTime($fechaInicio);
@@ -216,28 +216,28 @@ try {
                 $diasRango[] = $fechaActual->format('Y-m-d');
                 $fechaActual->modify('+1 day');
             }
-            
+
             if (empty($diasRango)) {
                 throw new Exception('No hay días seleccionados en el rango');
             }
-            
+
             // Determinar tipo de falta final y observaciones según permisos
             if ($puedeAprobar) {
                 // Aprobador: registra directo con tipo real y aprobado=1
                 $tipoFaltaFinal = $tipoFaltaOriginal;
-                $aprobadoFinal  = 1;
+                $aprobadoFinal = 1;
                 $obsFinal = $observaciones;
                 $obsRRHH = $observaciones;
             } elseif ($categoriaFalta === 'vacaciones') {
                 // Líder registra vacaciones: guardar como Vacaciones + aprobado=0 (pendiente de RRHH)
                 $tipoFaltaFinal = 'Vacaciones';
-                $aprobadoFinal  = 0;
+                $aprobadoFinal = 0;
                 $obsFinal = $observaciones;
                 $obsRRHH = null;
             } else {
                 // Líder registra subsidio o falta: flujo existente, RRHH asigna tipo luego
                 $tipoFaltaFinal = 'Pendiente';
-                $aprobadoFinal  = 1; // default, no necesita doble aprobación
+                $aprobadoFinal = 1; // default, no necesita doble aprobación
                 $prefijo = '';
                 if ($categoriaFalta === 'subsidio') {
                     $prefijo = '[Subsidio: ' . str_replace('_', ' ', $tipoFaltaOriginal) . '] ';
@@ -247,27 +247,27 @@ try {
                 $obsFinal = $prefijo . $observaciones;
                 $obsRRHH = null;
             }
-            
+
             $porcentajePago = obtenerPorcentajePagoTipoFalta($tipoFaltaFinal);
-            
+
             // Crear carpeta y subir imagen
             $extension = pathinfo($foto['name'], PATHINFO_EXTENSION);
             $nombreFoto = 'hibrido_' . $codOperario . '_' . date('YmdHis') . '.' . $extension;
             $rutaRelativa = '/uploads/faltas_manual/' . $nombreFoto;
             $uploadDir = __DIR__ . '/../../../uploads/faltas_manual/';
-            
+
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
-            
+
             $rutaCompleta = $uploadDir . $nombreFoto;
             if (!move_uploaded_file($foto['tmp_name'], $rutaCompleta)) {
                 throw new Exception('Error al guardar la foto en el servidor.');
             }
-            
+
             $registrosExitosos = 0;
             $errores = [];
-            
+
             foreach ($diasRango as $dia) {
                 // Verificar que la suma de ausencias para este día no supere 1.00
                 $stmtSum = $conn->prepare("
@@ -276,13 +276,13 @@ try {
                     WHERE cod_operario = ? AND fecha_falta = ?
                 ");
                 $stmtSum->execute([$codOperario, $dia]);
-                $totalExistente = (float)$stmtSum->fetch()['total_dias'];
+                $totalExistente = (float) $stmtSum->fetch()['total_dias'];
 
                 if ($totalExistente + $cantidadDias > 1.0) {
                     $errores[] = "El día " . formatoFechaCorta($dia) . " ya tiene " . number_format($totalExistente, 2) . " día(s) registrado(s). Agregar " . number_format($cantidadDias, 2) . " día(s) superaría el límite de 1 día completo";
                     continue;
                 }
-                
+
                 // Verificar falta real si es falta manual y el usuario NO tiene permiso de aprobador.
                 // Los aprobadores pueden registrar falta aunque haya marcaciones, en cualquier sucursal.
                 if ($esFaltaManual && !$puedeAprobar) {
@@ -291,7 +291,7 @@ try {
                         continue;
                     }
                 }
-                
+
                 // Insertar
                 $stmt = $conn->prepare("
                     INSERT INTO faltas_manual (
@@ -299,7 +299,7 @@ try {
                         tipo_falta, aprobado, observaciones, observaciones_rrhh, foto_path, registrado_por, cod_contrato, porcentaje_pago, cantidad_dias
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
-                
+
                 $ok = $stmt->execute([
                     $codOperario,
                     $dia,
@@ -314,14 +314,14 @@ try {
                     $porcentajePago,
                     $cantidadDias
                 ]);
-                
+
                 if ($ok) {
                     $registrosExitosos++;
                 } else {
                     $errores[] = "Error de BD al insertar el día " . formatoFechaCorta($dia);
                 }
             }
-            
+
             if ($registrosExitosos > 0) {
                 $mensaje = "Se registraron $registrosExitosos días correctamente";
                 if (!empty($errores)) {
@@ -340,27 +340,27 @@ try {
             if (!$puedeAprobar) {
                 throw new Exception('No tiene permisos para editar o aprobar registros');
             }
-            
+
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            
-            $id = (int)$_POST['id'];
+
+            $id = (int) $_POST['id'];
             $tipoFalta = $_POST['tipo_falta'];
             $observaciones_rrhh = $_POST['observaciones_rrhh'] ?? '';
-            
+
             if (empty($observaciones_rrhh)) {
                 throw new Exception('Las observaciones de RRHH son obligatorias al editar/aprobar');
             }
-            
+
             $stmt = $conn->prepare("SELECT cod_operario, fecha_falta FROM faltas_manual WHERE id = ?");
             $stmt->execute([$id]);
             $falta = $stmt->fetch();
-            
+
             if (!$falta) {
                 throw new Exception('Registro no encontrado');
             }
-            
+
             // Validar liquidación y contrato
             if (fechaPosteriorLiquidacion($falta['cod_operario'], $falta['fecha_falta'])) {
                 throw new Exception('No se puede editar: posterior a la liquidación del colaborador');
@@ -368,11 +368,11 @@ try {
             if (!operarioTieneContrato($falta['cod_operario'])) {
                 throw new Exception('El colaborador no tiene un contrato registrado.');
             }
-            
+
             $porcentajePago = obtenerPorcentajePagoTipoFalta($tipoFalta);
 
             // Cantidad de días fraccional en edición (solo aprobadores)
-            $cantidadDiasEdit = isset($_POST['cantidad_dias']) ? (float)$_POST['cantidad_dias'] : 1.0;
+            $cantidadDiasEdit = isset($_POST['cantidad_dias']) ? (float) $_POST['cantidad_dias'] : 1.0;
             if ($cantidadDiasEdit <= 0 || $cantidadDiasEdit > 1) {
                 $cantidadDiasEdit = 1.0;
             } else {
@@ -386,7 +386,7 @@ try {
                 WHERE cod_operario = ? AND fecha_falta = ? AND id != ?
             ");
             $stmtSumEdit->execute([$falta['cod_operario'], $falta['fecha_falta'], $id]);
-            $totalOtros = (float)$stmtSumEdit->fetch()['total_dias'];
+            $totalOtros = (float) $stmtSumEdit->fetch()['total_dias'];
             if ($totalOtros + $cantidadDiasEdit > 1.0) {
                 throw new Exception('La duración ingresada (' . number_format($cantidadDiasEdit, 2) . ' días) supera el límite: ya hay ' . number_format($totalOtros, 2) . ' día(s) registrado(s) en esa fecha para este colaborador');
             }
@@ -409,7 +409,7 @@ try {
                 $_SESSION['usuario_id'],
                 $id
             ]);
-            
+
             echo json_encode(['success' => true, 'message' => 'Registro actualizado y aprobado correctamente']);
             break;
 
@@ -420,8 +420,9 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            $id = (int)($_POST['id'] ?? 0);
-            if (!$id) throw new Exception('ID no válido');
+            $id = (int) ($_POST['id'] ?? 0);
+            if (!$id)
+                throw new Exception('ID no válido');
 
             $stmt = $conn->prepare("
                 UPDATE faltas_manual
@@ -447,8 +448,9 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            $id = (int)($_POST['id'] ?? 0);
-            if (!$id) throw new Exception('ID no válido');
+            $id = (int) ($_POST['id'] ?? 0);
+            if (!$id)
+                throw new Exception('ID no válido');
 
             $stmt = $conn->prepare("
                 UPDATE faltas_manual
@@ -472,18 +474,18 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            
-            $id = (int)$_POST['id'];
-            
+
+            $id = (int) $_POST['id'];
+
             // Cargar falta
             $stmt = $conn->prepare("SELECT registrado_por, foto_path FROM faltas_manual WHERE id = ?");
             $stmt->execute([$id]);
             $falta = $stmt->fetch();
-            
+
             if (!$falta) {
                 throw new Exception('Registro no encontrado');
             }
-            
+
             // Los líderes solo pueden eliminar sus propias solicitudes si están en 'Pendiente' o vacacion pendiente
             if (!$puedeAprobar) {
                 $stmt_check = $conn->prepare("SELECT tipo_falta, aprobado FROM faltas_manual WHERE id = ? AND registrado_por = ?");
@@ -491,17 +493,17 @@ try {
                 $miFalta = $stmt_check->fetch();
                 $esPendientePropia = $miFalta && (
                     $miFalta['tipo_falta'] === 'Pendiente' ||
-                    ($miFalta['tipo_falta'] === 'Vacaciones' && (int)$miFalta['aprobado'] === 0)
+                    ($miFalta['tipo_falta'] === 'Vacaciones' && (int) $miFalta['aprobado'] === 0)
                 );
                 if (!$esPendientePropia) {
                     throw new Exception('No tiene permisos para eliminar este registro.');
                 }
             }
-            
+
             // Eliminar registro
             $stmt = $conn->prepare("DELETE FROM faltas_manual WHERE id = ?");
             $stmt->execute([$id]);
-            
+
             echo json_encode(['success' => true, 'message' => 'Registro eliminado/rechazado correctamente']);
             break;
 
@@ -519,8 +521,9 @@ try {
 function obtenerPorcentajePagoTipoFalta($tipoFalta)
 {
     global $conn;
-    if ($tipoFalta === 'Pendiente') return 0;
-    
+    if ($tipoFalta === 'Pendiente')
+        return 0;
+
     $stmt = $conn->prepare("
         SELECT porcentaje_pago 
         FROM tipos_falta 
