@@ -1848,7 +1848,7 @@ function obtenerTiposFaltaConPorcentajes()
                     'exportar_excel' => 1
                 ]) ?>'">
                     <span class="fab-label">Exportar</span>
-                    <div class="fab-icon-holder" style="background-color: #28a745;"><i class="fas fa-file-excel"></i></div>
+                    <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
                 </div>
                 <?php endif; ?>
             </div>
