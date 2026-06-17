@@ -984,7 +984,7 @@ function obtenerTiposFaltaConPorcentajes()
                             <i class="fas fa-notes-medical fs-4"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">Registrar Subsidio</h5>
+                            <h5 class="modal-title fw-bold mb-0 text-white">Registrar Subsidio</h5>
                             <p class="small mb-0 opacity-75">Registro de subsidio por rango de fechas</p>
                         </div>
                     </div>
@@ -1159,7 +1159,7 @@ function obtenerTiposFaltaConPorcentajes()
                             <i class="fas fa-umbrella-beach fs-4"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">Solicitud de vacaciones</h5>
+                            <h5 class="modal-title fw-bold mb-0 text-white">Solicitud de vacaciones</h5>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -1317,7 +1317,7 @@ function obtenerTiposFaltaConPorcentajes()
                         data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn-modern" style="background:#17a2b8;color:#fff;"
                         onclick="imprimirBoletaVacacionesV2()">
-                        <i class="fas fa-print me-2"></i>Imprimir Boleta
+                        <i class="fas fa-print me-2"></i>Imprimir
                     </button>
                     <button type="submit" form="formNuevaVacacion" class="btn-modern btn-modern-primary">
                         <i class="fas fa-save me-2"></i>Guardar
@@ -1409,7 +1409,7 @@ function obtenerTiposFaltaConPorcentajes()
                             <i class="fas fa-question fs-4"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">Ayuda — Registro de Ausencias</h5>
+                            <h5 class="modal-title fw-bold mb-0 text-white">Ayuda — Registro de Ausencias</h5>
                             <p class="small mb-0 opacity-75">Guía rápida de uso del módulo</p>
                         </div>
                     </div>
@@ -1463,7 +1463,7 @@ function obtenerTiposFaltaConPorcentajes()
                             <i class="fas fa-exclamation-triangle fs-4"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">Justificación de Falta</h5>
+                            <h5 class="modal-title fw-bold mb-0 text-white">Justificación de Falta</h5>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -1637,7 +1637,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 <i class="fas fa-check-circle fs-4"></i>
                             </div>
                             <div>
-                                <h5 class="modal-title fw-bold mb-0">Editar / Aprobar Solicitud</h5>
+                                <h5 class="modal-title fw-bold mb-0 text-white">Editar / Aprobar Solicitud</h5>
                                 <p class="small mb-0 opacity-75">Modificación por parte de RRHH</p>
                             </div>
                         </div>
@@ -1857,11 +1857,11 @@ function obtenerTiposFaltaConPorcentajes()
             <div class="fab-options">
                 <?php if ($puedeNuevoRegistroOperativo): ?>
                     <div class="fab-option" onclick="mostrarModalNuevaVacacion()">
-                        <span class="fab-label">Vacaciones</span>
+                        <span class="fab-label">Solicitud de vacaciones</span>
                         <div class="fab-icon-holder"><i class="fas fa-umbrella-beach"></i></div>
                     </div>
                     <div class="fab-option" onclick="mostrarModalNuevaFaltaPermiso()">
-                        <span class="fab-label">Falta / Permiso</span>
+                        <span class="fab-label">Justificación de faltas</span>
                         <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
                     </div>
                 <?php endif; ?>
