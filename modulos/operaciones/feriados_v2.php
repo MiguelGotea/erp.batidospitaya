@@ -626,7 +626,7 @@ function getEstadoBadgeClass($estado)
                         <button type="button" class="btn-modern btn-modern-secondary"
                             data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" form="formNuevaSolicitud" class="btn-modern btn-modern-primary">
-                            <i class="fas fa-save me-2"></i>Registrar Solicitud
+                            <i class="fas fa-save me-2"></i>Guardar
                         </button>
                     </div>
                 </div>
