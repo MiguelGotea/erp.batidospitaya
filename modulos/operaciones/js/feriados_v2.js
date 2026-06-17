@@ -433,3 +433,110 @@ function eliminarSolicitud(id) {
             alert('Error al intentar eliminar el registro.');
         });
 }
+
+// =====================================================
+// IMPRIMIR FICHA DE FERIADO
+// =====================================================
+
+// Datos de feriados cargados para el modal de impresión
+let feriadosImpresionData = [];
+
+function mostrarModalImprimirFicha() {
+    const modalEl = document.getElementById('modalImprimirFicha');
+    if (!modalEl) return;
+
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    // Cargar registros al abrir
+    cargarFeriadosParaImprimir();
+}
+
+function cargarFeriadosParaImprimir() {
+    const anioEl = document.getElementById('imprimir_anio');
+    const registroEl = document.getElementById('imprimir_registro');
+    const previewEl = document.getElementById('imprimir_preview');
+    if (!anioEl || !registroEl) return;
+
+    const anio = anioEl.value;
+    registroEl.innerHTML = '<option value="">⏳ Cargando registros...</option>';
+    if (previewEl) previewEl.classList.add('d-none');
+
+    fetch(`ajax/feriados_v2_ajax.php?action=listar_para_imprimir&anio=${encodeURIComponent(anio)}`)
+        .then(r => {
+            if (!r.ok) throw new Error('Error en servidor');
+            return r.json();
+        })
+        .then(data => {
+            feriadosImpresionData = data;
+
+            if (!data || data.length === 0) {
+                registroEl.innerHTML = '<option value="">No hay registros para este año</option>';
+                return;
+            }
+
+            const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+            let options = '<option value="">— Seleccione un registro —</option>';
+            data.forEach(r => {
+                const parts = r.fecha_feriado.split('-');
+                const fechaLabel = parts[2] + '-' + months[parseInt(parts[1], 10) - 1] + '-' + parts[0];
+                const estadoLabel = r.estado === 'Descansado' ? 'COMPENSADO' : r.estado.toUpperCase();
+                options += `<option value="${r.id}">${r.nombre_completo} | ${r.feriado_nombre || 'Feriado'} (${fechaLabel}) — ${estadoLabel}</option>`;
+            });
+
+            registroEl.innerHTML = options;
+        })
+        .catch(err => {
+            console.error('Error cargando feriados para imprimir:', err);
+            registroEl.innerHTML = '<option value="">❌ Error al cargar registros</option>';
+        });
+}
+
+function mostrarPreviewFicha() {
+    const registroEl = document.getElementById('imprimir_registro');
+    const previewEl  = document.getElementById('imprimir_preview');
+    if (!registroEl || !previewEl) return;
+
+    const id = registroEl.value;
+    if (!id) {
+        previewEl.classList.add('d-none');
+        return;
+    }
+
+    const reg = feriadosImpresionData.find(r => String(r.id) === String(id));
+    if (!reg) {
+        previewEl.classList.add('d-none');
+        return;
+    }
+
+    const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const parts  = reg.fecha_feriado.split('-');
+    const fechaLabel = parts[2] + ' ' + months[parseInt(parts[1], 10) - 1] + ' ' + parts[0];
+
+    const estadoBadge = {
+        'Pagado':     '<span style="background:#d1e7dd;color:#0a3622;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;">PAGADO</span>',
+        'Descansado': '<span style="background:#cff4fc;color:#055160;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;">COMPENSADO</span>',
+        'Pendiente':  '<span style="background:#fff3cd;color:#856404;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;">PENDIENTE</span>'
+    };
+
+    previewEl.innerHTML = `
+        <strong>${reg.nombre_completo}</strong><br>
+        <span class="text-muted">Tienda:</span> ${reg.sucursal_nombre}<br>
+        <span class="text-muted">Feriado:</span> ${reg.feriado_nombre || 'Feriado'}<br>
+        <span class="text-muted">Fecha:</span> ${fechaLabel}<br>
+        <span class="text-muted">Estado:</span> ${estadoBadge[reg.estado] || reg.estado}
+    `;
+    previewEl.classList.remove('d-none');
+}
+
+function abrirImpresionFicha() {
+    const registroEl = document.getElementById('imprimir_registro');
+    if (!registroEl || !registroEl.value) {
+        alert('Debe seleccionar un registro para imprimir.');
+        return;
+    }
+
+    const id = registroEl.value;
+    window.open(`imprimir_ficha_feriado.php?id=${encodeURIComponent(id)}`, '_blank', 'width=700,height=800,scrollbars=yes');
+}

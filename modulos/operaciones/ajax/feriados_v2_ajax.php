@@ -273,6 +273,68 @@ try {
             echo json_encode(['success' => true, 'message' => 'Solicitud eliminada/rechazada correctamente']);
             break;
 
+        case 'listar_para_imprimir':
+            // Solo lideres/aprobadores pueden listar para imprimir
+            if (!$puedeAprobar) {
+                throw new Exception('No tiene permisos para imprimir fichas de feriados');
+            }
+
+            $anio = isset($_GET['anio']) ? intval($_GET['anio']) : (int)date('Y');
+            if ($anio < 2020 || $anio > 2100) {
+                throw new Exception('Año inválido');
+            }
+
+            $puedeVerTodasSucursales = tienePermiso('feriados_v2', 'ver_todas_sucursales', $cargoOperario);
+
+            $sqlImpr = "
+                SELECT fs.id, fs.fecha_feriado, fs.horas_trabajadas, fs.estado,
+                       CONCAT_WS(' ',
+                           TRIM(o.Nombre),
+                           NULLIF(TRIM(o.Nombre2), ''),
+                           TRIM(o.Apellido),
+                           NULLIF(TRIM(o.Apellido2), '')
+                       ) as nombre_completo,
+                       COALESCE(s.nombre, s_actual.nombre, 'Sin sucursal') as sucursal_nombre,
+                       GROUP_CONCAT(DISTINCT fn.nombre SEPARATOR ' / ') as feriado_nombre
+                FROM FeriadosStatus fs
+                INNER JOIN Operarios o ON fs.cod_operario = o.CodOperario
+                LEFT JOIN Contratos c ON fs.cod_contrato = c.CodContrato
+                LEFT JOIN sucursales s ON c.cod_sucursal_contrato = s.codigo
+                LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
+                    AND fs.fecha_feriado >= anc.Fecha
+                    AND (anc.Fin IS NULL OR anc.Fin = '0000-00-00' OR fs.fecha_feriado <= anc.Fin)
+                LEFT JOIN sucursales s_actual ON anc.Sucursal = s_actual.codigo
+                LEFT JOIN feriadosnic fn ON fs.fecha_feriado = fn.fecha
+                    AND (fn.departamento_codigo IS NULL OR fn.departamento_codigo = COALESCE(s.cod_departamento, s_actual.cod_departamento))
+                WHERE YEAR(fs.fecha_feriado) = ?
+            ";
+            $paramsImpr = [$anio];
+
+            // Si NO puede ver todas las sucursales, filtrar por las propias
+            if (!$puedeVerTodasSucursales) {
+                require_once '../../../core/layout/menu_lateral.php';
+                $sucursalesLider = obtenerSucursalesUsuario($_SESSION['usuario_id']);
+                $codigos = array_column($sucursalesLider, 'codigo');
+                if (!empty($codigos)) {
+                    $placeholders = implode(',', array_fill(0, count($codigos), '?'));
+                    $sqlImpr .= " AND COALESCE(s.codigo, s_actual.codigo) IN ($placeholders)";
+                    foreach ($codigos as $cod) {
+                        $paramsImpr[] = $cod;
+                    }
+                } else {
+                    echo json_encode([]);
+                    break;
+                }
+            }
+
+            $sqlImpr .= " GROUP BY fs.id ORDER BY fs.fecha_feriado DESC, nombre_completo ASC LIMIT 500";
+
+            $stmtImpr = $conn->prepare($sqlImpr);
+            $stmtImpr->execute($paramsImpr);
+            $registros = $stmtImpr->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode($registros);
+            break;
+
         default:
             throw new Exception('Acción no válida');
     }

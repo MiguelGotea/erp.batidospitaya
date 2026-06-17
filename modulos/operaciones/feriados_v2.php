@@ -22,6 +22,7 @@ if (!tienePermiso('feriados_v2', 'vista', $cargoOperario)) {
 $puedeCrear = tienePermiso('feriados_v2', 'crear', $cargoOperario);
 $puedeAprobar = tienePermiso('feriados_v2', 'aprobar', $cargoOperario);
 $puedeExportar = tienePermiso('feriados_v2', 'exportar', $cargoOperario);
+$puedeImprimir = tienePermiso('feriados_v2', 'aprobar', $cargoOperario); // Solo lideres pueden imprimir fichas
 
 $puedeVerTodasSucursales = tienePermiso('feriados_v2', 'ver_todas_sucursales', $cargoOperario);
 
@@ -687,6 +688,57 @@ function getEstadoBadgeClass($estado)
         </div>
     <?php endif; ?>
 
+    <!-- MODAL 3: SELECCIONAR FICHA DE FERIADO PARA IMPRIMIR (Solo Lideres) -->
+    <?php if ($puedeImprimir): ?>
+        <div class="modal fade" id="modalImprimirFicha" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                    <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-print fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0 text-white">Imprimir Ficha de Feriado</h5>
+                                <small class="text-white opacity-75">Seleccione el registro a imprimir</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-3 bg-light">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Año:</label>
+                            <select id="imprimir_anio" class="form-select" onchange="cargarFeriadosParaImprimir()">
+                                <?php
+                                $anioActual = (int)date('Y');
+                                for ($a = $anioActual; $a >= $anioActual - 2; $a--) {
+                                    $sel = ($a === $anioActual) ? 'selected' : '';
+                                    echo "<option value=\"$a\" $sel>$a</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Colaborador / Feriado:</label>
+                            <select id="imprimir_registro" class="form-select" onchange="mostrarPreviewFicha()">
+                                <option value="">Cargando registros...</option>
+                            </select>
+                        </div>
+                        <div id="imprimir_preview" class="p-2 bg-white rounded border d-none" style="font-size: 12px; line-height: 1.6;"></div>
+                    </div>
+                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
+                        <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn-modern btn-modern-primary" onclick="abrirImpresionFicha()">
+                            <i class="fas fa-print me-2"></i>Imprimir Ficha
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <script>
         // Config de autocompletado para el buscador de filtros
@@ -697,7 +749,8 @@ function getEstadoBadgeClass($estado)
                 <?php endforeach; ?>
             ],
             puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
-            esRH: <?= $puedeVerTodasSucursales ? 'true' : 'false' ?>
+            esRH: <?= $puedeVerTodasSucursales ? 'true' : 'false' ?>,
+            puedeImprimir: <?= $puedeImprimir ? 'true' : 'false' ?>
         };
 
         function cambiarRegistrosPorPagina() {
@@ -713,9 +766,15 @@ function getEstadoBadgeClass($estado)
 
 
     <!-- Botón Flotante con opciones -->
-    <?php if ($puedeCrear || $puedeExportar): ?>
+    <?php if ($puedeCrear || $puedeExportar || $puedeImprimir): ?>
         <div class="fab-container">
             <div class="fab-options">
+                <?php if ($puedeImprimir): ?>
+                    <div class="fab-option" onclick="mostrarModalImprimirFicha()">
+                        <span class="fab-label">Imprimir Ficha Feriado</span>
+                        <div class="fab-icon-holder"><i class="fas fa-print"></i></div>
+                    </div>
+                <?php endif; ?>
                 <?php if ($puedeExportar): ?>
                     <div class="fab-option" onclick="window.location.href='feriados_v2.php?<?= http_build_query([
                         'sucursal' => $sucursalSeleccionada ?? '',
