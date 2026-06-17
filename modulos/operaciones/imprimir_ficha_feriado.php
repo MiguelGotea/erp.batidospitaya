@@ -374,7 +374,6 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
 
         <!-- Cabecera -->
         <div class="ticket-header">
-            <span class="header-title">Batidos Pitaya S.A.</span>
             <span class="header-subtitle">BATIDOS PITAYA</span>
             <span class="header-doctype">Ficha de Feriado Trabajado</span>
         </div>
@@ -409,12 +408,7 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
             <span class="field-value"><?= htmlspecialchars($reg['cargo_nombre']) ?></span>
         </div>
         <?php endif; ?>
-        <?php if (!empty($reg['CodContrato'])): ?>
-        <div class="field-row">
-            <span class="field-label">Contrato:</span>
-            <span class="field-value"><?= htmlspecialchars($reg['CodContrato']) ?></span>
-        </div>
-        <?php endif; ?>
+
 
         <!-- Detalles del Feriado -->
         <div class="section-title">Detalle del Feriado</div>
@@ -427,10 +421,7 @@ $horas = number_format($reg['horas_trabajadas'] ?? 0, 2);
             <span class="field-label">Fecha:</span>
             <span class="field-value"><?= $fechaFeriado ?></span>
         </div>
-        <div class="field-row">
-            <span class="field-label">Horas laboradas:</span>
-            <span class="field-value bold"><?= $horas ?> hrs</span>
-        </div>
+
         <div class="field-row" style="margin-top: 6px;">
             <span class="field-label">Estado:</span>
             <span class="field-value">
