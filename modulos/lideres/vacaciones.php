@@ -788,18 +788,7 @@ function obtenerTiposFaltaConPorcentajes()
 
 
 
-                            <?php if (tienePermiso('registro_vacaciones', 'exportar_excel', $cargoOperario)): ?>
-                                <a href="vacaciones.php?<?= http_build_query([
-                                    'sucursal' => $sucursalSeleccionada ?? '',
-                                    'desde' => $fechaDesde,
-                                    'hasta' => $fechaHasta,
-                                    'operario' => $operarioSeleccionado,
-                                    'tipo_filtro' => $tipoFiltro,
-                                    'exportar_excel' => 1
-                                ]) ?>" class="btn-agregar">
-                                    <i class="fas fa-file-excel"></i> Exportar
-                                </a>
-                            <?php endif; ?>
+
                         </div>
                     </form>
                 </div>
@@ -1828,9 +1817,14 @@ function obtenerTiposFaltaConPorcentajes()
     </script>
 
     <!-- Botón Flotante con opciones -->
-    <?php if (tienePermiso('registro_vacaciones', 'nuevo_registro', $cargoOperario)): ?>
+    <?php 
+    $puedeNuevoRegistro = tienePermiso('registro_vacaciones', 'nuevo_registro', $cargoOperario);
+    $puedeExportarExcel = tienePermiso('registro_vacaciones', 'exportar_excel', $cargoOperario);
+    if ($puedeNuevoRegistro || $puedeExportarExcel): 
+    ?>
         <div class="fab-container">
             <div class="fab-options">
+                <?php if ($puedeNuevoRegistro): ?>
                 <div class="fab-option" onclick="mostrarModalNuevaVacacion()">
                     <span class="fab-label">Vacaciones</span>
                     <div class="fab-icon-holder"><i class="fas fa-umbrella-beach"></i></div>
@@ -1843,6 +1837,20 @@ function obtenerTiposFaltaConPorcentajes()
                     <span class="fab-label">Falta / Permiso</span>
                     <div class="fab-icon-holder"><i class="fas fa-exclamation-triangle"></i></div>
                 </div>
+                <?php endif; ?>
+                <?php if ($puedeExportarExcel): ?>
+                <div class="fab-option" onclick="window.location.href='vacaciones.php?<?= http_build_query([
+                    'sucursal' => $sucursalSeleccionada ?? '',
+                    'desde' => $fechaDesde,
+                    'hasta' => $fechaHasta,
+                    'operario' => $operarioSeleccionado,
+                    'tipo_filtro' => $tipoFiltro,
+                    'exportar_excel' => 1
+                ]) ?>'">
+                    <span class="fab-label">Exportar</span>
+                    <div class="fab-icon-holder" style="background-color: #28a745;"><i class="fas fa-file-excel"></i></div>
+                </div>
+                <?php endif; ?>
             </div>
             <div class="btn-floating-pitaya" title="Herramientas">
                 <i class="fas fa-wrench"></i>
