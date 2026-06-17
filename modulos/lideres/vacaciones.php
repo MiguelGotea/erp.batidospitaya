@@ -850,9 +850,10 @@ function obtenerTiposFaltaConPorcentajes()
                                     <th>Colaborador</th>
                                     <th>Sucursal</th>
                                     <th>Fechas</th>
-                                    <th>Tipo</th>
-                                    <th>% Pago</th>
                                     <th>Días</th>
+                                    <th>Tipo</th>
+                                    <?php if ($puedeAprobar): ?>
+                                        <th>% Pago</th><?php endif; ?>
                                     <th>Observaciones</th>
                                     <?php if ($puedeAprobar): ?>
                                         <th>Obs. RRHH</th><?php endif; ?>
@@ -869,6 +870,12 @@ function obtenerTiposFaltaConPorcentajes()
                                         </td>
                                         <td><?= htmlspecialchars($vacacion['sucursal_nombre']) ?></td>
                                         <td><?= formatoFechaCorta($vacacion['fecha_desde']) . ' - ' . formatoFechaCorta($vacacion['fecha_hasta']) ?></td>
+                                        <td style="text-align:center;">
+                                            <?php
+                                            $cantDias = isset($vacacion['cantidad_dias_total']) ? (float) $vacacion['cantidad_dias_total'] : 1.0;
+                                            echo number_format($cantDias, 2);
+                                            ?>
+                                        </td>
                                         <td>
                                             <?php
                                             $esVacPendiente = ($vacacion['tipo_falta'] === 'Vacaciones' && (int)$vacacion['aprobado'] === 0);
@@ -880,15 +887,11 @@ function obtenerTiposFaltaConPorcentajes()
                                                 <?= htmlspecialchars($displayLabel) ?>
                                             </span>
                                         </td>
-                                        <td style="text-align:center;">
-                                            <?= number_format($vacacion['porcentaje_pago'] ?? 0, 0) ?>%
-                                        </td>
-                                        <td style="text-align:center;">
-                                            <?php
-                                            $cantDias = isset($vacacion['cantidad_dias_total']) ? (float) $vacacion['cantidad_dias_total'] : 1.0;
-                                            echo number_format($cantDias, 2);
-                                            ?>
-                                        </td>
+                                        <?php if ($puedeAprobar): ?>
+                                            <td style="text-align:center;">
+                                                <?= number_format($vacacion['porcentaje_pago'] ?? 0, 0) ?>%
+                                            </td>
+                                        <?php endif; ?>
                                         <td title="<?= htmlspecialchars($vacacion['observaciones'] ?: '-') ?>">
                                             <?= $vacacion['observaciones'] ? htmlspecialchars(recortarTexto($vacacion['observaciones'], 25)) : '-' ?>
                                         </td>
