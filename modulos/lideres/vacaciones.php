@@ -1779,7 +1779,7 @@ function obtenerTiposFaltaConPorcentajes()
                                 <i class="fas fa-times me-2"></i>Rechazar
                             </button>
                             <button type="button" id="btn_aprobar_vacacion" class="btn-modern btn-modern-primary text-nowrap">
-                                <i class="fas fa-check me-2"></i>Aprobar Vacación
+                                <i class="fas fa-check me-2"></i>Aprobar
                             </button>
                         </div>
                     </div>

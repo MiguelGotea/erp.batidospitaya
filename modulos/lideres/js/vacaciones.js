@@ -1044,13 +1044,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.location.reload();
                 } else {
                     alert('Error: ' + data.error);
-                    this.innerHTML = '<i class="fas fa-check me-2"></i>Aprobar Vacación';
+                    this.innerHTML = '<i class="fas fa-check me-2"></i>Aprobar';
                     this.disabled = false;
                 }
             })
             .catch(() => {
                 alert('Error de conexión al procesar la solicitud.');
-                this.innerHTML = '<i class="fas fa-check me-2"></i>Aprobar Vacación';
+                this.innerHTML = '<i class="fas fa-check me-2"></i>Aprobar';
                 this.disabled = false;
             });
         });
