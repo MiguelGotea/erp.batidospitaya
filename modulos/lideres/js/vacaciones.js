@@ -645,10 +645,11 @@ function mostrarModalEditarAprobar(ids, nombre, sucursal, fechaDesde, fechaHasta
         if (duracionContainer) duracionContainer.style.display = esPendienteVacacion ? 'none' : 'block';
 
         // Conmutar grupos de botones del footer
+        const esVacacion = (tipoFalta === 'Vacaciones');
         const botonesNormal = document.getElementById('editar_botones_normal');
         const botonesVacacion = document.getElementById('editar_botones_vacacion');
-        if (botonesNormal) botonesNormal.style.display = esPendienteVacacion ? 'none' : 'block';
-        if (botonesVacacion) botonesVacacion.style.display = esPendienteVacacion ? 'flex' : 'none';
+        if (botonesNormal) botonesNormal.style.display = esVacacion ? 'none' : 'block';
+        if (botonesVacacion) botonesVacacion.style.display = esVacacion ? 'flex' : 'none';
 
         // Obs RRHH: no requerida para vacaciones pendientes
         const obsRrhh = document.getElementById('editar_observaciones_rrhh');
