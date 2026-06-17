@@ -17,6 +17,7 @@ if (!tienePermiso('feriados_v2', 'vista', $cargoOperario)) {
 
 $puedeAprobar = tienePermiso('feriados_v2', 'aprobar', $cargoOperario);
 $puedeCrear = tienePermiso('feriados_v2', 'crear', $cargoOperario);
+$puedeImprimir = tienePermiso('feriados_v2', 'imprimir', $cargoOperario);
 
 $action = $_GET['action'] ?? '';
 
@@ -274,8 +275,8 @@ try {
             break;
 
         case 'listar_para_imprimir':
-            // Solo lideres/aprobadores pueden listar para imprimir
-            if (!$puedeAprobar) {
+            // Solo quien tiene permiso 'imprimir' puede listar para imprimir
+            if (!$puedeImprimir) {
                 throw new Exception('No tiene permisos para imprimir fichas de feriados');
             }
 

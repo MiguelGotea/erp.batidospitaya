@@ -11,8 +11,8 @@ if (!$conn) {
 $usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
-// Solo líderes/aprobadores pueden imprimir fichas de feriado
-if (!tienePermiso('feriados_v2', 'aprobar', $cargoOperario)) {
+// Solo quien tiene permiso 'imprimir' puede acceder a esta pagina
+if (!tienePermiso('feriados_v2', 'imprimir', $cargoOperario)) {
     header('Location: ../index.php');
     exit();
 }

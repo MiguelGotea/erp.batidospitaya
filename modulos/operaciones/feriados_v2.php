@@ -22,7 +22,7 @@ if (!tienePermiso('feriados_v2', 'vista', $cargoOperario)) {
 $puedeCrear = tienePermiso('feriados_v2', 'crear', $cargoOperario);
 $puedeAprobar = tienePermiso('feriados_v2', 'aprobar', $cargoOperario);
 $puedeExportar = tienePermiso('feriados_v2', 'exportar', $cargoOperario);
-$puedeImprimir = tienePermiso('feriados_v2', 'aprobar', $cargoOperario); // Solo lideres pueden imprimir fichas
+$puedeImprimir = tienePermiso('feriados_v2', 'imprimir', $cargoOperario);
 
 $puedeVerTodasSucursales = tienePermiso('feriados_v2', 'ver_todas_sucursales', $cargoOperario);
 
