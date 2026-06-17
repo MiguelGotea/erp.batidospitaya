@@ -1773,7 +1773,7 @@ function obtenerTiposFaltaConPorcentajes()
                             </button>
                         </div>
                         <!-- Botones para vacaciones pendientes de aprobacion -->
-                        <div id="editar_botones_vacacion" style="display:none;" class="d-flex gap-2 flex-nowrap">
+                        <div id="editar_botones_vacacion" style="display:none; gap:0.5rem; flex-wrap:nowrap;" class="gap-2">
                             <button type="button" id="btn_rechazar_vacacion" class="btn-modern text-nowrap"
                                 style="background:#dc3545;color:#fff;">
                                 <i class="fas fa-times me-2"></i>Rechazar
