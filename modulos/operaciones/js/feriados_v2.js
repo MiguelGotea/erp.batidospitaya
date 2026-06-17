@@ -228,13 +228,13 @@ function mostrarModalAprobacion(id, nombre, sucursal, fecha, horas, estado, obse
         day: '2-digit', month: 'short', year: 'numeric'
     });
     document.getElementById('aprobacion_fecha').textContent = fLocal;
-    document.getElementById('aprobacion_horas').textContent = parseFloat(horas).toFixed(2);
-
-    const selectEstado = document.getElementById('aprobacion_estado');
-    if (selectEstado) selectEstado.value = estado;
 
     const obsInput = document.getElementById('aprobacion_observaciones');
     if (obsInput) obsInput.value = observaciones || '';
+
+    // Reset estado a Pendiente al abrir
+    const estadoInput = document.getElementById('aprobacion_estado');
+    if (estadoInput) estadoInput.value = 'Pendiente';
 
     const modalEl = document.getElementById('modalAprobacion');
     if (modalEl) {
@@ -348,64 +348,52 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Formulario de Aprobación
-    const formAprobacion = document.getElementById('formAprobacionSolicitud');
-    if (formAprobacion) {
-        formAprobacion.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const id = document.getElementById('aprobacion_id').value;
-            const estado = document.getElementById('aprobacion_estado').value;
-            const observaciones = document.getElementById('aprobacion_observaciones').value.trim();
-
-            if (!confirm('¿Está seguro de actualizar esta solicitud?')) {
-                return false;
-            }
-
-            const submitBtn = formAprobacion.querySelector('button[type="submit"]');
-            const originalText = submitBtn ? submitBtn.innerHTML : '';
-            if (submitBtn) {
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-                submitBtn.disabled = true;
-            }
-
-            const params = new URLSearchParams({
-                id: id,
-                estado: estado,
-                observaciones: observaciones
-            });
-
-            fetch('ajax/feriados_v2_ajax.php?action=editar_aprobar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        window.location.reload();
-                    } else {
-                        alert('Error: ' + data.error);
-                        if (submitBtn) {
-                            submitBtn.innerHTML = originalText;
-                            submitBtn.disabled = false;
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error al actualizar el registro.');
-                    if (submitBtn) {
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    }
-                });
-
-            return false;
-        });
-    }
+    // El formulario de Aprobación ahora se maneja con submitAprobacion()
 });
+
+// Función central para Aprobar o Rechazar desde los botones del modal
+function submitAprobacion(nuevoEstado) {
+    const id = document.getElementById('aprobacion_id').value;
+    const observaciones = document.getElementById('aprobacion_observaciones').value.trim();
+
+    const accion = nuevoEstado === 'Pagado' ? 'aprobar' : 'rechazar';
+    const msg = nuevoEstado === 'Pagado'
+        ? '¿Aprobar esta solicitud de feriado como PAGADO?'
+        : '¿Rechazar esta solicitud? Se marcará como Compensado (descanso).';
+
+    if (!confirm(msg)) return;
+
+    // Fijar el estado en el campo oculto
+    document.getElementById('aprobacion_estado').value = nuevoEstado;
+
+    // Deshabilitar ambos botones mientras procesa
+    const modalEl = document.getElementById('modalAprobacion');
+    const btns = modalEl ? modalEl.querySelectorAll('.modal-footer button') : [];
+    btns.forEach(b => b.disabled = true);
+
+    const params = new URLSearchParams({ id, estado: nuevoEstado, observaciones });
+
+    fetch('ajax/feriados_v2_ajax.php?action=editar_aprobar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.error);
+            btns.forEach(b => b.disabled = false);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Error de conexión al actualizar el registro.');
+        btns.forEach(b => b.disabled = false);
+    });
+}
 
 // Eliminar o rechazar solicitud
 function eliminarSolicitud(id) {

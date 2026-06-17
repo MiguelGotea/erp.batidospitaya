@@ -605,7 +605,7 @@ function getEstadoBadgeClass($estado) {
                                 <i class="fas fa-check-double fs-4"></i>
                             </div>
                             <div>
-                                <h5 class="modal-title fw-bold mb-0 text-white">Gestionar Solicitud de Feriado</h5>
+                                <h5 class="modal-title fw-bold mb-0 text-white">Solicitud de Pago de Feriado</h5>
                             </div>
                         </div>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -614,33 +614,33 @@ function getEstadoBadgeClass($estado) {
                         <div class="info-resumen alert alert-info py-2 mb-3">
                             <p class="mb-1"><strong>Colaborador:</strong> <span id="aprobacion_nombre">-</span></p>
                             <p class="mb-1"><strong>Sucursal:</strong> <span id="aprobacion_sucursal">-</span></p>
-                            <p class="mb-1"><strong>Fecha Feriado:</strong> <span id="aprobacion_fecha">-</span></p>
-                            <p class="mb-0"><strong>Horas Laboradas (Marcación):</strong> <span id="aprobacion_horas">0.00</span> hrs</p>
+                            <p class="mb-0"><strong>Fecha Feriado:</strong> <span id="aprobacion_fecha">-</span></p>
                         </div>
 
                         <form id="formAprobacionSolicitud">
                             <input type="hidden" id="aprobacion_id" name="id">
+                            <input type="hidden" id="aprobacion_estado" name="estado" value="Pendiente">
 
                             <div class="mb-3">
-                                <label for="aprobacion_estado" class="form-label small fw-bold text-muted text-uppercase">Acción / Estado del Feriado:</label>
-                                <select id="aprobacion_estado" name="estado" class="form-select" required>
-                                    <option value="Pendiente">Pendiente</option>
-                                    <option value="Pagado">Pagado (100% Recargo)</option>
-                                    <option value="Descansado">Compensado (Día de descanso)</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="aprobacion_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones / Comentario Aprobación:</label>
-                                <textarea id="aprobacion_observaciones" name="observaciones" class="form-control" rows="2" style="resize: none;" placeholder="Escriba comentarios u observaciones..." required></textarea>
+                                <label class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                                <textarea id="aprobacion_observaciones" name="observaciones" class="form-control bg-white" rows="3" style="resize: none;" readonly></textarea>
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between">
-                        <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" form="formAprobacionSolicitud" class="btn-modern btn-modern-primary">
-                            <i class="fas fa-save me-2"></i>Aplicar Cambios
+                    <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between gap-2">
+                        <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancelar
                         </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn-modern" style="background:#dc3545;color:#fff;"
+                                onclick="submitAprobacion('Descansado')">
+                                <i class="fas fa-ban me-1"></i>Rechazar
+                            </button>
+                            <button type="button" class="btn-modern btn-modern-primary"
+                                onclick="submitAprobacion('Pagado')">
+                                <i class="fas fa-check me-1"></i>Aprobar
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
