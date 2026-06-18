@@ -15,6 +15,7 @@ if (!tienePermiso('feriados_v2', 'vista', $cargoOperario)) {
     exit;
 }
 
+
 $puedeAprobar = tienePermiso('feriados_v2', 'aprobar', $cargoOperario);
 $puedeCrear = tienePermiso('feriados_v2', 'crear', $cargoOperario);
 $puedeImprimir = tienePermiso('feriados_v2', 'imprimir', $cargoOperario);
@@ -59,12 +60,12 @@ try {
             if (empty($codSucursal)) {
                 throw new Exception('Debe especificar una sucursal');
             }
-            
+
             $fechaReferencia = $_GET['fecha'] ?? date('Y-m-d');
             if (empty($fechaReferencia)) {
                 $fechaReferencia = date('Y-m-d');
             }
-            
+
             // Traer colaboradores activos de la sucursal (excluyendo cargo 27 e inactivos/liquidados)
             // Usamos CONCAT_WS + NULLIF para el nombre completo
             $stmt = $conn->prepare("
@@ -118,22 +119,22 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            
-            $codOperario = (int)$_POST['cod_operario'];
+
+            $codOperario = (int) $_POST['cod_operario'];
             $fechaFeriado = $_POST['fecha_feriado'];
             $observaciones = $_POST['observaciones'] ?? '';
-            
+
             if (!$codOperario || !$fechaFeriado) {
                 throw new Exception('Todos los campos son obligatorios');
             }
-            
+
             // Validar que no exista ya un registro para este operario y fecha
             $stmt_dup = $conn->prepare("SELECT id FROM FeriadosStatus WHERE cod_operario = ? AND fecha_feriado = ?");
             $stmt_dup->execute([$codOperario, $fechaFeriado]);
             if ($stmt_dup->fetch()) {
                 throw new Exception('Ya existe una solicitud o registro de feriado para este colaborador en esta fecha');
             }
-            
+
             // Obtener el último contrato activo
             $codContrato = null;
             $stmt_contrato = $conn->prepare("
@@ -148,7 +149,7 @@ try {
             if ($contrato) {
                 $codContrato = $contrato['CodContrato'];
             }
-            
+
             // Buscar si hay marcación de reloj para esa fecha y operario
             $stmt_marcacion = $conn->prepare("
                 SELECT id, hora_ingreso, hora_salida 
@@ -158,10 +159,10 @@ try {
             ");
             $stmt_marcacion->execute([$codOperario, $fechaFeriado]);
             $marcacion = $stmt_marcacion->fetch(PDO::FETCH_ASSOC);
-            
+
             $idMarcacion = null;
             $horasTrabajadas = 0;
-            
+
             if ($marcacion) {
                 $idMarcacion = $marcacion['id'];
                 if (!empty($marcacion['hora_ingreso']) && !empty($marcacion['hora_salida'])) {
@@ -171,7 +172,7 @@ try {
                     $horasTrabajadas = $diferencia->h + ($diferencia->i / 60);
                 }
             }
-            
+
             // Registrar solicitud en estado 'Pendiente'
             $stmt_insert = $conn->prepare("
                 INSERT INTO FeriadosStatus (
@@ -179,7 +180,7 @@ try {
                     cod_contrato, estado, observaciones, creado_por, fecha_creacion
                 ) VALUES (?, ?, ?, ?, ?, 'Pendiente', ?, ?, NOW())
             ");
-            
+
             $ok = $stmt_insert->execute([
                 $idMarcacion,
                 $codOperario,
@@ -189,7 +190,7 @@ try {
                 $observaciones,
                 $_SESSION['usuario_id']
             ]);
-            
+
             if ($ok) {
                 echo json_encode(['success' => true, 'message' => 'Solicitud de feriado registrada en estado Pendiente']);
             } else {
@@ -204,20 +205,20 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            
-            $id = (int)$_POST['id'];
+
+            $id = (int) $_POST['id'];
             $estado = $_POST['estado'];
             $observaciones = $_POST['observaciones'] ?? '';
-            
+
             if (!$id || !$estado) {
                 throw new Exception('Parámetros incompletos');
             }
-            
+
             $estadosPermitidos = ['Pendiente', 'Pagado', 'Descansado'];
             if (!in_array($estado, $estadosPermitidos)) {
                 throw new Exception('Estado no válido');
             }
-            
+
             $stmt_upd = $conn->prepare("
                 UPDATE FeriadosStatus 
                 SET estado = ?, 
@@ -226,14 +227,14 @@ try {
                     fecha_actualizacion = NOW()
                 WHERE id = ?
             ");
-            
+
             $ok = $stmt_upd->execute([
                 $estado,
                 $observaciones,
                 $_SESSION['usuario_id'],
                 $id
             ]);
-            
+
             if ($ok) {
                 echo json_encode(['success' => true, 'message' => 'Solicitud actualizada correctamente']);
             } else {
@@ -245,32 +246,32 @@ try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Método no permitido');
             }
-            
-            $id = (int)$_POST['id'];
+
+            $id = (int) $_POST['id'];
             if (!$id) {
                 throw new Exception('ID no especificado');
             }
-            
+
             // Cargar registro
             $stmt = $conn->prepare("SELECT creado_por, estado FROM FeriadosStatus WHERE id = ?");
             $stmt->execute([$id]);
             $registro = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$registro) {
                 throw new Exception('Registro no encontrado');
             }
-            
+
             // Líderes solo pueden eliminar sus propias solicitudes en estado 'Pendiente'
             if (!$puedeAprobar) {
                 if ($registro['creado_por'] != $_SESSION['usuario_id'] || $registro['estado'] !== 'Pendiente') {
                     throw new Exception('No tiene permisos para eliminar este registro');
                 }
             }
-            
+
             // Eliminar
             $stmt_del = $conn->prepare("DELETE FROM FeriadosStatus WHERE id = ?");
             $stmt_del->execute([$id]);
-            
+
             echo json_encode(['success' => true, 'message' => 'Solicitud eliminada/rechazada correctamente']);
             break;
 
@@ -280,7 +281,7 @@ try {
                 throw new Exception('No tiene permisos para imprimir fichas de feriados');
             }
 
-            $anio = isset($_GET['anio']) ? intval($_GET['anio']) : (int)date('Y');
+            $anio = isset($_GET['anio']) ? intval($_GET['anio']) : (int) date('Y');
             if ($anio < 2020 || $anio > 2100) {
                 throw new Exception('Año inválido');
             }
