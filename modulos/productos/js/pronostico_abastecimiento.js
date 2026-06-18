@@ -278,9 +278,6 @@ function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false
     }
 
     let html = '';
-    if (isConsolidado) {
-        html += `<div class="pa-consolidado-banner"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Vista Consolidada · <strong>${nTiendas} Tiendas</strong> · Haz clic en una fila para ver el detalle por tienda</div>`;
-    }
 
     fechasOrdenadas.forEach(fecha => {
         const info = formatDateHeader(fecha);
@@ -318,6 +315,19 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
                 ? '<span class="pa-round-badge" style="background:rgba(56,189,248,0.15);color:#38bdf8;">Ronda 1 · Inventario Real</span>'
                 : `<span class="pa-round-badge">Ronda ${slot.round} · Proyección</span>`;
         }
+
+        let badgeB = '';
+        if (cat === 'B') {
+            let totalDespacho = 0;
+            slot.items.forEach(p => {
+                let despPron = isConsolidado ? p._despTotal : (p._porRonda?.[slot.round]?.despachoPron);
+                if (despPron !== null && despPron !== undefined) {
+                    totalDespacho += despPron;
+                }
+            });
+            badgeB = `<span class="pa-round-badge" style="margin-left:auto; background:rgba(14,165,233,0.1); color:#0ea5e9; font-size:13px; font-weight:800; padding:4px 12px;">Total Despacho: ${totalDespacho}</span>`;
+        }
+
         const slotKey = `${fecha.replace(/-/g, '')}-${cat}`;
         html += `
         <div class="pa-cat-card pa-cat-${cat.toLowerCase()}">
@@ -325,6 +335,7 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
                 <div class="pa-cat-badge">${cat}</div>
                 <span>${PA_LABELS[cat] || cat}</span>
                 ${badge}
+                ${badgeB}
             </div>
             <div class="pa-table-wrap">
                 ${buildTablaProductos(slot, isConsolidado, slotKey)}
