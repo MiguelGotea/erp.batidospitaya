@@ -101,8 +101,7 @@ try {
 
                     <div class="col-auto d-flex align-items-end gap-2">
                         <?php if (!empty($semActual)): ?>
-                        <span class="badge rounded-pill"
-                              style="background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);font-size:11px;padding:6px 10px;">
+                        <span class="badge rounded-pill pa-badge-current-week">
                             <i class="fas fa-calendar-check me-1"></i>Sem.&nbsp;<strong><?php echo $semActual; ?></strong>
                         </span>
                         <?php endif; ?>
