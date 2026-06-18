@@ -272,6 +272,7 @@ function buildFila(p, cat) {
         <tr class="ps-fila-producto" data-id="${p.id_pp}">
             <td class="col-producto">
                 <div class="fw-bold text-dark" style="font-size: 13px;">${escHtml(p.nombre)}</div>
+                ${p.despacho_nombre ? `<div class="text-muted" style="font-size: 11px;">${escHtml(p.despacho_nombre)} (${Number(p.despacho_factor).toLocaleString('es-NI', {maximumFractionDigits: 2})} ${escHtml(p.unidad || '')})</div>` : ''}
             </td>
             <td class="col-presentacion">
                 <div class="text-muted" style="font-size: 11px;">${escHtml(p.unidad || '—')}</div>
