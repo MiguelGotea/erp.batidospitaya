@@ -342,7 +342,7 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
 .pa-table tbody tr:hover { transform: translateY(-1px); }
 
 .pa-table td {
-    padding: 12px 14px;
+    padding: 8px 14px;
     vertical-align: middle;
     text-align: right;
 }

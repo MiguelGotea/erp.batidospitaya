@@ -328,29 +328,12 @@ function buildCatsHtml(cats) {
             ? '<span class="pa-round-badge" style="background:rgba(56,189,248,0.15);color:#38bdf8;">Ronda 1 · Inventario Real</span>'
             : `<span class="pa-round-badge">Ronda ${round} · Proyección</span>`;
 
-        // Totals for header
-        let totalDesp = 0;
-        let hasNull   = false;
-        items.forEach(p => {
-            const ronda = p._porRonda?.[round];
-            if (ronda?.despachoPron !== null && ronda?.despachoPron !== undefined) {
-                totalDesp += ronda.despachoPron;
-            } else { hasNull = true; }
-        });
-
-        const despTotalStr = hasNull
-            ? `~${totalDesp} paq`
-            : `${totalDesp} paq`;
-
         html += `
         <div class="pa-cat-card pa-cat-${cat.toLowerCase()}">
             <div class="pa-cat-header">
                 <div class="pa-cat-badge">${cat}</div>
                 <span>${PA_LABELS[cat] || cat}</span>
                 ${roundLabel}
-                <div class="pa-cat-meta">
-                    Total despacho: <strong>${despTotalStr}</strong>
-                </div>
             </div>
             <div class="pa-table-wrap">
                 ${buildTablaProductos(items, round)}
@@ -376,7 +359,7 @@ function buildTablaProductos(items, round) {
         } else {
             const pct   = smf > 0 ? stockD1 / smf : 0;
             const cls   = pct >= 0.5 ? 'positive' : pct >= 0.25 ? 'low' : 'critical';
-            stockHtml   = `<span class="pa-stock-d1 ${cls}">${stockD1.toFixed(1)}</span><br><small style="font-size:9px;color:#475569">paq</small>`;
+            stockHtml   = `<span class="pa-stock-d1 ${cls}">${stockD1.toFixed(1)}</span>`;
         }
 
         // Despacho Pron cell
@@ -385,7 +368,7 @@ function buildTablaProductos(items, round) {
             despHtml = '<span class="pa-na">—</span>';
         } else {
             const cls = despPron > 0 ? 'needs' : 'ok';
-            despHtml  = `<span class="pa-desp-val ${cls}">${despPron}</span><br><small style="font-size:9px;color:#475569">paq</small>`;
+            despHtml  = `<span class="pa-desp-val ${cls}">${despPron}</span>`;
         }
 
         const despTag = p.despacho_nombre
@@ -402,7 +385,7 @@ function buildTablaProductos(items, round) {
             <td>${fmt2(p.cons_semanal)}</td>
             <td>${fmt2(p.stock_minimo)}</td>
             <td>${fmt2(p.stock_maximo)}</td>
-            <td>${p.stock_max_final !== null ? fmt2(p.stock_max_final) + (p.es_ajustado ? '<br><small style="font-size:9px;color:#0ea5e9">Ajustado</small>' : '') : '<span class="pa-na">N/A</span>'}</td>
+            <td>${p.stock_max_final !== null ? fmt2(p.stock_max_final) : '<span class="pa-na">N/A</span>'}</td>
             <td class="pa-col-desp">${stockHtml}</td>
             <td class="pa-col-desp">${despHtml}</td>
         </tr>`;
@@ -414,12 +397,12 @@ function buildTablaProductos(items, round) {
             <tr>
                 <th style="text-align:left">Producto</th>
                 <th style="text-align:left">Presentación</th>
-                <th>Cons. Semanal</th>
+                <th>Cons. Semanal<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(en unidades)</small></th>
                 <th>Stock Mín</th>
                 <th>Stock Máx</th>
-                <th>Stock Máx Final</th>
-                <th>Stock Pronóst. D-1</th>
-                <th>Despacho Pron. (paq)</th>
+                <th>Stock Máx Ajustado</th>
+                <th>Pronóstico Inventario</th>
+                <th>Despacho</th>
             </tr>
         </thead>
         <tbody>${rows || '<tr class="pa-no-data-row"><td colspan="8">Sin productos</td></tr>'}</tbody>
