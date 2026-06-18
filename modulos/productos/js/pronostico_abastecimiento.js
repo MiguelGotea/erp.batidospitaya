@@ -91,6 +91,7 @@ async function calcularAgenda() {
 }
 
 async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
+    try {
     const fdP = new FormData();
     fdP.append('semana_desde_num', semDesde);
     fdP.append('semana_hasta_num', semHasta);
@@ -169,20 +170,22 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
     });
 
     return { agendaMap, fechasOrdenadas, sinPlan };
+    } catch(err) {
+        console.warn(`calcularDatosParaSucursal(${codSuc}):`, err);
+        return null;
+    }
 }
 
 async function calcularAgendaConsolidada(semDesde, semHasta, semCorte) {
     const total = PA_SUCURSALES.length;
-    let completadas = 0;
     const storeResults = {};
 
-    const promises = PA_SUCURSALES.map(async (suc) => {
+    for (let i = 0; i < PA_SUCURSALES.length; i++) {
+        const suc = PA_SUCURSALES[i];
+        setLoaderStep(`Calculando tienda ${i + 1} de ${total}: ${suc.nombre}…`);
         const datos = await calcularDatosParaSucursal(semDesde, semHasta, semCorte, suc.codigo);
-        completadas++;
-        setLoaderStep(`Calculando tienda ${completadas} de ${total}: ${suc.nombre}…`);
         if (datos) storeResults[suc.codigo] = { ...datos, nombre: suc.nombre, codigo: suc.codigo };
-    });
-    await Promise.all(promises);
+    }
 
     if (!Object.keys(storeResults).length) {
         hideLoader(); showInicial();
