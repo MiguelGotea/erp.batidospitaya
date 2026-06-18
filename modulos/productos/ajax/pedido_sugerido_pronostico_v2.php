@@ -75,6 +75,16 @@ try {
     $fechaIniRango = $rangeDates['ini'];
     $fechaFinRango = $rangeDates['fin'];
 
+    // ── Detectar semana actual incompleta ─────────────────────────────────
+    // Si fecha_fin (domingo de semHasta en BD) es futuro, la semana en curso aún no terminó.
+    // Aplicamos la misma lógica que dashboard_consumo_get_stock_pronosticado.php:
+    //   a) Limitar la query de ventas a ayer (excluir días futuros con consumo=0)
+    //   b) Limitar originalRangeLen a ayer (el balance forward no procesa días futuros)
+    $hoy  = date('Y-m-d');
+    $ayer = date('Y-m-d', strtotime('-1 day'));
+    $semanaActualIncompleta = ($fechaFinRango > $ayer);
+    $fechaFinQuery = $semanaActualIncompleta ? $ayer : $fechaFinRango;
+
     // ── 2. Semana anterior al corte (stock base del inventario) ──────────
     $rSA = $conn->prepare("SELECT numero_semana FROM SemanasSistema WHERE numero_semana < :c ORDER BY numero_semana DESC LIMIT 1");
     $rSA->execute([':c' => $semCorte]);
@@ -203,9 +213,19 @@ try {
     $allDays = [];
     $cur = clone $start;
     while ($cur <= $end) { $allDays[] = $cur->format('Y-m-d'); $cur->modify('+1 day'); }
-    $originalRangeLen = count($allDays);
 
-    // Extender hasta la fecha_D1 más lejana
+    // originalRangeLen = días reales (pasados) — limitar a ayer si semana incompleta
+    if ($semanaActualIncompleta) {
+        $lastRealIdx = -1;
+        foreach ($allDays as $idx => $day) {
+            if ($day <= $ayer) $lastRealIdx = $idx;
+        }
+        $originalRangeLen = $lastRealIdx >= 0 ? $lastRealIdx + 1 : 0;
+    } else {
+        $originalRangeLen = count($allDays);
+    }
+
+    // Extender hasta la fecha_D1 más lejana (partiendo siempre desde fecha_fin de la BD)
     $endExt = new DateTime($maxFechaD1 . ' 12:00:00');
     $extCur = clone $end; $extCur->modify('+1 day');
     while ($extCur <= $endExt) { $allDays[] = $extCur->format('Y-m-d'); $extCur->modify('+1 day'); }
@@ -306,9 +326,10 @@ try {
             foreach ($sIng->fetchAll(PDO::FETCH_ASSOC) as $row) $dbIng[$row['CodIngrediente']] = $row;
         }
 
-        // Query de ventas (misma lógica que dashboard_consumo_get_datos.php)
+        // Query de ventas — limitar a $fechaFinQuery (ayer si semana incompleta)
+        // para no traer días futuros con consumo=0 que distorsionen el promedio DOW.
         $phSucsQ = '?';
-        $pValS   = [$fechaIniRango, $fechaFinRango, $semDesde, $semHasta, $codSuc];
+        $pValS   = [$fechaIniRango, $fechaFinQuery, $semDesde, $semHasta, $codSuc];
         $whereEx = "1=0";
         if (!empty($ingsRel))    { $whereEx .= " OR sr.CodIngrediente IN (" . implode(',', array_fill(0, count($ingsRel), '?')) . ")"; $pValS = array_merge($pValS, $ingsRel); }
         if (!empty($allCodsCons)){ $whereEx .= " OR sr.codporcion IN ($phCC)"; $pValS = array_merge($pValS, $allCodsCons); }
@@ -368,8 +389,14 @@ try {
         // Sin fecha asignada → null
         if (!$fechaD1) { $stocks[(string)$targetId] = null; continue; }
 
-        // fecha_D1 dentro del rango histórico → null (por diseño)
-        if ($fechaD1 <= $fechaFinRango) { $stocks[(string)$targetId] = null; continue; }
+        // fecha_D1 dentro del rango histórico completo → null (por diseño).
+        // EXCEPCIÓN: si la semana está incompleta, fechaFinRango es un domingo futuro;
+        // en ese caso permitimos fecha_D1 dentro de la semana actual (>= hoy) porque
+        // la proyección arranca desde ayer (anchorVal) hacia adelante.
+        $esD1ValidaSemIncompleta = $semanaActualIncompleta && $fechaD1 >= $hoy;
+        if ($fechaD1 <= $fechaFinRango && !$esD1ValidaSemIncompleta) {
+            $stocks[(string)$targetId] = null; continue;
+        }
 
         $invCorte  = $invCorteByPP[$targetId]     ?? 0;
         $movsFecha = $movsByPPFecha[$targetId]     ?? [];
