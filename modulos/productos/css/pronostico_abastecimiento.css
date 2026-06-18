@@ -492,17 +492,4 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
     .pa-date-day-num { font-size: 22px; }
 }
 
-/* Dark mode overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --neu-bg: #1e2027;
-    --neu-shadow-dark: #15171d;
-    --neu-shadow-light: #272a33;
-    
-    --pa-text: #e2e8f0;
-    --pa-muted: #94a3b8;
-  }
-  
-  .pa-prod-name { color: #f1f5f9; }
-  .pa-prod-sub { color: #64748b; }
-}
+
