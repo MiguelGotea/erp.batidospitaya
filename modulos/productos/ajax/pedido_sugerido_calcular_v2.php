@@ -157,7 +157,9 @@ function calcularProximoDespacho(?array $planCat, string $hoy, PDO $conn): ?stri
         $diaFijo   = (int)($planCat['dia_despacho']     ?? 0); // 0=Lun,...,6=Dom
         $semAncla  = (int)($planCat['semana_ancla']     ?? 0);
 
-        if (!$semAncla || $intervalo <= 0) return null;
+        if ($intervalo <= 0) return null;
+        // Solo requerimos semana ancla si el intervalo es mayor a 1 semana
+        if ($intervalo > 1 && !$semAncla) return null;
 
         $stmtSem = $conn->prepare("
             SELECT numero_semana
