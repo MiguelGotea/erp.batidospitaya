@@ -190,7 +190,7 @@ function buildCatRow(cod, cat, cfg) {
 
 function buildCongeladorSection(cap) {
     if (!PUEDE_EDITAR) {
-        return `<div class="pdg-congelador-card">
+        return `<div class="pdg-congelador-card d-none">
             <div class="pdg-congelador-title"><i class="bi bi-snow2"></i>Capacidad Congelador (Cat B)</div>
             <div class="row g-2">
                 <div class="col-auto"><strong>${cap.paquetes ?? '—'}</strong> paquetes</div>
@@ -198,7 +198,7 @@ function buildCongeladorSection(cap) {
             </div>
         </div>`;
     }
-    return `<div class="pdg-congelador-card">
+    return `<div class="pdg-congelador-card d-none">
         <div class="pdg-congelador-title"><i class="bi bi-snow2"></i>Capacidad Congelador (Categoría B)</div>
         <div class="row g-2 align-items-end">
             <div class="col-auto">
