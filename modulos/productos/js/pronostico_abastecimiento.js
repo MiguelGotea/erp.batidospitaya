@@ -156,7 +156,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                 let stockD1Paq;
                 if (slot.round === 1) {
                     const su = stockRonda1[String(p.id_pp)];
-                    stockD1Paq = (su !== null && su !== undefined) ? su / df : null;
+                    stockD1Paq = (su !== null && su !== undefined) ? Math.max(0, su / df) : null;
                 } else {
                     stockD1Paq = Math.max(0, smf - (cd * dc) / df);
                 }
