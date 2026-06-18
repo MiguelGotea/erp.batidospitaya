@@ -437,6 +437,12 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             Movimiento de Existencia (Kardex)
                                             <span id="bdChartStockBadge"
                                                 style="display:none;margin-left:auto;font-size:.7rem;font-weight:600;color:#51B8AC"></span>
+                                            <!-- Toggle: Pronóstico de Abastecimiento -->
+                                            <label class="dc-pron-toggle" id="labelTogglePronAbast" title="Activa para incorporar eventos de despacho (Pronóstico de Abastecimiento) en la proyección morada" style="display:none;">
+                                                <input type="checkbox" id="togglePronAbast">
+                                                <span class="dc-pron-toggle-slider"></span>
+                                                <span class="dc-pron-toggle-label"><i class="fas fa-truck me-1" style="font-size:.65rem"></i>Pron. Abastecimiento</span>
+                                            </label>
                                         </div>
                                         <div style="height:320px; position:relative;">
                                             <canvas id="existenciaChart"></canvas>
@@ -1053,6 +1059,48 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
             background: var(--neu-bg);
             box-shadow: 6px 6px 12px var(--neu-shadow-dark),
                 -6px -6px 12px var(--neu-shadow-light);
+        }
+
+        /* ── Toggle: Pronóstico de Abastecimiento ── */
+        .dc-pron-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            margin-left: 8px;
+            user-select: none;
+        }
+        .dc-pron-toggle input[type="checkbox"] { display: none; }
+        .dc-pron-toggle-slider {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background: #ccc;
+            border-radius: 20px;
+            transition: background .25s;
+            flex-shrink: 0;
+        }
+        .dc-pron-toggle-slider::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform .25s;
+            box-shadow: 0 1px 3px rgba(0,0,0,.25);
+        }
+        .dc-pron-toggle input:checked + .dc-pron-toggle-slider { background: #8e44ad; }
+        .dc-pron-toggle input:checked + .dc-pron-toggle-slider::after { transform: translateX(16px); }
+        .dc-pron-toggle-label {
+            font-size: .68rem;
+            font-weight: 700;
+            color: #8e44ad;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            white-space: nowrap;
         }
     </style>
 

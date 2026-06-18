@@ -22,6 +22,8 @@ let datosActuales = null;   // Respuesta completa del AJAX de datos
 let chartTendencia = null;   // Instancia Chart.js activa
 let modoGrafico = 'barras'; // 'barras' | 'linea_total' | 'linea_suc'
 let stocksPronosticados = {}; // { id_pp: float|null } — resultado del endpoint de pronóstico bulk
+let kardexPronAbastEnabled = false; // Toggle: pronostico de abastecimiento en Kardex
+let _kardexLastRenderCtx = null;    // Contexto del último render para re-dibujar al cambiar toggle
 
 
 /* ════════════════════════════════════════════════════════════
@@ -374,6 +376,30 @@ function bindEventos() {
     });
 
     $('#btnCalcStockPron').on('click', calcularStockPronosticadoTabla);
+
+    // Toggle pronóstico de abastecimiento en Kardex
+    $(document).on('change', '#togglePronAbast', function () {
+        kardexPronAbastEnabled = this.checked;
+        if (_kardexLastRenderCtx) {
+            renderChartKardex(
+                _kardexLastRenderCtx.res,
+                _kardexLastRenderCtx.stockMinVal,
+                _kardexLastRenderCtx.stockMaxFinalVal
+            );
+        }
+    });
+
+    // Mostrar/ocultar toggle cuando cambia la fecha de pronóstico en Kardex
+    $(document).on('change', '#kardexFechaPronostico', function () {
+        const fecha = $(this).val();
+        if (fecha) {
+            $('#labelTogglePronAbast').show();
+        } else {
+            $('#labelTogglePronAbast').hide();
+            $('#togglePronAbast').prop('checked', false);
+            kardexPronAbastEnabled = false;
+        }
+    });
 }
 
 async function calcularStockPronosticadoTabla() {
@@ -2397,7 +2423,10 @@ function renderDetalleKardex(res) {
     renderChartKardex(res);
 }
 
+
 function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
+    // Guardar contexto para poder re-renderizar al cambiar el toggle
+    _kardexLastRenderCtx = { res, stockMinVal, stockMaxFinalVal };
     const regs = res.registros || [];
     const t = res.totales_tipo;
     const invCorte = t.inv_inicial || 0;       // Inventario de la semana de corte
@@ -2639,7 +2668,6 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     // pero NO define dónde arranca el pronóstico.
     if (fechaObjetivoPronostico) {
         // ── Calcular consumo promedio diario usando TODO el rango analizado ──
-        // (semDesde→semHasta). El punto de corte no afecta el consumo promedio.
         const _cntDow = [0, 0, 0, 0, 0, 0, 0];
         const _sumDow = [0, 0, 0, 0, 0, 0, 0];
         let _totalCons = 0;
@@ -2665,10 +2693,6 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         };
 
         // ── Punto de arranque del pronóstico = fin de la línea verde ────────
-        // = último día del rango real analizado:
-        //   - Si la semana hasta ya terminó: domingo de semHasta
-        //   - Si la semana hasta es la actual (incompleta): ayer (hoy - 1)
-        //   - Edge case originalRangeLen=0 (hoy es el primer día del rango): usar pIdx
         const _anchorIdx = originalRangeLen > 0 ? originalRangeLen - 1 : pIdx;
         const _anchorVal = stockTeoData[_anchorIdx] ?? (originalRangeLen === 0 ? invCorte : null);
 
@@ -2677,24 +2701,32 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             || !allDays[_anchorIdx]
             || allDays[_anchorIdx] >= fechaObjetivoPronostico) {
             // sin proyección
+        } else if (kardexPronAbastEnabled) {
+            // ── Modo Pronóstico de Abastecimiento: construir línea ASYNC ────────
+            // Capturamos los valores locales que necesita la función async
+            const _anIdx = _anchorIdx, _anVal = _anchorVal;
+            const _allDays = allDays.slice();
+            const _fobj = fechaObjetivoPronostico;
+            const _datasets = datasets;
+            const _ctx = ctx;
+            const _fmtK = fmtKardex;
+
+            // Iniciamos async (no bloqueante) — el chart se dibuja primero sin línea morada
+            // y luego se agrega al recibir los datos de abastecimiento
+            calcularPronosticoAbastKardex(
+                res, _anVal, _anIdx, _allDays, _fobj, _getConsProy, _datasets, _ctx, _fmtK
+            );
         } else {
-            // ── Construir línea morada: nace en el último punto verde ────────────
-            //   - Desde _anchorIdx + 1 en adelante: solo consumo proyectado
-            //     (no hay movimientos reales de kardex más allá del rango analizado)
+            // ── Modo simple: solo consumo proyectado (sin eventos de despacho) ─
             const forecastData = new Array(allDays.length).fill(null);
-            // Ancla visual: conecta la línea morada con el último punto verde
             forecastData[_anchorIdx] = _anchorVal;
             let _balFc = _anchorVal;
             for (let i = _anchorIdx + 1; i < allDays.length; i++) {
                 if (allDays[i] > fechaObjetivoPronostico) break;
-                // Más allá del rango analizado no hay movimientos reales de kardex;
-                // solo se descuenta el consumo proyectado día a día.
-                const consProy = _getConsProy(allDays[i]);
-                _balFc = _balFc - consProy;
+                _balFc = _balFc - _getConsProy(allDays[i]);
                 forecastData[i] = _balFc;
             }
 
-            // Punto final destacado en la fecha objetivo
             const _idxObj = allDays.indexOf(fechaObjetivoPronostico);
             const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
             const _finalPoint = new Array(allDays.length).fill(null);
@@ -2819,6 +2851,9 @@ function cargarStockMinMaxKardex(idPP, semAnalisis) {
                     if (parts.length) {
                         badge.textContent = '* ' + parts.join(' · ');
                         badge.style.display = '';
+                        // Mostrar toggle si ya hay fecha de pronóstico seleccionada
+                        const fechaPron = ($('#kardexFechaPronostico').val() || '').trim();
+                        if (fechaPron) $('#labelTogglePronAbast').show();
                     }
                 }
             }
@@ -2835,4 +2870,264 @@ function cargarStockMinMaxKardex(idPP, semAnalisis) {
             }
         })
         .catch(() => { /* silencioso */ });
+}
+
+/* ================================================================
+   CALC PRONÓSTICO ABASTECIMIENTO KARDEX
+   Usa la misma pipeline de pronostico_abastecimiento.php:
+     1. pedido_sugerido_calcular_v2.php  → plan + rondas
+     2. pedido_sugerido_pronostico_v2.php → stock D-1 ronda 1
+   Construye la línea morada teniendo en cuenta los eventos de
+   despacho programados: cada vez que se recibe un despacho,
+   el stock sube por el despacho pronosticado y luego sigue bajando.
+   ================================================================ */
+async function calcularPronosticoAbastKardex(
+    res, anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, ctx, fmtKardex
+) {
+    // Mostrar spinner temporal en leyenda
+    const $badge = $('#bdChartStockBadge');
+    const prevBadge = $badge.text();
+    $badge.html(prevBadge + '  <i class="fas fa-spinner fa-spin" style="font-size:.7rem;color:#8e44ad"></i>');
+
+    try {
+        const idPP     = res.id_pp;        // retornado por balance_inventario_get_detalle.php
+        const semDesde = datosActuales._semDesde;
+        const semHasta = datosActuales._semHasta;
+        const semCorte = parseInt($('#kardexSemanaCorte').val()) || semDesde;
+        const sucursalesSelec = SucPicker.getSelected();
+        const codSuc = sucursalesSelec.length > 0 ? sucursalesSelec[0] : '';
+
+        if (!idPP || !codSuc) {
+            // Sin datos suficientes: fallback a modo simple
+            _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
+            _finalizarChartKardex(datasets, ctx);
+            $badge.text(prevBadge);
+            return;
+        }
+
+        // ── 1. Calcular plan de despacho (rondas) para este producto ──────
+        const fdP = new FormData();
+        fdP.append('semana_desde_num', semDesde);
+        fdP.append('semana_hasta_num', semHasta);
+        fdP.append('cod_sucursal', codSuc);
+
+        const resPedido = await fetch('ajax/pedido_sugerido_calcular_v2.php', { method: 'POST', body: fdP }).then(r => r.json());
+
+        if (!resPedido.ok) {
+            _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
+            _finalizarChartKardex(datasets, ctx);
+            $badge.text(prevBadge);
+            return;
+        }
+
+        // Buscar el producto actual en el resultado
+        const prod = (resPedido.productos || []).find(p => String(p.id_pp) === String(idPP));
+
+        if (!prod || !prod.fecha_proximo_despacho) {
+            // Sin plan: fallback modo simple
+            _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
+            _finalizarChartKardex(datasets, ctx);
+            $badge.text(prevBadge);
+            return;
+        }
+
+        // ── 2. Calcular rondas de despacho hasta fechaObj ──────────────────
+        const addDays = (d, n) => {
+            const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + n);
+            return dt.toISOString().split('T')[0];
+        };
+        const cycle = Math.max(1, Math.round(prod.dias_ciclo || 7));
+        const df    = prod.despacho_factor > 0 ? prod.despacho_factor : 1;
+        const smf   = prod.stock_max_final ?? 0;
+
+        // Construir lista de rondas dentro del horizonte
+        const rondas = []; // { fecha, round }
+        let cur = prod.fecha_proximo_despacho;
+        let round = 1;
+        while (cur <= fechaObj && round <= 52) {  // max 52 rondas como seguro
+            if (cur > allDays[anchorIdx]) {  // solo rondas futuras al ancla
+                rondas.push({ fecha: cur, round });
+            }
+            cur = addDays(cur, cycle);
+            round++;
+        }
+
+        // ── 3. Stock D-1 ronda 1 (inventario real proyectado) ─────────────
+        let stockD1R1 = null;
+        if (rondas.length > 0 && rondas[0].round === 1) {
+            const fechaD1R1 = addDays(prod.fecha_proximo_despacho, -1);
+            const fdPron = new FormData();
+            fdPron.append('semana_desde', semDesde);
+            fdPron.append('semana_hasta', semHasta);
+            fdPron.append('semana_corte', semCorte);
+            fdPron.append('cod_sucursal', codSuc);
+            fdPron.append('ids_pp[]', idPP);
+            fdPron.append(`fechas_d1[${idPP}]`, fechaD1R1);
+
+            try {
+                const resPron = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method: 'POST', body: fdPron }).then(r => r.json());
+                if (resPron.ok && resPron.stocks[String(idPP)] !== null) {
+                    const su = resPron.stocks[String(idPP)];
+                    stockD1R1 = Math.max(0, su / df);
+                }
+            } catch (e) { /* silencioso */ }
+        }
+
+        // ── 4. Calcular despacho por ronda ────────────────────────────────
+        const despachosPorRonda = {};
+        rondas.forEach(r => {
+            let stockD1Paq;
+            if (r.round === 1 && stockD1R1 !== null) {
+                stockD1Paq = stockD1R1;
+            } else {
+                // Rondas siguientes: estimación por fórmula (igual que pronostico_abastecimiento.js)
+                const cd = prod.cons_diario ?? 0;
+                const dc = prod.dias_ciclo ?? 7;
+                stockD1Paq = Math.max(0, smf - (cd * dc) / df);
+            }
+            const despachoPron = Math.max(0, Math.ceil(smf - stockD1Paq));
+            despachosPorRonda[r.fecha] = { despacho: despachoPron, stockD1Paq, round: r.round };
+        });
+
+        // ── 5. Construir línea morada con saltos de despacho ────────────────
+        const forecastData = new Array(allDays.length).fill(null);
+        forecastData[anchorIdx] = anchorVal;
+        let balFc = anchorVal;
+        const dispatchMarkers = []; // { idx, val, label } para puntos de despacho
+
+        for (let i = anchorIdx + 1; i < allDays.length; i++) {
+            const day = allDays[i];
+            if (day > fechaObj) break;
+
+            // Descontar consumo primero
+            balFc = balFc - getConsProy(day);
+
+            // Agregar despacho si corresponde a este día
+            if (despachosPorRonda[day]) {
+                const { despacho, round: rnd } = despachosPorRonda[day];
+                // El despacho llega HOY: sube el stock
+                balFc = balFc + despacho * df;  // despacho está en paquetes, convertir a unidades base
+                dispatchMarkers.push({ idx: i, val: balFc, rnd, despacho });
+            }
+
+            forecastData[i] = balFc;
+        }
+
+        // Punto final
+        const _idxObj = allDays.indexOf(fechaObj);
+        const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
+        const _finalPoint = new Array(allDays.length).fill(null);
+        if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
+
+        // Dataset línea morada (con abastecimiento)
+        const pronLabel = `Pronóstico c/Abast. → ${fechaObj}`;
+        datasets.push({
+            label: pronLabel,
+            data: forecastData,
+            borderColor: '#8e44ad',
+            backgroundColor: 'rgba(142,68,173,0.06)',
+            borderWidth: 2.5,
+            borderDash: [10, 5],
+            fill: false,
+            tension: 0.2,
+            pointRadius: 2,
+            pointBackgroundColor: '#8e44ad',
+            spanGaps: true,
+        });
+
+        // Punto final
+        if (_valObj !== null) {
+            datasets.push({
+                label: `Al ${fechaObj}: ${fmtKardex(_valObj, 2)}`,
+                data: _finalPoint,
+                borderColor: '#8e44ad',
+                backgroundColor: '#8e44ad',
+                pointRadius: 11,
+                pointHoverRadius: 13,
+                pointStyle: 'crossRot',
+                showLine: false,
+            });
+        }
+
+        // Marcadores de despacho (triángulos verdes por cada ronda)
+        if (dispatchMarkers.length > 0) {
+            const dispData    = new Array(allDays.length).fill(null);
+            const dispRadius  = new Array(allDays.length).fill(0);
+            dispatchMarkers.forEach(m => {
+                dispData[m.idx]   = m.val;
+                dispRadius[m.idx] = 10;
+            });
+            datasets.push({
+                label: `🚧 Despacho(s) programado(s)`,
+                data: dispData,
+                borderColor: '#27ae60',
+                backgroundColor: '#27ae60',
+                pointRadius: dispRadius,
+                pointHoverRadius: 13,
+                pointStyle: 'triangle',
+                showLine: false,
+            });
+        }
+
+        // Dibujar el chart
+        _finalizarChartKardex(datasets, ctx);
+
+    } catch (err) {
+        console.warn('calcularPronosticoAbastKardex error:', err);
+        _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
+        _finalizarChartKardex(datasets, ctx);
+    } finally {
+        $badge.text(prevBadge);
+    }
+}
+
+// Fallback: construir proyección simple (modo consumo puro, sin despachos)
+function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex) {
+    const forecastData = new Array(allDays.length).fill(null);
+    forecastData[anchorIdx] = anchorVal;
+    let balFc = anchorVal;
+    for (let i = anchorIdx + 1; i < allDays.length; i++) {
+        if (allDays[i] > fechaObj) break;
+        balFc -= getConsProy(allDays[i]);
+        forecastData[i] = balFc;
+    }
+    const _idxObj = allDays.indexOf(fechaObj);
+    const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
+    const _finalPoint = new Array(allDays.length).fill(null);
+    if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
+
+    datasets.push({
+        label: `Pronóstico → ${fechaObj}`,
+        data: forecastData,
+        borderColor: '#8e44ad',
+        backgroundColor: 'rgba(142,68,173,0.06)',
+        borderWidth: 2.5,
+        borderDash: [10, 5],
+        fill: false,
+        tension: 0.2,
+        pointRadius: 2,
+        pointBackgroundColor: '#8e44ad',
+        spanGaps: false,
+    });
+    if (_valObj !== null) {
+        datasets.push({
+            label: `Al ${fechaObj}: ${fmtKardex(_valObj, 2)}`,
+            data: _finalPoint,
+            borderColor: '#8e44ad',
+            backgroundColor: '#8e44ad',
+            pointRadius: 11,
+            pointHoverRadius: 13,
+            pointStyle: 'crossRot',
+            showLine: false,
+        });
+    }
+}
+
+// Crear/actualizar el chart de kardex con el set de datasets final
+function _finalizarChartKardex(datasets, ctx) {
+    // Redibujar el chart existente con los nuevos datasets
+    if (chartKardexExistencia) {
+        chartKardexExistencia.data.datasets = datasets;
+        chartKardexExistencia.update();
+    }
 }

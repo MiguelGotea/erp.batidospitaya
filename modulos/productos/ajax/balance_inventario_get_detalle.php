@@ -490,6 +490,7 @@ try {
 
     echo json_encode([
         'ok'                     => true,
+        'id_pp'                  => $idPP,
         'producto'               => $prodMeta,
         'semana_ant'             => (int) $semAntCorte,
         'semana_corte'           => (int) $semCorte,
