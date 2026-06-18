@@ -11,7 +11,7 @@ $(document).ready(() => {
     $('#pa-agenda').on('click', '.pa-row-expandible', function () {
         const ppId = $(this).data('pp-id');
         const sk   = $(this).data('slot-key');
-        $(`#pa-sub-${sk}-${ppId}`).toggleClass('d-none');
+        $(`.pa-tienda-sub[data-slot-key="${sk}"][data-pp-id="${ppId}"]`).toggleClass('d-none');
         $(this).find('.pa-expand-icon').toggleClass('rotated');
     });
 });
@@ -424,7 +424,7 @@ function buildSubRowsTiendas(item, slotKey) {
             : `<span class="pa-desp-val ${td.despachoPron > 0 ? 'needs' : 'ok'}">${td.despachoPron}</span>`;
 
         rows += `
-        <tr class="pa-tienda-row d-none" id="pa-sub-${slotKey}-${item.id_pp}">
+        <tr class="pa-tienda-row pa-tienda-sub d-none" data-slot-key="${slotKey}" data-pp-id="${item.id_pp}">
             <td><span class="pa-tienda-badge">${esc(td.nombre)}</span></td>
             <td></td>
             <td>${fmt2(td.cons_semanal)}</td>
