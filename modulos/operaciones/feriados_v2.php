@@ -26,7 +26,6 @@ $puedeImprimir = tienePermiso('feriados_v2', 'imprimir', $cargoOperario);
 
 $puedeVerTodasSucursales = tienePermiso('feriados_v2', 'ver_todas_sucursales', $cargoOperario);
 
-
 // Obtener sucursales según el permiso (patrón idéntico a vacaciones.php)
 if ($puedeVerTodasSucursales) {
     $sucursales = obtenerTodasSucursales();
@@ -747,7 +746,7 @@ function getEstadoBadgeClass($estado)
         window.CONFIG_FERIADOS = {
             operariosData: [
                 <?php foreach ($operarios as $op): ?>
-                                { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
+                                    { id: <?= $op['CodOperario'] ?>, nombre: '<?= addslashes($op['nombre_completo']) ?>' },
                 <?php endforeach; ?>
             ],
             puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
