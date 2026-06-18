@@ -341,7 +341,7 @@ async function calcularPronosticoMasivo() {
     if (!productos.length) {
         return Swal.fire({
             icon: 'info', title: 'Sin despachos',
-            text: 'No hay productos con fecha de próximo despacho calculada.',
+            text: 'No hay productos con fecha de próximo despacho calculada. Verifica que el calendario de semanas esté actualizado y que la sucursal tenga un Plan de Despacho configurado.',
             confirmButtonColor: '#51B8AC'
         });
     }

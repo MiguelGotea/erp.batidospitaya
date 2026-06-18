@@ -157,7 +157,7 @@ function calcularProximoDespacho(?array $planCat, string $hoy, PDO $conn): ?stri
         $diaFijo   = (int)($planCat['dia_despacho']     ?? 0); // 0=Lun,...,6=Dom
         $semAncla  = (int)($planCat['semana_ancla']     ?? 0);
 
-        if (!$semAncla) return null;
+        if (!$semAncla || $intervalo <= 0) return null;
 
         $stmtSem = $conn->prepare("
             SELECT numero_semana
@@ -167,26 +167,46 @@ function calcularProximoDespacho(?array $planCat, string $hoy, PDO $conn): ?stri
         ");
         $stmtSem->execute([$hoy, $hoy]);
         $semActual = (int)($stmtSem->fetchColumn() ?: 0);
+        
+        // Fallback si 'hoy' no está en SemanasSistema (ej: calendario no generado)
+        if (!$semActual) {
+            $stmtSemMax = $conn->prepare("SELECT numero_semana FROM SemanasSistema WHERE fecha_inicio <= ? ORDER BY numero_semana DESC LIMIT 1");
+            $stmtSemMax->execute([$hoy]);
+            $semActual = (int)($stmtSemMax->fetchColumn() ?: 0);
+        }
+        // Fallback absoluto si 'hoy' es muy antiguo
+        if (!$semActual) {
+            $stmtSemMax = $conn->query("SELECT MIN(numero_semana) FROM SemanasSistema");
+            $semActual = (int)($stmtSemMax->fetchColumn() ?: 0);
+        }
+
         if (!$semActual) return null;
 
         $delta      = ($semActual - $semAncla) % $intervalo;
+        if ($delta < 0) $delta += $intervalo; // Corrección para deltas negativos
+        
         $semProximo = ($delta === 0) ? $semActual : $semActual + ($intervalo - $delta);
 
         $stmtFecha = $conn->prepare("SELECT fecha_inicio FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
-        $stmtFecha->execute([$semProximo]);
-        $inicioSem = $stmtFecha->fetchColumn();
-        if (!$inicioSem) return null;
-
-        $fechaDespacho = date('Y-m-d', strtotime($inicioSem . " +{$diaFijo} days"));
-
-        if ($fechaDespacho <= $hoy) {
-            $semProximo += $intervalo;
+        
+        $maxIter = 10; // Evitar loop infinito
+        while ($maxIter > 0) {
             $stmtFecha->execute([$semProximo]);
             $inicioSem = $stmtFecha->fetchColumn();
-            if (!$inicioSem) return null;
+            
+            // Si la semana no existe en el sistema, salimos (no podemos proyectar más)
+            if (!$inicioSem) break; 
+            
             $fechaDespacho = date('Y-m-d', strtotime($inicioSem . " +{$diaFijo} days"));
+            if ($fechaDespacho > $hoy) {
+                return $fechaDespacho;
+            }
+            
+            $semProximo += $intervalo;
+            $maxIter--;
         }
-        return $fechaDespacho;
+        
+        return null;
     }
 
     return null;
