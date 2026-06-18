@@ -88,10 +88,6 @@ function buildCatRow(cod, cat, cfg) {
     const prep = cfg ? cfg.dias_preparacion : 1;
     const activo = cfg ? cfg.activo : 1;
     const diasSel = cfg ? (cfg.dias_semana || []) : [];
-    const metaTxt = cfg && cfg.modificado_por_nombre
-        ? `<div class="pdg-meta-info"><i class="bi bi-person-check me-1"></i>${cfg.modificado_por_nombre}
-           <span class="ms-1">${cfg.fecha_actualizacion ? cfg.fecha_actualizacion.substring(0, 16) : ''}</span></div>`
-        : '';
     const disabled = PUEDE_EDITAR ? '' : 'disabled';
     const showAncla = isNSem && intervalo > 1;
 
@@ -111,7 +107,6 @@ function buildCatRow(cod, cat, cfg) {
             <span class="pdg-badge-cat ${info.cls}">
                 <i class="bi ${info.icon}"></i>${cat} – ${info.nombre}
             </span>
-            ${metaTxt}
         </td>
         <!-- Tipo -->
         <td>
@@ -406,16 +401,6 @@ function saveRow(cod, cat, $btn) {
     }).done(function (res) {
         if (res.success) {
             toastOk(res.message || 'Guardado correctamente.');
-            // Actualizar meta info
-            if (res.meta) {
-                const $tr = $(`#tabla-${cod} tr[data-cat="${cat}"]`);
-                const metaHtml = `<div class="pdg-meta-info">
-                    <i class="bi bi-person-check me-1"></i>${res.meta.modificado_por_nombre}
-                    <span class="ms-1">${res.meta.fecha_actualizacion.substring(0, 16)}</span>
-                </div>`;
-                $tr.find('td:first .pdg-meta-info').remove();
-                $tr.find('td:first').append(metaHtml);
-            }
             // Invalidar caché y re-render calendario
             delete PDG.configCache[cod];
             loadConfig(cod, true);
