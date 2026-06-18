@@ -378,22 +378,22 @@ function bindEventos() {
 
 async function calcularStockPronosticadoTabla() {
     if (!datosActuales || !datosActuales.consumo || !datosActuales.consumo.length) {
-        Swal.fire({ icon:'info', title:'Sin datos', text:'Primero analiza un período.', confirmButtonColor:'#0E544C' }); return;
+        Swal.fire({ icon: 'info', title: 'Sin datos', text: 'Primero analiza un período.', confirmButtonColor: '#0E544C' }); return;
     }
-    const semDesde    = datosActuales._semDesde;
-    const semHasta    = datosActuales._semHasta;
+    const semDesde = datosActuales._semDesde;
+    const semHasta = datosActuales._semHasta;
     const semCorteVal = parseInt($('#pronSemCorteGlobal').val()) || semDesde;
     const fechaPronVal = ($('#pronFechaGlobal').val() || '').trim();
 
     if (!semCorteVal || semCorteVal < semDesde || semCorteVal > semHasta) {
-        Swal.fire({ icon:'warning', title:'Sem. Corte inválida', html:`Entre <strong>${semDesde}</strong> y <strong>${semHasta}</strong>.`, confirmButtonColor:'#0E544C' }); return;
+        Swal.fire({ icon: 'warning', title: 'Sem. Corte inválida', html: `Entre <strong>${semDesde}</strong> y <strong>${semHasta}</strong>.`, confirmButtonColor: '#0E544C' }); return;
     }
     if (!fechaPronVal) {
-        Swal.fire({ icon:'warning', title:'Fecha requerida', text:'Ingresa la Fecha de Pronóstico.', confirmButtonColor:'#0E544C' }); return;
+        Swal.fire({ icon: 'warning', title: 'Fecha requerida', text: 'Ingresa la Fecha de Pronóstico.', confirmButtonColor: '#0E544C' }); return;
     }
 
-    const $btn     = $('#btnCalcStockPron');
-    const $status  = $('#pronStatusTxt');
+    const $btn = $('#btnCalcStockPron');
+    const $status = $('#pronStatusTxt');
     $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Calculando…');
     $status.text(`Procesando ${datosActuales.consumo.length} insumos…`).show();
 
@@ -409,10 +409,10 @@ async function calcularStockPronosticadoTabla() {
     SucPicker.getSelected().forEach(s => fd.append('sucursales[]', s));
 
     try {
-        const res  = await fetch('ajax/dashboard_consumo_get_stock_pronosticado.php', { method:'POST', body:fd });
+        const res = await fetch('ajax/dashboard_consumo_get_stock_pronosticado.php', { method: 'POST', body: fd });
         const data = await res.json();
         if (!data.ok) {
-            Swal.fire({ icon:'error', title:'Error', text: data.msg||'Error al calcular.', confirmButtonColor:'#0E544C' });
+            Swal.fire({ icon: 'error', title: 'Error', text: data.msg || 'Error al calcular.', confirmButtonColor: '#0E544C' });
             actualizarColumnasStockPronosticado(false);
             $status.hide();
             return;
@@ -424,9 +424,9 @@ async function calcularStockPronosticadoTabla() {
         $('#thStockPron').attr('title', `Sem.Corte:${semCorteVal} | Fecha:${fechaPronVal}`);
         $status.text(`${datosActuales.consumo.length} insumos procesados.`);
         setTimeout(() => $status.hide(), 3000);
-    } catch(err) {
+    } catch (err) {
         console.error('Error calcularStockProy:', err);
-        Swal.fire({ icon:'error', title:'Error de conexión', text:'No se pudo conectar.', confirmButtonColor:'#0E544C' });
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar.', confirmButtonColor: '#0E544C' });
         actualizarColumnasStockPronosticado(false);
         $status.hide();
     } finally {
@@ -435,14 +435,14 @@ async function calcularStockPronosticadoTabla() {
 }
 
 function actualizarColumnasStockPronosticado(cargando) {
-    $('#tbodyProyeccion tr[data-id-pp]').each(function() {
-        const idPP  = $(this).data('id-pp');
+    $('#tbodyProyeccion tr[data-id-pp]').each(function () {
+        const idPP = $(this).data('id-pp');
         const $cell = $(this).find('.td-stock-pron');
         if (!$cell.length) return;
         if (cargando) { $cell.html('<i class="fas fa-spinner fa-spin text-muted" style="font-size:.75rem"></i>'); return; }
         const val = stocksPronosticados[String(idPP)];
         if (val !== undefined && val !== null) {
-            $cell.html(`<strong style="color:#8e44ad">${parseFloat(val).toLocaleString('es-NI',{minimumFractionDigits:2,maximumFractionDigits:2})}</strong>`);
+            $cell.html(`<strong style="color:#8e44ad">${parseFloat(val).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>`);
         } else {
             $cell.html('<span class="text-muted" style="font-size:.75rem">—</span>');
         }
@@ -1325,7 +1325,7 @@ function renderInsumoSel(data) {
     const prevVal = $sel.val();   // conservar selección si ya hay una al recargar
 
     $sel.empty().append('<option value=""></option>');
-    
+
     const opciones = data.consumo.map(item => {
         const tipoLabel = item.es_global ? ' [Global]' : '';
         const label = `${item.nombre}${tipoLabel}`;
@@ -1385,8 +1385,8 @@ const InsumoPicker = (() => {
     function renderList(query) {
         $list.empty();
         const q = (query || '').toLowerCase();
-        const filtradas = _opciones.filter(o => 
-            o.label.toLowerCase().includes(q) || 
+        const filtradas = _opciones.filter(o =>
+            o.label.toLowerCase().includes(q) ||
             (o.subtext && o.subtext.toLowerCase().includes(q))
         );
 
@@ -1412,7 +1412,7 @@ const InsumoPicker = (() => {
         const v = value ? String(value) : null;
         _seleccionado = v;
         $hiddenSel.val(v || '').trigger('change');
-        
+
         if (v) {
             const opt = _opciones.find(o => String(o.value) === v);
             $search.val(opt ? opt.label : '');
@@ -1424,7 +1424,7 @@ const InsumoPicker = (() => {
 
     function init() {
         $search.on('focus', open);
-        
+
         $search.on('input', function () {
             if (!$dropdown.hasClass('open')) open();
             renderList($(this).val());
@@ -1435,7 +1435,7 @@ const InsumoPicker = (() => {
         });
 
         // Click en el chevron abre/cierra
-        $('#dcInsumoChevron').on('click', function(e) {
+        $('#dcInsumoChevron').on('click', function (e) {
             e.stopPropagation();
             toggle();
         });
@@ -2352,10 +2352,10 @@ function cargarKardex(idPP, item) {
 function renderDetalleKardex(res) {
     const t = res.totales_tipo || {};
     const bdResumen = document.getElementById('bdResumen');
-    
+
     // Función fmt local para kardex
     const fmtKardex = (v, d = 4) => v === null || v === undefined ? '—' : parseFloat(v).toLocaleString('es', { minimumFractionDigits: d, maximumFractionDigits: d });
-    
+
     const semCorte = res.semana_corte || '?';
     bdResumen.innerHTML = `
         <div class="bd-resumen-item" style="border-left:3px solid #f39c12">
@@ -2400,19 +2400,19 @@ function renderDetalleKardex(res) {
 function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     const regs = res.registros || [];
     const t = res.totales_tipo;
-    const invCorte      = t.inv_inicial || 0;       // Inventario de la semana de corte
-    const invFin        = t.inv_final   || 0;
-    const semCorte      = res.semana_corte;
-    const pivotDate     = res.fecha_inicio_corte;  // Primer día de la semana de corte
-    const invIniRango   = res.inv_inicial_rango ?? null;  // Inicial real del rango completo
-    const semAntRango   = res.semana_ant_rango   || 0;
+    const invCorte = t.inv_inicial || 0;       // Inventario de la semana de corte
+    const invFin = t.inv_final || 0;
+    const semCorte = res.semana_corte;
+    const pivotDate = res.fecha_inicio_corte;  // Primer día de la semana de corte
+    const invIniRango = res.inv_inicial_rango ?? null;  // Inicial real del rango completo
+    const semAntRango = res.semana_ant_rango || 0;
     const consTeoDiario = res.consumo_teorico_diario || {};
-    const puntosDomingo = res.puntos_domingo  || {};
+    const puntosDomingo = res.puntos_domingo || {};
     const fmtKardex = (v, d = 4) => v === null || v === undefined ? '—' : parseFloat(v).toLocaleString('es', { minimumFractionDigits: d, maximumFractionDigits: d });
 
     // ── Construir lista de días del rango completo ──────────────────────
     const start = new Date(res.fecha_inicio + 'T12:00:00');
-    const end   = new Date(res.fecha_fin   + 'T12:00:00');
+    const end = new Date(res.fecha_fin + 'T12:00:00');
     const allDays = [];
     let curr = new Date(start);
     while (curr <= end) {
@@ -2430,7 +2430,7 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     const ayerDate = new Date(hoy);
     ayerDate.setDate(ayerDate.getDate() - 1);
     const ayerStr = ayerDate.toISOString().split('T')[0];
-    const hoyStr  = hoy.toISOString().split('T')[0];
+    const hoyStr = hoy.toISOString().split('T')[0];
 
     // Si el último día del rango (fecha_fin de BD) es posterior a ayer, la semana no terminó.
     const semanaActualIncompleta = allDays[allDays.length - 1] > ayerStr;
@@ -2447,6 +2447,7 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     } else {
         originalRangeLen = allDays.length;
     }
+
 
     // ── Extender allDays hasta fecha objetivo de pronóstico (si aplica) ──
     const fechaObjetivoPronostico = ($('#kardexFechaPronostico').val() || '').trim();
@@ -2487,7 +2488,7 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     // Hacia adelante: pIdx → fin del rango original (el Kardex no se extiende a días de pronóstico)
     let balFwd = invCorte;
     for (let i = pIdx; i < originalRangeLen; i++) {
-        const mov  = movsPorFecha[allDays[i]] || 0;
+        const mov = movsPorFecha[allDays[i]] || 0;
         const cTeo = consTeoDiario[allDays[i]] || 0;
         balFwd = balFwd + mov - cTeo;
         stockTeoData[i] = balFwd;
@@ -2500,7 +2501,7 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         let balBwd = invCorte;
         stockTeoData[pIdx - 1] = balBwd;
         for (let i = pIdx - 2; i >= 0; i--) {
-            const mov  = movsPorFecha[allDays[i + 1]] || 0;
+            const mov = movsPorFecha[allDays[i + 1]] || 0;
             const cTeo = consTeoDiario[allDays[i + 1]] || 0;
             balBwd = balBwd - mov + cTeo;
             stockTeoData[i] = balBwd;
@@ -2639,8 +2640,8 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     if (fechaObjetivoPronostico) {
         // ── Calcular consumo promedio diario usando TODO el rango analizado ──
         // (semDesde→semHasta). El punto de corte no afecta el consumo promedio.
-        const _cntDow = [0,0,0,0,0,0,0];
-        const _sumDow = [0,0,0,0,0,0,0];
+        const _cntDow = [0, 0, 0, 0, 0, 0, 0];
+        const _sumDow = [0, 0, 0, 0, 0, 0, 0];
         let _totalCons = 0;
         const allDates = Object.keys(consTeoDiario);
         allDates.forEach(f => {
@@ -2677,54 +2678,54 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             || allDays[_anchorIdx] >= fechaObjetivoPronostico) {
             // sin proyección
         } else {
-        // ── Construir línea morada: nace en el último punto verde ────────────
-        //   - Desde _anchorIdx + 1 en adelante: solo consumo proyectado
-        //     (no hay movimientos reales de kardex más allá del rango analizado)
-        const forecastData = new Array(allDays.length).fill(null);
-        // Ancla visual: conecta la línea morada con el último punto verde
-        forecastData[_anchorIdx] = _anchorVal;
-        let _balFc = _anchorVal;
-        for (let i = _anchorIdx + 1; i < allDays.length; i++) {
-            if (allDays[i] > fechaObjetivoPronostico) break;
-            // Más allá del rango analizado no hay movimientos reales de kardex;
-            // solo se descuenta el consumo proyectado día a día.
-            const consProy = _getConsProy(allDays[i]);
-            _balFc = _balFc - consProy;
-            forecastData[i] = _balFc;
-        }
+            // ── Construir línea morada: nace en el último punto verde ────────────
+            //   - Desde _anchorIdx + 1 en adelante: solo consumo proyectado
+            //     (no hay movimientos reales de kardex más allá del rango analizado)
+            const forecastData = new Array(allDays.length).fill(null);
+            // Ancla visual: conecta la línea morada con el último punto verde
+            forecastData[_anchorIdx] = _anchorVal;
+            let _balFc = _anchorVal;
+            for (let i = _anchorIdx + 1; i < allDays.length; i++) {
+                if (allDays[i] > fechaObjetivoPronostico) break;
+                // Más allá del rango analizado no hay movimientos reales de kardex;
+                // solo se descuenta el consumo proyectado día a día.
+                const consProy = _getConsProy(allDays[i]);
+                _balFc = _balFc - consProy;
+                forecastData[i] = _balFc;
+            }
 
-        // Punto final destacado en la fecha objetivo
-        const _idxObj = allDays.indexOf(fechaObjetivoPronostico);
-        const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
-        const _finalPoint = new Array(allDays.length).fill(null);
-        if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
+            // Punto final destacado en la fecha objetivo
+            const _idxObj = allDays.indexOf(fechaObjetivoPronostico);
+            const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
+            const _finalPoint = new Array(allDays.length).fill(null);
+            if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
 
-        datasets.push({
-            label: `Pronóstico → ${fechaObjetivoPronostico}`,
-            data: forecastData,
-            borderColor: '#8e44ad',
-            backgroundColor: 'rgba(142,68,173,0.06)',
-            borderWidth: 2.5,
-            borderDash: [10, 5],
-            fill: false,
-            tension: 0.2,
-            pointRadius: 2,
-            pointBackgroundColor: '#8e44ad',
-            spanGaps: false,
-        });
-
-        if (_valObj !== null) {
             datasets.push({
-                label: `Al ${fechaObjetivoPronostico}: ${fmtKardex(_valObj, 2)}`,
-                data: _finalPoint,
+                label: `Pronóstico → ${fechaObjetivoPronostico}`,
+                data: forecastData,
                 borderColor: '#8e44ad',
-                backgroundColor: '#8e44ad',
-                pointRadius: 11,
-                pointHoverRadius: 13,
-                pointStyle: 'crossRot',
-                showLine: false,
+                backgroundColor: 'rgba(142,68,173,0.06)',
+                borderWidth: 2.5,
+                borderDash: [10, 5],
+                fill: false,
+                tension: 0.2,
+                pointRadius: 2,
+                pointBackgroundColor: '#8e44ad',
+                spanGaps: false,
             });
-        }
+
+            if (_valObj !== null) {
+                datasets.push({
+                    label: `Al ${fechaObjetivoPronostico}: ${fmtKardex(_valObj, 2)}`,
+                    data: _finalPoint,
+                    borderColor: '#8e44ad',
+                    backgroundColor: '#8e44ad',
+                    pointRadius: 11,
+                    pointHoverRadius: 13,
+                    pointStyle: 'crossRot',
+                    showLine: false,
+                });
+            }
         } // fin else pronóstico válido
     }
 
