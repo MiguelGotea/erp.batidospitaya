@@ -30,6 +30,7 @@ try {
                 throw new Exception('Debe especificar una sucursal');
             }
 
+
             // Obtener el cod_departamento de la sucursal
             $stmtSuc = $conn->prepare("SELECT cod_departamento FROM sucursales WHERE codigo = ? LIMIT 1");
             $stmtSuc->execute([$codSucursal]);
