@@ -224,20 +224,59 @@ try {
         exit();
     }
 
-    // 2. Ventas Agregadas
+    // ── Detectar semana actual incompleta ────────────────────────────────
+    // Si fecha_fin del rango (domingo de numHasta en la BD) está en el futuro,
+    // la semana hasta es la semana en curso y no ha terminado.
+    // Solución:
+    //   a) Limitar la query de ventas a ayer (no traer días futuros con ventas=0).
+    //   b) Escalar el consumo parcial de esa semana a su equivalente semanal completo
+    //      usando el factor: 7 / N_días_con_datos (lunes→ayer).
+    $hoy  = date('Y-m-d');
+    $ayer = date('Y-m-d', strtotime('-1 day'));
+    $semanaHastaIncompleta = ($r['f2'] > $ayer);
+
+    // Fecha real de fin para la query de ventas: ayer si semana incompleta
+    $fechaFinQuery = $semanaHastaIncompleta ? $ayer : $r['f2'];
+
+    // Calcular factor de escala para la semana actual incompleta:
+    // N = días transcurridos desde el inicio de la semana hasta (lunes) hasta ayer inclusive
+    $factorEscalaSemActual = 1.0; // por defecto sin escala
+    if ($semanaHastaIncompleta) {
+        // Obtener la fecha de inicio de semHasta
+        $stmtIniSem = $conn->prepare("SELECT fecha_inicio FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
+        $stmtIniSem->execute([$numHasta]);
+        $iniSemActual = $stmtIniSem->fetchColumn();
+        if ($iniSemActual && $iniSemActual <= $ayer) {
+            // Días con datos reales = desde inicio de semHasta hasta ayer inclusive
+            $diasConDatos = (int)((strtotime($ayer) - strtotime($iniSemActual)) / 86400) + 1;
+            if ($diasConDatos > 0 && $diasConDatos < 7) {
+                $factorEscalaSemActual = 7.0 / $diasConDatos;
+            }
+        } else {
+            // La semana actual empezó hoy → 0 días de datos → excluir esa semana
+            // Ajustar $numHasta y $nSemanas para no incluirla
+            $numHasta = $numHasta - 1;
+            $nSemanas = max(1, $numHasta - $numDesde + 1);
+            $semanaHastaIncompleta = false; // ya no aplica escala
+            $factorEscalaSemActual = 1.0;
+        }
+    }
+
+    // 2. Ventas Agregadas (limitadas a $fechaFinQuery para excluir días futuros)
     $sql = "SELECT v.Semana as sem, sr.CodIngrediente as cod_ing, sr.codporcion, SUM(v.Cantidad * sr.Cantidad) as cant
             FROM VentasGlobalesAccessCSV v
             INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
             WHERE v.Anulado = 0 AND v.local = ? AND v.Semana BETWEEN ? AND ? AND v.Fecha BETWEEN ? AND ?
             GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion";
     $stmt = $conn->prepare($sql);
-    $stmt->execute([$codSucursal, $numDesde, $numHasta, $r['f1'], $r['f2']]);
+    $stmt->execute([$codSucursal, $numDesde, $numHasta, $r['f1'], $fechaFinQuery]);
     $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (empty($filas)) {
         echo json_encode(['ok' => true, 'productos' => [], 'n_semanas' => $nSemanas, 'factor_congelados' => null, 'capacidad_congelados' => null]);
         exit();
     }
+
 
     // 3. Pre-cargar mapeos (Bulk)
     $codsIng = array_unique(array_column($filas, 'cod_ing'));
@@ -492,7 +531,15 @@ try {
             // Si presentacion es NULL en la BD, se deja null → el JS muestra '—'.
             // No se usa fallback a la abreviatura de unidad para evitar mostrar datos no configurados.
             $metaPP[$idPP] = ['n' => $m['n'], 'u' => ($m['presentacion'] ?: null), 'cat' => $m['cat']];
-        $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $cons;
+
+        // Si esta fila corresponde a la semana actual incompleta, escalar el consumo
+        // parcial al equivalente de 7 días completos (7/N_días_transcurridos).
+        // Así el promedio estadístico no queda subestimado por tener solo, por ej., 2 días de datos.
+        $consAcumular = $cons;
+        if ($semanaHastaIncompleta && $sem === $numHasta && $factorEscalaSemActual > 1.0) {
+            $consAcumular = $cons * $factorEscalaSemActual;
+        }
+        $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $consAcumular;
     }
 
     // 5. Config Logística
