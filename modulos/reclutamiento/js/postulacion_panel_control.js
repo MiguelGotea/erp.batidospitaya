@@ -448,7 +448,7 @@ async function guardarCambios() {
         // Recopilar datos de sucursales
         const datosSucursalesMap = new Map();
 
-        document.querySelectorAll('#tablaSucursalesBody input[data-sucursal]').forEach(input => {
+        document.querySelectorAll('#tablaSucursales input[data-sucursal]').forEach(input => {
             const sucursal = input.dataset.sucursal;
             const tipo = input.dataset.tipo;
 
@@ -472,7 +472,7 @@ async function guardarCambios() {
         });
 
         // También los selects de urgencia para sucursales
-        document.querySelectorAll('#tablaSucursalesBody select[data-sucursal]').forEach(select => {
+        document.querySelectorAll('#tablaSucursales select[data-sucursal]').forEach(select => {
             const sucursal = select.dataset.sucursal;
             const tipo = select.dataset.tipo;
             const value = parseInt(select.value) || 1;
