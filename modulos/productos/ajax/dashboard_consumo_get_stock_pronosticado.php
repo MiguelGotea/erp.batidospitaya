@@ -31,9 +31,27 @@ try {
     $rangeDates    = $rD->fetch(PDO::FETCH_ASSOC);
     $fechaIniRango = $rangeDates['ini'];
     $fechaFinRango = $rangeDates['fin'];
-    if ($fechaPron <= $fechaFinRango) {
-        echo json_encode(['ok' => false, 'msg' => 'Fecha pronóstico debe ser posterior al fin del rango ('.$fechaFinRango.')']); exit();
+
+    // ── Detectar semana actual incompleta ──────────────────────────────
+    // Si fecha_fin del rango (domingo de semHasta según BD) está en el futuro,
+    // la semana actual no ha terminado. El pronóstico puede arrancar desde hoy.
+    $hoy  = date('Y-m-d');
+    $ayer = date('Y-m-d', strtotime('-1 day'));
+    $semanaActualIncompleta = ($fechaFinRango > $ayer);
+
+    // Validación de fecha pronóstico:
+    // - Semana completa: debe ser posterior al domingo de semHasta
+    // - Semana incompleta: debe ser hoy o posterior (la semana aún no cerró)
+    if ($semanaActualIncompleta) {
+        if ($fechaPron < $hoy) {
+            echo json_encode(['ok' => false, 'msg' => 'Fecha pronóstico debe ser hoy o posterior (semana '.$semHasta.' aún en curso)']); exit();
+        }
+    } else {
+        if ($fechaPron <= $fechaFinRango) {
+            echo json_encode(['ok' => false, 'msg' => 'Fecha pronóstico debe ser posterior al fin del rango ('.$fechaFinRango.')']); exit();
+        }
     }
+
     $rSA = $conn->prepare("SELECT numero_semana FROM SemanasSistema WHERE numero_semana < :c ORDER BY numero_semana DESC LIMIT 1");
     $rSA->execute([':c' => $semCorte]);
     $semAnt = $rSA->fetchColumn();
@@ -160,12 +178,25 @@ try {
     $allDays = [];
     $cur = clone $start;
     while ($cur <= $end) { $allDays[] = $cur->format('Y-m-d'); $cur->modify('+1 day'); }
-    $originalRangeLen = count($allDays);
 
-    // Extender hasta fecha pronóstico
+    // originalRangeLen = días reales (pasados) en allDays.
+    // Si la semana está incompleta, limitamos al último día <= ayer.
+    // (misma lógica que renderChartKardex en el JS)
+    if ($semanaActualIncompleta) {
+        $lastRealIdx = -1;
+        foreach ($allDays as $idx => $day) {
+            if ($day <= $ayer) $lastRealIdx = $idx;
+        }
+        $originalRangeLen = $lastRealIdx >= 0 ? $lastRealIdx + 1 : 0;
+    } else {
+        $originalRangeLen = count($allDays);
+    }
+
+    // Extender hasta fecha pronóstico (partiendo del último día del array, que puede ser futuro)
     $endExt = new DateTime($fechaPron . ' 12:00:00');
     $extCur = clone $end; $extCur->modify('+1 day');
     while ($extCur <= $endExt) { $allDays[] = $extCur->format('Y-m-d'); $extCur->modify('+1 day'); }
+
 
     // ── Índice del pivot (primer día de semana de corte) ──────
     $pivotIdx = array_search($fechaIniCorte, $allDays);
@@ -318,9 +349,11 @@ try {
         $movsFecha  = $movsByPPFecha[$targetId]  ?? [];
         $consFecha  = $consTeoByPPFecha[$targetId] ?? [];
 
-        // Balance hacia adelante desde pIdx hasta fin del rango
+        // Balance hacia adelante desde pIdx hasta fin del rango REAL (hasta ayer si semana incompleta).
+        // Si originalRangeLen=0 (hoy es el primer día del período), $anchorVal = $invCorte directamente.
         $balFwd = $invCorte;
-        for ($i = $pIdx; $i < $originalRangeLen; $i++) {
+        $efectivoPIdx = min($pIdx, max($originalRangeLen - 1, 0));
+        for ($i = $efectivoPIdx; $i < $originalRangeLen; $i++) {
             $balFwd += ($movsFecha[$allDays[$i]] ?? 0) - ($consFecha[$allDays[$i]] ?? 0);
         }
         $anchorVal = $balFwd;
