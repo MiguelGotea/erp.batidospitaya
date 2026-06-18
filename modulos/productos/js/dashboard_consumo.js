@@ -2420,10 +2420,38 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         curr.setDate(curr.getDate() + 1);
     }
 
+    // ── Calcular "ayer" como límite máximo del rango real ──────────────
+    // Si la semana hasta es la semana en curso (no terminada), la fecha_fin
+    // de la BD apunta al domingo futuro. Debemos limitar el rango real a
+    // ayer para que: (a) el Kardex verde solo muestre datos pasados/reales,
+    // y (b) el pronóstico arranque desde hoy hacia adelante (no desde el domingo).
+    const hoy = new Date();
+    hoy.setHours(12, 0, 0, 0);
+    const ayerDate = new Date(hoy);
+    ayerDate.setDate(ayerDate.getDate() - 1);
+    const ayerStr = ayerDate.toISOString().split('T')[0];
+    const hoyStr  = hoy.toISOString().split('T')[0];
+
+    // Si el último día del rango (fecha_fin de BD) es posterior a ayer, la semana no terminó.
+    const semanaActualIncompleta = allDays[allDays.length - 1] > ayerStr;
+
+    // originalRangeLen = cantidad de días reales (pasados) en allDays.
+    // Usamos reduce para encontrar el último día <= ayerStr, que es robusto
+    // incluso cuando ayer cae antes del inicio del rango (edge case: hoy=lunes y
+    // semDesde comienza esta misma semana → ayer es el domingo anterior, fuera del array).
+    let originalRangeLen;
+    if (semanaActualIncompleta) {
+        // Buscar el último índice cuyo día sea <= ayerStr
+        const lastRealIdx = allDays.reduce((last, day, i) => day <= ayerStr ? i : last, -1);
+        originalRangeLen = lastRealIdx >= 0 ? lastRealIdx + 1 : 0;
+    } else {
+        originalRangeLen = allDays.length;
+    }
+
     // ── Extender allDays hasta fecha objetivo de pronóstico (si aplica) ──
     const fechaObjetivoPronostico = ($('#kardexFechaPronostico').val() || '').trim();
-    // Guardar el límite del rango real ANTES de extender (el Kardex solo usa hasta aquí)
-    const originalRangeLen = allDays.length;
+    // allDays ya contiene todos los días hasta fecha_fin del PHP (que puede ser un domingo futuro).
+    // Solo necesitamos extender si la fecha objetivo supera ese límite.
     if (fechaObjetivoPronostico && fechaObjetivoPronostico > allDays[allDays.length - 1]) {
         const endExt = new Date(fechaObjetivoPronostico + 'T12:00:00');
         let extCurr = new Date(allDays[allDays.length - 1] + 'T12:00:00');
@@ -2433,6 +2461,8 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
             extCurr.setDate(extCurr.getDate() + 1);
         }
     }
+    // Si semanaActualIncompleta y fechaObjetivoPronostico cae dentro del rango ya existente
+    // (entre hoy y el domingo), allDays ya lo contiene — no es necesario extender.
 
     // ── Movimientos por fecha (merma negativa, resto positivo) ──────────
     const movsPorFecha = {};
@@ -2497,8 +2527,12 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     });
 
     // ── Dataset: Inventario físico FINAL (en el último día del rango real, no el extendido) ─
+    // Si la semana está incompleta (no ha llegado el domingo), no mostrar el punto final
+    // porque el conteo de inventario físico de esa semana todavía no ocurrió.
     const realFinalPoint = new Array(allDays.length).fill(null);
-    realFinalPoint[originalRangeLen - 1] = invFin;
+    if (!semanaActualIncompleta) {
+        realFinalPoint[originalRangeLen - 1] = invFin;
+    }
 
     // ── Dataset: Inventario real al INICIO del rango (estrella verde en pos 0) ─
     const invIniRangoData = new Array(allDays.length).fill(null);
@@ -2595,11 +2629,13 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     }
 
     // ── Pronóstico de consumo (línea morada) ────────────────────────────────
-    // REGLA: la línea morada SIEMPRE nace donde termina la línea verde,
-    // es decir, en el último día de semHasta (originalRangeLen - 1).
+    // REGLA: la línea morada SIEMPRE nace donde termina la línea verde.
+    //   • Si semHasta ya está completa (domingo pasó): nace en el domingo de semHasta.
+    //   • Si semHasta es la semana en curso: nace en ayer (hoy-1), porque la línea
+    //     verde termina ahí y el pronóstico cubre desde hoy hasta fechaObjetivoPronostico.
     // La semana de corte SOLO calibra el nivel vertical de la línea verde
-    // (la desplaza arriba/abajo para que el domingo del corte coincida con
-    // el conteo físico), pero NO define dónde arranca el pronóstico.
+    // (ajusta arriba/abajo para que coincida con el conteo físico),
+    // pero NO define dónde arranca el pronóstico.
     if (fechaObjetivoPronostico) {
         // ── Calcular consumo promedio diario usando TODO el rango analizado ──
         // (semDesde→semHasta). El punto de corte no afecta el consumo promedio.
@@ -2628,12 +2664,17 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
         };
 
         // ── Punto de arranque del pronóstico = fin de la línea verde ────────
-        // = último día del rango analizado (domingo de semHasta)
-        const _anchorIdx = originalRangeLen - 1;  // último índice del rango real
-        const _anchorVal = stockTeoData[_anchorIdx];  // valor final de la línea verde
+        // = último día del rango real analizado:
+        //   - Si la semana hasta ya terminó: domingo de semHasta
+        //   - Si la semana hasta es la actual (incompleta): ayer (hoy - 1)
+        //   - Edge case originalRangeLen=0 (hoy es el primer día del rango): usar pIdx
+        const _anchorIdx = originalRangeLen > 0 ? originalRangeLen - 1 : pIdx;
+        const _anchorVal = stockTeoData[_anchorIdx] ?? (originalRangeLen === 0 ? invCorte : null);
 
-        // Si la fecha de pronóstico no supera el fin del rango, no hay nada que proyectar
-        if (_anchorVal === null || allDays[_anchorIdx] >= fechaObjetivoPronostico) {
+        // Sin proyección si: el ancla es nula, o la fecha objetivo no supera el ancla
+        if (_anchorVal === null || _anchorVal === undefined
+            || !allDays[_anchorIdx]
+            || allDays[_anchorIdx] >= fechaObjetivoPronostico) {
             // sin proyección
         } else {
         // ── Construir línea morada: nace en el último punto verde ────────────
