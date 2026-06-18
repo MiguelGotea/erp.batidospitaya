@@ -2349,6 +2349,11 @@ function cargarKardex(idPP, item) {
     $('#bdChartWrap').addClass('d-none');
     $('#bdChartStockBadge').hide();
     $('#bdChartNota').hide();
+    // Reset toggle de pronóstico de abastecimiento al cargar nuevo producto
+    $('#labelTogglePronAbast').hide();
+    $('#togglePronAbast').prop('checked', false);
+    kardexPronAbastEnabled = false;
+    _kardexLastRenderCtx = null;
 
     const sucursalesSelec = SucPicker.getSelected();
 
