@@ -292,6 +292,26 @@ function bindEventos() {
         }
     });
 
+    // Toggles del Kardex
+    $('#togglePronAbast').on('change', function () {
+        kardexPronAbastEnabled = $(this).is(':checked');
+        if (kardexPronAbastEnabled) {
+            $('#labelToggleDespCurso').show();
+        } else {
+            $('#labelToggleDespCurso').hide();
+        }
+        if (_kardexLastRenderCtx && _kardexLastRenderCtx.res) {
+            renderChartKardex(_kardexLastRenderCtx.res, _kardexLastRenderCtx.stockMinVal, _kardexLastRenderCtx.stockMaxFinalVal);
+        }
+    });
+
+    $('#toggleDespCurso').on('change', function () {
+        kardexDespCursoEnabled = $(this).is(':checked');
+        if (_kardexLastRenderCtx && _kardexLastRenderCtx.res) {
+            renderChartKardex(_kardexLastRenderCtx.res, _kardexLastRenderCtx.stockMinVal, _kardexLastRenderCtx.stockMaxFinalVal);
+        }
+    });
+
     // Botón Actualizar Kardex → recarga con la semana de corte actual
     $('#btnRefreshKardex').on('click', function () {
         const idSel = parseInt($('#chartInsumoSel').val()) || 0;
