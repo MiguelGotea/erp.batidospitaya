@@ -438,11 +438,18 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <span id="bdChartStockBadge"
                                                 style="display:none;margin-left:auto;font-size:.7rem;font-weight:600;color:#51B8AC"></span>
                                             <!-- Toggle: Pronóstico de Abastecimiento -->
-                                            <label class="dc-pron-toggle" id="labelTogglePronAbast" title="Activa para incorporar eventos de despacho (Pronóstico de Abastecimiento) en la proyección morada" style="display:none;">
-                                                <input type="checkbox" id="togglePronAbast">
-                                                <span class="dc-pron-toggle-slider"></span>
-                                                <span class="dc-pron-toggle-label"><i class="fas fa-truck me-1" style="font-size:.65rem"></i>Pron. Abastecimiento</span>
-                                            </label>
+                                            <div class="d-flex align-items-center gap-3 ms-auto" id="kardexToggles" style="display:none !important">
+                                                <label class="dc-pron-toggle" id="labelToggleDespCurso" title="Considerar ingresos que se reciben hoy (pre-ingresos)">
+                                                    <input type="checkbox" id="toggleDespCurso" checked>
+                                                    <span class="dc-pron-toggle-slider"></span>
+                                                    <span class="dc-pron-toggle-label"><i class="fas fa-box-open me-1" style="font-size:.65rem"></i>Despacho en Curso</span>
+                                                </label>
+                                                <label class="dc-pron-toggle" id="labelTogglePronAbast" title="Activa para incorporar eventos de despacho (Pronóstico de Abastecimiento) en la proyección morada">
+                                                    <input type="checkbox" id="togglePronAbast">
+                                                    <span class="dc-pron-toggle-slider"></span>
+                                                    <span class="dc-pron-toggle-label"><i class="fas fa-truck me-1" style="font-size:.65rem"></i>Pron. Abastecimiento</span>
+                                                </label>
+                                            </div>
                                         </div>
                                         <div style="height:320px; position:relative;">
                                             <canvas id="existenciaChart"></canvas>
