@@ -67,13 +67,13 @@ function calcularStockMaxSlot(p, cicloSlot) {
         };
     }
     // Nueva fórmula: Consumo Diario * Ciclo + Stock Mínimo Base
-    const cd  = p.cons_diario ?? 0;
+    const cd = p.cons_diario ?? 0;
     const dSM = p.dias_stock_min ?? 0;
-    const df  = p.despacho_factor > 0 ? p.despacho_factor : 1;
-    
+    const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
+
     const sMinUso = cd * dSM;
     const sMaxUso = (cd * cicloSlot) + sMinUso;
-    
+
     let ratio = 1;
     if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
         ratio = (p.stock_max_final * df) / (p.stock_maximo * df); // ratio en uso
@@ -170,6 +170,7 @@ async function calcularAgenda() {
     }
 }
 
+
 async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
     try {
         const fdP = new FormData();
@@ -237,12 +238,12 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
         fechasOrdenadas.forEach(fecha => {
             Object.entries(agendaMap[fecha]).forEach(([cat, slot]) => {
                 slot.items.forEach(p => {
-                    const df      = p.despacho_factor > 0 ? p.despacho_factor : 1;
-                    const ciclo   = slot.cicloSlot;                        // ciclo real de esta ronda
+                    const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
+                    const ciclo = slot.cicloSlot;                        // ciclo real de esta ronda
                     const maximos = calcularStockMaxSlot(p, ciclo);
-                    const smSlot  = maximos.smSlot;
+                    const smSlot = maximos.smSlot;
                     const smfSlot = maximos.smfSlot;        // stock_max recalculado para este ciclo
-                    const cd      = p.cons_diario ?? 0;
+                    const cd = p.cons_diario ?? 0;
 
                     let stockD1Paq;
                     if (slot.round === 1) {
@@ -462,18 +463,18 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     items.forEach(p => {
         let stockD1Paq, despPron, smfDisplay, smDisplay;
         if (isConsolidado) {
-            stockD1Paq  = p._stockD1Total;
-            despPron    = p._despTotal;
-            smfDisplay  = p.stock_max_final;   // consolidado: usa genérico
-            smDisplay   = p.stock_maximo;
+            stockD1Paq = p._stockD1Total;
+            despPron = p._despTotal;
+            smfDisplay = p.stock_max_final;   // consolidado: usa genérico
+            smDisplay = p.stock_maximo;
         } else {
-            const rd    = p._porRonda?.[round] ?? {};
-            stockD1Paq  = rd.stockD1Paq;
-            despPron    = rd.despachoPron;
+            const rd = p._porRonda?.[round] ?? {};
+            stockD1Paq = rd.stockD1Paq;
+            despPron = rd.despachoPron;
             // smfSlot = stock_max ajustado para el ciclo real de ESTE despacho
             // (diferente al genérico stock_max_final para dias_semana)
-            smfDisplay  = rd.smfSlot ?? p.stock_max_final;
-            smDisplay   = rd.smSlot ?? p.stock_maximo;
+            smfDisplay = rd.smfSlot ?? p.stock_max_final;
+            smDisplay = rd.smSlot ?? p.stock_maximo;
         }
 
         const smfRef = smfDisplay ?? 0;
