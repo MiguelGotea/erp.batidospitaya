@@ -136,6 +136,20 @@ try {
             <!-- ══ PANEL DE RESULTADOS ══ -->
             <div id="pa-panel-datos" class="d-none">
 
+                <style>
+                    .d-none-search { display: none !important; }
+                </style>
+
+                <!-- Buscador de Insumos -->
+                <div class="row mb-3">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="pa-search-producto" class="form-control" placeholder="Buscar insumo...">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Warnings de grupos sin plan -->
                 <div id="pa-warnings" class="d-none"></div>
 

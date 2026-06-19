@@ -101,7 +101,63 @@ $(document).ready(() => {
         window.pa_include_preingreso = $(this).is(':checked');
         if (currentAgendaData) {
             renderAgenda(currentAgendaData.agendaMap, currentAgendaData.fechasOrdenadas, currentAgendaData.sinPlan, currentAgendaData.isConsolidado, currentAgendaData.nTiendas);
+            $('#pa-search-producto').trigger('input');
         }
+    });
+
+    $('#pa-search-producto').on('input', function() {
+        const term = $(this).val().toLowerCase().trim();
+        if (!term) {
+            $('.pa-date-block, .pa-cat-card, .pa-table tbody tr').removeClass('d-none-search');
+            return;
+        }
+
+        $('.pa-table tbody').each(function() {
+            let hasVisibleRows = false;
+            
+            $(this).find('tr:not(.pa-tienda-sub)').each(function() {
+                const $row = $(this);
+                if ($row.hasClass('pa-no-data-row')) return;
+                
+                const text = $row.find('.pa-prod-name').text().toLowerCase();
+                const isMatch = text.includes(term);
+                
+                if (isMatch) {
+                    $row.removeClass('d-none-search');
+                    hasVisibleRows = true;
+                    
+                    const ppId = $row.data('pp-id');
+                    const slotKey = $row.data('slot-key');
+                    if (ppId && slotKey) {
+                        $row.siblings(`.pa-tienda-sub[data-pp-id="${ppId}"][data-slot-key="${slotKey}"]`).removeClass('d-none-search');
+                    }
+                } else {
+                    $row.addClass('d-none-search');
+                    
+                    const ppId = $row.data('pp-id');
+                    const slotKey = $row.data('slot-key');
+                    if (ppId && slotKey) {
+                        $row.siblings(`.pa-tienda-sub[data-pp-id="${ppId}"][data-slot-key="${slotKey}"]`).addClass('d-none-search');
+                    }
+                }
+            });
+            
+            const $card = $(this).closest('.pa-cat-card');
+            if (hasVisibleRows) {
+                $card.removeClass('d-none-search');
+            } else {
+                $card.addClass('d-none-search');
+            }
+        });
+
+        $('.pa-date-block').each(function() {
+            const hasVisibleCards = $(this).find('.pa-cat-card:not(.d-none-search)').length > 0;
+            if (hasVisibleCards) {
+                $(this).removeClass('d-none-search');
+            } else {
+                $(this).addClass('d-none-search');
+            }
+        });
     });
 });
 
@@ -140,7 +196,7 @@ function setLoaderStep(m) { $('#pa-loader-step').text(m); }
 function showLoader() { $('#pa-panel-inicial,#pa-panel-datos').addClass('d-none'); $('#pa-loader').removeClass('d-none'); }
 function hideLoader() { $('#pa-loader').addClass('d-none'); }
 function showInicial() { hideLoader(); $('#pa-panel-inicial').removeClass('d-none'); $('#pa-panel-datos').addClass('d-none'); }
-function showDatos() { hideLoader(); $('#pa-panel-datos').removeClass('d-none'); }
+function showDatos() { hideLoader(); $('#pa-panel-datos').removeClass('d-none'); $('#pa-search-producto').trigger('input'); }
 
 async function calcularAgenda() {
     const semDesde = parseInt($('#pa-desde').val());
