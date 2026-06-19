@@ -23,6 +23,7 @@ let chartTendencia = null;   // Instancia Chart.js activa
 let modoGrafico = 'barras'; // 'barras' | 'linea_total' | 'linea_suc'
 let stocksPronosticados = {}; // { id_pp: float|null } — resultado del endpoint de pronóstico bulk
 let kardexPronAbastEnabled = false; // Toggle: pronostico de abastecimiento en Kardex
+let kardexDespCursoEnabled = true;  // Toggle: despacho en curso en Kardex
 let _kardexLastRenderCtx = null;    // Contexto del último render para re-dibujar al cambiar toggle
 
 
@@ -2939,8 +2940,11 @@ async function calcularPronosticoAbastKardex(
             round++;
         }
 
-        // ── 3. Stock D-1 ronda 1 (inventario real proyectado) ─────────────
+        // ── 3. Stock D-1 ronda 1 (inventario real proyectado) y Preingresos ─────────────
         let stockD1R1 = null;
+        let preHoyPaq = 0;
+        let diasProyRonda1 = 0;
+        
         if (rondas.length > 0 && rondas[0].round === 1) {
             const fechaD1R1 = addDays(prod.fecha_proximo_despacho, -1);
             const fdPron = new FormData();
@@ -2953,29 +2957,47 @@ async function calcularPronosticoAbastKardex(
 
             try {
                 const resPron = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method: 'POST', body: fdPron }).then(r => r.json());
-                if (resPron.ok && resPron.stocks[String(idPP)] !== null) {
+                if (resPron.ok) {
                     const su = resPron.stocks[String(idPP)];
-                    stockD1R1 = Math.max(0, su / df);
+                    const dP = resPron.dias_proy[String(idPP)] || 0;
+                    if (su !== null && su !== undefined) {
+                        const proyD1 = su - ((prod.cons_diario ?? 0) * dP);
+                        stockD1R1 = Math.max(0, proyD1 / df);
+                    }
+                    const ph = resPron.preingresos_hoy[String(idPP)];
+                    preHoyPaq = (ph !== null && ph !== undefined && ph > 0) ? (ph / df) : 0;
                 }
             } catch (e) { /* silencioso */ }
         }
 
-        // ── 4. Calcular despacho por ronda ────────────────────────────────
+        // ── 4. Calcular despacho por ronda con lógica de encadenamiento exacto ───
         const despachosPorRonda = {};
+        const cd = prod.cons_diario ?? 0;
+        let prevRoundPostDespachoPaq = null;
+        
         rondas.forEach(r => {
             let stockD1Paq;
-            if (r.round === 1 && stockD1R1 !== null) {
+            
+            if (r.round === 1) {
                 stockD1Paq = stockD1R1;
             } else {
-                // Rondas siguientes: estimación por fórmula (igual que pronostico_abastecimiento.js)
-                const cd = prod.cons_diario ?? 0;
-                const dc = prod.dias_ciclo ?? 7;
-                stockD1Paq = Math.max(0, smf - (cd * dc) / df);
+                // Rondas siguientes: encadenamiento de stock matemático exacto (simulando kardex a paquete cerrado)
+                if (prevRoundPostDespachoPaq !== null) {
+                    const prevConsPaq = (cd * cycle) / df;
+                    stockD1Paq = Math.max(0, prevRoundPostDespachoPaq - prevConsPaq);
+                } else {
+                    stockD1Paq = Math.max(0, smf - (cd * cycle) / df); // Fallback
+                }
             }
-            const despachoPron = Math.max(0, Math.ceil(smf - stockD1Paq));
-            despachosPorRonda[r.fecha] = { despacho: despachoPron, stockD1Paq, round: r.round };
+            
+            const invBeforePaq = (stockD1Paq ?? 0) + (r.round === 1 && kardexDespCursoEnabled ? preHoyPaq : 0);
+            const despachoPron = Math.max(0, Math.ceil(smf - invBeforePaq));
+            
+            // Inventario teórico final post-despacho de esta ronda (para usar en la siguiente)
+            prevRoundPostDespachoPaq = invBeforePaq + despachoPron;
+            
+            despachosPorRonda[r.fecha] = { despacho: despachoPron, stockD1Paq, round: r.round, stockPostDespachoPaq: prevRoundPostDespachoPaq };
         });
-
         // ── 5. Construir línea morada con saltos de despacho ────────────────
         const forecastData = new Array(allDays.length).fill(null);
         forecastData[anchorIdx] = anchorVal;
