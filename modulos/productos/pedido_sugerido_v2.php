@@ -319,8 +319,8 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Prom. Consumo:</b> Promedio sobre la <b>Ventana Activa</b> (ver abajo).</li>
-                                    <li><b>Cons. Semanal:</b> Promedio + Desv. Estándar (Colchón de seguridad).</li>
+                                    <li><b>Prom. Consumo:</b> Promedio sobre la <b>Ventana Activa</b>.</li>
+                                    <li><b>Cons. Semanal:</b> Proyección inteligente (tendencia) que da más peso a las semanas recientes.</li>
                                     <li><b>Ajuste demanda:</b> Afecta directamente al consumo proyectado (+/- %).</li>
                                     <li><b>Consumo Diario:</b> (Semanal × Ajuste) ÷ 7 días.</li>
                                 </ul>
@@ -372,6 +372,21 @@ try {
                         </div>
                     </div>
 
+                    <!-- Pronóstico Inteligente WLS -->
+                    <div class="mb-4 p-3 rounded-3 border" style="background:#f3e8ff;border-color:#d8b4fe !important;">
+                        <h6 class="fw-bold small d-flex align-items-center gap-2 mb-2" style="color:#7e22ce;">
+                            <i class="bi bi-graph-up-arrow"></i> Pronóstico Inteligente (Tendencia Reciente)
+                        </h6>
+                        <p class="text-secondary small mb-2">
+                            El <b>Consumo Semanal</b> ya no es un simple promedio. Ahora usamos una fórmula matemática (regresión lineal) que funciona de manera muy intuitiva:
+                        </p>
+                        <ul class="text-secondary small mb-0">
+                            <li><b>Más importancia a lo reciente:</b> Las ventas de la última semana valen mucho más en el cálculo que las de hace un mes.</li>
+                            <li><b>Detecta si vas en subida o bajada:</b> Si un producto se está vendiendo cada vez más (o menos), la fórmula detecta esa tendencia y la proyecta hacia el futuro.</li>
+                            <li><b>Resultado más exacto:</b> Se predicen las próximas 3 semanas y se promedian para darte un valor de consumo semanal estable y súper preciso.</li>
+                        </ul>
+                    </div>
+
                     <!-- Factor de Congelados -->
                     <div class="mb-4 p-3 bg-opacity-10 bg-info rounded-3 border-info border border-opacity-25">
                         <h6 class="fw-bold small text-info-emphasis d-flex align-items-center gap-2">
@@ -395,10 +410,8 @@ try {
                                 <ul class="list-unstyled small text-muted">
                                     <li class="mb-1"><b>Prom. Consumo:</b> Promedio semanal sobre la Ventana Activa
                                         (excluye ceros estructurales de inicio/fin).</li>
-                                    <li class="mb-1"><b>Desv. Estándar:</b> Qué tanto varía el consumo semana a semana
-                                        (mide la incertidumbre).</li>
-                                    <li class="mb-1"><b>Cons. Semanal:</b> La demanda base "segura" (Promedio +
-                                        Desviación).</li>
+                                    <li class="mb-1"><b>Desv. Estándar:</b> <i>(Obsoleto, se mantiene solo de referencia)</i> Qué tanto variaba el consumo.</li>
+                                    <li class="mb-1"><b>Cons. Semanal:</b> Proyección inteligente que detecta tendencias y da más peso a las ventas recientes para predecir la próxima semana con mayor exactitud.</li>
                                     <li class="mb-1"><b>Cap. Base (Final):</b> El Stock Máximo ya ajustado a lo que cabe
                                         físicamente en tienda.</li>
                                     <li class="mb-1"><b>Sugerencia:</b> La resta entre el Stock Máximo Final y tu
