@@ -2782,7 +2782,8 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
                             let extra = '';
                             if (context.dataset.despachoAmounts && context.dataset.despachoAmounts[context.dataIndex] !== null && context.dataset.despachoAmounts[context.dataIndex] !== undefined) {
                                 let qty = context.dataset.despachoAmounts[context.dataIndex];
-                                extra = ` (+${qty} paq proyectados)`;
+                                let tpe = (context.dataset.despachoTypes && context.dataset.despachoTypes[context.dataIndex] === 'curso') ? 'en curso' : 'proyectados';
+                                extra = ` (+${qty} paq ${tpe})`;
                             }
                             if (label) label += ': ';
                             label += fmtKardex(context.raw, 2) + extra;
@@ -3023,6 +3024,10 @@ async function calcularPronosticoAbastKardex(
         forecastData[anchorIdx] = anchorVal;
         let balFc = anchorVal;
         const dispatchMarkers = []; // { idx, val, label } para puntos de despacho
+        
+        const hoyD = new Date();
+        hoyD.setHours(12, 0, 0, 0);
+        const hoyStr = hoyD.toISOString().split('T')[0];
 
         for (let i = anchorIdx + 1; i < allDays.length; i++) {
             const day = allDays[i];
@@ -3030,6 +3035,12 @@ async function calcularPronosticoAbastKardex(
 
             // Descontar consumo primero
             balFc = balFc - getConsProy(day);
+
+            // Agregar preingreso hoy si corresponde a este día
+            if (day === hoyStr && kardexDespCursoEnabled && preHoyPaq > 0) {
+                balFc = balFc + preHoyPaq * df;
+                dispatchMarkers.push({ idx: i, val: balFc, rnd: 'Curso', despacho: preHoyPaq, isPreingreso: true });
+            }
 
             // Agregar despacho si corresponde a este día
             if (despachosPorRonda[day]) {
@@ -3078,25 +3089,35 @@ async function calcularPronosticoAbastKardex(
             });
         }
 
-        // Marcadores de despacho (triángulos verdes por cada ronda)
+        // Marcadores de despacho (triángulos verdes por cada ronda, círculos azules para curso)
         if (dispatchMarkers.length > 0) {
             const dispData    = new Array(allDays.length).fill(null);
             const dispRadius  = new Array(allDays.length).fill(0);
             const dispAmounts = new Array(allDays.length).fill(null);
+            const dispTypes   = new Array(allDays.length).fill('proy');
+            const pStyles     = new Array(allDays.length).fill('triangle');
+            const bgColors    = new Array(allDays.length).fill('#27ae60');
+            
             dispatchMarkers.forEach(m => {
                 dispData[m.idx]   = m.val;
                 dispRadius[m.idx] = 10;
                 dispAmounts[m.idx] = m.despacho;
+                if (m.isPreingreso) {
+                    dispTypes[m.idx] = 'curso';
+                    pStyles[m.idx] = 'circle';
+                    bgColors[m.idx] = '#2980b9'; // Blue for preingreso
+                }
             });
             datasets.push({
-                label: `🚧 Despacho(s) programado(s)`,
+                label: `🚧 Despacho(s) programado/curso`,
                 data: dispData,
                 despachoAmounts: dispAmounts,
-                borderColor: '#27ae60',
-                backgroundColor: '#27ae60',
+                despachoTypes: dispTypes,
+                borderColor: bgColors,
+                backgroundColor: bgColors,
                 pointRadius: dispRadius,
                 pointHoverRadius: 13,
-                pointStyle: 'triangle',
+                pointStyle: pStyles,
                 showLine: false,
             });
         }
