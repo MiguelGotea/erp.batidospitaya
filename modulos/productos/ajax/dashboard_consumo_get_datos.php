@@ -79,23 +79,6 @@ try {
     $semanaHastaIncompleta = ($rango['fecha_hasta'] > $ayer);
 
     $fechaFinQuery = $semanaHastaIncompleta ? $ayer : $rango['fecha_hasta'];
-    $factorEscalaSemActual = 1.0;
-
-    if ($semanaHastaIncompleta) {
-        $stmtIniSem = $conn->prepare("SELECT fecha_inicio FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
-        $stmtIniSem->execute([$numHasta]);
-        $iniSemActual = $stmtIniSem->fetchColumn();
-        if ($iniSemActual && $iniSemActual <= $ayer) {
-            $diasConDatos = (int)((strtotime($ayer) - strtotime($iniSemActual)) / 86400) + 1;
-            if ($diasConDatos > 0 && $diasConDatos < 7) {
-                $factorEscalaSemActual = 7.0 / $diasConDatos;
-            }
-        } else {
-            $numHasta = $numHasta - 1;
-            $semanaHastaIncompleta = false;
-            $factorEscalaSemActual = 1.0;
-        }
-    }
 
     $whereSuc = '';
     $paramsSql = [
@@ -621,12 +604,6 @@ try {
             }
         }
 
-        // Si esta fila corresponde a la semana actual incompleta, escalar el consumo
-        // parcial al equivalente de 7 días completos (7/N_días_transcurridos).
-        if ($semanaHastaIncompleta && (int)$f['semana'] === $numHasta && $factorEscalaSemActual > 1.0) {
-            $consumido = $consumido * $factorEscalaSemActual;
-        }
-
         // ── Guardar metadata ──────────────────────────────────
         if (!isset($metaPP[$idPP])) {
             $metaPP[$idPP] = [
@@ -750,7 +727,12 @@ try {
             }
 
             // Ventana Activa (mismo algoritmo que pedido_sugerido_calcular.php)
-            $nonZeroVals = array_filter($valsSuc, fn($v) => $v > 0);
+            $valsParaVentana = $valsSuc;
+            if ($semanaHastaIncompleta) {
+                array_pop($valsParaVentana); // Eliminar última semana (incompleta) para evitar sesgo en la regresión
+            }
+
+            $nonZeroVals = array_filter($valsParaVentana, fn($v) => $v > 0);
             if (empty($nonZeroVals)) {
                 $stockMinPorSucursal[$suc] = 0;
                 $stockMaxPorSucursal[$suc] = 0;
@@ -762,7 +744,7 @@ try {
 
             $firstIdx = null;
             $lastIdx = null;
-            foreach ($valsSuc as $i => $v) {
+            foreach ($valsParaVentana as $i => $v) {
                 if ($v >= $umbral) {
                     if ($firstIdx === null)
                         $firstIdx = $i;
@@ -780,21 +762,17 @@ try {
             $valsActivo = array_slice($valsSuc, $firstIdx, $nActiva);
             
             $n_vals = count($valsActivo);
+            $valsActivo = array_slice($valsParaVentana, $firstIdx, $nActiva);
+            
             $wlsResSuc = calcularProyeccionWLS($valsActivo);
             $semC = $wlsResSuc['promedio'];
-
-            
-            // Si hay múltiples sucursales, el cálculo WLS se hizo por sucursal, pero necesitamos el WLS global para el gráfico de "Total"
-            // De hecho, este loop foreach ($sucursalesPresentes as $suc) calcula WLS POR SUCURSAL.
-
 
             $sucCod = $idsSucursales[strtolower(trim($suc))] ?? null;
             $dSM = $sucCod ? ($configSucursales[$sucCod] ?? 0) : 0;
             $cat = $meta['categoria_insumo'];
             $cP = $sucCod ? ($configProductos[$sucCod][$cat] ?? null) : null;
             $adj = $cP ? (float) $cP['ajuste'] : 0;
-            $ciclo = $cP ? (float) $cP['ciclo'] : 7; // por defecto 1 semana si no hay config
-            // $dD = $cP ? (float) $cP['desfase'] : 0; // obsoleto
+            $ciclo = $cP ? (float) $cP['ciclo'] : 7; 
 
             $diaC = ($semC * (1 + $adj)) / 7;
             $sMin = $diaC * $dSM;
@@ -829,28 +807,33 @@ try {
         foreach ($semanasNros as $sem) {
             $valsGlobal[] = (float) ($consPorSem[$sem] ?? 0);
         }
-        $nonZeroGlobal = array_filter($valsGlobal, fn($v) => $v > 0);
         $globalSemC = 0;
         $globalWlsM = 0;
         $globalWlsB = 0;
         $globalWlsN = 0;
         $globalWlsFirstIdx = 0;
         
+        $valsParaVentanaGlobal = $valsGlobal;
+        if ($semanaHastaIncompleta) {
+            array_pop($valsParaVentanaGlobal);
+        }
+
+        $nonZeroGlobal = array_filter($valsParaVentanaGlobal, fn($v) => $v > 0);
         if (!empty($nonZeroGlobal)) {
             $meanNonZeroG = array_sum($nonZeroGlobal) / count($nonZeroGlobal);
             $umbralG = max(0.01, $meanNonZeroG * 0.10);
             
             $firstIdxG = null;
             $lastIdxG = null;
-            foreach ($valsGlobal as $i => $v) {
+            foreach ($valsParaVentanaGlobal as $i => $v) {
                 if ($v >= $umbralG) {
                     if ($firstIdxG === null) $firstIdxG = $i;
                     $lastIdxG = $i;
                 }
             }
-            if ($firstIdxG !== null) {
+            if ($firstIdxG !== null && $lastIdxG !== null && $lastIdxG >= $firstIdxG) {
                 $nActivaG = $lastIdxG - $firstIdxG + 1;
-                $valsActivoG = array_slice($valsGlobal, $firstIdxG, $nActivaG);
+                $valsActivoG = array_slice($valsParaVentanaGlobal, $firstIdxG, $nActivaG);
                 $wlsResG = calcularProyeccionWLS($valsActivoG);
                 $globalSemC = $wlsResG['promedio'];
                 $globalWlsM = $wlsResG['m'];
@@ -892,6 +875,10 @@ try {
             'por_semana' => $consPorSem,
             'por_sucursal' => $porSucRes,
             'desglose_semxsuc' => $desgloseSemsuc,
+            'proy_m' => $globalWlsM,
+            'proy_b' => $globalWlsB,
+            'proy_n' => $globalWlsN,
+            'proy_first_idx' => $globalWlsFirstIdx,
         ];
     }
 
