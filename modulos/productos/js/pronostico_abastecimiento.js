@@ -353,9 +353,19 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         const ph = preingresosHoy[String(p.id_pp)];
                         preHoyPaq = (ph !== null && ph !== undefined && ph > 0) ? (ph / df) : 0;
                     } else {
-                        // Rondas siguientes: estimación teórica (stock_max del slot anterior − consumo del ciclo)
-                        stockD1Paq = Math.max(0, (smfSlot ?? 0) - (cd * ciclo) / df);
+                        // Rondas siguientes: simular stock a partir de la ronda anterior
+                        const prevRound = p._porRonda?.[slot.round - 1];
+                        if (prevRound) {
+                            const prevConsPaq = (prevRound.cd_dinamico * prevRound.ciclo) / df;
+                            stockD1Paq = Math.max(0, (prevRound.stockPostDespachoPaq ?? 0) - prevConsPaq);
+                        } else {
+                            stockD1Paq = Math.max(0, (smfSlot ?? 0) - (cd * ciclo) / df); // Fallback
+                        }
                     }
+
+                    // Calcular stock post-despacho para esta ronda
+                    const invBeforePaq = (stockD1Paq ?? 0) + preHoyPaq;
+                    const stockPostDespachoPaq = Math.max(smfSlot ?? 0, invBeforePaq);
 
                     if (!p._porRonda) p._porRonda = {};
                     p._porRonda[slot.round] = {
@@ -365,7 +375,9 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         smSlot,
                         smfSlot,                // stock_max ajustado para este despacho específico
                         sMinSlot: maximos.sMinSlot, // stock mínimo ajustado
-                        cd_dinamico: cd
+                        cd_dinamico: cd,
+                        ciclo: ciclo,
+                        stockPostDespachoPaq: stockPostDespachoPaq
                     };
 
                 });
