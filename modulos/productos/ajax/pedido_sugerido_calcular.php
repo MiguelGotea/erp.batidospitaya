@@ -474,7 +474,7 @@ try {
         $dD = $cP ? (float) $cP['dias_desfase'] : 0;
         $diaC = $semC / 7;
         $sMin = $diaC * $dSM;
-        $sMax = $diaC * ($dC + $dD + $dSM);
+        $sMax = ($diaC * $dC) + $sMin;
         if ($cat === 'B')
             $sumB += $sMax;
         $res[$idP] = [

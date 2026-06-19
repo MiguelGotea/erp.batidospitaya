@@ -717,7 +717,7 @@ try {
 
         $diaC = $semC / 7;
         $sMin = $diaC * $dSM;
-        $sMax = $diaC * ($dC + $dD + $dSM);
+        $sMax = ($diaC * $dC) + $sMin;
         // sumB sigue acumulando en unidades de uso (se convierte a paquetes después)
         if ($cat === 'B')
             $sumB += $sMax;

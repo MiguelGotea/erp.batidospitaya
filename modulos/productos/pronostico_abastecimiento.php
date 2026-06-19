@@ -198,8 +198,8 @@ try {
                                 <ul class="small text-muted mb-0">
                                     <li><b>Stock Mín:</b> Nivel crítico en <b>unidades de despacho</b> = (Consumo Diario
                                         × Días Stock Mínimo) ÷ Factor Despacho.</li>
-                                    <li><b>Stock Máx:</b> Capacidad teórica en <b>unidades de despacho</b> = (Consumo
-                                        Diario × (Ciclo + Desfase + Stock Mín)) ÷ Factor Despacho.</li>
+                                    <li><b>Stock Máx:</b> Capacidad teórica en <b>unidades de despacho</b> = ((Consumo
+                                        Diario × Ciclo) + Stock Mínimo Base) ÷ Factor Despacho.</li>
                                 </ul>
                             </div>
                         </div>
@@ -292,8 +292,7 @@ try {
                                         demanda.</li>
                                     <li class="mb-1"><b>Ciclo:</b> Cuántos días pasan entre un pedido y el siguiente.
                                     </li>
-                                    <li class="mb-1"><b>Desfase:</b> Cuántos días tarda el proveedor en entregar el
-                                        producto.</li>
+                                    <li class="mb-1"><b>Desfase:</b> <i>(Obsoleto)</i> Cuántos días tarda el proveedor en entregar.</li>
                                     <li class="mb-1"><b>S.Mín:</b> Días de reserva que quieres tener siempre "por si
                                         acaso".</li>
                                 </ul>
