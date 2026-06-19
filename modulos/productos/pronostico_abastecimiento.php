@@ -187,8 +187,8 @@ try {
                                 <ul class="small text-muted mb-0">
                                     <li><b>Prom. Consumo:</b> Promedio sobre la <b>Ventana Activa</b>.</li>
                                     <li><b>Cons. Semanal:</b> Proyección inteligente (tendencia) que da más peso a las semanas recientes.</li>
-                                    <li><b>Ajuste demanda:</b> Afecta directamente al consumo proyectado (+/- %).</li>
-                                    <li><b>Consumo Diario:</b> (Semanal × Ajuste) ÷ 7 días.</li>
+                                    <li><b>Ajuste demanda:</b> <i>(Obsoleto, sin efecto en el cálculo actual)</i>.</li>
+                                    <li><b>Consumo Diario:</b> Cons. Semanal ÷ 7 días.</li>
                                 </ul>
                             </div>
                         </div>
