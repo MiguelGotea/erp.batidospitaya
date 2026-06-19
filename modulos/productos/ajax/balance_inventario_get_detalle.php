@@ -273,10 +273,10 @@ try {
     }
 
     // 5. Despachos
-    $stmt5 = $conn->prepare("SELECT pre.Fecha, pre.Destino, sub.CodCotizacion, sub.Cantidad, ss.numero_semana AS semana FROM msaccess_masivo_SubPreIngresosPitaya sub INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya = sub.CodPreIngresoPitaya INNER JOIN SemanasSistema ss ON pre.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana BETWEEN ? AND ? AND sub.CodCotizacion IN ($phCods) AND pre.Destino REGEXP '^[Pp]itaya[[:space:]]+[0-9]+'");
+    $stmt5 = $conn->prepare("SELECT pre.Fecha, pre.Destino, sub.CodCotizacion, sub.Cantidad, ss.numero_semana AS semana FROM msaccess_masivo_SubPreIngresosPitaya sub INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya = sub.CodPreIngresoPitaya INNER JOIN SemanasSistema ss ON pre.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana BETWEEN ? AND ? AND sub.CodCotizacion IN ($phCods) AND pre.Destino REGEXP '[Pp]itaya[[:space:]]+[0-9]+'");
     $stmt5->execute(array_merge([$semDesde, $semHasta], $allCods));
     foreach ($stmt5->fetchAll(PDO::FETCH_ASSOC) as $r) {
-        if (!preg_match('/[Pp]itaya\s+(\d+)/', $r['Destino'], $m)) continue;
+        if (!preg_match('/pitaya\s+(\d+)/i', $r['Destino'], $m)) continue;
         $suc = (int)$m[1];
         if (!in_array($suc, $sucFiltro)) continue;
         $r['Sucursal'] = $suc; // Requerido para addReg
@@ -385,6 +385,13 @@ try {
             $uPorNom[strtolower(trim($u['nombre']))] = $uid;
             if ($u['abreviado']) $uPorNom[strtolower(trim($u['abreviado']))] = $uid;
             if (!empty($u['nombres_opcionales'])) foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $al) { $ak = strtolower(trim($al)); if ($ak) $uPorNom[$ak] = $uid; }
+        }
+
+        $convIndex = [];
+        $qc = $conn->query("SELECT id_unidad_origen AS i, id_unidad_destino AS f, factor_multiplicador AS fac FROM unidad_conversion");
+        foreach ($qc->fetchAll(PDO::FETCH_ASSOC) as $c) {
+            $convIndex[(int)$c['i']][(int)$c['f']] = (float)$c['fac'];
+            $convIndex[(int)$c['f']][(int)$c['i']] = $c['fac'] != 0 ? 1/(float)$c['fac'] : 0;
         }
 
         $whereEx = "1=0";

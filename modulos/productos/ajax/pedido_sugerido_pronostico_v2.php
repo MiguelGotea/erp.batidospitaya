@@ -447,9 +447,10 @@ try {
         $diasProyRes[(string)$targetId] = $diasD1;
     }
 
+    file_put_contents(__DIR__ . '/../../../scratch/log_pronostico.txt', "STOCKS: " . json_encode($stocks) . "\n", FILE_APPEND);
     echo json_encode(['ok' => true, 'stocks' => $stocks, 'preingresos_hoy' => $preingresosHoyRes, 'dias_proy' => $diasProyRes], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
+    echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
 }
