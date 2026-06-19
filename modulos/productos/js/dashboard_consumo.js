@@ -747,11 +747,12 @@ function renderGrafico(data) {
     // Proyección con WLS proveniente del backend (coincide con pronóstico de abastecimiento)
     const ultimaSem = semanasNros[semanasNros.length - 1];
     let proyW1 = round2(promCalc), proyW2 = round2(promCalc), proyW3 = round2(promCalc);
-    let regSlope = item.wls_m || 0;
-    let regIntercept = item.wls_b || promCalc;
+    let regSlope = 0, regIntercept = promCalc;
     let proyActual = null;
 
-    if (item.wls_n > 0) {
+    if (item.wls_n !== undefined && item.wls_n > 0) {
+        regSlope = item.wls_m !== undefined ? item.wls_m : 0;
+        regIntercept = item.wls_b !== undefined ? item.wls_b : promCalc;
         let n_activa = item.wls_n;
         let ultima_semana_activa = semanasNros[item.wls_first_idx + n_activa - 1];
         
@@ -763,6 +764,28 @@ function renderGrafico(data) {
         
         if (esSemActualEnRango) {
             proyActual = calcWLS(semanaActual);
+        }
+    } else {
+        // Fallback a regresión lineal si el backend aún no provee wls_n (o si está en caché)
+        if (semanasCalc.length >= 2) {
+            const xV = semanasCalc;
+            const yV = semanasCalc.map(n => item.por_semana[n] || 0);
+            const n_ = xV.length;
+            const sumX = xV.reduce((a, b) => a + b, 0);
+            const sumY = yV.reduce((a, b) => a + b, 0);
+            const sumXY = xV.reduce((acc, x, i) => acc + x * yV[i], 0);
+            const sumX2 = xV.reduce((acc, x) => acc + x * x, 0);
+            const denom = n_ * sumX2 - sumX * sumX;
+            if (Math.abs(denom) > 0.001) {
+                regSlope = (n_ * sumXY - sumX * sumY) / denom;
+                regIntercept = (sumY - regSlope * sumX) / n_;
+                proyW1 = Math.max(0, round2(regSlope * (ultimaSem + 1) + regIntercept));
+                proyW2 = Math.max(0, round2(regSlope * (ultimaSem + 2) + regIntercept));
+                proyW3 = Math.max(0, round2(regSlope * (ultimaSem + 3) + regIntercept));
+            }
+        }
+        if (esSemActualEnRango) {
+            proyActual = Math.max(0, round2(regSlope * semanaActual + regIntercept));
         }
     }
 
