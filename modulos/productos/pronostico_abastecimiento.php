@@ -48,6 +48,7 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo $version; ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo $version; ?>">
     <link rel="stylesheet" href="css/pronostico_abastecimiento.css?v=<?php echo $version; ?>">
 </head>
 
@@ -146,6 +147,21 @@ try {
         </div><!-- /pa-wrapper -->
     </div><!-- /sub-container -->
 </div><!-- /main-container -->
+
+    <!-- Botón Flotante con opciones -->
+    <?php if (tienePermiso('pronostico_abastecimiento', 'exportar', $cargoOperario)): ?>
+        <div class="fab-container">
+            <div class="fab-options">
+                <div class="fab-option" onclick="exportarPronosticoExcel()">
+                    <span class="fab-label">Exportar a Excel</span>
+                    <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
+                </div>
+            </div>
+            <div class="btn-floating-pitaya" title="Herramientas">
+                <i class="fas fa-wrench"></i>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <!-- ===================================================
          MODAL DE AYUDA TÉCNICA (GUÍA DE USO)
@@ -415,6 +431,8 @@ try {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="js/pronostico_abastecimiento.js?v=<?php echo $version; ?>"></script>
+<script src="/core/assets/js/fab_button.js?v=<?php echo $version; ?>"></script>
 </body>
 </html>

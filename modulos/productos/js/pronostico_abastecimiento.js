@@ -664,3 +664,115 @@ function buildSubRowsTiendas(item, slotKey) {
     return rows;
 }
 
+function exportarPronosticoExcel() {
+    if (!currentAgendaData || !currentAgendaData.fechasOrdenadas.length) {
+        Swal.fire({ icon: 'warning', title: 'Sin datos', text: 'No hay datos para exportar.' });
+        return;
+    }
+    
+    let datosExportar = [];
+    
+    currentAgendaData.fechasOrdenadas.forEach(fecha => {
+        const agenda = currentAgendaData.agendaMap[fecha];
+        PA_GRUPOS.forEach(cat => {
+            if (!agenda[cat]) return;
+            const slot = agenda[cat];
+            
+            // Recorrer los items
+            slot.items.forEach(p => {
+                let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay;
+                if (currentAgendaData.isConsolidado) {
+                    stockD1Paq_base = p._stockD1Total;
+                    preHoyPaq = p._preHoyTotal;
+                    smfDisplay = p._smfTotal;
+                    smDisplay = p._smTotal;
+                } else {
+                    const rd = p._porRonda?.[slot.round] ?? {};
+                    stockD1Paq_base = rd.stockD1Paq;
+                    preHoyPaq = rd.preHoyPaq;
+                    smfDisplay = rd.smfSlot ?? p.stock_max_final;
+                    smDisplay = rd.smSlot ?? p.stock_maximo;
+                }
+                
+                let stockD1Paq = stockD1Paq_base;
+                if (window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq) {
+                    stockD1Paq += preHoyPaq;
+                }
+                
+                let despPron = stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null;
+                
+                let productoNombre = p.nombre;
+                if (p.despacho_nombre) productoNombre += ` (${p.despacho_nombre})`;
+                
+                let pronosticoInv = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq.toFixed(2) : 'Sin datos';
+                if (window.pa_include_preingreso && preHoyPaq) pronosticoInv += ` (+${preHoyPaq.toFixed(2)})`;
+                
+                datosExportar.push({
+                    "Fecha de Despacho": fecha,
+                    "Grupo": PA_LABELS[cat] || cat,
+                    "Producto": productoNombre,
+                    "Presentación": p.unidad || '-',
+                    "Cons. Semanal": p.cons_semanal !== null && p.cons_semanal !== undefined ? parseFloat(p.cons_semanal).toFixed(2) : '',
+                    "Stock Mín": p.stock_minimo !== null && p.stock_minimo !== undefined ? parseFloat(p.stock_minimo).toFixed(2) : '',
+                    "Stock Máx": smDisplay !== null && smDisplay !== undefined ? parseFloat(smDisplay).toFixed(2) : '',
+                    "Stock Máx Ajustado": smfDisplay !== null && smfDisplay !== undefined ? parseFloat(smfDisplay).toFixed(2) : '',
+                    "Pronóstico Inventario": pronosticoInv,
+                    "Despacho": despPron !== null ? despPron : '-'
+                });
+                
+                if (currentAgendaData.isConsolidado && p._porTienda) {
+                    Object.entries(p._porTienda).forEach(([cod, td]) => {
+                        let sub_smfDisplay = td.stock_max_final ?? 0;
+                        let sub_smDisplay = td.stock_maximo ?? 0;
+                        let sub_stockD1Paq = td.stockD1Paq;
+                        
+                        if (window.pa_include_preingreso && sub_stockD1Paq !== null && td.preHoyPaq) {
+                            sub_stockD1Paq += td.preHoyPaq;
+                        }
+                        
+                        let sub_despPron = sub_stockD1Paq !== null ? Math.max(0, Math.ceil((sub_smfDisplay ?? 0) - sub_stockD1Paq)) : null;
+                        
+                        let sub_pronosticoInv = sub_stockD1Paq !== null && sub_stockD1Paq !== undefined ? sub_stockD1Paq.toFixed(2) : 'Sin datos';
+                        if (window.pa_include_preingreso && td.preHoyPaq) sub_pronosticoInv += ` (+${td.preHoyPaq.toFixed(2)})`;
+                        
+                        datosExportar.push({
+                            "Fecha de Despacho": fecha,
+                            "Grupo": PA_LABELS[cat] || cat,
+                            "Producto": `    - ${td.nombre}`, // Indentado
+                            "Presentación": "-",
+                            "Cons. Semanal": td.cons_semanal !== null && td.cons_semanal !== undefined ? parseFloat(td.cons_semanal).toFixed(2) : '',
+                            "Stock Mín": td.stock_minimo !== null && td.stock_minimo !== undefined ? parseFloat(td.stock_minimo).toFixed(2) : '',
+                            "Stock Máx": sub_smDisplay !== null && sub_smDisplay !== undefined ? parseFloat(sub_smDisplay).toFixed(2) : '',
+                            "Stock Máx Ajustado": sub_smfDisplay !== null && sub_smfDisplay !== undefined ? parseFloat(sub_smfDisplay).toFixed(2) : '',
+                            "Pronóstico Inventario": sub_pronosticoInv,
+                            "Despacho": sub_despPron !== null ? sub_despPron : '-'
+                        });
+                    });
+                }
+            });
+        });
+    });
+    
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(datosExportar);
+    
+    // Auto-ajustar ancho de columnas
+    const wscols = [
+        {wch: 18}, // Fecha
+        {wch: 25}, // Grupo
+        {wch: 40}, // Producto
+        {wch: 15}, // Presentación
+        {wch: 15}, // Cons. Semanal
+        {wch: 15}, // Stock Mín
+        {wch: 15}, // Stock Máx
+        {wch: 18}, // Stock Máx Ajustado
+        {wch: 25}, // Pronóstico Inventario
+        {wch: 15}  // Despacho
+    ];
+    ws['!cols'] = wscols;
+
+    XLSX.utils.book_append_sheet(wb, ws, "Pronóstico");
+    
+    let nombreArchivo = `Pronostico_Abastecimiento_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(wb, nombreArchivo);
+}
