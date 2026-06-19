@@ -252,7 +252,7 @@ try {
                     $stmtAdj = $conn->prepare("SELECT clp.ajuste_demanda FROM producto_presentacion pp LEFT JOIN configuracion_logistica_producto clp ON clp.codigo_insumo=pp.categoria_insumo AND clp.cod_sucursal=? WHERE pp.id=? LIMIT 1");
                     $stmtAdj->execute([$codSucursal, $idPP]);
                     $adj = (float)($stmtAdj->fetchColumn() ?: 0);
-                    $consDiario = ($semC * (1 + $adj)) / 7.0;
+                    $consDiario = $semC / 7.0;
                 }
             }
         }

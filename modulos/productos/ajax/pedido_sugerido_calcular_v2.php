@@ -715,7 +715,7 @@ try {
         $dC = $cicloReal  ?? ($cP ? (float)$cP['dias_ciclo']   : 0);
         $dD = $diasPrep   ?? ($cP ? (float)$cP['dias_desfase']  : 0);
 
-        $diaC = ($semC * (1 + $adj)) / 7;
+        $diaC = $semC / 7;
         $sMin = $diaC * $dSM;
         $sMax = $diaC * ($dC + $dD + $dSM);
         // sumB sigue acumulando en unidades de uso (se convierte a paquetes después)
