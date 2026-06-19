@@ -472,7 +472,7 @@ try {
         $adj = $cP ? (float) $cP['ajuste_demanda'] : 0;
         $dC = $cP ? (float) $cP['dias_ciclo'] : 0;
         $dD = $cP ? (float) $cP['dias_desfase'] : 0;
-        $diaC = ($semC * (1 + $adj)) / 7;
+        $diaC = $semC / 7;
         $sMin = $diaC * $dSM;
         $sMax = $diaC * ($dC + $dD + $dSM);
         if ($cat === 'B')
