@@ -307,8 +307,10 @@ try {
                                         (excluye ceros estructurales de inicio/fin).</li>
                                     <li class="mb-1"><b>Desv. Estándar:</b> <i>(Obsoleto, se mantiene solo de referencia)</i> Qué tanto variaba el consumo.</li>
                                     <li class="mb-1"><b>Consumo Diario:</b> Proyección inteligente basada en Mínimos Cuadrados Ponderados (WLS) dividida entre 7 que detecta tendencias y da más peso a las ventas recientes para predecir el consumo con mayor exactitud.</li>
+                                    <li class="mb-1"><b>Consumo Semanal:</b> Proyección de consumo equivalente al Consumo Diario multiplicado por 7.</li>
                                     <li class="mb-1"><b>Cap. Base (Final):</b> El Stock Máximo ya ajustado a lo que cabe
                                         físicamente en tienda.</li>
+                                    <li class="mb-1"><b>Inv. Teórico Ayer:</b> Inventario calculado hasta el día de ayer, usado como punto de partida en la ecuación de Pronóstico Inventario.</li>
                                     <li class="mb-1"><b>Sugerencia:</b> La resta entre el Stock Máximo Final y tu
                                         Inventario Actual.</li>
                                 </ul>
