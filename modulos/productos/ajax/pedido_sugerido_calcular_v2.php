@@ -96,20 +96,70 @@ function buscarPresentacionEnMaestro_PS(int $idMaestro, int $idUnidad, array &$p
 
 /**
  * Calcula el ciclo real en días a partir de una fila de plan_despacho_sucursal.
+ *
+ * Para tipo 'n_semanas':
+ *   ciclo = intervalo × 7 días (sin cambios).
+ *
+ * Para tipo 'dias_semana':
+ *   El ciclo ya NO es el promedio 7/N.  Cada despacho debe abastecer
+ *   exactamente los días que transcurren hasta el despacho SIGUIENTE.
+ *   Ej. Lun+Mié →  despacho del Lunes cubre 3 días (L→M→X),
+ *                   despacho del Miércoles cubre 4 días (X→J→V→S→L).
+ *
+ *   Algoritmo:
+ *     1. Determinar el día de la semana de HOY.
+ *     2. Buscar el próximo día de despacho (nextDow).
+ *     3. Contar los días desde nextDow hasta el despacho SUBSIGUIENTE.
+ *     4. Ese conteo es el ciclo real del próximo despacho.
+ *
+ * @param string $hoy  Fecha actual 'Y-m-d'; si está vacía se usa 7/N como fallback.
  * Retorna null si no hay plan o la fila no está activa.
  */
-function calcularCicloRealDias(?array $planCat): ?float {
+function calcularCicloRealDias(?array $planCat, string $hoy = ''): ?float {
     if (!$planCat || !($planCat['activo'] ?? 0)) return null;
+
     if ($planCat['tipo_frecuencia'] === 'n_semanas') {
         $intervalo = (int)($planCat['intervalo_semanas'] ?? 1);
         return $intervalo * 7.0;
     }
+
     if ($planCat['tipo_frecuencia'] === 'dias_semana') {
         $dias = $planCat['dias_semana'];
         if (is_string($dias)) $dias = json_decode($dias, true);
-        $n = is_array($dias) ? count($dias) : 0;
-        return $n > 0 ? 7.0 / $n : null;
+        if (empty($dias) || !is_array($dias)) return null;
+        sort($dias); // 0=Lun, …, 6=Dom
+        $n = count($dias);
+        if ($n === 0) return null;
+        if ($n === 1) return 7.0; // Un solo despacho por semana → ciclo completo
+
+        // Sin fecha base: fallback al promedio (no debería ocurrir en producción)
+        if (!$hoy) return 7.0 / $n;
+
+        $hoyTs  = strtotime($hoy);
+        $hoyDow = (int)date('N', $hoyTs) - 1; // 0=Lun, …, 6=Dom
+
+        // 1. Encontrar el próximo día de despacho (nextDow)
+        $nextDow = null;
+        for ($d = 1; $d <= 7; $d++) {
+            $checkDow = ($hoyDow + $d) % 7;
+            if (in_array($checkDow, $dias)) {
+                $nextDow = $checkDow;
+                break;
+            }
+        }
+        if ($nextDow === null) return 7.0 / $n;
+
+        // 2. Contar días desde nextDow hasta el despacho subsiguiente
+        for ($d = 1; $d <= 7; $d++) {
+            $checkDow = ($nextDow + $d) % 7;
+            if (in_array($checkDow, $dias)) {
+                return (float)$d; // Ciclo real del próximo despacho
+            }
+        }
+
+        return 7.0 / $n; // Fallback de seguridad
     }
+
     return null;
 }
 
@@ -621,9 +671,11 @@ try {
         $cP = $cat ? ($cPs[$cat] ?? null) : null;
         $adj = $cP ? (float)$cP['ajuste_demanda'] : 0;
 
-        // Obtener ciclo desde el plan de despacho (si existe y está activo para esta cat)
+        // Obtener ciclo desde el plan de despacho (si existe y está activo para esta cat).
+        // Se pasa $hoy para que en tipo 'dias_semana' el ciclo refleje los días reales
+        // entre el PRÓXIMO despacho y el subsiguiente (no el promedio 7/N).
         $planCat   = $planDespacho[$cat] ?? null;
-        $cicloReal = calcularCicloRealDias($planCat);
+        $cicloReal = calcularCicloRealDias($planCat, $hoy);
         $diasPrep  = calcularDiasPreparacion($planCat);
 
         // Fallback a configuracion_logistica_producto si no hay plan
