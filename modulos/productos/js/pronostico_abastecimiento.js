@@ -60,23 +60,28 @@ function calcularCicloSlot(p, fechaStr) {
  */
 function calcularStockMaxSlot(p, cicloSlot) {
     if (p.plan_tipo_frecuencia !== 'dias_semana') {
-        // Para n_semanas el ciclo es fijo, usar stock_max_final tal como viene del backend
-        return p.stock_max_final;
+        // Para n_semanas el ciclo es fijo
+        return {
+            smSlot: p.stock_maximo,
+            smfSlot: p.stock_max_final
+        };
     }
-    // Recalcular stock_max con el ciclo real de este despacho:
-    // stock_max = cons_diario × (cicloSlot + dias_desfase + dias_stock_min)
+    // Nueva fórmula: Consumo Diario * Ciclo + Stock Mínimo Base
     const cd  = p.cons_diario ?? 0;
-    const dD  = p.dias_desfase   ?? 0;
     const dSM = p.dias_stock_min ?? 0;
     const df  = p.despacho_factor > 0 ? p.despacho_factor : 1;
-    const sMaxUso = cd * (cicloSlot + dD + dSM);
-    // Si es cat B y el producto estaba ajustado, aplicar el mismo factor (aproximado)
-    // Para simplificar usamos stock_max_final / stock_maximo como ratio de ajuste
+    
+    const sMinUso = cd * dSM;
+    const sMaxUso = (cd * cicloSlot) + sMinUso;
+    
     let ratio = 1;
     if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
         ratio = (p.stock_max_final * df) / (p.stock_maximo * df); // ratio en uso
     }
-    return (sMaxUso * ratio) / df;
+    return {
+        smSlot: sMaxUso / df,
+        smfSlot: (sMaxUso * ratio) / df
+    };
 }
 
 $(document).ready(() => {
@@ -234,7 +239,9 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                 slot.items.forEach(p => {
                     const df      = p.despacho_factor > 0 ? p.despacho_factor : 1;
                     const ciclo   = slot.cicloSlot;                        // ciclo real de esta ronda
-                    const smfSlot = calcularStockMaxSlot(p, ciclo);        // stock_max recalculado para este ciclo
+                    const maximos = calcularStockMaxSlot(p, ciclo);
+                    const smSlot  = maximos.smSlot;
+                    const smfSlot = maximos.smfSlot;        // stock_max recalculado para este ciclo
                     const cd      = p.cons_diario ?? 0;
 
                     let stockD1Paq;
@@ -252,6 +259,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     if (!p._porRonda) p._porRonda = {};
                     p._porRonda[slot.round] = {
                         stockD1Paq,
+                        smSlot,
                         smfSlot,                // stock_max ajustado para este despacho específico
                         despachoPron: stockD1Paq !== null
                             ? Math.max(0, Math.ceil((smfSlot ?? 0) - stockD1Paq))
@@ -341,7 +349,8 @@ function consolidarResultados(storeResults) {
                     item._porTienda[cod] = {
                         nombre: slot.nombre, round: slot.round,
                         cons_semanal: p.cons_semanal, stock_minimo: p.stock_minimo,
-                        stock_maximo: p.stock_maximo, stock_max_final: p.stock_max_final,
+                        stock_maximo: p._porRonda?.[slot.round]?.smSlot ?? p.stock_maximo,
+                        stock_max_final: p._porRonda?.[slot.round]?.smfSlot ?? p.stock_max_final,
                         stockD1Paq: sd, despachoPron: dp
                     };
                 });
@@ -451,11 +460,12 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     let rows = '';
 
     items.forEach(p => {
-        let stockD1Paq, despPron, smfDisplay;
+        let stockD1Paq, despPron, smfDisplay, smDisplay;
         if (isConsolidado) {
             stockD1Paq  = p._stockD1Total;
             despPron    = p._despTotal;
             smfDisplay  = p.stock_max_final;   // consolidado: usa genérico
+            smDisplay   = p.stock_maximo;
         } else {
             const rd    = p._porRonda?.[round] ?? {};
             stockD1Paq  = rd.stockD1Paq;
@@ -463,6 +473,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             // smfSlot = stock_max ajustado para el ciclo real de ESTE despacho
             // (diferente al genérico stock_max_final para dias_semana)
             smfDisplay  = rd.smfSlot ?? p.stock_max_final;
+            smDisplay   = rd.smSlot ?? p.stock_maximo;
         }
 
         const smfRef = smfDisplay ?? 0;
@@ -497,7 +508,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
                 <td><span class="pa-unit">${esc(p.unidad || '—')}</span></td>
                 <td>${fmt2(p.cons_semanal)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
-                <td>${fmt2(p.stock_maximo)}</td>
+                <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
                 <td class="pa-col-desp">${stockHtml}</td>
                 <td class="pa-col-desp">${despHtml}</td>
@@ -510,7 +521,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
                 <td><span class="pa-unit">${esc(p.unidad || '—')}</span></td>
                 <td>${fmt2(p.cons_semanal)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
-                <td>${fmt2(p.stock_maximo)}</td>
+                <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
                 <td class="pa-col-desp">${stockHtml}</td>
                 <td class="pa-col-desp">${despHtml}</td>
