@@ -28,7 +28,7 @@ try {
     // Sucursal principal
     $sqlSuc = "
         SELECT
-            s.id, s.codigo, s.nombre, s.ip_direccion, s.telefono, s.whatsapp,
+            s.id, s.codigo, s.nombre, s.ip_direccion, s.ip_impresora, s.telefono, s.whatsapp,
             s.Fecha_Apertura, s.Fecha_Cierre, 
             COALESCE(dep.nombre, s.departamento) AS departamento, 
             s.cod_departamento,

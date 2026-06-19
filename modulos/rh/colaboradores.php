@@ -145,6 +145,10 @@ $puedeCrearColaborador = tienePermiso('gestion_colaboradores', 'nuevo_colaborado
                                     Inicio Contrato
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th data-column="mes_contrato" data-type="list" style="width: 100px; text-align: center;">
+                                    Mes Contrato
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
                                 <th data-column="ultima_fecha_laborada" data-type="daterange">
                                     Último Día<br>Marcado
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
@@ -166,6 +170,10 @@ $puedeCrearColaborador = tienePermiso('gestion_colaboradores', 'nuevo_colaborado
                                 <th data-column="talla_camisa" data-type="list"
                                     style="width: 100px; text-align: center;">
                                     Talla Camisa
+                                    <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
+                                </th>
+                                <th data-column="fecha_vencimiento_salud" data-type="daterange" style="white-space: nowrap;">
+                                    Venc. Cert. Salud
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th data-column="porcentaje_llenado" data-type="numrange"

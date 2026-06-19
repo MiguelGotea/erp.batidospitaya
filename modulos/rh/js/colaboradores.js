@@ -82,7 +82,7 @@ function renderizarTabla(datos) {
     tbody.empty();
 
     if (datos.length === 0) {
-        tbody.append('<tr><td colspan="18" class="text-center py-4">No se encontraron registros</td></tr>');
+        tbody.append('<tr><td colspan="20" class="text-center py-4">No se encontraron registros</td></tr>');
         return;
     }
 
@@ -170,6 +170,9 @@ function renderizarTabla(datos) {
         // Inicio Contrato
         tr.append(`<td>${formatearFecha(row.fecha_inicio_ultimo_contrato)}</td>`);
 
+        // Mes Contrato
+        tr.append(`<td style="text-align: center;">${row.mes_contrato || '<span style="color: #999;">-</span>'}</td>`);
+
         // Último Día Marcado
         tr.append(`<td>${formatearFecha(row.ultima_fecha_laborada)}</td>`);
 
@@ -185,6 +188,9 @@ function renderizarTabla(datos) {
 
         // Talla Camisa
         tr.append(`<td style="text-align: center;">${row.talla_camisa || '<span style="color: #999;">-</span>'}</td>`);
+
+        // Venc. Cert. Salud
+        tr.append(`<td>${formatearFecha(row.fecha_vencimiento_salud)}</td>`);
 
         // Llenado (Compliance)
         const porcLlenado = row.porcentaje_llenado || 0;

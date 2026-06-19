@@ -25,6 +25,7 @@ try {
             s.codigo,
             s.nombre,
             s.ip_direccion,
+            s.ip_impresora,
             s.telefono,
             s.whatsapp,
             s.Fecha_Apertura,
