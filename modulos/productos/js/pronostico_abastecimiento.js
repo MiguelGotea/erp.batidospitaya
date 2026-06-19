@@ -371,9 +371,10 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         }
                     }
 
-                    // Calcular stock post-despacho para esta ronda
+                    // Calcular stock post-despacho para esta ronda usando el despacho real (redondeado hacia arriba)
                     const invBeforePaq = (stockD1Paq ?? 0) + (window.pa_include_preingreso ? preHoyPaq : 0);
-                    const stockPostDespachoPaq = Math.max(smfSlot ?? 0, invBeforePaq);
+                    const despRealPaq = Math.max(0, Math.ceil((smfSlot ?? 0) - invBeforePaq));
+                    const stockPostDespachoPaq = invBeforePaq + despRealPaq;
 
                     if (!p._porRonda) p._porRonda = {};
                     p._porRonda[slot.round] = {
@@ -941,7 +942,8 @@ function recalcularChaining(storeResults) {
                 
                 if (round === 1) {
                     const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
-                    rd.stockPostDespachoPaq = Math.max(rd.smfSlot ?? 0, invBeforePaq);
+                    const despRealPaq = Math.max(0, Math.ceil((rd.smfSlot ?? 0) - invBeforePaq));
+                    rd.stockPostDespachoPaq = invBeforePaq + despRealPaq;
                 } else {
                     const prevRound = p._porRonda[round - 1];
                     const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
@@ -950,7 +952,8 @@ function recalcularChaining(storeResults) {
                     rd.stockD1Paq = Math.max(0, (prevRound?.stockPostDespachoPaq ?? 0) - prevConsPaq);
                     
                     const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
-                    rd.stockPostDespachoPaq = Math.max(rd.smfSlot ?? 0, invBeforePaq);
+                    const despRealPaq = Math.max(0, Math.ceil((rd.smfSlot ?? 0) - invBeforePaq));
+                    rd.stockPostDespachoPaq = invBeforePaq + despRealPaq;
                 }
             });
         });
