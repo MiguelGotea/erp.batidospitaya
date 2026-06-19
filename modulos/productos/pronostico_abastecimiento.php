@@ -166,6 +166,10 @@ try {
     <?php if (tienePermiso('pronostico_abastecimiento', 'exportar', $cargoOperario)): ?>
         <div class="fab-container">
             <div class="fab-options">
+                <div class="fab-option" onclick="exportarPronosticoConsumoExcel()">
+                    <span class="fab-label">Descargar Pronóstico de Consumo</span>
+                    <div class="fab-icon-holder"><i class="fas fa-chart-line"></i></div>
+                </div>
                 <div class="fab-option" onclick="exportarPronosticoExcel()">
                     <span class="fab-label">Exportar a Excel</span>
                     <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>

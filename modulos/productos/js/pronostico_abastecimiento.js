@@ -959,3 +959,116 @@ function recalcularChaining(storeResults) {
         });
     });
 }
+
+function exportarPronosticoConsumoExcel() {
+    if (!window.lastStoreResults || !currentAgendaData) {
+        Swal.fire({ icon: 'warning', title: 'Sin datos', text: 'No hay datos para exportar.' });
+        return;
+    }
+
+    const wb = XLSX.utils.book_new();
+
+    function getUniqueProductsForStore(sr) {
+        const unique = new Map();
+        sr.fechasOrdenadas.forEach(f => {
+            Object.values(sr.agendaMap[f] || {}).forEach(slot => {
+                (slot.items || []).forEach(p => {
+                    if (!unique.has(p.id_pp)) {
+                        unique.set(p.id_pp, p);
+                    }
+                });
+            });
+        });
+        return Array.from(unique.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+    }
+
+    function calcularProyecciones(p) {
+        const wls_m = p.wls_m ?? 0;
+        const wls_b = p.wls_b ?? 0;
+        const wls_n = p.wls_n ?? 0;
+        
+        return {
+            cd1: Math.max(0, (wls_m * (wls_n + 1)) + wls_b) / 7,
+            cd2: Math.max(0, (wls_m * (wls_n + 2)) + wls_b) / 7,
+            cd3: Math.max(0, (wls_m * (wls_n + 3)) + wls_b) / 7,
+            cd4: Math.max(0, (wls_m * (wls_n + 4)) + wls_b) / 7
+        };
+    }
+
+    if (currentAgendaData.isConsolidado) {
+        let consolidados = new Map();
+
+        Object.values(window.lastStoreResults).forEach(sr => {
+            const prods = getUniqueProductsForStore(sr);
+            prods.forEach(p => {
+                const proy = calcularProyecciones(p);
+                if (!consolidados.has(p.id_pp)) {
+                    consolidados.set(p.id_pp, { 
+                        nombre: p.nombre, 
+                        grupo: PA_LABELS[p.categoria_insumo] || p.categoria_insumo,
+                        cd1: 0, cd2: 0, cd3: 0, cd4: 0 
+                    });
+                }
+                const c = consolidados.get(p.id_pp);
+                c.cd1 += proy.cd1;
+                c.cd2 += proy.cd2;
+                c.cd3 += proy.cd3;
+                c.cd4 += proy.cd4;
+            });
+        });
+
+        const arrConsolidado = Array.from(consolidados.values()).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        const datosConsolidado = arrConsolidado.map(c => ({
+            "Grupo": c.grupo,
+            "Producto": c.nombre,
+            "Semana 1 (Actual)": parseFloat(c.cd1.toFixed(4)),
+            "Semana 2": parseFloat(c.cd2.toFixed(4)),
+            "Semana 3": parseFloat(c.cd3.toFixed(4)),
+            "Semana 4": parseFloat(c.cd4.toFixed(4))
+        }));
+
+        const wsCons = XLSX.utils.json_to_sheet(datosConsolidado);
+        wsCons['!cols'] = [{wch: 25}, {wch: 40}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
+        XLSX.utils.book_append_sheet(wb, wsCons, "Consolidado");
+
+        Object.values(window.lastStoreResults).forEach(sr => {
+            const prods = getUniqueProductsForStore(sr);
+            const datosTienda = prods.map(p => {
+                const proy = calcularProyecciones(p);
+                return {
+                    "Grupo": PA_LABELS[p.categoria_insumo] || p.categoria_insumo,
+                    "Producto": p.nombre,
+                    "Semana 1 (Actual)": parseFloat(proy.cd1.toFixed(4)),
+                    "Semana 2": parseFloat(proy.cd2.toFixed(4)),
+                    "Semana 3": parseFloat(proy.cd3.toFixed(4)),
+                    "Semana 4": parseFloat(proy.cd4.toFixed(4))
+                };
+            });
+            const wsTienda = XLSX.utils.json_to_sheet(datosTienda);
+            wsTienda['!cols'] = [{wch: 25}, {wch: 40}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
+            const safeName = sr.nombre.substring(0, 31).replace(/[\\/?*\[\]]/g, '');
+            XLSX.utils.book_append_sheet(wb, wsTienda, safeName);
+        });
+
+    } else {
+        const sr = Object.values(window.lastStoreResults)[0];
+        const prods = getUniqueProductsForStore(sr);
+        const datosTienda = prods.map(p => {
+            const proy = calcularProyecciones(p);
+            return {
+                "Grupo": PA_LABELS[p.categoria_insumo] || p.categoria_insumo,
+                "Producto": p.nombre,
+                "Semana 1 (Actual)": parseFloat(proy.cd1.toFixed(4)),
+                "Semana 2": parseFloat(proy.cd2.toFixed(4)),
+                "Semana 3": parseFloat(proy.cd3.toFixed(4)),
+                "Semana 4": parseFloat(proy.cd4.toFixed(4))
+            };
+        });
+        const wsTienda = XLSX.utils.json_to_sheet(datosTienda);
+        wsTienda['!cols'] = [{wch: 25}, {wch: 40}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
+        XLSX.utils.book_append_sheet(wb, wsTienda, "Pronóstico Consumo");
+    }
+
+    let nombreArchivo = `Pronostico_Consumo_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, nombreArchivo);
+}
