@@ -99,7 +99,14 @@ $(document).ready(() => {
     });
     $('#pa-agenda').on('change', '.pa-toggle-preingreso', function () {
         window.pa_include_preingreso = $(this).is(':checked');
-        if (currentAgendaData) {
+        if (window.lastStoreResults && currentAgendaData) {
+            recalcularChaining(window.lastStoreResults);
+            
+            if (currentAgendaData.isConsolidado) {
+                const cons = consolidarResultados(window.lastStoreResults);
+                currentAgendaData.agendaMap = cons.agendaMap;
+            }
+            
             renderAgenda(currentAgendaData.agendaMap, currentAgendaData.fechasOrdenadas, currentAgendaData.sinPlan, currentAgendaData.isConsolidado, currentAgendaData.nTiendas);
             $('#pa-search-producto').trigger('input');
         }
@@ -226,6 +233,7 @@ async function calcularAgenda() {
         } else {
             const datos = await calcularDatosParaSucursal(semDesde, semHasta, semCorte, sucursal);
             if (!datos) return;
+            window.lastStoreResults = { [sucursal]: { ...datos, nombre: $('#pa-sucursal option:selected').text(), codigo: sucursal } };
             currentAgendaData = { agendaMap: datos.agendaMap, fechasOrdenadas: datos.fechasOrdenadas, sinPlan: datos.sinPlan, isConsolidado: false, nTiendas: 1 };
             renderAgenda(datos.agendaMap, datos.fechasOrdenadas, datos.sinPlan, false);
             showDatos();
@@ -364,7 +372,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     }
 
                     // Calcular stock post-despacho para esta ronda
-                    const invBeforePaq = (stockD1Paq ?? 0) + preHoyPaq;
+                    const invBeforePaq = (stockD1Paq ?? 0) + (window.pa_include_preingreso ? preHoyPaq : 0);
                     const stockPostDespachoPaq = Math.max(smfSlot ?? 0, invBeforePaq);
 
                     if (!p._porRonda) p._porRonda = {};
@@ -416,6 +424,7 @@ async function calcularAgendaConsolidada(semDesde, semHasta, semCorte) {
         return;
     }
 
+    window.lastStoreResults = storeResults;
     currentAgendaData = { agendaMap: cons.agendaMap, fechasOrdenadas: cons.fechasOrdenadas, sinPlan: cons.sinPlan, isConsolidado: true, nTiendas: Object.keys(storeResults).length };
     renderAgenda(cons.agendaMap, cons.fechasOrdenadas, cons.sinPlan, true, Object.keys(storeResults).length);
     showDatos();
@@ -910,3 +919,40 @@ function exportarPronosticoExcel() {
     XLSX.writeFile(wb, nombreArchivo);
 }
 
+function recalcularChaining(storeResults) {
+    Object.values(storeResults).forEach(sr => {
+        const byPP = {};
+        sr.fechasOrdenadas.forEach(fecha => {
+            Object.values(sr.agendaMap[fecha] || {}).forEach(slot => {
+                (slot.items || []).forEach(p => {
+                    if (!byPP[p.id_pp]) byPP[p.id_pp] = [];
+                    byPP[p.id_pp].push({ slot, p });
+                });
+            });
+        });
+
+        Object.values(byPP).forEach(arr => {
+            arr.sort((a, b) => a.slot.round - b.slot.round);
+            arr.forEach(item => {
+                const p = item.p;
+                const round = item.slot.round;
+                const rd = p._porRonda[round];
+                if (!rd) return;
+                
+                if (round === 1) {
+                    const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
+                    rd.stockPostDespachoPaq = Math.max(rd.smfSlot ?? 0, invBeforePaq);
+                } else {
+                    const prevRound = p._porRonda[round - 1];
+                    const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
+                    const prevConsPaq = prevRound ? (prevRound.cd_dinamico * prevRound.ciclo) / df : 0;
+                    
+                    rd.stockD1Paq = Math.max(0, (prevRound?.stockPostDespachoPaq ?? 0) - prevConsPaq);
+                    
+                    const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
+                    rd.stockPostDespachoPaq = Math.max(rd.smfSlot ?? 0, invBeforePaq);
+                }
+            });
+        });
+    });
+}
