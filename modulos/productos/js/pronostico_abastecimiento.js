@@ -517,18 +517,20 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     let rows = '';
 
     items.forEach(p => {
-        let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay;
+        let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, cdDisplay;
         if (isConsolidado) {
             stockD1Paq_base = p._stockD1Total;
             preHoyPaq = p._preHoyTotal;
             smfDisplay = p._smfTotal;
             smDisplay = p._smTotal;
+            cdDisplay = p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null;
         } else {
             const rd = p._porRonda?.[round] ?? {};
             stockD1Paq_base = rd.stockD1Paq;
             preHoyPaq = rd.preHoyPaq;
             smfDisplay = rd.smfSlot ?? p.stock_max_final;
             smDisplay = rd.smSlot ?? p.stock_maximo;
+            cdDisplay = rd.cd_dinamico ?? (p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null);
         }
 
         let stockD1Paq = stockD1Paq_base;
@@ -577,7 +579,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             <tr class="pa-row-expandible" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}">
                 <td><i class="bi bi-chevron-right pa-expand-icon"></i><div class="pa-prod-name">${esc(p.nombre)}</div></td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
-                <td>${p.cons_semanal !== null && p.cons_semanal !== undefined ? fmt2(p.cons_semanal / 7) : fmt2(null)}</td>
+                <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
@@ -591,7 +593,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             <tr>
                 <td><div class="pa-prod-name">${esc(p.nombre)}</div></td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
-                <td>${p.cons_semanal !== null && p.cons_semanal !== undefined ? fmt2(p.cons_semanal / 7) : fmt2(null)}</td>
+                <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
