@@ -74,7 +74,7 @@ try {
        consumo por (CodIngrediente, codporcion, sucursal, semana)
        ══════════════════════════════════════════════════════════ */
     // ── Detectar semana actual incompleta ────────────────────────────────
-    $hoy  = date('Y-m-d');
+    $hoy = date('Y-m-d');
     $ayer = date('Y-m-d', strtotime('-1 day'));
     $semanaHastaIncompleta = ($rango['fecha_hasta'] > $ayer);
 
@@ -411,13 +411,18 @@ try {
     function calcularProyeccionWLS(array $valores): array
     {
         $n = count($valores);
-        if ($n === 0) return ['promedio' => 0.0, 'm' => 0.0, 'b' => 0.0, 'n' => 0, 'w1' => 0.0, 'w2' => 0.0, 'w3' => 0.0];
+        if ($n === 0)
+            return ['promedio' => 0.0, 'm' => 0.0, 'b' => 0.0, 'n' => 0, 'w1' => 0.0, 'w2' => 0.0, 'w3' => 0.0];
         if ($n === 1) {
-            $v = max(0.0, (float)$valores[0]);
+            $v = max(0.0, (float) $valores[0]);
             return ['promedio' => $v, 'm' => 0.0, 'b' => $v, 'n' => 1, 'w1' => $v, 'w2' => $v, 'w3' => $v];
         }
 
-        $sum_w = 0.0; $sum_wx = 0.0; $sum_wy = 0.0; $sum_wxx = 0.0; $sum_wxy = 0.0;
+        $sum_w = 0.0;
+        $sum_wx = 0.0;
+        $sum_wy = 0.0;
+        $sum_wxx = 0.0;
+        $sum_wxy = 0.0;
         foreach ($valores as $i => $y) {
             $x = $i + 1;
             $w = $x;
@@ -477,8 +482,8 @@ try {
     // VentasGlobalesAccessCSV.local puede contener el NOMBRE o el CÓDIGO de la sucursal.
     // Construimos índices para asegurar encontrar el código y nombre.
     $nombresSucursales = []; // [codigo] => nombre
-    $idsSucursales     = []; // [nombre_lower] => codigo  +  [codigo_lower] => codigo
-    
+    $idsSucursales = []; // [nombre_lower] => codigo  +  [codigo_lower] => codigo
+
     $stmtSuc = $conn->query("SELECT id, codigo, nombre FROM sucursales");
     foreach ($stmtSuc->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $cod = $row['codigo'];
@@ -760,10 +765,10 @@ try {
 
             $nActiva = $lastIdx - $firstIdx + 1;
             $valsActivo = array_slice($valsSuc, $firstIdx, $nActiva);
-            
+
             $n_vals = count($valsActivo);
             $valsActivo = array_slice($valsParaVentana, $firstIdx, $nActiva);
-            
+
             $wlsResSuc = calcularProyeccionWLS($valsActivo);
             $semC = $wlsResSuc['promedio'];
 
@@ -772,7 +777,7 @@ try {
             $cat = $meta['categoria_insumo'];
             $cP = $sucCod ? ($configProductos[$sucCod][$cat] ?? null) : null;
             $adj = $cP ? (float) $cP['ajuste'] : 0;
-            $ciclo = $cP ? (float) $cP['ciclo'] : 7; 
+            $ciclo = $cP ? (float) $cP['ciclo'] : 7;
 
             $diaC = ($semC * (1 + $adj)) / 7;
             $sMin = $diaC * $dSM;
@@ -812,7 +817,7 @@ try {
         $globalWlsB = 0;
         $globalWlsN = 0;
         $globalWlsFirstIdx = 0;
-        
+
         $valsParaVentanaGlobal = $valsGlobal;
         if ($semanaHastaIncompleta) {
             array_pop($valsParaVentanaGlobal);
@@ -822,12 +827,13 @@ try {
         if (!empty($nonZeroGlobal)) {
             $meanNonZeroG = array_sum($nonZeroGlobal) / count($nonZeroGlobal);
             $umbralG = max(0.01, $meanNonZeroG * 0.10);
-            
+
             $firstIdxG = null;
             $lastIdxG = null;
             foreach ($valsParaVentanaGlobal as $i => $v) {
                 if ($v >= $umbralG) {
-                    if ($firstIdxG === null) $firstIdxG = $i;
+                    if ($firstIdxG === null)
+                        $firstIdxG = $i;
                     $lastIdxG = $i;
                 }
             }
@@ -927,3 +933,4 @@ try {
     http_response_code(500);
     echo json_encode(['ok' => false, 'msg' => 'Error al calcular consumo: ' . $e->getMessage()]);
 }
+
