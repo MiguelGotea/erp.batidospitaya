@@ -359,6 +359,7 @@ function consolidarResultados(storeResults) {
                             id_pp: p.id_pp, nombre: p.nombre, unidad: p.unidad,
                             categoria_insumo: p.categoria_insumo,
                             despacho_nombre: p.despacho_nombre,
+                            despacho_presentacion: p.despacho_presentacion,
                             despacho_factor: p.despacho_factor,
                             cons_semanal: 0, stock_minimo: 0, stock_maximo: 0, stock_max_final: 0,
                             _smTotal: 0, _smfTotal: 0,
@@ -571,7 +572,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             rows += `
             <tr class="pa-row-expandible" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}">
                 <td><i class="bi bi-chevron-right pa-expand-icon"></i><div class="pa-prod-name">${esc(p.nombre)}</div></td>
-                <td><span class="pa-unit">${esc(p.despacho_nombre || p.unidad || '—')}</span></td>
+                <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td>${fmt2(p.cons_semanal)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(smDisplay)}</td>
@@ -585,7 +586,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             rows += `
             <tr>
                 <td><div class="pa-prod-name">${esc(p.nombre)}</div></td>
-                <td><span class="pa-unit">${esc(p.despacho_nombre || p.unidad || '—')}</span></td>
+                <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td>${fmt2(p.cons_semanal)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(smDisplay)}</td>
@@ -710,7 +711,7 @@ function exportarPronosticoExcel() {
                     "Fecha de Despacho": fecha,
                     "Grupo": PA_LABELS[cat] || cat,
                     "Producto": productoNombre,
-                    "Presentación de Despacho": p.despacho_nombre || p.unidad || '-',
+                    "Presentación de Despacho": p.despacho_presentacion || p.unidad || '-',
                     "Cons. Semanal": p.cons_semanal !== null && p.cons_semanal !== undefined ? parseFloat(p.cons_semanal).toFixed(2) : '',
                     "Stock Mín": p.stock_minimo !== null && p.stock_minimo !== undefined ? parseFloat(p.stock_minimo).toFixed(2) : '',
                     "Stock Máx": smDisplay !== null && smDisplay !== undefined ? parseFloat(smDisplay).toFixed(2) : '',

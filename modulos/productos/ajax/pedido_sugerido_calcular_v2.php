@@ -787,6 +787,7 @@ try {
             SELECT crp.id_presentacion_producto AS id_pp,
                    crp.cantidad                 AS d_receta_cant,
                    ppd.Nombre                   AS d_nombre,
+                   ppd.presentacion             AS d_presentacion,
                    ud.abreviado                 AS d_unidad
             FROM producto_presentacion ppd
             INNER JOIN componentes_receta_producto crp
@@ -804,7 +805,7 @@ try {
         ");
         $stmtDB->execute(array_values($idsPP));
         foreach ($stmtDB->fetchAll(PDO::FETCH_ASSOC) as $row)
-            $despFMap[(int) $row['id_pp']] = ['factor' => (float) $row['d_receta_cant'], 'nombre' => $row['d_nombre'], 'unidad' => $row['d_unidad']];
+            $despFMap[(int) $row['id_pp']] = ['factor' => (float) $row['d_receta_cant'], 'nombre' => $row['d_nombre'], 'presentacion' => $row['d_presentacion'], 'unidad' => $row['d_unidad']];
 
         // ── Paso A: por maestro (fallback para los que no resolvieron con B)
         $sinDF = array_values(array_filter($idsPP, fn($id) => !isset($despFMap[$id])));
@@ -817,6 +818,7 @@ try {
                        pp.cantidad            AS pp_cant,
                        pp.id_unidad_producto  AS pp_uid,
                        ppd.Nombre             AS d_nombre,
+                       ppd.presentacion       AS d_presentacion,
                        ud.abreviado           AS d_unidad
                 FROM producto_presentacion pp
                 INNER JOIN producto_presentacion ppd
@@ -842,7 +844,7 @@ try {
                         $df = (float) $row['d_cant'] / (max((float) $row['pp_cant'], 0.001) * $facConv);
                 }
                 if ($df !== null)
-                    $despFMap[(int) $row['id_pp']] = ['factor' => round($df, 6), 'nombre' => $row['d_nombre'], 'unidad' => $row['d_unidad']];
+                    $despFMap[(int) $row['id_pp']] = ['factor' => round($df, 6), 'nombre' => $row['d_nombre'], 'presentacion' => $row['d_presentacion'], 'unidad' => $row['d_unidad']];
             }
         }
 
@@ -856,6 +858,7 @@ try {
             $stmtDC = $conn->prepare("
                 SELECT pp.id                  AS id_pp,
                        ppd.Nombre             AS d_nombre,
+                       ppd.presentacion       AS d_presentacion,
                        ud.abreviado           AS d_unidad,
                        crp.cantidad           AS d_receta_cant
                 FROM producto_presentacion pp
@@ -879,7 +882,7 @@ try {
             foreach ($stmtDC->fetchAll(PDO::FETCH_ASSOC) as $row) {
                 $cant = (float) $row['d_receta_cant'];
                 if ($cant > 0)
-                    $despFMap[(int) $row['id_pp']] = ['factor' => round($cant, 6), 'nombre' => $row['d_nombre'], 'unidad' => $row['d_unidad']];
+                    $despFMap[(int) $row['id_pp']] = ['factor' => round($cant, 6), 'nombre' => $row['d_nombre'], 'presentacion' => $row['d_presentacion'], 'unidad' => $row['d_unidad']];
             }
         }
     }
@@ -912,6 +915,7 @@ try {
 
         $p['despacho_factor'] = $dfInfo ? $dfInfo['factor'] : null;
         $p['despacho_nombre'] = $dfInfo ? $dfInfo['nombre'] : null;
+        $p['despacho_presentacion'] = $dfInfo ? $dfInfo['presentacion'] : null;
         $p['despacho_unidad'] = $dfInfo ? $dfInfo['unidad'] : null;
 
         // Stock máximo final en unidades de USO (con factor congelados si aplica)
