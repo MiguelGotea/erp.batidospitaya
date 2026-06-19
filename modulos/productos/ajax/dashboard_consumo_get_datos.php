@@ -73,10 +73,34 @@ try {
        Una sola query que une Ventas × SubReceta y devuelve
        consumo por (CodIngrediente, codporcion, sucursal, semana)
        ══════════════════════════════════════════════════════════ */
+    // ── Detectar semana actual incompleta ────────────────────────────────
+    $hoy  = date('Y-m-d');
+    $ayer = date('Y-m-d', strtotime('-1 day'));
+    $semanaHastaIncompleta = ($rango['fecha_hasta'] > $ayer);
+
+    $fechaFinQuery = $semanaHastaIncompleta ? $ayer : $rango['fecha_hasta'];
+    $factorEscalaSemActual = 1.0;
+
+    if ($semanaHastaIncompleta) {
+        $stmtIniSem = $conn->prepare("SELECT fecha_inicio FROM SemanasSistema WHERE numero_semana = ? LIMIT 1");
+        $stmtIniSem->execute([$numHasta]);
+        $iniSemActual = $stmtIniSem->fetchColumn();
+        if ($iniSemActual && $iniSemActual <= $ayer) {
+            $diasConDatos = (int)((strtotime($ayer) - strtotime($iniSemActual)) / 86400) + 1;
+            if ($diasConDatos > 0 && $diasConDatos < 7) {
+                $factorEscalaSemActual = 7.0 / $diasConDatos;
+            }
+        } else {
+            $numHasta = $numHasta - 1;
+            $semanaHastaIncompleta = false;
+            $factorEscalaSemActual = 1.0;
+        }
+    }
+
     $whereSuc = '';
     $paramsSql = [
         ':fecha_desde' => $rango['fecha_desde'],
-        ':fecha_hasta' => $rango['fecha_hasta'],
+        ':fecha_hasta' => $fechaFinQuery,
         ':sem_desde' => $numDesde,
         ':sem_hasta' => $numHasta,
     ];
@@ -595,6 +619,12 @@ try {
             if ($esP1) {
                 $consumido = round($consumido * 2) / 2;
             }
+        }
+
+        // Si esta fila corresponde a la semana actual incompleta, escalar el consumo
+        // parcial al equivalente de 7 días completos (7/N_días_transcurridos).
+        if ($semanaHastaIncompleta && (int)$f['semana'] === $numHasta && $factorEscalaSemActual > 1.0) {
+            $consumido = $consumido * $factorEscalaSemActual;
         }
 
         // ── Guardar metadata ──────────────────────────────────
