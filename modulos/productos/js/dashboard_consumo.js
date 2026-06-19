@@ -2758,8 +2758,13 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
                         label: function (context) {
                             if (context.raw === null) return null;
                             let label = context.dataset.label || '';
+                            let extra = '';
+                            if (context.dataset.despachoAmounts && context.dataset.despachoAmounts[context.dataIndex] !== null && context.dataset.despachoAmounts[context.dataIndex] !== undefined) {
+                                let qty = context.dataset.despachoAmounts[context.dataIndex];
+                                extra = ` (+${qty} paq proyectados)`;
+                            }
                             if (label) label += ': ';
-                            label += fmtKardex(context.raw, 2);
+                            label += fmtKardex(context.raw, 2) + extra;
                             return label;
                         }
                     }
@@ -3035,13 +3040,16 @@ async function calcularPronosticoAbastKardex(
         if (dispatchMarkers.length > 0) {
             const dispData    = new Array(allDays.length).fill(null);
             const dispRadius  = new Array(allDays.length).fill(0);
+            const dispAmounts = new Array(allDays.length).fill(null);
             dispatchMarkers.forEach(m => {
                 dispData[m.idx]   = m.val;
                 dispRadius[m.idx] = 10;
+                dispAmounts[m.idx] = m.despacho;
             });
             datasets.push({
                 label: `🚧 Despacho(s) programado(s)`,
                 data: dispData,
+                despachoAmounts: dispAmounts,
                 borderColor: '#27ae60',
                 backgroundColor: '#27ae60',
                 pointRadius: dispRadius,
