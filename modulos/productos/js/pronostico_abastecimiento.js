@@ -1006,6 +1006,7 @@ function exportarPronosticoConsumoExcel() {
                     consolidados.set(p.id_pp, { 
                         nombre: p.nombre, 
                         grupo: PA_LABELS[p.categoria_insumo] || p.categoria_insumo,
+                        presentacion: p.despacho_presentacion || p.unidad || '-',
                         cd1: 0, cd2: 0, cd3: 0, cd4: 0 
                     });
                 }
@@ -1021,6 +1022,7 @@ function exportarPronosticoConsumoExcel() {
         const datosConsolidado = arrConsolidado.map(c => ({
             "Grupo": c.grupo,
             "Producto": c.nombre,
+            "Presentación": c.presentacion,
             "Semana 1 (Actual)": parseFloat(c.cd1.toFixed(4)),
             "Semana 2": parseFloat(c.cd2.toFixed(4)),
             "Semana 3": parseFloat(c.cd3.toFixed(4)),
@@ -1028,7 +1030,7 @@ function exportarPronosticoConsumoExcel() {
         }));
 
         const wsCons = XLSX.utils.json_to_sheet(datosConsolidado);
-        wsCons['!cols'] = [{wch: 25}, {wch: 40}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
+        wsCons['!cols'] = [{wch: 25}, {wch: 40}, {wch: 20}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
         XLSX.utils.book_append_sheet(wb, wsCons, "Consolidado");
 
         Object.values(window.lastStoreResults).forEach(sr => {
@@ -1038,6 +1040,7 @@ function exportarPronosticoConsumoExcel() {
                 return {
                     "Grupo": PA_LABELS[p.categoria_insumo] || p.categoria_insumo,
                     "Producto": p.nombre,
+                    "Presentación": p.despacho_presentacion || p.unidad || '-',
                     "Semana 1 (Actual)": parseFloat(proy.cd1.toFixed(4)),
                     "Semana 2": parseFloat(proy.cd2.toFixed(4)),
                     "Semana 3": parseFloat(proy.cd3.toFixed(4)),
@@ -1045,7 +1048,7 @@ function exportarPronosticoConsumoExcel() {
                 };
             });
             const wsTienda = XLSX.utils.json_to_sheet(datosTienda);
-            wsTienda['!cols'] = [{wch: 25}, {wch: 40}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
+            wsTienda['!cols'] = [{wch: 25}, {wch: 40}, {wch: 20}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
             const safeName = sr.nombre.substring(0, 31).replace(/[\\/?*\[\]]/g, '');
             XLSX.utils.book_append_sheet(wb, wsTienda, safeName);
         });
@@ -1058,6 +1061,7 @@ function exportarPronosticoConsumoExcel() {
             return {
                 "Grupo": PA_LABELS[p.categoria_insumo] || p.categoria_insumo,
                 "Producto": p.nombre,
+                "Presentación": p.despacho_presentacion || p.unidad || '-',
                 "Semana 1 (Actual)": parseFloat(proy.cd1.toFixed(4)),
                 "Semana 2": parseFloat(proy.cd2.toFixed(4)),
                 "Semana 3": parseFloat(proy.cd3.toFixed(4)),
@@ -1065,7 +1069,7 @@ function exportarPronosticoConsumoExcel() {
             };
         });
         const wsTienda = XLSX.utils.json_to_sheet(datosTienda);
-        wsTienda['!cols'] = [{wch: 25}, {wch: 40}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
+        wsTienda['!cols'] = [{wch: 25}, {wch: 40}, {wch: 20}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
         XLSX.utils.book_append_sheet(wb, wsTienda, "Pronóstico Consumo");
     }
 
