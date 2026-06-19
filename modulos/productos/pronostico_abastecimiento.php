@@ -186,8 +186,8 @@ try {
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
                                 <ul class="small text-muted mb-0">
                                     <li><b>Prom. Consumo:</b> Promedio sobre la <b>Ventana Activa</b>.</li>
-                                    <li><b>Cons. Semanal:</b> Proyección inteligente (tendencia) que da más peso a las semanas recientes.</li>
-                                    <li><b>Ajuste demanda:</b> <i>(Obsoleto, sin efecto en el cálculo actual)</i>.</li>
+                                    <li><b>Cons. Semanal (WLS):</b> Calculado mediante regresión de <b>Mínimos Cuadrados Ponderados (WLS)</b> para dar mayor peso a la tendencia reciente.</li>
+                                    <li><b>Proyección Futura:</b> El algoritmo congela la tendencia WLS actual como una tasa de "quemado" constante (línea recta) para descontar el stock hacia el futuro, no varía semana a semana.</li>
                                     <li><b>Consumo Diario:</b> Cons. Semanal ÷ 7 días.</li>
                                 </ul>
                             </div>
