@@ -105,27 +105,27 @@ $(document).ready(() => {
         }
     });
 
-    $('#pa-search-producto').on('input', function() {
+    $('#pa-search-producto').on('input', function () {
         const term = $(this).val().toLowerCase().trim();
         if (!term) {
             $('.pa-date-block, .pa-cat-card, .pa-table tbody tr').removeClass('d-none-search');
             return;
         }
 
-        $('.pa-table tbody').each(function() {
+        $('.pa-table tbody').each(function () {
             let hasVisibleRows = false;
-            
-            $(this).find('tr:not(.pa-tienda-sub)').each(function() {
+
+            $(this).find('tr:not(.pa-tienda-sub)').each(function () {
                 const $row = $(this);
                 if ($row.hasClass('pa-no-data-row')) return;
-                
+
                 const text = $row.find('.pa-prod-name').text().toLowerCase();
                 const isMatch = text.includes(term);
-                
+
                 if (isMatch) {
                     $row.removeClass('d-none-search');
                     hasVisibleRows = true;
-                    
+
                     const ppId = $row.data('pp-id');
                     const slotKey = $row.data('slot-key');
                     if (ppId && slotKey) {
@@ -133,7 +133,7 @@ $(document).ready(() => {
                     }
                 } else {
                     $row.addClass('d-none-search');
-                    
+
                     const ppId = $row.data('pp-id');
                     const slotKey = $row.data('slot-key');
                     if (ppId && slotKey) {
@@ -141,7 +141,7 @@ $(document).ready(() => {
                     }
                 }
             });
-            
+
             const $card = $(this).closest('.pa-cat-card');
             if (hasVisibleRows) {
                 $card.removeClass('d-none-search');
@@ -150,7 +150,7 @@ $(document).ready(() => {
             }
         });
 
-        $('.pa-date-block').each(function() {
+        $('.pa-date-block').each(function () {
             const hasVisibleCards = $(this).find('.pa-cat-card:not(.d-none-search)').length > 0;
             if (hasVisibleCards) {
                 $(this).removeClass('d-none-search');
@@ -318,7 +318,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     const wls_m = p.wls_m ?? 0;
                     const wls_b = p.wls_b ?? 0;
                     let wls_x = p.wls_n ?? 0;
-                    
+
                     if (resPedido.wls_last_fecha_fin) {
                         const dF = new Date(resPedido.wls_last_fecha_fin + 'T23:59:59');
                         const dD = new Date(fecha + 'T12:00:00');
@@ -328,11 +328,11 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     } else {
                         // Fallback
                         if (p._current_wls_x === undefined) {
-                            p._current_wls_x = (p.wls_n ?? 0) + 1; 
+                            p._current_wls_x = (p.wls_n ?? 0) + 1;
                         }
                         wls_x = Math.floor(p._current_wls_x);
                     }
-                    
+
                     const semC_ronda = Math.max(0, (wls_m * wls_x) + wls_b);
                     const cd = semC_ronda / 7;
 
@@ -458,7 +458,7 @@ function consolidarResultados(storeResults) {
                     item.stock_minimo += p.stock_minimo ?? 0;
                     item.stock_maximo += p.stock_maximo ?? 0;
                     item.stock_max_final += p.stock_max_final ?? p.stock_maximo ?? 0;
-                    
+
                     const sMinRound = p._porRonda?.[slot.round]?.sMinSlot ?? p.stock_minimo ?? 0;
                     const smRound = p._porRonda?.[slot.round]?.smSlot ?? p.stock_maximo ?? 0;
                     const smfRound = p._porRonda?.[slot.round]?.smfSlot ?? p.stock_max_final ?? p.stock_maximo ?? 0;
@@ -569,7 +569,7 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
                     pre_hoy = rd.preHoyPaq;
                     smf = rd.smfSlot ?? p.stock_max_final;
                 }
-                
+
                 let s_final = s_base;
                 if (window.pa_include_preingreso && s_final !== null && pre_hoy) {
                     s_final += pre_hoy;
@@ -624,7 +624,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             cdDisplay = rd.cd_dinamico ?? (p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null);
             invTeoricoAyerPaq = rd.invTeoricoAyerPaq;
         }
-        
+
         let csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
 
         let stockD1Paq = stockD1Paq_base;
@@ -647,7 +647,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
 
         let preHtml = '';
         if (preHoyPaq) {
-            preHtml = window.pa_include_preingreso 
+            preHtml = window.pa_include_preingreso
                 ? `<span class="pa-stock-d1 positive" title="Sumado a Pronóstico Inventario">+${preHoyPaq.toFixed(1)}</span>`
                 : `<span class="pa-stock-d1" style="color:#9ca3af;" title="Desactivado">+${preHoyPaq.toFixed(1)}</span>`;
         } else {
@@ -733,7 +733,7 @@ function buildSubRowsTiendas(item, slotKey) {
     let rows = '';
     Object.entries(item._porTienda || {}).forEach(([cod, td]) => {
         const smf = td.stock_max_final ?? 0;
-        
+
         let stockD1Paq = td.stockD1Paq;
         if (window.pa_include_preingreso && stockD1Paq !== null && td.preHoyPaq) {
             stockD1Paq += td.preHoyPaq;
@@ -748,10 +748,10 @@ function buildSubRowsTiendas(item, slotKey) {
             const cls = pct >= 0.5 ? 'positive' : pct >= 0.25 ? 'low' : 'critical';
             sHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Paq.toFixed(1)}</span>`;
         }
-        
+
         let preHtml = '';
         if (td.preHoyPaq) {
-            preHtml = window.pa_include_preingreso 
+            preHtml = window.pa_include_preingreso
                 ? `<span class="pa-stock-d1 positive" style="transform: scale(0.9);">+${td.preHoyPaq.toFixed(1)}</span>`
                 : `<span class="pa-stock-d1 text-muted" style="transform: scale(0.9);">+${td.preHoyPaq.toFixed(1)}</span>`;
         } else {
@@ -789,15 +789,15 @@ function exportarPronosticoExcel() {
         Swal.fire({ icon: 'warning', title: 'Sin datos', text: 'No hay datos para exportar.' });
         return;
     }
-    
+
     let datosExportar = [];
-    
+
     currentAgendaData.fechasOrdenadas.forEach(fecha => {
         const agenda = currentAgendaData.agendaMap[fecha];
         PA_GRUPOS.forEach(cat => {
             if (!agenda[cat]) return;
             const slot = agenda[cat];
-            
+
             // Recorrer los items
             slot.items.forEach(p => {
                 let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay;
@@ -813,16 +813,16 @@ function exportarPronosticoExcel() {
                     smfDisplay = rd.smfSlot ?? p.stock_max_final;
                     smDisplay = rd.smSlot ?? p.stock_maximo;
                 }
-                
+
                 let stockD1Paq = stockD1Paq_base;
                 if (window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq) {
                     stockD1Paq += preHoyPaq;
                 }
-                
+
                 let despPron = stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null;
-                
+
                 let productoNombre = p.nombre;
-                
+
                 let pronosticoInv = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq.toFixed(2) : 'Sin datos';
                 if (window.pa_include_preingreso && preHoyPaq) pronosticoInv += ` (+${preHoyPaq.toFixed(2)})`;
 
@@ -837,7 +837,7 @@ function exportarPronosticoExcel() {
                     invTeoricoAyerPaq = rd.invTeoricoAyerPaq;
                 }
                 let csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
-                
+
                 datosExportar.push({
                     "Fecha de Despacho": fecha,
                     "Grupo": PA_LABELS[cat] || cat,
@@ -852,22 +852,22 @@ function exportarPronosticoExcel() {
                     "Pronóstico Inventario": pronosticoInv,
                     "Despacho": despPron !== null ? despPron : '-'
                 });
-                
+
                 if (currentAgendaData.isConsolidado && p._porTienda) {
                     Object.entries(p._porTienda).forEach(([cod, td]) => {
                         let sub_smfDisplay = td.stock_max_final ?? 0;
                         let sub_smDisplay = td.stock_maximo ?? 0;
                         let sub_stockD1Paq = td.stockD1Paq;
-                        
+
                         if (window.pa_include_preingreso && sub_stockD1Paq !== null && td.preHoyPaq) {
                             sub_stockD1Paq += td.preHoyPaq;
                         }
-                        
+
                         let sub_despPron = sub_stockD1Paq !== null ? Math.max(0, Math.ceil((sub_smfDisplay ?? 0) - sub_stockD1Paq)) : null;
-                        
+
                         let sub_pronosticoInv = sub_stockD1Paq !== null && sub_stockD1Paq !== undefined ? sub_stockD1Paq.toFixed(2) : 'Sin datos';
                         if (window.pa_include_preingreso && td.preHoyPaq) sub_pronosticoInv += ` (+${td.preHoyPaq.toFixed(2)})`;
-                        
+
                         datosExportar.push({
                             "Fecha de Despacho": fecha,
                             "Grupo": PA_LABELS[cat] || cat,
@@ -885,27 +885,28 @@ function exportarPronosticoExcel() {
             });
         });
     });
-    
+
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(datosExportar);
-    
+
     // Auto-ajustar ancho de columnas
     const wscols = [
-        {wch: 18}, // Fecha
-        {wch: 25}, // Grupo
-        {wch: 40}, // Producto
-        {wch: 25}, // Presentación de Despacho
-        {wch: 15}, // Consumo Diario
-        {wch: 15}, // Stock Mín
-        {wch: 15}, // Stock Máx
-        {wch: 18}, // Stock Máx Ajustado
-        {wch: 25}, // Pronóstico Inventario
-        {wch: 15}  // Despacho
+        { wch: 18 }, // Fecha
+        { wch: 25 }, // Grupo
+        { wch: 40 }, // Producto
+        { wch: 25 }, // Presentación de Despacho
+        { wch: 15 }, // Consumo Diario
+        { wch: 15 }, // Stock Mín
+        { wch: 15 }, // Stock Máx
+        { wch: 18 }, // Stock Máx Ajustado
+        { wch: 25 }, // Pronóstico Inventario
+        { wch: 15 }  // Despacho
     ];
     ws['!cols'] = wscols;
 
     XLSX.utils.book_append_sheet(wb, ws, "Pronóstico");
-    
-    let nombreArchivo = `Pronostico_Abastecimiento_${new Date().toISOString().slice(0,10)}.xlsx`;
+
+    let nombreArchivo = `Pronostico_Abastecimiento_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, nombreArchivo);
 }
+
