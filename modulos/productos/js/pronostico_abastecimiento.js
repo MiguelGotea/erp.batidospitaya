@@ -58,7 +58,7 @@ function calcularCicloSlot(p, fechaStr) {
  * @param {number} cicloSlot Ciclo real de esta ronda (días)
  * @returns {number|null}
  */
-function calcularStockMaxSlot(p, cicloSlot) {
+function calcularStockMaxSlot(p, cicloSlot, cd_dinamico = null) {
     if (p.plan_tipo_frecuencia !== 'dias_semana') {
         // Para n_semanas el ciclo es fijo
         return {
@@ -67,7 +67,7 @@ function calcularStockMaxSlot(p, cicloSlot) {
         };
     }
     // Nueva fórmula: Consumo Diario * Ciclo + Stock Mínimo Base
-    const cd = p.cons_diario ?? 0;
+    const cd = cd_dinamico !== null ? cd_dinamico : (p.cons_diario ?? 0);
     const dSM = p.dias_stock_min ?? 0;
     const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
 
@@ -240,10 +240,20 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                 slot.items.forEach(p => {
                     const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
                     const ciclo = slot.cicloSlot;                        // ciclo real de esta ronda
-                    const maximos = calcularStockMaxSlot(p, ciclo);
+
+                    // Proyección Dinámica WLS
+                    if (p._current_wls_x === undefined) {
+                        p._current_wls_x = (p.wls_n ?? 0) + 1; // Ronda 1 inicia proyectando a la semana n+1
+                    }
+                    
+                    const wls_m = p.wls_m ?? 0;
+                    const wls_b = p.wls_b ?? 0;
+                    const semC_ronda = Math.max(0, (wls_m * p._current_wls_x) + wls_b);
+                    const cd = semC_ronda / 7;
+
+                    const maximos = calcularStockMaxSlot(p, ciclo, cd);
                     const smSlot = maximos.smSlot;
                     const smfSlot = maximos.smfSlot;        // stock_max recalculado para este ciclo
-                    const cd = p.cons_diario ?? 0;
 
                     let stockD1Paq;
                     if (slot.round === 1) {
@@ -264,8 +274,12 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         smfSlot,                // stock_max ajustado para este despacho específico
                         despachoPron: stockD1Paq !== null
                             ? Math.max(0, Math.ceil((smfSlot ?? 0) - stockD1Paq))
-                            : null
+                            : null,
+                        cd_dinamico: cd
                     };
+
+                    // Avanzar la proyección de tiempo para la siguiente ronda de este producto
+                    p._current_wls_x += (ciclo / 7);
                 });
             });
         });

@@ -41,11 +41,11 @@ $nSemanas = $numHasta - $numDesde + 1;
  * Asigna mayor peso a los datos más recientes (w = i).
  * Retorna el promedio proyectado de las próximas 3 semanas.
  */
-function calcularProyeccionWLS(array $valores): float
+function calcularProyeccionWLS(array $valores): array
 {
     $n = count($valores);
-    if ($n === 0) return 0.0;
-    if ($n === 1) return max(0.0, (float)$valores[0]);
+    if ($n === 0) return ['promedio' => 0.0, 'm' => 0.0, 'b' => 0.0, 'n' => 0];
+    if ($n === 1) return ['promedio' => max(0.0, (float)$valores[0]), 'm' => 0.0, 'b' => max(0.0, (float)$valores[0]), 'n' => 1];
 
     $sum_w = 0.0;
     $sum_wx = 0.0;
@@ -67,7 +67,8 @@ function calcularProyeccionWLS(array $valores): float
 
     $denominator = ($sum_w * $sum_wxx) - ($sum_wx * $sum_wx);
     if (abs($denominator) < 0.0001) {
-        return array_sum($valores) / $n;
+        $prom = array_sum($valores) / $n;
+        return ['promedio' => $prom, 'm' => 0.0, 'b' => $prom, 'n' => $n];
     }
 
     $slope = (($sum_w * $sum_wxy) - ($sum_wx * $sum_wy)) / $denominator;
@@ -77,7 +78,12 @@ function calcularProyeccionWLS(array $valores): float
     $w2 = max(0.0, $slope * ($n + 2) + $intercept);
     $w3 = max(0.0, $slope * ($n + 3) + $intercept);
 
-    return ($w1 + $w2 + $w3) / 3.0;
+    return [
+        'promedio' => ($w1 + $w2 + $w3) / 3.0,
+        'm' => $slope,
+        'b' => $intercept,
+        'n' => $n
+    ];
 }
 
 function resolverUnidadId_PS(string $nombre, array &$unidadPorNombre): ?int
@@ -698,7 +704,11 @@ try {
         $nActiva = $lastIdx - $firstIdx + 1;
         $valsActivo = array_slice($vals, $firstIdx, $nActiva);
         $prom = array_sum($valsActivo) / $nActiva;
-        $semC = calcularProyeccionWLS($valsActivo);
+        $wlsRes = calcularProyeccionWLS($valsActivo);
+        $semC = $wlsRes['promedio'];
+        $wls_m = $wlsRes['m'];
+        $wls_b = $wlsRes['b'];
+        $wls_n = $wlsRes['n'];
         $m = $metaPP[$idP];
         $cat = $m['cat'];
         $cP = $cat ? ($cPs[$cat] ?? null) : null;
@@ -747,6 +757,12 @@ try {
 
             'fecha_proximo_despacho'  => $fechaProxDespacho,
             'dias_hasta_despacho'     => $diasHastaDespacho,
+            
+            // WLS metadatos para proyección dinámica
+            'wls_m' => $wls_m,
+            'wls_b' => $wls_b,
+            'wls_n' => $wls_n,
+
             // Metadatos del plan para que el JS calcule el ciclo real de cada ronda
             'plan_tipo_frecuencia'    => $planCat ? $planCat['tipo_frecuencia']  : null,
             'plan_dias_semana'        => $planCat ? (is_string($planCat['dias_semana']) ? json_decode($planCat['dias_semana'], true) : $planCat['dias_semana']) : null,

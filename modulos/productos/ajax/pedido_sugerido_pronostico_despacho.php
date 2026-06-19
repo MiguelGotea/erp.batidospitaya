@@ -51,11 +51,11 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaDespacho)) {
  * Asigna mayor peso a los datos más recientes (w = i).
  * Retorna el promedio proyectado de las próximas 3 semanas.
  */
-function calcularProyeccionWLS(array $valores): float
+function calcularProyeccionWLS(array $valores): array
 {
     $n = count($valores);
-    if ($n === 0) return 0.0;
-    if ($n === 1) return max(0.0, (float)$valores[0]);
+    if ($n === 0) return ['promedio' => 0.0, 'm' => 0.0, 'b' => 0.0, 'n' => 0];
+    if ($n === 1) return ['promedio' => max(0.0, (float)$valores[0]), 'm' => 0.0, 'b' => max(0.0, (float)$valores[0]), 'n' => 1];
 
     $sum_w = 0.0;
     $sum_wx = 0.0;
@@ -77,7 +77,8 @@ function calcularProyeccionWLS(array $valores): float
 
     $denominator = ($sum_w * $sum_wxx) - ($sum_wx * $sum_wx);
     if (abs($denominator) < 0.0001) {
-        return array_sum($valores) / $n;
+        $prom = array_sum($valores) / $n;
+        return ['promedio' => $prom, 'm' => 0.0, 'b' => $prom, 'n' => $n];
     }
 
     $slope = (($sum_w * $sum_wxy) - ($sum_wx * $sum_wy)) / $denominator;
@@ -87,7 +88,12 @@ function calcularProyeccionWLS(array $valores): float
     $w2 = max(0.0, $slope * ($n + 2) + $intercept);
     $w3 = max(0.0, $slope * ($n + 3) + $intercept);
 
-    return ($w1 + $w2 + $w3) / 3.0;
+    return [
+        'promedio' => ($w1 + $w2 + $w3) / 3.0,
+        'm' => $slope,
+        'b' => $intercept,
+        'n' => $n
+    ];
 }
 
 try {
@@ -248,7 +254,8 @@ try {
                 }
                 $nonZero = array_filter($vals, fn($v) => $v > 0);
                 if (!empty($nonZero)) {
-                    $semC = calcularProyeccionWLS($vals);
+                    $wlsRes = calcularProyeccionWLS($vals);
+                    $semC = $wlsRes['promedio'];
                     $stmtAdj = $conn->prepare("SELECT clp.ajuste_demanda FROM producto_presentacion pp LEFT JOIN configuracion_logistica_producto clp ON clp.codigo_insumo=pp.categoria_insumo AND clp.cod_sucursal=? WHERE pp.id=? LIMIT 1");
                     $stmtAdj->execute([$codSucursal, $idPP]);
                     $adj = (float)($stmtAdj->fetchColumn() ?: 0);
