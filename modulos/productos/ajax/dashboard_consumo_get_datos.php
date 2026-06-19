@@ -875,10 +875,10 @@ try {
             'por_semana' => $consPorSem,
             'por_sucursal' => $porSucRes,
             'desglose_semxsuc' => $desgloseSemsuc,
-            'proy_m' => $globalWlsM,
-            'proy_b' => $globalWlsB,
-            'proy_n' => $globalWlsN,
-            'proy_first_idx' => $globalWlsFirstIdx,
+            'wls_m' => $globalWlsM,
+            'wls_b' => $globalWlsB,
+            'wls_n' => $globalWlsN,
+            'wls_first_idx' => $globalWlsFirstIdx,
         ];
     }
 
