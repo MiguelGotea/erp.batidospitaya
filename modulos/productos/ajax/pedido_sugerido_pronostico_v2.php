@@ -287,6 +287,20 @@ try {
         $st5 = $conn->prepare("SELECT pre.Fecha, sub.CodCotizacion, sub.Cantidad FROM msaccess_masivo_SubPreIngresosPitaya sub INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya = sub.CodPreIngresoPitaya INNER JOIN SemanasSistema ss ON pre.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana BETWEEN ? AND ? AND sub.CodCotizacion IN ($phCods) AND pre.Destino REGEXP ?");
         $st5->execute(array_merge([$semDesde, $semHasta], $allCodsBalance, ["[Pp]itaya[[:space:]]+{$codSuc}([^0-9]|\$)"]));
         $addMov($st5->fetchAll(PDO::FETCH_ASSOC), 1);
+        
+        // 13f. Preingresos de HOY (solo para el toggle Despacho en Curso)
+        $preingresosHoyByPP = [];
+        $stHoy = $conn->prepare("SELECT pre.Fecha, sub.CodCotizacion, sub.Cantidad FROM msaccess_masivo_SubPreIngresosPitaya sub INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya = sub.CodPreIngresoPitaya WHERE pre.Fecha = ? AND sub.CodCotizacion IN ($phCods) AND pre.Destino REGEXP ?");
+        $stHoy->execute(array_merge([$hoy], $allCodsBalance, ["[Pp]itaya[[:space:]]+{$codSuc}([^0-9]|\$)"]));
+        foreach ($stHoy->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $cod = (int)$r['CodCotizacion']; 
+            foreach ($idsPP as $tid) {
+                if (isset($codMapBalanceAll[$tid][$cod])) {
+                    if (!isset($preingresosHoyByPP[$tid])) $preingresosHoyByPP[$tid] = 0;
+                    $preingresosHoyByPP[$tid] += round((float)$r['Cantidad'] * $codMapBalanceAll[$tid][$cod]['factor'], 4);
+                }
+            }
+        }
     }
 
     // ── 14. Consumo teórico diario por id_pp ─────────────────────────────
@@ -381,10 +395,14 @@ try {
         }
     }
 
-    // ── 15. Cálculo final: balance diario + proyección DOW ────────────────
+    // 15. Cálculo final: balance diario + proyección DOW
     $stocks = [];
+    $preingresosHoyRes = [];
     foreach ($idsPP as $targetId) {
         $fechaD1 = $fechasD1Clean[$targetId] ?? null;
+
+        // Default preingreso hoy
+        $preingresosHoyRes[(string)$targetId] = round($preingresosHoyByPP[$targetId] ?? 0, 2);
 
         // Sin fecha asignada → null
         if (!$fechaD1) { $stocks[(string)$targetId] = null; continue; }
@@ -449,7 +467,7 @@ try {
         $stocks[(string)$targetId] = round($balFc, 2);
     }
 
-    echo json_encode(['ok' => true, 'stocks' => $stocks], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['ok' => true, 'stocks' => $stocks, 'preingresos_hoy' => $preingresosHoyRes], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);

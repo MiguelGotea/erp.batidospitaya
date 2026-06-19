@@ -84,6 +84,9 @@ function calcularStockMaxSlot(p, cicloSlot, cd_dinamico = null) {
     };
 }
 
+let currentAgendaData = null;
+window.pa_include_preingreso = false;
+
 $(document).ready(() => {
     cargarSucursales();
     $('#pa-btn-calcular').on('click', calcularAgenda);
@@ -92,6 +95,12 @@ $(document).ready(() => {
         const sk = $(this).data('slot-key');
         $(`.pa-tienda-sub[data-slot-key="${sk}"][data-pp-id="${ppId}"]`).toggleClass('d-none');
         $(this).find('.pa-expand-icon').toggleClass('rotated');
+    });
+    $('#pa-agenda').on('change', '.pa-toggle-preingreso', function () {
+        window.pa_include_preingreso = $(this).is(':checked');
+        if (currentAgendaData) {
+            renderAgenda(currentAgendaData.agendaMap, currentAgendaData.fechasOrdenadas, currentAgendaData.sinPlan, currentAgendaData.isConsolidado, currentAgendaData.nTiendas);
+        }
     });
 });
 
@@ -160,6 +169,7 @@ async function calcularAgenda() {
         } else {
             const datos = await calcularDatosParaSucursal(semDesde, semHasta, semCorte, sucursal);
             if (!datos) return;
+            currentAgendaData = { agendaMap: datos.agendaMap, fechasOrdenadas: datos.fechasOrdenadas, sinPlan: datos.sinPlan, isConsolidado: false, nTiendas: 1 };
             renderAgenda(datos.agendaMap, datos.fechasOrdenadas, datos.sinPlan, false);
             showDatos();
         }
@@ -221,6 +231,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
 
         const prodConPlan = Object.values(conPlan).flat();
         const stockRonda1 = {};
+        const preingresosHoy = {};
         if (prodConPlan.length) {
             const fdPron = new FormData();
             fdPron.append('semana_desde', semDesde);
@@ -232,7 +243,10 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                 fdPron.append(`fechas_d1[${p.id_pp}]`, addDaysStr(p.fecha_proximo_despacho, -1));
             });
             const resPron = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method: 'POST', body: fdPron }).then(r => r.json());
-            if (resPron.ok) Object.entries(resPron.stocks || {}).forEach(([id, val]) => { stockRonda1[String(id)] = val; });
+            if (resPron.ok) {
+                Object.entries(resPron.stocks || {}).forEach(([id, val]) => { stockRonda1[String(id)] = val; });
+                Object.entries(resPron.preingresos_hoy || {}).forEach(([id, val]) => { preingresosHoy[String(id)] = val; });
+            }
         }
 
         fechasOrdenadas.forEach(fecha => {
@@ -256,25 +270,24 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     const smfSlot = maximos.smfSlot;        // stock_max recalculado para este ciclo
 
                     let stockD1Paq;
+                    let preHoyPaq = 0;
                     if (slot.round === 1) {
                         // Ronda 1: usar el pronóstico real de inventario D-1
                         const su = stockRonda1[String(p.id_pp)];
                         stockD1Paq = (su !== null && su !== undefined) ? Math.max(0, su / df) : null;
+                        const ph = preingresosHoy[String(p.id_pp)];
+                        preHoyPaq = (ph !== null && ph !== undefined && ph > 0) ? (ph / df) : 0;
                     } else {
                         // Rondas siguientes: estimación teórica (stock_max del slot anterior − consumo del ciclo)
-                        // Usamos el smfSlot del slot ANTERIOR (el que acaba de terminar) ≈ smfSlot actual
-                        // (aproximación conservadora, idéntica a la lógica anterior pero con ciclo correcto)
                         stockD1Paq = Math.max(0, (smfSlot ?? 0) - (cd * ciclo) / df);
                     }
 
                     if (!p._porRonda) p._porRonda = {};
                     p._porRonda[slot.round] = {
                         stockD1Paq,
+                        preHoyPaq,
                         smSlot,
                         smfSlot,                // stock_max ajustado para este despacho específico
-                        despachoPron: stockD1Paq !== null
-                            ? Math.max(0, Math.ceil((smfSlot ?? 0) - stockD1Paq))
-                            : null,
                         cd_dinamico: cd
                     };
 
@@ -316,6 +329,7 @@ async function calcularAgendaConsolidada(semDesde, semHasta, semCorte) {
         return;
     }
 
+    currentAgendaData = { agendaMap: cons.agendaMap, fechasOrdenadas: cons.fechasOrdenadas, sinPlan: cons.sinPlan, isConsolidado: true, nTiendas: Object.keys(storeResults).length };
     renderAgenda(cons.agendaMap, cons.fechasOrdenadas, cons.sinPlan, true, Object.keys(storeResults).length);
     showDatos();
 }
@@ -347,7 +361,8 @@ function consolidarResultados(storeResults) {
                             despacho_nombre: p.despacho_nombre,
                             despacho_factor: p.despacho_factor,
                             cons_semanal: 0, stock_minimo: 0, stock_maximo: 0, stock_max_final: 0,
-                            _stockD1Total: null, _despTotal: null, _porTienda: {}
+                            _smTotal: 0, _smfTotal: 0,
+                            _stockD1Total: null, _preHoyTotal: null, _porTienda: {}
                         };
                     }
                     const item = byPP[p.id_pp];
@@ -355,18 +370,23 @@ function consolidarResultados(storeResults) {
                     item.stock_minimo += p.stock_minimo ?? 0;
                     item.stock_maximo += p.stock_maximo ?? 0;
                     item.stock_max_final += p.stock_max_final ?? p.stock_maximo ?? 0;
+                    
+                    const smRound = p._porRonda?.[slot.round]?.smSlot ?? p.stock_maximo ?? 0;
+                    const smfRound = p._porRonda?.[slot.round]?.smfSlot ?? p.stock_max_final ?? p.stock_maximo ?? 0;
+                    item._smTotal += smRound;
+                    item._smfTotal += smfRound;
 
                     const rd = p._porRonda?.[slot.round] ?? {};
-                    const sd = rd.stockD1Paq, dp = rd.despachoPron;
+                    const sd = rd.stockD1Paq, pre = rd.preHoyPaq;
                     if (sd !== null && sd !== undefined) item._stockD1Total = (item._stockD1Total ?? 0) + sd;
-                    if (dp !== null && dp !== undefined) item._despTotal = (item._despTotal ?? 0) + dp;
+                    if (pre !== null && pre !== undefined) item._preHoyTotal = (item._preHoyTotal ?? 0) + pre;
 
                     item._porTienda[cod] = {
                         nombre: slot.nombre, round: slot.round,
                         cons_semanal: p.cons_semanal, stock_minimo: p.stock_minimo,
-                        stock_maximo: p._porRonda?.[slot.round]?.smSlot ?? p.stock_maximo,
-                        stock_max_final: p._porRonda?.[slot.round]?.smfSlot ?? p.stock_max_final,
-                        stockD1Paq: sd, despachoPron: dp
+                        stock_maximo: smRound,
+                        stock_max_final: smfRound,
+                        stockD1Paq: sd, preHoyPaq: pre
                     };
                 });
             });
@@ -445,7 +465,24 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
         if (cat === 'B') {
             let totalDespacho = 0;
             slot.items.forEach(p => {
-                let despPron = isConsolidado ? p._despTotal : (p._porRonda?.[slot.round]?.despachoPron);
+                let s_base, pre_hoy, smf;
+                if (isConsolidado) {
+                    s_base = p._stockD1Total;
+                    pre_hoy = p._preHoyTotal;
+                    smf = p._smfTotal;
+                } else {
+                    const rd = p._porRonda?.[slot.round] ?? {};
+                    s_base = rd.stockD1Paq;
+                    pre_hoy = rd.preHoyPaq;
+                    smf = rd.smfSlot ?? p.stock_max_final;
+                }
+                
+                let s_final = s_base;
+                if (window.pa_include_preingreso && s_final !== null && pre_hoy) {
+                    s_final += pre_hoy;
+                }
+                let despPron = s_final !== null ? Math.max(0, Math.ceil((smf ?? 0) - s_final)) : null;
+
                 if (despPron !== null && despPron !== undefined) totalDespacho += despPron;
             });
             badgeB = `<span class="pa-round-badge" style="margin-left:auto; background:rgba(14,165,233,0.1); color:#0ea5e9; font-size:13px; font-weight:800; padding:4px 12px;">Total Despacho: ${totalDespacho}</span>`;
@@ -475,21 +512,26 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     let rows = '';
 
     items.forEach(p => {
-        let stockD1Paq, despPron, smfDisplay, smDisplay;
+        let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay;
         if (isConsolidado) {
-            stockD1Paq = p._stockD1Total;
-            despPron = p._despTotal;
-            smfDisplay = p.stock_max_final;   // consolidado: usa genérico
-            smDisplay = p.stock_maximo;
+            stockD1Paq_base = p._stockD1Total;
+            preHoyPaq = p._preHoyTotal;
+            smfDisplay = p._smfTotal;
+            smDisplay = p._smTotal;
         } else {
             const rd = p._porRonda?.[round] ?? {};
-            stockD1Paq = rd.stockD1Paq;
-            despPron = rd.despachoPron;
-            // smfSlot = stock_max ajustado para el ciclo real de ESTE despacho
-            // (diferente al genérico stock_max_final para dias_semana)
+            stockD1Paq_base = rd.stockD1Paq;
+            preHoyPaq = rd.preHoyPaq;
             smfDisplay = rd.smfSlot ?? p.stock_max_final;
             smDisplay = rd.smSlot ?? p.stock_maximo;
         }
+
+        let stockD1Paq = stockD1Paq_base;
+        if (window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq) {
+            stockD1Paq += preHoyPaq;
+        }
+
+        let despPron = stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null;
 
         const smfRef = smfDisplay ?? 0;
         let stockHtml;
@@ -500,6 +542,15 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             const pct = smfRef > 0 ? stockD1Paq / smfRef : 0;
             const cls = pct >= 0.5 ? 'positive' : pct >= 0.25 ? 'low' : 'critical';
             stockHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Paq.toFixed(1)}</span>`;
+        }
+
+        let preHtml = '';
+        if (preHoyPaq) {
+            preHtml = window.pa_include_preingreso 
+                ? `<span class="pa-stock-d1 positive" title="Sumado a Pronóstico Inventario">+${preHoyPaq.toFixed(1)}</span>`
+                : `<span class="pa-stock-d1" style="color:#9ca3af;" title="Desactivado">+${preHoyPaq.toFixed(1)}</span>`;
+        } else {
+            preHtml = '<span class="pa-na">—</span>';
         }
 
         let despHtml;
@@ -526,6 +577,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
                 <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
                 <td class="pa-col-desp">${stockHtml}</td>
+                <td class="pa-col-desp" style="background:#f8fafc;">${preHtml}</td>
                 <td class="pa-col-desp">${despHtml}</td>
             </tr>
             ${buildSubRowsTiendas(p, slotKey)}`;
@@ -539,37 +591,62 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
                 <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
                 <td class="pa-col-desp">${stockHtml}</td>
+                <td class="pa-col-desp" style="background:#f8fafc;">${preHtml}</td>
                 <td class="pa-col-desp">${despHtml}</td>
             </tr>`;
         }
     });
 
+    const isChecked = window.pa_include_preingreso ? 'checked' : '';
     const thead = `<thead><tr>
         <th style="text-align:left">Producto</th>
         <th style="text-align:left">Presentación</th>
         <th>Cons. Semanal<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(en unidades)</small></th>
         <th>Stock Mín</th><th>Stock Máx</th><th>Stock Máx Ajustado</th>
-        <th>Pronóstico Inventario</th><th>Despacho</th>
+        <th>Pronóstico Inventario</th>
+        <th style="width: 100px;">Despacho en Curso<br>
+            <div class="form-check form-switch d-inline-block mt-1">
+                <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Incluir despachos de hoy" ${isChecked}>
+            </div>
+        </th>
+        <th>Despacho</th>
     </tr></thead>`;
 
-    return `<table class="pa-table">${thead}<tbody>${rows || '<tr class="pa-no-data-row"><td colspan="8">Sin productos</td></tr>'}</tbody></table>`;
+    return `<table class="pa-table">${thead}<tbody>${rows || '<tr class="pa-no-data-row"><td colspan="9">Sin productos</td></tr>'}</tbody></table>`;
 }
 
 function buildSubRowsTiendas(item, slotKey) {
     let rows = '';
     Object.entries(item._porTienda || {}).forEach(([cod, td]) => {
         const smf = td.stock_max_final ?? 0;
+        
+        let stockD1Paq = td.stockD1Paq;
+        if (window.pa_include_preingreso && stockD1Paq !== null && td.preHoyPaq) {
+            stockD1Paq += td.preHoyPaq;
+        }
+        let despPron = stockD1Paq !== null ? Math.max(0, Math.ceil((smf ?? 0) - stockD1Paq)) : null;
+
         let sHtml;
-        if (td.stockD1Paq === null || td.stockD1Paq === undefined) {
+        if (stockD1Paq === null || stockD1Paq === undefined) {
             sHtml = '<span class="pa-na">Sin datos</span>';
         } else {
-            const pct = smf > 0 ? td.stockD1Paq / smf : 0;
+            const pct = smf > 0 ? stockD1Paq / smf : 0;
             const cls = pct >= 0.5 ? 'positive' : pct >= 0.25 ? 'low' : 'critical';
-            sHtml = `<span class="pa-stock-d1 ${cls}">${td.stockD1Paq.toFixed(1)}</span>`;
+            sHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Paq.toFixed(1)}</span>`;
         }
-        const dHtml = (td.despachoPron === null || td.despachoPron === undefined)
+        
+        let preHtml = '';
+        if (td.preHoyPaq) {
+            preHtml = window.pa_include_preingreso 
+                ? `<span class="pa-stock-d1 positive" style="transform: scale(0.9);">+${td.preHoyPaq.toFixed(1)}</span>`
+                : `<span class="pa-stock-d1 text-muted" style="transform: scale(0.9);">+${td.preHoyPaq.toFixed(1)}</span>`;
+        } else {
+            preHtml = '<span class="pa-na">—</span>';
+        }
+
+        const dHtml = (despPron === null || despPron === undefined)
             ? '<span class="pa-na">—</span>'
-            : `<span class="pa-desp-val ${td.despachoPron > 0 ? 'needs' : 'ok'}">${td.despachoPron}</span>`;
+            : `<span class="pa-desp-val ${despPron > 0 ? 'needs' : 'ok'}">${despPron}</span>`;
 
         rows += `
         <tr class="pa-tienda-row pa-tienda-sub d-none" data-slot-key="${slotKey}" data-pp-id="${item.id_pp}">
@@ -580,6 +657,7 @@ function buildSubRowsTiendas(item, slotKey) {
             <td>${fmt2(td.stock_maximo)}</td>
             <td>${fmt2(td.stock_max_final)}</td>
             <td class="pa-col-desp">${sHtml}</td>
+            <td class="pa-col-desp" style="background:#f8fafc;">${preHtml}</td>
             <td class="pa-col-desp">${dHtml}</td>
         </tr>`;
     });
