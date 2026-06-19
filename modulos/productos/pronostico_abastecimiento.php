@@ -384,7 +384,7 @@ try {
                         <div class="mt-3 p-2 rounded-2 border border-danger border-opacity-25"
                             style="background:#fff5f5;">
                             <div class="fw-bold small mb-1 text-danger"><i class="bi bi-x-octagon me-1"></i>Si la
-                                columna "Presentación" muestra "—" para un producto</div>
+                                columna "Presentación de Despacho" muestra "—" para un producto</div>
                             <ol class="small text-muted mb-0">
                                 <li>Verifica que exista una presentación con <code>presentacion_despacho=1</code> bajo
                                     el mismo <code>producto_maestro</code> (Paso A la detecta automáticamente).</li>

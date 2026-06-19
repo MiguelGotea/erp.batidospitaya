@@ -560,7 +560,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             despHtml = `<span class="pa-desp-val ${despPron > 0 ? 'needs' : 'ok'}">${despPron}</span>`;
         }
 
-        const despTag = p.despacho_nombre ? `<div class="pa-prod-sub">${esc(p.despacho_nombre)}</div>` : '';
+        // El subtítulo de presentación se eliminó porque ahora la columna "Presentación de Despacho" muestra este dato
 
         // Celda del Stock Máx Ajustado: muestra smfDisplay (ciclo real de esta ronda)
         const smfCell = smfDisplay !== null && smfDisplay !== undefined
@@ -570,8 +570,8 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
         if (isConsolidado) {
             rows += `
             <tr class="pa-row-expandible" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}">
-                <td><i class="bi bi-chevron-right pa-expand-icon"></i><div class="pa-prod-name">${esc(p.nombre)}</div>${despTag}</td>
-                <td><span class="pa-unit">${esc(p.unidad || '—')}</span></td>
+                <td><i class="bi bi-chevron-right pa-expand-icon"></i><div class="pa-prod-name">${esc(p.nombre)}</div></td>
+                <td><span class="pa-unit">${esc(p.despacho_nombre || p.unidad || '—')}</span></td>
                 <td>${fmt2(p.cons_semanal)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(smDisplay)}</td>
@@ -584,8 +584,8 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
         } else {
             rows += `
             <tr>
-                <td><div class="pa-prod-name">${esc(p.nombre)}</div>${despTag}</td>
-                <td><span class="pa-unit">${esc(p.unidad || '—')}</span></td>
+                <td><div class="pa-prod-name">${esc(p.nombre)}</div></td>
+                <td><span class="pa-unit">${esc(p.despacho_nombre || p.unidad || '—')}</span></td>
                 <td>${fmt2(p.cons_semanal)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(smDisplay)}</td>
@@ -600,7 +600,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     const isChecked = window.pa_include_preingreso ? 'checked' : '';
     const thead = `<thead><tr>
         <th style="text-align:left">Producto</th>
-        <th style="text-align:left">Presentación</th>
+        <th style="text-align:left">Presentación de Despacho</th>
         <th>Cons. Semanal<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(en unidades)</small></th>
         <th>Stock Mín</th><th>Stock Máx</th><th>Stock Máx Ajustado</th>
         <th>Pronóstico Inventario</th>
@@ -702,7 +702,6 @@ function exportarPronosticoExcel() {
                 let despPron = stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null;
                 
                 let productoNombre = p.nombre;
-                if (p.despacho_nombre) productoNombre += ` (${p.despacho_nombre})`;
                 
                 let pronosticoInv = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq.toFixed(2) : 'Sin datos';
                 if (window.pa_include_preingreso && preHoyPaq) pronosticoInv += ` (+${preHoyPaq.toFixed(2)})`;
@@ -711,7 +710,7 @@ function exportarPronosticoExcel() {
                     "Fecha de Despacho": fecha,
                     "Grupo": PA_LABELS[cat] || cat,
                     "Producto": productoNombre,
-                    "Presentación": p.unidad || '-',
+                    "Presentación de Despacho": p.despacho_nombre || p.unidad || '-',
                     "Cons. Semanal": p.cons_semanal !== null && p.cons_semanal !== undefined ? parseFloat(p.cons_semanal).toFixed(2) : '',
                     "Stock Mín": p.stock_minimo !== null && p.stock_minimo !== undefined ? parseFloat(p.stock_minimo).toFixed(2) : '',
                     "Stock Máx": smDisplay !== null && smDisplay !== undefined ? parseFloat(smDisplay).toFixed(2) : '',
@@ -739,7 +738,7 @@ function exportarPronosticoExcel() {
                             "Fecha de Despacho": fecha,
                             "Grupo": PA_LABELS[cat] || cat,
                             "Producto": `    - ${td.nombre}`, // Indentado
-                            "Presentación": "-",
+                            "Presentación de Despacho": "-",
                             "Cons. Semanal": td.cons_semanal !== null && td.cons_semanal !== undefined ? parseFloat(td.cons_semanal).toFixed(2) : '',
                             "Stock Mín": td.stock_minimo !== null && td.stock_minimo !== undefined ? parseFloat(td.stock_minimo).toFixed(2) : '',
                             "Stock Máx": sub_smDisplay !== null && sub_smDisplay !== undefined ? parseFloat(sub_smDisplay).toFixed(2) : '',
@@ -761,7 +760,7 @@ function exportarPronosticoExcel() {
         {wch: 18}, // Fecha
         {wch: 25}, // Grupo
         {wch: 40}, // Producto
-        {wch: 15}, // Presentación
+        {wch: 25}, // Presentación de Despacho
         {wch: 15}, // Cons. Semanal
         {wch: 15}, // Stock Mín
         {wch: 15}, // Stock Máx
