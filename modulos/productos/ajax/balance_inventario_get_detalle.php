@@ -244,10 +244,12 @@ try {
         ];
     };
 
-    // 1. Inventario Inicial
-    $stmt1 = $conn->prepare("SELECT k.Fecha, k.Sucursal, k.CodCotizacion, k.Cantidad, ss.numero_semana AS semana FROM msaccess_masivo_InventarioCotizacion k INNER JOIN SemanasSistema ss ON k.Fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin WHERE ss.numero_semana = ? AND k.CodCotizacion IN ($phCods) AND k.Sucursal IN ($phSucs)");
-    $stmt1->execute(array_merge([$semAnt], $allCods, $sucFiltro));
+    // 1. Inventario Inicial (KardexBase de la semana de corte)
+    $stmt1 = $conn->prepare("SELECT k.Sucursal, k.CodCotizacion, k.Cantidad FROM msaccess_masivo_KardexBase k WHERE k.SemanaCorte = ? AND k.CodCotizacion IN ($phCods) AND k.Sucursal IN ($phSucs)");
+    $stmt1->execute(array_merge([$semCorte], $allCods, $sucFiltro));
     foreach ($stmt1->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $r['Fecha'] = ''; // KardexBase no tiene fecha diaria
+        $r['semana'] = $semCorte;
         $addReg('inv_inicial', $r, $codMapBalance[(int)$r['CodCotizacion']]);
     }
 
