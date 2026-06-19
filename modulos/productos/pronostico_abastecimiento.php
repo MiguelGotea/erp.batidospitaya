@@ -202,9 +202,8 @@ try {
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
                                 <ul class="small text-muted mb-0">
                                     <li><b>Prom. Consumo:</b> Promedio sobre la <b>Ventana Activa</b>.</li>
-                                    <li><b>Cons. Semanal (WLS):</b> Proyección base mediante regresión lineal (Mínimos Cuadrados Ponderados).</li>
+                                    <li><b>Consumo Diario (WLS):</b> Proyección base mediante regresión lineal (Mínimos Cuadrados Ponderados) dividida entre 7.</li>
                                     <li><b>Proyección Futura (Dinámica):</b> La tendencia WLS se proyecta semana a semana (y = mx + b). Si el producto va a la baja, el consumo esperado disminuye sutilmente en cada ronda futura.</li>
-                                    <li><b>Consumo Diario:</b> Cons. Semanal ÷ 7 días.</li>
                                 </ul>
                             </div>
                         </div>
@@ -260,7 +259,7 @@ try {
                             <i class="bi bi-graph-up-arrow"></i> Pronóstico Inteligente (Tendencia Reciente)
                         </h6>
                         <p class="text-secondary small mb-2">
-                            El <b>Consumo Semanal</b> ya no es un simple promedio. Ahora usamos una fórmula matemática (regresión lineal ponderada - WLS) que funciona de manera muy intuitiva:
+                            El <b>Consumo Diario</b> ya no es un simple promedio. Ahora usamos una fórmula matemática (regresión lineal ponderada - WLS) que funciona de manera muy intuitiva:
                         </p>
                         <ul class="text-secondary small mb-0">
                             <li><b>Más importancia a lo reciente:</b> Las ventas de la última semana valen mucho más en el cálculo que las de hace un mes.</li>
@@ -293,7 +292,7 @@ try {
                                     <li class="mb-1"><b>Prom. Consumo:</b> Promedio semanal sobre la Ventana Activa
                                         (excluye ceros estructurales de inicio/fin).</li>
                                     <li class="mb-1"><b>Desv. Estándar:</b> <i>(Obsoleto, se mantiene solo de referencia)</i> Qué tanto variaba el consumo.</li>
-                                    <li class="mb-1"><b>Cons. Semanal:</b> Proyección inteligente basada en Mínimos Cuadrados Ponderados (WLS) que detecta tendencias y da más peso a las ventas recientes para predecir la próxima semana con mayor exactitud.</li>
+                                    <li class="mb-1"><b>Consumo Diario:</b> Proyección inteligente basada en Mínimos Cuadrados Ponderados (WLS) dividida entre 7 que detecta tendencias y da más peso a las ventas recientes para predecir el consumo con mayor exactitud.</li>
                                     <li class="mb-1"><b>Cap. Base (Final):</b> El Stock Máximo ya ajustado a lo que cabe
                                         físicamente en tienda.</li>
                                     <li class="mb-1"><b>Sugerencia:</b> La resta entre el Stock Máximo Final y tu

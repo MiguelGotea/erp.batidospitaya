@@ -573,7 +573,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             <tr class="pa-row-expandible" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}">
                 <td><i class="bi bi-chevron-right pa-expand-icon"></i><div class="pa-prod-name">${esc(p.nombre)}</div></td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
-                <td>${fmt2(p.cons_semanal)}</td>
+                <td>${p.cons_semanal !== null && p.cons_semanal !== undefined ? fmt2(p.cons_semanal / 7) : fmt2(null)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
@@ -587,7 +587,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             <tr>
                 <td><div class="pa-prod-name">${esc(p.nombre)}</div></td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
-                <td>${fmt2(p.cons_semanal)}</td>
+                <td>${p.cons_semanal !== null && p.cons_semanal !== undefined ? fmt2(p.cons_semanal / 7) : fmt2(null)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
@@ -602,7 +602,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     const thead = `<thead><tr>
         <th style="text-align:left">Producto</th>
         <th style="text-align:left">Presentación de Despacho</th>
-        <th>Cons. Semanal<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(en unidades)</small></th>
+        <th>Consumo Diario<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(en unidades)</small></th>
         <th>Stock Mín</th><th>Stock Máx</th><th>Stock Máx Ajustado</th>
         <th>Pronóstico Inventario</th>
         <th style="width: 100px;">Despacho en Curso<br>
@@ -653,7 +653,7 @@ function buildSubRowsTiendas(item, slotKey) {
         <tr class="pa-tienda-row pa-tienda-sub d-none" data-slot-key="${slotKey}" data-pp-id="${item.id_pp}">
             <td><span class="pa-tienda-badge">${esc(td.nombre)}</span></td>
             <td></td>
-            <td>${fmt2(td.cons_semanal)}</td>
+            <td>${td.cons_semanal !== null && td.cons_semanal !== undefined ? fmt2(td.cons_semanal / 7) : fmt2(null)}</td>
             <td>${fmt2(td.stock_minimo)}</td>
             <td>${fmt2(td.stock_maximo)}</td>
             <td>${fmt2(td.stock_max_final)}</td>
@@ -712,7 +712,7 @@ function exportarPronosticoExcel() {
                     "Grupo": PA_LABELS[cat] || cat,
                     "Producto": productoNombre,
                     "Presentación de Despacho": p.despacho_presentacion || p.unidad || '-',
-                    "Cons. Semanal": p.cons_semanal !== null && p.cons_semanal !== undefined ? parseFloat(p.cons_semanal).toFixed(2) : '',
+                    "Consumo Diario": p.cons_semanal !== null && p.cons_semanal !== undefined ? parseFloat(p.cons_semanal / 7).toFixed(2) : '',
                     "Stock Mín": p.stock_minimo !== null && p.stock_minimo !== undefined ? parseFloat(p.stock_minimo).toFixed(2) : '',
                     "Stock Máx": smDisplay !== null && smDisplay !== undefined ? parseFloat(smDisplay).toFixed(2) : '',
                     "Stock Máx Ajustado": smfDisplay !== null && smfDisplay !== undefined ? parseFloat(smfDisplay).toFixed(2) : '',
@@ -740,7 +740,7 @@ function exportarPronosticoExcel() {
                             "Grupo": PA_LABELS[cat] || cat,
                             "Producto": `    - ${td.nombre}`, // Indentado
                             "Presentación de Despacho": "-",
-                            "Cons. Semanal": td.cons_semanal !== null && td.cons_semanal !== undefined ? parseFloat(td.cons_semanal).toFixed(2) : '',
+                            "Consumo Diario": td.cons_semanal !== null && td.cons_semanal !== undefined ? parseFloat(td.cons_semanal / 7).toFixed(2) : '',
                             "Stock Mín": td.stock_minimo !== null && td.stock_minimo !== undefined ? parseFloat(td.stock_minimo).toFixed(2) : '',
                             "Stock Máx": sub_smDisplay !== null && sub_smDisplay !== undefined ? parseFloat(sub_smDisplay).toFixed(2) : '',
                             "Stock Máx Ajustado": sub_smfDisplay !== null && sub_smfDisplay !== undefined ? parseFloat(sub_smfDisplay).toFixed(2) : '',
@@ -762,7 +762,7 @@ function exportarPronosticoExcel() {
         {wch: 25}, // Grupo
         {wch: 40}, // Producto
         {wch: 25}, // Presentación de Despacho
-        {wch: 15}, // Cons. Semanal
+        {wch: 15}, // Consumo Diario
         {wch: 15}, // Stock Mín
         {wch: 15}, // Stock Máx
         {wch: 18}, // Stock Máx Ajustado
