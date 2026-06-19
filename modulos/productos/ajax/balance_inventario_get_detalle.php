@@ -388,8 +388,9 @@ try {
         }
 
         $convIndex = [];
-        $qc = $conn->query("SELECT id_unidad_origen AS i, id_unidad_destino AS f, factor_multiplicador AS fac FROM unidad_conversion");
-        foreach ($qc->fetchAll(PDO::FETCH_ASSOC) as $c) {
+        $rConv = $conn->prepare("SELECT id_unidad_producto_inicio AS i, id_unidad_producto_final AS f, cantidad AS fac FROM conversion_unidad_producto");
+        $rConv->execute();
+        foreach ($rConv->fetchAll(PDO::FETCH_ASSOC) as $c) {
             $convIndex[(int)$c['i']][(int)$c['f']] = (float)$c['fac'];
             $convIndex[(int)$c['f']][(int)$c['i']] = $c['fac'] != 0 ? 1/(float)$c['fac'] : 0;
         }
