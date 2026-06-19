@@ -5,6 +5,80 @@ const PA_SEMANAS = 4;
 
 let PA_SUCURSALES = [];
 
+/**
+ * Dado el plan de despacho de una categoría y una fecha de despacho concreta,
+ * devuelve los días reales que ese despacho debe abastecer (días hasta el siguiente).
+ *
+ * Para n_semanas → siempre intervalo × 7  (constante entre rondas).
+ * Para dias_semana → cuenta los días desde el DOW de la fecha hasta el DOW del
+ *   próximo día de despacho, que puede ser 3, 4, etc. según el calendario.
+ *
+ * @param {Object}   p        Producto con plan_tipo_frecuencia / plan_dias_semana / plan_intervalo_semanas
+ * @param {string}   fechaStr Fecha del despacho 'YYYY-MM-DD' (a partir del que calculamos)
+ * @returns {number}          Días que debe cubrir este despacho
+ */
+function calcularCicloSlot(p, fechaStr) {
+    const tipo = p.plan_tipo_frecuencia;
+
+    if (tipo === 'n_semanas') {
+        return (p.plan_intervalo_semanas || 1) * 7;
+    }
+
+    if (tipo === 'dias_semana') {
+        const dias = Array.isArray(p.plan_dias_semana) ? [...p.plan_dias_semana].sort((a, b) => a - b) : [];
+        const n = dias.length;
+        if (n === 0) return 7;
+        if (n === 1) return 7;
+
+        // DOW de la fecha de despacho: 0=Lun, …, 6=Dom (igual que PHP: date('N')-1)
+        const dt = new Date(fechaStr + 'T12:00:00');
+        const dowJS = dt.getDay(); // 0=Dom, 1=Lun, …, 6=Sáb  (JS nativo)
+        // Convertir a 0=Lun, …, 6=Dom (mismo sistema que PHP)
+        const dowDispatch = (dowJS + 6) % 7;
+
+        // Buscar cuántos días hasta el SIGUIENTE despacho
+        for (let d = 1; d <= 7; d++) {
+            const next = (dowDispatch + d) % 7;
+            if (dias.includes(next)) return d;
+        }
+        return 7 / n; // Fallback de seguridad
+    }
+
+    // Fallback genérico
+    return p.dias_ciclo || 7;
+}
+
+/**
+ * Calcula el stock_max_final ajustado para UNA ronda específica de un producto
+ * con plan tipo dias_semana. El stock máx varía según el ciclo real de esa ronda.
+ *
+ * Para n_semanas el ciclo es constante, así que stock_max_final no varía entre rondas.
+ *
+ * @param {Object} p         Producto base
+ * @param {number} cicloSlot Ciclo real de esta ronda (días)
+ * @returns {number|null}
+ */
+function calcularStockMaxSlot(p, cicloSlot) {
+    if (p.plan_tipo_frecuencia !== 'dias_semana') {
+        // Para n_semanas el ciclo es fijo, usar stock_max_final tal como viene del backend
+        return p.stock_max_final;
+    }
+    // Recalcular stock_max con el ciclo real de este despacho:
+    // stock_max = cons_diario × (cicloSlot + dias_desfase + dias_stock_min)
+    const cd  = p.cons_diario ?? 0;
+    const dD  = p.dias_desfase   ?? 0;
+    const dSM = p.dias_stock_min ?? 0;
+    const df  = p.despacho_factor > 0 ? p.despacho_factor : 1;
+    const sMaxUso = cd * (cicloSlot + dD + dSM);
+    // Si es cat B y el producto estaba ajustado, aplicar el mismo factor (aproximado)
+    // Para simplificar usamos stock_max_final / stock_maximo como ratio de ajuste
+    let ratio = 1;
+    if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
+        ratio = (p.stock_max_final * df) / (p.stock_maximo * df); // ratio en uso
+    }
+    return (sMaxUso * ratio) / df;
+}
+
 $(document).ready(() => {
     cargarSucursales();
     $('#pa-btn-calcular').on('click', calcularAgenda);
@@ -118,13 +192,21 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
 
         const limit = limitStr();
         const agendaMap = {};
+
+        // ─── Construir el agendaMap con ciclo real por ronda ─────────────
+        // Para dias_semana cada despacho puede tener un ciclo distinto (ej: Lun=3d, Mié=4d).
+        // calcularCicloSlot() computa los días reales desde la fecha concreta del despacho
+        // hasta el siguiente, de modo que el stock_max_final varía entre rondas.
         Object.entries(conPlan).forEach(([cat, items]) => {
-            const cycle = Math.max(1, Math.round(items[0].dias_ciclo || 7));
-            let cur = items[0].fecha_proximo_despacho, round = 1;
+            let cur = items[0].fecha_proximo_despacho;
+            let round = 1;
             while (cur <= limit) {
                 if (!agendaMap[cur]) agendaMap[cur] = {};
-                agendaMap[cur][cat] = { items, round };
-                cur = addDaysStr(cur, cycle); round++;
+                // cicloSlot = días reales que este despacho debe abastecer
+                const cicloSlot = calcularCicloSlot(items[0], cur);
+                agendaMap[cur][cat] = { items, round, cicloSlot };
+                cur = addDaysStr(cur, cicloSlot);
+                round++;
             }
         });
 
@@ -150,21 +232,30 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
         fechasOrdenadas.forEach(fecha => {
             Object.entries(agendaMap[fecha]).forEach(([cat, slot]) => {
                 slot.items.forEach(p => {
-                    const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
-                    const smf = p.stock_max_final ?? 0;
-                    const cd = p.cons_diario ?? 0;
-                    const dc = p.dias_ciclo ?? 7;
+                    const df      = p.despacho_factor > 0 ? p.despacho_factor : 1;
+                    const ciclo   = slot.cicloSlot;                        // ciclo real de esta ronda
+                    const smfSlot = calcularStockMaxSlot(p, ciclo);        // stock_max recalculado para este ciclo
+                    const cd      = p.cons_diario ?? 0;
+
                     let stockD1Paq;
                     if (slot.round === 1) {
+                        // Ronda 1: usar el pronóstico real de inventario D-1
                         const su = stockRonda1[String(p.id_pp)];
                         stockD1Paq = (su !== null && su !== undefined) ? Math.max(0, su / df) : null;
                     } else {
-                        stockD1Paq = Math.max(0, smf - (cd * dc) / df);
+                        // Rondas siguientes: estimación teórica (stock_max del slot anterior − consumo del ciclo)
+                        // Usamos el smfSlot del slot ANTERIOR (el que acaba de terminar) ≈ smfSlot actual
+                        // (aproximación conservadora, idéntica a la lógica anterior pero con ciclo correcto)
+                        stockD1Paq = Math.max(0, (smfSlot ?? 0) - (cd * ciclo) / df);
                     }
+
                     if (!p._porRonda) p._porRonda = {};
                     p._porRonda[slot.round] = {
                         stockD1Paq,
-                        despachoPron: stockD1Paq !== null ? Math.max(0, Math.ceil(smf - stockD1Paq)) : null
+                        smfSlot,                // stock_max ajustado para este despacho específico
+                        despachoPron: stockD1Paq !== null
+                            ? Math.max(0, Math.ceil((smfSlot ?? 0) - stockD1Paq))
+                            : null
                     };
                 });
             });
@@ -306,6 +397,8 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
     PA_GRUPOS.forEach(cat => {
         if (!cats[cat]) return;
         const slot = cats[cat];
+
+        // Badge de ronda / tiendas
         let badge;
         if (isConsolidado) {
             const n = Object.keys(slot.tiendas).length;
@@ -316,14 +409,20 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
                 : `<span class="pa-round-badge">Ronda ${slot.round} · Proyección</span>`;
         }
 
+        // Badge de ciclo (días que cubre este despacho) — solo para tienda individual
+        let badgeCiclo = '';
+        if (!isConsolidado && slot.cicloSlot) {
+            const dias = Math.round(slot.cicloSlot);
+            badgeCiclo = `<span class="pa-round-badge" title="Días que este despacho debe abastecer hasta el siguiente" style="background:rgba(139,92,246,0.12);color:#8b5cf6;"><i class="bi bi-clock me-1"></i>${dias} día${dias !== 1 ? 's' : ''}</span>`;
+        }
+
+        // Badge de total despacho (cat B)
         let badgeB = '';
         if (cat === 'B') {
             let totalDespacho = 0;
             slot.items.forEach(p => {
                 let despPron = isConsolidado ? p._despTotal : (p._porRonda?.[slot.round]?.despachoPron);
-                if (despPron !== null && despPron !== undefined) {
-                    totalDespacho += despPron;
-                }
+                if (despPron !== null && despPron !== undefined) totalDespacho += despPron;
             });
             badgeB = `<span class="pa-round-badge" style="margin-left:auto; background:rgba(14,165,233,0.1); color:#0ea5e9; font-size:13px; font-weight:800; padding:4px 12px;">Total Despacho: ${totalDespacho}</span>`;
         }
@@ -335,6 +434,7 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
                 <div class="pa-cat-badge">${cat}</div>
                 <span>${PA_LABELS[cat] || cat}</span>
                 ${badge}
+                ${badgeCiclo}
                 ${badgeB}
             </div>
             <div class="pa-table-wrap">
@@ -351,22 +451,27 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     let rows = '';
 
     items.forEach(p => {
-        let stockD1Paq, despPron;
+        let stockD1Paq, despPron, smfDisplay;
         if (isConsolidado) {
-            stockD1Paq = p._stockD1Total;
-            despPron = p._despTotal;
+            stockD1Paq  = p._stockD1Total;
+            despPron    = p._despTotal;
+            smfDisplay  = p.stock_max_final;   // consolidado: usa genérico
         } else {
-            const rd = p._porRonda?.[round] ?? {};
-            stockD1Paq = rd.stockD1Paq;
-            despPron = rd.despachoPron;
+            const rd    = p._porRonda?.[round] ?? {};
+            stockD1Paq  = rd.stockD1Paq;
+            despPron    = rd.despachoPron;
+            // smfSlot = stock_max ajustado para el ciclo real de ESTE despacho
+            // (diferente al genérico stock_max_final para dias_semana)
+            smfDisplay  = rd.smfSlot ?? p.stock_max_final;
         }
 
-        const smf = p.stock_max_final ?? 0;
+        const smfRef = smfDisplay ?? 0;
         let stockHtml;
         if (stockD1Paq === null || stockD1Paq === undefined) {
             stockHtml = '<span class="pa-na">Sin datos</span>';
         } else {
-            const pct = smf > 0 ? stockD1Paq / smf : 0;
+            // Clasificar el nivel de stock respecto al stock_max del ESTE despacho
+            const pct = smfRef > 0 ? stockD1Paq / smfRef : 0;
             const cls = pct >= 0.5 ? 'positive' : pct >= 0.25 ? 'low' : 'critical';
             stockHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Paq.toFixed(1)}</span>`;
         }
@@ -380,6 +485,11 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
 
         const despTag = p.despacho_nombre ? `<div class="pa-prod-sub">${esc(p.despacho_nombre)}</div>` : '';
 
+        // Celda del Stock Máx Ajustado: muestra smfDisplay (ciclo real de esta ronda)
+        const smfCell = smfDisplay !== null && smfDisplay !== undefined
+            ? fmt2(smfDisplay)
+            : '<span class="pa-na">N/A</span>';
+
         if (isConsolidado) {
             rows += `
             <tr class="pa-row-expandible" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}">
@@ -388,7 +498,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
                 <td>${fmt2(p.cons_semanal)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(p.stock_maximo)}</td>
-                <td>${fmt2(p.stock_max_final)}</td>
+                <td>${smfCell}</td>
                 <td class="pa-col-desp">${stockHtml}</td>
                 <td class="pa-col-desp">${despHtml}</td>
             </tr>
@@ -401,7 +511,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
                 <td>${fmt2(p.cons_semanal)}</td>
                 <td>${fmt2(p.stock_minimo)}</td>
                 <td>${fmt2(p.stock_maximo)}</td>
-                <td>${p.stock_max_final !== null ? fmt2(p.stock_max_final) : '<span class="pa-na">N/A</span>'}</td>
+                <td>${smfCell}</td>
                 <td class="pa-col-desp">${stockHtml}</td>
                 <td class="pa-col-desp">${despHtml}</td>
             </tr>`;

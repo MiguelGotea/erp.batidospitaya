@@ -712,8 +712,12 @@ try {
             'stock_max_final' => null,
             'es_ajustado' => false,
 
-            'fecha_proximo_despacho' => $fechaProxDespacho,
-            'dias_hasta_despacho'   => $diasHastaDespacho,
+            'fecha_proximo_despacho'  => $fechaProxDespacho,
+            'dias_hasta_despacho'     => $diasHastaDespacho,
+            // Metadatos del plan para que el JS calcule el ciclo real de cada ronda
+            'plan_tipo_frecuencia'    => $planCat ? $planCat['tipo_frecuencia']  : null,
+            'plan_dias_semana'        => $planCat ? (is_string($planCat['dias_semana']) ? json_decode($planCat['dias_semana'], true) : $planCat['dias_semana']) : null,
+            'plan_intervalo_semanas'  => $planCat ? (int)($planCat['intervalo_semanas'] ?? 1) : null,
             '_tc' => $cP !== null
         ];
     }
