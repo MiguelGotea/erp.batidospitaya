@@ -80,7 +80,8 @@ function calcularStockMaxSlot(p, cicloSlot, cd_dinamico = null) {
     }
     return {
         smSlot: sMaxUso / df,
-        smfSlot: (sMaxUso * ratio) / df
+        smfSlot: (sMaxUso * ratio) / df,
+        sMinSlot: sMinUso / df
     };
 }
 
@@ -292,6 +293,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         preHoyPaq,
                         smSlot,
                         smfSlot,                // stock_max ajustado para este despacho específico
+                        sMinSlot: maximos.sMinSlot, // stock mínimo ajustado
                         cd_dinamico: cd
                     };
 
@@ -366,7 +368,7 @@ function consolidarResultados(storeResults) {
                             despacho_presentacion: p.despacho_presentacion,
                             despacho_factor: p.despacho_factor,
                             cons_semanal: 0, stock_minimo: 0, stock_maximo: 0, stock_max_final: 0,
-                            _smTotal: 0, _smfTotal: 0,
+                            _sMinTotal: 0, _smTotal: 0, _smfTotal: 0,
                             _stockD1Total: null, _preHoyTotal: null, _porTienda: {}
                         };
                     }
@@ -376,8 +378,10 @@ function consolidarResultados(storeResults) {
                     item.stock_maximo += p.stock_maximo ?? 0;
                     item.stock_max_final += p.stock_max_final ?? p.stock_maximo ?? 0;
                     
+                    const sMinRound = p._porRonda?.[slot.round]?.sMinSlot ?? p.stock_minimo ?? 0;
                     const smRound = p._porRonda?.[slot.round]?.smSlot ?? p.stock_maximo ?? 0;
                     const smfRound = p._porRonda?.[slot.round]?.smfSlot ?? p.stock_max_final ?? p.stock_maximo ?? 0;
+                    item._sMinTotal += sMinRound;
                     item._smTotal += smRound;
                     item._smfTotal += smfRound;
 
@@ -389,9 +393,11 @@ function consolidarResultados(storeResults) {
                     item._porTienda[cod] = {
                         nombre: slot.nombre, round: slot.round,
                         cons_semanal: p.cons_semanal, stock_minimo: p.stock_minimo,
+                        sMinSlot: sMinRound,
                         stock_maximo: smRound,
                         stock_max_final: smfRound,
-                        stockD1Paq: sd, preHoyPaq: pre
+                        stockD1Paq: sd, preHoyPaq: pre,
+                        cd_dinamico: p._porRonda?.[slot.round]?.cd_dinamico
                     };
                 });
             });
@@ -517,12 +523,13 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     let rows = '';
 
     items.forEach(p => {
-        let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, cdDisplay;
+        let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay, cdDisplay;
         if (isConsolidado) {
             stockD1Paq_base = p._stockD1Total;
             preHoyPaq = p._preHoyTotal;
             smfDisplay = p._smfTotal;
             smDisplay = p._smTotal;
+            sMinDisplay = p._sMinTotal;
             cdDisplay = p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null;
         } else {
             const rd = p._porRonda?.[round] ?? {};
@@ -530,6 +537,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             preHoyPaq = rd.preHoyPaq;
             smfDisplay = rd.smfSlot ?? p.stock_max_final;
             smDisplay = rd.smSlot ?? p.stock_maximo;
+            sMinDisplay = rd.sMinSlot ?? p.stock_minimo;
             cdDisplay = rd.cd_dinamico ?? (p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null);
         }
 
@@ -580,7 +588,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
                 <td><i class="bi bi-chevron-right pa-expand-icon"></i><div class="pa-prod-name">${esc(p.nombre)}</div></td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
-                <td>${fmt2(p.stock_minimo)}</td>
+                <td>${fmt2(sMinDisplay)}</td>
                 <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
                 <td class="pa-col-desp">${stockHtml}</td>
@@ -594,7 +602,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
                 <td><div class="pa-prod-name">${esc(p.nombre)}</div></td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
-                <td>${fmt2(p.stock_minimo)}</td>
+                <td>${fmt2(sMinDisplay)}</td>
                 <td>${fmt2(smDisplay)}</td>
                 <td>${smfCell}</td>
                 <td class="pa-col-desp">${stockHtml}</td>
@@ -659,8 +667,8 @@ function buildSubRowsTiendas(item, slotKey) {
         <tr class="pa-tienda-row pa-tienda-sub d-none" data-slot-key="${slotKey}" data-pp-id="${item.id_pp}">
             <td><span class="pa-tienda-badge">${esc(td.nombre)}</span></td>
             <td></td>
-            <td>${td.cons_semanal !== null && td.cons_semanal !== undefined ? fmt2(td.cons_semanal / 7) : fmt2(null)}</td>
-            <td>${fmt2(td.stock_minimo)}</td>
+            <td>${td.cd_dinamico !== null && td.cd_dinamico !== undefined ? fmt2(td.cd_dinamico) : (td.cons_semanal !== null && td.cons_semanal !== undefined ? fmt2(td.cons_semanal / 7) : fmt2(null))}</td>
+            <td>${fmt2(td.sMinSlot ?? td.stock_minimo)}</td>
             <td>${fmt2(td.stock_maximo)}</td>
             <td>${fmt2(td.stock_max_final)}</td>
             <td class="pa-col-desp">${sHtml}</td>
