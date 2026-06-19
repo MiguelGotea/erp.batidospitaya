@@ -232,6 +232,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
         const prodConPlan = Object.values(conPlan).flat();
         const stockRonda1 = {};
         const preingresosHoy = {};
+        const diasProyRonda1 = {};
         if (prodConPlan.length) {
             const fdPron = new FormData();
             fdPron.append('semana_desde', semDesde);
@@ -246,6 +247,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
             if (resPron.ok) {
                 Object.entries(resPron.stocks || {}).forEach(([id, val]) => { stockRonda1[String(id)] = val; });
                 Object.entries(resPron.preingresos_hoy || {}).forEach(([id, val]) => { preingresosHoy[String(id)] = val; });
+                Object.entries(resPron.dias_proy || {}).forEach(([id, val]) => { diasProyRonda1[String(id)] = val; });
             }
         }
 
@@ -272,9 +274,11 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     let stockD1Paq;
                     let preHoyPaq = 0;
                     if (slot.round === 1) {
-                        // Ronda 1: usar el pronóstico real de inventario D-1
+                        // Ronda 1: usar el pronóstico real de inventario D-1 restando la proyección de consumo (WLS) por los días faltantes
                         const su = stockRonda1[String(p.id_pp)];
-                        stockD1Paq = (su !== null && su !== undefined) ? Math.max(0, su / df) : null;
+                        const dP = diasProyRonda1[String(p.id_pp)] || 0;
+                        const proyD1 = (su !== null && su !== undefined) ? (su - (cd * dP)) : null;
+                        stockD1Paq = (proyD1 !== null) ? Math.max(0, proyD1 / df) : null;
                         const ph = preingresosHoy[String(p.id_pp)];
                         preHoyPaq = (ph !== null && ph !== undefined && ph > 0) ? (ph / df) : 0;
                     } else {

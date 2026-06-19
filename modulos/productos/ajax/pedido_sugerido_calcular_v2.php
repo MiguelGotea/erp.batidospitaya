@@ -563,27 +563,11 @@ try {
         if (!$m)
             continue;
 
-        // Si la presentación resuelta no es la básica de inventario (flag = 0)
-        // y tiene producto_maestro asignado, redirigir al id_pp de la presentación
-        // básica del mismo maestro. Mismo comportamiento que inventario_get_data.php.
-        if (empty($m['Id_receta_producto'])
-            && ($m['presentacion_basica_inventario'] ?? 1) != 1
-            && !empty($m['id_m'])
-        ) {
-            $basicasMaestro = $presentPorMaestro[(int) $m['id_m']] ?? [];
-            if (!empty($basicasMaestro)) {
-                $ppBasica = reset($basicasMaestro);
-                $uidBasica = (int) $ppBasica['id_unidad_producto'];
-                $m = array_merge($m, [
-                    'id'                          => $ppBasica['id'],
-                    'pp_cant'                     => $ppBasica['cantidad'],
-                    'n'                           => $ppBasica['Nombre'] ?? $m['n'],
-                    'uid'                         => $uidBasica,
-                    'uab'                         => $unidadPorId[$uidBasica]['abreviado'] ?? $m['uab'],
-                    'presentacion'                => $ppBasica['presentacion'] ?? $m['presentacion'],
-                    'presentacion_basica_inventario' => 1,
-                ]);
-            }
+        if (empty($m['Id_receta_producto']) && !empty($m['id_m'])) {
+            // Ya NO forzamos la unificación a la presentación básica de inventario.
+            // Se respeta la presentación exacta (igual que dashboard_consumo), pero sí
+            // aseguramos que, si la unidad difiere de la unidad ERP de la presentación
+            // original, se aplique el factor de conversión correspondiente.
         }
 
         $idPP = (int) $m['id'];

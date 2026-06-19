@@ -398,6 +398,7 @@ try {
     // 15. Cálculo final: balance diario + proyección DOW
     $stocks = [];
     $preingresosHoyRes = [];
+    $diasProyRes = [];
     foreach ($idsPP as $targetId) {
         $fechaD1 = $fechasD1Clean[$targetId] ?? null;
 
@@ -434,40 +435,19 @@ try {
         }
         $anchorVal = $balFwd;  // Stock estimado al final del rango histórico
 
-        // Promedio diario y por día de semana (DOW) — para proyección
-        $sumDow = array_fill(0, 7, 0);
-        $cntDow = array_fill(0, 7, 0);
-        $totalCons = 0;
-        foreach ($consFecha as $f => $v) {
-            if ($v > 0) {
-                $dow = (int)(new DateTime($f))->format('w');
-                $sumDow[$dow] += $v;
-                $cntDow[$dow]++;
-            }
-            $totalCons += $v;
-        }
-        $totalDias  = max(1, count($consFecha));
-        $promDiario = $totalCons / $totalDias;
-        $promDow    = [];
-        for ($d = 0; $d < 7; $d++) {
-            $promDow[$d] = $cntDow[$d] > 0 ? $sumDow[$d] / $cntDow[$d] : $promDiario;
-        }
-
-        // Proyección DOW-ponderada desde anchorVal hasta fecha_D1
-        // consProy = 0.65×pDow + 0.35×promDiario  (idéntico a dashboard_consumo)
-        $balFc = $anchorVal;
+        // En lugar de restar usando la media histórica (DOW), retornamos el stock real hasta ayer (anchorVal)
+        // y el número de días a proyectar, para que el frontend pueda restarle usando el consumo diario WLS.
+        $diasD1 = 0;
         for ($i = $originalRangeLen; $i < count($allDays); $i++) {
             if ($allDays[$i] > $fechaD1) break;
-            $dow      = (int)(new DateTime($allDays[$i]))->format('w');
-            $pDow     = $promDow[$dow] > 0 ? $promDow[$dow] : $promDiario;
-            $consProy = 0.65 * $pDow + 0.35 * $promDiario;
-            $balFc   -= $consProy;
+            $diasD1++;
         }
 
-        $stocks[(string)$targetId] = round($balFc, 2);
+        $stocks[(string)$targetId] = round($anchorVal, 2);
+        $diasProyRes[(string)$targetId] = $diasD1;
     }
 
-    echo json_encode(['ok' => true, 'stocks' => $stocks, 'preingresos_hoy' => $preingresosHoyRes], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['ok' => true, 'stocks' => $stocks, 'preingresos_hoy' => $preingresosHoyRes, 'dias_proy' => $diasProyRes], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);
