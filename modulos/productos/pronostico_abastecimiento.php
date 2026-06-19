@@ -186,8 +186,8 @@ try {
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
                                 <ul class="small text-muted mb-0">
                                     <li><b>Prom. Consumo:</b> Promedio sobre la <b>Ventana Activa</b>.</li>
-                                    <li><b>Cons. Semanal (WLS):</b> Calculado mediante regresión de <b>Mínimos Cuadrados Ponderados (WLS)</b> para dar mayor peso a la tendencia reciente.</li>
-                                    <li><b>Proyección Futura:</b> El algoritmo congela la tendencia WLS actual como una tasa de "quemado" constante (línea recta) para descontar el stock hacia el futuro, no varía semana a semana.</li>
+                                    <li><b>Cons. Semanal (WLS):</b> Proyección base mediante regresión lineal (Mínimos Cuadrados Ponderados).</li>
+                                    <li><b>Proyección Futura (Dinámica):</b> La tendencia WLS se proyecta semana a semana (y = mx + b). Si el producto va a la baja, el consumo esperado disminuye sutilmente en cada ronda futura.</li>
                                     <li><b>Consumo Diario:</b> Cons. Semanal ÷ 7 días.</li>
                                 </ul>
                             </div>
@@ -244,12 +244,12 @@ try {
                             <i class="bi bi-graph-up-arrow"></i> Pronóstico Inteligente (Tendencia Reciente)
                         </h6>
                         <p class="text-secondary small mb-2">
-                            El <b>Consumo Semanal</b> ya no es un simple promedio. Ahora usamos una fórmula matemática (regresión lineal) que funciona de manera muy intuitiva:
+                            El <b>Consumo Semanal</b> ya no es un simple promedio. Ahora usamos una fórmula matemática (regresión lineal ponderada - WLS) que funciona de manera muy intuitiva:
                         </p>
                         <ul class="text-secondary small mb-0">
                             <li><b>Más importancia a lo reciente:</b> Las ventas de la última semana valen mucho más en el cálculo que las de hace un mes.</li>
-                            <li><b>Detecta si vas en subida o bajada:</b> Si un producto se está vendiendo cada vez más (o menos), la fórmula detecta esa tendencia y la proyecta hacia el futuro.</li>
-                            <li><b>Resultado más exacto:</b> Se predicen las próximas 3 semanas y se promedian para darte un valor de consumo semanal estable y súper preciso.</li>
+                            <li><b>Detecta si vas en subida o bajada:</b> Si un producto se está vendiendo cada vez más (o menos), la fórmula detecta la recta de tendencia (pendiente) y la proyecta hacia el futuro.</li>
+                            <li><b>Resultado Dinámico:</b> Para cada ronda futura de despacho, el cálculo avanza en el tiempo sobre esa recta, adaptando el consumo esperado semana a semana.</li>
                         </ul>
                     </div>
 
@@ -277,7 +277,7 @@ try {
                                     <li class="mb-1"><b>Prom. Consumo:</b> Promedio semanal sobre la Ventana Activa
                                         (excluye ceros estructurales de inicio/fin).</li>
                                     <li class="mb-1"><b>Desv. Estándar:</b> <i>(Obsoleto, se mantiene solo de referencia)</i> Qué tanto variaba el consumo.</li>
-                                    <li class="mb-1"><b>Cons. Semanal:</b> Proyección inteligente que detecta tendencias y da más peso a las ventas recientes para predecir la próxima semana con mayor exactitud.</li>
+                                    <li class="mb-1"><b>Cons. Semanal:</b> Proyección inteligente basada en Mínimos Cuadrados Ponderados (WLS) que detecta tendencias y da más peso a las ventas recientes para predecir la próxima semana con mayor exactitud.</li>
                                     <li class="mb-1"><b>Cap. Base (Final):</b> El Stock Máximo ya ajustado a lo que cabe
                                         físicamente en tienda.</li>
                                     <li class="mb-1"><b>Sugerencia:</b> La resta entre el Stock Máximo Final y tu
@@ -290,9 +290,8 @@ try {
                                 <ul class="list-unstyled small text-muted">
                                     <li class="mb-1"><b>Adj:</b> Porcentaje manual de aumento o disminución de la
                                         demanda.</li>
-                                    <li class="mb-1"><b>Ciclo:</b> Cuántos días pasan entre un pedido y el siguiente.
+                                    <li class="mb-1"><b>Ciclo:</b> Cuántos días reales pasan entre un pedido y el siguiente.
                                     </li>
-                                    <li class="mb-1"><b>Desfase:</b> <i>(Obsoleto)</i> Cuántos días tarda el proveedor en entregar.</li>
                                     <li class="mb-1"><b>S.Mín:</b> Días de reserva que quieres tener siempre "por si
                                         acaso".</li>
                                 </ul>

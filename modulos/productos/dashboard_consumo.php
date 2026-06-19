@@ -582,8 +582,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                 <div class="dc-tabla-toolbar px-3 py-2">
                                     <span class="text-muted small">
                                         <i class="fas fa-info-circle me-1 text-primary"></i>
-                                        Proyección basada en promedio ponderado de las semanas analizadas · Stock Mín =
-                                        1 semana · Stock Máx = 2 semanas
+                                        Proyección (WLS) calculando tendencia de ventanas activas · Stock Mín y Stock Máx 
+                                        calculados dinámicamente según configuración logística y ciclo de despacho.
                                     </span>
                                 </div>
                                 <div class="table-responsive">
@@ -781,9 +781,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         </h6>
                                         <p class="small text-muted mb-0">
                                             Proyección de consumo para las próximas 3 semanas basada en regresión lineal
-                                            (mínimos cuadrados) sobre las semanas completas.<br><br>
-                                            Incluye <strong>Stock Mínimo</strong> (1 semana) y <strong>Stock
-                                                Máximo</strong> (2 semanas) recomendados.
+                                            ponderada (Mínimos Cuadrados Ponderados - WLS) sobre las semanas con consumo activo.<br><br>
+                                            Incluye <strong>Stock Mínimo</strong> y <strong>Stock Máximo</strong> recomendados calculados dinámicamente usando las configuraciones logísticas de la tienda (días de seguridad, ciclo de despacho y factor de ajuste).
                                         </p>
                                     </div>
                                 </div>

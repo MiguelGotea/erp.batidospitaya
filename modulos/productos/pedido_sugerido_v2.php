@@ -230,7 +230,7 @@ try {
                                                 title="Desviación estándar de muestra" style="font-weight: 600;">Desv.
                                                 Std</th>
                                             <th class="text-end bg-light-gray col-num align-bottom"
-                                                title="Consumo semanal = promedio + desv. estándar"
+                                                title="Proyección de consumo usando Mínimos Cuadrados Ponderados (WLS)"
                                                 style="color: var(--pitaya-dark);">Cons. Semanal</th>
                                             <th class="text-end bg-light-gray col-num align-bottom text-muted"
                                                 title="Consumo diario = (cons_semanal × (1 + ajuste)) / 7"
@@ -239,7 +239,7 @@ try {
                                                 title="Stock mínimo en unidades de despacho = (cons_diario × dias_stock_minimo) ÷ factor_despacho">
                                                 Stock Mín</th>
                                             <th class="text-end bg-mid-gray col-num align-bottom"
-                                                title="Stock máximo en unidades de despacho = (cons_diario × (ciclo + desfase + stock_min)) ÷ factor_despacho">
+                                                title="Stock máximo en unidades de despacho = ((cons_diario × ciclo_despacho) + stock_mínimo) ÷ factor_despacho">
                                                 Stock Máx</th>
                                             <th class="text-end bg-mid-gray col-num align-bottom"
                                                 title="Stock máximo final en unidades de despacho (ajustado para congelados si aplica)"
@@ -411,7 +411,7 @@ try {
                                     <li class="mb-1"><b>Prom. Consumo:</b> Promedio semanal sobre la Ventana Activa
                                         (excluye ceros estructurales de inicio/fin).</li>
                                     <li class="mb-1"><b>Desv. Estándar:</b> <i>(Obsoleto, se mantiene solo de referencia)</i> Qué tanto variaba el consumo.</li>
-                                    <li class="mb-1"><b>Cons. Semanal:</b> Proyección inteligente que detecta tendencias y da más peso a las ventas recientes para predecir la próxima semana con mayor exactitud.</li>
+                                    <li class="mb-1"><b>Cons. Semanal:</b> Proyección inteligente basada en Mínimos Cuadrados Ponderados (WLS) que detecta tendencias y da más peso a las ventas recientes para predecir la próxima semana con mayor exactitud.</li>
                                     <li class="mb-1"><b>Cap. Base (Final):</b> El Stock Máximo ya ajustado a lo que cabe
                                         físicamente en tienda.</li>
                                     <li class="mb-1"><b>Sugerencia:</b> La resta entre el Stock Máximo Final y tu
@@ -424,9 +424,8 @@ try {
                                 <ul class="list-unstyled small text-muted">
                                     <li class="mb-1"><b>Adj:</b> Porcentaje manual de aumento o disminución de la
                                         demanda.</li>
-                                    <li class="mb-1"><b>Ciclo:</b> Cuántos días pasan entre un pedido y el siguiente.
+                                    <li class="mb-1"><b>Ciclo:</b> Cuántos días reales pasan entre un pedido y el siguiente.
                                     </li>
-                                    <li class="mb-1"><b>Desfase:</b> <i>(Obsoleto)</i> Cuántos días tarda el proveedor en entregar.</li>
                                     <li class="mb-1"><b>S.Mín:</b> Días de reserva que quieres tener siempre "por si
                                         acaso".</li>
                                 </ul>

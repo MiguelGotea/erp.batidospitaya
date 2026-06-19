@@ -663,9 +663,11 @@ try {
         $n = count($consPorSem);
         $promSemana = $n > 0 ? $totalGeneral / $n : 0;
 
-        // ── Cálculo de Stock Mínimo Profesional (pedido_sugerido_calcular.php) ──
+        // ── Cálculo de Stock Mínimo y Máximo Profesional ──
         $stockMinPorSucursal = [];
+        $stockMaxPorSucursal = [];
         $stockMinTotalSum = 0;
+        $stockMaxTotalSum = 0;
 
         foreach ($sucursalesPresentes as $suc) {
             $valsSuc = [];
@@ -677,6 +679,7 @@ try {
             $nonZeroVals = array_filter($valsSuc, fn($v) => $v > 0);
             if (empty($nonZeroVals)) {
                 $stockMinPorSucursal[$suc] = 0;
+                $stockMaxPorSucursal[$suc] = 0;
                 continue;
             }
 
@@ -695,27 +698,61 @@ try {
 
             if ($firstIdx === null) {
                 $stockMinPorSucursal[$suc] = 0;
+                $stockMaxPorSucursal[$suc] = 0;
                 continue;
             }
 
             $nActiva = $lastIdx - $firstIdx + 1;
             $valsActivo = array_slice($valsSuc, $firstIdx, $nActiva);
-            $promActivo = array_sum($valsActivo) / $nActiva;
-            $desvActivo = calcularDesviacionEstandar($valsActivo);
-            $semC = $promActivo + $desvActivo;
+            
+            // WLS para la proyección
+            $n_vals = count($valsActivo);
+            if ($n_vals === 0) {
+                $promActivo = 0.0;
+                $semC = 0.0;
+            } elseif ($n_vals === 1) {
+                $promActivo = max(0.0, (float)$valsActivo[0]);
+                $semC = max(0.0, (float)$valsActivo[0]);
+            } else {
+                $sum_w = 0.0; $sum_wx = 0.0; $sum_wy = 0.0; $sum_wxx = 0.0; $sum_wxy = 0.0;
+                foreach ($valsActivo as $i => $y) {
+                    $x = $i + 1; $w = $x;
+                    $sum_w += $w; $sum_wx += $w * $x; $sum_wy += $w * $y;
+                    $sum_wxx += $w * $x * $x; $sum_wxy += $w * $x * $y;
+                }
+                $denominator = ($sum_w * $sum_wxx) - ($sum_wx * $sum_wx);
+                if (abs($denominator) < 0.0001) {
+                    $semC = array_sum($valsActivo) / $n_vals;
+                } else {
+                    $slope = (($sum_w * $sum_wxy) - ($sum_wx * $sum_wy)) / $denominator;
+                    $intercept = ($sum_wy - $slope * $sum_wx) / $sum_w;
+                    $w1 = max(0.0, $slope * ($n_vals + 1) + $intercept);
+                    $w2 = max(0.0, $slope * ($n_vals + 2) + $intercept);
+                    $w3 = max(0.0, $slope * ($n_vals + 3) + $intercept);
+                    $semC = ($w1 + $w2 + $w3) / 3.0;
+                }
+            }
 
             $sucCod = $idsSucursales[strtolower(trim($suc))] ?? null;
             $dSM = $sucCod ? ($configSucursales[$sucCod] ?? 0) : 0;
             $cat = $meta['categoria_insumo'];
             $cP = $sucCod ? ($configProductos[$sucCod][$cat] ?? null) : null;
             $adj = $cP ? (float) $cP['ajuste'] : 0;
+            $ciclo = $cP ? (float) $cP['ciclo'] : 7; // por defecto 1 semana si no hay config
+            // $dD = $cP ? (float) $cP['desfase'] : 0; // obsoleto
 
             $diaC = ($semC * (1 + $adj)) / 7;
             $sMin = $diaC * $dSM;
+            $sMax = ($diaC * $ciclo) + $sMin;
 
             $valMin = round($sMin, 4);
+            $valMax = round($sMax, 4);
+
             $stockMinPorSucursal[$suc] = $valMin;
+            $stockMaxPorSucursal[$suc] = $valMax;
+
             $stockMinTotalSum += $valMin;
+            $stockMaxTotalSum += $valMax;
         }
 
         // Tendencia
@@ -751,10 +788,11 @@ try {
             'es_p1' => $itemEsP1,
             'total' => $totalGeneral,
             'prom_semana' => round($promSemana, $itemEsP1 ? 1 : 4),
-            'proyeccion_4sem' => round($promSemana * 4, $itemEsP1 ? 1 : 4),
+            'proyeccion_3sem' => round($semC * 3, $itemEsP1 ? 1 : 4),
             'stock_min' => round($stockMinTotalSum, 4),
             'stock_min_suc' => $stockMinPorSucursal,
-            'stock_max' => round($promSemana * 2, $itemEsP1 ? 1 : 4),
+            'stock_max' => round($stockMaxTotalSum, 4),
+            'stock_max_suc' => $stockMaxPorSucursal,
             'semana_pico_num' => $semanaPico,
             'semana_low_num' => $semanaLow,
             'max_consumo_sem' => $rnd($maxC),
@@ -777,7 +815,7 @@ try {
 
     // Estadísticas globales
     $totalGeneral = array_sum(array_column($listaConsumo, 'total'));
-    $proyTotal = array_sum(array_column($listaConsumo, 'proyeccion_4sem'));
+    $proyTotal = array_sum(array_column($listaConsumo, 'proyeccion_3sem'));
     $sumasPorSem = [];
     foreach ($listaConsumo as $it) {
         foreach ($it['por_semana'] as $s => $c) {
