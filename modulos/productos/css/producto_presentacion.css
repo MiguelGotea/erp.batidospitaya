@@ -613,3 +613,11 @@ body {
     box-shadow: 0 0 0 2px rgba(81, 184, 172, 0.2);
 }
 /* ========== FIN ESTILOS DE AUDITORÍA ========== */
+/* Popover Receta */
+.receta-popover {
+    max-width: 400px;
+    z-index: 1060;
+}
+.receta-popover .popover-body {
+    padding: 0.5rem;
+}

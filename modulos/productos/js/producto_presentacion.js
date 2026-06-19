@@ -5,6 +5,7 @@ let ordenActivo = { columna: null, direccion: 'asc' };
 let panelFiltroAbierto = null;
 let totalRegistros = 0;
 let scrollTopInicial = 0;
+let recetaCache = {};
 
 // Inicializar
 $(document).ready(function() {
@@ -183,7 +184,7 @@ function renderizarTabla(datos) {
 
         // Receta (icono) - Movido antes de acciones
         const recetaIcono = row.tiene_receta === 'SI' 
-            ? '<i class="bi bi-check-circle-fill status-icon si"></i>' 
+            ? `<i class="bi bi-check-circle-fill status-icon si receta-tooltip-trigger" data-id="${row.id}" style="cursor: help;"></i>` 
             : '<i class="bi bi-x-circle-fill status-icon no"></i>';
         tr.append(`<td>${recetaIcono}</td>`);
 
@@ -216,6 +217,73 @@ function renderizarTabla(datos) {
         tr.append(`<td>${btnVer}</td>`);
         
         tbody.append(tr);
+    });
+    
+    // Inicializar tooltips de receta
+    initRecetaTooltips();
+}
+
+function initRecetaTooltips() {
+    $('.receta-tooltip-trigger').each(function() {
+        const $el = $(this);
+        const id = $el.data('id');
+        
+        // Destruir tooltip anterior si existe para evitar duplicados
+        const existingPopover = bootstrap.Popover.getInstance($el[0]);
+        if (existingPopover) {
+            existingPopover.dispose();
+        }
+        
+        new bootstrap.Popover($el[0], {
+            trigger: 'hover',
+            html: true,
+            placement: 'left',
+            title: '<i class="bi bi-journal-text"></i> Componentes de la Receta',
+            content: '<div class="text-center p-2"><div class="spinner-border spinner-border-sm text-success" role="status"></div><span class="ms-2">Cargando...</span></div>',
+            customClass: 'receta-popover',
+            delay: { "show": 200, "hide": 100 }
+        });
+
+        $el.on('inserted.bs.popover', function () {
+            const popoverId = $el.attr('aria-describedby');
+            if (!popoverId) return;
+
+            if (recetaCache[id]) {
+                $('#' + popoverId + ' .popover-body').html(recetaCache[id]);
+            } else {
+                $.ajax({
+                    url: 'ajax/producto_presentacion_get_receta_preview.php',
+                    data: { id: id },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            let html = '';
+                            if (response.componentes.length === 0) {
+                                html = '<p class="text-muted mb-0 text-center">No hay componentes registrados</p>';
+                            } else {
+                                html = '<table class="table table-sm table-bordered mb-0" style="font-size: 0.8rem;">';
+                                html += '<thead class="table-light"><tr><th>Componente</th><th>Cant.</th><th>Notas</th></tr></thead><tbody>';
+                                response.componentes.forEach(function(comp) {
+                                    html += `<tr>
+                                                <td class="text-start">${comp.nombre_producto}</td>
+                                                <td class="text-center" style="white-space: nowrap;">${comp.cantidad} ${comp.unidad || ''}</td>
+                                                <td class="text-start">${comp.notas || '-'}</td>
+                                             </tr>`;
+                                });
+                                html += '</tbody></table>';
+                            }
+                            recetaCache[id] = html;
+                            $('#' + popoverId + ' .popover-body').html(html);
+                        } else {
+                            $('#' + popoverId + ' .popover-body').html('<div class="text-danger text-center">Error al cargar</div>');
+                        }
+                    },
+                    error: function() {
+                        $('#' + popoverId + ' .popover-body').html('<div class="text-danger text-center">Error de conexión</div>');
+                    }
+                });
+            }
+        });
     });
 }
 
