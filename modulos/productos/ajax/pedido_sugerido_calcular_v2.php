@@ -908,6 +908,7 @@ try {
         'ok'                       => true,
         'productos'                => array_values($res),
         'n_semanas'                => $nSemanas,
+        'wls_last_fecha_fin'       => $r['f2'],
         'factor_congelados'        => $facC,
         'capacidad_congelados'     => $capC,            // legacy porciones
         'capacidad_paquetes'       => $capCPaquetes,    // nuevo: paquetes

@@ -314,21 +314,26 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
                     const ciclo = slot.cicloSlot;                        // ciclo real de esta ronda
 
-                    // Proyección Dinámica WLS
-                    if (p._current_wls_x === undefined) {
-                        // Calcular el offset dentro de la semana actual (Lunes = 0, Domingo = 6)
-                        const d = new Date(p.fecha_proximo_despacho + 'T00:00:00');
-                        const dayOfWeek = d.getDay();
-                        const offsetDays = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-                        
-                        // Iniciar en la semana n+1, sumando la fracción de semana transcurrida
-                        p._current_wls_x = (p.wls_n ?? 0) + 1 + (offsetDays / 7);
-                    }
-                    
+                    // Proyección Dinámica WLS por semana calendario
                     const wls_m = p.wls_m ?? 0;
                     const wls_b = p.wls_b ?? 0;
-                    // Evaluar la proyección en la semana ENTERA actual (Math.floor)
-                    const semC_ronda = Math.max(0, (wls_m * Math.floor(p._current_wls_x)) + wls_b);
+                    let wls_x = p.wls_n ?? 0;
+                    
+                    if (resPedido.wls_last_fecha_fin) {
+                        const dF = new Date(resPedido.wls_last_fecha_fin + 'T23:59:59');
+                        const dD = new Date(fecha + 'T12:00:00');
+                        const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
+                        const x_offset = Math.ceil(diffDays / 7);
+                        wls_x += x_offset;
+                    } else {
+                        // Fallback
+                        if (p._current_wls_x === undefined) {
+                            p._current_wls_x = (p.wls_n ?? 0) + 1; 
+                        }
+                        wls_x = Math.floor(p._current_wls_x);
+                    }
+                    
+                    const semC_ronda = Math.max(0, (wls_m * wls_x) + wls_b);
                     const cd = semC_ronda / 7;
 
                     const maximos = calcularStockMaxSlot(p, ciclo, cd);
@@ -360,8 +365,6 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         cd_dinamico: cd
                     };
 
-                    // Avanzar la proyección de tiempo para la siguiente ronda de este producto
-                    p._current_wls_x += (ciclo / 7);
                 });
             });
         });
