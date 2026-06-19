@@ -46,6 +46,50 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaDespacho)) {
     exit();
 }
 
+/**
+ * Calcula la proyección de consumo usando regresión lineal Weighted Least Squares (WLS).
+ * Asigna mayor peso a los datos más recientes (w = i).
+ * Retorna el promedio proyectado de las próximas 3 semanas.
+ */
+function calcularProyeccionWLS(array $valores): float
+{
+    $n = count($valores);
+    if ($n === 0) return 0.0;
+    if ($n === 1) return max(0.0, (float)$valores[0]);
+
+    $sum_w = 0.0;
+    $sum_wx = 0.0;
+    $sum_wy = 0.0;
+    $sum_wxx = 0.0;
+    $sum_wxy = 0.0;
+
+    // x = 1, 2, ..., n
+    foreach ($valores as $i => $y) {
+        $x = $i + 1;
+        $w = $x; // Pesos lineales decrecientes hacia el pasado (más reciente = mayor peso)
+        
+        $sum_w += $w;
+        $sum_wx += $w * $x;
+        $sum_wy += $w * $y;
+        $sum_wxx += $w * $x * $x;
+        $sum_wxy += $w * $x * $y;
+    }
+
+    $denominator = ($sum_w * $sum_wxx) - ($sum_wx * $sum_wx);
+    if (abs($denominator) < 0.0001) {
+        return array_sum($valores) / $n;
+    }
+
+    $slope = (($sum_w * $sum_wxy) - ($sum_wx * $sum_wy)) / $denominator;
+    $intercept = ($sum_wy - $slope * $sum_wx) / $sum_w;
+
+    $w1 = max(0.0, $slope * ($n + 1) + $intercept);
+    $w2 = max(0.0, $slope * ($n + 2) + $intercept);
+    $w3 = max(0.0, $slope * ($n + 3) + $intercept);
+
+    return ($w1 + $w2 + $w3) / 3.0;
+}
+
 try {
     // ── 1. Fechas de la semana de corte ─────────────────────────────────
     $stmtS = $conn->prepare(
@@ -204,10 +248,7 @@ try {
                 }
                 $nonZero = array_filter($vals, fn($v) => $v > 0);
                 if (!empty($nonZero)) {
-                    $mean = array_sum($vals) / count($vals);
-                    $n    = count($vals);
-                    $desv = $n > 1 ? sqrt(array_sum(array_map(fn($v) => ($v - $mean)**2, $vals)) / ($n-1)) : 0;
-                    $semC = $mean + $desv;
+                    $semC = calcularProyeccionWLS($vals);
                     $stmtAdj = $conn->prepare("SELECT clp.ajuste_demanda FROM producto_presentacion pp LEFT JOIN configuracion_logistica_producto clp ON clp.codigo_insumo=pp.categoria_insumo AND clp.cod_sucursal=? WHERE pp.id=? LIMIT 1");
                     $stmtAdj->execute([$codSucursal, $idPP]);
                     $adj = (float)($stmtAdj->fetchColumn() ?: 0);
