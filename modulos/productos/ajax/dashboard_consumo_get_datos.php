@@ -401,6 +401,50 @@ try {
         return $presentPorMaestro[$idMaestro][$idUnidad] ?? null;
     }
 
+    function calcularProyeccionWLS(array $valores): array
+    {
+        $n = count($valores);
+        if ($n === 0) return ['promedio' => 0.0, 'm' => 0.0, 'b' => 0.0, 'n' => 0, 'w1' => 0.0, 'w2' => 0.0, 'w3' => 0.0];
+        if ($n === 1) {
+            $v = max(0.0, (float)$valores[0]);
+            return ['promedio' => $v, 'm' => 0.0, 'b' => $v, 'n' => 1, 'w1' => $v, 'w2' => $v, 'w3' => $v];
+        }
+
+        $sum_w = 0.0; $sum_wx = 0.0; $sum_wy = 0.0; $sum_wxx = 0.0; $sum_wxy = 0.0;
+        foreach ($valores as $i => $y) {
+            $x = $i + 1;
+            $w = $x;
+            $sum_w += $w;
+            $sum_wx += $w * $x;
+            $sum_wy += $w * $y;
+            $sum_wxx += $w * $x * $x;
+            $sum_wxy += $w * $x * $y;
+        }
+
+        $denominator = ($sum_w * $sum_wxx) - ($sum_wx * $sum_wx);
+        if (abs($denominator) < 0.0001) {
+            $prom = array_sum($valores) / $n;
+            return ['promedio' => $prom, 'm' => 0.0, 'b' => $prom, 'n' => $n, 'w1' => $prom, 'w2' => $prom, 'w3' => $prom];
+        }
+
+        $slope = (($sum_w * $sum_wxy) - ($sum_wx * $sum_wy)) / $denominator;
+        $intercept = ($sum_wy - $slope * $sum_wx) / $sum_w;
+
+        $w1 = max(0.0, $slope * ($n + 1) + $intercept);
+        $w2 = max(0.0, $slope * ($n + 2) + $intercept);
+        $w3 = max(0.0, $slope * ($n + 3) + $intercept);
+
+        return [
+            'promedio' => ($w1 + $w2 + $w3) / 3.0,
+            'm' => $slope,
+            'b' => $intercept,
+            'n' => $n,
+            'w1' => $w1,
+            'w2' => $w2,
+            'w3' => $w3
+        ];
+    }
+
 
     function calcularDesviacionEstandar(array $valores): float
     {
@@ -705,33 +749,14 @@ try {
             $nActiva = $lastIdx - $firstIdx + 1;
             $valsActivo = array_slice($valsSuc, $firstIdx, $nActiva);
             
-            // WLS para la proyección
             $n_vals = count($valsActivo);
-            if ($n_vals === 0) {
-                $promActivo = 0.0;
-                $semC = 0.0;
-            } elseif ($n_vals === 1) {
-                $promActivo = max(0.0, (float)$valsActivo[0]);
-                $semC = max(0.0, (float)$valsActivo[0]);
-            } else {
-                $sum_w = 0.0; $sum_wx = 0.0; $sum_wy = 0.0; $sum_wxx = 0.0; $sum_wxy = 0.0;
-                foreach ($valsActivo as $i => $y) {
-                    $x = $i + 1; $w = $x;
-                    $sum_w += $w; $sum_wx += $w * $x; $sum_wy += $w * $y;
-                    $sum_wxx += $w * $x * $x; $sum_wxy += $w * $x * $y;
-                }
-                $denominator = ($sum_w * $sum_wxx) - ($sum_wx * $sum_wx);
-                if (abs($denominator) < 0.0001) {
-                    $semC = array_sum($valsActivo) / $n_vals;
-                } else {
-                    $slope = (($sum_w * $sum_wxy) - ($sum_wx * $sum_wy)) / $denominator;
-                    $intercept = ($sum_wy - $slope * $sum_wx) / $sum_w;
-                    $w1 = max(0.0, $slope * ($n_vals + 1) + $intercept);
-                    $w2 = max(0.0, $slope * ($n_vals + 2) + $intercept);
-                    $w3 = max(0.0, $slope * ($n_vals + 3) + $intercept);
-                    $semC = ($w1 + $w2 + $w3) / 3.0;
-                }
-            }
+            $wlsResSuc = calcularProyeccionWLS($valsActivo);
+            $semC = $wlsResSuc['promedio'];
+
+            
+            // Si hay múltiples sucursales, el cálculo WLS se hizo por sucursal, pero necesitamos el WLS global para el gráfico de "Total"
+            // De hecho, este loop foreach ($sucursalesPresentes as $suc) calcula WLS POR SUCURSAL.
+
 
             $sucCod = $idsSucursales[strtolower(trim($suc))] ?? null;
             $dSM = $sucCod ? ($configSucursales[$sucCod] ?? 0) : 0;
@@ -768,6 +793,43 @@ try {
             elseif ($p2 < $p1 * 0.95)
                 $tendencia = 'down';
         }
+
+        // --- CÁLCULO WLS GLOBAL PARA EL GRÁFICO ---
+        $valsGlobal = [];
+        foreach ($semanasNros as $sem) {
+            $valsGlobal[] = (float) ($consPorSem[$sem] ?? 0);
+        }
+        $nonZeroGlobal = array_filter($valsGlobal, fn($v) => $v > 0);
+        $globalSemC = 0;
+        $globalWlsM = 0;
+        $globalWlsB = 0;
+        $globalWlsN = 0;
+        $globalWlsFirstIdx = 0;
+        
+        if (!empty($nonZeroGlobal)) {
+            $meanNonZeroG = array_sum($nonZeroGlobal) / count($nonZeroGlobal);
+            $umbralG = max(0.01, $meanNonZeroG * 0.10);
+            
+            $firstIdxG = null;
+            $lastIdxG = null;
+            foreach ($valsGlobal as $i => $v) {
+                if ($v >= $umbralG) {
+                    if ($firstIdxG === null) $firstIdxG = $i;
+                    $lastIdxG = $i;
+                }
+            }
+            if ($firstIdxG !== null) {
+                $nActivaG = $lastIdxG - $firstIdxG + 1;
+                $valsActivoG = array_slice($valsGlobal, $firstIdxG, $nActivaG);
+                $wlsResG = calcularProyeccionWLS($valsActivoG);
+                $globalSemC = $wlsResG['promedio'];
+                $globalWlsM = $wlsResG['m'];
+                $globalWlsB = $wlsResG['b'];
+                $globalWlsN = $wlsResG['n'];
+                $globalWlsFirstIdx = $firstIdxG;
+            }
+        }
+
 
         // Desglose semana × sucursal (redondeado al 0.5 si es P1)
         $desgloseSemsuc = [];

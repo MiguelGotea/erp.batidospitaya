@@ -656,50 +656,8 @@ function renderKPIs(data, item) {
             $('#kpiPicoSub').text('');
         }
 
-        // Proyección 3 semanas con regresión lineal (misma lógica que el gráfico)
-        const semanasNrosKpi = data.semanas.map(s => s.numero_semana);
-        const semanaActualKpi = parseInt($('#semanaActualNum').text()) || 0;
-        const esSemActKpi = semanaActualKpi > 0 && semanasNrosKpi.includes(semanaActualKpi);
-        const semanasCalcKpi = esSemActKpi
-            ? semanasNrosKpi.filter(n => n !== semanaActualKpi)
-            : semanasNrosKpi;
-        const ultimaSemKpi = semanasNrosKpi[semanasNrosKpi.length - 1];
-
-        // Promedio sobre semanas completas
-        let promCalcKpi = item.prom_semana || 0;
-        if (semanasCalcKpi.length > 0) {
-            const valsC = semanasCalcKpi.map(n => item.por_semana[n] || 0);
-            const valsP = valsC.filter(v => v > 0);
-            if (valsP.length > 0) promCalcKpi = valsP.reduce((a, b) => a + b, 0) / valsP.length;
-        }
-
-        let kpiProy3 = 0;
-        let kpiProm3 = promCalcKpi;
-        if (semanasCalcKpi.length >= 2) {
-            const xV = semanasCalcKpi;
-            const yV = semanasCalcKpi.map(n => item.por_semana[n] || 0);
-            const nk = xV.length;
-            const sumX = xV.reduce((a, b) => a + b, 0);
-            const sumY = yV.reduce((a, b) => a + b, 0);
-            const sumXY = xV.reduce((acc, x, i) => acc + x * yV[i], 0);
-            const sumX2 = xV.reduce((acc, x) => acc + x * x, 0);
-            const denom = nk * sumX2 - sumX * sumX;
-            if (Math.abs(denom) > 0.001) {
-                const sl = (nk * sumXY - sumX * sumY) / denom;
-                const ic = (sumY - sl * sumX) / nk;
-                const w1 = Math.max(0, sl * (ultimaSemKpi + 1) + ic);
-                const w2 = Math.max(0, sl * (ultimaSemKpi + 2) + ic);
-                const w3 = Math.max(0, sl * (ultimaSemKpi + 3) + ic);
-                kpiProy3 = w1 + w2 + w3;
-                kpiProm3 = kpiProy3 / 3;
-            } else {
-                kpiProy3 = promCalcKpi * 3;
-                kpiProm3 = promCalcKpi;
-            }
-        } else {
-            kpiProy3 = promCalcKpi * 3;
-            kpiProm3 = promCalcKpi;
-        }
+        let kpiProy3 = item.proyeccion_3sem || 0;
+        let kpiProm3 = kpiProy3 / 3;
 
         $('#kpiProyVal').text(Math.round(kpiProy3).toLocaleString('es-NI'));
         $('#kpiProySub').text(`Prom. ${Math.round(kpiProm3).toLocaleString('es-NI')} ${escHtml(item.unidad)}/sem`);
@@ -786,31 +744,27 @@ function renderGrafico(data) {
         promCalc = valsPos.length > 0 ? valsPos.reduce((a, b) => a + b, 0) / valsPos.length : prom;
     }
 
-    // Proyección con regresión lineal (mínimos cuadrados) sobre semanas completas
+    // Proyección con WLS proveniente del backend (coincide con pronóstico de abastecimiento)
     const ultimaSem = semanasNros[semanasNros.length - 1];
     let proyW1 = round2(promCalc), proyW2 = round2(promCalc), proyW3 = round2(promCalc);
-    let regSlope = 0, regIntercept = promCalc;  // fallback: línea plana en promCalc
-    if (semanasCalc.length >= 2) {
-        const xV = semanasCalc;
-        const yV = semanasCalc.map(n => item.por_semana[n] || 0);
-        const n_ = xV.length;
-        const sumX = xV.reduce((a, b) => a + b, 0);
-        const sumY = yV.reduce((a, b) => a + b, 0);
-        const sumXY = xV.reduce((acc, x, i) => acc + x * yV[i], 0);
-        const sumX2 = xV.reduce((acc, x) => acc + x * x, 0);
-        const denom = n_ * sumX2 - sumX * sumX;
-        if (Math.abs(denom) > 0.001) {
-            regSlope = (n_ * sumXY - sumX * sumY) / denom;
-            regIntercept = (sumY - regSlope * sumX) / n_;
-            proyW1 = Math.max(0, round2(regSlope * (ultimaSem + 1) + regIntercept));
-            proyW2 = Math.max(0, round2(regSlope * (ultimaSem + 2) + regIntercept));
-            proyW3 = Math.max(0, round2(regSlope * (ultimaSem + 3) + regIntercept));
+    let regSlope = item.wls_m || 0;
+    let regIntercept = item.wls_b || promCalc;
+    let proyActual = null;
+
+    if (item.wls_n > 0) {
+        let n_activa = item.wls_n;
+        let ultima_semana_activa = semanasNros[item.wls_first_idx + n_activa - 1];
+        
+        let calcWLS = (sem) => Math.max(0, round2(regSlope * (n_activa + (sem - ultima_semana_activa)) + regIntercept));
+
+        proyW1 = calcWLS(ultimaSem + 1);
+        proyW2 = calcWLS(ultimaSem + 2);
+        proyW3 = calcWLS(ultimaSem + 3);
+        
+        if (esSemActualEnRango) {
+            proyActual = calcWLS(semanaActual);
         }
     }
-    // Estimado de cierre para la semana en curso (basado en regresión)
-    const proyActual = esSemActualEnRango
-        ? Math.max(0, round2(regSlope * semanaActual + regIntercept))
-        : null;
 
     // ── Detectar si hay múltiples sucursales con datos en desglose
     const hayDesglose = sucursales.length > 1 && item.desglose_semxsuc &&
