@@ -155,7 +155,7 @@ function buscarPresentacionEnMaestro_PS(int $idMaestro, int $idUnidad, array &$p
  * @param string $hoy  Fecha actual 'Y-m-d'; si está vacía se usa 7/N como fallback.
  * Retorna null si no hay plan o la fila no está activa.
  */
-function calcularCicloRealDias(?array $planCat, string $hoy = ''): ?float {
+function calcularCicloRealDias(?array $planCat, string $fechaDespacho = ''): ?float {
     if (!$planCat || !($planCat['activo'] ?? 0)) return null;
 
     if ($planCat['tipo_frecuencia'] === 'n_semanas') {
@@ -173,25 +173,14 @@ function calcularCicloRealDias(?array $planCat, string $hoy = ''): ?float {
         if ($n === 1) return 7.0; // Un solo despacho por semana → ciclo completo
 
         // Sin fecha base: fallback al promedio (no debería ocurrir en producción)
-        if (!$hoy) return 7.0 / $n;
+        if (!$fechaDespacho) return 7.0 / $n;
 
-        $hoyTs  = strtotime($hoy);
+        $hoyTs  = strtotime($fechaDespacho);
         $hoyDow = (int)date('N', $hoyTs) - 1; // 0=Lun, …, 6=Dom
 
-        // 1. Encontrar el próximo día de despacho (nextDow)
-        $nextDow = null;
+        // 1. Contar días desde la fecha de despacho dada hasta el SIGUIENTE despacho
         for ($d = 1; $d <= 7; $d++) {
             $checkDow = ($hoyDow + $d) % 7;
-            if (in_array($checkDow, $dias)) {
-                $nextDow = $checkDow;
-                break;
-            }
-        }
-        if ($nextDow === null) return 7.0 / $n;
-
-        // 2. Contar días desde nextDow hasta el despacho subsiguiente
-        for ($d = 1; $d <= 7; $d++) {
-            $checkDow = ($nextDow + $d) % 7;
             if (in_array($checkDow, $dias)) {
                 return (float)$d; // Ciclo real del próximo despacho
             }
@@ -232,7 +221,7 @@ function calcularProximoDespacho(?array $planCat, string $hoy, PDO $conn): ?stri
         sort($diasSemana);  // 0=Lun,...,6=Dom
 
         $hoyTs = strtotime($hoy);
-        for ($d = 1; $d <= 14; $d++) {
+        for ($d = 0; $d <= 14; $d++) {
             $ts  = strtotime("+{$d} days", $hoyTs);
             $dow = (int)date('N', $ts) - 1; // 0=Lun,...,6=Dom
             if (in_array($dow, $diasSemana)) {
@@ -290,7 +279,7 @@ function calcularProximoDespacho(?array $planCat, string $hoy, PDO $conn): ?stri
             if (!$inicioSem) break; 
             
             $fechaDespacho = date('Y-m-d', strtotime($inicioSem . " +{$diaFijo} days"));
-            if ($fechaDespacho > $hoy) {
+            if ($fechaDespacho >= $hoy) {
                 return $fechaDespacho;
             }
             
@@ -714,11 +703,16 @@ try {
         $cP = $cat ? ($cPs[$cat] ?? null) : null;
         $adj = $cP ? (float)$cP['ajuste_demanda'] : 0;
 
-        // Obtener ciclo desde el plan de despacho (si existe y está activo para esta cat).
-        // Se pasa $hoy para que en tipo 'dias_semana' el ciclo refleje los días reales
-        // entre el PRÓXIMO despacho y el subsiguiente (no el promedio 7/N).
+        // Calcular próximo despacho para la categoría
         $planCat   = $planDespacho[$cat] ?? null;
-        $cicloReal = calcularCicloRealDias($planCat, $hoy);
+        $fechaProxDespacho = calcularProximoDespacho($planCat, date('Y-m-d'), $conn);
+        $diasHastaDespacho = $fechaProxDespacho
+            ? max(0, (int)((strtotime($fechaProxDespacho) - strtotime('today')) / 86400))
+            : null;
+
+        // Obtener ciclo desde el plan de despacho (si existe y está activo para esta cat).
+        // Se pasa la fecha del próximo despacho para que el ciclo sea exacto (hacia el subsiguiente).
+        $cicloReal = calcularCicloRealDias($planCat, $fechaProxDespacho ?: date('Y-m-d'));
         $diasPrep  = calcularDiasPreparacion($planCat);
 
         // Fallback a configuracion_logistica_producto si no hay plan
@@ -731,11 +725,6 @@ try {
         // sumB sigue acumulando en unidades de uso (se convierte a paquetes después)
         if ($cat === 'B')
             $sumB += $sMax;
-        // Calcular próximo despacho para la categoría
-        $fechaProxDespacho = calcularProximoDespacho($planCat, date('Y-m-d'), $conn);
-        $diasHastaDespacho = $fechaProxDespacho
-            ? max(0, (int)((strtotime($fechaProxDespacho) - strtotime('today')) / 86400))
-            : null;
 
         $res[$idP] = [
             'id_pp' => $idP,
