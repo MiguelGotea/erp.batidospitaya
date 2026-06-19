@@ -188,6 +188,33 @@ try {
         }
     }
 
+    // Filtro de mes de contrato
+    elseif ($columna === 'mes_contrato') {
+        $mesesNombres = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+        ];
+        $sql = "SELECT DISTINCT MONTH(uc.inicio_contrato) as mes
+                FROM Operarios o
+                LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario
+                    AND uc.CodContrato = (SELECT MAX(CodContrato) FROM Contratos WHERE cod_operario = o.CodOperario)
+                WHERE uc.inicio_contrato IS NOT NULL AND uc.inicio_contrato != '0000-00-00'
+                ORDER BY mes ASC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $resultados = $stmt->fetchAll();
+
+        foreach ($resultados as $row) {
+            $m = (int)$row['mes'];
+            $opciones[] = [
+                'valor' => $m,
+                'texto' => $m . ' (' . $mesesNombres[$m] . ')'
+            ];
+        }
+    }
+
     echo json_encode([
         'success' => true,
         'opciones' => $opciones

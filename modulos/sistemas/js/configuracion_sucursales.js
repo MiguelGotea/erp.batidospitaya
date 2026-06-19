@@ -216,6 +216,13 @@ function renderTabGeneral(id, s) {
             </div>
         </div>
         <div class="field-item">
+            <label class="field-label"><i class="bi bi-printer"></i>IP Impresora (Local)</label>
+            <div class="field-input-wrap">
+                <input class="field-input autosave-suc" data-id="${id}" data-campo="ip_impresora" value="${esc(s.ip_impresora || '')}" placeholder="192.168.X.X o localhost" ${ro}>
+                <span class="save-indicator"></span>
+            </div>
+        </div>
+        <div class="field-item">
             <label class="field-label"><i class="bi bi-geo-alt"></i>Departamento</label>
             ${PUEDE_EDITAR
                 ? `<select class="field-input autosave-suc" data-id="${id}" data-campo="cod_departamento"><option value="">—</option>${deptoOpts}</select>`

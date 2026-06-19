@@ -278,6 +278,29 @@ try {
         $where[] = "COALESCE(o.talla_camisa, 'Sin talla') IN (" . implode(',', $placeholders) . ")";
     }
 
+    // Filtro de fecha vencimiento certificado salud (rango)
+    if (isset($filtros['fecha_vencimiento_salud']) && is_array($filtros['fecha_vencimiento_salud'])) {
+        if (!empty($filtros['fecha_vencimiento_salud']['desde'])) {
+            $where[] = "(SELECT MAX(fecha_vencimiento) FROM ArchivosAdjuntos WHERE cod_operario = o.CodOperario AND id_tipo_documento = 2) >= :venc_salud_desde";
+            $params[':venc_salud_desde'] = $filtros['fecha_vencimiento_salud']['desde'];
+        }
+        if (!empty($filtros['fecha_vencimiento_salud']['hasta'])) {
+            $where[] = "(SELECT MAX(fecha_vencimiento) FROM ArchivosAdjuntos WHERE cod_operario = o.CodOperario AND id_tipo_documento = 2) <= :venc_salud_hasta";
+            $params[':venc_salud_hasta'] = $filtros['fecha_vencimiento_salud']['hasta'];
+        }
+    }
+
+    // Filtro de mes de contrato (lista)
+    if (isset($filtros['mes_contrato']) && is_array($filtros['mes_contrato']) && count($filtros['mes_contrato']) > 0) {
+        $placeholders = [];
+        foreach ($filtros['mes_contrato'] as $idx => $valor) {
+            $key = ":mes_contrato_$idx";
+            $placeholders[] = $key;
+            $params[$key] = $valor;
+        }
+        $where[] = "MONTH(uc.inicio_contrato) IN (" . implode(',', $placeholders) . ")";
+    }
+
     $whereClause = 'WHERE ' . implode(' AND ', $where);
 
     // Construir ORDER BY
@@ -297,7 +320,9 @@ try {
             'tiempo_trabajado_dias',
             'ultima_fecha_laborada',
             'cantidad_hijos',
-            'talla_camisa'
+            'talla_camisa',
+            'mes_contrato',
+            'fecha_vencimiento_salud'
         ];
         if (in_array($orden['columna'], $columnas_validas)) {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
@@ -356,6 +381,10 @@ try {
                 $orderClause = "ORDER BY o.Cedula $direccion";
             } elseif ($orden['columna'] === 'codigo_inss') {
                 $orderClause = "ORDER BY o.codigo_inss $direccion";
+            } elseif ($orden['columna'] === 'mes_contrato') {
+                $orderClause = "ORDER BY MONTH(uc.inicio_contrato) $direccion";
+            } elseif ($orden['columna'] === 'fecha_vencimiento_salud') {
+                $orderClause = "ORDER BY (SELECT MAX(fecha_vencimiento) FROM ArchivosAdjuntos WHERE cod_operario = o.CodOperario AND id_tipo_documento = 2) $direccion";
             } else {
                 $orderClause = "ORDER BY {$orden['columna']} $direccion";
             }
@@ -459,7 +488,9 @@ try {
                        CURDATE())
                 ),
                 uc.inicio_contrato
-            ) as tiempo_trabajado_dias
+            ) as tiempo_trabajado_dias,
+            MONTH(uc.inicio_contrato) as mes_contrato,
+            (SELECT MAX(fecha_vencimiento) FROM ArchivosAdjuntos WHERE cod_operario = o.CodOperario AND id_tipo_documento = 2) as fecha_vencimiento_salud
         FROM Operarios o
         LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
             AND uc.CodContrato = (

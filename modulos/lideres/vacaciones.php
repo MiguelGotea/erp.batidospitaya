@@ -1320,10 +1320,18 @@ function obtenerTiposFaltaConPorcentajes()
                 <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap gap-2">
                     <button type="button" class="btn-modern btn-modern-secondary"
                         data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn-modern" style="background:#17a2b8;color:#fff;"
-                        onclick="imprimirBoletaVacacionesV2()">
-                        <i class="fas fa-print me-2"></i>Imprimir
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn-modern" style="background:#17a2b8;color:#fff;"
+                            onclick="imprimirBoletaVacacionesV2()">
+                            <i class="fas fa-print me-2"></i>Imprimir
+                        </button>
+                        <?php if (tienePermiso('registro_vacaciones', 'imprimir_ticket', $cargoOperario)): ?>
+                        <button type="button" class="btn-modern" style="background:#6f42c1;color:#fff;"
+                            onclick="imprimirTicketTermicoVacacion()">
+                            <i class="fas fa-receipt me-2"></i>Ticket Térmico
+                        </button>
+                        <?php endif; ?>
+                    </div>
                     <button type="submit" form="formNuevaVacacion" class="btn-modern btn-modern-primary">
                         <i class="fas fa-save me-2"></i>Guardar
                     </button>
@@ -1347,7 +1355,16 @@ function obtenerTiposFaltaConPorcentajes()
             ],
             puedeAprobar: <?= $puedeAprobar ? 'true' : 'false' ?>,
             esRH: <?= $esRH ? 'true' : 'false' ?>,
-            jefeNombre: '<?= addslashes(trim(($usuario['Nombre'] ?? '') . ' ' . ($usuario['Apellido'] ?? ''))) ?>'
+            jefeNombre: '<?= addslashes(trim(($usuario['Nombre'] ?? '') . ' ' . ($usuario['Apellido'] ?? ''))) ?>',
+            sucursalesIpImpresora: {
+                <?php
+                $listaSucs = $esRH ? obtenerTodasSucursales() : obtenerSucursalesLider($_SESSION['usuario_id']);
+                foreach ($listaSucs as $s):
+                    if (!empty($s['ip_impresora'])):
+                ?>
+                "<?= htmlspecialchars($s['codigo']) ?>": "<?= htmlspecialchars($s['ip_impresora']) ?>",
+                <?php endif; endforeach; ?>
+            }
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1853,6 +1870,144 @@ function obtenerTiposFaltaConPorcentajes()
             // También accionar el registro de vacaciones
             const submitBtn = document.querySelector('button[type="submit"][form="formNuevaVacacion"]');
             if (submitBtn) submitBtn.click();
+        }
+
+        /**
+         * Envía los datos de la nueva solicitud de vacaciones directamente al servidor local de la sucursal seleccionada.
+         */
+        async function imprimirTicketTermicoVacacion() {
+            const sucursalSel = document.getElementById('nueva_sucursal');
+            const codSucursal = sucursalSel ? sucursalSel.value : '';
+            const tienda = sucursalSel ? sucursalSel.options[sucursalSel.selectedIndex]?.text?.trim() : '';
+
+            const mapaIPs = (window.CONFIG_VACACIONES && window.CONFIG_VACACIONES.sucursalesIpImpresora)
+                ? window.CONFIG_VACACIONES.sucursalesIpImpresora : {};
+            const ipImpresora = mapaIPs[codSucursal] || null;
+
+            if (!ipImpresora) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin impresora configurada',
+                    text: `La sucursal "${tienda}" no tiene una IP de impresora térmica configurada. Configúrela en Sistemas → Configuración de Tiendas.`,
+                    confirmButtonColor: '#0E544C'
+                });
+                return;
+            }
+
+            const jefe = (window.CONFIG_VACACIONES && window.CONFIG_VACACIONES.jefeNombre)
+                ? window.CONFIG_VACACIONES.jefeNombre : '';
+
+            const hoy = new Date();
+            const fechaEmision = ('0' + hoy.getDate()).slice(-2) + '/' +
+                ('0' + (hoy.getMonth() + 1)).slice(-2) + '/' + hoy.getFullYear();
+
+            const operarioSel = document.getElementById('nueva_operario');
+            const nombre = operarioSel ? operarioSel.options[operarioSel.selectedIndex]?.text?.trim() : '';
+            const codOperario = operarioSel ? operarioSel.value : '';
+
+            const fechaInicio = document.getElementById('nueva_fecha_inicio')?.value || '';
+            const fechaFin = document.getElementById('nueva_fecha_fin')?.value || '';
+
+            let totalDias = '';
+            if (fechaInicio && fechaFin) {
+                const d1 = new Date(fechaInicio + 'T00:00:00');
+                const d2 = new Date(fechaFin + 'T00:00:00');
+                if (d2 >= d1) {
+                    const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+                    totalDias = diff + (diff === 1 ? ' día' : ' días');
+                }
+            }
+
+            // Formatear fechas para el ticket (dd/mm/yyyy)
+            let fechaInicioFmt = '';
+            let fechaFinFmt = '';
+            if (fechaInicio) {
+                const [y, m, d] = fechaInicio.split('-');
+                fechaInicioFmt = `${d}/${m}/${y}`;
+            }
+            if (fechaFin) {
+                const [y, m, d] = fechaFin.split('-');
+                fechaFinFmt = `${d}/${m}/${y}`;
+            }
+
+            // Construir las líneas del ticket en base a 32 caracteres (estándar de 58mm)
+            const lineas = [
+                '================================',
+                '    SOLICITUD DE VACACIONES',
+                '        BATIDOS PITAYA',
+                '================================',
+                `Tienda: ${tienda.substring(0, 24)}`,
+                `Jefe:   ${jefe.substring(0, 24)}`,
+                `Emision:${fechaEmision}`,
+                '--------------------------------',
+                'DATOS DEL COLABORADOR',
+                '--------------------------------',
+                `Nombre: ${nombre.substring(0, 24)}`,
+                '',
+                `Desde:  ${fechaInicioFmt}`,
+                `Hasta:  ${fechaFinFmt}`,
+                `Total:  ${totalDias}`,
+                '',
+                '================================',
+                'Firma del colaborador:',
+                '',
+                '',
+                '_______________________________',
+                '',
+                'Firma del jefe directo:',
+                '',
+                '',
+                '_______________________________',
+                '',
+            ];
+
+            // Mostrar cargando con SweetAlert
+            Swal.fire({
+                title: 'Enviando a la impresora...',
+                html: 'Conectando con el servidor de impresión de la tienda.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const respuesta = await fetch(`http://${ipImpresora}:3000/imprimir`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lineas }),
+                    signal: AbortSignal.timeout(8000)
+                });
+
+                const resultado = await respuesta.json();
+
+                if (resultado.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Impreso con éxito!',
+                        text: 'El ticket de solicitud de vacaciones ha sido impreso.',
+                        confirmButtonColor: '#0E544C'
+                    });
+
+                    // Opcional: También accionar el registro de vacaciones
+                    const submitBtn = document.querySelector('button[type="submit"][form="formNuevaVacacion"]');
+                    if (submitBtn) submitBtn.click();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de impresión',
+                        text: resultado.error || 'Ocurrió un error al enviar el ticket.',
+                        confirmButtonColor: '#0E544C'
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se pudo conectar',
+                    text: `No se pudo establecer conexión con el servidor de impresión local en http://${ipImpresora}:3000. ¿Está encendida la PC y corriendo el servidor?`,
+                    confirmButtonColor: '#0E544C'
+                });
+            }
         }
     </script>
 

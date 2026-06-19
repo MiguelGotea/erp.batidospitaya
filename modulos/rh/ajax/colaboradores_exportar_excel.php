@@ -136,6 +136,27 @@ if (!empty($filtros['talla_camisa']) && is_array($filtros['talla_camisa'])) {
     $where[] = "COALESCE(o.talla_camisa,'Sin talla') IN (".implode(',',$ph).")";
 }
 
+// Filtro de fecha vencimiento certificado salud (rango)
+if (!empty($filtros['fecha_vencimiento_salud']['desde'])) {
+    $where[] = "(SELECT MAX(fecha_vencimiento) FROM ArchivosAdjuntos WHERE cod_operario = o.CodOperario AND id_tipo_documento = 2) >= :venc_salud_desde";
+    $params[':venc_salud_desde'] = $filtros['fecha_vencimiento_salud']['desde'];
+}
+if (!empty($filtros['fecha_vencimiento_salud']['hasta'])) {
+    $where[] = "(SELECT MAX(fecha_vencimiento) FROM ArchivosAdjuntos WHERE cod_operario = o.CodOperario AND id_tipo_documento = 2) <= :venc_salud_hasta";
+    $params[':venc_salud_hasta'] = $filtros['fecha_vencimiento_salud']['hasta'];
+}
+
+// Filtro de mes de contrato (lista)
+if (!empty($filtros['mes_contrato']) && is_array($filtros['mes_contrato'])) {
+    $ph = [];
+    foreach ($filtros['mes_contrato'] as $idx => $v) {
+        $k = ":mes_contrato_$idx";
+        $ph[] = $k;
+        $params[$k] = $v;
+    }
+    $where[] = "MONTH(uc.inicio_contrato) IN (" . implode(',', $ph) . ")";
+}
+
 $whereClause = 'WHERE ' . implode(' AND ', $where);
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -192,6 +213,12 @@ if (!empty($orden['columna'])) {
             ";
             $orderClause = "ORDER BY $subquerySucursalActual $dir";
             break;
+        case 'mes_contrato':
+            $orderClause = "ORDER BY MONTH(uc.inicio_contrato) $dir";
+            break;
+        case 'fecha_vencimiento_salud':
+            $orderClause = "ORDER BY (SELECT MAX(fecha_vencimiento) FROM ArchivosAdjuntos WHERE cod_operario = o.CodOperario AND id_tipo_documento = 2) $dir";
+            break;
     }
 }
 
@@ -231,7 +258,9 @@ $sql = "
         DATEDIFF(
             COALESCE(uc.fecha_salida, IF(uc.fin_contrato IS NOT NULL AND uc.fin_contrato < CURDATE(), uc.fin_contrato, CURDATE())),
             uc.inicio_contrato
-        ) as tiempo_trabajado_dias
+        ) as tiempo_trabajado_dias,
+        MONTH(uc.inicio_contrato) as mes_contrato,
+        (SELECT MAX(fecha_vencimiento) FROM ArchivosAdjuntos WHERE cod_operario = o.CodOperario AND id_tipo_documento = 2) as fecha_vencimiento_salud
     FROM Operarios o
     LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario
         AND uc.CodContrato = (SELECT MAX(CodContrato) FROM Contratos WHERE cod_operario = o.CodOperario)
@@ -291,8 +320,8 @@ $headers = [
     'Código', 'Nombre Completo', 'Cédula', 'Seguro INSS',
     'Cargo', 'Teléfono Personal', 'Teléfono Corporativo',
     'Estado', 'Tienda Contrato', 'Tienda Actual',
-    'Inicio Contrato', 'Último Día Marcado', 'Fecha de Salida', 'Tiempo Trabajado',
-    'Cant. Hijos', 'Talla Camisa'
+    'Inicio Contrato', 'Mes Contrato', 'Último Día Marcado', 'Fecha de Salida', 'Tiempo Trabajado',
+    'Cant. Hijos', 'Talla Camisa', 'Venc. Cert. Salud'
 ];
 foreach ($headers as $h) {
     echo '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>';
@@ -311,6 +340,9 @@ foreach ($datos as $row) {
     $fechaSalida   = !empty($row['fecha_salida']) && $row['fecha_salida'] !== '0000-00-00'
         ? date('d/m/Y', strtotime($row['fecha_salida'])) : '-';
 
+    $fechaVencSalud = !empty($row['fecha_vencimiento_salud']) && $row['fecha_vencimiento_salud'] !== '0000-00-00'
+        ? date('d/m/Y', strtotime($row['fecha_vencimiento_salud'])) : '-';
+
     $cols = [
         $row['CodOperario'],
         $row['nombre_completo'],
@@ -323,11 +355,13 @@ foreach ($datos as $row) {
         $row['nombre_sucursal'],
         $row['sucursal_actual_nombre'],
         $fechaInicio,
+        $row['mes_contrato']       ?? '-',
         $ultimaMarca,
         $fechaSalida,
         $tiempoTexto,
         $row['cantidad_hijos'] !== null ? $row['cantidad_hijos'] : '-',
         $row['talla_camisa']          ?? '-',
+        $fechaVencSalud
     ];
 
     echo '<tr>';

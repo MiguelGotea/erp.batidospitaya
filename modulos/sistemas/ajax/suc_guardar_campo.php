@@ -20,6 +20,7 @@ $CAMPOS_PERMITIDOS = [
     // Generales
     'nombre'             => 'string',
     'ip_direccion'       => 'string',
+    'ip_impresora'       => 'string',
     'telefono'           => 'string',
     'whatsapp'           => 'string',
     'email'              => 'string',
