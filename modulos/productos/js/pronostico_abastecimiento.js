@@ -260,12 +260,19 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
 
                     // Proyección Dinámica WLS
                     if (p._current_wls_x === undefined) {
-                        p._current_wls_x = (p.wls_n ?? 0) + 1; // Ronda 1 inicia proyectando a la semana n+1
+                        // Calcular el offset dentro de la semana actual (Lunes = 0, Domingo = 6)
+                        const d = new Date(p.fecha_proximo_despacho + 'T00:00:00');
+                        const dayOfWeek = d.getDay();
+                        const offsetDays = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                        
+                        // Iniciar en la semana n+1, sumando la fracción de semana transcurrida
+                        p._current_wls_x = (p.wls_n ?? 0) + 1 + (offsetDays / 7);
                     }
                     
                     const wls_m = p.wls_m ?? 0;
                     const wls_b = p.wls_b ?? 0;
-                    const semC_ronda = Math.max(0, (wls_m * p._current_wls_x) + wls_b);
+                    // Evaluar la proyección en la semana ENTERA actual (Math.floor)
+                    const semC_ronda = Math.max(0, (wls_m * Math.floor(p._current_wls_x)) + wls_b);
                     const cd = semC_ronda / 7;
 
                     const maximos = calcularStockMaxSlot(p, ciclo, cd);
