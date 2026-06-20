@@ -798,3 +798,4 @@ function _finalizarChartKardex(datasets, ctx, chartId, labels) {
         }
     });
 }
+
