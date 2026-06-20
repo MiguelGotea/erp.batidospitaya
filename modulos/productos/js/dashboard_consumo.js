@@ -3001,7 +3001,10 @@ async function calcularPronosticoAbastKardex(
             return semC / 7;
         };
 
-        const baseCd = getDynamicCd(hoyStr || allDays[0]);
+        const hoyDBase = new Date();
+        hoyDBase.setHours(12, 0, 0, 0);
+        const hoyStrBase = hoyDBase.toISOString().split('T')[0];
+        const baseCd = getDynamicCd(hoyStrBase || allDays[0]);
 
         // Construir lista de rondas dentro del horizonte
         const rondas = []; // { fecha, round, cycle, prevCycle, smfSlot }
