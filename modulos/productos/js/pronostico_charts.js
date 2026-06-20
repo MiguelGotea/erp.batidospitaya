@@ -196,7 +196,9 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
     });
 
     const chartId = `tend-${sk}-${idInsumoSel}`;
-    if (instanciasCharts[chartId]) { instanciasCharts[chartId].destroy(); }
+    let existingTend = Chart.getChart(canvas);
+    if (existingTend) existingTend.destroy();
+    if (instanciasCharts[chartId]) { instanciasCharts[chartId].destroy(); delete instanciasCharts[chartId]; }
 
     const ctx = canvas.getContext('2d');
     instanciasCharts[chartId] = new Chart(ctx, {
@@ -369,7 +371,9 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
     ];
 
     const chartId = `kardex-${sk}-${res.id_pp}`;
-    if (instanciasCharts[chartId]) { instanciasCharts[chartId].destroy(); }
+    let existingKard = Chart.getChart(canvas);
+    if (existingKard) existingKard.destroy();
+    if (instanciasCharts[chartId]) { instanciasCharts[chartId].destroy(); delete instanciasCharts[chartId]; }
 
     const ctx = canvas.getContext('2d');
 
@@ -404,7 +408,7 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
 
             // Call the async function to add the forecast with dispatch
             calcularPronosticoAbastKardex(
-                res, _anchorVal, _anchorIdx, allDays, fechaObjetivoPronostico, _getConsProy, datasets, ctx, fmtKardex, chartId, labels, semDesde, semHasta, semCorte, codSuc
+                res, _anchorVal, _anchorIdx, allDays, fechaObjetivoPronostico, _getConsProy, datasets, ctx, fmtKardex, chartId, labels, semDesde, semHasta, semCorte, codSuc, sk
             );
             return; // We return here because _finalizarChartKardex will render the chart
         }
@@ -450,7 +454,7 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
 }
 
 async function calcularPronosticoAbastKardex(
-    res, anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, ctx, fmtKardex, chartId, labels, semDesde, semHasta, semCorte, codSuc
+    res, anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, ctx, fmtKardex, chartId, labels, semDesde, semHasta, semCorte, codSuc, sk
 ) {
     try {
         const idPP = res.id_pp;
