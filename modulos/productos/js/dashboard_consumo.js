@@ -3289,7 +3289,20 @@ function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsPr
 function _finalizarChartKardex(datasets, ctx) {
     // Redibujar el chart existente con los nuevos datasets
     if (chartKardexExistencia) {
-        chartKardexExistencia.data.datasets = datasets;
+        // Preservar las líneas dinámicas de Stock Mínimo y Stock Máx Final si fueron agregadas asíncronamente
+        const currentDatasets = chartKardexExistencia.data.datasets || [];
+        const stockMinDs = currentDatasets.find(ds => ds.label && ds.label.includes('Stock Mín'));
+        const stockMaxDs = currentDatasets.find(ds => ds.label && ds.label.includes('Stock Máx Final'));
+        
+        let finalDatasets = datasets.filter(ds => 
+            !(ds.label && ds.label.includes('Stock Mín')) && 
+            !(ds.label && ds.label.includes('Stock Máx Final'))
+        );
+        
+        if (stockMinDs) finalDatasets.push(stockMinDs);
+        if (stockMaxDs) finalDatasets.push(stockMaxDs);
+
+        chartKardexExistencia.data.datasets = finalDatasets;
         chartKardexExistencia.update();
     }
 }
