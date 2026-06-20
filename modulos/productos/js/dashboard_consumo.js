@@ -2794,10 +2794,29 @@ function cargarStockMinMaxKardex(idPP, semAnalisis) {
                 const facC = res.facC || 1.0;
                 const adj = res.adj || 0;
                 
+                // Obtenemos los parametros WLS dinámicos del item de dashboard (no del ajax estático)
+                let item_wls_n = res.wls_n || 0;
+                let item_wls_m = res.wls_m || 0;
+                let item_wls_b = res.wls_b || 0;
+                let item_wls_lff = res.wls_last_fecha_fin || '';
+
+                if (datosActuales && datosActuales.consumo) {
+                    const item = datosActuales.consumo.find(c => c.id == idPP);
+                    if (item && item.wls_n > 0) {
+                        item_wls_n = item.wls_n;
+                        item_wls_m = item.wls_m;
+                        item_wls_b = item.wls_b;
+                        const idxFin = item.wls_first_idx + item.wls_n - 1;
+                        if (datosActuales.semanas && datosActuales.semanas[idxFin]) {
+                            item_wls_lff = datosActuales.semanas[idxFin].fecha_fin;
+                        }
+                    }
+                }
+
                 const getDynamicCd = (fecha_str) => {
-                    let wls_x = res.wls_n || 0;
-                    if (res.wls_last_fecha_fin) {
-                        const dF = new Date(res.wls_last_fecha_fin + 'T23:59:59');
+                    let wls_x = item_wls_n;
+                    if (item_wls_lff) {
+                        const dF = new Date(item_wls_lff + 'T23:59:59');
                         const dD = new Date(fecha_str + 'T12:00:00');
                         const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
                         const x_offset = Math.ceil(diffDays / 7);
@@ -2805,7 +2824,7 @@ function cargarStockMinMaxKardex(idPP, semAnalisis) {
                     } else {
                         wls_x += 1;
                     }
-                    const semC = Math.max(0, ((res.wls_m || 0) * wls_x) + (res.wls_b || 0));
+                    const semC = Math.max(0, (item_wls_m * wls_x) + item_wls_b);
                     return (semC * (1 + adj)) / 7;
                 };
 
