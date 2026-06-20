@@ -12,7 +12,7 @@ require_once '../../core/layout/menu_lateral.php';
 require_once '../../core/layout/header_universal.php';
 require_once '../../core/permissions/permissions.php';
 
-$usuario      = obtenerUsuarioActual();
+$usuario = obtenerUsuarioActual();
 $cargoOperario = $usuario['CodNivelesCargos'];
 
 if (!tienePermiso('pronostico_abastecimiento', 'vista', $cargoOperario)) {
@@ -26,16 +26,18 @@ $version = mt_rand(1, 10000);
 $semActual = $semDesdeDefault = $semHastaDefault = '';
 try {
     $stmtSem = $conn->query("SELECT numero_semana FROM SemanasSistema WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin LIMIT 1");
-    $resSem  = $stmtSem->fetch(PDO::FETCH_ASSOC);
+    $resSem = $stmtSem->fetch(PDO::FETCH_ASSOC);
     if ($resSem) {
-        $semActual       = (int)$resSem['numero_semana'];
+        $semActual = (int) $resSem['numero_semana'];
         $semDesdeDefault = $semActual - 6;
         $semHastaDefault = $semActual;
     }
-} catch (Exception $e) { /* silencioso */ }
+} catch (Exception $e) { /* silencioso */
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,114 +55,117 @@ try {
 </head>
 
 <body>
-<?php echo renderMenuLateral($cargoOperario); ?>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-<div class="main-container">
-    <div class="sub-container">
-        <?php echo renderHeader($usuario, 'Pronóstico de Abastecimiento'); ?>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Pronóstico de Abastecimiento'); ?>
 
-        <div class="pa-wrapper p-2">
+            <div class="pa-wrapper p-2">
 
-            <!-- ══ FILTROS (UNA SOLA LÍNEA) ══ -->
-            <div class="pa-filtros-card mb-3">
-                <div class="row g-2 align-items-end">
+                <!-- ══ FILTROS (UNA SOLA LÍNEA) ══ -->
+                <div class="pa-filtros-card mb-3">
+                    <div class="row g-2 align-items-end">
 
-                    <div class="col-6 col-md-auto">
-                        <label class="pa-label" for="pa-desde">Semana Desde</label>
-                        <input type="number" id="pa-desde" class="form-control form-control-sm pa-input"
-                               style="width:110px" min="1" max="9999"
-                               placeholder="ej: <?php echo $semDesdeDefault; ?>"
-                               value="<?php echo $semDesdeDefault; ?>">
+                        <div class="col-6 col-md-auto">
+                            <label class="pa-label" for="pa-desde">Semana Desde</label>
+                            <input type="number" id="pa-desde" class="form-control form-control-sm pa-input"
+                                style="width:110px" min="1" max="9999" placeholder="ej: <?php echo $semDesdeDefault; ?>"
+                                value="<?php echo $semDesdeDefault; ?>">
+                        </div>
+
+                        <div class="col-6 col-md-auto">
+                            <label class="pa-label" for="pa-hasta">Semana Hasta</label>
+                            <input type="number" id="pa-hasta" class="form-control form-control-sm pa-input"
+                                style="width:110px" min="1" max="9999" placeholder="ej: <?php echo $semHastaDefault; ?>"
+                                value="<?php echo $semHastaDefault; ?>">
+                        </div>
+
+                        <div class="col-6 col-md-auto">
+                            <label class="pa-label" for="pa-corte"
+                                title="Semana cuyo inventario real (domingo) sirve como base del pronóstico D-1">
+                                Sem. Corte
+                            </label>
+                            <input type="number" id="pa-corte" class="form-control form-control-sm pa-input"
+                                style="width:110px" min="1" max="9999"
+                                placeholder="ej: <?php echo $semHastaDefault; ?>">
+                        </div>
+
+                        <div class="col-12 col-md">
+                            <label class="pa-label" for="pa-sucursal">
+                                Sucursal <span class="text-danger">*</span>
+                            </label>
+                            <select id="pa-sucursal" class="form-select form-select-sm pa-select"
+                                style="min-width:200px">
+                                <option value="">— Selecciona —</option>
+                            </select>
+                        </div>
+
+                        <div class="col-auto d-flex align-items-end gap-2">
+                            <?php if (!empty($semActual)): ?>
+                                <span class="badge rounded-pill pa-badge-current-week">
+                                    <i
+                                        class="fas fa-calendar-check me-1"></i>Sem.&nbsp;<strong><?php echo $semActual; ?></strong>
+                                </span>
+                            <?php endif; ?>
+                            <button id="pa-btn-calcular" class="btn pa-btn-calcular">
+                                <i class="bi bi-calendar2-week me-1"></i>Calcular Agenda
+                            </button>
+                        </div>
+
                     </div>
+                </div><!-- /filtros -->
 
-                    <div class="col-6 col-md-auto">
-                        <label class="pa-label" for="pa-hasta">Semana Hasta</label>
-                        <input type="number" id="pa-hasta" class="form-control form-control-sm pa-input"
-                               style="width:110px" min="1" max="9999"
-                               placeholder="ej: <?php echo $semHastaDefault; ?>"
-                               value="<?php echo $semHastaDefault; ?>">
-                    </div>
-
-                    <div class="col-6 col-md-auto">
-                        <label class="pa-label" for="pa-corte"
-                               title="Semana cuyo inventario real (domingo) sirve como base del pronóstico D-1">
-                            Sem. Corte
-                        </label>
-                        <input type="number" id="pa-corte" class="form-control form-control-sm pa-input"
-                               style="width:110px" min="1" max="9999"
-                               placeholder="ej: <?php echo $semHastaDefault; ?>">
-                    </div>
-
-                    <div class="col-12 col-md">
-                        <label class="pa-label" for="pa-sucursal">
-                            Sucursal <span class="text-danger">*</span>
-                        </label>
-                        <select id="pa-sucursal" class="form-select form-select-sm pa-select" style="min-width:200px">
-                            <option value="">— Selecciona —</option>
-                        </select>
-                    </div>
-
-                    <div class="col-auto d-flex align-items-end gap-2">
-                        <?php if (!empty($semActual)): ?>
-                        <span class="badge rounded-pill pa-badge-current-week">
-                            <i class="fas fa-calendar-check me-1"></i>Sem.&nbsp;<strong><?php echo $semActual; ?></strong>
-                        </span>
-                        <?php endif; ?>
-                        <button id="pa-btn-calcular" class="btn pa-btn-calcular">
-                            <i class="bi bi-calendar2-week me-1"></i>Calcular Agenda
-                        </button>
-                    </div>
-
+                <!-- ══ ESTADO INICIAL ══ -->
+                <div id="pa-panel-inicial" class="pa-empty-state">
+                    <div class="pa-empty-icon"><i class="bi bi-calendar2-week"></i></div>
+                    <h5>Pronóstico de Abastecimiento</h5>
+                    <p class="text-muted" style="max-width:400px;margin:0 auto">
+                        Ingresa el rango de semanas, la semana de corte y la sucursal,
+                        luego haz clic en <strong>Calcular Agenda</strong>.
+                    </p>
                 </div>
-            </div><!-- /filtros -->
 
-            <!-- ══ ESTADO INICIAL ══ -->
-            <div id="pa-panel-inicial" class="pa-empty-state">
-                <div class="pa-empty-icon"><i class="bi bi-calendar2-week"></i></div>
-                <h5>Pronóstico de Abastecimiento</h5>
-                <p class="text-muted" style="max-width:400px;margin:0 auto">
-                    Ingresa el rango de semanas, la semana de corte y la sucursal,
-                    luego haz clic en <strong>Calcular Agenda</strong>.
-                </p>
-            </div>
-
-            <!-- ══ LOADER ══ -->
-            <div id="pa-loader" class="pa-loader d-none">
-                <div class="pa-spinner"></div>
-                <div class="pa-loader-text">
-                    Calculando agenda de despachos…
-                    <div class="pa-loader-step" id="pa-loader-step">Analizando consumo histórico</div>
+                <!-- ══ LOADER ══ -->
+                <div id="pa-loader" class="pa-loader d-none">
+                    <div class="pa-spinner"></div>
+                    <div class="pa-loader-text">
+                        Calculando agenda de despachos…
+                        <div class="pa-loader-step" id="pa-loader-step">Analizando consumo histórico</div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- ══ PANEL DE RESULTADOS ══ -->
-            <div id="pa-panel-datos" class="d-none">
+                <!-- ══ PANEL DE RESULTADOS ══ -->
+                <div id="pa-panel-datos" class="d-none">
 
-                <style>
-                    .d-none-search { display: none !important; }
-                </style>
+                    <style>
+                        .d-none-search {
+                            display: none !important;
+                        }
+                    </style>
 
-                <!-- Buscador de Insumos -->
-                <div class="row mb-3">
-                    <div class="col-12 col-md-6 col-lg-4">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" id="pa-search-producto" class="form-control" placeholder="Buscar insumo...">
+                    <!-- Buscador de Insumos -->
+                    <div class="row mb-3">
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" id="pa-search-producto" class="form-control"
+                                    placeholder="Buscar insumo...">
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Warnings de grupos sin plan -->
-                <div id="pa-warnings" class="d-none"></div>
+                    <!-- Warnings de grupos sin plan -->
+                    <div id="pa-warnings" class="d-none"></div>
 
-                <!-- Agenda cronológica -->
-                <div id="pa-agenda"></div>
+                    <!-- Agenda cronológica -->
+                    <div id="pa-agenda"></div>
 
-            </div><!-- /panel-datos -->
+                </div><!-- /panel-datos -->
 
-        </div><!-- /pa-wrapper -->
-    </div><!-- /sub-container -->
-</div><!-- /main-container -->
+            </div><!-- /pa-wrapper -->
+        </div><!-- /sub-container -->
+    </div><!-- /main-container -->
 
     <!-- Botón Flotante con opciones -->
     <?php if (tienePermiso('pronostico_abastecimiento', 'exportar', $cargoOperario)): ?>
@@ -219,8 +224,10 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Consumo Diario (WLS):</b> Proyección calculada mediante regresión lineal ponderada dividida entre 7 para dar mayor peso a la tendencia reciente.</li>
-                                    <li><b>Proyección Futura:</b> Tasa plana constante. Se usa el Consumo Diario WLS actual para proyectar el descuento de stock futuro sin variaciones.</li>
+                                    <li><b>Consumo Diario (WLS):</b> Proyección calculada mediante regresión lineal
+                                        ponderada dividida entre 7 para dar mayor peso a la tendencia reciente.</li>
+                                    <li><b>Proyección Futura:</b> Tasa plana constante. Se usa el Consumo Diario WLS
+                                        actual para proyectar el descuento de stock futuro sin variaciones.</li>
                                 </ul>
                             </div>
                         </div>
@@ -228,8 +235,10 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-box-seam me-1"></i> Niveles de Stock</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Stock Mín:</b> <code>(Consumo Diario × Días Stock Mínimo) / Factor Despacho</code></li>
-                                    <li><b>Stock Máx:</b> <code>((Consumo Diario × Ciclo) + Stock Mín Base) / Factor Despacho</code></li>
+                                    <li><b>Stock Mín:</b>
+                                        <code>(Consumo Diario × Días Stock Mínimo) / Factor Despacho</code></li>
+                                    <li><b>Stock Máx:</b>
+                                        <code>((Consumo Diario × Ciclo) + Stock Mín Base) / Factor Despacho</code></li>
                                 </ul>
                             </div>
                         </div>
@@ -274,9 +283,12 @@ try {
                             <i class="bi bi-graph-up-arrow"></i> Pronóstico Inteligente (Tendencia Reciente WLS)
                         </h6>
                         <ul class="text-secondary small mb-0">
-                            <li>El cálculo de <b>Consumo Diario</b> da <b>más importancia a lo reciente</b>, asignando mayor peso a las semanas más cercanas para reaccionar rápido a cambios de demanda.</li>
-                            <li>La fórmula detecta la <b>tendencia de crecimiento o decrecimiento</b>, y con base en ello proyecta un consumo diario estimado.</li>
-                            <li>A partir de este cálculo, se utiliza una <b>tasa plana (constante)</b> para descontar el inventario futuro de manera segura.</li>
+                            <li>El cálculo de <b>Consumo Diario</b> da <b>más importancia a lo reciente</b>, asignando
+                                mayor peso a las semanas más cercanas para reaccionar rápido a cambios de demanda.</li>
+                            <li>La fórmula detecta la <b>tendencia de crecimiento o decrecimiento</b>, y con base en
+                                ello proyecta un consumo diario estimado.</li>
+                            <li>A partir de este cálculo, se utiliza una <b>tasa plana (constante)</b> para descontar el
+                                inventario futuro de manera segura.</li>
                         </ul>
                     </div>
 
@@ -303,12 +315,17 @@ try {
                                 <ul class="list-unstyled small text-muted">
                                     <li class="mb-1"><b>Prom. Consumo:</b> Promedio semanal sobre la Ventana Activa
                                         (excluye ceros estructurales de inicio/fin).</li>
-                                    <li class="mb-1"><b>Desv. Estándar:</b> <i>(Obsoleto, se mantiene solo de referencia)</i> Qué tanto variaba el consumo.</li>
-                                    <li class="mb-1"><b>Consumo Diario:</b> Proyección inteligente basada en Mínimos Cuadrados Ponderados (WLS) dividida entre 7 que detecta tendencias y da más peso a las ventas recientes para predecir el consumo con mayor exactitud.</li>
-                                    <li class="mb-1"><b>Consumo Semanal:</b> Proyección de consumo equivalente al Consumo Diario multiplicado por 7.</li>
+                                    <li class="mb-1"><b>Desv. Estándar:</b> <i>(Obsoleto, se mantiene solo de
+                                            referencia)</i> Qué tanto variaba el consumo.</li>
+                                    <li class="mb-1"><b>Consumo Diario:</b> Proyección inteligente basada en Mínimos
+                                        Cuadrados Ponderados (WLS) dividida entre 7 que detecta tendencias y da más peso
+                                        a las ventas recientes para predecir el consumo con mayor exactitud.</li>
+                                    <li class="mb-1"><b>Consumo Semanal:</b> Proyección de consumo equivalente al
+                                        Consumo Diario multiplicado por 7.</li>
                                     <li class="mb-1"><b>Cap. Base (Final):</b> El Stock Máximo ya ajustado a lo que cabe
                                         físicamente en tienda.</li>
-                                    <li class="mb-1"><b>Inv. Teórico Ayer:</b> Inventario calculado hasta el día de ayer, usado como punto de partida en la ecuación de Pronóstico Inventario.</li>
+                                    <li class="mb-1"><b>Inv. Teórico Ayer:</b> Inventario calculado hasta el día de
+                                        ayer, usado como punto de partida en la ecuación de Pronóstico Inventario.</li>
                                     <li class="mb-1"><b>Sugerencia:</b> La resta entre el Stock Máximo Final y tu
                                         Inventario Actual.</li>
                                 </ul>
@@ -319,7 +336,8 @@ try {
                                 <ul class="list-unstyled small text-muted">
                                     <li class="mb-1"><b>Adj:</b> Porcentaje manual de aumento o disminución de la
                                         demanda.</li>
-                                    <li class="mb-1"><b>Ciclo:</b> Cuántos días reales pasan entre un pedido y el siguiente.
+                                    <li class="mb-1"><b>Ciclo:</b> Cuántos días reales pasan entre un pedido y el
+                                        siguiente.
                                     </li>
                                     <li class="mb-1"><b>S.Mín:</b> Días de reserva que quieres tener siempre "por si
                                         acaso".</li>
@@ -440,14 +458,15 @@ try {
         </div>
     </div>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="js/pronostico_charts.js?v=<?php echo $version; ?>"></script>
-<script src="js/pronostico_abastecimiento.js?v=<?php echo $version; ?>"></script>
-<script src="/core/assets/js/fab_button.js?v=<?php echo $version; ?>"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="js/pronostico_charts.js?v=<?php echo $version; ?>"></script>
+    <script src="js/pronostico_abastecimiento.js?v=<?php echo $version; ?>"></script>
+    <script src="/core/assets/js/fab_button.js?v=<?php echo $version; ?>"></script>
 </body>
+
 </html>
