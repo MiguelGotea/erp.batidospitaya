@@ -97,6 +97,30 @@ $(document).ready(() => {
         $(`.pa-tienda-sub[data-slot-key="${sk}"][data-pp-id="${ppId}"]`).toggleClass('d-none');
         $(this).find('.pa-expand-icon').toggleClass('rotated');
     });
+
+    $('#pa-agenda').on('click', '.pa-row-expandible-charts', function () {
+        const ppId = $(this).data('pp-id');
+        const sk = $(this).data('slot-key');
+        const sucursal = $(this).data('sucursal');
+        const fechaDespacho = $(this).data('fecha-despacho');
+        const cicloSlot = $(this).data('ciclo');
+        
+        const subRow = $(`.pa-chart-sub[data-slot-key="${sk}"][data-pp-id="${ppId}"]`);
+        
+        subRow.toggleClass('d-none');
+        $(this).find('.pa-expand-icon').toggleClass('rotated');
+
+        if (!subRow.hasClass('d-none') && !subRow.data('loaded')) {
+            subRow.data('loaded', true);
+            const semDesde = $('#pa-desde').val();
+            const semHasta = $('#pa-hasta').val();
+            const semCorte = $('#pa-corte').val();
+            
+            if (window.cargarGraficasParaFila) {
+                window.cargarGraficasParaFila(ppId, sk, sucursal, semDesde, semHasta, semCorte, fechaDespacho, cicloSlot);
+            }
+        }
+    });
     $('#pa-agenda').on('change', '.pa-toggle-preingreso', function () {
         window.pa_include_preingreso = $(this).is(':checked');
         if (window.lastStoreResults && currentAgendaData) {
@@ -702,9 +726,14 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             </tr>
             ${buildSubRowsTiendas(p, slotKey)}`;
         } else {
+            // Reconstruir fecha desde el slotKey que es YYYYMMDD-CAT
+            const dsStr = slotKey.split('-')[0];
+            const fDesp = `${dsStr.substring(0,4)}-${dsStr.substring(4,6)}-${dsStr.substring(6,8)}`;
+            const sucVal = $('#pa-sucursal').val();
+
             rows += `
-            <tr>
-                <td><div class="pa-prod-name">${esc(p.nombre)}</div></td>
+            <tr class="pa-row-expandible-charts" style="cursor:pointer;" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}" data-sucursal="${sucVal}" data-fecha-despacho="${fDesp}" data-ciclo="${slot.cicloSlot}">
+                <td><i class="bi bi-chevron-right pa-expand-icon"></i><div class="pa-prod-name">${esc(p.nombre)}</div></td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
                 <td>${csDisplay !== null ? fmt2(csDisplay) : fmt2(null)}</td>
@@ -715,6 +744,24 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
                 <td class="pa-col-desp">${stockHtml}</td>
                 <td class="pa-col-desp" style="background:#f8fafc;">${preHtml}</td>
                 <td class="pa-col-desp">${despHtml}</td>
+            </tr>
+            <tr class="pa-chart-sub d-none" data-slot-key="${slotKey}" data-pp-id="${p.id_pp}">
+                <td colspan="11" class="p-0">
+                    <div class="pa-charts-container d-flex flex-wrap flex-md-nowrap" style="width: 100%; border-top: 1px solid #eee; background: #fafafa;">
+                        <div class="pa-chart-wrapper w-100 w-md-50 p-3" style="border-right: 1px solid #eee;">
+                            <div class="fw-bold mb-2 text-center" style="color:#0E544C; font-size: 0.85rem;"><i class="fas fa-chart-line me-2"></i>Análisis de Insumo</div>
+                            <div style="height: 320px; position: relative;">
+                                <canvas id="chart-tend-${slotKey}-${p.id_pp}"></canvas>
+                            </div>
+                        </div>
+                        <div class="pa-chart-wrapper w-100 w-md-50 p-3">
+                            <div class="fw-bold mb-2 text-center" style="color:#0E544C; font-size: 0.85rem;"><i class="fas fa-boxes me-2"></i>Movimiento de Existencia (Kardex)</div>
+                            <div style="height: 320px; position: relative;">
+                                <canvas id="chart-kardex-${slotKey}-${p.id_pp}"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </td>
             </tr>`;
         }
     });
