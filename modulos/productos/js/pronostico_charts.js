@@ -209,11 +209,11 @@ async function cargarChartKardex(canvas, idPP, semDesde, semHasta, semCorte, cod
             return;
         }
 
-        renderKardexCore(canvas, res, fechaPronostico, sk);
+        renderKardexCore(canvas, res, fechaPronostico, sk, semDesde, semHasta, semCorte, codSuc);
     } catch(e) { console.error('Error fetching kardex', e); }
 }
 
-function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk) {
+function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, semHasta, semCorte, codSuc) {
     const regs = res.registros || [];
     const t = res.totales_tipo;
     const invCorte = t.inv_inicial || 0;
@@ -346,6 +346,11 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk) {
         }
     ];
 
+    const chartId = `kardex-${sk}-${res.id_pp}`;
+    if (instanciasCharts[chartId]) { instanciasCharts[chartId].destroy(); }
+
+    const ctx = canvas.getContext('2d');
+    
     if (fechaObjetivoPronostico) {
         const _anchorIdx = originalRangeLen > 0 ? originalRangeLen - 1 : pIdx;
         const _anchorVal = stockTeoData[_anchorIdx] ?? (originalRangeLen === 0 ? invCorte : null);
@@ -375,50 +380,14 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk) {
                 return 0.65 * pDow + 0.35 * _promDiario;
             };
 
-            const forecastData = new Array(allDays.length).fill(null);
-            forecastData[_anchorIdx] = _anchorVal;
-            let _balFc = _anchorVal;
-            for (let i = _anchorIdx + 1; i < allDays.length; i++) {
-                if (allDays[i] > fechaObjetivoPronostico) break;
-                _balFc = _balFc - _getConsProy(allDays[i]);
-                forecastData[i] = _balFc;
-            }
-
-            const _idxObj = allDays.indexOf(fechaObjetivoPronostico);
-            const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
-            const _finalPoint = new Array(allDays.length).fill(null);
-            if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
-
-            datasets.push({
-                label: `Pronóstico → ${fechaObjetivoPronostico}`,
-                data: forecastData,
-                borderColor: '#8e44ad',
-                backgroundColor: 'rgba(142,68,173,0.06)',
-                borderWidth: 2.5,
-                borderDash: [10, 5],
-                fill: false,
-                tension: 0.2,
-                pointRadius: 2,
-            });
-
-            if (_valObj !== null) {
-                datasets.push({
-                    label: `Al ${fechaObjetivoPronostico}: ${fmtKardex(_valObj, 2)}`,
-                    data: _finalPoint,
-                    borderColor: '#8e44ad',
-                    backgroundColor: '#8e44ad',
-                    pointRadius: 9,
-                    pointStyle: 'crossRot',
-                    showLine: false,
-                });
-            }
+            // Call the async function to add the forecast with dispatch
+            calcularPronosticoAbastKardex(
+                res, _anchorVal, _anchorIdx, allDays, fechaObjetivoPronostico, _getConsProy, datasets, ctx, fmtKardex, chartId, labels, semDesde, semHasta, semCorte, codSuc
+            );
+            return; // We return here because _finalizarChartKardex will render the chart
         }
     }
 
-    const chartId = `kardex-${sk}-${res.id_pp}`;
-    if (instanciasCharts[chartId]) { instanciasCharts[chartId].destroy(); }
-
-    const ctx = canvas.getContext('2d');
     instanciasCharts[chartId] = new Chart(ctx, {
         type: 'line',
         data: { labels, datasets },
@@ -434,8 +403,367 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk) {
                         label: function (context) {
                             if (context.raw === null) return null;
                             let label = context.dataset.label || '';
+                            let extra = '';
+                            if (context.dataset.despachoAmounts && context.dataset.despachoAmounts[context.dataIndex] !== null && context.dataset.despachoAmounts[context.dataIndex] !== undefined) {
+                                let qty = context.dataset.despachoAmounts[context.dataIndex];
+                                let tpe = (context.dataset.despachoTypes && context.dataset.despachoTypes[context.dataIndex] === 'curso') ? 'en curso' : 'proyectados';
+                                extra = ` (+${qty} paq ${tpe})`;
+                            }
                             if (label) label += ': ';
-                            label += fmtKardex(context.raw, 2);
+                            label += fmtKardex(context.raw, 2) + extra;
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
+                x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } }
+            }
+        }
+    });
+}
+
+async function calcularPronosticoAbastKardex(
+    res, anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, ctx, fmtKardex, chartId, labels, semDesde, semHasta, semCorte, codSuc
+) {
+    try {
+        const idPP = res.id_pp;
+
+        if (!idPP || !codSuc) {
+            _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
+            _finalizarChartKardex(datasets, ctx, chartId, labels);
+            return;
+        }
+
+        const fdP = new FormData();
+        fdP.append('semana_desde_num', semDesde);
+        fdP.append('semana_hasta_num', semHasta);
+        fdP.append('cod_sucursal', codSuc);
+
+        const resPedido = await fetch('ajax/pedido_sugerido_calcular_v2.php', { method: 'POST', body: fdP }).then(r => r.json());
+
+        if (!resPedido.ok) {
+            _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
+            _finalizarChartKardex(datasets, ctx, chartId, labels);
+            return;
+        }
+
+        const prod = (resPedido.productos || []).find(p => String(p.id_pp) === String(idPP));
+
+        if (!prod || !prod.fecha_proximo_despacho) {
+            _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
+            _finalizarChartKardex(datasets, ctx, chartId, labels);
+            return;
+        }
+
+        const addDays = (d, n) => {
+            const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + n);
+            return dt.toISOString().split('T')[0];
+        };
+        const calcularCicloSlot = (p, fechaStr) => {
+            const tipo = p.plan_tipo_frecuencia;
+            if (tipo === 'n_semanas') return (p.plan_intervalo_semanas || 1) * 7;
+            if (tipo === 'dias_semana') {
+                let dias = Array.isArray(p.plan_dias_semana) ? p.plan_dias_semana.map(Number) : [];
+                dias.sort((a, b) => a - b);
+                const n = dias.length;
+                if (n === 0) return 7;
+                if (n === 1) return 7;
+                const dt = new Date(fechaStr + 'T12:00:00');
+                const dowJS = dt.getDay(); 
+                const dowDispatch = (dowJS + 6) % 7;
+                for (let d = 1; d <= 7; d++) {
+                    const next = (dowDispatch + d) % 7;
+                    if (dias.includes(next)) return d;
+                }
+                return 7 / n; 
+            }
+            return p.dias_ciclo || 7;
+        };
+
+        const calcularStockMaxSlot = (p, cicloSlot, cd_dinamico) => {
+            if (p.plan_tipo_frecuencia !== 'dias_semana') {
+                return p.stock_max_final ?? 0;
+            }
+            const cd = cd_dinamico ?? 0;
+            const dSM = p.dias_stock_min ?? 0;
+            const df_ = p.despacho_factor > 0 ? p.despacho_factor : 1;
+            
+            const sMinUso = cd * dSM;
+            const sMaxUso = (cd * cicloSlot) + sMinUso;
+            
+            let ratio = 1;
+            if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
+                ratio = (p.stock_max_final * df_) / (p.stock_maximo * df_);
+            }
+            return (sMaxUso * ratio) / df_;
+        };
+
+        const df = prod.despacho_factor > 0 ? prod.despacho_factor : 1;
+
+        const getDynamicCd = (fecha_str) => {
+            let wls_x = prod.wls_n ?? 0;
+            if (resPedido.wls_last_fecha_fin) {
+                const dF = new Date(resPedido.wls_last_fecha_fin + 'T23:59:59');
+                const dD = new Date(fecha_str + 'T12:00:00');
+                const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
+                const x_offset = Math.ceil(diffDays / 7);
+                wls_x += x_offset;
+            } else {
+                wls_x += 1;
+            }
+            const semC = Math.max(0, ((prod.wls_m ?? 0) * wls_x) + (prod.wls_b ?? 0));
+            return semC / 7;
+        };
+
+        const hoyDBase = new Date();
+        hoyDBase.setHours(12, 0, 0, 0);
+        const hoyStrBase = hoyDBase.toISOString().split('T')[0];
+        const baseCd = getDynamicCd(hoyStrBase || allDays[0]);
+
+        const rondas = []; 
+        let cur = prod.fecha_proximo_despacho;
+        let round = 1;
+        let prevCycle = 0;
+        let prevCdRonda = baseCd;
+        while (cur <= fechaObj && round <= 52) { 
+            const cd_ronda = getDynamicCd(cur);
+            const cicloReal = calcularCicloSlot(prod, cur);
+            const smfSlot = calcularStockMaxSlot(prod, cicloReal, cd_ronda);
+            if (cur > allDays[anchorIdx]) {  
+                rondas.push({ fecha: cur, round, cycle: cicloReal, prevCycle: prevCycle, smfSlot: smfSlot, cd_ronda: cd_ronda, prevCdRonda: prevCdRonda });
+            }
+            prevCycle = cicloReal;
+            prevCdRonda = cd_ronda;
+            cur = addDays(cur, cicloReal);
+            round++;
+        }
+
+        let stockD1R1 = null;
+        let preHoyPaq = 0;
+        
+        if (rondas.length > 0 && rondas[0].round === 1) {
+            const fechaD1R1 = addDays(prod.fecha_proximo_despacho, -1);
+            const fdPron = new FormData();
+            fdPron.append('semana_desde', semDesde);
+            fdPron.append('semana_hasta', semHasta);
+            fdPron.append('semana_corte', semCorte);
+            fdPron.append('cod_sucursal', codSuc);
+            fdPron.append('ids_pp[]', idPP);
+            fdPron.append(`fechas_d1[${idPP}]`, fechaD1R1);
+
+            try {
+                const resPron = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method: 'POST', body: fdPron }).then(r => r.json());
+                if (resPron.ok) {
+                    const su = resPron.stocks[String(idPP)];
+                    const dP = resPron.dias_proy[String(idPP)] || 0;
+                    if (su !== null && su !== undefined) {
+                        const proyD1 = su - (getDynamicCd(fechaD1R1) * dP);
+                        stockD1R1 = Math.max(0, proyD1 / df);
+                    }
+                    const ph = resPron.preingresos_hoy[String(idPP)];
+                    preHoyPaq = (ph !== null && ph !== undefined && ph > 0) ? (ph / df) : 0;
+                }
+            } catch (e) { }
+        }
+
+        const despachosPorRonda = {};
+        let prevRoundPostDespachoPaq = null;
+        const kardexDespCursoEnabled = window.pa_include_preingreso;
+        
+        rondas.forEach(r => {
+            let stockD1Paq;
+            
+            if (r.round === 1) {
+                stockD1Paq = stockD1R1;
+            } else {
+                if (prevRoundPostDespachoPaq !== null) {
+                    const prevConsPaq = (r.prevCdRonda * r.prevCycle) / df;
+                    stockD1Paq = Math.max(0, prevRoundPostDespachoPaq - prevConsPaq);
+                } else {
+                    stockD1Paq = Math.max(0, r.smfSlot - (r.cd_ronda * r.cycle) / df); 
+                }
+            }
+            
+            const invBeforePaq = (stockD1Paq ?? 0) + (r.round === 1 && kardexDespCursoEnabled ? preHoyPaq : 0);
+            const despachoPron = Math.max(0, Math.ceil(r.smfSlot - invBeforePaq));
+            
+            prevRoundPostDespachoPaq = invBeforePaq + despachoPron;
+            
+            despachosPorRonda[r.fecha] = { despacho: despachoPron, stockD1Paq, round: r.round, stockPostDespachoPaq: prevRoundPostDespachoPaq };
+        });
+
+        const forecastData = new Array(allDays.length).fill(null);
+        forecastData[anchorIdx] = anchorVal;
+        let balFc = anchorVal;
+        const dispatchMarkers = []; 
+        
+        const hoyD = new Date();
+        hoyD.setHours(12, 0, 0, 0);
+        const hoyStrLocal = hoyD.toISOString().split('T')[0];
+
+        const getConsProyAligned = (day) => getDynamicCd(day);
+
+        for (let i = anchorIdx + 1; i < allDays.length; i++) {
+            const day = allDays[i];
+            if (day > fechaObj) break;
+
+            balFc = balFc - getConsProyAligned(day);
+
+            if (day === hoyStrLocal && kardexDespCursoEnabled && preHoyPaq > 0) {
+                balFc = balFc + preHoyPaq * df;
+                dispatchMarkers.push({ idx: i, val: balFc, rnd: 'Curso', despacho: preHoyPaq, isPreingreso: true });
+            }
+
+            if (despachosPorRonda[day]) {
+                const { despacho, round: rnd } = despachosPorRonda[day];
+                balFc = balFc + despacho * df; 
+                dispatchMarkers.push({ idx: i, val: balFc, rnd, despacho });
+            }
+
+            forecastData[i] = balFc;
+        }
+
+        const _idxObj = allDays.indexOf(fechaObj);
+        const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
+        const _finalPoint = new Array(allDays.length).fill(null);
+        if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
+
+        const pronLabel = `Pronóstico c/Abast. → ${fechaObj}`;
+        datasets.push({
+            label: pronLabel,
+            data: forecastData,
+            borderColor: '#8e44ad',
+            backgroundColor: 'rgba(142,68,173,0.06)',
+            borderWidth: 2.5,
+            borderDash: [10, 5],
+            fill: false,
+            tension: 0.2,
+            pointRadius: 2,
+            pointBackgroundColor: '#8e44ad',
+            spanGaps: true,
+        });
+
+        if (_valObj !== null) {
+            datasets.push({
+                label: `Al ${fechaObj}: ${fmtKardex(_valObj, 2)}`,
+                data: _finalPoint,
+                borderColor: '#8e44ad',
+                backgroundColor: '#8e44ad',
+                pointRadius: 11,
+                pointHoverRadius: 13,
+                pointStyle: 'crossRot',
+                showLine: false,
+            });
+        }
+
+        if (dispatchMarkers.length > 0) {
+            const dispData    = new Array(allDays.length).fill(null);
+            const dispRadius  = new Array(allDays.length).fill(0);
+            const dispAmounts = new Array(allDays.length).fill(null);
+            const dispTypes   = new Array(allDays.length).fill('proy');
+            const pStyles     = new Array(allDays.length).fill('triangle');
+            const bgColors    = new Array(allDays.length).fill('#27ae60');
+            
+            dispatchMarkers.forEach(m => {
+                dispData[m.idx]   = m.val;
+                dispRadius[m.idx] = 10;
+                dispAmounts[m.idx] = m.despacho;
+                if (m.isPreingreso) {
+                    dispTypes[m.idx] = 'curso';
+                    pStyles[m.idx] = 'circle';
+                    bgColors[m.idx] = '#2980b9';
+                }
+            });
+            datasets.push({
+                label: `🚧 Despacho(s) programado/curso`,
+                data: dispData,
+                despachoAmounts: dispAmounts,
+                despachoTypes: dispTypes,
+                borderColor: bgColors,
+                backgroundColor: bgColors,
+                pointRadius: dispRadius,
+                pointHoverRadius: 13,
+                pointStyle: pStyles,
+                showLine: false,
+            });
+        }
+
+        _finalizarChartKardex(datasets, ctx, chartId, labels);
+
+    } catch (err) {
+        console.warn('calcularPronosticoAbastKardex error:', err);
+        _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
+        _finalizarChartKardex(datasets, ctx, chartId, labels);
+    }
+}
+
+function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex) {
+    const forecastData = new Array(allDays.length).fill(null);
+    forecastData[anchorIdx] = anchorVal;
+    let balFc = anchorVal;
+    for (let i = anchorIdx + 1; i < allDays.length; i++) {
+        if (allDays[i] > fechaObj) break;
+        balFc -= getConsProy(allDays[i]);
+        forecastData[i] = balFc;
+    }
+    const _idxObj = allDays.indexOf(fechaObj);
+    const _valObj = _idxObj >= 0 ? forecastData[_idxObj] : null;
+    const _finalPoint = new Array(allDays.length).fill(null);
+    if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
+
+    datasets.push({
+        label: `Pronóstico → ${fechaObj}`,
+        data: forecastData,
+        borderColor: '#8e44ad',
+        backgroundColor: 'rgba(142,68,173,0.06)',
+        borderWidth: 2.5,
+        borderDash: [10, 5],
+        fill: false,
+        tension: 0.2,
+        pointRadius: 2,
+        pointBackgroundColor: '#8e44ad',
+        spanGaps: false,
+    });
+    if (_valObj !== null) {
+        datasets.push({
+            label: `Al ${fechaObj}: ${fmtKardex(_valObj, 2)}`,
+            data: _finalPoint,
+            borderColor: '#8e44ad',
+            backgroundColor: '#8e44ad',
+            pointRadius: 11,
+            pointHoverRadius: 13,
+            pointStyle: 'crossRot',
+            showLine: false,
+        });
+    }
+}
+
+function _finalizarChartKardex(datasets, ctx, chartId, labels) {
+    instanciasCharts[chartId] = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function (context) {
+                            if (context.raw === null) return null;
+                            let label = context.dataset.label || '';
+                            let extra = '';
+                            if (context.dataset.despachoAmounts && context.dataset.despachoAmounts[context.dataIndex] !== null && context.dataset.despachoAmounts[context.dataIndex] !== undefined) {
+                                let qty = context.dataset.despachoAmounts[context.dataIndex];
+                                let tpe = (context.dataset.despachoTypes && context.dataset.despachoTypes[context.dataIndex] === 'curso') ? 'en curso' : 'proyectados';
+                                extra = ` (+${qty} paq ${tpe})`;
+                            }
+                            if (label) label += ': ';
+                            label += (typeof fmtKardex === 'function' ? fmtKardex(context.raw, 2) : context.raw.toFixed(2)) + extra;
                             return label;
                         }
                     }
