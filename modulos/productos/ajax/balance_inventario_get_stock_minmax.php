@@ -26,10 +26,10 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $usuario['CodNivele
     exit();
 }
 
-$idPP       = isset($_POST['id_pp'])        ? (int)$_POST['id_pp']        : 0;
-$semAnalisis= isset($_POST['sem_analisis']) ? (int)$_POST['sem_analisis'] : 0;
-$semActual  = isset($_POST['sem_actual'])   ? (int)$_POST['sem_actual']   : 0;
-$codSuc     = isset($_POST['cod_sucursal']) ? trim($_POST['cod_sucursal']) : '';
+$idPP = isset($_POST['id_pp']) ? (int) $_POST['id_pp'] : 0;
+$semAnalisis = isset($_POST['sem_analisis']) ? (int) $_POST['sem_analisis'] : 0;
+$semActual = isset($_POST['sem_actual']) ? (int) $_POST['sem_actual'] : 0;
+$codSuc = isset($_POST['cod_sucursal']) ? trim($_POST['cod_sucursal']) : '';
 
 if (!$idPP || !$semAnalisis || !$semActual) {
     echo json_encode(['ok' => false, 'msg' => 'Faltan parámetros.']);
@@ -44,7 +44,7 @@ if (!$idPP || !$semAnalisis || !$semActual) {
 $retrocedido = false;
 if ($semAnalisis >= $semActual) {
     // Semana actual o futura: retroceder 1 para tener datos completos
-    $semBase     = $semActual - 1;
+    $semBase = $semActual - 1;
     $retrocedido = true;
 } else {
     $semBase = $semAnalisis;
@@ -54,10 +54,13 @@ $numHasta = $semBase;
 $numDesde = $semBase - 4;   // 5 semanas: [base-4 .. base]
 
 /* ── Helpers (igual que pedido_sugerido_calcular.php) ────────────────── */
-function calcularProyeccionWLS(array $valores): array {
+function calcularProyeccionWLS(array $valores): array
+{
     $n = count($valores);
-    if ($n === 0) return ['promedio' => 0.0, 'm' => 0.0, 'b' => 0.0, 'n' => 0];
-    if ($n === 1) return ['promedio' => max(0.0, (float)$valores[0]), 'm' => 0.0, 'b' => max(0.0, (float)$valores[0]), 'n' => 1];
+    if ($n === 0)
+        return ['promedio' => 0.0, 'm' => 0.0, 'b' => 0.0, 'n' => 0];
+    if ($n === 1)
+        return ['promedio' => max(0.0, (float) $valores[0]), 'm' => 0.0, 'b' => max(0.0, (float) $valores[0]), 'n' => 1];
 
     $sum_w = 0.0;
     $sum_wx = 0.0;
@@ -68,7 +71,7 @@ function calcularProyeccionWLS(array $valores): array {
     foreach ($valores as $i => $y) {
         $x = $i + 1;
         $w = $x;
-        
+
         $sum_w += $w;
         $sum_wx += $w * $x;
         $sum_wy += $w * $y;
@@ -97,21 +100,26 @@ function calcularProyeccionWLS(array $valores): array {
     ];
 }
 
-function resolverFactorConv_SMM(int $o, int $d, array &$idx): ?float {
-    if ($o === $d) return 1.0;
+function resolverFactorConv_SMM(int $o, int $d, array &$idx): ?float
+{
+    if ($o === $d)
+        return 1.0;
     return $idx[$o][$d] ?? null;
 }
 
-function cerrarTransitivas_SMM(array &$convIndex): void {
+function cerrarTransitivas_SMM(array &$convIndex): void
+{
     $units = array_unique(array_merge(
         array_keys($convIndex),
         array_merge(...array_map('array_keys', array_values($convIndex)))
     ));
     foreach ($units as $k)
         foreach ($units as $i) {
-            if (!isset($convIndex[$i][$k])) continue;
+            if (!isset($convIndex[$i][$k]))
+                continue;
             foreach ($units as $j) {
-                if (!isset($convIndex[$k][$j])) continue;
+                if (!isset($convIndex[$k][$j]))
+                    continue;
                 if (!isset($convIndex[$i][$j]))
                     $convIndex[$i][$j] = $convIndex[$i][$k] * $convIndex[$k][$j];
             }
@@ -135,8 +143,8 @@ try {
         exit();
     }
 
-    $cat   = $ppRow['cat'];
-    $idM   = $ppRow['id_m'] ? (int)$ppRow['id_m'] : null;
+    $cat = $ppRow['cat'];
+    $idM = $ppRow['id_m'] ? (int) $ppRow['id_m'] : null;
 
     /* 1b. Si la presentación no tiene categoria_insumo propia, intentar
            obtenerla de la presentación básica del mismo maestro
@@ -150,7 +158,8 @@ try {
         ");
         $stmtCat->execute([$idM]);
         $rowCat = $stmtCat->fetch(PDO::FETCH_ASSOC);
-        if ($rowCat) $cat = $rowCat['categoria_insumo'];
+        if ($rowCat)
+            $cat = $rowCat['categoria_insumo'];
     }
     /* 1c. Sin maestro pero sin cat: buscar en cualquier otra presentación activa del mismo producto */
     if (!$cat && !$idM) {
@@ -176,15 +185,15 @@ try {
         $stmtS = $conn->query("SELECT dias_stock_minimo, capacidad_congelados
                                FROM configuracion_logistica_sucursal LIMIT 1");
     }
-    $cS  = $stmtS->fetch();
-    $dSM = $cS ? (float)$cS['dias_stock_minimo'] : 0;
-    $capC= $cS ? (float)$cS['capacidad_congelados'] : null;
+    $cS = $stmtS->fetch();
+    $dSM = $cS ? (float) $cS['dias_stock_minimo'] : 0;
+    $capC = $cS ? (float) $cS['capacidad_congelados'] : null;
 
     /* Config logística del producto por categoría */
-    $cP   = null;
+    $cP = null;
     if ($cat) {
         $params = $codSuc ? [$cat, $codSuc] : [$cat];
-        $sql    = $codSuc
+        $sql = $codSuc
             ? "SELECT dias_ciclo, dias_desfase, ajuste_demanda FROM configuracion_logistica_producto WHERE codigo_insumo = ? AND cod_sucursal = ? LIMIT 1"
             : "SELECT dias_ciclo, dias_desfase, ajuste_demanda FROM configuracion_logistica_producto WHERE codigo_insumo = ? LIMIT 1";
         $stmtCLP = $conn->prepare($sql);
@@ -195,20 +204,20 @@ try {
     if (!$cP) {
         /* Sin config logística → no podemos calcular */
         echo json_encode([
-            'ok'           => true,
+            'ok' => true,
             'stock_minimo' => null,
             'stock_max_final' => null,
-            'sem_desde'    => $numDesde,
-            'sem_hasta'    => $numHasta,
-            'retrocedido'  => $retrocedido,
-            'msg'          => 'Sin configuración logística para esta categoría/sucursal.'
+            'sem_desde' => $numDesde,
+            'sem_hasta' => $numHasta,
+            'retrocedido' => $retrocedido,
+            'msg' => 'Sin configuración logística para esta categoría/sucursal.'
         ]);
         exit();
     }
 
-    $adj = (float)$cP['ajuste_demanda'];
-    $dC  = (float)$cP['dias_ciclo'];
-    $dD  = (float)$cP['dias_desfase'];
+    $adj = (float) $cP['ajuste_demanda'];
+    $dC = (float) $cP['dias_ciclo'];
+    $dD = (float) $cP['dias_desfase'];
 
     /* 4. Consumo por semana del producto en la ventana activa
           Misma estrategia que pedido_sugerido_calcular.php:
@@ -239,27 +248,30 @@ try {
     }
 
     $consumoPorSem = [];
-    for ($s = $numDesde; $s <= $numHasta; $s++) $consumoPorSem[$s] = 0.0;
+    for ($s = $numDesde; $s <= $numHasta; $s++)
+        $consumoPorSem[$s] = 0.0;
 
     if (!empty($codCots)) {
         $ph = implode(',', array_fill(0, count($codCots), '?'));
 
         /* Unidades y conversiones */
         $unidadPorNombre = [];
-        $unidadPorId     = [];
+        $unidadPorId = [];
         foreach ($conn->query("SELECT id, nombre, abreviado, nombres_opcionales FROM unidad_producto")->fetchAll() as $u) {
-            $uid = (int)$u['id'];
+            $uid = (int) $u['id'];
             $unidadPorId[$uid] = $u;
             $unidadPorNombre[strtolower(trim($u['nombre']))] = $uid;
-            if ($u['abreviado']) $unidadPorNombre[strtolower(trim($u['abreviado']))] = $uid;
+            if ($u['abreviado'])
+                $unidadPorNombre[strtolower(trim($u['abreviado']))] = $uid;
             if ($u['nombres_opcionales'])
                 foreach (preg_split('/[,;|]+/', $u['nombres_opcionales']) as $a)
-                    if ($ak = strtolower(trim($a))) $unidadPorNombre[$ak] = $uid;
+                    if ($ak = strtolower(trim($a)))
+                        $unidadPorNombre[$ak] = $uid;
         }
         $convIndex = [];
         foreach ($conn->query("SELECT id_unidad_producto_inicio as i, id_unidad_producto_final as f, cantidad as c FROM conversion_unidad_producto")->fetchAll() as $cv) {
-            $convIndex[(int)$cv['i']][(int)$cv['f']] = (float)$cv['c'];
-            $convIndex[(int)$cv['f']][(int)$cv['i']] = $cv['c'] != 0 ? 1/(float)$cv['c'] : 0;
+            $convIndex[(int) $cv['i']][(int) $cv['f']] = (float) $cv['c'];
+            $convIndex[(int) $cv['f']][(int) $cv['i']] = $cv['c'] != 0 ? 1 / (float) $cv['c'] : 0;
         }
         cerrarTransitivas_SMM($convIndex);
 
@@ -279,7 +291,7 @@ try {
         ");
         $stmtDM->execute(array_values($codCots));
         foreach ($stmtDM->fetchAll(PDO::FETCH_ASSOC) as $row)
-            $dicMap[(string)$row['CodCotizacion']] = $row;
+            $dicMap[(string) $row['CodCotizacion']] = $row;
 
         /* 4b-bis. Presentación básica por maestro — necesaria para redirigir
                    presentaciones de despacho a su equivalente en unidades de control.
@@ -297,7 +309,7 @@ try {
             ");
             $stmtPPB->execute($idMsAll);
             foreach ($stmtPPB->fetchAll(PDO::FETCH_ASSOC) as $pb)
-                $presentPorMaestro[(int)$pb['id_producto_maestro']] = $pb;
+                $presentPorMaestro[(int) $pb['id_producto_maestro']] = $pb;
         }
 
         /* 4c. CodIngrediente via Cotizaciones → cotMap (p2=prioridad1, p3=cualquiera)
@@ -315,10 +327,12 @@ try {
         $stmtCot->execute(array_values($codCots));
         foreach ($stmtCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
             $ci = $c['CodIngrediente'];
-            if (!isset($cotMap[$ci])) $cotMap[$ci] = ['p2' => null, 'p3' => null];
+            if (!isset($cotMap[$ci]))
+                $cotMap[$ci] = ['p2' => null, 'p3' => null];
             if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotMap[$ci]['p2'])
                 $cotMap[$ci]['p2'] = $c['CodCotizacion'];
-            if (!$cotMap[$ci]['p3']) $cotMap[$ci]['p3'] = $c['CodCotizacion'];
+            if (!$cotMap[$ci]['p3'])
+                $cotMap[$ci]['p3'] = $c['CodCotizacion'];
         }
         $codsIngFiltro = array_keys($cotMap);
 
@@ -331,8 +345,8 @@ try {
                El OR restaura la cobertura de las porciones sin romper el caso Kiwi. */
         $filasV = [];
         // Construir cláusula WHERE dinámica según qué listas están disponibles
-        $hasCodCots     = !empty($codCots);
-        $hasIngFiltro   = !empty($codsIngFiltro);
+        $hasCodCots = !empty($codCots);
+        $hasIngFiltro = !empty($codsIngFiltro);
 
         if ($hasCodCots || $hasIngFiltro) {
             $partsWhere = [];
@@ -340,12 +354,12 @@ try {
 
             if ($hasCodCots) {
                 $partsWhere[] = "sr.codporcion IN (" . implode(',', array_fill(0, count($codCots), '?')) . ")";
-                $paramsExtra  = array_merge($paramsExtra, array_values($codCots));
+                $paramsExtra = array_merge($paramsExtra, array_values($codCots));
             }
             if ($hasIngFiltro) {
                 $phI2 = implode(',', array_fill(0, count($codsIngFiltro), '?'));
                 $partsWhere[] = "sr.CodIngrediente IN ($phI2)";
-                $paramsExtra  = array_merge($paramsExtra, array_values($codsIngFiltro));
+                $paramsExtra = array_merge($paramsExtra, array_values($codsIngFiltro));
             }
             $whereExtra = "AND (" . implode(" OR ", $partsWhere) . ")";
 
@@ -386,26 +400,28 @@ try {
             $phI = implode(',', array_fill(0, count($codsIng), '?'));
             $stmtI = $conn->prepare("SELECT CodIngrediente, Nombre, Unidad FROM DBIngredientes WHERE CodIngrediente IN ($phI)");
             $stmtI->execute(array_values($codsIng));
-            foreach ($stmtI->fetchAll() as $row) $dbIng[$row['CodIngrediente']] = $row;
+            foreach ($stmtI->fetchAll() as $row)
+                $dbIng[$row['CodIngrediente']] = $row;
         }
 
         /* 4f. Acumular consumo con cascade P1→P2→P3 (igual que pedido_sugerido) */
         foreach ($filasV as $f) {
-            $cp   = $f['codporcion'];
-            $ci   = $f['cod_ing'];
-            $sem  = (int)$f['sem'];
-            $cant = (float)$f['cant'];
+            $cp = $f['codporcion'];
+            $ci = $f['cod_ing'];
+            $sem = (int) $f['sem'];
+            $cant = (float) $f['cant'];
 
             /* Resolver presentación: P1=codporcion en diccionario, P2/P3 vía cotMap */
             $m = null;
-            if (!empty($cp) && isset($dicMap[(string)$cp])) {
-                $m = $dicMap[(string)$cp];
+            if (!empty($cp) && isset($dicMap[(string) $cp])) {
+                $m = $dicMap[(string) $cp];
             }
-            if (!$m && isset($cotMap[$ci]['p2']) && isset($dicMap[(string)$cotMap[$ci]['p2']]))
-                $m = $dicMap[(string)$cotMap[$ci]['p2']];
-            if (!$m && isset($cotMap[$ci]['p3']) && isset($dicMap[(string)$cotMap[$ci]['p3']]))
-                $m = $dicMap[(string)$cotMap[$ci]['p3']];
-            if (!$m) continue;
+            if (!$m && isset($cotMap[$ci]['p2']) && isset($dicMap[(string) $cotMap[$ci]['p2']]))
+                $m = $dicMap[(string) $cotMap[$ci]['p2']];
+            if (!$m && isset($cotMap[$ci]['p3']) && isset($dicMap[(string) $cotMap[$ci]['p3']]))
+                $m = $dicMap[(string) $cotMap[$ci]['p3']];
+            if (!$m)
+                continue;
 
             /* ── Redirigir a presentación BÁSICA si la resuelta es de despacho ──────
                CRÍTICO: la gráfica del kardex trabaja en unidades de CONTROL.
@@ -414,33 +430,35 @@ try {
                del paquete y los valores de min/max quedarían en unidades de despacho.
                Lo corregimos redirigiendo a la presentación básica del mismo maestro,
                exactamente igual que pedido_sugerido_calcular.php (líneas 321-339). */
-            if (empty($m['Id_receta_producto'])
+            if (
+                empty($m['Id_receta_producto'])
                 && ($m['presentacion_basica_inventario'] ?? 1) != 1
                 && !empty($m['id_m'])
-                && isset($presentPorMaestro[(int)$m['id_m']])
+                && isset($presentPorMaestro[(int) $m['id_m']])
             ) {
-                $pb = $presentPorMaestro[(int)$m['id_m']];
-                $m  = array_merge($m, [
-                    'id'                          => $pb['id'],
-                    'pp_cant'                     => $pb['cantidad'],
-                    'uid'                         => (int)$pb['id_unidad_producto'],
+                $pb = $presentPorMaestro[(int) $m['id_m']];
+                $m = array_merge($m, [
+                    'id' => $pb['id'],
+                    'pp_cant' => $pb['cantidad'],
+                    'uid' => (int) $pb['id_unidad_producto'],
                     'presentacion_basica_inventario' => 1,
                 ]);
             }
 
-            $ppId  = (int)$m['id'];
-            $ppC   = max((float)$m['pp_cant'], 0.001);
-            $uidERP= (int)$m['uid'];
+            $ppId = (int) $m['id'];
+            $ppC = max((float) $m['pp_cant'], 0.001);
+            $uidERP = (int) $m['uid'];
 
             if ($m['Id_receta_producto']) {
                 $cons = $cant;
             } else {
-                $uAcc  = $dbIng[$ci]['Unidad'] ?? '';
-                $uidAcc= isset($unidadPorNombre[strtolower(trim($uAcc))]) ? $unidadPorNombre[strtolower(trim($uAcc))] : null;
-                $fac   = 1.0;
+                $uAcc = $dbIng[$ci]['Unidad'] ?? '';
+                $uidAcc = isset($unidadPorNombre[strtolower(trim($uAcc))]) ? $unidadPorNombre[strtolower(trim($uAcc))] : null;
+                $fac = 1.0;
                 if ($uidAcc && $uidAcc !== $uidERP) {
                     $fDir = resolverFactorConv_SMM($uidAcc, $uidERP, $convIndex);
-                    if ($fDir) $fac = $fDir;
+                    if ($fDir)
+                        $fac = $fDir;
                 }
                 $cons = ($cant * $fac) / $ppC;
                 /* P1: redondear al 0.5 más cercano si la pp es la básica */
@@ -456,54 +474,63 @@ try {
 
     /* 5. Estadísticas con ventana activa */
     $vals = [];
-    for ($s = $numDesde; $s <= $numHasta; $s++) $vals[] = (float)($consumoPorSem[$s] ?? 0);
+    for ($s = $numDesde; $s <= $numHasta; $s++)
+        $vals[] = (float) ($consumoPorSem[$s] ?? 0);
 
     $nonZero = array_filter($vals, fn($v) => $v > 0);
     if (empty($nonZero)) {
         echo json_encode([
-            'ok'              => true,
-            'stock_minimo'    => null,
+            'ok' => true,
+            'stock_minimo' => null,
             'stock_max_final' => null,
-            'sem_desde'       => $numDesde,
-            'sem_hasta'       => $numHasta,
-            'retrocedido'     => $retrocedido,
-            'msg'             => 'Sin consumo registrado en el período.'
+            'sem_desde' => $numDesde,
+            'sem_hasta' => $numHasta,
+            'retrocedido' => $retrocedido,
+            'msg' => 'Sin consumo registrado en el período.'
         ]);
         exit();
     }
 
-    $meanNZ  = array_sum($nonZero) / count($nonZero);
-    $umbral  = max(0.01, $meanNZ * 0.10);
-    $firstIdx= null; $lastIdx = null;
+    $meanNZ = array_sum($nonZero) / count($nonZero);
+    $umbral = max(0.01, $meanNZ * 0.10);
+    $firstIdx = null;
+    $lastIdx = null;
     foreach ($vals as $i => $v) {
         if ($v >= $umbral) {
-            if ($firstIdx === null) $firstIdx = $i;
+            if ($firstIdx === null)
+                $firstIdx = $i;
             $lastIdx = $i;
         }
     }
     if ($firstIdx === null) {
-        echo json_encode(['ok' => true, 'stock_minimo' => null, 'stock_max_final' => null,
-                          'sem_desde' => $numDesde, 'sem_hasta' => $numHasta, 'retrocedido' => $retrocedido]);
+        echo json_encode([
+            'ok' => true,
+            'stock_minimo' => null,
+            'stock_max_final' => null,
+            'sem_desde' => $numDesde,
+            'sem_hasta' => $numHasta,
+            'retrocedido' => $retrocedido
+        ]);
         exit();
     }
 
-    $nActiva   = $lastIdx - $firstIdx + 1;
-    $valsActivo= array_slice($vals, $firstIdx, $nActiva);
-    $wlsRes    = calcularProyeccionWLS($valsActivo);
-    $semC      = $wlsRes['promedio'];
-    $wls_m     = $wlsRes['m'];
-    $wls_b     = $wlsRes['b'];
-    $wls_n     = $wlsRes['n'];
-    
-    $diaC      = ($semC * (1 + $adj)) / 7;
-    $sMin      = $diaC * $dSM;
-    $sMax      = $diaC * ($dC + $dD + $dSM);
+    $nActiva = $lastIdx - $firstIdx + 1;
+    $valsActivo = array_slice($vals, $firstIdx, $nActiva);
+    $wlsRes = calcularProyeccionWLS($valsActivo);
+    $semC = $wlsRes['promedio'];
+    $wls_m = $wlsRes['m'];
+    $wls_b = $wlsRes['b'];
+    $wls_n = $wlsRes['n'];
+
+    $diaC = ($semC * (1 + $adj)) / 7;
+    $sMin = $diaC * $dSM;
+    $sMax = $diaC * ($dC + $dD + $dSM);
 
     /* Factor congelados (cat B) — se aplica igual que en pedido_sugerido */
     $sMaxFinal = $sMax;
     $facC = 1.0;
     if ($cat === 'B' && $capC !== null && $sMax > 0) {
-        $facC      = min(1.0, $capC / $sMax);
+        $facC = min(1.0, $capC / $sMax);
         $sMaxFinal = $sMax * $facC;
     }
 
@@ -513,24 +540,25 @@ try {
        despacho porque el kardex trabaja en unidades base, no en paquetes.
        ───────────────────────────────────────────────────────────────────── */
     echo json_encode([
-        'ok'              => true,
-        'stock_minimo'    => round($sMin,      2),
+        'ok' => true,
+        'stock_minimo' => round($sMin, 2),
         'stock_max_final' => round($sMaxFinal, 2),
-        'cons_diario'     => round($diaC, 6),
-        'sem_desde'       => $numDesde,
-        'sem_hasta'       => $numHasta,
-        'retrocedido'     => $retrocedido,
-        'sem_actual'      => $semActual,
-        'wls_m'           => $wls_m,
-        'wls_b'           => $wls_b,
-        'wls_n'           => $wls_n,
+        'cons_diario' => round($diaC, 6),
+        'sem_desde' => $numDesde,
+        'sem_hasta' => $numHasta,
+        'retrocedido' => $retrocedido,
+        'sem_actual' => $semActual,
+        'wls_m' => $wls_m,
+        'wls_b' => $wls_b,
+        'wls_n' => $wls_n,
         'wls_last_fecha_fin' => $rDates['f2'],
-        'adj'             => $adj,
-        'dSM'             => $dSM,
-        'dC_plus_dD'      => $dC + $dD,
-        'facC'            => $facC,
+        'adj' => $adj,
+        'dSM' => $dSM,
+        'dC_plus_dD' => $dC + $dD,
+        'facC' => $facC,
     ]);
 
 } catch (Exception $e) {
     echo json_encode(['ok' => false, 'msg' => 'Error: ' . $e->getMessage()]);
 }
+
