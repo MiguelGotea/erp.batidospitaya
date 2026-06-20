@@ -2945,19 +2945,61 @@ async function calcularPronosticoAbastKardex(
             const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + n);
             return dt.toISOString().split('T')[0];
         };
-        const cycle = Math.max(1, Math.round(prod.dias_ciclo || 7));
+        const calcularCicloSlot = (p, fechaStr) => {
+            const tipo = p.plan_tipo_frecuencia;
+            if (tipo === 'n_semanas') return (p.plan_intervalo_semanas || 1) * 7;
+            if (tipo === 'dias_semana') {
+                let dias = Array.isArray(p.plan_dias_semana) ? p.plan_dias_semana.map(Number) : [];
+                dias.sort((a, b) => a - b);
+                const n = dias.length;
+                if (n === 0) return 7;
+                if (n === 1) return 7;
+                const dt = new Date(fechaStr + 'T12:00:00');
+                const dowJS = dt.getDay(); 
+                const dowDispatch = (dowJS + 6) % 7;
+                for (let d = 1; d <= 7; d++) {
+                    const next = (dowDispatch + d) % 7;
+                    if (dias.includes(next)) return d;
+                }
+                return 7 / n; 
+            }
+            return p.dias_ciclo || 7;
+        };
+
+        const calcularStockMaxSlot = (p, cicloSlot, cd_dinamico) => {
+            if (p.plan_tipo_frecuencia !== 'dias_semana') {
+                return p.stock_max_final ?? 0;
+            }
+            const cd = cd_dinamico ?? 0;
+            const dSM = p.dias_stock_min ?? 0;
+            const df_ = p.despacho_factor > 0 ? p.despacho_factor : 1;
+            
+            const sMinUso = cd * dSM;
+            const sMaxUso = (cd * cicloSlot) + sMinUso;
+            
+            let ratio = 1;
+            if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
+                ratio = (p.stock_max_final * df_) / (p.stock_maximo * df_);
+            }
+            return (sMaxUso * ratio) / df_;
+        };
+
         const df    = prod.despacho_factor > 0 ? prod.despacho_factor : 1;
-        const smf   = prod.stock_max_final ?? 0;
+        const cd    = prod.cons_diario ?? 0;
 
         // Construir lista de rondas dentro del horizonte
-        const rondas = []; // { fecha, round }
+        const rondas = []; // { fecha, round, cycle, prevCycle, smfSlot }
         let cur = prod.fecha_proximo_despacho;
         let round = 1;
+        let prevCycle = 0;
         while (cur <= fechaObj && round <= 52) {  // max 52 rondas como seguro
+            const cicloReal = calcularCicloSlot(prod, cur);
+            const smfSlot = calcularStockMaxSlot(prod, cicloReal, cd);
             if (cur > allDays[anchorIdx]) {  // solo rondas futuras al ancla
-                rondas.push({ fecha: cur, round });
+                rondas.push({ fecha: cur, round, cycle: cicloReal, prevCycle: prevCycle, smfSlot: smfSlot });
             }
-            cur = addDays(cur, cycle);
+            prevCycle = cicloReal;
+            cur = addDays(cur, cicloReal);
             round++;
         }
 
@@ -2993,7 +3035,6 @@ async function calcularPronosticoAbastKardex(
 
         // ── 4. Calcular despacho por ronda con lógica de encadenamiento exacto ───
         const despachosPorRonda = {};
-        const cd = prod.cons_diario ?? 0;
         let prevRoundPostDespachoPaq = null;
         
         rondas.forEach(r => {
@@ -3004,15 +3045,15 @@ async function calcularPronosticoAbastKardex(
             } else {
                 // Rondas siguientes: encadenamiento de stock matemático exacto (simulando kardex a paquete cerrado)
                 if (prevRoundPostDespachoPaq !== null) {
-                    const prevConsPaq = (cd * cycle) / df;
+                    const prevConsPaq = (cd * r.prevCycle) / df;
                     stockD1Paq = Math.max(0, prevRoundPostDespachoPaq - prevConsPaq);
                 } else {
-                    stockD1Paq = Math.max(0, smf - (cd * cycle) / df); // Fallback
+                    stockD1Paq = Math.max(0, r.smfSlot - (cd * r.cycle) / df); // Fallback
                 }
             }
             
             const invBeforePaq = (stockD1Paq ?? 0) + (r.round === 1 && kardexDespCursoEnabled ? preHoyPaq : 0);
-            const despachoPron = Math.max(0, Math.ceil(smf - invBeforePaq));
+            const despachoPron = Math.max(0, Math.ceil(r.smfSlot - invBeforePaq));
             
             // Inventario teórico final post-despacho de esta ronda (para usar en la siguiente)
             prevRoundPostDespachoPaq = invBeforePaq + despachoPron;
