@@ -444,6 +444,9 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
             }
         }
     });
+
+    instanciasCharts[chartId]._allDays = allDays;
+    fetchAndAddStockLines(res.id_pp, semHasta, codSuc, chartId, allDays);
 }
 
 async function calcularPronosticoAbastKardex(
@@ -706,11 +709,13 @@ async function calcularPronosticoAbastKardex(
         }
 
         _finalizarChartKardex(datasets, ctx, chartId, labels);
+        fetchAndAddStockLines(idPP, semHasta, codSuc, chartId, allDays);
 
     } catch (err) {
         console.warn('calcularPronosticoAbastKardex error:', err);
         _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
         _finalizarChartKardex(datasets, ctx, chartId, labels);
+        fetchAndAddStockLines(res.id_pp, semHasta, codSuc, chartId, allDays);
     }
 }
 
@@ -784,5 +789,94 @@ function _finalizarChartKardex(datasets, ctx, chartId, labels) {
             }
         }
     });
+}
+
+async function fetchAndAddStockLines(idPP, semAnalisis, codSuc, chartId, allDays) {
+    const semActual = parseInt($('.pa-badge-current-week strong').text()) || 0;
+    const fd = new FormData();
+    fd.append('id_pp', idPP);
+    fd.append('sem_analisis', semAnalisis);
+    fd.append('sem_actual', semActual);
+    if (codSuc) fd.append('cod_sucursal', codSuc);
+
+    try {
+        const res = await fetch('ajax/balance_inventario_get_stock_minmax.php', { method: 'POST', body: fd }).then(r => r.json());
+        if (!res.ok || (res.stock_minimo === null && res.stock_max_final === null)) return;
+
+        const chart = instanciasCharts[chartId];
+        if (!chart) return;
+
+        const dSM = res.dSM || 0;
+        const dC_plus_dD = res.dC_plus_dD || 0;
+        const facC = res.facC || 1.0;
+        const adj = res.adj || 0;
+        
+        const getDynamicCd = (fecha_str) => {
+            let wls_x = res.wls_n || 0;
+            if (res.wls_last_fecha_fin) {
+                const dF = new Date(res.wls_last_fecha_fin + 'T23:59:59');
+                const dD = new Date(fecha_str + 'T12:00:00');
+                const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
+                const x_offset = Math.ceil(diffDays / 7);
+                wls_x += x_offset;
+            } else {
+                wls_x += 1;
+            }
+            const semC = Math.max(0, ((res.wls_m || 0) * wls_x) + (res.wls_b || 0));
+            return (semC * (1 + adj)) / 7;
+        };
+
+        const minData = [];
+        const maxData = [];
+        
+        for (let i = 0; i < allDays.length; i++) {
+            const day = allDays[i];
+            if (!day) {
+                minData.push(res.stock_minimo);
+                maxData.push(res.stock_max_final);
+                continue;
+            }
+            const cd = getDynamicCd(day);
+            const sMin = cd * dSM;
+            const sMax = (cd * dC_plus_dD) + sMin;
+            const sMaxFinal = sMax * facC;
+            
+            minData.push(sMin);
+            maxData.push(sMaxFinal);
+        }
+
+        if (res.stock_minimo !== null) {
+            chart.data.datasets.push({
+                label: 'Stock Mínimo *',
+                data: minData,
+                borderColor: '#f9a825',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                fill: false,
+                tension: 0,
+                stepped: true
+            });
+        }
+        if (res.stock_max_final !== null) {
+            chart.data.datasets.push({
+                label: 'Stock Máx Final *',
+                data: maxData,
+                borderColor: '#6d597a',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                fill: false,
+                tension: 0,
+                stepped: true
+            });
+        }
+        chart.update();
+
+    } catch (e) {
+        console.warn('Error en fetchAndAddStockLines', e);
+    }
 }
 
