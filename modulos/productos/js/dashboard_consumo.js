@@ -3029,12 +3029,14 @@ async function calcularPronosticoAbastKardex(
         hoyD.setHours(12, 0, 0, 0);
         const hoyStr = hoyD.toISOString().split('T')[0];
 
+        const getConsProyAligned = (day) => cd;
+
         for (let i = anchorIdx + 1; i < allDays.length; i++) {
             const day = allDays[i];
             if (day > fechaObj) break;
 
-            // Descontar consumo primero
-            balFc = balFc - getConsProy(day);
+            // Descontar consumo con tasa plana WLS para paridad absoluta con la tabla
+            balFc = balFc - getConsProyAligned(day);
 
             // Agregar preingreso hoy si corresponde a este día
             if (day === hoyStr && kardexDespCursoEnabled && preHoyPaq > 0) {
