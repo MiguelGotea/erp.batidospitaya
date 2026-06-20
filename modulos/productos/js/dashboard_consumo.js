@@ -292,7 +292,6 @@ function bindEventos() {
         }
     });
 
-    // Toggles del Kardex
     $('#togglePronAbast').on('change', function () {
         kardexPronAbastEnabled = $(this).is(':checked');
         if (kardexPronAbastEnabled) {
@@ -302,6 +301,10 @@ function bindEventos() {
         }
         if (_kardexLastRenderCtx && _kardexLastRenderCtx.res) {
             renderChartKardex(_kardexLastRenderCtx.res, _kardexLastRenderCtx.stockMinVal, _kardexLastRenderCtx.stockMaxFinalVal);
+            const idSel = parseInt($('#chartInsumoSel').val()) || 0;
+            if (idSel && datosActuales) {
+                cargarStockMinMaxKardex(idSel, datosActuales._semHasta);
+            }
         }
     });
 
@@ -309,6 +312,10 @@ function bindEventos() {
         kardexDespCursoEnabled = $(this).is(':checked');
         if (_kardexLastRenderCtx && _kardexLastRenderCtx.res) {
             renderChartKardex(_kardexLastRenderCtx.res, _kardexLastRenderCtx.stockMinVal, _kardexLastRenderCtx.stockMaxFinalVal);
+            const idSel = parseInt($('#chartInsumoSel').val()) || 0;
+            if (idSel && datosActuales) {
+                cargarStockMinMaxKardex(idSel, datosActuales._semHasta);
+            }
         }
     });
 
