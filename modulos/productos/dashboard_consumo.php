@@ -787,9 +787,8 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                             <i class="fas fa-chart-line me-2"></i>Tab: Proyección y Planificación
                                         </h6>
                                         <p class="small text-muted mb-0">
-                                            Proyección de consumo para las próximas 3 semanas basada en regresión lineal
-                                            ponderada (Mínimos Cuadrados Ponderados - WLS) sobre las semanas con consumo activo.<br><br>
-                                            Incluye <strong>Stock Mínimo</strong> y <strong>Stock Máximo</strong> recomendados calculados dinámicamente usando las configuraciones logísticas de la tienda (días de seguridad, ciclo de despacho y factor de ajuste).
+                                            Proyección calculada mediante regresión lineal ponderada (Mínimos Cuadrados Ponderados - WLS), lo que da mayor peso a la tendencia reciente para descontar inventario a una tasa plana constante.<br><br>
+                                            Incluye <strong>Stock Mínimo</strong> <code>((Consumo Diario × Días Mínimos) / Factor)</code> y <strong>Stock Máximo</strong> <code>(((Consumo Diario × Ciclo) + Stock Mín Base) / Factor)</code> recomendados, calculados dinámicamente según la logística de la tienda.
                                         </p>
                                     </div>
                                 </div>

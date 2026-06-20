@@ -219,9 +219,8 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Prom. Consumo:</b> Promedio sobre la <b>Ventana Activa</b>.</li>
-                                    <li><b>Consumo Diario (WLS):</b> Proyección base mediante regresión lineal (Mínimos Cuadrados Ponderados) dividida entre 7.</li>
-                                    <li><b>Proyección Futura (Dinámica):</b> La tendencia WLS se proyecta semana a semana (y = mx + b). Si el producto va a la baja, el consumo esperado disminuye sutilmente en cada ronda futura.</li>
+                                    <li><b>Consumo Diario (WLS):</b> Proyección calculada mediante regresión lineal ponderada dividida entre 7 para dar mayor peso a la tendencia reciente.</li>
+                                    <li><b>Proyección Futura:</b> Tasa plana constante. Se usa el Consumo Diario WLS actual para proyectar el descuento de stock futuro sin variaciones.</li>
                                 </ul>
                             </div>
                         </div>
@@ -229,10 +228,8 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-box-seam me-1"></i> Niveles de Stock</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Stock Mín:</b> Nivel crítico en <b>unidades de despacho</b> = (Consumo Diario
-                                        × Días Stock Mínimo) ÷ Factor Despacho.</li>
-                                    <li><b>Stock Máx:</b> Capacidad teórica en <b>unidades de despacho</b> = ((Consumo
-                                        Diario × Ciclo) + Stock Mínimo Base) ÷ Factor Despacho.</li>
+                                    <li><b>Stock Mín:</b> <code>(Consumo Diario × Días Stock Mínimo) / Factor Despacho</code></li>
+                                    <li><b>Stock Máx:</b> <code>((Consumo Diario × Ciclo) + Stock Mín Base) / Factor Despacho</code></li>
                                 </ul>
                             </div>
                         </div>
@@ -274,15 +271,12 @@ try {
                     <!-- Pronóstico Inteligente WLS -->
                     <div class="mb-4 p-3 rounded-3 border" style="background:#f3e8ff;border-color:#d8b4fe !important;">
                         <h6 class="fw-bold small d-flex align-items-center gap-2 mb-2" style="color:#7e22ce;">
-                            <i class="bi bi-graph-up-arrow"></i> Pronóstico Inteligente (Tendencia Reciente)
+                            <i class="bi bi-graph-up-arrow"></i> Pronóstico Inteligente (Tendencia Reciente WLS)
                         </h6>
-                        <p class="text-secondary small mb-2">
-                            El <b>Consumo Diario</b> ya no es un simple promedio. Ahora usamos una fórmula matemática (regresión lineal ponderada - WLS) que funciona de manera muy intuitiva:
-                        </p>
                         <ul class="text-secondary small mb-0">
-                            <li><b>Más importancia a lo reciente:</b> Las ventas de la última semana valen mucho más en el cálculo que las de hace un mes.</li>
-                            <li><b>Detecta si vas en subida o bajada:</b> Si un producto se está vendiendo cada vez más (o menos), la fórmula detecta la recta de tendencia (pendiente) y la proyecta hacia el futuro.</li>
-                            <li><b>Resultado Dinámico:</b> Para cada ronda futura de despacho, el cálculo avanza en el tiempo sobre esa recta, adaptando el consumo esperado semana a semana.</li>
+                            <li>El cálculo de <b>Consumo Diario</b> da <b>más importancia a lo reciente</b>, asignando mayor peso a las semanas más cercanas para reaccionar rápido a cambios de demanda.</li>
+                            <li>La fórmula detecta la <b>tendencia de crecimiento o decrecimiento</b>, y con base en ello proyecta un consumo diario estimado.</li>
+                            <li>A partir de este cálculo, se utiliza una <b>tasa plana (constante)</b> para descontar el inventario futuro de manera segura.</li>
                         </ul>
                     </div>
 
