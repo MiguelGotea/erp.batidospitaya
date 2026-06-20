@@ -236,9 +236,11 @@ try {
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-box-seam me-1"></i> Niveles de Stock</h6>
                                 <ul class="small text-muted mb-0">
                                     <li><b>Stock Mín:</b>
-                                        <code>(Consumo Diario × Días Stock Mínimo) / Factor Despacho</code></li>
+                                        <code>(Consumo Diario × Días Stock Mínimo) / Factor Despacho</code>
+                                    </li>
                                     <li><b>Stock Máx:</b>
-                                        <code>((Consumo Diario × Ciclo) + Stock Mín Base) / Factor Despacho</code></li>
+                                        <code>((Consumo Diario × Ciclo) + Stock Mín Base) / Factor Despacho</code>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
