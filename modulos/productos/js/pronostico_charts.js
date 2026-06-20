@@ -154,7 +154,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
     const valores = semanasNros.map(n => round2(item.por_semana[n] || 0));
     let datasets = [
         {
-            label: item.nombre.length > 35 ? item.nombre.substring(0, 33) + '…' : item.nombre,
+            label: 'Consumo Real',
             data: [...valores, null, null, null],
             backgroundColor: 'rgba(81,184,172,.35)',
             borderColor: '#0E544C',
@@ -165,7 +165,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
             pointBackgroundColor: '#0E544C',
         },
         {
-            label: `Prom./sem: ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
+            label: `Promedio Semanal: ${formatNum(round2(promCalc))}`,
             data: [...semanasNros.map(n => n === semanaActual ? null : round2(promCalc)), null, null, null],
             borderColor: '#e67e22',
             borderWidth: 1.5,
@@ -179,7 +179,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
 
     const proyData = [...semanasNros.map(n => n === semanaActual ? proyActual : null), proyW1, proyW2, proyW3];
     datasets.push({
-        label: `↗ Proyección`,
+        label: `Proyeccion`,
         data: proyData,
         borderColor: '#f39c12',
         backgroundColor: 'rgba(243,156,18,.12)',
@@ -652,7 +652,11 @@ async function calcularPronosticoAbastKardex(
         const _finalPoint = new Array(allDays.length).fill(null);
         if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
 
-        const pronLabel = `Pronóstico c/Abast. → ${fechaObj}`;
+        const pointRadii = forecastData.map((v, i) => i === _idxObj ? 11 : 2);
+        const pointHoverRadii = forecastData.map((v, i) => i === _idxObj ? 13 : 4);
+        const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
+
+        const pronLabel = `Pronóstico c/Abastecimiento`;
         datasets.push({
             label: pronLabel,
             data: forecastData,
@@ -662,23 +666,12 @@ async function calcularPronosticoAbastKardex(
             borderDash: [10, 5],
             fill: false,
             tension: 0.2,
-            pointRadius: 2,
+            pointRadius: pointRadii,
+            pointHoverRadius: pointHoverRadii,
+            pointStyle: pointStyles,
             pointBackgroundColor: '#8e44ad',
             spanGaps: true,
         });
-
-        if (_valObj !== null) {
-            datasets.push({
-                label: `Al ${fechaObj}: ${fmtKardex(_valObj, 2)}`,
-                data: _finalPoint,
-                borderColor: '#8e44ad',
-                backgroundColor: '#8e44ad',
-                pointRadius: 11,
-                pointHoverRadius: 13,
-                pointStyle: 'crossRot',
-                showLine: false,
-            });
-        }
 
         if (dispatchMarkers.length > 0) {
             const dispData = new Array(allDays.length).fill(null);
@@ -735,8 +728,12 @@ function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsPr
     const _finalPoint = new Array(allDays.length).fill(null);
     if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
 
+    const pointRadii = forecastData.map((v, i) => i === _idxObj ? 11 : 2);
+    const pointHoverRadii = forecastData.map((v, i) => i === _idxObj ? 13 : 4);
+    const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
+
     datasets.push({
-        label: `Pronóstico → ${fechaObj}`,
+        label: `Pronóstico c/Abastecimiento`,
         data: forecastData,
         borderColor: '#8e44ad',
         backgroundColor: 'rgba(142,68,173,0.06)',
@@ -744,22 +741,12 @@ function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsPr
         borderDash: [10, 5],
         fill: false,
         tension: 0.2,
-        pointRadius: 2,
+        pointRadius: pointRadii,
+        pointHoverRadius: pointHoverRadii,
+        pointStyle: pointStyles,
         pointBackgroundColor: '#8e44ad',
         spanGaps: false,
     });
-    if (_valObj !== null) {
-        datasets.push({
-            label: `Al ${fechaObj}: ${fmtKardex(_valObj, 2)}`,
-            data: _finalPoint,
-            borderColor: '#8e44ad',
-            backgroundColor: '#8e44ad',
-            pointRadius: 11,
-            pointHoverRadius: 13,
-            pointStyle: 'crossRot',
-            showLine: false,
-        });
-    }
 }
 
 function _finalizarChartKardex(datasets, ctx, chartId, labels) {
