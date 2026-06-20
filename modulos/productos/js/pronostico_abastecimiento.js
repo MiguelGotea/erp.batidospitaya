@@ -287,7 +287,10 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
 
         const porCat = {};
         PA_GRUPOS.forEach(c => porCat[c] = []);
-        prodFiltrados.forEach(p => { porCat[p.categoria_insumo]?.push(p); });
+        prodFiltrados.forEach(p => { 
+            p._wls_lff = resPedido.wls_last_fecha_fin;
+            porCat[p.categoria_insumo]?.push(p); 
+        });
 
         const sinPlan = {}, conPlan = {};
         PA_GRUPOS.forEach(cat => {
@@ -760,8 +763,15 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             const fDesp = `${dsStr.substring(0,4)}-${dsStr.substring(4,6)}-${dsStr.substring(6,8)}`;
             const sucVal = $('#pa-sucursal').val();
 
+            let rowRatio = 1;
+            const df_ = p.despacho_factor > 0 ? p.despacho_factor : 1;
+            if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
+                rowRatio = (p.stock_max_final * df_) / (p.stock_maximo * df_);
+            }
+
             rows += `
-            <tr class="pa-row-expandible-charts" style="cursor:pointer;" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}" data-sucursal="${sucVal}" data-fecha-despacho="${fDesp}" data-ciclo="${slot.cicloSlot}">
+            <tr class="pa-row-expandible-charts" style="cursor:pointer;" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}" data-sucursal="${sucVal}" data-fecha-despacho="${fDesp}" data-ciclo="${slot.cicloSlot}"
+                data-wls-m="${p.wls_m ?? 0}" data-wls-b="${p.wls_b ?? 0}" data-wls-n="${p.wls_n ?? 0}" data-wls-lff="${p._wls_lff || ''}" data-dsm="${p.dias_stock_min ?? 0}" data-ratio="${rowRatio}">
                 <td><i class="bi bi-chevron-right pa-expand-icon"></i><div class="pa-prod-name">${esc(p.nombre)}</div></td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
