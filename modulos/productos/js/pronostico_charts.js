@@ -584,7 +584,13 @@ async function calcularPronosticoAbastKardex(
                     const su = resPron.stocks[String(idPP)];
                     const dP = resPron.dias_proy[String(idPP)] || 0;
                     if (su !== null && su !== undefined) {
-                        const proyD1 = su - (getDynamicCd(fechaD1R1) * dP);
+                        let proyD1 = su;
+                        if (dP > 0) {
+                            for (let k = 0; k < dP; k++) {
+                                const dStr = addDays(fechaD1R1, -k);
+                                proyD1 -= getDynamicCd(dStr);
+                            }
+                        }
                         stockD1R1 = Math.max(0, proyD1 / df);
                     }
                     const ph = resPron.preingresos_hoy[String(idPP)];

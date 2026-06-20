@@ -381,7 +381,34 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         // Ronda 1: usar el pronóstico real de inventario D-1 restando la proyección de consumo (WLS) por los días faltantes
                         const su = stockRonda1[String(p.id_pp)];
                         const dP = diasProyRonda1[String(p.id_pp)] || 0;
-                        const proyD1 = (su !== null && su !== undefined) ? (su - (cd * dP)) : null;
+                        
+                        let proyD1 = null;
+                        if (su !== null && su !== undefined) {
+                            proyD1 = su;
+                            if (dP > 0) {
+                                const fechaD1 = addDaysStr(p.fecha_proximo_despacho, -1);
+                                for (let k = 0; k < dP; k++) {
+                                    const dStr = addDaysStr(fechaD1, -k);
+                                    
+                                    // Calculate dynamic CD for this specific day
+                                    let wls_x_day = p.wls_n ?? 0;
+                                    if (resPedido.wls_last_fecha_fin) {
+                                        const dF = new Date(resPedido.wls_last_fecha_fin + 'T23:59:59');
+                                        const dD = new Date(dStr + 'T12:00:00');
+                                        const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
+                                        const x_offset = Math.ceil(diffDays / 7);
+                                        wls_x_day += x_offset;
+                                    } else {
+                                        wls_x_day += 1;
+                                    }
+                                    const semC_day = Math.max(0, ((wls_m) * wls_x_day) + (wls_b));
+                                    const cd_day = semC_day / 7;
+                                    
+                                    proyD1 -= cd_day;
+                                }
+                            }
+                        }
+                        
                         stockD1Paq = (proyD1 !== null) ? Math.max(0, proyD1 / df) : null;
                         invTeoricoAyerPaq = (su !== null && su !== undefined) ? (su / df) : null;
                         const ph = preingresosHoy[String(p.id_pp)];
