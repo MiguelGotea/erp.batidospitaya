@@ -471,4 +471,5 @@ try {
     <script src="/core/assets/js/fab_button.js?v=<?php echo $version; ?>"></script>
 </body>
 
+
 </html>
