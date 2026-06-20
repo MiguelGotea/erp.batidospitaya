@@ -104,9 +104,9 @@ $(document).ready(() => {
         const sucursal = $(this).data('sucursal');
         const fechaDespacho = $(this).data('fecha-despacho');
         const cicloSlot = $(this).data('ciclo');
-        
+
         const subRow = $(`.pa-chart-sub[data-slot-key="${sk}"][data-pp-id="${ppId}"]`);
-        
+
         subRow.toggleClass('d-none');
         $(this).find('.pa-expand-icon').toggleClass('rotated');
 
@@ -115,7 +115,7 @@ $(document).ready(() => {
             const semDesde = $('#pa-desde').val();
             const semHasta = $('#pa-hasta').val();
             const semCorte = $('#pa-corte').val();
-            
+
             if (window.cargarGraficasParaFila) {
                 window.cargarGraficasParaFila(ppId, sk, sucursal, semDesde, semHasta, semCorte, fechaDespacho, cicloSlot);
             }
@@ -125,12 +125,12 @@ $(document).ready(() => {
         window.pa_include_preingreso = $(this).is(':checked');
         if (window.lastStoreResults && currentAgendaData) {
             recalcularChaining(window.lastStoreResults);
-            
+
             if (currentAgendaData.isConsolidado) {
                 const cons = consolidarResultados(window.lastStoreResults);
                 currentAgendaData.agendaMap = cons.agendaMap;
             }
-            
+
             renderAgenda(currentAgendaData.agendaMap, currentAgendaData.fechasOrdenadas, currentAgendaData.sinPlan, currentAgendaData.isConsolidado, currentAgendaData.nTiendas);
             $('#pa-search-producto').trigger('input');
         }
@@ -287,10 +287,11 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
 
         const porCat = {};
         PA_GRUPOS.forEach(c => porCat[c] = []);
-        prodFiltrados.forEach(p => { 
+        prodFiltrados.forEach(p => {
             p._wls_lff = resPedido.wls_last_fecha_fin;
-            porCat[p.categoria_insumo]?.push(p); 
+            porCat[p.categoria_insumo]?.push(p);
         });
+
 
         const sinPlan = {}, conPlan = {};
         PA_GRUPOS.forEach(cat => {
@@ -384,7 +385,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         // Ronda 1: usar el pronóstico real de inventario D-1 restando la proyección de consumo (WLS) por los días faltantes
                         const su = stockRonda1[String(p.id_pp)];
                         const dP = diasProyRonda1[String(p.id_pp)] || 0;
-                        
+
                         let proyD1 = null;
                         if (su !== null && su !== undefined) {
                             proyD1 = su;
@@ -392,7 +393,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                                 const fechaD1 = addDaysStr(p.fecha_proximo_despacho, -1);
                                 for (let k = 0; k < dP; k++) {
                                     const dStr = addDaysStr(fechaD1, -k);
-                                    
+
                                     // Calculate dynamic CD for this specific day
                                     let wls_x_day = p.wls_n ?? 0;
                                     if (resPedido.wls_last_fecha_fin) {
@@ -406,12 +407,12 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                                     }
                                     const semC_day = Math.max(0, ((wls_m) * wls_x_day) + (wls_b));
                                     const cd_day = semC_day / 7;
-                                    
+
                                     proyD1 -= cd_day;
                                 }
                             }
                         }
-                        
+
                         stockD1Paq = (proyD1 !== null) ? Math.max(0, proyD1 / df) : null;
                         invTeoricoAyerPaq = (su !== null && su !== undefined) ? (su / df) : null;
                         const ph = preingresosHoy[String(p.id_pp)];
@@ -760,7 +761,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
         } else {
             // Reconstruir fecha desde el slotKey que es YYYYMMDD-CAT
             const dsStr = slotKey.split('-')[0];
-            const fDesp = `${dsStr.substring(0,4)}-${dsStr.substring(4,6)}-${dsStr.substring(6,8)}`;
+            const fDesp = `${dsStr.substring(0, 4)}-${dsStr.substring(4, 6)}-${dsStr.substring(6, 8)}`;
             const sucVal = $('#pa-sucursal').val();
 
             let rowRatio = 1;
@@ -1025,7 +1026,7 @@ function recalcularChaining(storeResults) {
                 const round = item.slot.round;
                 const rd = p._porRonda[round];
                 if (!rd) return;
-                
+
                 if (round === 1) {
                     const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
                     const despRealPaq = Math.max(0, Math.ceil((rd.smfSlot ?? 0) - invBeforePaq));
@@ -1034,9 +1035,9 @@ function recalcularChaining(storeResults) {
                     const prevRound = p._porRonda[round - 1];
                     const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
                     const prevConsPaq = prevRound ? (prevRound.cd_dinamico * prevRound.ciclo) / df : 0;
-                    
+
                     rd.stockD1Paq = Math.max(0, (prevRound?.stockPostDespachoPaq ?? 0) - prevConsPaq);
-                    
+
                     const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
                     const despRealPaq = Math.max(0, Math.ceil((rd.smfSlot ?? 0) - invBeforePaq));
                     rd.stockPostDespachoPaq = invBeforePaq + despRealPaq;
@@ -1072,7 +1073,7 @@ function exportarPronosticoConsumoExcel() {
         const wls_m = p.wls_m ?? 0;
         const wls_b = p.wls_b ?? 0;
         const wls_n = p.wls_n ?? 0;
-        
+
         return {
             cd1: Math.max(0, (wls_m * (wls_n + 1)) + wls_b) / 7,
             cd2: Math.max(0, (wls_m * (wls_n + 2)) + wls_b) / 7,
@@ -1089,11 +1090,11 @@ function exportarPronosticoConsumoExcel() {
             prods.forEach(p => {
                 const proy = calcularProyecciones(p);
                 if (!consolidados.has(p.id_pp)) {
-                    consolidados.set(p.id_pp, { 
-                        nombre: p.nombre, 
+                    consolidados.set(p.id_pp, {
+                        nombre: p.nombre,
                         grupo: PA_LABELS[p.categoria_insumo] || p.categoria_insumo,
                         unidad: p.unidad || '-',
-                        cd1: 0, cd2: 0, cd3: 0, cd4: 0 
+                        cd1: 0, cd2: 0, cd3: 0, cd4: 0
                     });
                 }
                 const c = consolidados.get(p.id_pp);
@@ -1116,7 +1117,7 @@ function exportarPronosticoConsumoExcel() {
         }));
 
         const wsCons = XLSX.utils.json_to_sheet(datosConsolidado);
-        wsCons['!cols'] = [{wch: 25}, {wch: 40}, {wch: 20}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
+        wsCons['!cols'] = [{ wch: 25 }, { wch: 40 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
         XLSX.utils.book_append_sheet(wb, wsCons, "Consolidado");
 
         Object.values(window.lastStoreResults).forEach(sr => {
@@ -1134,7 +1135,7 @@ function exportarPronosticoConsumoExcel() {
                 };
             });
             const wsTienda = XLSX.utils.json_to_sheet(datosTienda);
-            wsTienda['!cols'] = [{wch: 25}, {wch: 40}, {wch: 20}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
+            wsTienda['!cols'] = [{ wch: 25 }, { wch: 40 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
             const safeName = sr.nombre.substring(0, 31).replace(/[\\/?*\[\]]/g, '');
             XLSX.utils.book_append_sheet(wb, wsTienda, safeName);
         });
@@ -1155,7 +1156,7 @@ function exportarPronosticoConsumoExcel() {
             };
         });
         const wsTienda = XLSX.utils.json_to_sheet(datosTienda);
-        wsTienda['!cols'] = [{wch: 25}, {wch: 40}, {wch: 20}, {wch: 18}, {wch: 18}, {wch: 18}, {wch: 18}];
+        wsTienda['!cols'] = [{ wch: 25 }, { wch: 40 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
         XLSX.utils.book_append_sheet(wb, wsTienda, "Pronóstico Consumo");
     }
 
