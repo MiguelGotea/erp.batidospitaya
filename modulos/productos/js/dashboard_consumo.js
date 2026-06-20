@@ -2985,20 +2985,39 @@ async function calcularPronosticoAbastKardex(
         };
 
         const df    = prod.despacho_factor > 0 ? prod.despacho_factor : 1;
-        const cd    = prod.cons_diario ?? 0;
+
+        const getDynamicCd = (fecha_str) => {
+            let wls_x = prod.wls_n ?? 0;
+            if (resPedido.wls_last_fecha_fin) {
+                const dF = new Date(resPedido.wls_last_fecha_fin + 'T23:59:59');
+                const dD = new Date(fecha_str + 'T12:00:00');
+                const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
+                const x_offset = Math.ceil(diffDays / 7);
+                wls_x += x_offset;
+            } else {
+                wls_x += 1;
+            }
+            const semC = Math.max(0, ((prod.wls_m ?? 0) * wls_x) + (prod.wls_b ?? 0));
+            return semC / 7;
+        };
+
+        const baseCd = getDynamicCd(hoyStr || allDays[0]);
 
         // Construir lista de rondas dentro del horizonte
         const rondas = []; // { fecha, round, cycle, prevCycle, smfSlot }
         let cur = prod.fecha_proximo_despacho;
         let round = 1;
         let prevCycle = 0;
+        let prevCdRonda = baseCd;
         while (cur <= fechaObj && round <= 52) {  // max 52 rondas como seguro
+            const cd_ronda = getDynamicCd(cur);
             const cicloReal = calcularCicloSlot(prod, cur);
-            const smfSlot = calcularStockMaxSlot(prod, cicloReal, cd);
+            const smfSlot = calcularStockMaxSlot(prod, cicloReal, cd_ronda);
             if (cur > allDays[anchorIdx]) {  // solo rondas futuras al ancla
-                rondas.push({ fecha: cur, round, cycle: cicloReal, prevCycle: prevCycle, smfSlot: smfSlot });
+                rondas.push({ fecha: cur, round, cycle: cicloReal, prevCycle: prevCycle, smfSlot: smfSlot, cd_ronda: cd_ronda, prevCdRonda: prevCdRonda });
             }
             prevCycle = cicloReal;
+            prevCdRonda = cd_ronda;
             cur = addDays(cur, cicloReal);
             round++;
         }
@@ -3024,7 +3043,7 @@ async function calcularPronosticoAbastKardex(
                     const su = resPron.stocks[String(idPP)];
                     const dP = resPron.dias_proy[String(idPP)] || 0;
                     if (su !== null && su !== undefined) {
-                        const proyD1 = su - ((prod.cons_diario ?? 0) * dP);
+                        const proyD1 = su - (getDynamicCd(fechaD1R1) * dP);
                         stockD1R1 = Math.max(0, proyD1 / df);
                     }
                     const ph = resPron.preingresos_hoy[String(idPP)];
@@ -3045,10 +3064,10 @@ async function calcularPronosticoAbastKardex(
             } else {
                 // Rondas siguientes: encadenamiento de stock matemático exacto (simulando kardex a paquete cerrado)
                 if (prevRoundPostDespachoPaq !== null) {
-                    const prevConsPaq = (cd * r.prevCycle) / df;
+                    const prevConsPaq = (r.prevCdRonda * r.prevCycle) / df;
                     stockD1Paq = Math.max(0, prevRoundPostDespachoPaq - prevConsPaq);
                 } else {
-                    stockD1Paq = Math.max(0, r.smfSlot - (cd * r.cycle) / df); // Fallback
+                    stockD1Paq = Math.max(0, r.smfSlot - (r.cd_ronda * r.cycle) / df); // Fallback
                 }
             }
             
@@ -3068,9 +3087,9 @@ async function calcularPronosticoAbastKardex(
         
         const hoyD = new Date();
         hoyD.setHours(12, 0, 0, 0);
-        const hoyStr = hoyD.toISOString().split('T')[0];
+        const hoyStrLocal = hoyD.toISOString().split('T')[0];
 
-        const getConsProyAligned = (day) => cd;
+        const getConsProyAligned = (day) => getDynamicCd(day);
 
         for (let i = anchorIdx + 1; i < allDays.length; i++) {
             const day = allDays[i];
@@ -3080,7 +3099,7 @@ async function calcularPronosticoAbastKardex(
             balFc = balFc - getConsProyAligned(day);
 
             // Agregar preingreso hoy si corresponde a este día
-            if (day === hoyStr && kardexDespCursoEnabled && preHoyPaq > 0) {
+            if (day === hoyStrLocal && kardexDespCursoEnabled && preHoyPaq > 0) {
                 balFc = balFc + preHoyPaq * df;
                 dispatchMarkers.push({ idx: i, val: balFc, rnd: 'Curso', despacho: preHoyPaq, isPreingreso: true });
             }
