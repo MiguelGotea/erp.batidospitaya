@@ -39,7 +39,7 @@ function escHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-window.cargarGraficasParaFila = async function(ppId, sk, sucursal, semDesde, semHasta, semCorte, fechaDespacho, cicloSlot) {
+window.cargarGraficasParaFila = async function (ppId, sk, sucursal, semDesde, semHasta, semCorte, fechaDespacho, cicloSlot) {
     const canvasTend = document.getElementById(`chart-tend-${sk}-${ppId}`);
     const canvasKard = document.getElementById(`chart-kardex-${sk}-${ppId}`);
     if (!canvasTend || !canvasKard) return;
@@ -65,7 +65,7 @@ window.cargarGraficasParaFila = async function(ppId, sk, sucursal, semDesde, sem
                 globalDatosConsumo._semHasta = semHasta;
                 globalDatosConsumo._sucursal = sucursal;
             }
-        } catch(e) { console.error('Error fetching consumo', e); }
+        } catch (e) { console.error('Error fetching consumo', e); }
     }
 
     if (globalDatosConsumo) {
@@ -83,28 +83,48 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
     const labels = data.semanas.map(s => `Sem ${s.numero_semana}`);
     const semanasNros = data.semanas.map(s => s.numero_semana);
     const prom = item.prom_semana || 0;
-    const semanaActual = 0; // Para simplificar en pronostico, no excluimos semana actual
-    const promCalc = prom;
+
+    // ── Excluir semana en curso del promedio y proyeccin ────────────────────
+    const semanaActual = parseInt($('.pa-badge-current-week strong').text()) || 0;
+    const esSemActualEnRango = semanaActual > 0 && semanasNros.includes(semanaActual);
+
+    // Semanas completas: excluir la semana en curso si est dentro del rango
+    const semanasCalc = esSemActualEnRango
+        ? semanasNros.filter(n => n !== semanaActual)
+        : semanasNros;
+
+    // Promedio recalculado sin semana en curso
+    let promCalc = prom;
+    if (semanasCalc.length > 0) {
+        const valsCalc = semanasCalc.map(n => item.por_semana[n] || 0);
+        const valsPos = valsCalc.filter(v => v > 0);
+        promCalc = valsPos.length > 0 ? valsPos.reduce((a, b) => a + b, 0) / valsPos.length : prom;
+    }
 
     const ultimaSem = semanasNros[semanasNros.length - 1];
     let proyW1 = round2(promCalc), proyW2 = round2(promCalc), proyW3 = round2(promCalc);
     let regSlope = 0, regIntercept = promCalc;
+    let proyActual = null;
 
     if (item.wls_n !== undefined && item.wls_n > 0) {
         regSlope = item.wls_m !== undefined ? item.wls_m : 0;
         regIntercept = item.wls_b !== undefined ? item.wls_b : promCalc;
         let n_activa = item.wls_n;
         let ultima_semana_activa = semanasNros[item.wls_first_idx + n_activa - 1];
-        
+
         let calcWLS = (sem) => Math.max(0, round2(regSlope * (n_activa + (sem - ultima_semana_activa)) + regIntercept));
 
         proyW1 = calcWLS(ultimaSem + 1);
         proyW2 = calcWLS(ultimaSem + 2);
         proyW3 = calcWLS(ultimaSem + 3);
+
+        if (esSemActualEnRango) {
+            proyActual = calcWLS(semanaActual);
+        }
     } else {
-        if (semanasNros.length >= 2) {
-            const xV = semanasNros;
-            const yV = semanasNros.map(n => item.por_semana[n] || 0);
+        if (semanasCalc.length >= 2) {
+            const xV = semanasCalc;
+            const yV = semanasCalc.map(n => item.por_semana[n] || 0);
             const n_ = xV.length;
             const sumX = xV.reduce((a, b) => a + b, 0);
             const sumY = yV.reduce((a, b) => a + b, 0);
@@ -118,6 +138,9 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
                 proyW2 = Math.max(0, round2(regSlope * (ultimaSem + 2) + regIntercept));
                 proyW3 = Math.max(0, round2(regSlope * (ultimaSem + 3) + regIntercept));
             }
+        }
+        if (esSemActualEnRango) {
+            proyActual = Math.max(0, round2(regSlope * semanaActual + regIntercept));
         }
     }
 
@@ -138,12 +161,12 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
             borderWidth: 2,
             tension: 0.3,
             fill: true,
-            pointRadius: [...valores.map(()=>4), 0,0,0],
+            pointRadius: [...valores.map(() => 4), 0, 0, 0],
             pointBackgroundColor: '#0E544C',
         },
         {
             label: `Prom./sem: ${formatNum(round2(promCalc))} ${escHtml(item.unidad)}`,
-            data: [...semanasNros.map(() => round2(promCalc)), null, null, null],
+            data: [...semanasNros.map(n => n === semanaActual ? null : round2(promCalc)), null, null, null],
             borderColor: '#e67e22',
             borderWidth: 1.5,
             borderDash: [5, 4],
@@ -154,7 +177,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
         },
     ];
 
-    const proyData = [...semanasNros.map(() => null), proyW1, proyW2, proyW3];
+    const proyData = [...semanasNros.map(n => n === semanaActual ? proyActual : null), proyW1, proyW2, proyW3];
     datasets.push({
         label: `↗ Proyección`,
         data: proyData,
@@ -162,7 +185,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
         backgroundColor: 'rgba(243,156,18,.12)',
         borderWidth: 2.5,
         borderDash: [6, 4],
-        pointRadius: [...semanasNros.map(()=>0), 6, 6, 6],
+        pointRadius: [...semanasNros.map(n => n === semanaActual ? 6 : 0), 6, 6, 6],
         pointStyle: 'triangle',
         pointBackgroundColor: '#f39c12',
         fill: false,
@@ -210,7 +233,7 @@ async function cargarChartKardex(canvas, idPP, semDesde, semHasta, semCorte, cod
         }
 
         renderKardexCore(canvas, res, fechaPronostico, sk, semDesde, semHasta, semCorte, codSuc);
-    } catch(e) { console.error('Error fetching kardex', e); }
+    } catch (e) { console.error('Error fetching kardex', e); }
 }
 
 function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, semHasta, semCorte, codSuc) {
@@ -349,13 +372,13 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
     if (instanciasCharts[chartId]) { instanciasCharts[chartId].destroy(); }
 
     const ctx = canvas.getContext('2d');
-    
+
     if (fechaObjetivoPronostico) {
         const _anchorIdx = originalRangeLen > 0 ? originalRangeLen - 1 : pIdx;
         const _anchorVal = stockTeoData[_anchorIdx] ?? (originalRangeLen === 0 ? invCorte : null);
 
         if (_anchorVal !== null && _anchorVal !== undefined && allDays[_anchorIdx] && allDays[_anchorIdx] < fechaObjetivoPronostico) {
-            
+
             const _cntDow = [0, 0, 0, 0, 0, 0, 0];
             const _sumDow = [0, 0, 0, 0, 0, 0, 0];
             let _totalCons = 0;
@@ -470,13 +493,13 @@ async function calcularPronosticoAbastKardex(
                 if (n === 0) return 7;
                 if (n === 1) return 7;
                 const dt = new Date(fechaStr + 'T12:00:00');
-                const dowJS = dt.getDay(); 
+                const dowJS = dt.getDay();
                 const dowDispatch = (dowJS + 6) % 7;
                 for (let d = 1; d <= 7; d++) {
                     const next = (dowDispatch + d) % 7;
                     if (dias.includes(next)) return d;
                 }
-                return 7 / n; 
+                return 7 / n;
             }
             return p.dias_ciclo || 7;
         };
@@ -488,10 +511,10 @@ async function calcularPronosticoAbastKardex(
             const cd = cd_dinamico ?? 0;
             const dSM = p.dias_stock_min ?? 0;
             const df_ = p.despacho_factor > 0 ? p.despacho_factor : 1;
-            
+
             const sMinUso = cd * dSM;
             const sMaxUso = (cd * cicloSlot) + sMinUso;
-            
+
             let ratio = 1;
             if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
                 ratio = (p.stock_max_final * df_) / (p.stock_maximo * df_);
@@ -521,16 +544,16 @@ async function calcularPronosticoAbastKardex(
         const hoyStrBase = hoyDBase.toISOString().split('T')[0];
         const baseCd = getDynamicCd(hoyStrBase || allDays[0]);
 
-        const rondas = []; 
+        const rondas = [];
         let cur = prod.fecha_proximo_despacho;
         let round = 1;
         let prevCycle = 0;
         let prevCdRonda = baseCd;
-        while (cur <= fechaObj && round <= 52) { 
+        while (cur <= fechaObj && round <= 52) {
             const cd_ronda = getDynamicCd(cur);
             const cicloReal = calcularCicloSlot(prod, cur);
             const smfSlot = calcularStockMaxSlot(prod, cicloReal, cd_ronda);
-            if (cur > allDays[anchorIdx]) {  
+            if (cur > allDays[anchorIdx]) {
                 rondas.push({ fecha: cur, round, cycle: cicloReal, prevCycle: prevCycle, smfSlot: smfSlot, cd_ronda: cd_ronda, prevCdRonda: prevCdRonda });
             }
             prevCycle = cicloReal;
@@ -541,7 +564,7 @@ async function calcularPronosticoAbastKardex(
 
         let stockD1R1 = null;
         let preHoyPaq = 0;
-        
+
         if (rondas.length > 0 && rondas[0].round === 1) {
             const fechaD1R1 = addDays(prod.fecha_proximo_despacho, -1);
             const fdPron = new FormData();
@@ -570,10 +593,10 @@ async function calcularPronosticoAbastKardex(
         const despachosPorRonda = {};
         let prevRoundPostDespachoPaq = null;
         const kardexDespCursoEnabled = window.pa_include_preingreso;
-        
+
         rondas.forEach(r => {
             let stockD1Paq;
-            
+
             if (r.round === 1) {
                 stockD1Paq = stockD1R1;
             } else {
@@ -581,23 +604,23 @@ async function calcularPronosticoAbastKardex(
                     const prevConsPaq = (r.prevCdRonda * r.prevCycle) / df;
                     stockD1Paq = Math.max(0, prevRoundPostDespachoPaq - prevConsPaq);
                 } else {
-                    stockD1Paq = Math.max(0, r.smfSlot - (r.cd_ronda * r.cycle) / df); 
+                    stockD1Paq = Math.max(0, r.smfSlot - (r.cd_ronda * r.cycle) / df);
                 }
             }
-            
+
             const invBeforePaq = (stockD1Paq ?? 0) + (r.round === 1 && kardexDespCursoEnabled ? preHoyPaq : 0);
             const despachoPron = Math.max(0, Math.ceil(r.smfSlot - invBeforePaq));
-            
+
             prevRoundPostDespachoPaq = invBeforePaq + despachoPron;
-            
+
             despachosPorRonda[r.fecha] = { despacho: despachoPron, stockD1Paq, round: r.round, stockPostDespachoPaq: prevRoundPostDespachoPaq };
         });
 
         const forecastData = new Array(allDays.length).fill(null);
         forecastData[anchorIdx] = anchorVal;
         let balFc = anchorVal;
-        const dispatchMarkers = []; 
-        
+        const dispatchMarkers = [];
+
         const hoyD = new Date();
         hoyD.setHours(12, 0, 0, 0);
         const hoyStrLocal = hoyD.toISOString().split('T')[0];
@@ -617,7 +640,7 @@ async function calcularPronosticoAbastKardex(
 
             if (despachosPorRonda[day]) {
                 const { despacho, round: rnd } = despachosPorRonda[day];
-                balFc = balFc + despacho * df; 
+                balFc = balFc + despacho * df;
                 dispatchMarkers.push({ idx: i, val: balFc, rnd, despacho });
             }
 
@@ -658,15 +681,15 @@ async function calcularPronosticoAbastKardex(
         }
 
         if (dispatchMarkers.length > 0) {
-            const dispData    = new Array(allDays.length).fill(null);
-            const dispRadius  = new Array(allDays.length).fill(0);
+            const dispData = new Array(allDays.length).fill(null);
+            const dispRadius = new Array(allDays.length).fill(0);
             const dispAmounts = new Array(allDays.length).fill(null);
-            const dispTypes   = new Array(allDays.length).fill('proy');
-            const pStyles     = new Array(allDays.length).fill('triangle');
-            const bgColors    = new Array(allDays.length).fill('#27ae60');
-            
+            const dispTypes = new Array(allDays.length).fill('proy');
+            const pStyles = new Array(allDays.length).fill('triangle');
+            const bgColors = new Array(allDays.length).fill('#27ae60');
+
             dispatchMarkers.forEach(m => {
-                dispData[m.idx]   = m.val;
+                dispData[m.idx] = m.val;
                 dispRadius[m.idx] = 10;
                 dispAmounts[m.idx] = m.despacho;
                 if (m.isPreingreso) {
