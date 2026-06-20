@@ -54,12 +54,47 @@ $numHasta = $semBase;
 $numDesde = $semBase - 4;   // 5 semanas: [base-4 .. base]
 
 /* ── Helpers (igual que pedido_sugerido_calcular.php) ────────────────── */
-function desviacionEstandarMuestra_SMM(array $valores): float {
+function calcularProyeccionWLS(array $valores): array {
     $n = count($valores);
-    if ($n <= 1) return 0.0;
-    $media   = array_sum($valores) / $n;
-    $varianza= array_sum(array_map(fn($v) => ($v - $media) ** 2, $valores)) / ($n - 1);
-    return sqrt($varianza);
+    if ($n === 0) return ['promedio' => 0.0, 'm' => 0.0, 'b' => 0.0, 'n' => 0];
+    if ($n === 1) return ['promedio' => max(0.0, (float)$valores[0]), 'm' => 0.0, 'b' => max(0.0, (float)$valores[0]), 'n' => 1];
+
+    $sum_w = 0.0;
+    $sum_wx = 0.0;
+    $sum_wy = 0.0;
+    $sum_wxx = 0.0;
+    $sum_wxy = 0.0;
+
+    foreach ($valores as $i => $y) {
+        $x = $i + 1;
+        $w = $x;
+        
+        $sum_w += $w;
+        $sum_wx += $w * $x;
+        $sum_wy += $w * $y;
+        $sum_wxx += $w * $x * $x;
+        $sum_wxy += $w * $x * $y;
+    }
+
+    $denominator = ($sum_w * $sum_wxx) - ($sum_wx * $sum_wx);
+    if (abs($denominator) < 0.0001) {
+        $prom = array_sum($valores) / $n;
+        return ['promedio' => $prom, 'm' => 0.0, 'b' => $prom, 'n' => $n];
+    }
+
+    $slope = (($sum_w * $sum_wxy) - ($sum_wx * $sum_wy)) / $denominator;
+    $intercept = ($sum_wy - $slope * $sum_wx) / $sum_w;
+
+    $w1 = max(0.0, $slope * ($n + 1) + $intercept);
+    $w2 = max(0.0, $slope * ($n + 2) + $intercept);
+    $w3 = max(0.0, $slope * ($n + 3) + $intercept);
+
+    return [
+        'promedio' => ($w1 + $w2 + $w3) / 3.0,
+        'm' => $slope,
+        'b' => $intercept,
+        'n' => $n
+    ];
 }
 
 function resolverFactorConv_SMM(int $o, int $d, array &$idx): ?float {
@@ -454,15 +489,19 @@ try {
 
     $nActiva   = $lastIdx - $firstIdx + 1;
     $valsActivo= array_slice($vals, $firstIdx, $nActiva);
-    $prom      = array_sum($valsActivo) / $nActiva;
-    $desv      = desviacionEstandarMuestra_SMM($valsActivo);
-    $semC      = $prom + $desv;
+    $wlsRes    = calcularProyeccionWLS($valsActivo);
+    $semC      = $wlsRes['promedio'];
+    $wls_m     = $wlsRes['m'];
+    $wls_b     = $wlsRes['b'];
+    $wls_n     = $wlsRes['n'];
+    
     $diaC      = ($semC * (1 + $adj)) / 7;
     $sMin      = $diaC * $dSM;
     $sMax      = $diaC * ($dC + $dD + $dSM);
 
     /* Factor congelados (cat B) — se aplica igual que en pedido_sugerido */
     $sMaxFinal = $sMax;
+    $facC = 1.0;
     if ($cat === 'B' && $capC !== null && $sMax > 0) {
         $facC      = min(1.0, $capC / $sMax);
         $sMaxFinal = $sMax * $facC;
@@ -482,6 +521,14 @@ try {
         'sem_hasta'       => $numHasta,
         'retrocedido'     => $retrocedido,
         'sem_actual'      => $semActual,
+        'wls_m'           => $wls_m,
+        'wls_b'           => $wls_b,
+        'wls_n'           => $wls_n,
+        'wls_last_fecha_fin' => $rDates['f2'],
+        'adj'             => $adj,
+        'dSM'             => $dSM,
+        'dC_plus_dD'      => $dC + $dD,
+        'facC'            => $facC,
     ]);
 
 } catch (Exception $e) {
