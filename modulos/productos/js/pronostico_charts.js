@@ -218,7 +218,6 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
     const t = res.totales_tipo;
     const invCorte = t.inv_inicial || 0;
     const invFin = t.inv_final || 0;
-    const semCorte = res.semana_corte;
     const pivotDate = res.fecha_inicio_corte;
     const invIniRango = res.inv_inicial_rango ?? null;
     const semAntRango = res.semana_ant_rango || 0;

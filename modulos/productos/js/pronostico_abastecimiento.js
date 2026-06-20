@@ -148,7 +148,7 @@ $(document).ready(() => {
 
             $(this).find('tr:not(.pa-tienda-sub)').each(function () {
                 const $row = $(this);
-                if ($row.hasClass('pa-no-data-row')) return;
+                if ($row.hasClass('pa-no-data-row') || $row.hasClass('pa-tienda-sub') || $row.hasClass('pa-chart-sub')) return;
 
                 const text = $row.find('.pa-prod-name').text().toLowerCase();
                 const isMatch = text.includes(term);
@@ -161,6 +161,7 @@ $(document).ready(() => {
                     const slotKey = $row.data('slot-key');
                     if (ppId && slotKey) {
                         $row.siblings(`.pa-tienda-sub[data-pp-id="${ppId}"][data-slot-key="${slotKey}"]`).removeClass('d-none-search');
+                        $row.siblings(`.pa-chart-sub[data-pp-id="${ppId}"][data-slot-key="${slotKey}"]`).removeClass('d-none-search');
                     }
                 } else {
                     $row.addClass('d-none-search');
@@ -169,6 +170,7 @@ $(document).ready(() => {
                     const slotKey = $row.data('slot-key');
                     if (ppId && slotKey) {
                         $row.siblings(`.pa-tienda-sub[data-pp-id="${ppId}"][data-slot-key="${slotKey}"]`).addClass('d-none-search');
+                        $row.siblings(`.pa-chart-sub[data-pp-id="${ppId}"][data-slot-key="${slotKey}"]`).addClass('d-none-search');
                     }
                 }
             });
