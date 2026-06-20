@@ -892,29 +892,6 @@ function renderGrafico(data) {
                 order: 1,
             });
         }
-
-        // ── LÍNEA DE STOCK MÍNIMO (Línea x Tienda cuando hay varias tiendas)
-        if (esLineaSuc && item.stock_min_suc) {
-            sucConTotal.forEach(({ suc, nombre, idx }) => {
-                const color = SUCURSAL_COLORS[idx % SUCURSAL_COLORS.length];
-                const valMin = item.stock_min_suc[suc] || 0;
-                if (valMin > 0) {
-                    datasets.push({
-                        label: `Stock Mín (${nombre}): ${formatNum(valMin)}`,
-                        data: labelsExtended.map(() => valMin),
-                        borderColor: color.border,
-                        borderWidth: 1.5,
-                        borderDash: [3, 6], // puntos/guiones muy finos
-                        pointRadius: 0,
-                        fill: false,
-                        tension: 0,
-                        type: 'line',
-                        order: 5, // por debajo de las líneas principales
-                    });
-                }
-            });
-        }
-
     } else {
         // ━━ Modo Total / Línea Total (1 línea con promedio y proyección) ━━
         const valores = semanasNros.map(n => round2(item.por_semana[n] || 0));
@@ -942,33 +919,13 @@ function renderGrafico(data) {
                 type: 'line',
             },
         ];
-
-        // ── LÍNEA DE STOCK MÍNIMO (modo Línea Total y Barras — siempre que haya valor)
-        // Se muestra en cualquier cantidad de sucursales cuando el modo es linea_total o barras
-        if ((esLineaTotal || modoGrafico === 'barras') && item.stock_min > 0) {
-            datasets.push({
-                label: `Stock Mín: ${formatNum(item.stock_min)} ${escHtml(item.unidad)}`,
-                data: labelsExtended.map(() => item.stock_min),  // ya cubre zona proyección
-                borderColor: '#e74c3c',
-                borderWidth: 2,
-                borderDash: [8, 4],
-                pointRadius: 0,
-                fill: false,
-                tension: 0,
-                type: 'line',
-                order: 5,
-                _stockMin: true,  // marca para excluir del null-padding
-            });
-        }
     }
 
 
     if (!esLineaSuc) {
         // Pad todos los datasets históricos con null para las 3 semanas proyectadas
-        // EXCEPCIÓN: datasets marcados con _stockMin ya tienen datos para toda la zona (labelsExtended)
         datasets.forEach(ds => {
             if (!Array.isArray(ds.data)) return;
-            if (ds._stockMin) return;  // ya cubre labelsExtended completo — no padear
             ds.data = [...ds.data, null, null, null];
             if (Array.isArray(ds.pointRadius)) {
                 ds.pointRadius = [...ds.pointRadius, 0, 0, 0];
@@ -1221,7 +1178,6 @@ function renderTablaProyeccion(data) {
                 <td><span class="badge bg-light text-dark border" style="font-size:.7rem">${escHtml(item.categoria_insumo || '—')}</span></td>
                 <td class="text-end">${formatNum(item.prom_semana)}</td>
                 <td class="text-end fw-bold" style="color:#0E544C">${Math.round(proy3Tbl).toLocaleString('es-NI')}</td>
-                <td class="text-end" style="color:#e67e22">${formatNum(item.stock_min)}</td>
                 <td class="text-end" style="color:#27ae60">${formatNum(item.stock_max)}</td>
                 <td class="text-end">
                     ${item.semana_pico_num ? `<span class="dc-semana-badge">Sem ${item.semana_pico_num}</span>` : '—'}

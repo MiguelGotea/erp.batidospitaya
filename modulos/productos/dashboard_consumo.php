@@ -601,7 +601,6 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                                 <th>Categoría</th>
                                                 <th class="text-end">Prom/Semana</th>
                                                 <th class="text-end">Proyec. 3 Sem.</th>
-                                                <th class="text-end">Stock Mín</th>
                                                 <th class="text-end">Stock Máx</th>
                                                 <th class="text-end">Semana Pico</th>
                                                 <th class="text-end">Semana Baja</th>
@@ -788,7 +787,7 @@ $puedeExportar = tienePermiso('dashboard_consumo_insumos', 'exportar_consumo', $
                                         </h6>
                                         <p class="small text-muted mb-0">
                                             Proyección calculada mediante regresión lineal ponderada (Mínimos Cuadrados Ponderados - WLS), lo que da mayor peso a la tendencia reciente para descontar inventario a una tasa plana constante.<br><br>
-                                            Incluye <strong>Stock Mínimo</strong> <code>((Consumo Diario × Días Mínimos) / Factor)</code> y <strong>Stock Máximo</strong> <code>(((Consumo Diario × Ciclo) + Stock Mín Base) / Factor)</code> recomendados, calculados dinámicamente según la logística de la tienda.
+                                            Incluye <strong>Stock Máximo</strong> <code>((Consumo Diario × Ciclo) / Factor)</code> recomendado, calculado dinámicamente según la logística de la tienda.
                                         </p>
                                     </div>
                                 </div>

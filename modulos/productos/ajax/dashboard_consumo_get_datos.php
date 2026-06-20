@@ -719,10 +719,8 @@ try {
         $n = count($consPorSem);
         $promSemana = $n > 0 ? $totalGeneral / $n : 0;
 
-        // ── Cálculo de Stock Mínimo y Máximo Profesional ──
-        $stockMinPorSucursal = [];
+        // ── Cálculo de Stock Máximo Profesional ──
         $stockMaxPorSucursal = [];
-        $stockMinTotalSum = 0;
         $stockMaxTotalSum = 0;
 
         foreach ($sucursalesPresentes as $suc) {
@@ -739,7 +737,6 @@ try {
 
             $nonZeroVals = array_filter($valsParaVentana, fn($v) => $v > 0);
             if (empty($nonZeroVals)) {
-                $stockMinPorSucursal[$suc] = 0;
                 $stockMaxPorSucursal[$suc] = 0;
                 continue;
             }
@@ -758,7 +755,6 @@ try {
             }
 
             if ($firstIdx === null) {
-                $stockMinPorSucursal[$suc] = 0;
                 $stockMaxPorSucursal[$suc] = 0;
                 continue;
             }
@@ -780,16 +776,14 @@ try {
             $ciclo = $cP ? (float) $cP['ciclo'] : 7;
 
             $diaC = ($semC * (1 + $adj)) / 7;
-            $sMin = $diaC * $dSM;
-            $sMax = ($diaC * $ciclo) + $sMin;
+            
+            // Stock Maximo: sin Stock Minimo
+            $sMax = ($diaC * $ciclo);
 
-            $valMin = round($sMin, 4);
             $valMax = round($sMax, 4);
 
-            $stockMinPorSucursal[$suc] = $valMin;
             $stockMaxPorSucursal[$suc] = $valMax;
 
-            $stockMinTotalSum += $valMin;
             $stockMaxTotalSum += $valMax;
         }
 
@@ -870,8 +864,6 @@ try {
             'total' => $totalGeneral,
             'prom_semana' => round($promSemana, $itemEsP1 ? 1 : 4),
             'proyeccion_3sem' => round($semC * 3, $itemEsP1 ? 1 : 4),
-            'stock_min' => round($stockMinTotalSum, 4),
-            'stock_min_suc' => $stockMinPorSucursal,
             'stock_max' => round($stockMaxTotalSum, 4),
             'stock_max_suc' => $stockMaxPorSucursal,
             'semana_pico_num' => $semanaPico,
