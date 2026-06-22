@@ -2765,146 +2765,178 @@ function renderChartKardex(res, stockMinVal, stockMaxFinalVal) {
     document.getElementById('bdChartWrap').classList.remove('d-none');
 }
 
-function cargarStockMinMaxKardex(idPP, semAnalisis) {
-    const KARDEX_AJAX = 'ajax/';
-    const semActual = parseInt($('#semanaActualNum').text()) || 0;
+async function cargarStockMinMaxKardex(idPP, semAnalisis) {
+    const semDesde = datosActuales._semDesde;
+    const semHasta = datosActuales._semHasta;
     const sucursalesSelec = SucPicker.getSelected();
-    const primeraSuc = sucursalesSelec.length > 0 ? sucursalesSelec[0] : '';
-    const fmtKardex = (v, d = 4) => v === null || v === undefined ? '—' : parseFloat(v).toLocaleString('es', { minimumFractionDigits: d, maximumFractionDigits: d });
+    const codSuc = sucursalesSelec.length > 0 ? sucursalesSelec[0] : '';
 
-    const fd = new FormData();
-    fd.append('id_pp', idPP);
-    fd.append('sem_analisis', semAnalisis);
-    fd.append('sem_actual', semActual);
-    if (primeraSuc) fd.append('cod_sucursal', primeraSuc);
+    if (!idPP || !codSuc) return;
 
-    fetch(KARDEX_AJAX + 'balance_inventario_get_stock_minmax.php', { method: 'POST', body: fd })
-        .then(r => r.json())
-        .then(res => {
-            if (!res.ok || (res.stock_minimo === null && res.stock_max_final === null)) return;
+    const fdP = new FormData();
+    fdP.append('semana_desde_num', semDesde);
+    fdP.append('semana_hasta_num', semHasta);
+    fdP.append('cod_sucursal', codSuc);
 
-            if (chartKardexExistencia) {
-                const n = chartKardexExistencia.data.labels.length;
-                chartKardexExistencia.data.datasets = chartKardexExistencia.data.datasets
-                    .filter(ds => !ds.label.includes('Stock Mín') && !ds.label.includes('Stock Máx Final'));
+    try {
+        const resPedido = await fetch('ajax/pedido_sugerido_calcular_v2.php', { method: 'POST', body: fdP }).then(r => r.json());
+        if (!resPedido.ok) return;
 
-                const allDays = chartKardexExistencia._allDays || [];
-                const dSM = res.dSM || 0;
-                const dC_plus_dD = res.dC_plus_dD || 0;
-                const facC = res.facC || 1.0;
-                const adj = res.adj || 0;
-                
-                // Obtenemos los parametros WLS dinámicos del item de dashboard (no del ajax estático)
-                let item_wls_n = res.wls_n || 0;
-                let item_wls_m = res.wls_m || 0;
-                let item_wls_b = res.wls_b || 0;
-                let item_wls_lff = res.wls_last_fecha_fin || '';
+        const prod = (resPedido.productos || []).find(p => String(p.id_pp) === String(idPP));
+        if (!prod) return;
 
-                if (datosActuales && datosActuales.consumo) {
-                    const item = datosActuales.consumo.find(c => c.id == idPP);
-                    if (item && item.wls_n > 0) {
-                        item_wls_n = item.wls_n;
-                        item_wls_m = item.wls_m;
-                        item_wls_b = item.wls_b;
-                        const idxFin = item.wls_first_idx + item.wls_n - 1;
-                        if (datosActuales.semanas && datosActuales.semanas[idxFin]) {
-                            item_wls_lff = datosActuales.semanas[idxFin].fecha_fin;
-                        }
-                    }
-                }
+        if (chartKardexExistencia) {
+            const n = chartKardexExistencia.data.labels.length;
+            chartKardexExistencia.data.datasets = chartKardexExistencia.data.datasets
+                .filter(ds => !ds.label.includes('Stock Mín') && !ds.label.includes('Stock Máx Final'));
 
-                const getDynamicCd = (fecha_str) => {
-                    let wls_x = item_wls_n;
-                    if (item_wls_lff) {
-                        const dF = new Date(item_wls_lff + 'T23:59:59');
-                        const dD = new Date(fecha_str + 'T12:00:00');
-                        const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
-                        const x_offset = Math.ceil(diffDays / 7);
-                        wls_x += x_offset;
-                    } else {
-                        wls_x += 1;
-                    }
-                    const semC = Math.max(0, (item_wls_m * wls_x) + item_wls_b);
-                    return (semC * (1 + adj)) / 7;
-                };
+            const allDays = chartKardexExistencia._allDays || [];
+            const dSM = prod.dias_stock_min || 0;
+            const adj = prod.ajuste_demanda || 0;
+            const df = prod.despacho_factor > 0 ? prod.despacho_factor : 1;
 
-                const minData = [];
-                const maxData = [];
-                
-                for (let i = 0; i < n; i++) {
-                    const day = allDays[i];
-                    if (!day) {
-                        minData.push(res.stock_minimo);
-                        maxData.push(res.stock_max_final);
-                        continue;
-                    }
-                    const cd = getDynamicCd(day);
-                    const sMin = cd * dSM;
-                    const sMax = (cd * dC_plus_dD) + sMin;
-                    const sMaxFinal = sMax * facC;
-                    
-                    minData.push(sMin);
-                    maxData.push(sMaxFinal);
-                }
+            let item_wls_n = prod.wls_n || 0;
+            let item_wls_m = prod.wls_m || 0;
+            let item_wls_b = prod.wls_b || 0;
+            let item_wls_lff = resPedido.wls_last_fecha_fin || '';
 
-                if (res.stock_minimo !== null) {
-                    chartKardexExistencia.data.datasets.push({
-                        label: 'Stock Mínimo *',
-                        data: minData,
-                        borderColor: '#f9a825',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        borderDash: [6, 4],
-                        pointRadius: 0,
-                        fill: false,
-                        tension: 0,
-                        stepped: true
-                    });
-                }
-                if (res.stock_max_final !== null) {
-                    chartKardexExistencia.data.datasets.push({
-                        label: 'Stock Máx Final *',
-                        data: maxData,
-                        borderColor: '#6d597a',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        borderDash: [6, 4],
-                        pointRadius: 0,
-                        fill: false,
-                        tension: 0,
-                        stepped: true
-                    });
-                }
-                chartKardexExistencia.update();
-
-                const badge = document.getElementById('bdChartStockBadge');
-                if (badge) {
-                    let parts = [];
-                    // Mostramos los valores base en el badge
-                    if (res.stock_minimo !== null) parts.push('Mín: Dinámico');
-                    if (res.stock_max_final !== null) parts.push('Máx: Dinámico');
-                    if (parts.length) {
-                        badge.textContent = '* ' + parts.join(' · ');
-                        badge.style.display = '';
-                        // Mostrar toggle si ya hay fecha de pronóstico seleccionada
-                        const fechaPron = ($('#kardexFechaPronostico').val() || '').trim();
-                        if (fechaPron) $('#labelTogglePronAbast').show();
+            if (datosActuales && datosActuales.consumo) {
+                const item = datosActuales.consumo.find(c => c.id == idPP);
+                if (item && item.wls_n > 0) {
+                    item_wls_n = item.wls_n;
+                    item_wls_m = item.wls_m;
+                    item_wls_b = item.wls_b;
+                    const idxFin = item.wls_first_idx + item.wls_n - 1;
+                    if (datosActuales.semanas && datosActuales.semanas[idxFin]) {
+                        item_wls_lff = datosActuales.semanas[idxFin].fecha_fin;
                     }
                 }
             }
 
-            const notaEl = document.getElementById('bdChartNota');
-            const notaTxt = document.getElementById('bdChartNotaText');
-            if (notaEl && notaTxt && res.retrocedido) {
-                notaTxt.textContent = `* Las líneas de Stock Mín y Máx se calculan con las semanas ${res.sem_desde}–${res.sem_hasta} ` +
-                    `(se retrocedió 1 semana desde la semana actual ${res.sem_actual} para usar solo semanas con datos completos de 7 días).`;
-                notaEl.style.display = '';
-            } else if (notaEl && notaTxt) {
-                notaTxt.textContent = `* Stock Mín y Máx calculados con semanas ${res.sem_desde}–${res.sem_hasta} (últimas 5 semanas completas).`;
-                notaEl.style.display = '';
+            const getDynamicCd = (fecha_str) => {
+                let wls_x = item_wls_n;
+                if (item_wls_lff) {
+                    const dF = new Date(item_wls_lff + 'T23:59:59');
+                    const dD = new Date(fecha_str + 'T12:00:00');
+                    const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
+                    const x_offset = Math.ceil(diffDays / 7);
+                    wls_x += x_offset;
+                } else {
+                    wls_x += 1;
+                }
+                const semC = Math.max(0, (item_wls_m * wls_x) + item_wls_b);
+                return semC / 7;
+            };
+
+            const calcularCicloSlot = (p, fechaStr) => {
+                const tipo = p.plan_tipo_frecuencia;
+                if (tipo === 'n_semanas') return (p.plan_intervalo_semanas || 1) * 7;
+                if (tipo === 'dias_semana') {
+                    let dias = Array.isArray(p.plan_dias_semana) ? p.plan_dias_semana.map(Number) : [];
+                    dias.sort((a, b) => a - b);
+                    const nDias = dias.length;
+                    if (nDias === 0) return 7;
+                    if (nDias === 1) return 7;
+                    const dt = new Date(fechaStr + 'T12:00:00');
+                    const dowJS = dt.getDay(); 
+                    const dowDispatch = (dowJS + 6) % 7;
+                    for (let d = 1; d <= 7; d++) {
+                        const next = (dowDispatch + d) % 7;
+                        if (dias.includes(next)) return d;
+                    }
+                    return 7 / nDias; 
+                }
+                return p.dias_ciclo || 7;
+            };
+
+            const calcularStockMaxSlot = (p, cicloSlot, cd_dinamico) => {
+                if (p.plan_tipo_frecuencia !== 'dias_semana') {
+                    return p.stock_max_final ?? 0;
+                }
+                const cd = cd_dinamico ?? 0;
+                const dSM_p = p.dias_stock_min ?? 0;
+                const df_p = p.despacho_factor > 0 ? p.despacho_factor : 1;
+                
+                const sMinUso = cd * dSM_p;
+                const sMaxUso = (cd * cicloSlot) + sMinUso;
+                
+                let ratio = 1;
+                if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
+                    ratio = (p.stock_max_final * df_p) / (p.stock_maximo * df_p);
+                }
+                return (sMaxUso * ratio) / df_p;
+            };
+
+            const minData = [];
+            const maxData = [];
+            
+            for (let i = 0; i < n; i++) {
+                const day = allDays[i];
+                if (!day) {
+                    minData.push(null);
+                    maxData.push(null);
+                    continue;
+                }
+                const cd = getDynamicCd(day);
+                const sMin = cd * dSM;
+                const cicloReal = calcularCicloSlot(prod, day);
+                const sMaxFinal = calcularStockMaxSlot(prod, cicloReal, cd) * df;
+                
+                minData.push(sMin);
+                maxData.push(sMaxFinal);
             }
-        })
-        .catch(() => { /* silencioso */ });
+
+            chartKardexExistencia.data.datasets.push({
+                label: 'Stock Mínimo *',
+                data: minData,
+                borderColor: '#f9a825',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                fill: false,
+                tension: 0,
+                stepped: true
+            });
+
+            chartKardexExistencia.data.datasets.push({
+                label: 'Stock Máx Final *',
+                data: maxData,
+                borderColor: '#6d597a',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                fill: false,
+                tension: 0,
+                stepped: true
+            });
+
+            chartKardexExistencia.update();
+
+            const badge = document.getElementById('bdChartStockBadge');
+            if (badge) {
+                let parts = [];
+                parts.push('Mín: Dinámico');
+                parts.push('Máx: Dinámico');
+                if (parts.length) {
+                    badge.textContent = '* ' + parts.join(' · ');
+                    badge.style.display = '';
+                    const fechaPron = ($('#kardexFechaPronostico').val() || '').trim();
+                    if (fechaPron) $('#labelTogglePronAbast').show();
+                }
+            }
+        }
+
+        const notaEl = document.getElementById('bdChartNota');
+        const notaTxt = document.getElementById('bdChartNotaText');
+        if (notaEl && notaTxt) {
+            notaTxt.textContent = `* Stock Mín y Máx calculados con semanas ${semDesde}–${semHasta} y ciclos de despacho logísticos.`;
+            notaEl.style.display = '';
+        }
+    } catch (e) {
+        console.error("Error cargarStockMinMaxKardex:", e);
+    }
 }
 
 /* ================================================================
