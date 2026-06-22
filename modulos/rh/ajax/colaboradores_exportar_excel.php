@@ -340,7 +340,7 @@ foreach ($datos as $row) {
     $fechaSalida   = !empty($row['fecha_salida']) && $row['fecha_salida'] !== '0000-00-00'
         ? date('d/m/Y', strtotime($row['fecha_salida'])) : '-';
 
-    $fechaVencSalud = !empty($row['fecha_vencimiento_salud']) && $row['fecha_vencimiento_salud'] !== '0000-00-00'
+    $fechaVencSalud = !empty($row['fecha_vencimiento_salud']) && strpos($row['fecha_vencimiento_salud'], '0000-00-00') === false
         ? date('d/m/Y', strtotime($row['fecha_vencimiento_salud'])) : '-';
 
     $cols = [
