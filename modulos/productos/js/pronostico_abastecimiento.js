@@ -940,7 +940,7 @@ function exportarPronosticoExcel() {
                 let productoNombre = p.nombre;
 
                 let pronosticoInv = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq.toFixed(2) : 'Sin datos';
-                if (window.pa_include_preingreso && preHoyPaq) pronosticoInv += ` (+${preHoyPaq.toFixed(2)})`;
+                let despachoEnCurso = window.pa_include_preingreso && preHoyPaq ? preHoyPaq.toFixed(2) : '0.00';
 
                 if (!currentAgendaData.isConsolidado) {
                     const rd = p._porRonda?.[slot.round] ?? {};
@@ -964,6 +964,7 @@ function exportarPronosticoExcel() {
                     "Stock Máx Ajustado": smfDisplay !== null && smfDisplay !== undefined ? parseFloat(smfDisplay).toFixed(2) : '',
                     "Inv. Teórico Ayer": invTeoricoAyerPaq !== null && invTeoricoAyerPaq !== undefined ? invTeoricoAyerPaq.toFixed(2) : '',
                     "Pronóstico Inventario": pronosticoInv,
+                    "Despacho en curso": despachoEnCurso,
                     "Despacho": despPron !== null ? despPron : '-'
                 });
 
@@ -980,7 +981,7 @@ function exportarPronosticoExcel() {
                         let sub_despPron = sub_stockD1Paq !== null ? Math.max(0, Math.ceil((sub_smfDisplay ?? 0) - sub_stockD1Paq)) : null;
 
                         let sub_pronosticoInv = sub_stockD1Paq !== null && sub_stockD1Paq !== undefined ? sub_stockD1Paq.toFixed(2) : 'Sin datos';
-                        if (window.pa_include_preingreso && td.preHoyPaq) sub_pronosticoInv += ` (+${td.preHoyPaq.toFixed(2)})`;
+                        let sub_despachoEnCurso = window.pa_include_preingreso && td.preHoyPaq ? td.preHoyPaq.toFixed(2) : '0.00';
 
                         let sub_cdDisplay = td.cd_dinamico !== null && td.cd_dinamico !== undefined ? td.cd_dinamico : (td.cons_semanal !== null && td.cons_semanal !== undefined ? (td.cons_semanal / 7) : null);
                         let sub_csDisplay = sub_cdDisplay !== null ? sub_cdDisplay * 7 : null;
@@ -998,6 +999,7 @@ function exportarPronosticoExcel() {
                             "Stock Máx Ajustado": sub_smfDisplay !== null && sub_smfDisplay !== undefined ? parseFloat(sub_smfDisplay).toFixed(2) : '',
                             "Inv. Teórico Ayer": td.invTeoricoAyerPaq !== null && td.invTeoricoAyerPaq !== undefined ? td.invTeoricoAyerPaq.toFixed(2) : '',
                             "Pronóstico Inventario": sub_pronosticoInv,
+                            "Despacho en curso": sub_despachoEnCurso,
                             "Despacho": sub_despPron !== null ? sub_despPron : '-'
                         });
                     });
@@ -1011,16 +1013,19 @@ function exportarPronosticoExcel() {
 
     // Auto-ajustar ancho de columnas
     const wscols = [
-        { wch: 18 }, // Fecha
+        { wch: 18 }, // Fecha de Despacho
         { wch: 25 }, // Grupo
         { wch: 40 }, // Producto
         { wch: 25 }, // Tienda
         { wch: 25 }, // Presentación de Despacho
         { wch: 15 }, // Consumo Diario
+        { wch: 15 }, // Consumo Semanal
         { wch: 15 }, // Stock Mín
         { wch: 15 }, // Stock Máx
         { wch: 18 }, // Stock Máx Ajustado
+        { wch: 18 }, // Inv. Teórico Ayer
         { wch: 25 }, // Pronóstico Inventario
+        { wch: 18 }, // Despacho en curso
         { wch: 15 }  // Despacho
     ];
     ws['!cols'] = wscols;
