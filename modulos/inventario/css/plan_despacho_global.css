@@ -499,11 +499,10 @@
 }
 
 .pdg-cal-cell.pdg-cal-despacho {
-    background: #ffffff;
+    background: rgba(81, 184, 172, .2);
     color: var(--pdg-green);
     border-radius: 6px;
-    border: 1px solid var(--pdg-green-lt);
-    box-shadow: 0 2px 6px rgba(14, 84, 76, .05);
+    border: 1px solid rgba(81, 184, 172, .4);
 }
 
 .pdg-cal-cell.pdg-cal-prep {
