@@ -968,16 +968,21 @@ function exportarPronosticoExcel() {
                         let sub_pronosticoInv = sub_stockD1Paq !== null && sub_stockD1Paq !== undefined ? sub_stockD1Paq.toFixed(2) : 'Sin datos';
                         if (window.pa_include_preingreso && td.preHoyPaq) sub_pronosticoInv += ` (+${td.preHoyPaq.toFixed(2)})`;
 
+                        let sub_cdDisplay = td.cd_dinamico !== null && td.cd_dinamico !== undefined ? td.cd_dinamico : (td.cons_semanal !== null && td.cons_semanal !== undefined ? (td.cons_semanal / 7) : null);
+                        let sub_csDisplay = sub_cdDisplay !== null ? sub_cdDisplay * 7 : null;
+
                         datosExportar.push({
                             "Fecha de Despacho": fecha,
                             "Grupo": PA_LABELS[cat] || cat,
                             "Producto": productoNombre,
                             "Tienda": td.nombre,
-                            "Presentación de Despacho": "-",
-                            "Consumo Diario": td.cons_semanal !== null && td.cons_semanal !== undefined ? parseFloat(td.cons_semanal / 7).toFixed(2) : '',
+                            "Presentación de Despacho": p.despacho_presentacion || p.unidad || '-',
+                            "Consumo Diario": sub_cdDisplay !== null ? sub_cdDisplay.toFixed(2) : '',
+                            "Consumo Semanal": sub_csDisplay !== null ? sub_csDisplay.toFixed(2) : '',
                             "Stock Mín": td.stock_minimo !== null && td.stock_minimo !== undefined ? parseFloat(td.stock_minimo).toFixed(2) : '',
                             "Stock Máx": sub_smDisplay !== null && sub_smDisplay !== undefined ? parseFloat(sub_smDisplay).toFixed(2) : '',
                             "Stock Máx Ajustado": sub_smfDisplay !== null && sub_smfDisplay !== undefined ? parseFloat(sub_smfDisplay).toFixed(2) : '',
+                            "Inv. Teórico Ayer": td.invTeoricoAyerPaq !== null && td.invTeoricoAyerPaq !== undefined ? td.invTeoricoAyerPaq.toFixed(2) : '',
                             "Pronóstico Inventario": sub_pronosticoInv,
                             "Despacho": sub_despPron !== null ? sub_despPron : '-'
                         });
