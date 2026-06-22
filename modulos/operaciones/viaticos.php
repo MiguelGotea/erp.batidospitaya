@@ -10,14 +10,9 @@ require_once '../../core/permissions/permissions.php';
 
 $usuario = obtenerUsuarioActual();
 $cargoUsuarioId = $usuario['CodNivelesCargos'];
-// Verificar acceso al módulo Operaciones (Codigo 11 para Jefe de Operaciones)
-verificarAccesoCargo([8, 16, 49]);
 
 // Verificar acceso al módulo
-if (!verificarAccesoCargo([8, 16, 49])) {
-    header('Location: ../index.php');
-    exit();
-}
+verificarPermisoORedireccionar('viaticos', 'vista', $cargoUsuarioId, '../index.php');
 
 // Obtenemos el cargo principal usando la función de funciones.php
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
@@ -38,7 +33,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'buscar_operarios' && isset($_G
     exit();
 }
 
-$esOperaciones = verificarAccesoCargo([11, 49]); // Jefe de Operaciones
+$puedeVerTodasSucursales = tienePermiso('viaticos', 'ver_todas_sucursales', $cargoUsuarioId);
 
 /**
  * Obtiene la sucursal principal asignada a un operario
@@ -411,13 +406,13 @@ $operarioSeleccionado = $_GET['operario'] ?? null;
 $viaticos = [];
 if ($fechaDesde && $fechaHasta) {
     // Para el jefe de operaciones, si no hay sucursal seleccionada, pasamos null
-    $sucursalParam = ($esOperaciones && empty($sucursalSeleccionada)) ? null : $sucursalSeleccionada;
+    $sucursalParam = ($puedeVerTodasSucursales && empty($sucursalSeleccionada)) ? null : $sucursalSeleccionada;
     $viaticos = obtenerViaticos($sucursalParam, $fechaDesde, $fechaHasta, $operarioSeleccionado);
 }
 
 // Obtener operarios activos para el formulario
 $operarios = [];
-if ($sucursalSeleccionada || ($esOperaciones && empty($sucursalSeleccionada))) {
+if ($sucursalSeleccionada || ($puedeVerTodasSucursales && empty($sucursalSeleccionada))) {
     $sucursalParam = $sucursalSeleccionada ?: null; // Si es "Todas las sucursales", pasa null
     $operarios = obtenerOperariosActivos($sucursalParam);
 }
@@ -427,7 +422,7 @@ $todosOperarios = obtenerTodosOperarios();
 
 // Funciones específicas para viáticos
 function obtenerViaticos($codSucursal, $fechaDesde, $fechaHasta, $codOperario = null) {
-    global $conn, $esOperaciones;
+    global $conn, $puedeVerTodasSucursales;
     
     try {
         // Obtener viáticos manuales (Alimentación y Transporte)
@@ -2044,7 +2039,7 @@ header {
                 <div class="filter-group">
                     <label for="sucursal">Sucursal</label>
                     <select id="sucursal" name="sucursal" onchange="actualizarFiltros()">
-                        <?php if (verificarAccesoCargo([8, 16, 49])): ?>
+                        <?php if (tienePermiso('viaticos', 'ver_todas_sucursales', $cargoUsuarioId)): ?>
                             <option value="" <?= empty($sucursalSeleccionada) ? 'selected' : '' ?>>Todas las sucursales</option>
                         <?php endif; ?>
                         <?php foreach ($sucursales as $sucursal): ?>
@@ -2092,14 +2087,14 @@ header {
                 </div>
                 
                 <div class="action-buttons">
-                    <?php if (verificarAccesoCargo([16, 49])): ?>
+                    <?php if (tienePermiso('viaticos', 'crear', $cargoUsuarioId)): ?>
                         <button type="button" onclick="mostrarModalNuevoViatico()" class="btn btn-success">
                             <i class="fas fa-plus"></i> Nuevo
                         </button>
                     <?php endif; ?>
                     
                     <?php if (!empty($viaticos)): ?>
-                        <?php if (verificarAccesoCargo([8, 16, 49])): ?>
+                        <?php if (tienePermiso('viaticos', 'exportar', $cargoUsuarioId)): ?>
                             <button style="display:none;" type="button" onclick="exportarNocturnosExcel()" class="btn btn-primary">
                                 <i class="fas fa-file-excel"></i> Exportar Nocturnos
                             </button>
@@ -2140,7 +2135,7 @@ header {
                             <th>Cantidad (C$)</th>
                             <th style="display:none;">Origen</th>
                             <th>Observaciones</th>
-                            <?php if (verificarAccesoCargo([8, 16, 49])): ?>
+                            <?php if (tienePermiso('viaticos', 'ver_fecha_pago', $cargoUsuarioId)): ?>
                                 <th>Fecha Pago Viático</th>
                             <?php endif; ?>
                             <th style="display:none;"></th>
@@ -2185,7 +2180,7 @@ header {
                                     ?>
                                 </td>
                                 
-                                <?php if (verificarAccesoCargo([8, 16, 49])): ?>
+                                <?php if (tienePermiso('viaticos', 'ver_fecha_pago', $cargoUsuarioId)): ?>
                                     <td><?= $viatico['fecha_pago'] ? formatoFechaCorta($viatico['fecha_pago']) : 'Pendiente' ?></td>
                                 <?php endif; ?>
                                 
@@ -2197,7 +2192,7 @@ header {
                                 </td>
                                 
                                 <td style="text-align: center; display:none;">
-                                    <?php if ($viatico['origen'] === 'Automático' && (verificarAccesoCargo([8, 49]))): ?>
+                                    <?php if ($viatico['origen'] === 'Automático' && (tienePermiso('viaticos', 'guardar_nocturno', $cargoUsuarioId))): ?>
                                         <button type="button" onclick="mostrarModalGuardarNocturno(
                                                 <?= $viatico['cod_operario'] ?>, 
                                                 '<?= htmlspecialchars($viatico['Nombre']) ?>', 
@@ -2213,7 +2208,7 @@ header {
                                             <i class="fas fa-save"></i>
                                         </button>
                                     <?php elseif ($viatico['origen'] === 'Manual'): ?>
-                                        <?php if (verificarAccesoCargo([11, 49])): ?>
+                                        <?php if (tienePermiso('viaticos', 'editar_eliminar_manual', $cargoUsuarioId)): ?>
                                             <button type="button" onclick="mostrarModalEditarViatico(
                                                     <?= (int)$viatico['id'] ?>, 
                                                     '<?= htmlspecialchars($viatico['Nombre'], ENT_QUOTES) ?>', 
@@ -2239,7 +2234,7 @@ header {
                                         <span class="badge badge-auto">Automático</span>
                                     <?php endif; ?>
                                     
-                                    <?php if ((verificarAccesoCargo([8, 49])) && $viatico['tipo'] !== 'Nocturno'): ?>
+                                    <?php if ((tienePermiso('viaticos', 'registrar_fecha_pago', $cargoUsuarioId)) && $viatico['tipo'] !== 'Nocturno'): ?>
                                         <button type="button" onclick="mostrarModalFechaPago(
                                             <?= (int)$viatico['id'] ?>,
                                             '<?= htmlspecialchars($viatico['Nombre'] . ' ' . $viatico['Apellido'], ENT_QUOTES) ?>',
@@ -2258,7 +2253,7 @@ header {
             <?php else: ?>
                 <div class="no-results">
                     <?php if ($fechaDesde && $fechaHasta): ?>
-                        <?php if (empty($sucursalSeleccionada) && $esOperaciones): ?>
+                        <?php if (empty($sucursalSeleccionada) && $puedeVerTodasSucursales): ?>
                             No se encontraron viáticos entre <?= formatoFechaCorta($fechaDesde) ?> y <?= formatoFechaCorta($fechaHasta) ?>.
                         <?php else: ?>
                             No se encontraron viáticos para <?= htmlspecialchars(obtenerNombreSucursal($sucursalSeleccionada)) ?> 
