@@ -510,6 +510,7 @@
     border-radius: 4px;
 }
 
+
 .pdg-cal-cell.pdg-cal-today-col {
     border: 1px solid var(--pdg-green-lt);
 }
