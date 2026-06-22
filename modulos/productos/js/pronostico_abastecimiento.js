@@ -529,15 +529,24 @@ function consolidarResultados(storeResults) {
                     const sMinRound = p._porRonda?.[slot.round]?.sMinSlot ?? p.stock_minimo ?? 0;
                     const smRound = p._porRonda?.[slot.round]?.smSlot ?? p.stock_maximo ?? 0;
                     const smfRound = p._porRonda?.[slot.round]?.smfSlot ?? p.stock_max_final ?? p.stock_maximo ?? 0;
-                    item._sMinTotal += sMinRound;
-                    item._smTotal += smRound;
-                    item._smfTotal += smfRound;
+                    const cdDinamicoRound = p._porRonda?.[slot.round]?.cd_dinamico !== undefined && p._porRonda?.[slot.round]?.cd_dinamico !== null ? p._porRonda?.[slot.round]?.cd_dinamico : ((p.cons_semanal ?? 0) / 7);
+
+                    item._sMinTotal = (item._sMinTotal ?? 0) + parseFloat(sMinRound.toFixed(2));
+                    item._smTotal = (item._smTotal ?? 0) + parseFloat(smRound.toFixed(2));
+                    item._smfTotal = (item._smfTotal ?? 0) + parseFloat(smfRound.toFixed(2));
+                    item._cdTotal = (item._cdTotal ?? 0) + parseFloat(cdDinamicoRound.toFixed(2));
+                    item._csTotal = (item._csTotal ?? 0) + parseFloat((cdDinamicoRound * 7).toFixed(2));
 
                     const rd = p._porRonda?.[slot.round] ?? {};
                     const sd = rd.stockD1Paq, pre = rd.preHoyPaq, invTA = rd.invTeoricoAyerPaq;
-                    if (sd !== null && sd !== undefined) item._stockD1Total = (item._stockD1Total ?? 0) + sd;
-                    if (pre !== null && pre !== undefined) item._preHoyTotal = (item._preHoyTotal ?? 0) + pre;
-                    if (invTA !== null && invTA !== undefined) item._invTeoricoAyerTotal = (item._invTeoricoAyerTotal ?? 0) + invTA;
+                    if (sd !== null && sd !== undefined) item._stockD1Total = (item._stockD1Total ?? 0) + parseFloat(sd.toFixed(2));
+                    if (pre !== null && pre !== undefined) item._preHoyTotal = (item._preHoyTotal ?? 0) + parseFloat(pre.toFixed(2));
+                    if (invTA !== null && invTA !== undefined) item._invTeoricoAyerTotal = (item._invTeoricoAyerTotal ?? 0) + parseFloat(invTA.toFixed(2));
+
+                    let stockD1Paq_sub = sd;
+                    if (window.pa_include_preingreso && stockD1Paq_sub !== null && pre) stockD1Paq_sub += pre;
+                    let sub_despPron = stockD1Paq_sub !== null ? Math.max(0, Math.ceil((smfRound ?? 0) - stockD1Paq_sub)) : 0;
+                    item._despTotal = (item._despTotal ?? 0) + sub_despPron;
 
                     item._porTienda[cod] = {
                         nombre: slot.nombre, round: slot.round,
@@ -672,15 +681,17 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     let rows = '';
 
     items.forEach(p => {
-        let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay, cdDisplay, invTeoricoAyerPaq;
+        let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay, cdDisplay, csDisplay, invTeoricoAyerPaq, despTotalConsolidado;
         if (isConsolidado) {
             stockD1Paq_base = p._stockD1Total;
             preHoyPaq = p._preHoyTotal;
             smfDisplay = p._smfTotal;
             smDisplay = p._smTotal;
             sMinDisplay = p._sMinTotal;
-            cdDisplay = p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null;
+            cdDisplay = p._cdTotal !== undefined ? p._cdTotal : null;
+            csDisplay = p._csTotal !== undefined ? p._csTotal : null;
             invTeoricoAyerPaq = p._invTeoricoAyerTotal;
+            despTotalConsolidado = p._despTotal;
         } else {
             const rd = p._porRonda?.[round] ?? {};
             stockD1Paq_base = rd.stockD1Paq;
@@ -692,14 +703,16 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
             invTeoricoAyerPaq = rd.invTeoricoAyerPaq;
         }
 
-        let csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
+        if (csDisplay === undefined) {
+            csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
+        }
 
         let stockD1Paq = stockD1Paq_base;
         if (window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq) {
             stockD1Paq += preHoyPaq;
         }
 
-        let despPron = stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null;
+        let despPron = isConsolidado ? despTotalConsolidado : (stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null);
 
         const smfRef = smfDisplay ?? 0;
         let stockHtml;
@@ -897,13 +910,17 @@ function exportarPronosticoExcel() {
 
             // Recorrer los items
             slot.items.forEach(p => {
-                let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay;
+                let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay, cdDisplay, csDisplay, invTeoricoAyerPaq, despTotalConsolidado;
                 if (currentAgendaData.isConsolidado) {
                     stockD1Paq_base = p._stockD1Total;
                     preHoyPaq = p._preHoyTotal;
                     smfDisplay = p._smfTotal;
                     smDisplay = p._smTotal;
                     sMinDisplay = p._sMinTotal;
+                    cdDisplay = p._cdTotal !== undefined ? p._cdTotal : null;
+                    csDisplay = p._csTotal !== undefined ? p._csTotal : null;
+                    invTeoricoAyerPaq = p._invTeoricoAyerTotal;
+                    despTotalConsolidado = p._despTotal;
                 } else {
                     const rd = p._porRonda?.[slot.round] ?? {};
                     stockD1Paq_base = rd.stockD1Paq;
@@ -918,24 +935,19 @@ function exportarPronosticoExcel() {
                     stockD1Paq += preHoyPaq;
                 }
 
-                let despPron = stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null;
+                let despPron = currentAgendaData.isConsolidado ? despTotalConsolidado : (stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null);
 
                 let productoNombre = p.nombre;
 
                 let pronosticoInv = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq.toFixed(2) : 'Sin datos';
                 if (window.pa_include_preingreso && preHoyPaq) pronosticoInv += ` (+${preHoyPaq.toFixed(2)})`;
 
-                let cdDisplay = null;
-                let invTeoricoAyerPaq = null;
-                if (currentAgendaData.isConsolidado) {
-                    cdDisplay = p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null;
-                    invTeoricoAyerPaq = p._invTeoricoAyerTotal;
-                } else {
+                if (!currentAgendaData.isConsolidado) {
                     const rd = p._porRonda?.[slot.round] ?? {};
                     cdDisplay = rd.cd_dinamico ?? (p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null);
+                    csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
                     invTeoricoAyerPaq = rd.invTeoricoAyerPaq;
                 }
-                let csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
 
                 let tiendaPrincipal = currentAgendaData.isConsolidado ? "Total" : (window.lastStoreResults ? Object.values(window.lastStoreResults)[0].nombre : "");
 
