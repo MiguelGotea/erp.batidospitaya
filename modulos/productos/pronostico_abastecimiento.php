@@ -29,7 +29,7 @@ try {
     $resSem = $stmtSem->fetch(PDO::FETCH_ASSOC);
     if ($resSem) {
         $semActual = (int) $resSem['numero_semana'];
-        $semDesdeDefault = $semActual - 6;
+        $semDesdeDefault = $semActual - 4;
         $semHastaDefault = $semActual;
     }
 } catch (Exception $e) { /* silencioso */
