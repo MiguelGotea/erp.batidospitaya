@@ -1100,7 +1100,9 @@ function confirmarFinalizarManual() {
             if (r.success) {
                 Swal.fire({ icon: 'success', title: '¡Completado!', text: 'Tarea finalizada correctamente', timer: 2000, showConfirmButton: false });
                 modalFinalizarTarea.hide();
-                cargarDatos();
+                $(`.item-card-row[data-id="${idItem}"]`).fadeOut(400, function() {
+                    $(this).remove();
+                });
             } else {
                 Swal.fire('Error', r.message, 'error');
             }
@@ -1130,7 +1132,9 @@ function cancelarItem(id, tipo) {
             success: function (r) {
                 if (r.success) {
                     Swal.fire({ icon: 'success', title: 'Cancelado', text: r.message, timer: 1800, showConfirmButton: false });
-                    cargarDatos();
+                    $(`.item-card-row[data-id="${id}"]`).fadeOut(400, function() {
+                        $(this).remove();
+                    });
                 } else {
                     Swal.fire('Error', r.message, 'error');
                 }
