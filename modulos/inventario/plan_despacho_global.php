@@ -52,14 +52,19 @@ $version = mt_rand(1, 10000);
                 <div id="mainLayout" style="display:none;" class="row g-3">
                     <!-- Panel lateral para sucursales -->
                     <div class="col-md-3 col-lg-2">
-                        <div class="list-group pdg-store-list" id="sucursalesList">
-                            <!-- Generado por JS -->
+                        <div class="w-100 h-100 position-relative" style="min-height: 250px;">
+                            <div class="pdg-sidebar-wrapper pdg-tab-content d-flex flex-column" style="padding: 1.25rem;">
+                                <h6 class="mb-3 fw-bold" style="color: var(--pdg-green);"><i class="bi bi-shop me-2"></i>Tiendas</h6>
+                                <div class="list-group pdg-store-list flex-grow-1" id="sucursalesList" style="overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+                                    <!-- Generado por JS -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <!-- Lista de categorias (Formulario) -->
-                    <div class="col-md-9 col-lg-10">
-                        <div class="pdg-tab-content h-100" id="contentSelectedStore">
+                    <div class="col-md-9 col-lg-10 d-flex flex-column">
+                        <div class="pdg-tab-content flex-grow-1" id="contentSelectedStore">
                             <!-- Generado por JS -->
                         </div>
                     </div>
@@ -67,7 +72,9 @@ $version = mt_rand(1, 10000);
 
                 <!-- Calendario Global full width -->
                 <div id="calendarContainer" class="mt-4" style="display:none;">
-                    <div id="globalCalendar"></div>
+                    <div class="pdg-tab-content" style="overflow-x: auto; padding: 1.25rem;">
+                        <div id="globalCalendar"></div>
+                    </div>
                 </div>
 
                 <!-- Estado vacío si no hay sucursales -->
