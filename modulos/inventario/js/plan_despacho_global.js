@@ -273,9 +273,9 @@ function renderGlobalCalendar() {
             if (storesDispatching.length > 0) {
                 cellCls = 'pdg-cal-despacho';
                 let tagsHtml = storesDispatching.map(storeName => {
-                    return `<span style="color: var(--pdg-green); font-size: 0.68rem; font-weight: 700; white-space: nowrap;" title="${storeName}">${storeName}</span>`;
-                }).join('<span style="color: rgba(14,84,76,.4); font-size: 0.68rem; margin-right: 2px;">,</span>');
-                cellTxt = `<div style="text-align: center; line-height: 1.2; padding: 2px 4px;">${tagsHtml}</div>`;
+                    return `<span style="color: var(--pdg-green); font-size: 0.68rem; font-weight: 700; word-break: break-word;" title="${storeName}">${storeName}</span>`;
+                }).join('<span style="color: rgba(14,84,76,.4); font-size: 0.68rem; margin-right: 2px;">,</span> ');
+                cellTxt = `<div style="text-align: center; line-height: 1.2; padding: 2px 2px; width: 100%; white-space: normal;">${tagsHtml}</div>`;
             }
 
             grid += `<div class="pdg-cal-cell ${cellCls} ${sep} ${todayCls}" style="flex-direction:column; justify-content:center;">${cellTxt}</div>`;
