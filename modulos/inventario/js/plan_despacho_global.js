@@ -272,12 +272,13 @@ function renderGlobalCalendar() {
             let cellTxt = '';
             if (storesDispatching.length > 0) {
                 cellCls = 'pdg-cal-despacho';
-                storesDispatching.forEach(storeName => {
-                    cellTxt += `<div style="background:#ffffff; border: 1px solid rgba(81,184,172,0.3); color: var(--pdg-green); border-radius:4px; margin:1px 0; padding:1px 4px; font-size:0.65rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${storeName}">${storeName}</div>`;
-                });
+                let tagsHtml = storesDispatching.map(storeName => {
+                    return `<span style="background: rgba(81,184,172,.2); color: var(--pdg-green); border-radius: 4px; padding: 1px 5px; font-size: 0.65rem; white-space: nowrap; font-weight: 600;" title="${storeName}">${storeName}</span>`;
+                }).join('');
+                cellTxt = `<div style="display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; align-content: flex-start; width: 100%;">${tagsHtml}</div>`;
             }
 
-            grid += `<div class="pdg-cal-cell ${cellCls} ${sep} ${todayCls}" style="flex-direction:column; justify-content:start; padding-top:2px;">${cellTxt}</div>`;
+            grid += `<div class="pdg-cal-cell ${cellCls} ${sep} ${todayCls}" style="flex-direction:column; justify-content:start; padding: 4px;">${cellTxt}</div>`;
         });
     });
 
