@@ -563,6 +563,11 @@ try {
         } else {
             $row['fecha_fin_display'] = null;
         }
+
+        // Limpiar fechas con valor cero o nulas para el certificado de salud
+        if (!empty($row['fecha_vencimiento_salud']) && strpos($row['fecha_vencimiento_salud'], '0000-00-00') !== false) {
+            $row['fecha_vencimiento_salud'] = null;
+        }
     }
 
     // Filtrar por porcentaje_llenado (post-proceso, porque se calcula en PHP)
