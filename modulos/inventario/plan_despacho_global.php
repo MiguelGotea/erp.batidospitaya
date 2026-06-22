@@ -40,28 +40,7 @@ $version = mt_rand(1, 10000);
 
             <div class="container-fluid p-3">
 
-                <!-- Encabezado informativo -->
-                <div class="pdg-header-card mb-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="pdg-header-icon">
-                            <i class="fas fa-truck-moving"></i>
-                        </div>
-                        <div>
-                            <h1 class="pdg-header-title">Plan de Despacho Global</h1>
-                            <p class="pdg-header-subtitle mb-0">
-                                Configura la frecuencia y días de despacho por categoría de insumo para cada sucursal.
-                                Los cambios afectan directamente el cálculo de inventario sugerido.
-                            </p>
-                        </div>
-                        <?php if (!$puedeEditar): ?>
-                        <div class="ms-auto">
-                            <span class="badge pdg-badge-readonly">
-                                <i class="bi bi-lock-fill me-1"></i> Solo lectura
-                            </span>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
+
 
                 <!-- Loader de sucursales -->
                 <div id="loaderSucursales" class="pdg-loader-main">
@@ -69,23 +48,26 @@ $version = mt_rand(1, 10000);
                     <p class="mt-3 text-muted small">Cargando sucursales…</p>
                 </div>
 
-                <!-- Contenedor de tabs por sucursal -->
-                <div id="sucursalesContainer" style="display:none;">
-
-                    <!-- Tabs nav -->
-                    <div class="card border-0 shadow-sm mb-0">
-                        <div class="card-body pb-0">
-                            <ul class="nav nav-tabs pdg-nav-tabs" id="sucursalesTabs" role="tablist">
-                                <!-- Generado por JS -->
-                            </ul>
+                <!-- Contenedor principal: Lista lateral + Formulario -->
+                <div id="mainLayout" style="display:none;" class="row g-3">
+                    <!-- Panel lateral para sucursales -->
+                    <div class="col-md-3 col-lg-2">
+                        <div class="list-group pdg-store-list" id="sucursalesList">
+                            <!-- Generado por JS -->
                         </div>
                     </div>
-
-                    <!-- Tabs content -->
-                    <div class="tab-content pdg-tab-content" id="sucursalesTabContent">
-                        <!-- Generado por JS -->
+                    
+                    <!-- Lista de categorias (Formulario) -->
+                    <div class="col-md-9 col-lg-10">
+                        <div class="pdg-tab-content h-100" id="contentSelectedStore">
+                            <!-- Generado por JS -->
+                        </div>
                     </div>
+                </div>
 
+                <!-- Calendario Global full width -->
+                <div id="calendarContainer" class="mt-4" style="display:none;">
+                    <div id="globalCalendar"></div>
                 </div>
 
                 <!-- Estado vacío si no hay sucursales -->

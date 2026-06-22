@@ -88,10 +88,30 @@
     box-shadow: 0 -2px 8px rgba(14,84,76,.08);
 }
 
+/* ── Store list lateral ── */
+.pdg-store-list .list-group-item {
+    border: none;
+    border-radius: 8px !important;
+    margin-bottom: 4px;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #495057;
+    transition: all .2s;
+}
+.pdg-store-list .list-group-item:hover {
+    background-color: rgba(81,184,172,.1);
+    color: var(--pdg-green);
+}
+.pdg-store-list .list-group-item.active {
+    background-color: var(--pdg-green);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(14,84,76,.2);
+}
+
 /* ── Tab content ── */
 .pdg-tab-content {
     background: var(--pdg-card-bg);
-    border-radius: 0 var(--pdg-radius) var(--pdg-radius) var(--pdg-radius);
+    border-radius: var(--pdg-radius);
     box-shadow: var(--pdg-shadow);
     padding: 1.75rem;
     border-top: var(--pdg-tab-h) solid var(--pdg-green-lt);

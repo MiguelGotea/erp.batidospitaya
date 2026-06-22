@@ -45,26 +45,12 @@ function toastErr(msg) {
    RENDER HTML
    ══════════════════════════════════════════════════════════ */
 
-function buildTabNav(suc, idx) {
+function buildStoreListItem(suc, idx) {
     const active = idx === 0 ? 'active' : '';
-    return `<li class="nav-item" role="presentation">
-        <button class="nav-link ${active}" id="tab-${suc.codigo}" data-bs-toggle="tab"
-            data-bs-target="#pane-${suc.codigo}" type="button" role="tab"
-            data-cod="${suc.codigo}">
-            <i class="bi bi-building me-1"></i>${suc.nombre}
-        </button>
-    </li>`;
-}
-
-function buildTabPane(suc, idx) {
-    const active = idx === 0 ? 'show active' : '';
-    return `<div class="tab-pane fade ${active}" id="pane-${suc.codigo}" role="tabpanel">
-        <div class="pdg-tab-loader" id="loader-${suc.codigo}">
-            <div class="spinner-border" role="status"></div>
-            <p class="mt-2 small">Cargando configuración…</p>
-        </div>
-        <div id="content-${suc.codigo}" style="display:none;"></div>
-    </div>`;
+    return `<button type="button" class="list-group-item list-group-item-action ${active}" 
+                data-cod="${suc.codigo}" id="store-${suc.codigo}">
+                <i class="bi bi-building me-2"></i>${suc.nombre}
+            </button>`;
 }
 
 
@@ -85,16 +71,12 @@ function buildCatRow(cod, cat, cfg) {
     const intervalo = cfg ? cfg.intervalo_semanas : 1;
     const dia = cfg ? cfg.dia_despacho : 1;
     const ancla = cfg && cfg.semana_ancla ? cfg.semana_ancla : '';
-    const prep = cfg ? cfg.dias_preparacion : 1;
-    const activo = cfg ? cfg.activo : 1;
     const diasSel = cfg ? (cfg.dias_semana || []) : [];
     const disabled = PUEDE_EDITAR ? '' : 'disabled';
     const showAncla = isNSem && intervalo > 1;
 
-    // Opcionalmente deshabilitar si inactivo
     const rowCls = [
-        cat === 'B' ? 'pdg-row-cat-b' : '',
-        activo ? '' : 'pdg-row-inactive'
+        cat === 'B' ? 'pdg-row-cat-b' : ''
     ].join(' ');
 
     const anclaTooltip = `Ingresa el número de semana de un despacho real ya ocurrido.<br>
@@ -159,27 +141,6 @@ function buildCatRow(cod, cat, cfg) {
             </div>
             <span class="pdg-dias-semana-fields text-muted small ${!isNSem ? '' : 'd-none'}">—</span>
         </td>
-        <!-- Preparación -->
-        <td style="width:80px; text-align:center;">
-            <input type="number" class="form-control form-control-sm text-center pdg-prep"
-                value="${prep}" min="0" max="30" ${disabled}>
-        </td>
-        <!-- Activo -->
-        <td style="text-align:center;">
-            <div class="form-check form-switch d-flex justify-content-center">
-                <input class="form-check-input pdg-activo" type="checkbox"
-                    ${activo ? 'checked' : ''} ${disabled}>
-            </div>
-        </td>
-        <!-- Guardar -->
-        <td style="text-align:center; white-space:nowrap;">
-            ${PUEDE_EDITAR
-            ? `<button class="btn-pdg-save btn-save-row" data-cat="${cat}">
-                       <i class="bi bi-floppy me-1"></i>Guardar
-                   </button>`
-            : '<span class="text-muted small">—</span>'
-        }
-        </td>
     </tr>`;
 }
 
@@ -226,16 +187,12 @@ function buildContent(cod, data) {
                         <th>Frecuencia</th>
                         <th>Día Despacho</th>
                         <th>Sem. Ancla <i class="bi bi-question-circle text-white-50 small"></i></th>
-                        <th style="width:80px;">Prep. (días)</th>
-                        <th style="width:70px;">Activo</th>
-                        <th style="width:100px;">Acción</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
         </div>
         ${buildCongeladorSection(capacidad_congelados)}
-        <div class="pdg-calendar-section" id="cal-${cod}"></div>
     </div>`;
 }
 
@@ -250,7 +207,7 @@ function getCurrentWeekNumber() {
     return Math.ceil((days + jan1.getDay() + 1) / 7);
 }
 
-function renderCalendar(cod, plan) {
+function renderGlobalCalendar() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const weekNow = getCurrentWeekNumber();
@@ -275,43 +232,58 @@ function renderCalendar(cod, plan) {
 
     // Filas por categoría
     Object.keys(PDG.CATEGORIAS).forEach(cat => {
-        const cfg = plan[cat];
         const info = PDG.CATEGORIAS[cat];
         grid += `<div class="pdg-cal-cat-label"><span class="pdg-badge-cat ${info.cls}" style="font-size:.68rem;padding:.15em .5em;">${cat}</span></div>`;
 
         datesArr.forEach(({ d, dow, weekNum }, i) => {
             const sep = dow === 0 && i > 0 ? 'pdg-cal-week-sep' : '';
             const todayCls = i === 0 ? 'pdg-cal-today-col' : '';
-            let cellCls = '', cellTxt = '';
+            let cellCls = '';
+            let storesDispatching = [];
 
-            if (cfg && cfg.activo) {
-                let isDespacho = false;
-                if (cfg.tipo_frecuencia === 'dias_semana') {
-                    isDespacho = Array.isArray(cfg.dias_semana) && cfg.dias_semana.includes(dow);
-                } else {
-                    const diaMach = cfg.dia_despacho === dow;
-                    let intervalMach = true;
-                    if (cfg.intervalo_semanas > 1 && cfg.semana_ancla) {
-                        intervalMach = (weekNum - cfg.semana_ancla) % cfg.intervalo_semanas === 0;
+            // Check which stores are dispatching this category today
+            PDG.sucursales.forEach(suc => {
+                const cod = suc.codigo;
+                const storeData = PDG.configCache[cod];
+                if (!storeData || !storeData.plan) return;
+                const cfg = storeData.plan[cat];
+                if (cfg && (cfg.activo || cfg.activo === undefined)) {
+                    let isDespacho = false;
+                    if (cfg.tipo_frecuencia === 'dias_semana') {
+                        let diasSemanaArr = [];
+                        try {
+                            diasSemanaArr = typeof cfg.dias_semana === 'string' ? JSON.parse(cfg.dias_semana) : cfg.dias_semana;
+                        } catch(e) {}
+                        isDespacho = Array.isArray(diasSemanaArr) && diasSemanaArr.includes(dow);
+                    } else {
+                        const diaMach = parseInt(cfg.dia_despacho) === dow;
+                        let intervalMach = true;
+                        if (parseInt(cfg.intervalo_semanas) > 1 && cfg.semana_ancla) {
+                            intervalMach = (weekNum - parseInt(cfg.semana_ancla)) % parseInt(cfg.intervalo_semanas) === 0;
+                        }
+                        isDespacho = diaMach && intervalMach;
                     }
-                    isDespacho = diaMach && intervalMach;
+                    if (isDespacho) {
+                        storesDispatching.push(suc.nombre);
+                    }
                 }
-                if (isDespacho) {
-                    cellCls = 'pdg-cal-despacho';
-                    cellTxt = '<i class="bi bi-truck-front-fill"></i>';
-                }
+            });
+
+            let cellTxt = '';
+            if (storesDispatching.length > 0) {
+                cellCls = 'pdg-cal-despacho';
+                storesDispatching.forEach(storeName => {
+                    cellTxt += `<div style="background:rgba(255,255,255,0.2); border-radius:3px; margin:1px 0; padding:1px 3px; font-size:0.65rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${storeName}">${storeName}</div>`;
+                });
             }
 
-            grid += `<div class="pdg-cal-cell ${cellCls} ${sep} ${todayCls}">${cellTxt}</div>`;
+            grid += `<div class="pdg-cal-cell ${cellCls} ${sep} ${todayCls}" style="flex-direction:column; justify-content:start; padding-top:2px;">${cellTxt}</div>`;
         });
     });
 
-    $(`#cal-${cod}`).html(`
+    $(`#globalCalendar`).html(`
         <div class="pdg-calendar-title">
-            <i class="bi bi-calendar3-week"></i> Vista previa — Próximos 14 días
-            <span class="text-muted fw-normal" style="font-size:.75rem;">
-                <i class="bi bi-truck-front-fill text-white bg-success rounded px-1"></i> = día de despacho
-            </span>
+            <i class="bi bi-calendar3-week"></i> Vista previa
         </div>
         <div class="pdg-calendar-grid">${grid}</div>
     `);
@@ -322,32 +294,29 @@ function renderCalendar(cod, plan) {
    ══════════════════════════════════════════════════════════ */
 
 function bindRowEvents(cod) {
-    const $ctx = $(`#content-${cod}`);
+    const $ctx = $(`#contentSelectedStore`);
 
     // Cambio de tipo (n_semanas ↔ dias_semana)
-    $ctx.on('change', '.pdg-tipo-radio', function () {
+    $ctx.off('change', '.pdg-tipo-radio').on('change', '.pdg-tipo-radio', function () {
         const $tr = $(this).closest('tr');
         const tipo = $(this).val();
         const isNSem = tipo === 'n_semanas';
         $tr.find('.pdg-n-semanas-fields').toggleClass('d-none', !isNSem);
         $tr.find('.pdg-dias-semana-fields').toggleClass('d-none', isNSem);
         updateAnclaVisibility($tr);
+        saveRow(cod, $tr.data('cat'));
     });
 
-    // Cambio intervalo → mostrar/ocultar ancla
-    $ctx.on('change', '.pdg-intervalo', function () {
-        updateAnclaVisibility($(this).closest('tr'));
-    });
-
-    // Toggle activo → estilo visual
-    $ctx.on('change', '.pdg-activo', function () {
-        $(this).closest('tr').toggleClass('pdg-row-inactive', !this.checked);
-    });
-
-    // Guardar por fila
-    $ctx.on('click', '.btn-save-row', function () {
-        const cat = $(this).data('cat');
-        saveRow(cod, cat, $(this));
+    // Auto-save on any other input/select change
+    $ctx.off('change', 'select, input[type="number"], input[type="text"], input[type="checkbox"]').on('change', 'select, input[type="number"], input[type="text"], input[type="checkbox"]', function() {
+        if ($(this).hasClass('pdg-tipo-radio')) return; // Handled above
+        const $tr = $(this).closest('tr');
+        if ($tr.length) {
+            const cat = $tr.data('cat');
+            if(cat) saveRow(cod, cat);
+        } else if ($(this).closest('.pdg-congelador-card').length) {
+            saveRow(cod, 'B'); // Guardar cat B si cambia el congelador
+        }
     });
 }
 
@@ -377,8 +346,8 @@ function collectRowData(cod, cat) {
         data.dias_semana = JSON.stringify(dias);
     }
 
-    data.dias_preparacion = $tr.find('.pdg-prep').val();
-    data.activo = $tr.find('.pdg-activo').is(':checked') ? 1 : 0;
+    data.dias_preparacion = 1; // Default
+    data.activo = 1; // Default
 
     // Cat B: capacidad congelador
     if (cat === 'B') {
@@ -389,9 +358,9 @@ function collectRowData(cod, cat) {
     return data;
 }
 
-function saveRow(cod, cat, $btn) {
+function saveRow(cod, cat) {
+    if (!PUEDE_EDITAR) return;
     const payload = collectRowData(cod, cat);
-    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
 
     $.ajax({
         url: PDG.AJAX_BASE + 'plan_despacho_save.php',
@@ -400,17 +369,23 @@ function saveRow(cod, cat, $btn) {
         dataType: 'json',
     }).done(function (res) {
         if (res.success) {
-            toastOk(res.message || 'Guardado correctamente.');
+            toastOk('Guardado.');
+            
             // Invalidar caché y re-render calendario
-            delete PDG.configCache[cod];
-            loadConfig(cod, true);
+            if (PDG.configCache[cod] && PDG.configCache[cod].plan) {
+                if (!PDG.configCache[cod].plan[cat]) PDG.configCache[cod].plan[cat] = {};
+                Object.assign(PDG.configCache[cod].plan[cat], payload);
+                if (cat === 'B') {
+                    PDG.configCache[cod].capacidad_congelados.paquetes = payload.capacidad_congelados_paquetes;
+                    PDG.configCache[cod].capacidad_congelados.obs = payload.capacidad_congelados_obs;
+                }
+            }
+            renderGlobalCalendar();
         } else {
             toastErr(res.message || 'Error al guardar.');
         }
     }).fail(function () {
         toastErr('Error de conexión al guardar.');
-    }).always(function () {
-        $btn.prop('disabled', false).html('<i class="bi bi-floppy me-1"></i>Guardar');
     });
 }
 
@@ -418,48 +393,51 @@ function saveRow(cod, cat, $btn) {
    CARGA DE DATOS
    ══════════════════════════════════════════════════════════ */
 
-function loadConfig(cod, calOnly) {
-    if (!calOnly) {
-        $(`#loader-${cod}`).show();
-        $(`#content-${cod}`).hide();
-    }
+function loadAllConfigs() {
+    const requests = PDG.sucursales.map(suc => {
+        return $.ajax({
+            url: PDG.AJAX_BASE + 'plan_despacho_get_config.php',
+            method: 'POST',
+            data: { cod_sucursal: suc.codigo },
+            dataType: 'json'
+        });
+    });
 
-    if (PDG.configCache[cod] && !calOnly) {
-        renderConfig(cod, PDG.configCache[cod]);
-        return;
-    }
-
-    $.ajax({
-        url: PDG.AJAX_BASE + 'plan_despacho_get_config.php',
-        method: 'POST',
-        data: { cod_sucursal: cod },
-        dataType: 'json',
-    }).done(function (res) {
-        if (res.success) {
-            PDG.configCache[cod] = res.data;
-            if (calOnly) {
-                renderCalendar(cod, res.data.plan);
-            } else {
-                renderConfig(cod, res.data);
+    Promise.allSettled(requests).then(results => {
+        results.forEach((res, index) => {
+            if(res.status === 'fulfilled' && res.value.success) {
+                const cod = PDG.sucursales[index].codigo;
+                PDG.configCache[cod] = res.value.data;
             }
-        } else {
-            toastErr('Error cargando datos: ' + (res.message || ''));
-            $(`#loader-${cod}`).html('<p class="text-danger small">Error cargando datos.</p>');
+        });
+        
+        if(PDG.sucursales.length > 0) {
+            selectStore(PDG.sucursales[0].codigo);
         }
-    }).fail(function () {
-        toastErr('Error de conexión.');
-        $(`#loader-${cod}`).html('<p class="text-danger small">Error de conexión.</p>');
+        
+        $('#calendarContainer').show();
+        renderGlobalCalendar();
     });
 }
 
+function selectStore(cod) {
+    $('.pdg-store-list .list-group-item').removeClass('active');
+    $(`#store-${cod}`).addClass('active');
+    
+    PDG.currentStore = cod;
+    
+    renderConfig(cod, PDG.configCache[cod]);
+}
+
 function renderConfig(cod, data) {
-    const $content = $(`#content-${cod}`);
-    $content.html(buildContent(cod, data));
-    $(`#loader-${cod}`).hide();
-    $content.show();
-    initTooltips(`#content-${cod}`);
-    bindRowEvents(cod);
-    renderCalendar(cod, data.plan);
+    const $content = $(`#contentSelectedStore`);
+    if(data) {
+        $content.html(buildContent(cod, data));
+        initTooltips($content);
+        bindRowEvents(cod);
+    } else {
+        $content.html('<p class="text-danger p-3">Error cargando configuración.</p>');
+    }
 }
 
 function loadSucursales() {
@@ -474,26 +452,22 @@ function loadSucursales() {
             return;
         }
         PDG.sucursales = res.data;
-        const $nav = $('#sucursalesTabs');
-        const $content = $('#sucursalesTabContent');
+        const $list = $('#sucursalesList');
+        $list.empty();
 
         res.data.forEach(function (suc, idx) {
-            $nav.append(buildTabNav(suc, idx));
-            $content.append(buildTabPane(suc, idx));
+            $list.append(buildStoreListItem(suc, idx));
         });
 
-        $('#sucursalesContainer').show();
+        $('#mainLayout').show();
 
-        // Cargar la primera pestaña
-        if (res.data.length > 0) {
-            loadConfig(res.data[0].codigo, false);
-        }
-
-        // Cargar al cambiar de tab (lazy)
-        $('#sucursalesTabs').on('shown.bs.tab', 'button[data-cod]', function () {
+        $list.on('click', '.list-group-item', function() {
             const cod = $(this).data('cod');
-            if (!PDG.configCache[cod]) loadConfig(cod, false);
+            selectStore(cod);
         });
+
+        loadAllConfigs();
+
     }).fail(function () {
         $('#loaderSucursales').hide();
         toastErr('No se pudo cargar la lista de sucursales.');
