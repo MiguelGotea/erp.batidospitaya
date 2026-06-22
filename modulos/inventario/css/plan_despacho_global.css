@@ -457,7 +457,7 @@
 
 .pdg-calendar-grid {
     display: grid;
-    grid-template-columns: auto repeat(14, 1fr);
+    grid-template-columns: auto repeat(14, minmax(0, 1fr));
     gap: 4px;
     font-size: .72rem;
     overflow-x: auto;
