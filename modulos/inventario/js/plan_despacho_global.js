@@ -273,7 +273,7 @@ function renderGlobalCalendar() {
             if (storesDispatching.length > 0) {
                 cellCls = 'pdg-cal-despacho';
                 storesDispatching.forEach(storeName => {
-                    cellTxt += `<div style="background:rgba(255,255,255,0.2); border-radius:3px; margin:1px 0; padding:1px 3px; font-size:0.65rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${storeName}">${storeName}</div>`;
+                    cellTxt += `<div style="background:#ffffff; border: 1px solid rgba(81,184,172,0.3); color: var(--pdg-green); border-radius:4px; margin:1px 0; padding:1px 4px; font-size:0.65rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${storeName}">${storeName}</div>`;
                 });
             }
 

@@ -103,9 +103,12 @@
     color: var(--pdg-green);
 }
 .pdg-store-list .list-group-item.active {
-    background-color: var(--pdg-green);
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(14,84,76,.2);
+    background-color: rgba(81,184,172,.15);
+    color: var(--pdg-green);
+    border-left: 4px solid var(--pdg-green);
+    border-radius: 4px 8px 8px 4px !important;
+    box-shadow: none;
+    font-weight: 700;
 }
 
 /* ── Tab content ── */
@@ -152,14 +155,17 @@
     font-size: .85rem;
 }
 .pdg-tabla thead th {
-    background: var(--pdg-green);
-    color: #fff;
-    padding: .65rem .9rem;
-    font-weight: 600;
+    background: #f4f8f7; /* Very light subtle green/gray */
+    color: var(--pdg-green);
+    padding: .8rem .9rem;
+    font-weight: 700;
     font-size: .78rem;
     text-transform: uppercase;
     letter-spacing: .5px;
-    border: 1px solid rgba(255,255,255,.1);
+    border-bottom: 2px solid rgba(14,84,76,.1);
+    border-top: none;
+    border-left: none;
+    border-right: none;
     vertical-align: middle;
     text-align: center;
     position: sticky;
@@ -367,10 +373,11 @@
 .pdg-calendar-grid {
     display: grid;
     grid-template-columns: auto repeat(14, 1fr);
-    gap: 3px;
+    gap: 4px;
     font-size: .72rem;
     overflow-x: auto;
-    min-width: 1200px;
+    width: 200%; /* Forces 14 days to take twice the space, leaving 7 visible */
+    min-width: 900px;
 }
 .pdg-cal-header {
     text-align: center;
@@ -401,11 +408,11 @@
     justify-content: center;
 }
 .pdg-cal-cell.pdg-cal-despacho {
-    background: var(--pdg-green);
-    color: #fff;
+    background: rgba(81,184,172,.2);
+    color: var(--pdg-green);
     font-weight: 700;
     border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(14,84,76,.3);
+    border: 1px solid rgba(81,184,172,.4);
 }
 .pdg-cal-cell.pdg-cal-prep {
     background: rgba(81,184,172,.2);
