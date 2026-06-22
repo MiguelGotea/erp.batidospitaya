@@ -935,10 +935,13 @@ function exportarPronosticoExcel() {
                 }
                 let csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
 
+                let tiendaPrincipal = currentAgendaData.isConsolidado ? "Total" : (window.lastStoreResults ? Object.values(window.lastStoreResults)[0].nombre : "");
+
                 datosExportar.push({
                     "Fecha de Despacho": fecha,
                     "Grupo": PA_LABELS[cat] || cat,
                     "Producto": productoNombre,
+                    "Tienda": tiendaPrincipal,
                     "Presentación de Despacho": p.despacho_presentacion || p.unidad || '-',
                     "Consumo Diario": cdDisplay !== null ? cdDisplay.toFixed(2) : '',
                     "Consumo Semanal": csDisplay !== null ? csDisplay.toFixed(2) : '',
@@ -968,7 +971,8 @@ function exportarPronosticoExcel() {
                         datosExportar.push({
                             "Fecha de Despacho": fecha,
                             "Grupo": PA_LABELS[cat] || cat,
-                            "Producto": `    - ${td.nombre}`, // Indentado
+                            "Producto": productoNombre,
+                            "Tienda": td.nombre,
                             "Presentación de Despacho": "-",
                             "Consumo Diario": td.cons_semanal !== null && td.cons_semanal !== undefined ? parseFloat(td.cons_semanal / 7).toFixed(2) : '',
                             "Stock Mín": td.stock_minimo !== null && td.stock_minimo !== undefined ? parseFloat(td.stock_minimo).toFixed(2) : '',
@@ -991,6 +995,7 @@ function exportarPronosticoExcel() {
         { wch: 18 }, // Fecha
         { wch: 25 }, // Grupo
         { wch: 40 }, // Producto
+        { wch: 25 }, // Tienda
         { wch: 25 }, // Presentación de Despacho
         { wch: 15 }, // Consumo Diario
         { wch: 15 }, // Stock Mín
