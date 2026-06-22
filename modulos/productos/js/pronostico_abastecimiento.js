@@ -897,18 +897,20 @@ function exportarPronosticoExcel() {
 
             // Recorrer los items
             slot.items.forEach(p => {
-                let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay;
+                let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay;
                 if (currentAgendaData.isConsolidado) {
                     stockD1Paq_base = p._stockD1Total;
                     preHoyPaq = p._preHoyTotal;
                     smfDisplay = p._smfTotal;
                     smDisplay = p._smTotal;
+                    sMinDisplay = p._sMinTotal;
                 } else {
                     const rd = p._porRonda?.[slot.round] ?? {};
                     stockD1Paq_base = rd.stockD1Paq;
                     preHoyPaq = rd.preHoyPaq;
                     smfDisplay = rd.smfSlot ?? p.stock_max_final;
                     smDisplay = rd.smSlot ?? p.stock_maximo;
+                    sMinDisplay = rd.sMinSlot ?? p.stock_minimo;
                 }
 
                 let stockD1Paq = stockD1Paq_base;
@@ -945,7 +947,7 @@ function exportarPronosticoExcel() {
                     "Presentación de Despacho": p.despacho_presentacion || p.unidad || '-',
                     "Consumo Diario": cdDisplay !== null ? cdDisplay.toFixed(2) : '',
                     "Consumo Semanal": csDisplay !== null ? csDisplay.toFixed(2) : '',
-                    "Stock Mín": p.stock_minimo !== null && p.stock_minimo !== undefined ? parseFloat(p.stock_minimo).toFixed(2) : '',
+                    "Stock Mín": sMinDisplay !== null && sMinDisplay !== undefined ? parseFloat(sMinDisplay).toFixed(2) : '',
                     "Stock Máx": smDisplay !== null && smDisplay !== undefined ? parseFloat(smDisplay).toFixed(2) : '',
                     "Stock Máx Ajustado": smfDisplay !== null && smfDisplay !== undefined ? parseFloat(smfDisplay).toFixed(2) : '',
                     "Inv. Teórico Ayer": invTeoricoAyerPaq !== null && invTeoricoAyerPaq !== undefined ? invTeoricoAyerPaq.toFixed(2) : '',
@@ -979,7 +981,7 @@ function exportarPronosticoExcel() {
                             "Presentación de Despacho": p.despacho_presentacion || p.unidad || '-',
                             "Consumo Diario": sub_cdDisplay !== null ? sub_cdDisplay.toFixed(2) : '',
                             "Consumo Semanal": sub_csDisplay !== null ? sub_csDisplay.toFixed(2) : '',
-                            "Stock Mín": td.stock_minimo !== null && td.stock_minimo !== undefined ? parseFloat(td.stock_minimo).toFixed(2) : '',
+                            "Stock Mín": (td.sMinSlot ?? td.stock_minimo) !== null && (td.sMinSlot ?? td.stock_minimo) !== undefined ? parseFloat(td.sMinSlot ?? td.stock_minimo).toFixed(2) : '',
                             "Stock Máx": sub_smDisplay !== null && sub_smDisplay !== undefined ? parseFloat(sub_smDisplay).toFixed(2) : '',
                             "Stock Máx Ajustado": sub_smfDisplay !== null && sub_smfDisplay !== undefined ? parseFloat(sub_smfDisplay).toFixed(2) : '',
                             "Inv. Teórico Ayer": td.invTeoricoAyerPaq !== null && td.invTeoricoAyerPaq !== undefined ? td.invTeoricoAyerPaq.toFixed(2) : '',
