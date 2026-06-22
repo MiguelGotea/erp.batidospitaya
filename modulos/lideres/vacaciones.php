@@ -1972,7 +1972,7 @@ function obtenerTiposFaltaConPorcentajes()
             });
 
             try {
-                const respuesta = await fetch(`http://${ipImpresora}:3000/imprimir`, {
+                const respuesta = await fetch(`https://${ipImpresora}:3000/imprimir`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ lineas }),

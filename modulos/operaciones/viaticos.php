@@ -486,6 +486,12 @@ function obtenerViaticosNocturnosAutomaticos($codSucursal, $fechaDesde, $fechaHa
                 o.Apellido,
                 o.Apellido2,
                 m.fecha,
+                -- HARDCODED: El horario 05:00-05:40 AM es el rango de turno madrugada que aplica
+                -- para viático diurno. Está definido en d.horario_mananero_viatico (BD) pero aún
+                -- no se usa dinámicamente — por ahora se compara con un literal de tiempo fijo.
+                -- HARDCODED: Solo la sucursal código 19 genera viáticos diurnos (turno mañanero).
+                -- Idealmente esto debería controlarse desde BD (ej. una columna en 'sucursales'
+                -- como 'aplica_viatico_diurno' o similar).
                 CASE 
                     WHEN (m.hora_ingreso BETWEEN '05:00:00' AND '05:40:00' OR m.hora_salida BETWEEN '05:00:00' AND '05:40:00')
                     AND s.codigo = 19 THEN 'Diurno'
@@ -530,7 +536,11 @@ function obtenerViaticosNocturnosAutomaticos($codSucursal, $fechaDesde, $fechaHa
                 AND m.sucursal_codigo = v.sucursal_codigo
             WHERE m.fecha BETWEEN ? AND ?
             AND (
-                -- Condiciones para viáticos nocturnos (horario después de las 20:00)
+                -- Condiciones para viáticos nocturnos
+                -- HARDCODED: El umbral '20:00:00' para clasificar un turno como nocturno está
+                -- literalizado aquí. La tabla 'departamentos' ya tiene la columna
+                -- 'horario_nocturno_viatico' pensada para esto, pero aún no se usa de forma
+                -- dinámica en este WHERE. Pendiente migrar a d.horario_nocturno_viatico.
                 (
                     d.viatico_nocturno IS NOT NULL
                     AND (
@@ -541,7 +551,10 @@ function obtenerViaticosNocturnosAutomaticos($codSucursal, $fechaDesde, $fechaHa
                     )
                 )
                 OR 
-                -- Condiciones para viáticos diurnos (sucursal 19, horario 5:00-5:40 AM)
+                -- Condiciones para viáticos diurnos
+                -- HARDCODED: El rango 05:00-05:40 AM y el código de sucursal 19 están
+                -- fijos aquí. Deberían leerse de BD (d.horario_mananero_viatico y una
+                -- columna que marque qué sucursales aplican turno mañanero).
                 (
                     s.codigo = 19 
                     AND d.viatico_diurno IS NOT NULL
@@ -552,7 +565,10 @@ function obtenerViaticosNocturnosAutomaticos($codSucursal, $fechaDesde, $fechaHa
                 )
             )
             AND (m.hora_ingreso IS NOT NULL OR m.hora_salida IS NOT NULL)
-            -- Excluir operarios cuya sucursal principal sea 6 o 18
+            -- HARDCODED: Los códigos de sucursal 6 y 18 están fijos para indicar que los
+            -- operarios asignados principalmente a esas sucursales NO reciben viáticos.
+            -- Debería controlarse con una columna en 'sucursales' como 'excluida_viaticos'
+            -- (tinyint, default 0) en lugar de listar IDs aquí.
             AND m.CodOperario NOT IN (
                 SELECT DISTINCT anc_ex.CodOperario
                 FROM AsignacionNivelesCargos anc_ex
@@ -580,6 +596,16 @@ function obtenerViaticosNocturnosAutomaticos($codSucursal, $fechaDesde, $fechaHa
         $resultados = $stmt->fetchAll();
         
         // FILTRAR POR REGLAS ESPECÍFICAS DE DEPARTAMENTO
+        // HARDCODED: La lógica de qué días aplica el viático por departamento está aquí
+        // directamente en PHP (y también duplicada en aplicaViaticoDepartamento() en funciones.php).
+        // Departamentos actuales:
+        //   - 1 (Managua):  aplica todos los días de la semana
+        //   - 3 (Masaya):   aplica todos los días de la semana
+        //   - 4 (Granada):  aplica solo jueves a domingo (días 4-7 de la semana ISO)
+        // Si se agrega un nuevo departamento con regla diferente, hay que editar el código.
+        // TODO: Migrar estas reglas de días a la BD, por ejemplo con columnas en 'departamentos':
+        //   'dias_semana_viatico' VARCHAR (ej: '1,2,3,4,5,6,7' = todos; '4,5,6,7' = jue-dom)
+        //   o una tabla auxiliar 'departamento_viatico_config' con detalle de días permitidos.
         $resultadosFiltrados = [];
         foreach ($resultados as $viatico) {
             $codDepartamento = $viatico['cod_departamento'];
@@ -593,6 +619,7 @@ function obtenerViaticosNocturnosAutomaticos($codSucursal, $fechaDesde, $fechaHa
             }
             
             // Para viáticos nocturnos, aplicar reglas por departamento
+            // HARDCODED: códigos de departamento 1, 3, 4 están literalizados
             if ($codDepartamento == 1 || $codDepartamento == 3) {
                 // Managua (1) y Masaya (3) - aplican todos los días
                 $resultadosFiltrados[] = $viatico;
@@ -619,7 +646,8 @@ function guardarViaticoAutomatico($codOperario, $fecha, $sucursalCodigo, $cantid
     try {
         // Para viáticos diurnos, validaciones diferentes
         if ($tipo === 'Diurno') {
-            // Solo sucursal 19 aplica para viáticos diurnos
+            // HARDCODED: Solo la sucursal código 19 puede tener viáticos diurnos (turno mañanero).
+            // Este control debería venir de una columna en BD, no de un código fijo.
             if ($sucursalCodigo != 19) {
                 throw new Exception("Los viáticos diurnos solo aplican para la sucursal 19");
             }
@@ -1079,7 +1107,9 @@ function obtenerMarcacionesNocturnasParaExcel($codSucursal, $fechaDesde, $fechaH
             )
             AND d.viatico_nocturno IS NOT NULL  -- Solo departamentos con viáticos
             AND (m.hora_ingreso IS NOT NULL OR m.hora_salida IS NOT NULL)
-            -- Excluir operarios cuya sucursal principal sea 6 o 18
+            -- HARDCODED: Los códigos de sucursal 6 y 18 están fijos para excluirlos del cálculo
+            -- de viáticos nocturnos en el Excel. Igual que en obtenerViaticosNocturnosAutomaticos().
+            -- Pendiente: reemplazar por una columna 'excluida_viaticos' en la tabla 'sucursales'.
             AND m.CodOperario NOT IN (
                 SELECT DISTINCT anc_ex.CodOperario
                 FROM AsignacionNivelesCargos anc_ex
@@ -1301,6 +1331,12 @@ function obtenerViaticosNocturnosBDParaExport($codSucursal, $fechaDesde, $fechaH
             JOIN sucursales s ON v.sucursal_codigo = s.codigo
             WHERE v.tipo IN ('Nocturno', 'Diurno')
             AND v.fecha BETWEEN ? AND ?
+            -- HARDCODED: La lista de sucursales permitidas para exportar viáticos está
+            -- literalizada con IDs fijos: 7, 9, 10, 11, 12, 13, 16, 19, 20, 22.
+            -- Esto representa las sucursales Managua/Masaya/Granada activas con viaticos.
+            -- Si se abre una nueva sucursal o se cierra una, hay que editar este código.
+            -- TODO: Reemplazar por: WHERE d.viatico_nocturno IS NOT NULL AND s.activa = 1
+            -- (y excluir las de la lista negra con 'excluida_viaticos = 0')
             AND s.codigo IN (7, 9, 10, 11, 12, 13, 16, 19, 20, 22)
         ";
         
@@ -1310,6 +1346,7 @@ function obtenerViaticosNocturnosBDParaExport($codSucursal, $fechaDesde, $fechaH
             $sql .= " AND v.sucursal_codigo = ?";
             $params[] = $codSucursal;
         } else {
+            // HARDCODED: misma lista fija sin filtro de sucursal seleccionada
             $sql .= " AND v.sucursal_codigo IN (7, 9, 10, 11, 12, 13, 16, 19, 20, 22)";
         }
         
