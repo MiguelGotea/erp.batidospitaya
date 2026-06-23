@@ -90,9 +90,8 @@ try {
     if (!$semInv) throw new Exception("Semana de inventario no válida.");
 
     /* ── 2. Configuración de porcentajes de la sucursal ───── */
-    $stmtConf = $conn->prepare("SELECT porcentaje_congelados, porcentaje_frescos FROM inventario_configuracion_sucursal WHERE cod_sucursal = ?");
-    $stmtConf->execute([$codSucursal]);
-    $configPct = $stmtConf->fetch(PDO::FETCH_ASSOC) ?: ['porcentaje_congelados' => 0, 'porcentaje_frescos' => 0];
+    // La herramienta original de porcentajes fue eliminada. Usamos 0 por defecto.
+    $configPct = ['porcentaje_congelados' => 0, 'porcentaje_frescos' => 0];
 
     /* ── 3. Logística sucursal ────────────────────────────── */
     $stmtLogSuc = $conn->prepare("SELECT dias_stock_minimo, capacidad_congelados FROM configuracion_logistica_sucursal WHERE cod_sucursal = ?");
