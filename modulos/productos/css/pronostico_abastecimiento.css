@@ -256,7 +256,6 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
 
 .pa-cat-card {
     border-radius: var(--neu-radius);
-    overflow: hidden;
     border: none;
     background: var(--neu-bg);
     box-shadow:
@@ -307,7 +306,7 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
 .pa-cat-g { background: var(--neu-bg); }
 
 /* ── Product table inside each cat card ── */
-.pa-table-wrap { overflow-x: auto; padding: 0 10px; }
+.pa-table-wrap { padding: 0 10px; }
 
 .pa-table {
     width: 100%;
@@ -317,7 +316,10 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
     color: var(--pa-text);
 }
 .pa-table thead th {
-    background: transparent;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--neu-bg);
     padding: 4px 10px 8px;
     font-size: 11px;
     font-weight: 700;
@@ -327,6 +329,8 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
     text-align: right;
     border-bottom: none;
     white-space: nowrap;
+    /* Sombra inferior sutil cuando es sticky */
+    box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 .pa-table thead th:first-child,
 .pa-table thead th:nth-child(2) { text-align: left; }
