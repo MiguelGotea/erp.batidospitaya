@@ -185,12 +185,13 @@ try {
 
     // Filtro de última fecha laborada (rango)
     if (isset($filtros['ultima_fecha_laborada']) && is_array($filtros['ultima_fecha_laborada'])) {
+        $subqueryUltimaFechaMarcacion = "(SELECT MAX(fecha) FROM marcaciones WHERE CodOperario = o.CodOperario AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL) AND fecha <= CURDATE())";
         if (!empty($filtros['ultima_fecha_laborada']['desde'])) {
-            $where[] = "m.fecha >= :ultima_fecha_desde";
+            $where[] = "$subqueryUltimaFechaMarcacion >= :ultima_fecha_desde";
             $params[':ultima_fecha_desde'] = $filtros['ultima_fecha_laborada']['desde'];
         }
         if (!empty($filtros['ultima_fecha_laborada']['hasta'])) {
-            $where[] = "m.fecha <= :ultima_fecha_hasta";
+            $where[] = "$subqueryUltimaFechaMarcacion <= :ultima_fecha_hasta";
             $params[':ultima_fecha_hasta'] = $filtros['ultima_fecha_laborada']['hasta'];
         }
     }
@@ -374,7 +375,8 @@ try {
             } elseif ($orden['columna'] === 'fecha_salida_ultimo') {
                 $orderClause = "ORDER BY (CASE WHEN uc.fecha_salida IS NULL OR uc.fecha_salida = '0000-00-00' THEN 1 ELSE 0 END) ASC, uc.fecha_salida $direccion";
             } elseif ($orden['columna'] === 'ultima_fecha_laborada') {
-                $orderClause = "ORDER BY m.fecha $direccion";
+                $subqueryUltimaFechaMarcacion = "(SELECT MAX(fecha) FROM marcaciones WHERE CodOperario = o.CodOperario AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL) AND fecha <= CURDATE())";
+                $orderClause = "ORDER BY $subqueryUltimaFechaMarcacion $direccion";
             } elseif ($orden['columna'] === 'tiempo_trabajado_dias') {
                 $orderClause = "ORDER BY tiempo_trabajado_dias $direccion";
             } elseif ($orden['columna'] === 'Cedula') {
@@ -406,14 +408,6 @@ try {
                 LIMIT 1
             )
         LEFT JOIN sucursales s ON uc.cod_sucursal_contrato = s.codigo
-        LEFT JOIN marcaciones m ON m.CodOperario = o.CodOperario 
-            AND m.fecha = (
-                SELECT MAX(fecha) 
-                FROM marcaciones 
-                WHERE CodOperario = o.CodOperario 
-                AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL)
-                AND fecha <= CURDATE()
-            )
         $whereClause
     ";
 
@@ -479,7 +473,7 @@ try {
             uc.inicio_contrato as fecha_inicio_ultimo_contrato,
             uc.fin_contrato as fecha_fin_ultimo_contrato,
             uc.fecha_salida as fecha_salida_ultimo,
-            m.fecha as ultima_fecha_laborada,
+            (SELECT MAX(fecha) FROM marcaciones WHERE CodOperario = o.CodOperario AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL) AND fecha <= CURDATE()) as ultima_fecha_laborada,
             DATEDIFF(
                 COALESCE(
                     uc.fecha_salida,
@@ -499,14 +493,6 @@ try {
                 WHERE cod_operario = o.CodOperario
             )
         LEFT JOIN sucursales s ON uc.cod_sucursal_contrato = s.codigo
-        LEFT JOIN marcaciones m ON m.CodOperario = o.CodOperario 
-            AND m.fecha = (
-                SELECT MAX(fecha) 
-                FROM marcaciones 
-                WHERE CodOperario = o.CodOperario 
-                AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL)
-                AND fecha <= CURDATE()
-            )
         $whereClause
         $orderClause
         LIMIT :offset, :limit
