@@ -267,7 +267,13 @@ async function calcularAgenda() {
     } catch (err) {
         console.error('calcularAgenda:', err);
         hideLoader(); showInicial();
-        Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo comunicar con el servidor.', confirmButtonColor: '#0ea5e9' });
+        const esPermiso = err.message && err.message.toLowerCase().includes('permiso');
+        Swal.fire({
+            icon: esPermiso ? 'warning' : 'error',
+            title: esPermiso ? 'Sin acceso' : 'Error de conexión',
+            text: err.message || 'No se pudo comunicar con el servidor.',
+            confirmButtonColor: '#0ea5e9'
+        });
     }
 }
 
@@ -280,7 +286,10 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
         fdP.append('cod_sucursal', codSuc);
 
         const resPedido = await fetch('ajax/pedido_sugerido_calcular_v2.php', { method: 'POST', body: fdP }).then(r => r.json());
-        if (!resPedido.ok) return null;
+        if (!resPedido.ok) {
+            // Lanzar error con mensaje del servidor para que calcularAgenda lo capture y muestre al usuario
+            throw new Error(resPedido.msg || 'Error al calcular el pedido sugerido.');
+        }
 
         const prodFiltrados = (resPedido.productos || []).filter(p => PA_GRUPOS.includes(p.categoria_insumo));
         if (!prodFiltrados.length) return null;

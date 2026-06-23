@@ -18,7 +18,10 @@ header('Content-Type: application/json; charset=utf-8');
 set_time_limit(0);
 
 $usuario = obtenerUsuarioActual();
-if (!tienePermiso('pedido_sugerido', 'vista', $usuario['CodNivelesCargos'])) {
+$cargo = $usuario['CodNivelesCargos'];
+// Este AJAX es reutilizado por pronostico_abastecimiento.php, por lo que
+// se acepta el permiso de cualquiera de los dos módulos.
+if (!tienePermiso('pedido_sugerido', 'vista', $cargo) && !tienePermiso('pronostico_abastecimiento', 'vista', $cargo)) {
     echo json_encode(['ok' => false, 'msg' => 'Sin permiso para calcular.']);
     exit();
 }

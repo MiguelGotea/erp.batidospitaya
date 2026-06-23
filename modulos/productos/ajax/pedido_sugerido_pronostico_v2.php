@@ -35,9 +35,11 @@ ini_set('memory_limit', '512M');
 
 $usuario = obtenerUsuarioActual();
 $cargo   = $usuario['CodNivelesCargos'];
-if (!tienePermiso('pedido_sugerido', 'vista', $cargo)) {
+// Este AJAX es reutilizado por pronostico_abastecimiento.php, por lo que
+// se acepta el permiso de cualquiera de los dos módulos.
+if (!tienePermiso('pedido_sugerido', 'vista', $cargo) && !tienePermiso('pronostico_abastecimiento', 'vista', $cargo)) {
     http_response_code(403);
-    echo json_encode(['ok' => false, 'msg' => 'Sin permiso']);
+    echo json_encode(['ok' => false, 'msg' => 'Sin permiso para calcular el pronóstico.']);
     exit();
 }
 
@@ -447,7 +449,6 @@ try {
         $diasProyRes[(string)$targetId] = $diasD1;
     }
 
-    file_put_contents(__DIR__ . '/../../../scratch/log_pronostico.txt', "STOCKS: " . json_encode($stocks) . "\n", FILE_APPEND);
     echo json_encode(['ok' => true, 'stocks' => $stocks, 'preingresos_hoy' => $preingresosHoyRes, 'dias_proy' => $diasProyRes], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
