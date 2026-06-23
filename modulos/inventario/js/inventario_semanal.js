@@ -150,11 +150,6 @@ function renderizarTabla(res, semInv) {
         const invPres = p._inv_pres !== null && p._inv_pres !== undefined ? p._inv_pres : '';
         const invUnid = p._inv_unidades !== null && p._inv_unidades !== undefined ? p._inv_unidades : '';
 
-        // Stock máximo final
-        const sMaxHtml = p.stock_max_final !== null
-            ? fmt(p.stock_max_final) + (p.es_ajustado ? ' <span class="badge bg-info text-dark" style="font-size:.65rem">Aj.</span>' : '')
-            : '<span class="text-muted small">Sin config.</span>';
-
         // Pedido sugerido
         const pedidoHtml = p.pedido_sugerido !== null
             ? (p.pedido_sugerido <= 0
@@ -167,27 +162,6 @@ function renderizarTabla(res, semInv) {
         const invPresNum = invPres !== '' ? parseFloat(invPres) : null;
 
 
-
-        // Stock pronóstico (antes de stock mínimo)
-        let pronHtml = '<span class="text-muted small">—</span>';
-        if (p._stock_pronostico !== null && p._stock_pronostico !== undefined) {
-            const pron = parseFloat(p._stock_pronostico);
-            const sMin = parseFloat(p._stock_min) || 0;
-            const sMax = parseFloat(p.stock_max_final) || 0;
-            let colorClass = '';
-            let icon = '';
-            if (sMin > 0 && pron < sMin) {
-                colorClass = 'text-danger fw-bold';
-                icon = '<i class="bi bi-exclamation-triangle-fill me-1" style="font-size:.7rem"></i>';
-            } else if (sMin > 0 && pron < sMin * 1.2) {
-                colorClass = 'text-warning fw-bold';
-                icon = '<i class="bi bi-dash-circle-fill me-1" style="font-size:.7rem"></i>';
-            } else {
-                colorClass = 'text-success fw-bold';
-                icon = '<i class="bi bi-check-circle-fill me-1" style="font-size:.7rem"></i>';
-            }
-            pronHtml = `<span class="${colorClass}">${icon}${fmt(pron)}</span>`;
-        }
 
         tbody.append(`
             <tr data-id="${idPP}" data-cat="${cat}"
@@ -207,9 +181,6 @@ function renderizarTabla(res, semInv) {
                 <td class="small text-muted">
                     ${p.despacho_nombre ? p.despacho_nombre : ''}
                 </td>
-                <td class="bg-light text-center" style="min-width:80px">${pronHtml}</td>
-                <td class="bg-light">${fmt(p._stock_min)}</td>
-                <td class="bg-light">${sMaxHtml}</td>
                 <td class="col-sug">${pedidoHtml}</td>
                 <td class="bg-highlight-p1">${p.p1 !== null ? fmt(p.p1) : '—'}</td>
                 <td class="bg-highlight-p2">${p.p2 !== null ? fmt(p.p2) : '—'}</td>

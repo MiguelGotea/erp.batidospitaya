@@ -104,22 +104,12 @@ $version = mt_rand(1, 10000);
                                 <tr>
                                     <th rowspan="2" style="width:18%;">Producto</th>
                                     <th colspan="4" class="th-inventario">INVENTARIO SEMANAL</th>
-                                    <th class="th-pronostico" rowspan="2"
-                                        title="Stock estimado al cierre de la semana de inventario, partiendo del inventario físico de la semana de corte">
-                                        <i class="bi bi-graph-up-arrow me-1"></i>Stock Final Pronóstico
-                                        <span id="labelCortePronostico" class="d-block fw-normal"
-                                            style="font-size:.65rem;opacity:.8"></span>
-                                    </th>
-                                    <th class="th-inventario">Stock Mínimo</th>
-                                    <th class="th-inventario">Stock Máximo (B)</th>
                                     <th class="th-pedido-sugerido">PEDIDO SUGERIDO (+B - A)</th>
                                     <th colspan="3" class="th-pedido-dia">PEDIDO SUGERIDO EN CADA DÍA DE DESPACHO</th>
                                 </tr>
                                 <tr>
                                     <th colspan="2" class="th-inventario">En Unidades</th>
                                     <th colspan="2" class="th-inventario">(A) En Presentación Envío</th>
-                                    <th class="th-inventario">Presentación de Envío</th>
-                                    <th class="th-inventario">Presentación de Envío</th>
                                     <th class="th-pedido-sugerido">Presentación de Envío</th>
                                     <th class="th-pedido-dia">PEDIDO 1 (Si es quincenal solo 1 pedido)</th>
                                     <th class="th-pedido-dia">PEDIDO 2</th>
