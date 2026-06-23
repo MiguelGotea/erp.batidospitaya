@@ -492,7 +492,18 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     const semC_ronda = Math.max(0, (wls_m * wls_x) + wls_b);
                     const cd = semC_ronda / 7;
 
-                    const maximos = calcularStockMaxSlot(p, ciclo, cd);
+                    const dSM = p.dias_stock_min ?? 0;
+                    const sMinUso = cd * dSM;
+                    const sMaxUso = (cd * ciclo) + sMinUso;
+                    let ratio = 1;
+                    if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
+                        ratio = (p.stock_max_final * df) / (p.stock_maximo * df);
+                    }
+                    const maximos = {
+                        smSlot: sMaxUso / df,
+                        smfSlot: (sMaxUso * ratio) / df,
+                        sMinSlot: sMinUso / df
+                    };
 
                     const su = stockRonda1[String(p.id_pp)];
                     const invTeoricoAyerPaq = (su !== null && su !== undefined) ? (su / df) : null;
