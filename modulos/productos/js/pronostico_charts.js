@@ -47,7 +47,12 @@ window.cargarGraficasParaFila = async function (ppId, sk, sucursal, semDesde, se
     // Calcular fecha pronóstico: fecha despacho + cicloSlot
     const d = new Date(fechaDespacho + 'T12:00:00');
     d.setDate(d.getDate() + Math.round(cicloSlot));
-    const fechaPronostico = d.toISOString().split('T')[0];
+    let fechaPronostico = d.toISOString().split('T')[0];
+    if (sk && sk.endsWith('-HOY')) {
+        const ayer = new Date();
+        ayer.setDate(ayer.getDate() - 1);
+        fechaPronostico = ayer.toISOString().split('T')[0];
+    }
 
     // Mostrar loaders o placeholders opcionalmente
     // 1. Cargar datos de consumo si no están en caché
@@ -264,7 +269,15 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
     const ayerDate = new Date(hoy);
     ayerDate.setDate(ayerDate.getDate() - 1);
     const ayerStr = ayerDate.toISOString().split('T')[0];
-    const semanaActualIncompleta = allDays[allDays.length - 1] > ayerStr;
+
+    const isHoyAudit = typeof sk === 'string' && sk.endsWith('-HOY');
+    if (isHoyAudit) {
+        while (allDays.length > 0 && allDays[allDays.length - 1] > ayerStr) {
+            allDays.pop();
+        }
+    }
+
+    const semanaActualIncompleta = allDays.length > 0 && allDays[allDays.length - 1] > ayerStr;
 
     let originalRangeLen;
     if (semanaActualIncompleta) {

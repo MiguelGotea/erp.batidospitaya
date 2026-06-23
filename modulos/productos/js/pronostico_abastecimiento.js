@@ -759,7 +759,7 @@ function buildCatsHtml(cats, isConsolidado, fecha, isHoy = false) {
             badgeB = `<span class="pa-round-badge" style="margin-left:auto; background:rgba(14,165,233,0.1); color:#0ea5e9; font-size:13px; font-weight:800; padding:4px 12px;">Total Despacho: ${totalDespacho}</span>`;
         }
 
-        const slotKey = `${fecha.replace(/-/g, '')}-${cat}`;
+        const slotKey = `${fecha.replace(/-/g, '')}-${cat}${isHoy ? '-HOY' : ''}`;
         html += `
         <div class="pa-cat-card pa-cat-${cat.toLowerCase()}">
             <div class="pa-cat-header">
