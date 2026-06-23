@@ -1,4 +1,4 @@
-﻿C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\almacen\index.php
+C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\almacen\index.php
 C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\atencioncliente\cliente_gestion.php
 C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\atencioncliente\cumpleanos_clientes.php
 C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\atencioncliente\historial_clientes.php
@@ -50,7 +50,6 @@ C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modul
 C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\productos\configuracion_logistica.php
 C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\productos\dashboard_consumo.php
 C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\productos\historial_unidades_conversion.php
-C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\productos\pedido_sugerido.php
 C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\productos\productos_maestro_gestion.php
 C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\productos\producto_presentacion_gestion.php
 C:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com\modulos\productos\registro_producto_global.php
