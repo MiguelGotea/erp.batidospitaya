@@ -216,6 +216,51 @@ function calcularDiasPreparacion(?array $planCat): ?float {
 }
 
 /**
+ * Verifica si hoy es un día de despacho configurado en el plan.
+ *
+ * @param array|null $planCat   Fila de plan_despacho_sucursal
+ * @param string     $hoy      Fecha actual 'Y-m-d'
+ * @param PDO        $conn     Conexión BD (para consultar SemanasSistema)
+ * @return bool                True si hoy es día de despacho
+ */
+function hoyEsDespacho(?array $planCat, string $hoy, PDO $conn): bool {
+    if (!$planCat || !($planCat['activo'] ?? 0)) return false;
+
+    $tipo = $planCat['tipo_frecuencia'];
+    if ($tipo === 'dias_semana') {
+        $diasSemana = $planCat['dias_semana'];
+        if (is_string($diasSemana)) $diasSemana = json_decode($diasSemana, true);
+        if (empty($diasSemana)) return false;
+        $hoyDow = (int)date('N', strtotime($hoy)) - 1;
+        return in_array($hoyDow, $diasSemana);
+    }
+
+    if ($tipo === 'n_semanas') {
+        $intervalo = (int)($planCat['intervalo_semanas'] ?? 1);
+        $diaFijo   = (int)($planCat['dia_despacho']     ?? 0); // 0=Lun,...,6=Dom
+        $semAncla  = (int)($planCat['semana_ancla']     ?? 0);
+        
+        $hoyDow = (int)date('N', strtotime($hoy)) - 1;
+        if ($hoyDow !== $diaFijo) return false;
+
+        $stmtSem = $conn->prepare("
+            SELECT numero_semana
+            FROM SemanasSistema
+            WHERE ? BETWEEN fecha_inicio AND fecha_fin
+            LIMIT 1
+        ");
+        $stmtSem->execute([$hoy]);
+        $semActual = (int)($stmtSem->fetchColumn() ?: 0);
+        if (!$semActual) return false;
+
+        $delta = ($semActual - $semAncla) % $intervalo;
+        if ($delta < 0) $delta += $intervalo;
+        return $delta === 0;
+    }
+    return false;
+}
+
+/**
  * Calcula la fecha del próximo despacho para una categoría.
  *
  * @param array|null $planCat   Fila de plan_despacho_sucursal
@@ -733,6 +778,7 @@ try {
             'plan_tipo_frecuencia'    => $planCat ? $planCat['tipo_frecuencia']  : null,
             'plan_dias_semana'        => $planCat ? (is_string($planCat['dias_semana']) ? json_decode($planCat['dias_semana'], true) : $planCat['dias_semana']) : null,
             'plan_intervalo_semanas'  => $planCat ? (int)($planCat['intervalo_semanas'] ?? 1) : null,
+            'hoy_es_despacho'         => hoyEsDespacho($planCat, $hoy, $conn),
             '_tc' => $cP !== null
         ];
     }

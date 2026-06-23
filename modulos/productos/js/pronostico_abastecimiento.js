@@ -131,7 +131,7 @@ $(document).ready(() => {
                 currentAgendaData.agendaMap = cons.agendaMap;
             }
 
-            renderAgenda(currentAgendaData.agendaMap, currentAgendaData.fechasOrdenadas, currentAgendaData.sinPlan, currentAgendaData.isConsolidado, currentAgendaData.nTiendas);
+            renderAgenda(currentAgendaData.agendaMap, currentAgendaData.fechasOrdenadas, currentAgendaData.sinPlan, currentAgendaData.isConsolidado, currentAgendaData.nTiendas, currentAgendaData.hoyData);
             $('#pa-search-producto').trigger('input');
         }
     });
@@ -260,8 +260,8 @@ async function calcularAgenda() {
             const datos = await calcularDatosParaSucursal(semDesde, semHasta, semCorte, sucursal);
             if (!datos) return;
             window.lastStoreResults = { [sucursal]: { ...datos, nombre: $('#pa-sucursal option:selected').text(), codigo: sucursal } };
-            currentAgendaData = { agendaMap: datos.agendaMap, fechasOrdenadas: datos.fechasOrdenadas, sinPlan: datos.sinPlan, isConsolidado: false, nTiendas: 1 };
-            renderAgenda(datos.agendaMap, datos.fechasOrdenadas, datos.sinPlan, false);
+            currentAgendaData = { agendaMap: datos.agendaMap, fechasOrdenadas: datos.fechasOrdenadas, sinPlan: datos.sinPlan, isConsolidado: false, nTiendas: 1, hoyData: datos.hoyData };
+            renderAgenda(datos.agendaMap, datos.fechasOrdenadas, datos.sinPlan, false, 1, datos.hoyData);
             showDatos();
         }
     } catch (err) {
@@ -312,12 +312,21 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
 
         const limit = limitStr();
         const agendaMap = {};
+        const hoyMap = {};
+        const todayD = todayStr();
+        let hasHoy = false;
 
         // ─── Construir el agendaMap con ciclo real por ronda ─────────────
         // Para dias_semana cada despacho puede tener un ciclo distinto (ej: Lun=3d, Mié=4d).
         // calcularCicloSlot() computa los días reales desde la fecha concreta del despacho
         // hasta el siguiente, de modo que el stock_max_final varía entre rondas.
         Object.entries(conPlan).forEach(([cat, items]) => {
+            if (items[0] && items[0].hoy_es_despacho) {
+                const cicloHoy = calcularCicloSlot(items[0], todayD);
+                hoyMap[cat] = { items, round: 0, cicloSlot: cicloHoy };
+                hasHoy = true;
+            }
+
             let cur = items[0].fecha_proximo_despacho;
             let round = 1;
             while (cur <= limit) {
@@ -459,7 +468,61 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
             });
         });
 
-        return { agendaMap, fechasOrdenadas, sinPlan };
+        // Cálculos para HOY (Auditoría) si aplica
+        let hoyData = null;
+        if (hasHoy) {
+            hoyData = {};
+            Object.entries(hoyMap).forEach(([cat, slot]) => {
+                slot.items.forEach(p => {
+                    const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
+                    const ciclo = slot.cicloSlot;
+
+                    const wls_m = p.wls_m ?? 0;
+                    const wls_b = p.wls_b ?? 0;
+                    let wls_x = p.wls_n ?? 0;
+                    if (resPedido.wls_last_fecha_fin) {
+                        const dF = new Date(resPedido.wls_last_fecha_fin + 'T23:59:59');
+                        const dD = new Date(todayD + 'T12:00:00');
+                        const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
+                        const x_offset = Math.ceil(diffDays / 7);
+                        wls_x += x_offset;
+                    } else {
+                        wls_x = Math.floor(p._current_wls_x || (p.wls_n ?? 0) + 1);
+                    }
+                    const semC_ronda = Math.max(0, (wls_m * wls_x) + wls_b);
+                    const cd = semC_ronda / 7;
+
+                    const maximos = calcularStockMaxSlot(p, ciclo, cd);
+
+                    const su = stockRonda1[String(p.id_pp)];
+                    const invTeoricoAyerPaq = (su !== null && su !== undefined) ? (su / df) : null;
+                    const ph = preingresosHoy[String(p.id_pp)];
+                    const preHoyPaq = (ph !== null && ph !== undefined && ph > 0) ? (ph / df) : 0;
+
+                    const stockD1Paq = invTeoricoAyerPaq; // Exactly yesterday's theoretical stock (no future projection)
+                    const smfSlot = maximos.smfSlot;
+                    
+                    const despRealPaq = stockD1Paq !== null ? Math.max(0, Math.ceil((smfSlot ?? 0) - stockD1Paq)) : null;
+
+                    if (!p._porRonda) p._porRonda = {};
+                    p._porRonda[0] = {
+                        stockD1Paq,
+                        preHoyPaq,
+                        invTeoricoAyerPaq,
+                        smSlot: maximos.smSlot,
+                        smfSlot,
+                        sMinSlot: maximos.sMinSlot,
+                        cd_dinamico: cd,
+                        ciclo: ciclo,
+                        despPron: despRealPaq,
+                        stockPostDespachoPaq: null // Not tracked for history
+                    };
+                });
+                hoyData[cat] = slot;
+            });
+        }
+
+        return { agendaMap, fechasOrdenadas, sinPlan, hoyData };
     } catch (err) {
         console.warn(`calcularDatosParaSucursal(${codSuc}):`, err);
         return null;
@@ -580,7 +643,7 @@ function consolidarResultados(storeResults) {
     return { agendaMap, fechasOrdenadas: fechasOrdenadas.filter(f => agendaMap[f]), sinPlan };
 }
 
-function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false, nTiendas = 1) {
+function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false, nTiendas = 1, hoyData = null) {
     const $w = $('#pa-warnings').empty();
     const spk = Object.keys(sinPlan);
     if (spk.length) {
@@ -591,6 +654,25 @@ function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false
     }
 
     let html = '';
+
+    if (hoyData && !isConsolidado) {
+        const todayStrVal = todayStr();
+        const info = formatDateHeader(todayStrVal);
+        html += `
+        <div class="pa-date-block pa-date-hoy" style="border: 2px solid #0ea5e9; padding: 10px; border-radius: 12px; background: #f0f9ff; margin-bottom: 2rem;">
+            <div class="pa-date-header">
+                <div class="pa-date-pill" style="background:#0ea5e9; color:white;">
+                    <div class="pa-date-day-num" style="color:white;">${info.day}</div>
+                    <div class="pa-date-info">
+                        <div class="pa-date-weekday" style="color:white;">Hoy (Auditoría de Despacho)</div>
+                        <div class="pa-date-monthyear" style="color:rgba(255,255,255,0.9);">${info.month} ${info.year}</div>
+                    </div>
+                </div>
+                <div class="pa-date-line" style="border-color:#bae6fd;"></div>
+            </div>
+            <div class="pa-cats-row">${buildCatsHtml(hoyData, isConsolidado, todayStrVal, true)}</div>
+        </div>`;
+    }
 
     fechasOrdenadas.forEach(fecha => {
         const info = formatDateHeader(fecha);
@@ -607,14 +689,14 @@ function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false
                 </div>
                 <div class="pa-date-line"></div>
             </div>
-            <div class="pa-cats-row">${buildCatsHtml(cats, isConsolidado, fecha)}</div>
+            <div class="pa-cats-row">${buildCatsHtml(cats, isConsolidado, fecha, false)}</div>
         </div>`;
     });
 
     $('#pa-agenda').html(html || '<p class="text-muted text-center p-5">Sin datos para mostrar.</p>');
 }
 
-function buildCatsHtml(cats, isConsolidado, fecha) {
+function buildCatsHtml(cats, isConsolidado, fecha, isHoy = false) {
     let html = '';
     PA_GRUPOS.forEach(cat => {
         if (!cats[cat]) return;
@@ -626,9 +708,9 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
             const n = Object.keys(slot.tiendas).length;
             badge = `<span class="pa-round-badge" style="background:rgba(16,185,129,0.12);color:#10b981;">${n} Tienda${n > 1 ? 's' : ''}</span>`;
         } else {
-            badge = slot.round === 1
+            badge = isHoy ? '<span class="pa-round-badge" style="background:rgba(14, 165, 233, 0.15);color:#0ea5e9;">Auditoría Hoy</span>' : (slot.round === 1
                 ? '<span class="pa-round-badge" style="background:rgba(56,189,248,0.15);color:#38bdf8;">Ronda 1 · Inventario Real</span>'
-                : `<span class="pa-round-badge">Ronda ${slot.round} · Proyección</span>`;
+                : `<span class="pa-round-badge">Ronda ${slot.round} · Proyección</span>`);
         }
 
         // Badge de ciclo (días que cubre este despacho) — solo para tienda individual
@@ -656,7 +738,7 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
                 }
 
                 let s_final = s_base;
-                if (window.pa_include_preingreso && s_final !== null && pre_hoy) {
+                if (!isHoy && window.pa_include_preingreso && s_final !== null && pre_hoy) {
                     s_final += pre_hoy;
                 }
                 let despPron = s_final !== null ? Math.max(0, Math.ceil((smf ?? 0) - s_final)) : null;
@@ -677,14 +759,14 @@ function buildCatsHtml(cats, isConsolidado, fecha) {
                 ${badgeB}
             </div>
             <div class="pa-table-wrap">
-                ${buildTablaProductos(slot, isConsolidado, slotKey)}
+                ${buildTablaProductos(slot, isConsolidado, slotKey, isHoy)}
             </div>
         </div>`;
     });
     return html;
 }
 
-function buildTablaProductos(slot, isConsolidado, slotKey) {
+function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
     const items = slot.items;
     const round = slot.round;
     let rows = '';
@@ -717,7 +799,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
         }
 
         let stockD1Paq = stockD1Paq_base;
-        if (window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq) {
+        if (!isHoy && window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq) {
             stockD1Paq += preHoyPaq;
         }
 
@@ -736,9 +818,13 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
 
         let preHtml = '';
         if (preHoyPaq) {
-            preHtml = window.pa_include_preingreso
-                ? `<span class="pa-stock-d1 positive" title="Sumado a Pronóstico Inventario">+${preHoyPaq.toFixed(1)}</span>`
-                : `<span class="pa-stock-d1" style="color:#9ca3af;" title="Desactivado">+${preHoyPaq.toFixed(1)}</span>`;
+            if (isHoy) {
+                preHtml = `<span class="pa-stock-d1" style="color:#0ea5e9; font-weight: bold;" title="Despacho Real de Hoy">${preHoyPaq.toFixed(1)}</span>`;
+            } else {
+                preHtml = window.pa_include_preingreso
+                    ? `<span class="pa-stock-d1 positive" title="Sumado a Pronóstico Inventario">+${preHoyPaq.toFixed(1)}</span>`
+                    : `<span class="pa-stock-d1" style="color:#9ca3af;" title="Desactivado">+${preHoyPaq.toFixed(1)}</span>`;
+            }
         } else {
             preHtml = '<span class="pa-na">—</span>';
         }
@@ -829,6 +915,11 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
     });
 
     const isChecked = window.pa_include_preingreso ? 'checked' : '';
+    const thDespachoEnCurso = isHoy ? 'Despacho Real de Hoy' : `Despacho en Curso<br>
+            <div class="form-check form-switch d-inline-block mt-1">
+                <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Incluir despachos de hoy" ${isChecked}>
+            </div>`;
+
     const thead = `<thead><tr>
         <th style="text-align:left">Producto</th>
         <th style="text-align:left">Presentación de Despacho</th>
@@ -837,11 +928,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey) {
         <th>Stock Mín</th><th>Stock Máx</th><th>Stock Máx Ajustado</th>
         <th>Inv. Teórico Ayer</th>
         <th>Pronóstico Inventario</th>
-        <th style="width: 100px;">Despacho en Curso<br>
-            <div class="form-check form-switch d-inline-block mt-1">
-                <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Incluir despachos de hoy" ${isChecked}>
-            </div>
-        </th>
+        <th style="width: 100px;">${thDespachoEnCurso}</th>
         <th>Despacho</th>
     </tr></thead>`;
 
