@@ -103,8 +103,16 @@ if (!empty($filtros['fecha_inicio_ultimo_contrato']['desde'])) { $where[] = "uc.
 if (!empty($filtros['fecha_inicio_ultimo_contrato']['hasta'])) { $where[] = "uc.inicio_contrato <= :fi_hasta"; $params[':fi_hasta'] = $filtros['fecha_inicio_ultimo_contrato']['hasta']; }
 if (!empty($filtros['fecha_salida_ultimo']['desde']))          { $where[] = "uc.fecha_salida >= :fs_desde";    $params[':fs_desde'] = $filtros['fecha_salida_ultimo']['desde']; }
 if (!empty($filtros['fecha_salida_ultimo']['hasta']))          { $where[] = "uc.fecha_salida <= :fs_hasta";    $params[':fs_hasta'] = $filtros['fecha_salida_ultimo']['hasta']; }
-if (!empty($filtros['ultima_fecha_laborada']['desde'])) { $where[] = "m.fecha >= :ul_desde"; $params[':ul_desde'] = $filtros['ultima_fecha_laborada']['desde']; }
-if (!empty($filtros['ultima_fecha_laborada']['hasta'])) { $where[] = "m.fecha <= :ul_hasta"; $params[':ul_hasta'] = $filtros['ultima_fecha_laborada']['hasta']; }
+if (!empty($filtros['ultima_fecha_laborada']['desde'])) { 
+    $subqueryUltimaFechaMarcacion = "(SELECT MAX(fecha) FROM marcaciones WHERE CodOperario = o.CodOperario AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL) AND fecha <= CURDATE())";
+    $where[] = "$subqueryUltimaFechaMarcacion >= :ul_desde"; 
+    $params[':ul_desde'] = $filtros['ultima_fecha_laborada']['desde']; 
+}
+if (!empty($filtros['ultima_fecha_laborada']['hasta'])) { 
+    $subqueryUltimaFechaMarcacion = "(SELECT MAX(fecha) FROM marcaciones WHERE CodOperario = o.CodOperario AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL) AND fecha <= CURDATE())";
+    $where[] = "$subqueryUltimaFechaMarcacion <= :ul_hasta"; 
+    $params[':ul_hasta'] = $filtros['ultima_fecha_laborada']['hasta']; 
+}
 
 // Filtro de tiempo trabajado
 if (!empty($filtros['tiempo_trabajado_dias']) && is_array($filtros['tiempo_trabajado_dias'])) {
@@ -174,7 +182,10 @@ if (!empty($orden['columna'])) {
         case 'talla_camisa':  $orderClause = "ORDER BY o.talla_camisa $dir"; break;
         case 'fecha_inicio_ultimo_contrato': $orderClause = "ORDER BY uc.inicio_contrato $dir"; break;
         case 'fecha_salida_ultimo':          $orderClause = "ORDER BY (CASE WHEN uc.fecha_salida IS NULL OR uc.fecha_salida = '0000-00-00' THEN 1 ELSE 0 END) ASC, uc.fecha_salida $dir"; break;
-        case 'ultima_fecha_laborada':        $orderClause = "ORDER BY m.fecha $dir"; break;
+        case 'ultima_fecha_laborada':
+            $subqueryUltimaFechaMarcacion = "(SELECT MAX(fecha) FROM marcaciones WHERE CodOperario = o.CodOperario AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL) AND fecha <= CURDATE())";
+            $orderClause = "ORDER BY $subqueryUltimaFechaMarcacion $dir";
+            break;
         case 'tiempo_trabajado_dias':        $orderClause = "ORDER BY tiempo_trabajado_dias $dir"; break;
         case 'Operativo':     $orderClause = "ORDER BY (CASE WHEN uc.fecha_salida IS NULL OR uc.fecha_salida > CURDATE() THEN 1 ELSE 0 END) $dir"; break;
         case 'nombre_sucursal': $orderClause = "ORDER BY s.nombre $dir"; break;
@@ -254,7 +265,7 @@ $sql = "
         ) as sucursal_actual_nombre,
         uc.inicio_contrato   as fecha_inicio_contrato,
         uc.fecha_salida      as fecha_salida,
-        m.fecha              as ultima_fecha_marcacion,
+        (SELECT MAX(fecha) FROM marcaciones WHERE CodOperario = o.CodOperario AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL) AND fecha <= CURDATE()) as ultima_fecha_marcacion,
         DATEDIFF(
             COALESCE(uc.fecha_salida, IF(uc.fin_contrato IS NOT NULL AND uc.fin_contrato < CURDATE(), uc.fin_contrato, CURDATE())),
             uc.inicio_contrato
@@ -265,8 +276,6 @@ $sql = "
     LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario
         AND uc.CodContrato = (SELECT MAX(CodContrato) FROM Contratos WHERE cod_operario = o.CodOperario)
     LEFT JOIN sucursales s ON uc.cod_sucursal_contrato = s.codigo
-    LEFT JOIN marcaciones m ON m.CodOperario = o.CodOperario
-        AND m.fecha = (SELECT MAX(fecha) FROM marcaciones WHERE CodOperario = o.CodOperario AND (hora_ingreso IS NOT NULL OR hora_salida IS NOT NULL) AND fecha <= CURDATE())
     $whereClause
     $orderClause
 ";

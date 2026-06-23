@@ -288,10 +288,10 @@ function renderizarTabla(datos) {
 
             // Botón para seleccionar directamente (saltar evaluación del jefe)
             if (puedeSeleccionarDirecto) {
-                btnAccion += `<button class="btn-accion-icono text-success" 
+                btnAccion += `<button class="btn-ia-validar px-2 py-1" style="font-size: 11px;" 
                                       onclick="seleccionarDirecto(${c.id}, '${(c.nombre || '').replace(/'/g, "\\'")}')"
-                                      title="Seleccionar directamente (sin evaluación de jefe)">
-                                 <i class="bi bi-check-circle-fill"></i>
+                                      title="Contratar directamente (sin evaluación de jefe)">
+                                 Contratar directamente
                              </button>`;
             }
 

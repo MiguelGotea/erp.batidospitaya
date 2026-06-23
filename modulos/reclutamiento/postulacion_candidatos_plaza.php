@@ -276,7 +276,7 @@ if (!$plaza) {
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title" id="modalAgregarCandidatoInmediatoLabel">
-                        <i class="bi bi-person-plus-fill me-2"></i> Agregar Candidato Inmediato
+                        <i class="bi bi-person-plus-fill me-2"></i> Agregar a Fase Contratación
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -298,7 +298,7 @@ if (!$plaza) {
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-success" style="background-color: #10b981; border-color: #10b981;">
-                            <i class="bi bi-save me-1"></i> Guardar y Crear Solicitud
+                            <i class="bi bi-save me-1"></i> Guardar
                         </button>
                     </div>
                 </form>
