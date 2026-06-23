@@ -336,6 +336,17 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
     }
 }
 
+// Contar asignaciones múltiples de colaboradores
+$conteoAsignaciones = [];
+foreach ($colaboradoresPorSucursal as $codSucursal => $grupos) {
+    foreach (['lideres', 'colaboradores'] as $tipoGrupo) {
+        foreach ($grupos[$tipoGrupo] as $col) {
+            $codigo = $col['codigo'];
+            $conteoAsignaciones[$codigo] = ($conteoAsignaciones[$codigo] ?? 0) + 1;
+        }
+    }
+}
+
 // Calcular totales
 $totalColaboradoresGlobal = obtenerTotalColaboradoresGlobal($semanaMostrar);
 $totalesPorSucursal = [];
@@ -532,7 +543,12 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                                     data-cargo="<?= $lider['cod_cargo'] ?>" title="<?= htmlspecialchars($lider['nombre']) ?>&#10;Código: <?= $lider['codigo'] ?>&#10;Cargo: <?= htmlspecialchars($lider['cargo_nombre']) ?>">
                                                                     <?php $cargo_lider_simplificado = preg_replace('/^Vendedor\s+/i', '', $lider['cargo_nombre']); ?>
                                                                     <div class="item-info">
-                                                                        <div class="item-name"><?= htmlspecialchars($lider['nombre']) ?></div>
+                                                                        <div class="item-name">
+                                                                            <?= htmlspecialchars($lider['nombre']) ?>
+                                                                            <?php if (($conteoAsignaciones[$lider['codigo']] ?? 0) >= 2): ?>
+                                                                                <i class="fas fa-exclamation-triangle text-danger ms-1" title="Asignado a 2 o más tiendas"></i>
+                                                                            <?php endif; ?>
+                                                                        </div>
                                                                     </div>
                                                                     <span class="item-badge"><?= htmlspecialchars($cargo_lider_simplificado) ?></span>
                                                                 </div>
@@ -559,7 +575,12 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                                                                     data-cargo="<?= $colaborador['cod_cargo'] ?>" title="<?= htmlspecialchars($colaborador['nombre']) ?>&#10;Código: <?= $colaborador['codigo'] ?>&#10;Cargo: <?= htmlspecialchars($colaborador['cargo_nombre']) ?>">
                                                                     <?php $cargo_colaborador_simplificado = preg_replace('/^Vendedor\s+/i', '', $colaborador['cargo_nombre']); ?>
                                                                     <div class="item-info">
-                                                                        <div class="item-name"><?= htmlspecialchars($colaborador['nombre']) ?></div>
+                                                                        <div class="item-name">
+                                                                            <?= htmlspecialchars($colaborador['nombre']) ?>
+                                                                            <?php if (($conteoAsignaciones[$colaborador['codigo']] ?? 0) >= 2): ?>
+                                                                                <i class="fas fa-exclamation-triangle text-danger ms-1" title="Asignado a 2 o más tiendas"></i>
+                                                                            <?php endif; ?>
+                                                                        </div>
                                                                     </div>
                                                                     <span class="item-badge"><?= htmlspecialchars($cargo_colaborador_simplificado) ?></span>
                                                                 </div>
