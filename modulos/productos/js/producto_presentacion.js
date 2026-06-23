@@ -211,7 +211,7 @@ function renderizarTabla(datos) {
         // Botón de acciones
         const btnVer = `
             <button class="btn-accion btn-ver" onclick="verProducto(${row.id})" title="Ver/Editar">
-                <i class="bi bi-eye"></i>
+                <i class="bi bi-pencil"></i>
             </button>
         `;
         tr.append(`<td>${btnVer}</td>`);
@@ -289,7 +289,7 @@ function initRecetaTooltips() {
 
 // Ver producto (ir a página de edición)
 function verProducto(id) {
-    window.location.href = `registro_producto_global.php?id=${id}`;
+    window.open(`registro_producto_global.php?id=${id}`, '_blank');
 }
 
 // Toggle estado activo
