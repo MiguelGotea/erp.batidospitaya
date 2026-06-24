@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     cargarDatosSucursales();
     cargarDatosAdministrativo();
     cargarDatosProduccion();
+    cargarEspecialidadesListado();
 
     // Inicializar tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -100,6 +101,13 @@ function renderizarTablaSucursales(datos) {
             <td class="d-none">
                 ${generarSelectUrgencia(4, sucursal.codigo_sucursal, 'vendedor_urgencia', 'Sucursales', true)}
             </td>
+            <td>
+                <input type="text" class="form-control form-control-sm especialidad-input"
+                       list="especialidadesListado"
+                       value="${sucursal.vendedor_especialidad || ''}"
+                       ${!puedeEditar ? 'disabled' : ''}
+                       onchange="guardarEspecialidad(2, this.value)">
+            </td>
             <td class="text-center">
                 ${generarColumnaBanner(sucursal.vendedor_banner, sucursal.vendedor_id, 2, sucursal.codigo_sucursal, 'Sucursales')}
             </td>
@@ -151,6 +159,13 @@ function renderizarTablaSucursales(datos) {
             <td class="d-none">
                 ${generarSelectUrgencia(4, sucursal.codigo_sucursal, 'lider_urgencia', 'Sucursales', true)}
             </td>
+            <td>
+                <input type="text" class="form-control form-control-sm especialidad-input"
+                       list="especialidadesListado"
+                       value="${sucursal.lider_especialidad || ''}"
+                       ${!puedeEditar ? 'disabled' : ''}
+                       onchange="guardarEspecialidad(5, this.value)">
+            </td>
             <td class="text-center">
                 ${generarColumnaBanner(sucursal.lider_banner, sucursal.lider_id, 5, sucursal.codigo_sucursal, 'Sucursales')}
             </td>
@@ -193,7 +208,7 @@ function renderizarTablaAdministrativo(datos) {
             areaActual = cargo.area_cargo;
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = `
-                <th colspan="9" class="bg-light text-secondary text-start ps-3 py-2">
+                <th colspan="10" class="bg-light text-secondary text-start ps-3 py-2">
                     <i class="bi bi-diagram-3 me-2"></i>Área: ${areaActual || 'Sin Área Definida'}
                 </th>`;
             tbody.appendChild(headerRow);
@@ -236,6 +251,13 @@ function renderizarTablaAdministrativo(datos) {
             <td>${generarSelectUrgencia(cargo.nivel_urgencia || 1, cargo.cod_cargo, 'nivel_urgencia', 'Administrativo', false)}</td>
             <td class="text-center">${generarColumnaPDF(cargo.ruta_pdf_cargo, cargo.config_id, cargo.cod_cargo, 18, 'Administrativo')}</td>
             <td class="text-center">${generarColumnaBanner(cargo.ruta_banner, cargo.config_id, cargo.cod_cargo, 18, 'Administrativo')}</td>
+            <td>
+                <input type="text" class="form-control form-control-sm especialidad-input"
+                       list="especialidadesListado"
+                       value="${cargo.especialidad_area || ''}"
+                       ${!puedeEditar ? 'disabled' : ''}
+                       onchange="guardarEspecialidad(${cargo.cod_cargo}, this.value)">
+            </td>
             <td class="text-center">
                 <div class="form-check form-switch d-flex justify-content-center mb-0">
                     <input class="form-check-input operativo-toggle" type="checkbox" role="switch" checked
@@ -308,7 +330,7 @@ function renderizarTablaProduccion(datos) {
             areaActual = cargo.area_cargo;
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = `
-                <th colspan="9" class="bg-light text-secondary text-start ps-3 py-2">
+                <th colspan="10" class="bg-light text-secondary text-start ps-3 py-2">
                     <i class="bi bi-diagram-3 me-2"></i>Área: ${areaActual || 'Sin Área Definida'}
                 </th>`;
             tbody.appendChild(headerRow);
@@ -354,6 +376,13 @@ function renderizarTablaProduccion(datos) {
             <td>${generarSelectUrgencia(cargo.nivel_urgencia || 1, cargo.cod_cargo, 'nivel_urgencia', 'Produccion', false)}</td>
             <td class="text-center">${generarColumnaPDF(cargo.ruta_pdf_cargo, cargo.config_id, cargo.cod_cargo, sucursalId, 'Produccion')}</td>
             <td class="text-center">${generarColumnaBanner(cargo.ruta_banner, cargo.config_id, cargo.cod_cargo, sucursalId, 'Produccion')}</td>
+            <td>
+                <input type="text" class="form-control form-control-sm especialidad-input"
+                       list="especialidadesListado"
+                       value="${cargo.especialidad_area || ''}"
+                       ${!puedeEditar ? 'disabled' : ''}
+                       onchange="guardarEspecialidad(${cargo.cod_cargo}, this.value)">
+            </td>
             <td class="text-center">
                 <div class="form-check form-switch d-flex justify-content-center mb-0">
                     <input class="form-check-input operativo-toggle" type="checkbox" role="switch" checked
@@ -905,5 +934,63 @@ async function toggleOperativo(checkbox, codCargo, tipo) {
     } catch (error) {
         checkbox.checked = !checkbox.checked;
         Swal.fire('Error', 'No se pudo actualizar el estado del cargo.', 'error');
+    }
+}
+
+// ========================================
+// AUTOCOMPLETE Y GUARDADO DE ESPECIALIDAD
+// ========================================
+async function cargarEspecialidadesListado() {
+    try {
+        const response = await fetch('ajax/postulacion_panel_control_get_especialidades.php');
+        const data = await response.json();
+        if (data.success) {
+            const datalist = document.getElementById('especialidadesListado');
+            if (datalist) {
+                datalist.innerHTML = '';
+                data.especialidades.forEach(esp => {
+                    const option = document.createElement('option');
+                    option.value = esp;
+                    datalist.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error al cargar especialidades:', error);
+    }
+}
+
+async function guardarEspecialidad(codCargo, valor) {
+    try {
+        const response = await fetch('ajax/postulacion_panel_control_especialidad_guardar.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                cod_cargo: codCargo,
+                especialidad_area: valor
+            })
+        });
+        const data = await response.json();
+        if (data.success) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
+            Toast.fire({
+                icon: 'success',
+                title: 'Especialidad guardada'
+            });
+            cargarEspecialidadesListado();
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        console.error('Error al guardar especialidad:', error);
+        Swal.fire('Error', 'No se pudo guardar la especialidad: ' + error.message, 'error');
     }
 }

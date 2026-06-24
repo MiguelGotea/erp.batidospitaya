@@ -46,9 +46,18 @@ $(document).ready(function () {
     cargarEstructuraHerramientas();
 
     // Búsqueda de herramientas por tipo
-    $('.buscar-input').on('input', function () {
+    $('.buscar-input').on('input search', function () {
         const tipo = $(this).data('tipo');
         filtrarHerramientas($(this).val(), tipo);
+    });
+
+    // Limpiar con la tecla Escape
+    $('.buscar-input').on('keydown', function (e) {
+        if (e.key === 'Escape') {
+            $(this).val('');
+            const tipo = $(this).data('tipo');
+            filtrarHerramientas('', tipo);
+        }
     });
 });
 
@@ -545,12 +554,21 @@ function filtrarHerramientas(texto, tipo) {
 
     // Mostrar todos primero para poder filtrar
     $container.find('.tree-item').show();
+    $container.find('.tree-group').show();
     $container.find('.tree-group-items').addClass('show');
 
     // Filtrar items
     $container.find('.tree-item').each(function () {
-        const titulo = ($(this).data('titulo') || $(this).data('nombre') || '').toLowerCase();
-        const coincide = titulo.includes(filtro);
+        const titulo = ($(this).data('titulo') || '').toLowerCase();
+        const nombre = ($(this).data('nombre') || '').toLowerCase();
+        const descripcion = ($(this).data('descripcion') || '').toLowerCase();
+        const urlReal = ($(this).data('url-real') || '').toLowerCase();
+        
+        // Coincide si el filtro está presente en título, nombre, descripción o URL
+        const coincide = titulo.includes(filtro) || 
+                         nombre.includes(filtro) || 
+                         descripcion.includes(filtro) || 
+                         urlReal.includes(filtro);
 
         if (coincide) {
             $(this).show();

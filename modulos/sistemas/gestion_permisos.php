@@ -73,7 +73,7 @@ $puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
                                 <!-- Tab Herramientas -->
                                 <div class="tab-content-custom tab-content-active" id="content-herramientas">
                                     <div class="p-3 border-bottom">
-                                        <input type="text" class="form-control form-control-sm buscar-input" data-tipo="herramientas" placeholder="Buscar herramienta...">
+                                        <input type="search" class="form-control form-control-sm buscar-input" data-tipo="herramientas" placeholder="Buscar herramienta...">
                                     </div>
                                     <div class="tree-container" id="treeHerramientas">
                                         <div class="text-center p-4">
@@ -86,7 +86,7 @@ $puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
                                 <!-- Tab Indicadores -->
                                 <div class="tab-content-custom" id="content-indicadores">
                                     <div class="p-3 border-bottom">
-                                        <input type="text" class="form-control form-control-sm buscar-input" data-tipo="indicadores" placeholder="Buscar indicador...">
+                                        <input type="search" class="form-control form-control-sm buscar-input" data-tipo="indicadores" placeholder="Buscar indicador...">
                                     </div>
                                     <div class="tree-container" id="treeIndicadores">
                                         <div class="text-center p-4">
@@ -99,7 +99,7 @@ $puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
                                 <!-- Tab Balances -->
                                 <div class="tab-content-custom" id="content-balances">
                                     <div class="p-3 border-bottom">
-                                        <input type="text" class="form-control form-control-sm buscar-input" data-tipo="balances" placeholder="Buscar balance...">
+                                        <input type="search" class="form-control form-control-sm buscar-input" data-tipo="balances" placeholder="Buscar balance...">
                                     </div>
                                     <div class="tree-container" id="treeBalances">
                                         <div class="text-center p-4">
@@ -112,7 +112,7 @@ $puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
                                 <!-- Tab Alertas WSP -->
                                 <div class="tab-content-custom" id="content-alertas">
                                     <div class="p-3 border-bottom">
-                                        <input type="text" class="form-control form-control-sm buscar-input" data-tipo="alertas" placeholder="Buscar alerta...">
+                                        <input type="search" class="form-control form-control-sm buscar-input" data-tipo="alertas" placeholder="Buscar alerta...">
                                     </div>
                                     <div class="tree-container" id="treeAlertas">
                                         <div class="text-center p-4">
@@ -125,7 +125,7 @@ $puedeBorrar = tienePermiso('gestion_permisos', 'borrar', $cargoOperario);
                                 <!-- Tab Notificaciones Email -->
                                 <div class="tab-content-custom" id="content-notificaciones_email">
                                     <div class="p-3 border-bottom">
-                                        <input type="text" class="form-control form-control-sm buscar-input" data-tipo="notificaciones_email" placeholder="Buscar notificación...">
+                                        <input type="search" class="form-control form-control-sm buscar-input" data-tipo="notificaciones_email" placeholder="Buscar notificación...">
                                     </div>
                                     <div class="tree-container" id="treeNotificacionesEmail">
                                         <div class="text-center p-4">

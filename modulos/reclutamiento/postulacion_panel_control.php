@@ -90,6 +90,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 100px;">Personal Contratado</th>
                                                 <th style="width: 120px;">Mostrar en Web</th>
                                                 <th style="width: 150px;" class="d-none">Urgencia</th>
+                                                <th style="width: 140px;">Especialidad</th>
                                                 <th style="width: 80px;">Banner</th>
                                             </tr>
                                         </thead>
@@ -146,6 +147,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 150px;">Urgencia</th>
                                                 <th style="width: 80px;">Perfil de Puesto</th>
                                                 <th style="width: 80px;">Banner</th>
+                                                <th style="width: 140px;">Especialidad</th>
                                                 <th style="width: 75px;" class="text-center">Activo</th>
                                             </tr>
                                         </thead>
@@ -185,6 +187,7 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                                                 <th style="width: 150px;">Urgencia</th>
                                                 <th style="width: 80px;">Perfil de Puesto</th>
                                                 <th style="width: 80px;">Banner</th>
+                                                <th style="width: 140px;">Especialidad</th>
                                                 <th style="width: 75px;" class="text-center">Activo</th>
                                             </tr>
                                         </thead>
@@ -216,6 +219,9 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                         <form id="formUploadBanner" style="display: none;">
                             <input type="file" id="inputUploadBanner" accept=".jpg,.png,.jpeg">
                         </form>
+
+                        <!-- Datalist para autocomplete de Especialidad (poblado por JS) -->
+                        <datalist id="especialidadesListado"></datalist>
 
                         <!-- Botón de guardar (solo si tiene permiso) -->
                         <?php if ($puedeEditar): ?>
