@@ -2777,7 +2777,6 @@ async function cargarStockMinMaxKardex(idPP, semAnalisis) {
     fdP.append('semana_desde_num', semDesde);
     fdP.append('semana_hasta_num', semHasta);
     fdP.append('cod_sucursal', codSuc);
-    fdP.append('modulo', 'dashboard_consumo_insumos');
 
     try {
         const resPedido = await fetch('ajax/pedido_sugerido_calcular_v2.php', { method: 'POST', body: fdP }).then(r => r.json());
@@ -2978,7 +2977,6 @@ async function calcularPronosticoAbastKardex(
         fdP.append('semana_desde_num', semDesde);
         fdP.append('semana_hasta_num', semHasta);
         fdP.append('cod_sucursal', codSuc);
-        fdP.append('modulo', 'dashboard_consumo_insumos');
 
         const resPedido = await fetch('ajax/pedido_sugerido_calcular_v2.php', { method: 'POST', body: fdP }).then(r => r.json());
 
@@ -3099,7 +3097,6 @@ async function calcularPronosticoAbastKardex(
             fdPron.append('cod_sucursal', codSuc);
             fdPron.append('ids_pp[]', idPP);
             fdPron.append(`fechas_d1[${idPP}]`, fechaD1R1);
-            fdPron.append('modulo', 'dashboard_consumo_insumos');
 
             try {
                 const resPron = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method: 'POST', body: fdPron }).then(r => r.json());

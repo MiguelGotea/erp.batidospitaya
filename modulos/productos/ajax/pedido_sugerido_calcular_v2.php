@@ -19,25 +19,11 @@ set_time_limit(0);
 
 $usuario = obtenerUsuarioActual();
 $cargo = $usuario['CodNivelesCargos'];
-// Este AJAX es reutilizado por pronostico_abastecimiento.php y dashboard_consumo.php.
-// Se valida dinámicamente según el módulo que lo invoque para mantener el aislamiento,
-// y se conserva un fallback compatible para otros archivos que puedan reutilizarlo.
-$moduloPermiso = isset($_POST['modulo']) ? trim($_POST['modulo']) : '';
-if ($moduloPermiso === 'pronostico_abastecimiento') {
-    if (!tienePermiso('pronostico_abastecimiento', 'vista', $cargo)) {
-        echo json_encode(['ok' => false, 'msg' => 'Sin permiso para calcular.']);
-        exit();
-    }
-} elseif ($moduloPermiso === 'dashboard_consumo_insumos') {
-    if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargo)) {
-        echo json_encode(['ok' => false, 'msg' => 'Sin permiso para calcular.']);
-        exit();
-    }
-} else {
-    if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargo) && !tienePermiso('pronostico_abastecimiento', 'vista', $cargo)) {
-        echo json_encode(['ok' => false, 'msg' => 'Sin permiso para calcular.']);
-        exit();
-    }
+// Este AJAX es reutilizado por pronostico_abastecimiento.php, por lo que
+// se acepta el permiso de cualquiera de los dos módulos.
+if (!tienePermiso('dashboard_consumo_insumos', 'vista', $cargo) && !tienePermiso('pronostico_abastecimiento', 'vista', $cargo)) {
+    echo json_encode(['ok' => false, 'msg' => 'Sin permiso para calcular.']);
+    exit();
 }
 
 $numDesde = isset($_POST['semana_desde_num']) ? (int) $_POST['semana_desde_num'] : 0;
