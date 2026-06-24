@@ -285,6 +285,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
         fdP.append('semana_desde_num', semDesde);
         fdP.append('semana_hasta_num', semHasta);
         fdP.append('cod_sucursal', codSuc);
+        fdP.append('modulo', 'pronostico_abastecimiento');
 
         const resPedido = await fetch('ajax/pedido_sugerido_calcular_v2.php', { method: 'POST', body: fdP }).then(r => r.json());
         if (!resPedido.ok) {
@@ -353,6 +354,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
             fdPron.append('semana_hasta', semHasta);
             fdPron.append('semana_corte', semCorte);
             fdPron.append('cod_sucursal', codSuc);
+            fdPron.append('modulo', 'pronostico_abastecimiento');
             prodConPlan.forEach(p => {
                 fdPron.append('ids_pp[]', p.id_pp);
                 fdPron.append(`fechas_d1[${p.id_pp}]`, addDaysStr(p.fecha_proximo_despacho, -1));

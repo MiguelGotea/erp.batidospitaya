@@ -1220,7 +1220,7 @@ function cambiarEstado(ticketId, statusActual) {
         return `
                     <div class="opcion-modal-pitaya" 
                          style="background-color: ${color}; color: white;"
-                         onclick="actualizarEstado(${ticketId}, '${status}')">
+                         onclick="seleccionarNuevoEstado(${ticketId}, '${status}')">
                         <span>${selected}${texto}</span>
                     </div>
                 `;
@@ -1229,6 +1229,15 @@ function cambiarEstado(ticketId, statusActual) {
     `;
 
     abrirModalPitaya('modalEstadoSolicitud', 'Estado de la Solicitud', opciones);
+}
+
+function seleccionarNuevoEstado(ticketId, nuevoStatus) {
+    $('#modalEstadoSolicitud').modal('hide');
+    if (nuevoStatus === 'finalizado') {
+        abrirModalFinalizarTicket(ticketId);
+    } else {
+        actualizarEstado(ticketId, nuevoStatus);
+    }
 }
 
 // Actualizar estado
@@ -1530,4 +1539,285 @@ function mostrarToastIA(exito, mensaje) {
         toast.style.transition = 'opacity 0.4s ease';
         setTimeout(() => toast.remove(), 400);
     }, 4000);
+}
+
+/**
+ * GESTIÓN DE CÁMARA Y FINALIZACIÓN DIRECTA — Módulo de Mantenimiento
+ */
+let activeStream        = null;
+let activeVideoTrack    = null;
+let torchActivo         = false;
+let currentCameraTarget = null;
+let focusToastTimers    = {};
+let fotosEvidenciaTmp   = []; // Almacena fotos (tipo: 'file' o 'cam') para la finalización directa
+
+function previewEvidencia(input) {
+    if (input.files) {
+        Array.from(input.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                fotosEvidenciaTmp.push({ tipo: 'file', data: e.target.result, file: file });
+                renderEvidenciaPreviews();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function renderEvidenciaPreviews() {
+    const container = $('#finalizar_evidencia_previews');
+    container.empty();
+    fotosEvidenciaTmp.forEach((foto, index) => {
+        container.append(`
+            <div class="col-4 col-md-3 position-relative">
+                <img src="${foto.data}" class="img-thumbnail rounded-3 w-100" style="height: 80px; object-fit: cover;">
+                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle" 
+                        onclick="removerFotoTmp(${index})"><i class="fas fa-times"></i></button>
+            </div>
+        `);
+    });
+}
+
+function removerFotoTmp(index) {
+    fotosEvidenciaTmp.splice(index, 1);
+    renderEvidenciaPreviews();
+}
+
+async function startCamera(target) {
+    stopCamera();
+
+    currentCameraTarget = target;
+    torchActivo         = false;
+    const container = document.getElementById(`${target}_container`);
+    const video     = document.getElementById(`${target}_video`);
+    const btnTorch  = document.getElementById(`${target}_torch`);
+
+    const constraints = {
+        audio: false,
+        video: {
+            facingMode: { ideal: 'environment' },
+            width:      { ideal: 3840 },
+            height:     { ideal: 2160 },
+            focusMode:  { ideal: 'continuous' }
+        }
+    };
+
+    try {
+        activeStream     = await navigator.mediaDevices.getUserMedia(constraints);
+        activeVideoTrack = activeStream.getVideoTracks()[0];
+        video.srcObject  = activeStream;
+        container.classList.remove('d-none');
+
+        video.onloadedmetadata = () => initCameraControls(target);
+        container.addEventListener('click', (e) => onCameraViewportClick(e, target));
+
+    } catch (e) {
+        Swal.fire('Cámara', 'No se pudo acceder a la cámara: ' + e.message, 'warning');
+    }
+}
+
+function initCameraControls(target) {
+    if (!activeVideoTrack) return;
+    const caps     = activeVideoTrack.getCapabilities ? activeVideoTrack.getCapabilities() : {};
+    const btnTorch = document.getElementById(`${target}_torch`);
+
+    if (btnTorch) {
+        btnTorch.style.display = caps.torch ? 'flex' : 'none';
+        btnTorch.classList.remove('on');
+    }
+
+    if (caps.focusMode && caps.focusMode.includes('continuous')) {
+        activeVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+    }
+
+    showFocusToast(target, 'Toca para enfocar', 2000);
+}
+
+function onCameraViewportClick(e, target) {
+    if (e.target.closest('button')) return;
+
+    const container = document.getElementById(`${target}_container`);
+    const ring      = document.getElementById(`${target}_ring`);
+    if (!ring || !container) return;
+
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ring.style.left = x + 'px';
+    ring.style.top  = y + 'px';
+    ring.classList.remove('focus-active', 'focus-locked');
+    void ring.offsetWidth;
+    ring.classList.add('focus-active');
+
+    if (activeVideoTrack) {
+        const xR = x / rect.width;
+        const yR = y / rect.height;
+        activeVideoTrack.applyConstraints({
+            advanced: [{ pointsOfInterest: [{ x: xR, y: yR }], focusMode: 'single-shot' }]
+        }).then(() => {
+            ring.classList.add('focus-locked');
+            showFocusToast(target, '✓ Enfocado', 1500);
+            setTimeout(() => {
+                activeVideoTrack && activeVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+            }, 2000);
+        }).catch(() => {
+            ring.classList.add('focus-locked');
+            showFocusToast(target, 'Enfoque ajustado', 1200);
+        });
+    }
+
+    setTimeout(() => ring.classList.remove('focus-active', 'focus-locked'), 2500);
+}
+
+function showFocusToast(target, msg, duration) {
+    const toast = document.getElementById(`${target}_toast`);
+    if (!toast) return;
+    if (focusToastTimers[target]) clearTimeout(focusToastTimers[target]);
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    focusToastTimers[target] = setTimeout(() => { toast.style.opacity = '0'; }, duration || 1500);
+}
+
+function toggleCameraTorch(target) {
+    if (!activeVideoTrack || currentCameraTarget !== target) return;
+    torchActivo = !torchActivo;
+    activeVideoTrack.applyConstraints({ advanced: [{ torch: torchActivo }] })
+        .then(() => {
+            const btn = document.getElementById(`${target}_torch`);
+            if (btn) btn.classList.toggle('on', torchActivo);
+        })
+        .catch(() => {
+            torchActivo = false;
+            Swal.fire('Linterna', 'Este dispositivo no soporta linterna.', 'info');
+        });
+}
+
+function captureSnapshot(target) {
+    const video     = document.getElementById(`${target}_video`);
+    const container = document.getElementById(`${target}_container`);
+    const canvas    = document.createElement('canvas');
+
+    canvas.width  = video.videoWidth  || video.clientWidth;
+    canvas.height = video.videoHeight || video.clientHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    if (container) {
+        const flash = document.createElement('div');
+        flash.style.cssText = 'position:absolute;inset:0;background:#fff;opacity:0.85;pointer-events:none;z-index:10;transition:opacity 0.35s';
+        container.appendChild(flash);
+        requestAnimationFrame(() => { flash.style.opacity = '0'; });
+        setTimeout(() => flash.remove(), 400);
+    }
+
+    canvas.toBlob(blob => {
+        const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+
+        if (target === 'finalizar_evidencia' || target === 'cam_evidencia') {
+            fotosEvidenciaTmp.push({ tipo: 'cam', data: dataURL });
+            renderEvidenciaPreviews();
+        } else {
+            $(`#${target}_data`).val(dataURL);
+            const preview = target.replace('cam_', 'preview_');
+            $(`#${preview}`).removeClass('d-none').find('img').attr('src', dataURL);
+        }
+
+        stopCamera();
+    }, 'image/jpeg', 0.92);
+}
+
+function stopCamera() {
+    if (torchActivo && activeVideoTrack) {
+        activeVideoTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+        torchActivo = false;
+    }
+    if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+        activeStream     = null;
+        activeVideoTrack = null;
+    }
+    if (currentCameraTarget) {
+        const container = document.getElementById(`${currentCameraTarget}_container`);
+        if (container) {
+            const clone = container.cloneNode(true);
+            container.parentNode.replaceChild(clone, container);
+            clone.classList.add('d-none');
+        }
+        const btnTorch = document.getElementById(`${currentCameraTarget}_torch`);
+        if (btnTorch) { btnTorch.classList.remove('on'); btnTorch.style.display = 'none'; }
+        currentCameraTarget = null;
+    }
+}
+
+function abrirModalFinalizarTicket(ticketId) {
+    $('#finalizar_ticket_id').val(ticketId);
+    $('#formFinalizarTicket')[0].reset();
+    $('#finalizar_evidencia_previews').empty();
+    fotosEvidenciaTmp = [];
+    stopCamera();
+    
+    // Abrir modal usando Bootstrap 5
+    const modalEl = document.getElementById('finalizarTicketModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) {
+        modal = new bootstrap.Modal(modalEl);
+    }
+    modal.show();
+}
+
+async function guardarFinalizacionDirecta() {
+    const form = document.getElementById('formFinalizarTicket');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    if (fotosEvidenciaTmp.length === 0) {
+        Swal.fire('Atención', 'Debe incluir al menos una foto de evidencia del trabajo', 'warning');
+        return;
+    }
+
+    const formData = new FormData(form);
+    const dt = new DataTransfer();
+    const fotosCam = [];
+
+    fotosEvidenciaTmp.forEach(f => {
+        if (f.tipo === 'file') {
+            dt.items.add(f.file);
+        } else {
+            fotosCam.push(f.data);
+        }
+    });
+
+    document.getElementById('finalizar_evidencia_input').files = dt.files;
+    
+    const finalFormData = new FormData(form);
+    Array.from(dt.files).forEach(f => finalFormData.append('fotos_evidencia[]', f));
+    finalFormData.append('fotos_camera_json', JSON.stringify(fotosCam));
+
+    Swal.fire({ 
+        title: 'Guardando registro de trabajo...', 
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading() 
+    });
+
+    try {
+        const response = await fetch('ajax/historial_finalizar_ticket.php', {
+            method: 'POST',
+            body: finalFormData
+        });
+        const res = await response.json();
+        if (res.success) {
+            Swal.fire('Guardado', 'Ticket finalizado correctamente', 'success').then(() => {
+                const modalEl = document.getElementById('finalizarTicketModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                cargarDatos(); // Recargar la tabla
+            });
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
+    }
 }

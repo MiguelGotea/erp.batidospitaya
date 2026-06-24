@@ -109,6 +109,8 @@ function getTextoUrgencia($nivel)
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/historial_solicitudes.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
     <!-- Library for HEIC support -->
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 </head>
@@ -283,6 +285,7 @@ function getTextoUrgencia($nivel)
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const filtroSucursalBloqueado = <?php echo $filtro_sucursal_bloqueado ? 'true' : 'false'; ?>;
         const codigoSucursalBusqueda = '<?php echo $codigo_sucursal_busqueda; ?>';
@@ -316,6 +319,142 @@ function getTextoUrgencia($nivel)
             }
         });
     </script>
+
+    <!-- Modal Registrar Trabajo Realizado (Finalizar Ticket) -->
+    <div class="modal fade" id="finalizarTicketModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fas fa-tools me-2"></i>Registrar Trabajo Realizado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="stopCamera()"></button>
+                </div>
+                <div class="modal-body p-4 pt-3">
+                    <form id="formFinalizarTicket">
+                        <input type="hidden" name="ticket_id" id="finalizar_ticket_id">
+                        <input type="hidden" name="status" value="finalizado">
+                        
+                        <div class="mb-3">
+                            <label class="form-label required">📋 Describe el trabajo realizado</label>
+                            <textarea name="trabajo_realizado" id="finalizar_trabajo_realizado" class="form-control" rows="4"
+                                placeholder="Ej: Se reparó la llave del lavamanos del área de producción. Se cambió empaque y ajustaron conexiones." required></textarea>
+                        </div>
+                        
+                        <div class="mb-0">
+                            <label class="form-label required">📷 Fotos de Evidencia (mín. 1 foto)</label>
+                            <div class="foto-upload-group mb-2">
+                                <button type="button" class="btn btn-outline-primary"
+                                    onclick="document.getElementById('finalizar_evidencia_input').click()">
+                                    <i class="fas fa-image me-1"></i>Galería
+                                </button>
+                                <button type="button" class="btn btn-outline-success"
+                                    onclick="startCamera('finalizar_evidencia')">
+                                    <i class="fas fa-camera me-1"></i>Cámara
+                                </button>
+                            </div>
+                            <input type="file" id="finalizar_evidencia_input" multiple accept="image/*" class="d-none"
+                                onchange="previewEvidencia(this)">
+                            <div id="finalizar_evidencia_previews" class="row g-2 mt-2"></div>
+
+                            <div id="finalizar_evidencia_container"
+                                class="mt-2 d-none border rounded-3 overflow-hidden position-relative bg-black"
+                                style="max-width: 420px; margin: 0 auto; cursor: crosshair;">
+                                <video id="finalizar_evidencia_video" autoplay playsinline class="w-100" style="display:block;"></video>
+                                <div class="ag-cam-grid"></div>
+                                <div id="finalizar_evidencia_ring" class="ag-focus-ring"></div>
+                                <div id="finalizar_evidencia_toast" class="ag-focus-toast">Toca para enfocar</div>
+                                <div class="ag-cam-controls d-flex align-items-center justify-content-between px-3 py-2">
+                                    <button type="button" id="finalizar_evidencia_torch" class="ag-btn-torch" style="display:none;"
+                                        onclick="toggleCameraTorch('finalizar_evidencia')" title="Linterna">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+                                    <button type="button" class="ag-btn-capture"
+                                        onclick="captureSnapshot('finalizar_evidencia')" title="Tomar foto">
+                                        <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill text-white border-secondary"
+                                        onclick="stopCamera()">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal" onclick="stopCamera()">Cancelar</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="guardarFinalizacionDirecta()">Guardar Registro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* ── Cámara Premium (Historial Solicitudes) ── */
+        .ag-cam-grid {
+            position: absolute; inset: 0; pointer-events: none;
+            opacity: 0.15;
+            background-image:
+                linear-gradient(to right, #fff 1px, transparent 1px),
+                linear-gradient(to bottom, #fff 1px, transparent 1px);
+            background-size: 33.33% 33.33%;
+        }
+        .ag-focus-ring {
+            position: absolute;
+            width: 70px; height: 70px;
+            border: 2px solid #FFD700;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1.6);
+            opacity: 0; pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+        }
+        .ag-focus-ring.focus-active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        .ag-focus-ring.focus-locked { border-color: #00FF88; opacity: 0.7; }
+        .ag-focus-ring::before, .ag-focus-ring::after {
+            content: ''; position: absolute;
+            width: 10px; height: 10px;
+            border-color: inherit; border-style: solid;
+        }
+        .ag-focus-ring::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+        .ag-focus-ring::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+        .ag-focus-toast {
+            position: absolute; bottom: 58px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.65); color: #fff;
+            font-size: 0.72rem; padding: 3px 12px;
+            border-radius: 20px; opacity: 0;
+            transition: opacity 0.3s; pointer-events: none;
+            white-space: nowrap;
+        }
+        .ag-cam-controls {
+            background: #111; padding: 8px 14px 12px;
+        }
+        .ag-btn-torch {
+            background: transparent; border: 1.5px solid #555;
+            color: #aaa; border-radius: 50%;
+            width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all 0.2s; cursor: pointer;
+        }
+        .ag-btn-torch.on {
+            border-color: #FFD700; color: #FFD700;
+            box-shadow: 0 0 8px rgba(255,215,0,0.5);
+        }
+        .ag-btn-capture {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #fff; border: 4px solid rgba(255,255,255,0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; color: #333;
+            transition: transform 0.1s, background 0.1s;
+            cursor: pointer;
+        }
+        .ag-btn-capture:active { transform: scale(0.92); background: #ddd; }
+    </style>
+
     <script src="js/historial_solicitudes.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
     <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
     <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>

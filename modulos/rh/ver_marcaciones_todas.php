@@ -37,11 +37,11 @@ if ($esLider) {
     // Para otros usuarios (admin, RH, etc.): todos los operarios
     global $conn;
     $sql_operarios = "SELECT o.CodOperario,
-CONCAT(
-IFNULL(o.Nombre, ''), ' ',
-IFNULL(o.Nombre2, ''), ' ',
-IFNULL(o.Apellido, ''), ' ',
-IFNULL(o.Apellido2, '')
+CONCAT_WS(' ',
+    NULLIF(TRIM(o.Nombre),   ''),
+    NULLIF(TRIM(o.Nombre2),  ''),
+    NULLIF(TRIM(o.Apellido), ''),
+    NULLIF(TRIM(o.Apellido2),'')
 ) AS nombre_completo
 FROM Operarios o
 LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
@@ -189,11 +189,11 @@ if (strtotime($fechaHasta) > strtotime($fechaHoy)) {
 // Obtener lista de operarios para el filtro
 global $conn;
 $sql_operarios = "SELECT o.CodOperario,
-CONCAT(
-IFNULL(o.Nombre, ''), ' ',
-IFNULL(o.Nombre2, ''), ' ',
-IFNULL(o.Apellido, ''), ' ',
-IFNULL(o.Apellido2, '')
+CONCAT_WS(' ',
+    NULLIF(TRIM(o.Nombre),   ''),
+    NULLIF(TRIM(o.Nombre2),  ''),
+    NULLIF(TRIM(o.Apellido), ''),
+    NULLIF(TRIM(o.Apellido2),'')
 ) AS nombre_completo
 FROM Operarios o
 LEFT JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
@@ -315,7 +315,7 @@ function obtenerMarcacionesConHorariosProgramados(
     hso.sabado_estado, hso.sabado_entrada, hso.sabado_salida,
     hso.domingo_estado, hso.domingo_entrada, hso.domingo_salida,
     s.nombre as nombre_sucursal,
-    o.Nombre, o.Apellido, o.Apellido2,
+    o.Nombre, o.Nombre2, o.Apellido, o.Apellido2,
     -- Verificar estado actual del operario
     (SELECT CASE
     WHEN MAX(anc.Fin) IS NULL THEN 1
@@ -419,7 +419,7 @@ function obtenerMarcacionesConHorariosProgramados(
 
     // Aplicar filtro de búsqueda
     if (!empty($busqueda)) {
-        $sqlHorarios .= " AND (CONCAT(o.Nombre, ' ', o.Apellido) LIKE ? OR hso.cod_operario = ?)";
+        $sqlHorarios .= " AND (CONCAT_WS(' ', NULLIF(TRIM(o.Nombre),''), NULLIF(TRIM(o.Nombre2),''), NULLIF(TRIM(o.Apellido),''), NULLIF(TRIM(o.Apellido2),'')) LIKE ? OR hso.cod_operario = ?)";
         $paramsHorarios[] = "%$busqueda%";
         $paramsHorarios[] = $busqueda;
     }
@@ -438,7 +438,7 @@ function obtenerMarcacionesConHorariosProgramados(
         m.CodOperario,
         m.sucursal_codigo,
         s.nombre as nombre_sucursal,
-        o.Nombre, o.Apellido, o.Apellido2,
+        o.Nombre, o.Nombre2, o.Apellido, o.Apellido2,
         (SELECT ss.numero_semana
         FROM SemanasSistema ss
         WHERE m.fecha BETWEEN ss.fecha_inicio AND ss.fecha_fin
@@ -540,7 +540,7 @@ function obtenerMarcacionesConHorariosProgramados(
 
     // Aplicar filtro de búsqueda para marcaciones
     if (!empty($busqueda)) {
-        $sqlMarcaciones .= " AND (CONCAT(o.Nombre, ' ', o.Apellido) LIKE ? OR m.CodOperario = ?)";
+        $sqlMarcaciones .= " AND (CONCAT_WS(' ', NULLIF(TRIM(o.Nombre),''), NULLIF(TRIM(o.Nombre2),''), NULLIF(TRIM(o.Apellido),''), NULLIF(TRIM(o.Apellido2),'')) LIKE ? OR m.CodOperario = ?)";
         $paramsMarcaciones[] = "%$busqueda%";
         $paramsMarcaciones[] = $busqueda;
     }
@@ -647,6 +647,7 @@ function obtenerMarcacionesConHorariosProgramados(
                             'sucursal_codigo' => $horario['cod_sucursal'],
                             'nombre_sucursal' => $horario['nombre_sucursal'],
                             'Nombre' => $horario['Nombre'],
+                            'Nombre2' => $horario['Nombre2'],
                             'Apellido' => $horario['Apellido'],
                             'Apellido2' => $horario['Apellido2'],
                             'numero_semana' => $horario['numero_semana'],
@@ -678,6 +679,7 @@ function obtenerMarcacionesConHorariosProgramados(
                         'sucursal_codigo' => $horario['cod_sucursal'],
                         'nombre_sucursal' => $horario['nombre_sucursal'],
                         'Nombre' => $horario['Nombre'],
+                        'Nombre2' => $horario['Nombre2'],
                         'Apellido' => $horario['Apellido'],
                         'Apellido2' => $horario['Apellido2'],
                         'numero_semana' => $horario['numero_semana'],
@@ -715,6 +717,7 @@ function obtenerMarcacionesConHorariosProgramados(
                 'sucursal_codigo' => $marcacion['sucursal_codigo'],
                 'nombre_sucursal' => $marcacion['nombre_sucursal'],
                 'Nombre' => $marcacion['Nombre'],
+                'Nombre2' => $marcacion['Nombre2'],
                 'Apellido' => $marcacion['Apellido'],
                 'Apellido2' => $marcacion['Apellido2'],
                 'numero_semana' => $marcacion['numero_semana'],

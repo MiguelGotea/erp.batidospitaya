@@ -122,6 +122,25 @@ try {
         $stmtCubLider->execute();
         $cubLider = $stmtCubLider->fetch(PDO::FETCH_ASSOC);
         $sucursal['lider_cubierto'] = $cubLider ? $cubLider['total'] : 0;
+
+        // --- ESPECIALIDADES desde NivelesCargos ---
+        $sqlEspVend = "SELECT especialidad_area FROM NivelesCargos
+                       WHERE CodNivelesCargos IN (" . implode(',', $gruposVendedores) . ")
+                         AND especialidad_area IS NOT NULL AND especialidad_area != ''
+                       LIMIT 1";
+        $stmtEspVend = $conn->prepare($sqlEspVend);
+        $stmtEspVend->execute();
+        $espVend = $stmtEspVend->fetchColumn();
+        $sucursal['vendedor_especialidad'] = $espVend ?: '';
+
+        $sqlEspLider = "SELECT especialidad_area FROM NivelesCargos
+                        WHERE CodNivelesCargos IN (" . implode(',', $gruposLideres) . ")
+                          AND especialidad_area IS NOT NULL AND especialidad_area != ''
+                        LIMIT 1";
+        $stmtEspLider = $conn->prepare($sqlEspLider);
+        $stmtEspLider->execute();
+        $espLider = $stmtEspLider->fetchColumn();
+        $sucursal['lider_especialidad'] = $espLider ?: '';
     }
 
     echo json_encode([
