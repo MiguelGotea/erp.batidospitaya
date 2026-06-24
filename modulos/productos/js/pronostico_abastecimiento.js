@@ -810,6 +810,8 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
             csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
         }
 
+        const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
+
         let stockD1Paq = stockD1Paq_base;
         if (!isHoy && window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq) {
             stockD1Paq += preHoyPaq;
@@ -817,69 +819,72 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
 
         let despPron = isConsolidado ? despTotalConsolidado : (stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null);
 
-        const smfRef = smfDisplay ?? 0;
+        // Convert to Unid de control for display
+        const sMinDisplayCtrl = sMinDisplay !== null && sMinDisplay !== undefined ? sMinDisplay * df : null;
+        const smDisplayCtrl = smDisplay !== null && smDisplay !== undefined ? smDisplay * df : null;
+        const smfDisplayCtrl = smfDisplay !== null && smfDisplay !== undefined ? smfDisplay * df : null;
+        const invTeoricoAyerCtrl = invTeoricoAyerPaq !== null && invTeoricoAyerPaq !== undefined ? invTeoricoAyerPaq * df : null;
+        const stockD1Ctrl = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq * df : null;
+        const preHoyCtrl = preHoyPaq !== null && preHoyPaq !== undefined ? preHoyPaq * df : null;
+        const despPronCtrl = despPron !== null && despPron !== undefined ? despPron * df : null;
+
+        const smfRefCtrl = smfDisplayCtrl ?? 0;
         let stockHtml;
-        if (stockD1Paq === null || stockD1Paq === undefined) {
+        if (stockD1Ctrl === null || stockD1Ctrl === undefined) {
             stockHtml = '<span class="pa-na">Sin datos</span>';
         } else {
-            // Clasificar el nivel de stock respecto al stock_max del ESTE despacho
-            const pct = smfRef > 0 ? stockD1Paq / smfRef : 0;
+            const pct = smfRefCtrl > 0 ? stockD1Ctrl / smfRefCtrl : 0;
             const cls = pct >= 0.5 ? 'positive' : pct >= 0.25 ? 'low' : 'critical';
-            stockHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Paq.toFixed(1)}</span>`;
+            stockHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Ctrl.toFixed(1)}</span>`;
         }
 
         let preHtml = '';
-        if (preHoyPaq) {
+        if (preHoyCtrl) {
             if (isHoy) {
-                preHtml = `<span class="pa-stock-d1" style="color:#0ea5e9; font-weight: bold;" title="Despacho Real de Hoy">${preHoyPaq.toFixed(1)}</span>`;
+                preHtml = `<span class="pa-stock-d1" style="color:#0ea5e9; font-weight: bold;" title="Despacho Real de Hoy">${preHoyCtrl.toFixed(1)}</span>`;
             } else {
                 preHtml = window.pa_include_preingreso
-                    ? `<span class="pa-stock-d1 positive" title="Sumado a Pronóstico Inventario">+${preHoyPaq.toFixed(1)}</span>`
-                    : `<span class="pa-stock-d1" style="color:#9ca3af;" title="Desactivado">+${preHoyPaq.toFixed(1)}</span>`;
+                    ? `<span class="pa-stock-d1 positive" title="Sumado a Pronóstico Inventario">+${preHoyCtrl.toFixed(1)}</span>`
+                    : `<span class="pa-stock-d1" style="color:#9ca3af;" title="Desactivado">+${preHoyCtrl.toFixed(1)}</span>`;
             }
         } else {
             preHtml = '<span class="pa-na">—</span>';
         }
 
-        let despHtml;
-        if (despPron === null || despPron === undefined) {
-            despHtml = '<span class="pa-na">—</span>';
-        } else {
-            despHtml = `<span class="pa-desp-val ${despPron > 0 ? 'needs' : 'ok'}">${despPron}</span>`;
-        }
+        let despHtmlCtrl = despPronCtrl === null || despPronCtrl === undefined ? '<span class="pa-na">—</span>' : `<span class="pa-desp-val ${despPronCtrl > 0 ? 'needs' : 'ok'}">${despPronCtrl.toFixed(1)}</span>`;
+        let despHtmlPaq = despPron === null || despPron === undefined ? '<span class="pa-na">—</span>' : `<span class="pa-desp-val ${despPron > 0 ? 'needs' : 'ok'}">${despPron.toFixed(1)}</span>`;
 
-        // El subtítulo de presentación se eliminó porque ahora la columna "Presentación de Despacho" muestra este dato
-
-        // Celda del Stock Máx Ajustado: muestra smfDisplay (ciclo real de esta ronda)
-        const smfCell = smfDisplay !== null && smfDisplay !== undefined
-            ? fmt2(smfDisplay)
+        const smfCell = smfDisplayCtrl !== null && smfDisplayCtrl !== undefined
+            ? fmt2(smfDisplayCtrl)
             : '<span class="pa-na">N/A</span>';
 
         let invTAHtml;
-        if (invTeoricoAyerPaq === null || invTeoricoAyerPaq === undefined) {
+        if (invTeoricoAyerCtrl === null || invTeoricoAyerCtrl === undefined) {
             invTAHtml = '<span class="pa-na">—</span>';
         } else {
-            invTAHtml = `<span>${invTeoricoAyerPaq.toFixed(1)}</span>`;
+            invTAHtml = `<span>${invTeoricoAyerCtrl.toFixed(1)}</span>`;
         }
+
+        const tdDatosCompletos = window.PA_DATOS_COMPLETOS ? `<td>${smfCell}</td><td class="pa-col-desp">${invTAHtml}</td>` : '';
+        const colspan = 10 + (window.PA_DATOS_COMPLETOS ? 2 : 0);
 
         if (isConsolidado) {
             rows += `
             <tr class="pa-row-expandible" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}">
                 <td><div class="d-flex align-items-center"><div class="pa-prod-name">${esc(p.nombre)}</div><i class="bi bi-chevron-right pa-expand-icon ms-2" style="margin-right: 0;"></i></div></td>
-                <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
-                <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
                 <td>${csDisplay !== null ? fmt2(csDisplay) : fmt2(null)}</td>
-                <td>${fmt2(sMinDisplay)}</td>
-                <td>${fmt2(smDisplay)}</td>
-                <td>${smfCell}</td>
-                <td class="pa-col-desp">${invTAHtml}</td>
+                <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
+                <td>${fmt2(sMinDisplayCtrl)}</td>
+                <td>${fmt2(smDisplayCtrl)}</td>
+                ${tdDatosCompletos}
                 <td class="pa-col-desp">${stockHtml}</td>
                 <td class="pa-col-desp" style="background:#f8fafc;">${preHtml}</td>
-                <td class="pa-col-desp">${despHtml}</td>
+                <td class="pa-col-desp">${despHtmlCtrl}</td>
+                <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
+                <td class="pa-col-desp">${despHtmlPaq}</td>
             </tr>
             ${buildSubRowsTiendas(p, slotKey)}`;
         } else {
-            // Reconstruir fecha desde el slotKey que es YYYYMMDD-CAT
             const dsStr = slotKey.split('-')[0];
             const fDesp = `${dsStr.substring(0, 4)}-${dsStr.substring(4, 6)}-${dsStr.substring(6, 8)}`;
             const sucVal = $('#pa-sucursal').val();
@@ -894,19 +899,19 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
             <tr class="pa-row-expandible-charts" style="cursor:pointer;" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}" data-sucursal="${sucVal}" data-fecha-despacho="${fDesp}" data-ciclo="${slot.cicloSlot}"
                 data-wls-m="${p.wls_m ?? 0}" data-wls-b="${p.wls_b ?? 0}" data-wls-n="${p.wls_n ?? 0}" data-wls-lff="${p._wls_lff || ''}" data-dsm="${p.dias_stock_min ?? 0}" data-ratio="${rowRatio}">
                 <td><div class="d-flex align-items-center"><div class="pa-prod-name">${esc(p.nombre)}</div><i class="bi bi-chevron-right pa-expand-icon ms-2" style="margin-right: 0;"></i></div></td>
-                <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
-                <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
                 <td>${csDisplay !== null ? fmt2(csDisplay) : fmt2(null)}</td>
-                <td>${fmt2(sMinDisplay)}</td>
-                <td>${fmt2(smDisplay)}</td>
-                <td>${smfCell}</td>
-                <td class="pa-col-desp">${invTAHtml}</td>
+                <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
+                <td>${fmt2(sMinDisplayCtrl)}</td>
+                <td>${fmt2(smDisplayCtrl)}</td>
+                ${tdDatosCompletos}
                 <td class="pa-col-desp">${stockHtml}</td>
                 <td class="pa-col-desp" style="background:#f8fafc;">${preHtml}</td>
-                <td class="pa-col-desp">${despHtml}</td>
+                <td class="pa-col-desp">${despHtmlCtrl}</td>
+                <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
+                <td class="pa-col-desp">${despHtmlPaq}</td>
             </tr>
             <tr class="pa-chart-sub d-none" data-slot-key="${slotKey}" data-pp-id="${p.id_pp}">
-                <td colspan="11" class="p-0">
+                <td colspan="${colspan}" class="p-0">
                     <div class="pa-charts-container d-flex flex-wrap flex-md-nowrap" style="width: 100%; border-top: 1px solid #eee; background: #fafafa;">
                         <div class="pa-chart-wrapper w-100 w-md-50 p-3" style="border-right: 1px solid #eee;">
                             <div class="fw-bold mb-2 text-center" style="color:#0E544C; font-size: 0.85rem;"><i class="fas fa-chart-line me-2"></i>Consumo Real y Pronostico (Unidades de Control)</div>
@@ -927,30 +932,35 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
     });
 
     const isChecked = window.pa_include_preingreso ? 'checked' : '';
-    const thDespachoEnCurso = isHoy ? 'Despacho Real de Hoy' : `Despacho en Curso<br>
+    const thDespachoEnCurso = isHoy ? 'Despacho en curso' : `Despacho en curso<br>
             <div class="form-check form-switch d-inline-block mt-1">
                 <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Incluir despachos de hoy" ${isChecked}>
             </div>`;
 
+    const thDatosCompletos = window.PA_DATOS_COMPLETOS ? `<th>Stock Máx Ajustado<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th><th>Inv. Teórico Ayer<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>` : '';
+
     const thead = `<thead><tr>
         <th style="text-align:left">Producto</th>
-        <th style="text-align:left">Presentación de Despacho</th>
-        <th>Consumo Diario<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(en unidades)</small></th>
-        <th>Consumo Semanal<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(en unidades)</small></th>
-        <th>Stock Mín</th><th>Stock Máx</th><th>Stock Máx Ajustado</th>
-        <th>Inv. Teórico Ayer</th>
-        <th>Pronóstico Inventario</th>
+        <th>Pronostico consumo semana<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
+        <th>Pronostico consumo dia<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
+        <th>Stock Minimo<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(3 dias - Unid. de control)</small></th>
+        <th>Requerido Total<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
+        ${thDatosCompletos}
+        <th>Pronostico de inventario al dia de despacho<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         <th style="width: 100px;">${thDespachoEnCurso}</th>
-        <th>Despacho</th>
+        <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
+        <th style="text-align:left">Presentacion de despacho</th>
+        <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid despacho)</small></th>
     </tr></thead>`;
 
-    return `<table class="pa-table">${thead}<tbody>${rows || '<tr class="pa-no-data-row"><td colspan="11">Sin productos</td></tr>'}</tbody></table>`;
+    return `<table class="pa-table">${thead}<tbody>${rows || '<tr class="pa-no-data-row"><td colspan="12">Sin productos</td></tr>'}</tbody></table>`;
 }
 
 function buildSubRowsTiendas(item, slotKey) {
     let rows = '';
     Object.entries(item._porTienda || {}).forEach(([cod, td]) => {
         const smf = td.stock_max_final ?? 0;
+        const df = item.despacho_factor > 0 ? item.despacho_factor : 1;
 
         let stockD1Paq = td.stockD1Paq;
         if (window.pa_include_preingreso && stockD1Paq !== null && td.preHoyPaq) {
@@ -958,45 +968,59 @@ function buildSubRowsTiendas(item, slotKey) {
         }
         let despPron = stockD1Paq !== null ? Math.max(0, Math.ceil((smf ?? 0) - stockD1Paq)) : null;
 
+        const stockD1Ctrl = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq * df : null;
+        const smfCtrl = smf * df;
+        const smCtrl = (td.stock_maximo ?? 0) * df;
+        const sMinCtrl = (td.sMinSlot ?? td.stock_minimo ?? 0) * df;
+        const preHoyCtrl = td.preHoyPaq !== null && td.preHoyPaq !== undefined ? td.preHoyPaq * df : null;
+        const despPronCtrl = despPron !== null && despPron !== undefined ? despPron * df : null;
+        const invTeoricoAyerCtrl = td.invTeoricoAyerPaq !== null && td.invTeoricoAyerPaq !== undefined ? td.invTeoricoAyerPaq * df : null;
+
         let sHtml;
-        if (stockD1Paq === null || stockD1Paq === undefined) {
+        if (stockD1Ctrl === null || stockD1Ctrl === undefined) {
             sHtml = '<span class="pa-na">Sin datos</span>';
         } else {
-            const pct = smf > 0 ? stockD1Paq / smf : 0;
+            const pct = smfCtrl > 0 ? stockD1Ctrl / smfCtrl : 0;
             const cls = pct >= 0.5 ? 'positive' : pct >= 0.25 ? 'low' : 'critical';
-            sHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Paq.toFixed(1)}</span>`;
+            sHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Ctrl.toFixed(1)}</span>`;
         }
 
         let preHtml = '';
-        if (td.preHoyPaq) {
+        if (preHoyCtrl) {
             preHtml = window.pa_include_preingreso
-                ? `<span class="pa-stock-d1 positive" style="transform: scale(0.9);">+${td.preHoyPaq.toFixed(1)}</span>`
-                : `<span class="pa-stock-d1 text-muted" style="transform: scale(0.9);">+${td.preHoyPaq.toFixed(1)}</span>`;
+                ? `<span class="pa-stock-d1 positive" style="transform: scale(0.9);">+${preHoyCtrl.toFixed(1)}</span>`
+                : `<span class="pa-stock-d1 text-muted" style="transform: scale(0.9);">+${preHoyCtrl.toFixed(1)}</span>`;
         } else {
             preHtml = '<span class="pa-na">—</span>';
         }
 
-        const dHtml = (despPron === null || despPron === undefined)
+        const dHtmlCtrl = (despPronCtrl === null || despPronCtrl === undefined)
             ? '<span class="pa-na">—</span>'
-            : `<span class="pa-desp-val ${despPron > 0 ? 'needs' : 'ok'}">${despPron}</span>`;
+            : `<span class="pa-desp-val ${despPronCtrl > 0 ? 'needs' : 'ok'}">${despPronCtrl.toFixed(1)}</span>`;
+            
+        const dHtmlPaq = (despPron === null || despPron === undefined)
+            ? '<span class="pa-na">—</span>'
+            : `<span class="pa-desp-val ${despPron > 0 ? 'needs' : 'ok'}">${despPron.toFixed(1)}</span>`;
 
         let tdCdDisplay = td.cd_dinamico !== null && td.cd_dinamico !== undefined ? td.cd_dinamico : (td.cons_semanal !== null && td.cons_semanal !== undefined ? (td.cons_semanal / 7) : null);
         let tdCsDisplay = tdCdDisplay !== null ? tdCdDisplay * 7 : null;
-        let tdInvTAHtml = (td.invTeoricoAyerPaq === null || td.invTeoricoAyerPaq === undefined) ? '<span class="pa-na">—</span>' : `<span>${td.invTeoricoAyerPaq.toFixed(1)}</span>`;
+        let tdInvTAHtml = (invTeoricoAyerCtrl === null || invTeoricoAyerCtrl === undefined) ? '<span class="pa-na">—</span>' : `<span>${invTeoricoAyerCtrl.toFixed(1)}</span>`;
+        
+        const tdDatosCompletos = window.PA_DATOS_COMPLETOS ? `<td>${fmt2(smfCtrl)}</td><td class="pa-col-desp">${tdInvTAHtml}</td>` : '';
 
         rows += `
         <tr class="pa-tienda-row pa-tienda-sub d-none" data-slot-key="${slotKey}" data-pp-id="${item.id_pp}">
             <td><span class="pa-tienda-badge">${esc(td.nombre)}</span></td>
-            <td></td>
-            <td>${tdCdDisplay !== null ? fmt2(tdCdDisplay) : fmt2(null)}</td>
             <td>${tdCsDisplay !== null ? fmt2(tdCsDisplay) : fmt2(null)}</td>
-            <td>${fmt2(td.sMinSlot ?? td.stock_minimo)}</td>
-            <td>${fmt2(td.stock_maximo)}</td>
-            <td>${fmt2(td.stock_max_final)}</td>
-            <td class="pa-col-desp">${tdInvTAHtml}</td>
+            <td>${tdCdDisplay !== null ? fmt2(tdCdDisplay) : fmt2(null)}</td>
+            <td>${fmt2(sMinCtrl)}</td>
+            <td>${fmt2(smCtrl)}</td>
+            ${tdDatosCompletos}
             <td class="pa-col-desp">${sHtml}</td>
             <td class="pa-col-desp" style="background:#f8fafc;">${preHtml}</td>
-            <td class="pa-col-desp">${dHtml}</td>
+            <td class="pa-col-desp">${dHtmlCtrl}</td>
+            <td></td>
+            <td class="pa-col-desp">${dHtmlPaq}</td>
         </tr>`;
     });
     return rows;
@@ -1045,42 +1069,50 @@ function exportarPronosticoExcel() {
 
                 let despPron = currentAgendaData.isConsolidado ? despTotalConsolidado : (stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null);
 
-                let productoNombre = p.nombre;
+                const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
 
-                let pronosticoInv = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq.toFixed(2) : 'Sin datos';
-                let despachoEnCurso = window.pa_include_preingreso && preHoyPaq ? preHoyPaq.toFixed(2) : '0.00';
+                // Apply * df for displaying in Control units
+                const sMinDisplayCtrl = sMinDisplay !== null && sMinDisplay !== undefined ? sMinDisplay * df : null;
+                const smDisplayCtrl = smDisplay !== null && smDisplay !== undefined ? smDisplay * df : null;
+                const smfDisplayCtrl = smfDisplay !== null && smfDisplay !== undefined ? smfDisplay * df : null;
+                const invTeoricoAyerCtrl = invTeoricoAyerPaq !== null && invTeoricoAyerPaq !== undefined ? invTeoricoAyerPaq * df : null;
+                const stockD1Ctrl = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq * df : null;
+                const preHoyCtrl = preHoyPaq !== null && preHoyPaq !== undefined ? preHoyPaq * df : null;
+                const despPronCtrl = despPron !== null && despPron !== undefined ? despPron * df : null;
 
-                if (!currentAgendaData.isConsolidado) {
-                    const rd = p._porRonda?.[slot.round] ?? {};
-                    cdDisplay = rd.cd_dinamico ?? (p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null);
-                    csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
-                    invTeoricoAyerPaq = rd.invTeoricoAyerPaq;
-                }
+                let pronosticoInv = stockD1Ctrl !== null && stockD1Ctrl !== undefined ? stockD1Ctrl.toFixed(1) : 'Sin datos';
+                let despachoEnCurso = window.pa_include_preingreso && preHoyCtrl ? preHoyCtrl.toFixed(1) : '0.0';
 
-                let tiendaPrincipal = currentAgendaData.isConsolidado ? "Total" : (window.lastStoreResults ? Object.values(window.lastStoreResults)[0].nombre : "");
-
-                datosExportar.push({
+                let obj = {
                     "Fecha de Despacho": fecha,
                     "Grupo": PA_LABELS[cat] || cat,
                     "Producto": productoNombre,
                     "Tienda": tiendaPrincipal,
-                    "Presentación de Despacho": p.despacho_presentacion || p.unidad || '-',
-                    "Consumo Diario": cdDisplay !== null ? cdDisplay.toFixed(2) : '',
-                    "Consumo Semanal": csDisplay !== null ? csDisplay.toFixed(2) : '',
-                    "Stock Mín": sMinDisplay !== null && sMinDisplay !== undefined ? parseFloat(sMinDisplay).toFixed(2) : '',
-                    "Stock Máx": smDisplay !== null && smDisplay !== undefined ? parseFloat(smDisplay).toFixed(2) : '',
-                    "Stock Máx Ajustado": smfDisplay !== null && smfDisplay !== undefined ? parseFloat(smfDisplay).toFixed(2) : '',
-                    "Inv. Teórico Ayer": invTeoricoAyerPaq !== null && invTeoricoAyerPaq !== undefined ? invTeoricoAyerPaq.toFixed(2) : '',
-                    "Pronóstico Inventario": pronosticoInv,
-                    "Despacho en curso": despachoEnCurso,
-                    "Despacho": despPron !== null ? despPron : '-'
-                });
+                    "Pronostico consumo semana (Unid. de control)": csDisplay !== null ? parseFloat(csDisplay).toFixed(1) : '',
+                    "Pronostico consumo dia (Unid. de control)": cdDisplay !== null ? parseFloat(cdDisplay).toFixed(1) : '',
+                    "Stock Minimo (Unid. de control)": sMinDisplayCtrl !== null ? parseFloat(sMinDisplayCtrl).toFixed(1) : '',
+                    "Requerido Total (Unid. de control)": smDisplayCtrl !== null ? parseFloat(smDisplayCtrl).toFixed(1) : ''
+                };
+                
+                if (window.PA_DATOS_COMPLETOS) {
+                    obj["Stock Máx Ajustado (Unid. de control)"] = smfDisplayCtrl !== null ? parseFloat(smfDisplayCtrl).toFixed(1) : '';
+                    obj["Inv. Teórico Ayer (Unid. de control)"] = invTeoricoAyerCtrl !== null ? parseFloat(invTeoricoAyerCtrl).toFixed(1) : '';
+                }
+                
+                obj["Pronostico de inventario al dia de despacho (Unid. de control)"] = pronosticoInv;
+                obj["Despacho en curso"] = despachoEnCurso;
+                obj["Despacho requerido (Unid. de control)"] = despPronCtrl !== null ? parseFloat(despPronCtrl).toFixed(1) : '-';
+                obj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
+                obj["Despacho requerido (Unid despacho)"] = despPron !== null ? parseFloat(despPron).toFixed(1) : '-';
+                
+                datosExportar.push(obj);
 
                 if (currentAgendaData.isConsolidado && p._porTienda) {
                     Object.entries(p._porTienda).forEach(([cod, td]) => {
                         let sub_smfDisplay = td.stock_max_final ?? 0;
                         let sub_smDisplay = td.stock_maximo ?? 0;
                         let sub_stockD1Paq = td.stockD1Paq;
+                        let sub_sMinSlot = td.sMinSlot ?? td.stock_minimo;
 
                         if (window.pa_include_preingreso && sub_stockD1Paq !== null && td.preHoyPaq) {
                             sub_stockD1Paq += td.preHoyPaq;
@@ -1088,28 +1120,43 @@ function exportarPronosticoExcel() {
 
                         let sub_despPron = sub_stockD1Paq !== null ? Math.max(0, Math.ceil((sub_smfDisplay ?? 0) - sub_stockD1Paq)) : null;
 
-                        let sub_pronosticoInv = sub_stockD1Paq !== null && sub_stockD1Paq !== undefined ? sub_stockD1Paq.toFixed(2) : 'Sin datos';
-                        let sub_despachoEnCurso = window.pa_include_preingreso && td.preHoyPaq ? td.preHoyPaq.toFixed(2) : '0.00';
+                        const sub_sMinDisplayCtrl = sub_sMinSlot !== null && sub_sMinSlot !== undefined ? sub_sMinSlot * df : null;
+                        const sub_smDisplayCtrl = sub_smDisplay !== null && sub_smDisplay !== undefined ? sub_smDisplay * df : null;
+                        const sub_smfDisplayCtrl = sub_smfDisplay !== null && sub_smfDisplay !== undefined ? sub_smfDisplay * df : null;
+                        const sub_invTeoricoAyerCtrl = td.invTeoricoAyerPaq !== null && td.invTeoricoAyerPaq !== undefined ? td.invTeoricoAyerPaq * df : null;
+                        const sub_stockD1Ctrl = sub_stockD1Paq !== null && sub_stockD1Paq !== undefined ? sub_stockD1Paq * df : null;
+                        const sub_preHoyCtrl = td.preHoyPaq !== null && td.preHoyPaq !== undefined ? td.preHoyPaq * df : null;
+                        const sub_despPronCtrl = sub_despPron !== null && sub_despPron !== undefined ? sub_despPron * df : null;
+
+                        let sub_pronosticoInv = sub_stockD1Ctrl !== null && sub_stockD1Ctrl !== undefined ? sub_stockD1Ctrl.toFixed(1) : 'Sin datos';
+                        let sub_despachoEnCurso = window.pa_include_preingreso && sub_preHoyCtrl ? sub_preHoyCtrl.toFixed(1) : '0.0';
 
                         let sub_cdDisplay = td.cd_dinamico !== null && td.cd_dinamico !== undefined ? td.cd_dinamico : (td.cons_semanal !== null && td.cons_semanal !== undefined ? (td.cons_semanal / 7) : null);
                         let sub_csDisplay = sub_cdDisplay !== null ? sub_cdDisplay * 7 : null;
 
-                        datosExportar.push({
+                        let subObj = {
                             "Fecha de Despacho": fecha,
                             "Grupo": PA_LABELS[cat] || cat,
                             "Producto": productoNombre,
                             "Tienda": td.nombre,
-                            "Presentación de Despacho": p.despacho_presentacion || p.unidad || '-',
-                            "Consumo Diario": sub_cdDisplay !== null ? sub_cdDisplay.toFixed(2) : '',
-                            "Consumo Semanal": sub_csDisplay !== null ? sub_csDisplay.toFixed(2) : '',
-                            "Stock Mín": (td.sMinSlot ?? td.stock_minimo) !== null && (td.sMinSlot ?? td.stock_minimo) !== undefined ? parseFloat(td.sMinSlot ?? td.stock_minimo).toFixed(2) : '',
-                            "Stock Máx": sub_smDisplay !== null && sub_smDisplay !== undefined ? parseFloat(sub_smDisplay).toFixed(2) : '',
-                            "Stock Máx Ajustado": sub_smfDisplay !== null && sub_smfDisplay !== undefined ? parseFloat(sub_smfDisplay).toFixed(2) : '',
-                            "Inv. Teórico Ayer": td.invTeoricoAyerPaq !== null && td.invTeoricoAyerPaq !== undefined ? td.invTeoricoAyerPaq.toFixed(2) : '',
-                            "Pronóstico Inventario": sub_pronosticoInv,
-                            "Despacho en curso": sub_despachoEnCurso,
-                            "Despacho": sub_despPron !== null ? sub_despPron : '-'
-                        });
+                            "Pronostico consumo semana (Unid. de control)": sub_csDisplay !== null ? parseFloat(sub_csDisplay).toFixed(1) : '',
+                            "Pronostico consumo dia (Unid. de control)": sub_cdDisplay !== null ? parseFloat(sub_cdDisplay).toFixed(1) : '',
+                            "Stock Minimo (Unid. de control)": sub_sMinDisplayCtrl !== null ? parseFloat(sub_sMinDisplayCtrl).toFixed(1) : '',
+                            "Requerido Total (Unid. de control)": sub_smDisplayCtrl !== null ? parseFloat(sub_smDisplayCtrl).toFixed(1) : ''
+                        };
+
+                        if (window.PA_DATOS_COMPLETOS) {
+                            subObj["Stock Máx Ajustado (Unid. de control)"] = sub_smfDisplayCtrl !== null ? parseFloat(sub_smfDisplayCtrl).toFixed(1) : '';
+                            subObj["Inv. Teórico Ayer (Unid. de control)"] = sub_invTeoricoAyerCtrl !== null ? parseFloat(sub_invTeoricoAyerCtrl).toFixed(1) : '';
+                        }
+                        
+                        subObj["Pronostico de inventario al dia de despacho (Unid. de control)"] = sub_pronosticoInv;
+                        subObj["Despacho en curso"] = sub_despachoEnCurso;
+                        subObj["Despacho requerido (Unid. de control)"] = sub_despPronCtrl !== null ? parseFloat(sub_despPronCtrl).toFixed(1) : '-';
+                        subObj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
+                        subObj["Despacho requerido (Unid despacho)"] = sub_despPron !== null ? parseFloat(sub_despPron).toFixed(1) : '-';
+
+                        datosExportar.push(subObj);
                     });
                 }
             });

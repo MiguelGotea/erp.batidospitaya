@@ -226,9 +226,9 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Consumo Diario (WLS):</b> Proyección calculada mediante regresión lineal
+                                    <li><b>Pronostico consumo dia (WLS):</b> Proyección calculada mediante regresión lineal
                                         ponderada dividida entre 7 para dar mayor peso a la tendencia reciente.</li>
-                                    <li><b>Proyección Futura:</b> Tasa plana constante. Se usa el Consumo Diario WLS
+                                    <li><b>Proyección Futura:</b> Tasa plana constante. Se usa el Pronostico consumo dia WLS
                                         actual para proyectar el descuento de stock futuro sin variaciones.</li>
                                 </ul>
                             </div>
@@ -237,11 +237,11 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-box-seam me-1"></i> Niveles de Stock</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Stock Mín:</b>
-                                        <code>(Consumo Diario × Días Stock Mínimo) / Factor Despacho</code>
+                                    <li><b>Stock Minimo:</b>
+                                        <code>(Pronostico consumo dia × Días Stock Mínimo)</code>
                                     </li>
-                                    <li><b>Stock Máx:</b>
-                                        <code>((Consumo Diario × Ciclo) + Stock Mín Base) / Factor Despacho</code>
+                                    <li><b>Requerido Total:</b>
+                                        <code>(Pronostico consumo dia × Ciclo) + Stock Minimo Base</code>
                                     </li>
                                 </ul>
                             </div>
@@ -287,7 +287,7 @@ try {
                             <i class="bi bi-graph-up-arrow"></i> Pronóstico Inteligente (Tendencia Reciente WLS)
                         </h6>
                         <ul class="text-secondary small mb-0">
-                            <li>El cálculo de <b>Consumo Diario</b> da <b>más importancia a lo reciente</b>, asignando
+                            <li>El cálculo de <b>Pronostico consumo dia</b> da <b>más importancia a lo reciente</b>, asignando
                                 mayor peso a las semanas más cercanas para reaccionar rápido a cambios de demanda.</li>
                             <li>La fórmula detecta la <b>tendencia de crecimiento o decrecimiento</b>, y con base en
                                 ello proyecta un consumo diario estimado.</li>
@@ -302,7 +302,7 @@ try {
                             <i class="bi bi-snow2"></i> Capacidad de Congelados (Ajuste B)
                         </h6>
                         <p class="text-secondary small mb-0">
-                            Si la suma de los <b>Stock Máximos</b> de la Categoría B excede la capacidad de la sucursal,
+                            Si la suma del <b>Requerido Total</b> de la Categoría B excede la capacidad de la sucursal,
                             el sistema aplica un **Factor de Reducción Proporcional** (nunca mayor a 1.0).
                             Esto garantiza que el pedido sugerido no exceda lo que físicamente cabe en los congeladores.
                         </p>
@@ -321,16 +321,16 @@ try {
                                         (excluye ceros estructurales de inicio/fin).</li>
                                     <li class="mb-1"><b>Desv. Estándar:</b> <i>(Obsoleto, se mantiene solo de
                                             referencia)</i> Qué tanto variaba el consumo.</li>
-                                    <li class="mb-1"><b>Consumo Diario:</b> Proyección inteligente basada en Mínimos
+                                    <li class="mb-1"><b>Pronostico consumo dia:</b> Proyección inteligente basada en Mínimos
                                         Cuadrados Ponderados (WLS) dividida entre 7 que detecta tendencias y da más peso
                                         a las ventas recientes para predecir el consumo con mayor exactitud.</li>
-                                    <li class="mb-1"><b>Consumo Semanal:</b> Proyección de consumo equivalente al
+                                    <li class="mb-1"><b>Pronostico consumo semana:</b> Proyección de consumo equivalente al
                                         Consumo Diario multiplicado por 7.</li>
-                                    <li class="mb-1"><b>Cap. Base (Final):</b> El Stock Máximo ya ajustado a lo que cabe
+                                    <li class="mb-1"><b>Cap. Base (Final):</b> El Requerido Total ya ajustado a lo que cabe
                                         físicamente en tienda.</li>
                                     <li class="mb-1"><b>Inv. Teórico Ayer:</b> Inventario calculado hasta el día de
                                         ayer, usado como punto de partida en la ecuación de Pronóstico Inventario.</li>
-                                    <li class="mb-1"><b>Sugerencia:</b> La resta entre el Stock Máximo Final y tu
+                                    <li class="mb-1"><b>Sugerencia:</b> La resta entre el Requerido Total y tu
                                         Inventario Actual.</li>
                                 </ul>
                             </div>
