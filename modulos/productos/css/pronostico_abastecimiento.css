@@ -342,14 +342,13 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--pa-muted);
-    text-align: right;
+    text-align: center;
     border-bottom: none;
     white-space: normal;
     /* Sombra inferior sutil cuando es sticky */
     box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
-.pa-table thead th:first-child,
-.pa-table thead th:nth-child(2) { text-align: left; }
+.pa-table thead th:first-child { text-align: left; }
 
 .pa-table tbody tr {
     background: var(--neu-bg);
@@ -364,7 +363,7 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
 .pa-table td {
     padding: 8px 14px;
     vertical-align: middle;
-    text-align: right;
+    text-align: center;
 }
 .pa-table td:first-child { 
     text-align: left; 
@@ -375,7 +374,6 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
     border-top-right-radius: 8px; 
     border-bottom-right-radius: 8px; 
 }
-.pa-table td:nth-child(2) { text-align: left; }
 
 .pa-prod-name { font-weight: 700; font-size: 13.5px; color: var(--pa-text); white-space: nowrap; }
 .pa-prod-sub { font-size: 11px; color: var(--pa-muted); margin-top: 2px; }

@@ -949,7 +949,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         <th>Pronostico de inventario al dia de despacho<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         <th style="width: 100px;">${thDespachoEnCurso}</th>
         <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
-        <th style="text-align:left">Presentacion de despacho</th>
+        <th>Presentacion de despacho</th>
         <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid despacho)</small></th>
     </tr></thead>`;
 

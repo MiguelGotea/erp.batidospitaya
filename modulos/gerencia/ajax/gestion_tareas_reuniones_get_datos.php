@@ -65,9 +65,11 @@ try {
     ]);
 
 } catch (Exception $e) {
-    error_log("Error en get_datos: " . $e->getMessage());
-    file_put_contents(__DIR__ . '/error_debug.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
     echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
+}
         'success' => false,
         'message' => $e->getMessage()
     ]);
@@ -276,110 +278,93 @@ function agruparPorMes($items)
  */
 function agruparPorSemana($items, $conn)
 {
-    try {
-        $grupos = [];
-        $hoy = new DateTime();
+    $grupos = [];
+    $hoy = new DateTime();
 
-        // Obtener la semana actual del sistema
-        $sqlSemanaActual = "SELECT numero_semana, anio FROM SemanasSistema 
-                            WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin LIMIT 1";
-        $stmtActual = $conn->query($sqlSemanaActual);
-        $semanaActualData = $stmtActual ? $stmtActual->fetch(PDO::FETCH_ASSOC) : null;
-        $numSemanaActual = $semanaActualData ? (int)$semanaActualData['numero_semana'] : 0;
-        $anioSemanaActual = $semanaActualData ? (int)$semanaActualData['anio'] : 0;
+    // Obtener la semana actual del sistema
+    $sqlSemanaActual = "SELECT numero_semana, anio FROM SemanasSistema 
+                        WHERE CURDATE() BETWEEN fecha_inicio AND fecha_fin LIMIT 1";
+    $stmtActual = $conn->query($sqlSemanaActual);
+    $semanaActualData = $stmtActual ? $stmtActual->fetch(PDO::FETCH_ASSOC) : null;
+    $numSemanaActual = $semanaActualData ? (int)$semanaActualData['numero_semana'] : 0;
+    $anioSemanaActual = $semanaActualData ? (int)$semanaActualData['anio'] : 0;
 
-        // Grupo de tareas vencidas (antes de la semana actual)
-        $vencidas = [];
+    // Grupo de tareas vencidas (antes de la semana actual)
+    $vencidas = [];
 
-        foreach ($items as $item) {
-            $fecha = $item['tipo'] == 'reunion' ? $item['fecha_reunion'] : $item['fecha_meta'];
+    foreach ($items as $item) {
+        $fecha = $item['tipo'] == 'reunion' ? $item['fecha_reunion'] : $item['fecha_meta'];
 
-            if (!$fecha)
-                continue;
+        if (!$fecha)
+            continue;
 
-            // Extraer solo la fecha YYYY-MM-DD para evitar problemas con hora
-            $fechaSolo = substr($fecha, 0, 10);
+        // Extraer solo la fecha YYYY-MM-DD para evitar problemas con hora
+        $fechaSolo = substr($fecha, 0, 10);
 
-            // Obtener la fila de SemanasSistema que contiene esta fecha
-            $sqlSemana = "SELECT numero_semana, anio, fecha_inicio, fecha_fin 
-                          FROM SemanasSistema 
-                          WHERE :fecha BETWEEN fecha_inicio AND fecha_fin LIMIT 1";
-            $stmt = $conn->prepare($sqlSemana);
-            $stmt->execute([':fecha' => $fechaSolo]);
-            $semanaData = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Obtener la fila de SemanasSistema que contiene esta fecha
+        $sqlSemana = "SELECT numero_semana, anio, fecha_inicio, fecha_fin 
+                      FROM SemanasSistema 
+                      WHERE :fecha BETWEEN fecha_inicio AND fecha_fin LIMIT 1";
+        $stmt = $conn->prepare($sqlSemana);
+        $stmt->execute([':fecha' => $fechaSolo]);
+        $semanaData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$semanaData) {
-                $numSemana = 0;
-                $anioSemana = 9999;
-                $ordenSemana = 999999;
-                $nombreSemana = "Semana fuera de sistema (" . $fechaSolo . ")";
-                $fechaFinSemana = $fechaSolo;
-            } else {
-                $numSemana = (int)$semanaData['numero_semana'];
-                $anioSemana = (int)$semanaData['anio'];
-                $ordenSemana = $anioSemana * 100 + $numSemana;
-                
-                $mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-                $fechaInicio = new DateTime($semanaData['fecha_inicio']);
-                $fechaFin    = new DateTime($semanaData['fecha_fin']);
-                $nombreSemana = "Semana #" . $numSemana . " (" .
-                    $fechaInicio->format('d') . "-" . $mesesCortos[$fechaInicio->format('n') - 1] . " al " .
-                    $fechaFin->format('d')   . "-" . $mesesCortos[$fechaFin->format('n')   - 1] . ")";
-                $fechaFinSemana = $semanaData['fecha_fin'];
-            }
+        if (!$semanaData)
+            continue;
 
-            $ordenSemanaActual = $anioSemanaActual * 100 + $numSemanaActual;
+        $numSemana = (int)$semanaData['numero_semana'];
+        $anioSemana = (int)$semanaData['anio'];
+        $ordenSemana = $anioSemana * 100 + $numSemana;
+        
+        $mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        $fechaInicio = new DateTime($semanaData['fecha_inicio']);
+        $fechaFin    = new DateTime($semanaData['fecha_fin']);
+        $nombreSemana = "Semana #" . $numSemana . " (" .
+            $fechaInicio->format('d') . "-" . $mesesCortos[$fechaInicio->format('n') - 1] . " al " .
+            $fechaFin->format('d')   . "-" . $mesesCortos[$fechaFin->format('n')   - 1] . ")";
+        $fechaFinSemana = $semanaData['fecha_fin'];
 
-            // Si es tarea activa y su semana ya pasó → vencidas
-            if ($item['tipo'] == 'tarea'
-                && $ordenSemanaActual > 0
-                && $ordenSemana < $ordenSemanaActual
-                && $item['estado'] != 'finalizado'
-                && $item['estado'] != 'cancelado') {
-                $vencidas[] = $item;
-                continue;
-            }
+        $ordenSemanaActual = $anioSemanaActual * 100 + $numSemanaActual;
 
-            // Agregar fecha_referencia para drag & drop
-            if (!isset($grupos[$ordenSemana])) {
-                $grupos[$ordenSemana] = [
-                    'nombre'           => $nombreSemana,
-                    'orden'            => $ordenSemana,
-                    'fecha_referencia' => $fechaFinSemana, // última fecha de la semana
-                    'items'            => []
-                ];
-            }
-
-            $grupos[$ordenSemana]['items'][] = $item;
+        // Si es tarea activa y su semana ya pasó → vencidas
+        if ($item['tipo'] == 'tarea'
+            && $ordenSemanaActual > 0
+            && $ordenSemana < $ordenSemanaActual
+            && $item['estado'] != 'finalizado'
+            && $item['estado'] != 'cancelado') {
+            $vencidas[] = $item;
+            continue;
         }
 
-        // Ordenar grupos por orden cronológico de semana
-        uasort($grupos, function ($a, $b) {
-            return $a['orden'] - $b['orden'];
-        });
-
-        // Agregar grupo de vencidas al inicio si hay
-        if (!empty($vencidas)) {
-            array_unshift($grupos, [
-                'nombre'           => 'Tareas Vencidas',
-                'orden'            => 0,
-                'fecha_referencia' => '',
-                'items'            => $vencidas
-            ]);
-        }
-
-        return array_values($grupos);
-
-    } catch (Throwable $e) {
-        return [
-            [
-                'nombre'           => 'ERROR DETECTADO: ' . $e->getMessage() . ' (Línea ' . $e->getLine() . ')',
-                'orden'            => 0,
-                'fecha_referencia' => date('Y-m-d'),
+        // Agregar fecha_referencia para drag & drop
+        if (!isset($grupos[$ordenSemana])) {
+            $grupos[$ordenSemana] = [
+                'nombre'           => $nombreSemana,
+                'orden'            => $ordenSemana,
+                'fecha_referencia' => $fechaFinSemana, // última fecha de la semana
                 'items'            => []
-            ]
-        ];
+            ];
+        }
+
+        $grupos[$ordenSemana]['items'][] = $item;
     }
+
+    // Ordenar grupos por orden cronológico de semana
+    uasort($grupos, function ($a, $b) {
+        return $a['orden'] - $b['orden'];
+    });
+
+    // Agregar grupo de vencidas al inicio si hay
+    if (!empty($vencidas)) {
+        array_unshift($grupos, [
+            'nombre'           => 'Tareas Vencidas',
+            'orden'            => 0,
+            'fecha_referencia' => '',
+            'items'            => $vencidas
+        ]);
+    }
+
+    return array_values($grupos);
 }
 
 /**
