@@ -598,6 +598,7 @@ function consolidarResultados(storeResults) {
                             despacho_nombre: p.despacho_nombre,
                             despacho_presentacion: p.despacho_presentacion,
                             despacho_factor: p.despacho_factor,
+                            dias_stock_min: p.dias_stock_min,
                             cons_semanal: 0, stock_minimo: 0, stock_maximo: 0, stock_max_final: 0,
                             _sMinTotal: 0, _smTotal: 0, _smfTotal: 0,
                             _stockD1Total: null, _preHoyTotal: null, _invTeoricoAyerTotal: null, _porTienda: {}
@@ -940,11 +941,16 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
 
     const thDatosCompletos = window.PA_DATOS_COMPLETOS ? `<th>Stock Máx Ajustado<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th><th>Inv. Teórico Ayer<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>` : '';
 
+    let dsmText = '3 dias';
+    if (items && items.length > 0 && items[0].dias_stock_min !== undefined && items[0].dias_stock_min !== null) {
+        dsmText = items[0].dias_stock_min + (items[0].dias_stock_min == 1 ? ' dia' : ' dias');
+    }
+
     const thead = `<thead><tr>
         <th style="text-align:left">Producto</th>
         <th>Pronostico consumo semana<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         <th>Pronostico consumo dia<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
-        <th>Stock Minimo<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(3 dias - Unid. de control)</small></th>
+        <th>Stock Minimo<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(${dsmText} - Unid. de control)</small></th>
         <th>Requerido Total<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         ${thDatosCompletos}
         <th>Pronostico de inventario al dia de despacho<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
