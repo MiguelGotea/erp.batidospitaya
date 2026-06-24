@@ -438,9 +438,9 @@ try {
     if (!empty($codCotBuscar)) {
         $phC = implode(',', array_fill(0, count($codCotBuscar), '?'));
 
-        // Paso A: resolución directa — sin filtro por presentacion_basica_inventario
-        // (igual que inventario_get_data.php). Cuando la presentación resuelta no sea
-        // la básica, se corrige más adelante en el loop de consumo via maestro.
+        // Paso A: resolución directa (presentacion_basica_inventario = 1)
+        // Se fuerza a la presentación básica para unificar insumos y permitir a Paso B
+        // encontrar las unidades base de los mapeos de despacho, igual que en el dashboard.
         $stmtD = $conn->prepare("
             SELECT d.CodCotizacion,
                    pp.id                          AS id,
@@ -460,6 +460,7 @@ try {
             LEFT  JOIN producto_maestro pm      ON pm.id = pp.id_producto_maestro
             WHERE d.CodCotizacion IN ($phC)
               AND pp.Activo = 'SI'
+              AND pp.presentacion_basica_inventario = 1
         ");
         $stmtD->execute(array_values($codCotBuscar));
         foreach ($stmtD->fetchAll() as $row)
@@ -604,9 +605,7 @@ try {
             continue;
 
         if (empty($m['Id_receta_producto']) && !empty($m['id_m'])) {
-            // Ya NO forzamos la unificación a la presentación básica de inventario.
-            // Se respeta la presentación exacta (igual que dashboard_consumo), pero sí
-            // aseguramos que, si la unidad difiere de la unidad ERP de la presentación
+            // Aseguramos que, si la unidad difiere de la unidad ERP de la presentación
             // original, se aplique el factor de conversión correspondiente.
         }
 
