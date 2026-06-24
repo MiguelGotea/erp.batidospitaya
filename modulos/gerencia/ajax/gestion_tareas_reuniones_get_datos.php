@@ -70,10 +70,6 @@ try {
         'message' => $e->getMessage()
     ]);
 }
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
-}
 
 /**
  * Obtener items relevantes para el usuario
