@@ -932,7 +932,8 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
     });
 
     const isChecked = window.pa_include_preingreso ? 'checked' : '';
-    const thDespachoEnCurso = isHoy ? 'Despacho en curso' : `Despacho en curso<br>
+    const thDespachoEnCurso = isHoy ? 'Despacho en curso<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small>' : `Despacho en curso<br>
+            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small><br>
             <div class="form-check form-switch d-inline-block mt-1">
                 <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Incluir despachos de hoy" ${isChecked}>
             </div>`;
