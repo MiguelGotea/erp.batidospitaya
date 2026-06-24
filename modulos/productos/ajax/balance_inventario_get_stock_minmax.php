@@ -371,6 +371,12 @@ try {
                     INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
                     WHERE v.Anulado = 0 AND v.local = ? AND v.Semana BETWEEN ? AND ?
                       AND v.Fecha BETWEEN ? AND ?
+                      AND v.CodProducto IS NOT NULL
+                      AND (sr.codporcion IS NULL OR sr.codporcion NOT IN (
+                          SELECT CodCotizacionPorcion
+                          FROM MezclaPorcionesAccess
+                          WHERE CodCotizacionPorcion IS NOT NULL
+                      ))
                       $whereExtra
                     GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
                 ");
@@ -383,6 +389,12 @@ try {
                     INNER JOIN SubReceta sr ON sr.CodBatido = v.CodProducto
                     WHERE v.Anulado = 0 AND v.Semana BETWEEN ? AND ?
                       AND v.Fecha BETWEEN ? AND ?
+                      AND v.CodProducto IS NOT NULL
+                      AND (sr.codporcion IS NULL OR sr.codporcion NOT IN (
+                          SELECT CodCotizacionPorcion
+                          FROM MezclaPorcionesAccess
+                          WHERE CodCotizacionPorcion IS NOT NULL
+                      ))
                       $whereExtra
                     GROUP BY v.Semana, sr.CodIngrediente, sr.codporcion
                 ");
