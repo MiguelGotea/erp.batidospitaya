@@ -604,10 +604,16 @@ try {
             continue;
 
         if (empty($m['Id_receta_producto']) && !empty($m['id_m'])) {
-            // Ya NO forzamos la unificación a la presentación básica de inventario.
-            // Se respeta la presentación exacta (igual que dashboard_consumo), pero sí
-            // aseguramos que, si la unidad difiere de la unidad ERP de la presentación
-            // original, se aplique el factor de conversión correspondiente.
+            $baseForM = $presentPorMaestro[$m['id_m']] ?? null;
+            if ($baseForM) {
+                $firstBase = reset($baseForM);
+                $m['id'] = $firstBase['id'];
+                $m['pp_cant'] = $firstBase['cantidad'];
+                $m['uid'] = $firstBase['id_unidad_producto'];
+                $m['n'] = $firstBase['Nombre'];
+                $m['presentacion'] = $firstBase['presentacion'];
+                $m['cat'] = $firstBase['categoria_insumo'] ?? $m['cat'];
+            }
         }
 
         $idPP = (int) $m['id'];

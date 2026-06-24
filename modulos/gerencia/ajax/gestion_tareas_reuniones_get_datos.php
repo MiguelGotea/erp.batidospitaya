@@ -358,7 +358,15 @@ function agruparPorSemana($items, $conn)
         ]);
     }
 
-    return array_values($grupos);
+    $resultadoFinal = array_values($grupos);
+    file_put_contents(__DIR__ . '/debug_semana.txt', print_r([
+        'numSemanaActual' => $numSemanaActual,
+        'anioSemanaActual' => $anioSemanaActual,
+        'items_procesados' => count($items),
+        'vencidas' => count($vencidas),
+        'grupos_encontrados' => count($grupos)
+    ], true));
+    return $resultadoFinal;
 }
 
 /**
