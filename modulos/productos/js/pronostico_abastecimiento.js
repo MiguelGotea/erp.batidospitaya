@@ -100,6 +100,7 @@ $(document).ready(() => {
 
     $('#pa-agenda').on('click', '.pa-row-expandible-charts', function () {
         const ppId = $(this).data('pp-id');
+        const baseId = $(this).data('base-id') || ppId;
         const sk = $(this).data('slot-key');
         const sucursal = $(this).data('sucursal');
         const fechaDespacho = $(this).data('fecha-despacho');
@@ -117,7 +118,7 @@ $(document).ready(() => {
             const semCorte = $('#pa-corte').val();
 
             if (window.cargarGraficasParaFila) {
-                window.cargarGraficasParaFila(ppId, sk, sucursal, semDesde, semHasta, semCorte, fechaDespacho, cicloSlot);
+                window.cargarGraficasParaFila(ppId, sk, sucursal, semDesde, semHasta, semCorte, fechaDespacho, cicloSlot, baseId);
             }
         }
     });
@@ -891,7 +892,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
             }
 
             rows += `
-            <tr class="pa-row-expandible-charts" style="cursor:pointer;" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}" data-sucursal="${sucVal}" data-fecha-despacho="${fDesp}" data-ciclo="${slot.cicloSlot}"
+            <tr class="pa-row-expandible-charts" style="cursor:pointer;" data-pp-id="${p.id_pp}" data-base-id="${p.id_pp_base || p.id_pp}" data-slot-key="${slotKey}" data-sucursal="${sucVal}" data-fecha-despacho="${fDesp}" data-ciclo="${slot.cicloSlot}"
                 data-wls-m="${p.wls_m ?? 0}" data-wls-b="${p.wls_b ?? 0}" data-wls-n="${p.wls_n ?? 0}" data-wls-lff="${p._wls_lff || ''}" data-dsm="${p.dias_stock_min ?? 0}" data-ratio="${rowRatio}">
                 <td><div class="d-flex align-items-center"><div class="pa-prod-name">${esc(p.nombre)}</div><i class="bi bi-chevron-right pa-expand-icon ms-2" style="margin-right: 0;"></i></div></td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>

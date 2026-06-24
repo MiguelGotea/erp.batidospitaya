@@ -66,6 +66,7 @@ try {
 
 } catch (Exception $e) {
     error_log("Error en get_datos: " . $e->getMessage());
+    file_put_contents(__DIR__ . '/error_debug.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()

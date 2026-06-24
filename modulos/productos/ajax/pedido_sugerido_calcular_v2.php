@@ -644,7 +644,7 @@ try {
             // 'u' = campo presentacion de producto_presentacion (ej: 'rama', 'unid', 'oz', 'bolsa').
             // Si presentacion es NULL en la BD, se deja null → el JS muestra '—'.
             // No se usa fallback a la abreviatura de unidad para evitar mostrar datos no configurados.
-            $metaPP[$idPP] = ['n' => $m['n'], 'u' => ($m['presentacion'] ?: null), 'cat' => $m['cat']];
+            $metaPP[$idPP] = ['n' => $m['n'], 'u' => ($m['presentacion'] ?: null), 'cat' => $m['cat'], 'id_m' => $m['id_m'] ?? null, 'es_receta' => $m['Id_receta_producto'] ?? null];
 
         $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $cons;
     }
@@ -727,6 +727,15 @@ try {
         $wls_b = $wlsRes['b'];
         $wls_n = $wlsRes['n'];
         $m = $metaPP[$idP];
+        $idBase = $idP;
+        if (empty($m['es_receta']) && !empty($m['id_m'])) {
+            $baseForM = $presentPorMaestro[$m['id_m']] ?? null;
+            if ($baseForM) {
+                $firstBase = reset($baseForM);
+                $idBase = (int) $firstBase['id'];
+            }
+        }
+
         $cat = $m['cat'];
         $cP = $cat ? ($cPs[$cat] ?? null) : null;
         $adj = $cP ? (float)$cP['ajuste_demanda'] : 0;
@@ -756,6 +765,7 @@ try {
 
         $res[$idP] = [
             'id_pp' => $idP,
+            'id_pp_base' => $idBase,
             'nombre' => $m['n'],
             'unidad' => $m['u'],
             'categoria_insumo' => $cat,

@@ -39,10 +39,25 @@ function escHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-window.cargarGraficasParaFila = async function (ppId, sk, sucursal, semDesde, semHasta, semCorte, fechaDespacho, cicloSlot) {
+window.cargarGraficasParaFila = async function (ppId, sk, sucursal, semDesde, semHasta, semCorte, fechaDespacho, cicloSlot, baseId = null) {
+    if (!baseId) baseId = ppId;
+
     const canvasTend = document.getElementById(`chart-tend-${sk}-${ppId}`);
     const canvasKard = document.getElementById(`chart-kardex-${sk}-${ppId}`);
     if (!canvasTend || !canvasKard) return;
+
+    // Obtener datos del producto para pasar a kardex (ratio)
+    const tableRow = $(`.pa-row-expandible-charts[data-slot-key="${sk}"][data-pp-id="${ppId}"]`);
+    const prod = {
+        id_pp: ppId,
+        id_pp_base: baseId,
+        wls_m: parseFloat(tableRow.data('wls-m')) || 0,
+        wls_b: parseFloat(tableRow.data('wls-b')) || 0,
+        wls_n: parseInt(tableRow.data('wls-n')) || 0,
+        _wls_lff: tableRow.data('wls-lff') || '',
+        dias_stock_min: parseFloat(tableRow.data('dsm')) || 0,
+        ratio: parseFloat(tableRow.data('ratio')) || 1
+    };
 
     // Calcular fecha pronóstico: fecha despacho + cicloSlot
     const d = new Date(fechaDespacho + 'T12:00:00');
@@ -74,14 +89,14 @@ window.cargarGraficasParaFila = async function (ppId, sk, sucursal, semDesde, se
     }
 
     if (globalDatosConsumo) {
-        renderChartTendencia(canvasTend, globalDatosConsumo, ppId, sk);
+        renderChartTendencia(canvasTend, globalDatosConsumo, baseId, sk, prod);
     }
 
     // 2. Cargar Kardex
-    cargarChartKardex(canvasKard, ppId, semDesde, semHasta, semCorte, sucursal, fechaPronostico, sk);
+    cargarChartKardex(canvasKard, baseId, semDesde, semHasta, semCorte, sucursal, fechaPronostico, sk, prod);
 };
 
-function renderChartTendencia(canvas, data, idInsumoSel, sk) {
+function renderChartTendencia(canvas, data, idInsumoSel, sk, prod) {
     const item = data.consumo.find(c => c.id == idInsumoSel);
     if (!item) return;
 
@@ -224,7 +239,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
     });
 }
 
-async function cargarChartKardex(canvas, idPP, semDesde, semHasta, semCorte, codSuc, fechaPronostico, sk) {
+async function cargarChartKardex(canvas, idPP, semDesde, semHasta, semCorte, codSuc, fechaPronostico, sk, prod) {
     const fd = new FormData();
     fd.append('id_pp', idPP);
     fd.append('semana_desde', semDesde);
@@ -239,11 +254,11 @@ async function cargarChartKardex(canvas, idPP, semDesde, semHasta, semCorte, cod
             return;
         }
 
-        renderKardexCore(canvas, res, fechaPronostico, sk, semDesde, semHasta, semCorte, codSuc);
+        renderKardexCore(canvas, res, fechaPronostico, sk, semDesde, semHasta, semCorte, codSuc, prod);
     } catch (e) { console.error('Error fetching kardex', e); }
 }
 
-function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, semHasta, semCorte, codSuc) {
+function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, semHasta, semCorte, codSuc, prod) {
     const regs = res.registros || [];
     const t = res.totales_tipo;
     const invCorte = t.inv_inicial || 0;
