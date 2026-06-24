@@ -85,7 +85,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
     const item = data.consumo.find(c => c.id == idInsumoSel);
     if (!item) return;
 
-    const labels = data.semanas.map(s => `Sem ${s.numero_semana}`);
+    const labels = data.semanas.map(s => `${s.numero_semana}`);
     const semanasNros = data.semanas.map(s => s.numero_semana);
     const prom = item.prom_semana || 0;
 
@@ -151,9 +151,9 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
 
     const labelsExtended = [
         ...labels,
-        `Proy. ${ultimaSem + 1}`,
-        `Proy. ${ultimaSem + 2}`,
-        `Proy. ${ultimaSem + 3}`,
+        `${ultimaSem + 1}`,
+        `${ultimaSem + 2}`,
+        `${ultimaSem + 3}`,
     ];
 
     const valores = semanasNros.map(n => round2(item.por_semana[n] || 0));

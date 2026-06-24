@@ -178,7 +178,7 @@ try {
                     <div class="fab-icon-holder"><i class="fas fa-chart-line"></i></div>
                 </div>
                 <div class="fab-option" onclick="exportarPronosticoExcel()">
-                    <span class="fab-label">Exportar a Excel</span>
+                    <span class="fab-label">Descargar pronóstico de despacho</span>
                     <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
                 </div>
             </div>
