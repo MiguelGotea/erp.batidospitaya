@@ -222,7 +222,7 @@ function formatDateHeader(ds) {
 }
 function fmt2(v) {
     if (v === null || v === undefined) return '<span class="pa-na">N/A</span>';
-    return Number(v).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return Number(v).toLocaleString('es-NI', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function setLoaderStep(m) { $('#pa-loader-step').text(m); }

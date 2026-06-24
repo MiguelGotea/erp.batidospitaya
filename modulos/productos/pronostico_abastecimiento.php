@@ -20,6 +20,8 @@ if (!tienePermiso('pronostico_abastecimiento', 'vista', $cargoOperario)) {
     exit();
 }
 
+$permisoDatosCompletos = tienePermiso('pronostico_abastecimiento', 'datos_completos', $cargoOperario);
+
 $version = mt_rand(1, 10000);
 
 // Predeterminar semanas desde el servidor
@@ -459,6 +461,10 @@ try {
             </div>
         </div>
     </div>
+
+    <script>
+        window.PA_DATOS_COMPLETOS = <?php echo $permisoDatosCompletos ? 'true' : 'false'; ?>;
+    </script>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
