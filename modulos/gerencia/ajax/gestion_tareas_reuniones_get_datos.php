@@ -278,11 +278,13 @@ function agruparPorSemana($items, $conn)
     $grupos = [];
     $hoy = new DateTime();
 
-    // Obtener la semana actual del sistema — la tabla solo tiene id, fecha_inicio, fecha_fin
-    $sqlSemanaActual = "SELECT id FROM SemanasSistema 
+    // Obtener la semana actual del sistema
+    $sqlSemanaActual = "SELECT numero_semana, anio FROM SemanasSistema 
                         WHERE fecha_inicio <= CURDATE() AND fecha_fin >= CURDATE() LIMIT 1";
     $stmtActual = $conn->query($sqlSemanaActual);
-    $idSemanaActual = $stmtActual ? (int)$stmtActual->fetchColumn() : 0;
+    $semanaActualData = $stmtActual ? $stmtActual->fetch(PDO::FETCH_ASSOC) : null;
+    $numSemanaActual = $semanaActualData ? (int)$semanaActualData['numero_semana'] : 0;
+    $anioSemanaActual = $semanaActualData ? (int)$semanaActualData['anio'] : 0;
 
     // Grupo de tareas vencidas (antes de la semana actual)
     $vencidas = [];
@@ -294,7 +296,7 @@ function agruparPorSemana($items, $conn)
             continue;
 
         // Obtener la fila de SemanasSistema que contiene esta fecha
-        $sqlSemana = "SELECT id, fecha_inicio, fecha_fin 
+        $sqlSemana = "SELECT numero_semana, anio, fecha_inicio, fecha_fin 
                       FROM SemanasSistema 
                       WHERE fecha_inicio <= DATE(:fecha) AND fecha_fin >= DATE(:fecha) LIMIT 1";
         $stmt = $conn->prepare($sqlSemana);
@@ -304,12 +306,16 @@ function agruparPorSemana($items, $conn)
         if (!$semanaData)
             continue;
 
-        $idSemana = (int)$semanaData['id'];
+        $numSemana = (int)$semanaData['numero_semana'];
+        $anioSemana = (int)$semanaData['anio'];
+        // Orden cronológico: AAAA + Semana (ej. 202626 para semana 26 de 2026)
+        $ordenSemana = $anioSemana * 100 + $numSemana;
+        $ordenSemanaActual = $anioSemanaActual * 100 + $numSemanaActual;
 
         // Si es tarea activa y su semana ya pasó → vencidas
         if ($item['tipo'] == 'tarea'
-            && $idSemanaActual > 0
-            && $idSemana < $idSemanaActual
+            && $ordenSemanaActual > 0
+            && $ordenSemana < $ordenSemanaActual
             && $item['estado'] != 'finalizado'
             && $item['estado'] != 'cancelado') {
             $vencidas[] = $item;
@@ -319,24 +325,24 @@ function agruparPorSemana($items, $conn)
         $mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
         $fechaInicio = new DateTime($semanaData['fecha_inicio']);
         $fechaFin    = new DateTime($semanaData['fecha_fin']);
-        $nombreSemana = "Semana #" . $idSemana . " (" .
+        $nombreSemana = "Semana #" . $numSemana . " (" .
             $fechaInicio->format('d') . "-" . $mesesCortos[$fechaInicio->format('n') - 1] . " al " .
             $fechaFin->format('d')   . "-" . $mesesCortos[$fechaFin->format('n')   - 1] . ")";
 
         // Agregar fecha_referencia para drag & drop
-        if (!isset($grupos[$idSemana])) {
-            $grupos[$idSemana] = [
+        if (!isset($grupos[$ordenSemana])) {
+            $grupos[$ordenSemana] = [
                 'nombre'           => $nombreSemana,
-                'orden'            => $idSemana,
+                'orden'            => $ordenSemana,
                 'fecha_referencia' => $semanaData['fecha_fin'], // última fecha de la semana
                 'items'            => []
             ];
         }
 
-        $grupos[$idSemana]['items'][] = $item;
+        $grupos[$ordenSemana]['items'][] = $item;
     }
 
-    // Ordenar grupos por id de semana (cronológico)
+    // Ordenar grupos por orden cronológico de semana
     uasort($grupos, function ($a, $b) {
         return $a['orden'] - $b['orden'];
     });

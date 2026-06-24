@@ -1,7 +1,7 @@
 'use strict';
 const PA_GRUPOS = ['B', 'D', 'F', 'G'];
 const PA_LABELS = { B: 'Congelados', D: 'Desechables', F: 'Secos y Preparación', G: 'Productos de Mostrador' };
-const PA_SEMANAS = 4;
+const PA_DIAS_FUTURO = 8;
 
 let PA_SUCURSALES = [];
 
@@ -213,7 +213,7 @@ function addDaysStr(d, n) {
     return dt.toISOString().split('T')[0];
 }
 function todayStr() { return new Date().toISOString().split('T')[0]; }
-function limitStr() { return addDaysStr(todayStr(), PA_SEMANAS * 7); }
+function limitStr() { return addDaysStr(todayStr(), PA_DIAS_FUTURO); }
 function formatDateHeader(ds) {
     const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -671,7 +671,7 @@ function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false
         const info = formatDateHeader(todayStrVal);
         html += `
         <div class="pa-date-block pa-date-hoy" style="border: 2px solid #0ea5e9; padding: 10px; border-radius: 12px; background: #f0f9ff; margin-bottom: 2rem;">
-            <div class="pa-date-header">
+            <div class="pa-date-header" style="cursor: pointer;" onclick="$('#pa-cats-hoy').slideToggle(); $(this).find('.pa-expand-date-icon').toggleClass('rotated');">
                 <div class="pa-date-pill" style="background:#0ea5e9; color:white;">
                     <div class="pa-date-day-num" style="color:white;">${info.day}</div>
                     <div class="pa-date-info">
@@ -680,8 +680,9 @@ function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false
                     </div>
                 </div>
                 <div class="pa-date-line" style="border-color:#bae6fd;"></div>
+                <i class="bi bi-chevron-down pa-expand-date-icon" style="color: #0ea5e9; font-size: 1.5rem; transition: transform 0.3s; margin-left: 10px;"></i>
             </div>
-            <div class="pa-cats-row">${buildCatsHtml(hoyData, isConsolidado, todayStrVal, true)}</div>
+            <div class="pa-cats-row" id="pa-cats-hoy">${buildCatsHtml(hoyData, isConsolidado, todayStrVal, true)}</div>
         </div>`;
     }
 

@@ -212,7 +212,17 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
     align-items: center;
     gap: 16px;
     margin-bottom: 16px;
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--pa-bg);
+    padding: 10px 0 18px 0;
+    margin: -10px 0 0 0;
+}
+.pa-date-hoy .pa-date-header {
+    background: #f0f9ff;
+    margin: -10px -10px 16px -10px;
+    padding: 10px 10px 18px 10px;
 }
 .pa-date-pill {
     background: var(--neu-bg);
@@ -272,8 +282,14 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
     padding: 16px 20px;
     font-weight: 700;
     font-size: 14px;
-    background: transparent;
     border-bottom: none;
+    position: sticky;
+    top: 70px;
+    z-index: 20;
+    background: var(--neu-bg);
+    border-top-left-radius: var(--neu-radius);
+    border-top-right-radius: var(--neu-radius);
+    box-shadow: 0 4px 6px -4px rgba(0,0,0,0.05);
 }
 .pa-cat-badge {
     width: 32px; height: 32px;
@@ -317,7 +333,7 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
 }
 .pa-table thead th {
     position: sticky;
-    top: 0;
+    top: 134px;
     z-index: 10;
     background: var(--neu-bg);
     padding: 4px 10px 8px;
@@ -531,6 +547,10 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
 }
 .pa-expand-icon.rotated {
     transform: rotate(90deg);
+}
+
+.pa-expand-date-icon.rotated {
+    transform: rotate(-180deg);
 }
 
 /* Sub-filas de tiendas */
