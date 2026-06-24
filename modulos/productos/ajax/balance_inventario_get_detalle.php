@@ -212,12 +212,26 @@ try {
 
     $allCods = array_keys($codMapBalance);
     if (empty($allCods)) {
-        echo json_encode(['ok' => true, 'registros' => [], 'producto' => $prodMeta, 'msg' => 'No hay códigos mapeados para balance']);
-        exit();
-    }
-
-    if (empty($allCods)) {
-        echo json_encode(['ok' => true, 'registros' => [], 'producto' => $prodMeta, 'msg' => 'No hay códigos mapeados']);
+        echo json_encode([
+            'ok'                     => true,
+            'id_pp'                  => $idPP,
+            'producto'               => $prodMeta,
+            'semana_ant'             => (int) $semAntCorte,
+            'semana_corte'           => (int) $semCorte,
+            'fecha_inicio_corte'     => $fechaInicioCorte,
+            'fecha_inicio'           => $fechaInicioRange,
+            'fecha_fin'              => $fechaFinRange,
+            'inv_inicial_rango'      => 0,
+            'semana_ant_rango'       => 0,
+            'registros'              => [],
+            'totales_tipo'           => ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'compras' => 0, 'merma' => 0, 'inv_final' => 0],
+            'consumo_real'           => 0,
+            'consumo_teorico'        => 0,
+            'consumo_teorico_diario' => [],
+            'puntos_domingo'         => [],
+            'num_mapeos'             => 0,
+            'msg'                    => 'No hay códigos mapeados para balance'
+        ]);
         exit();
     }
     $phCods = implode(',', array_fill(0, count($allCods), '?'));
@@ -463,6 +477,13 @@ try {
         }
     }
 
+    $totales = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'compras' => 0, 'merma' => 0, 'inv_final' => 0];
+    foreach ($registros as $reg)
+        if (isset($totales[$reg['tipo']]))
+            $totales[$reg['tipo']] += $reg['qty_base'];
+
+    $consumoReal = round($totales['inv_inicial'] + $totales['ajuste'] + $totales['despacho'] + $totales['compras'] - $totales['merma'] - $totales['inv_final'], 4);
+
     // ── Inventario real al INICIO del rango (semana anterior a semDesde) ──────
     // Independiente del corte — siempre el arranque físico del período
     $invIniRango = 0;
@@ -488,13 +509,6 @@ try {
             }
         }
     }
-
-    $totales = ['inv_inicial' => 0, 'ajuste' => 0, 'despacho' => 0, 'compras' => 0, 'merma' => 0, 'inv_final' => 0];
-    foreach ($registros as $reg)
-        if (isset($totales[$reg['tipo']]))
-            $totales[$reg['tipo']] += $reg['qty_base'];
-
-    $consumoReal = round($totales['inv_inicial'] + $totales['ajuste'] + $totales['despacho'] + $totales['compras'] - $totales['merma'] - $totales['inv_final'], 4);
 
     echo json_encode([
         'ok'                     => true,

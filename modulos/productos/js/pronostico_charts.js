@@ -245,7 +245,7 @@ async function cargarChartKardex(canvas, idPP, semDesde, semHasta, semCorte, cod
 
 function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, semHasta, semCorte, codSuc) {
     const regs = res.registros || [];
-    const t = res.totales_tipo;
+    const t = res.totales_tipo || {};
     const invCorte = t.inv_inicial || 0;
     const invFin = t.inv_final || 0;
     const pivotDate = res.fecha_inicio_corte;
