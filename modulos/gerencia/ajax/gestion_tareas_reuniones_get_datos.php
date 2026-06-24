@@ -304,13 +304,27 @@ function agruparPorSemana($items, $conn)
         $stmt->execute([':fecha' => $fecha]);
         $semanaData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$semanaData)
-            continue;
+        if (!$semanaData) {
+            $numSemana = 0;
+            $anioSemana = 9999;
+            $ordenSemana = 999999;
+            $nombreSemana = "Semana fuera de sistema (" . substr($fecha, 0, 10) . ")";
+            $fechaFinSemana = $fecha;
+        } else {
+            $numSemana = (int)$semanaData['numero_semana'];
+            $anioSemana = (int)$semanaData['anio'];
+            // Orden cronológico: AAAA + Semana (ej. 202626 para semana 26 de 2026)
+            $ordenSemana = $anioSemana * 100 + $numSemana;
+            
+            $mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            $fechaInicio = new DateTime($semanaData['fecha_inicio']);
+            $fechaFin    = new DateTime($semanaData['fecha_fin']);
+            $nombreSemana = "Semana #" . $numSemana . " (" .
+                $fechaInicio->format('d') . "-" . $mesesCortos[$fechaInicio->format('n') - 1] . " al " .
+                $fechaFin->format('d')   . "-" . $mesesCortos[$fechaFin->format('n')   - 1] . ")";
+            $fechaFinSemana = $semanaData['fecha_fin'];
+        }
 
-        $numSemana = (int)$semanaData['numero_semana'];
-        $anioSemana = (int)$semanaData['anio'];
-        // Orden cronológico: AAAA + Semana (ej. 202626 para semana 26 de 2026)
-        $ordenSemana = $anioSemana * 100 + $numSemana;
         $ordenSemanaActual = $anioSemanaActual * 100 + $numSemanaActual;
 
         // Si es tarea activa y su semana ya pasó → vencidas
@@ -323,19 +337,12 @@ function agruparPorSemana($items, $conn)
             continue;
         }
 
-        $mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        $fechaInicio = new DateTime($semanaData['fecha_inicio']);
-        $fechaFin    = new DateTime($semanaData['fecha_fin']);
-        $nombreSemana = "Semana #" . $numSemana . " (" .
-            $fechaInicio->format('d') . "-" . $mesesCortos[$fechaInicio->format('n') - 1] . " al " .
-            $fechaFin->format('d')   . "-" . $mesesCortos[$fechaFin->format('n')   - 1] . ")";
-
         // Agregar fecha_referencia para drag & drop
         if (!isset($grupos[$ordenSemana])) {
             $grupos[$ordenSemana] = [
                 'nombre'           => $nombreSemana,
                 'orden'            => $ordenSemana,
-                'fecha_referencia' => $semanaData['fecha_fin'], // última fecha de la semana
+                'fecha_referencia' => $fechaFinSemana, // última fecha de la semana
                 'items'            => []
             ];
         }
