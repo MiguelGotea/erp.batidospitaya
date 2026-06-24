@@ -802,10 +802,10 @@ function cambiarPagina(pagina) {
 
 // Buscar en opciones
 function buscarEnOpciones(input) {
-    const busqueda = input.value.toLowerCase();
+    const busqueda = input.value.toLowerCase().replace(/\s+/g, ' ').trim();
     const opciones = $(input).siblings('.filter-options').find('.filter-option');
     opciones.each(function () {
-        const texto = $(this).text().toLowerCase();
+        const texto = $(this).text().toLowerCase().replace(/\s+/g, ' ').trim();
         $(this).toggle(texto.includes(busqueda));
     });
 }

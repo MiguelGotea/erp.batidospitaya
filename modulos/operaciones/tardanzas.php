@@ -146,6 +146,7 @@ function procesarAprobacionTardanza()
 
         // Verificar si ya existe un registro para esta marcación
         $existente = obtenerEstadoTardanza($idMarcacion);
+        $idAprobacion = null;
 
         if ($existente) {
             // Actualizar registro existente
@@ -164,6 +165,7 @@ function procesarAprobacionTardanza()
                 $codOperario,
                 $existente['id']
             ]);
+            $idAprobacion = $existente['id'];
         } else {
             // Crear nuevo registro
             $stmt = $conn->prepare("
@@ -181,6 +183,16 @@ function procesarAprobacionTardanza()
                 $_SESSION['usuario_id'],
                 $_SESSION['usuario_id']
             ]);
+            $idAprobacion = $conn->lastInsertId();
+        }
+
+        // Ajustar o revertir la marcación según el nuevo estado de la tardanza
+        if ($estado === 'Justificado') {
+            // Justificada → ajustar hora_ingreso a la hora programada (respalda la real)
+            ajustarMarcacionPorTardanza($idMarcacion, $codOperario, $idAprobacion);
+        } else {
+            // No Válido o Pendiente → revertir si la marcación fue ajustada previamente
+            revertirAjusteMarcacion($idMarcacion);
         }
 
         $_SESSION['exito'] = 'Estado de tardanza actualizado correctamente';
@@ -194,6 +206,115 @@ function procesarAprobacionTardanza()
         'hasta' => $_GET['hasta'] ?? ''
     ]));
     exit();
+}
+
+/**
+ * Ajusta la hora_ingreso de una marcación a la hora programada del horario semanal
+ * cuando una tardanza es marcada como 'Justificado'.
+ *
+ * - Respalda las horas reales en hora_ingreso_original y hora_salida_original.
+ * - Solo actúa si la marcación NO fue ajustada antes (ajustado_por_tardanza = 0).
+ * - Si no hay horario programado disponible, no hace nada (falla silenciosamente con log).
+ */
+function ajustarMarcacionPorTardanza($idMarcacion, $codOperario, $idAprobacion)
+{
+    global $conn;
+
+    // Obtener datos actuales de la marcación
+    $stmt = $conn->prepare("
+        SELECT id, fecha, hora_ingreso, hora_salida, sucursal_codigo, ajustado_por_tardanza
+        FROM marcaciones WHERE id = ? LIMIT 1
+    ");
+    $stmt->execute([$idMarcacion]);
+    $marcacion = $stmt->fetch();
+
+    if (!$marcacion) {
+        error_log("ajustarMarcacionPorTardanza: Marcación ID $idMarcacion no encontrada");
+        return;
+    }
+
+    // Ignorar si ya fue ajustada (puede ser re-justificación; no sobrescribir el backup real)
+    if ($marcacion['ajustado_por_tardanza'] == 1) {
+        error_log("ajustarMarcacionPorTardanza: Marcación ID $idMarcacion ya estaba ajustada, se ignora");
+        return;
+    }
+
+    // Obtener semana del sistema para esa fecha
+    $semana = obtenerSemanaPorFecha($marcacion['fecha']);
+    if (!$semana) {
+        error_log("ajustarMarcacionPorTardanza: No se encontró semana para fecha {$marcacion['fecha']}");
+        return;
+    }
+
+    // Obtener horario programado del operario en esa semana y sucursal
+    $horarioProgramado = obtenerHorarioOperacionesPorDia(
+        $codOperario,
+        $semana['id'],
+        $marcacion['sucursal_codigo'],
+        $marcacion['fecha']
+    );
+
+    if (!$horarioProgramado || empty($horarioProgramado['hora_entrada'])) {
+        error_log("ajustarMarcacionPorTardanza: Sin horario programado para operario $codOperario en fecha {$marcacion['fecha']}");
+        return;
+    }
+
+    $horaProgramada = $horarioProgramado['hora_entrada'];
+
+    // Respaldar horas reales y ajustar hora_ingreso a la programada
+    $stmt = $conn->prepare("
+        UPDATE marcaciones
+        SET hora_ingreso_original = hora_ingreso,
+            hora_salida_original  = hora_salida,
+            hora_ingreso          = ?,
+            ajustado_por_tardanza = 1,
+            id_tardanza_ajuste    = ?
+        WHERE id = ?
+          AND ajustado_por_tardanza = 0
+    ");
+    $stmt->execute([$horaProgramada, $idAprobacion, $idMarcacion]);
+
+    error_log("ajustarMarcacionPorTardanza: Marcación ID $idMarcacion ajustada. hora_ingreso → $horaProgramada (original: {$marcacion['hora_ingreso']})");
+}
+
+/**
+ * Revierte el ajuste de una marcación restaurando las horas originales respaldadas.
+ * Solo actúa si la marcación fue ajustada por tardanza (ajustado_por_tardanza = 1
+ * e id_tardanza_ajuste IS NOT NULL — descarta los ajustados solo por falta).
+ */
+function revertirAjusteMarcacion($idMarcacion)
+{
+    global $conn;
+
+    $stmt = $conn->prepare("
+        SELECT id, ajustado_por_tardanza, id_tardanza_ajuste,
+               hora_ingreso_original, hora_salida_original
+        FROM marcaciones WHERE id = ? LIMIT 1
+    ");
+    $stmt->execute([$idMarcacion]);
+    $marcacion = $stmt->fetch();
+
+    if (!$marcacion || $marcacion['ajustado_por_tardanza'] == 0 || $marcacion['id_tardanza_ajuste'] === null) {
+        // No fue ajustada por tardanza → nada que revertir
+        return;
+    }
+
+    // Restaurar horas originales y limpiar campos de ajuste
+    $stmt = $conn->prepare("
+        UPDATE marcaciones
+        SET hora_ingreso          = hora_ingreso_original,
+            hora_salida           = hora_salida_original,
+            hora_ingreso_original = NULL,
+            hora_salida_original  = NULL,
+            ajustado_por_tardanza = 0,
+            id_tardanza_ajuste    = NULL
+        WHERE id = ?
+          AND ajustado_por_tardanza = 1
+          AND id_tardanza_ajuste IS NOT NULL
+    ");
+    $stmt->execute([$idMarcacion]);
+
+    error_log("revertirAjusteMarcacion: Marcación ID $idMarcacion revertida a horas originales (ingreso: {$marcacion['hora_ingreso_original']})");
 }
 ?>
 

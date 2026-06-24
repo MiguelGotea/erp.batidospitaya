@@ -59,7 +59,13 @@ try {
         hso.sabado_estado, hso.sabado_entrada, hso.sabado_salida, hso.sabado_sucursal_externa,
         hso.domingo_estado, hso.domingo_entrada, hso.domingo_salida, hso.domingo_sucursal_externa,
         s.nombre as nombre_sucursal,
-        o.Nombre, o.Apellido, o.Apellido2,
+        o.Nombre, o.Nombre2, o.Apellido, o.Apellido2,
+        CONCAT_WS(' ',
+            NULLIF(TRIM(o.Nombre),   ''),
+            NULLIF(TRIM(o.Nombre2),  ''),
+            NULLIF(TRIM(o.Apellido), ''),
+            NULLIF(TRIM(o.Apellido2),'')
+        ) AS nombre_completo,
         nc.Nombre as nombre_cargo,
         nc.CodNivelesCargos as codigo_cargo,
         c.fecha_salida
@@ -314,7 +320,7 @@ try {
                             'numero_semana' => $horario['numero_semana'],
                             'nombre_sucursal' => $horario['nombre_sucursal'],
                             'sucursal_codigo' => $horario['cod_sucursal'],
-                            'nombre_completo' => trim($horario['Nombre'] . ' ' . ($horario['Apellido'] ?? '')),
+                            'nombre_completo' => $horario['nombre_completo'],
                             'CodOperario' => $horario['cod_operario'],
                             'nombre_cargo' => $horario['nombre_cargo'],
                             'codigo_cargo' => $horario['codigo_cargo'],
@@ -368,7 +374,7 @@ try {
                         'numero_semana' => $horario['numero_semana'],
                         'nombre_sucursal' => $horario['nombre_sucursal'],
                         'sucursal_codigo' => $horario['cod_sucursal'],
-                        'nombre_completo' => trim($horario['Nombre'] . ' ' . ($horario['Apellido'] ?? '')),
+                        'nombre_completo' => $horario['nombre_completo'],
                         'CodOperario' => $horario['cod_operario'],
                         'nombre_cargo' => $horario['nombre_cargo'],
                         'codigo_cargo' => $horario['codigo_cargo'],
@@ -450,7 +456,13 @@ try {
             SELECT
                 m.id, m.fecha, m.hora_ingreso, m.hora_salida, m.CodOperario, m.sucursal_codigo,
                 s.nombre as nombre_sucursal,
-                o.Nombre, o.Apellido, o.Apellido2,
+                o.Nombre, o.Nombre2, o.Apellido, o.Apellido2,
+                CONCAT_WS(' ',
+                    NULLIF(TRIM(o.Nombre),   ''),
+                    NULLIF(TRIM(o.Nombre2),  ''),
+                    NULLIF(TRIM(o.Apellido), ''),
+                    NULLIF(TRIM(o.Apellido2),'')
+                ) AS nombre_completo,
                 (SELECT ss2.numero_semana FROM SemanasSistema ss2
                  WHERE m.fecha BETWEEN ss2.fecha_inicio AND ss2.fecha_fin LIMIT 1) as numero_semana,
                 (SELECT nc2.Nombre FROM AsignacionNivelesCargos anc2
@@ -577,7 +589,7 @@ try {
                 'numero_semana'           => $msh['numero_semana'],
                 'nombre_sucursal'         => $msh['nombre_sucursal'],
                 'sucursal_codigo'         => $msh['sucursal_codigo'],
-                'nombre_completo'         => trim($msh['Nombre'] . ' ' . ($msh['Apellido'] ?? '')),
+                'nombre_completo'         => $msh['nombre_completo'],
                 'CodOperario'             => $msh['CodOperario'],
                 'nombre_cargo'            => $msh['nombre_cargo'],
                 'codigo_cargo'            => $msh['codigo_cargo'],

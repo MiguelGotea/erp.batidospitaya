@@ -102,6 +102,12 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                 o.Nombre2,
                 o.Apellido,
                 o.Apellido2,
+                CONCAT_WS(' ',
+                    NULLIF(TRIM(o.Nombre),   ''),
+                    NULLIF(TRIM(o.Nombre2),  ''),
+                    NULLIF(TRIM(o.Apellido), ''),
+                    NULLIF(TRIM(o.Apellido2),'')
+                ) AS nombre_completo,
                 o.Operativo,
                 hso.lunes_entrada,
                 hso.martes_entrada,
@@ -280,12 +286,7 @@ function obtenerTardanzasDetalladas($modoVista, $codSucursal, $fechaDesde, $fech
                     'anio' => $anio,
                     'dia_semana' => obtenerNombreDia($diaSemana),
                     'cod_operario' => $marcacion['CodOperario'],
-                    'nombre_operario' => implode(' ', array_filter([
-                        trim($marcacion['Nombre']   ?? ''),
-                        trim($marcacion['Nombre2']  ?? ''),
-                        trim($marcacion['Apellido'] ?? ''),
-                        trim($marcacion['Apellido2'] ?? '')
-                    ], fn($v) => $v !== '')),
+                    'nombre_operario' => $marcacion['nombre_completo'],
                     'nombre_sucursal' => $marcacion['nombre_sucursal'],
                     'nombre_cargo' => $marcacion['nombre_cargo'] ?? 'Sin cargo',
                     'cod_contrato' => $marcacion['CodContrato'] ?? '',

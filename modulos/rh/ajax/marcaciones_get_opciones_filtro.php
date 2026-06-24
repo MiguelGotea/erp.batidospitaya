@@ -90,7 +90,15 @@ try {
                     $stmt = $conn->prepare("
                         SELECT DISTINCT
                             o.CodOperario as valor,
-                            CONCAT(TRIM(o.Nombre), ' ', TRIM(IFNULL(o.Apellido, '')), ' (', o.CodOperario, ')') as texto
+                            CONCAT(
+                                CONCAT_WS(' ',
+                                    NULLIF(TRIM(o.Nombre),   ''),
+                                    NULLIF(TRIM(o.Nombre2),  ''),
+                                    NULLIF(TRIM(o.Apellido), ''),
+                                    NULLIF(TRIM(o.Apellido2),'')
+                                ),
+                                ' (', o.CodOperario, ')'
+                            ) as texto
                         FROM Operarios o
                         INNER JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
                         LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
@@ -115,7 +123,15 @@ try {
                 $stmt = $conn->query("
                     SELECT DISTINCT
                         o.CodOperario as valor,
-                        CONCAT(TRIM(o.Nombre), ' ', TRIM(IFNULL(o.Apellido, '')), ' (', o.CodOperario, ')') as texto
+                        CONCAT(
+                            CONCAT_WS(' ',
+                                NULLIF(TRIM(o.Nombre),   ''),
+                                NULLIF(TRIM(o.Nombre2),  ''),
+                                NULLIF(TRIM(o.Apellido), ''),
+                                NULLIF(TRIM(o.Apellido2),'')
+                            ),
+                            ' (', o.CodOperario, ')'
+                        ) as texto
                     FROM Operarios o
                     INNER JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
                     LEFT JOIN Contratos uc ON uc.cod_operario = o.CodOperario 
@@ -140,7 +156,12 @@ try {
                     SELECT DISTINCT
                         o.CodOperario as valor,
                         CONCAT(
-                            TRIM(o.Nombre), ' ', TRIM(IFNULL(o.Apellido, '')), 
+                            CONCAT_WS(' ',
+                                NULLIF(TRIM(o.Nombre),   ''),
+                                NULLIF(TRIM(o.Nombre2),  ''),
+                                NULLIF(TRIM(o.Apellido), ''),
+                                NULLIF(TRIM(o.Apellido2),'')
+                            ),
                             IF(uc.fecha_salida IS NOT NULL AND uc.fecha_salida <= CURDATE(), ' (baja)', ''),
                             ' (', o.CodOperario, ')'
                         ) as texto
