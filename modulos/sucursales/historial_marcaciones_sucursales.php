@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 //ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
@@ -1170,18 +1170,26 @@ function obtenerDiasLaborablesOperario($codOperario, $fechaDesde, $fechaHasta)
 }
 
 // Función auxiliar para verificar marcación de entrada
-function obtenerMarcacionEntrada($codOperario, $fecha)
+function obtenerMarcacionEntrada($codOperario, $fecha, $codSucursal = null)
 {
     global $conn;
 
-    $stmt = $conn->prepare("
-        SELECT * FROM marcaciones 
-        WHERE CodOperario = ? 
-        AND fecha = ?
-        AND hora_ingreso IS NOT NULL
-        LIMIT 1
-    ");
-    $stmt->execute([$codOperario, $fecha]);
+    $sql = "SELECT * FROM marcaciones 
+            WHERE CodOperario = ? 
+            AND fecha = ?
+            AND hora_ingreso IS NOT NULL";
+    
+    $params = [$codOperario, $fecha];
+    
+    if ($codSucursal !== null) {
+        $sql .= " AND sucursal_codigo = ?";
+        $params[] = $codSucursal;
+    }
+    
+    $sql .= " LIMIT 1";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
     return $stmt->fetch();
 }
 

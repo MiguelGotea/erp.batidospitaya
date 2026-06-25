@@ -1242,24 +1242,26 @@ function generarReporteFaltas($modoVista, $codSucursal, $fechaDesde, $fechaHasta
             $sqlFaltasReportadas = "SELECT COUNT(*) as total
                                 FROM faltas_manual
                                 WHERE cod_operario = ?
+                                AND cod_sucursal = ?
                                 AND fecha_falta BETWEEN ? AND ?
                                 AND fecha_falta < CURDATE()";
 
             $stmtReportadas = $conn->prepare($sqlFaltasReportadas);
-            $stmtReportadas->execute([$operario['CodOperario'], $fechaDesde, $fechaHasta]);
+            $stmtReportadas->execute([$operario['CodOperario'], $operario['codigo_sucursal'], $fechaOriginalDesde ?? $fechaDesde, $fechaHasta]);
             $faltasReportadas = $stmtReportadas->fetch()['total'];
 
             // FALTAS JUSTIFICADAS: Faltas manuales que no son "No_Pagado" o "Pendiente"
             $sqlFaltasJustificadas = "SELECT COUNT(*) as total
                                 FROM faltas_manual
                                 WHERE cod_operario = ?
+                                AND cod_sucursal = ?
                                 AND fecha_falta BETWEEN ? AND ?
                                 AND fecha_falta < CURDATE()
                                 AND tipo_falta NOT IN ('No_Pagado', 'Pendiente')
                                 AND (tipo_falta != 'Vacaciones' OR aprobado = 1)";
 
             $stmtJustificadas = $conn->prepare($sqlFaltasJustificadas);
-            $stmtJustificadas->execute([$operario['CodOperario'], $fechaDesde, $fechaHasta]);
+            $stmtJustificadas->execute([$operario['CodOperario'], $operario['codigo_sucursal'], $fechaOriginalDesde ?? $fechaDesde, $fechaHasta]);
             $faltasJustificadas = $stmtJustificadas->fetch()['total'];
 
             // FALTAS EJECUTADAS: Automáticas - Justificadas
@@ -1383,6 +1385,7 @@ function generarReporteTardanzas(
                                 FROM marcaciones m
                                 JOIN TardanzasManuales tm ON m.CodOperario = tm.cod_operario
                                 AND m.fecha = tm.fecha_tardanza
+                                AND m.sucursal_codigo = tm.cod_sucursal
                                 WHERE m.CodOperario = ?
                                 AND tm.cod_contrato = ?
                                 AND m.fecha BETWEEN ? AND ?

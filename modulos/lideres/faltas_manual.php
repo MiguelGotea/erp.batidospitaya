@@ -392,7 +392,7 @@ function obtenerFaltasAutomaticasParaContabilidad($codSucursal, $fechaDesde, $fe
         );
 
         foreach ($diasLaborables as $dia) {
-            $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha']);
+            $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha'], $operario['cod_sucursal']);
 
             if (!$marcacion) {
                 $faltas[] = [
@@ -1392,8 +1392,8 @@ function obtenerTotalFaltasAutomaticas($codSucursal, $fechaDesde, $fechaHasta)
         $diasLaborables = obtenerDiasLaborablesOperario($operario['CodOperario'], $codSucursal, $fechaDesde, $fechaHasta);
 
         foreach ($diasLaborables as $dia) {
-            // 3. Verificar si hay marcación de entrada para ese día
-            $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha']);
+            // 3. Verificar si hay marcación de entrada para ese día, filtrando por sucursal
+            $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha'], $codSucursal);
 
             if (!$marcacion) {
                 $totalFaltas++;
@@ -1524,18 +1524,32 @@ function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, 
 }
 
 // Función auxiliar para verificar marcación de entrada
-function obtenerMarcacionEntrada($codOperario, $fecha)
+function obtenerMarcacionEntrada($codOperario, $fecha, $codSucursal = null)
 {
     global $conn;
 
-    $stmt = $conn->prepare("
-        SELECT * FROM marcaciones 
-        WHERE CodOperario = ? 
-        AND fecha = ?
-        AND hora_ingreso IS NOT NULL
-        LIMIT 1
-    ");
-    $stmt->execute([$codOperario, $fecha]);
+    if ($codSucursal !== null) {
+        $stmt = $conn->prepare("
+            SELECT * FROM marcaciones 
+            WHERE CodOperario = ? 
+            AND fecha = ?
+            AND sucursal_codigo = ?
+            AND hora_ingreso IS NOT NULL
+            ORDER BY id ASC
+            LIMIT 1
+        ");
+        $stmt->execute([$codOperario, $fecha, $codSucursal]);
+    } else {
+        $stmt = $conn->prepare("
+            SELECT * FROM marcaciones 
+            WHERE CodOperario = ? 
+            AND fecha = ?
+            AND hora_ingreso IS NOT NULL
+            ORDER BY id ASC
+            LIMIT 1
+        ");
+        $stmt->execute([$codOperario, $fecha]);
+    }
     return $stmt->fetch();
 }
 
