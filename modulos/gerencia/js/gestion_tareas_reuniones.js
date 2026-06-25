@@ -122,7 +122,7 @@ function cargarDatos() {
         dataType: 'json',
         success: function (r) {
             const tieneGrupos = r.success && r.grupos && r.grupos.length > 0;
-            const tieneFinalizados = agrupacionActual === 'mes' && r.finalizados && r.finalizados.length > 0;
+            const tieneFinalizados = r.finalizados && r.finalizados.length > 0;
             const tieneSinFecha = agrupacionActual === 'mes' && r.sin_fecha && r.sin_fecha.length > 0;
 
             // Panel de pendientes sin fecha (PRIMERO, antes de los grupos)
@@ -500,10 +500,11 @@ function renderizarTablaFinalizados(items) {
     const hoy = obtenerFechaHoy();
     const seccion = $(`
         <div class="seccion-finalizados">
-            <div class="historial-separador">
+            <div class="historial-separador" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="$(this).next('.historial-tabla-wrap').slideToggle(); $(this).find('i.toggle-icon').toggleClass('bi-chevron-right bi-chevron-down');">
                 <span><i class="bi bi-check-circle-fill"></i> Historial — Finalizadas y concluidas</span>
+                <i class="bi bi-chevron-right toggle-icon"></i>
             </div>
-            <div class="historial-tabla-wrap">
+            <div class="historial-tabla-wrap" style="display: none;">
                 <table class="historial-tabla">
                     <thead>
                         <tr>

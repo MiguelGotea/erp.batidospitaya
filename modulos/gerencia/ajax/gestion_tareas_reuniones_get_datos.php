@@ -23,28 +23,30 @@ try {
     $hoyStr = date('Y-m-d');
 
     $sinFecha = [];
+
+    // Historial: tareas finalizadas/canceladas + reuniones cuya fecha ya pasó
+    foreach ($items as $it) {
+        if ($it['tipo'] === 'tarea' && in_array($it['estado'], ['finalizado', 'cancelado'])) {
+            $finalizados[] = $it;
+        } elseif ($it['tipo'] === 'reunion') {
+            $fechaR = substr($it['fecha_reunion'] ?? '', 0, 10);
+            if ($fechaR < $hoyStr || $it['estado'] === 'finalizado') {
+                $finalizados[] = $it;
+            }
+        }
+    }
+    // Ordenar historial: más reciente primero
+    usort($finalizados, function($a, $b) {
+        $fa = $a['tipo'] === 'reunion' ? ($a['fecha_reunion'] ?? '') : ($a['fecha_meta'] ?? '');
+        $fb = $b['tipo'] === 'reunion' ? ($b['fecha_reunion'] ?? '') : ($b['fecha_meta'] ?? '');
+        return strcmp($fb, $fa);
+    });
+
     switch ($agrupacion) {
         case 'mes':
             $resultado = agruparPorMes($items);
             $grupos    = $resultado['grupos'];
             $sinFecha  = $resultado['sin_fecha'];
-            // Historial: tareas finalizadas/canceladas + reuniones cuya fecha ya pasó
-            foreach ($items as $it) {
-                if ($it['tipo'] === 'tarea' && in_array($it['estado'], ['finalizado', 'cancelado'])) {
-                    $finalizados[] = $it;
-                } elseif ($it['tipo'] === 'reunion') {
-                    $fechaR = substr($it['fecha_reunion'] ?? '', 0, 10);
-                    if ($fechaR < $hoyStr || $it['estado'] === 'finalizado') {
-                        $finalizados[] = $it;
-                    }
-                }
-            }
-            // Ordenar historial: más reciente primero
-            usort($finalizados, function($a, $b) {
-                $fa = $a['tipo'] === 'reunion' ? ($a['fecha_reunion'] ?? '') : ($a['fecha_meta'] ?? '');
-                $fb = $b['tipo'] === 'reunion' ? ($b['fecha_reunion'] ?? '') : ($b['fecha_meta'] ?? '');
-                return strcmp($fb, $fa);
-            });
             break;
         case 'semana':
             $grupos = agruparPorSemana($items, $conn);
@@ -289,6 +291,16 @@ function agruparPorSemana($items, $conn)
     $vencidas = [];
 
     foreach ($items as $item) {
+        // Ignorar finalizadas para no mostrarlas en los grupos de semana
+        if ($item['tipo'] === 'tarea' && in_array($item['estado'], ['finalizado', 'cancelado'])) {
+            continue;
+        } elseif ($item['tipo'] === 'reunion') {
+            $fechaR = substr($item['fecha_reunion'] ?? '', 0, 10);
+            if ($fechaR < $hoy->format('Y-m-d') || $item['estado'] === 'finalizado') {
+                continue;
+            }
+        }
+
         $fecha = $item['tipo'] == 'reunion' ? $item['fecha_reunion'] : $item['fecha_meta'];
 
         if (!$fecha)
@@ -369,8 +381,19 @@ function agruparPorSemana($items, $conn)
 function agruparPorCargo($items, $conn)
 {
     $grupos = [];
+    $hoy = new DateTime();
 
     foreach ($items as $item) {
+        // Ignorar finalizadas para no mostrarlas en los grupos de cargo
+        if ($item['tipo'] === 'tarea' && in_array($item['estado'], ['finalizado', 'cancelado'])) {
+            continue;
+        } elseif ($item['tipo'] === 'reunion') {
+            $fechaR = substr($item['fecha_reunion'] ?? '', 0, 10);
+            if ($fechaR < $hoy->format('Y-m-d') || $item['estado'] === 'finalizado') {
+                continue;
+            }
+        }
+
         if ($item['tipo'] == 'tarea') {
             // Agrupar por cargo asignado
             $codCargo = $item['cod_cargo_asignado'];
