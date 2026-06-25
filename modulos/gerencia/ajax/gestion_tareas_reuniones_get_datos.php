@@ -25,7 +25,14 @@ try {
     $sinFecha = [];
 
     // Historial: tareas finalizadas/canceladas + reuniones cuya fecha ya pasó
-    foreach ($items as $it) {
+    // Y Pendientes sin fecha
+    foreach ($items as $k => $it) {
+        if ($it['tipo'] === 'tarea' && empty($it['fecha_meta']) && !in_array($it['estado'], ['finalizado', 'cancelado'])) {
+            $sinFecha[] = $it;
+            unset($items[$k]);
+            continue;
+        }
+
         if ($it['tipo'] === 'tarea' && in_array($it['estado'], ['finalizado', 'cancelado'])) {
             $finalizados[] = $it;
         } elseif ($it['tipo'] === 'reunion') {
@@ -46,7 +53,7 @@ try {
         case 'mes':
             $resultado = agruparPorMes($items);
             $grupos    = $resultado['grupos'];
-            $sinFecha  = $resultado['sin_fecha'];
+            // Ya se capturó sinFecha globalmente
             break;
         case 'semana':
             $grupos = agruparPorSemana($items, $conn);
@@ -287,9 +294,6 @@ function agruparPorSemana($items, $conn)
     $numSemanaActual = $semanaActualData ? (int)$semanaActualData['numero_semana'] : 0;
     $anioSemanaActual = $semanaActualData ? (int)$semanaActualData['anio'] : 0;
 
-    // Grupo de tareas vencidas (antes de la semana actual)
-    $vencidas = [];
-
     foreach ($items as $item) {
         // Ignorar finalizadas para no mostrarlas en los grupos de semana
         if ($item['tipo'] === 'tarea' && in_array($item['estado'], ['finalizado', 'cancelado'])) {
@@ -334,22 +338,13 @@ function agruparPorSemana($items, $conn)
 
         $ordenSemanaActual = $anioSemanaActual * 100 + $numSemanaActual;
 
-        // Si es tarea activa y su semana ya pasó → vencidas
-        if ($item['tipo'] == 'tarea'
-            && $ordenSemanaActual > 0
-            && $ordenSemana < $ordenSemanaActual
-            && $item['estado'] != 'finalizado'
-            && $item['estado'] != 'cancelado') {
-            $vencidas[] = $item;
-            continue;
-        }
-
         // Agregar fecha_referencia para drag & drop
         if (!isset($grupos[$ordenSemana])) {
             $grupos[$ordenSemana] = [
                 'nombre'           => $nombreSemana,
                 'orden'            => $ordenSemana,
                 'fecha_referencia' => $fechaFinSemana, // última fecha de la semana
+                'clase_header'     => ($ordenSemana < $ordenSemanaActual && $ordenSemanaActual > 0) ? 'vencido' : '',
                 'items'            => []
             ];
         }
@@ -361,16 +356,6 @@ function agruparPorSemana($items, $conn)
     uasort($grupos, function ($a, $b) {
         return $a['orden'] - $b['orden'];
     });
-
-    // Agregar grupo de vencidas al inicio si hay
-    if (!empty($vencidas)) {
-        array_unshift($grupos, [
-            'nombre'           => 'Tareas Vencidas',
-            'orden'            => 0,
-            'fecha_referencia' => '',
-            'items'            => $vencidas
-        ]);
-    }
 
     return array_values($grupos);
 }

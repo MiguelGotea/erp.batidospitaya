@@ -123,7 +123,7 @@ function cargarDatos() {
         success: function (r) {
             const tieneGrupos = r.success && r.grupos && r.grupos.length > 0;
             const tieneFinalizados = r.finalizados && r.finalizados.length > 0;
-            const tieneSinFecha = agrupacionActual === 'mes' && r.sin_fecha && r.sin_fecha.length > 0;
+            const tieneSinFecha = r.sin_fecha && r.sin_fecha.length > 0;
 
             // Panel de pendientes sin fecha (PRIMERO, antes de los grupos)
             if (tieneSinFecha) {
@@ -179,18 +179,23 @@ function renderizarSinFecha(items) {
     const hoy = obtenerFechaHoy();
     const panel = $(`
         <div class="sin-fecha-panel" id="panelSinFecha">
-            <div class="sin-fecha-header">
+            <div class="sin-fecha-header" style="cursor: pointer;" onclick="$(this).siblings('.sin-fecha-content').slideToggle(); $(this).find('.toggle-icon').toggleClass('bi-chevron-right bi-chevron-down');">
                 <span class="sin-fecha-title">
                     <i class="bi bi-hourglass-split"></i>
                     Pendientes de Asignar
                 </span>
-                <span class="sin-fecha-badge">${items.length} sin fecha</span>
+                <div>
+                    <span class="sin-fecha-badge">${items.length} sin fecha</span>
+                    <i class="bi bi-chevron-right toggle-icon" style="margin-left: 8px;"></i>
+                </div>
             </div>
-            <div class="sin-fecha-body" id="sinFechaBody">
-            </div>
-            <div class="sin-fecha-hint">
-                <i class="bi bi-arrow-down-circle-fill"></i>
-                Arrastra las tarjetas hacia un día para asignar su fecha
+            <div class="sin-fecha-content" style="display: none;">
+                <div class="sin-fecha-body" id="sinFechaBody">
+                </div>
+                <div class="sin-fecha-hint">
+                    <i class="bi bi-arrow-down-circle-fill"></i>
+                    Arrastra las tarjetas hacia un día para asignar su fecha
+                </div>
             </div>
         </div>
     `);
