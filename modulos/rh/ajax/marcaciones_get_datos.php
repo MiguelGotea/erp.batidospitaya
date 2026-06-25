@@ -636,13 +636,17 @@ try {
                     return false;
                 } else {
                     if (!empty($r['hora_ingreso']) && !empty($r['hora_entrada_programada'])) {
-                        $ingreso = new DateTime($r['hora_ingreso']);
-                        $programada = new DateTime($r['hora_entrada_programada']);
-                        $intervalo = $programada->diff($ingreso);
-                        $minutosDiferencia = ($intervalo->days * 24 * 60) + ($intervalo->h * 60) + $intervalo->i;
+                        $horaEntradaStr = preg_replace('/^\d{4}-\d{2}-\d{2}\s+/', '', trim($r['hora_entrada_programada']));
+                        $horaIngresaStr = preg_replace('/^\d{4}-\d{2}-\d{2}\s+/', '', trim($r['hora_ingreso']));
+                        
+                        $horaProgramada = new DateTime('2000-01-01 ' . $horaEntradaStr);
+                        $horaMarcada    = new DateTime('2000-01-01 ' . $horaIngresaStr);
+                        
+                        $segundos = $horaMarcada->getTimestamp() - $horaProgramada->getTimestamp();
+                        $minutosDiferencia = (int) floor($segundos / 60);
 
-                        // Si la fecha de ingreso es mayor y la diferencia es > 1 minuto
-                        if ($ingreso > $programada && $minutosDiferencia > 1) {
+                        // Si llegó más de 1 minuto después
+                        if ($minutosDiferencia > 1) {
                             $esTardanza = true;
                         }
                     }

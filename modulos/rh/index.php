@@ -101,8 +101,8 @@ function obtenerTotalFaltasAutomaticas($codSucursal, $fechaDesde, $fechaHasta)
                 continue;
             }
 
-            // 3. Verificar si hay marcación de entrada para ese día
-            $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha']);
+            // 3. Verificar si hay marcación de entrada para ese día, filtrando por sucursal
+            $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha'], $codSucursal);
 
             if (!$marcacion) {
                 $totalFaltas++;
@@ -132,8 +132,8 @@ function obtenerTotalTardanzasAutomaticas($codSucursal, $fechaDesde, $fechaHasta
                 continue;
             }
 
-            // 3. Verificar si hay marcación de entrada para ese día
-            $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha']);
+            // 3. Verificar si hay marcación de entrada para ese día, filtrando por sucursal
+            $marcacion = obtenerMarcacionEntrada($operario['CodOperario'], $dia['fecha'], $codSucursal);
 
             if ($marcacion) {
                 // 4. Verificar si hay tardanza comparando con el horario programado
@@ -239,18 +239,32 @@ function obtenerDiasLaborablesOperario($codOperario, $codSucursal, $fechaDesde, 
     return $diasLaborables;
 }
 
-function obtenerMarcacionEntrada($codOperario, $fecha)
+function obtenerMarcacionEntrada($codOperario, $fecha, $codSucursal = null)
 {
     global $conn;
 
-    $stmt = $conn->prepare("
-        SELECT * FROM marcaciones 
-        WHERE CodOperario = ? 
-        AND fecha = ?
-        AND hora_ingreso IS NOT NULL
-        LIMIT 1
-    ");
-    $stmt->execute([$codOperario, $fecha]);
+    if ($codSucursal !== null) {
+        $stmt = $conn->prepare("
+            SELECT * FROM marcaciones 
+            WHERE CodOperario = ? 
+            AND fecha = ?
+            AND sucursal_codigo = ?
+            AND hora_ingreso IS NOT NULL
+            ORDER BY id ASC
+            LIMIT 1
+        ");
+        $stmt->execute([$codOperario, $fecha, $codSucursal]);
+    } else {
+        $stmt = $conn->prepare("
+            SELECT * FROM marcaciones 
+            WHERE CodOperario = ? 
+            AND fecha = ?
+            AND hora_ingreso IS NOT NULL
+            ORDER BY id ASC
+            LIMIT 1
+        ");
+        $stmt->execute([$codOperario, $fecha]);
+    }
     return $stmt->fetch();
 }
 
@@ -308,13 +322,19 @@ function verificarTardanza($codOperario, $codSucursal, $fecha, $horaMarcada)
         $fecha
     );
 
-    if ($horarioProgramado && $horarioProgramado['hora_entrada']) {
-        // Calcular diferencia entre hora programada y hora marcada
-        $horaProgramada = new DateTime($horarioProgramado['hora_entrada']);
-        $horaMarcada = new DateTime($horaMarcada);
+    if ($horarioProgramado && $horarioProgramado['hora_entrada'] && $horarioProgramado['estado'] === 'Activo') {
+        // Normalizar ambas horas a fecha fija para comparar solo la hora (no la fecha)
+        $horaEntradaStr = preg_replace('/^\d{4}-\d{2}-\d{2}\s+/', '', trim($horarioProgramado['hora_entrada']));
+        $horaIngresaStr = preg_replace('/^\d{4}-\d{2}-\d{2}\s+/', '', trim($horaMarcada));
 
-        // Considerar como tardanza si la hora marcada es posterior a la programada
-        return $horaMarcada > $horaProgramada;
+        $horaProgramadaObj = new DateTime('2000-01-01 ' . $horaEntradaStr);
+        $horaMarcadaObj    = new DateTime('2000-01-01 ' . $horaIngresaStr);
+
+        $segundos = $horaMarcadaObj->getTimestamp() - $horaProgramadaObj->getTimestamp();
+        $minutos  = (int) floor($segundos / 60);
+
+        // Tardanza si llegó más de 1 minuto después
+        return $minutos > 1;
     }
 
     return false;
