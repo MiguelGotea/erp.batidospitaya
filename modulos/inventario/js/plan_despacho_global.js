@@ -375,7 +375,13 @@ function saveRow(cod, cat) {
             // Invalidar caché y re-render calendario
             if (PDG.configCache[cod] && PDG.configCache[cod].plan) {
                 if (!PDG.configCache[cod].plan[cat]) PDG.configCache[cod].plan[cat] = {};
-                Object.assign(PDG.configCache[cod].plan[cat], payload);
+                
+                const cachePayload = { ...payload };
+                if (cachePayload.dias_semana && typeof cachePayload.dias_semana === 'string') {
+                    try { cachePayload.dias_semana = JSON.parse(cachePayload.dias_semana); } catch(e) { cachePayload.dias_semana = []; }
+                }
+                
+                Object.assign(PDG.configCache[cod].plan[cat], cachePayload);
                 if (cat === 'B') {
                     PDG.configCache[cod].capacidad_congelados.paquetes = payload.capacidad_congelados_paquetes;
                     PDG.configCache[cod].capacidad_congelados.obs = payload.capacidad_congelados_obs;

@@ -22,6 +22,7 @@ try {
     $placeholders = implode(',', array_fill(0, count($categorias), '?'));
     $stmt = $conn->prepare("
         SELECT
+            cats.cat,
             pds.id,
             pds.categoria_insumo,
             pds.tipo_frecuencia,
@@ -48,7 +49,7 @@ try {
 
     $plan = [];
     foreach ($rows as $row) {
-        $cat = $row['categoria_insumo'];
+        $cat = $row['cat'];
         $plan[$cat] = [
             'id'                   => $row['id'],
             'tipo_frecuencia'      => $row['tipo_frecuencia'] ?? 'n_semanas',
