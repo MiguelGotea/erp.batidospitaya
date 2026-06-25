@@ -19,6 +19,7 @@ if (!tienePermiso('balance_inventario_access_host', 'vista', $cargoOperario)) {
 $idPP = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $semDesde = isset($_GET['sem_desde']) ? (int) $_GET['sem_desde'] : 0;
 $semHasta = isset($_GET['sem_hasta']) ? (int) $_GET['sem_hasta'] : 0;
+$semCorte = isset($_GET['sem_corte']) ? (int) $_GET['sem_corte'] : $semDesde;
 $sucsRaw = isset($_GET['sucs']) ? trim($_GET['sucs']) : '';
 
 // Obtener semana actual del sistema
@@ -462,6 +463,7 @@ try {
         const ID_PP = <?php echo $idPP; ?>;
         const SEM_DESDE = <?php echo $semDesde; ?>;
         const SEM_HASTA = <?php echo $semHasta; ?>;
+        const SEM_CORTE = <?php echo $semCorte; ?>;
         const SUCS_RAW = '<?php echo htmlspecialchars($sucsRaw); ?>';
         const SEM_ACTUAL = <?php echo $semActualSistema; ?>;
 
@@ -485,6 +487,7 @@ try {
             fd.append('id_pp', ID_PP);
             fd.append('semana_desde', SEM_DESDE);
             fd.append('semana_hasta', SEM_HASTA);
+            fd.append('semana_corte', SEM_CORTE);
             if (SUCS_RAW) {
                 SUCS_RAW.split(',').forEach(s => { if (s.trim()) fd.append('sucursales[]', s.trim()); });
             }
@@ -742,7 +745,7 @@ try {
             // Header
             document.getElementById('bdNombreProd').textContent = prod.Nombre || prod.nombre || '—';
             document.getElementById('bdMetaRow').innerHTML = `
-        <span class="bd-pill-meta"><i class="fas fa-hashtag me-1"></i>Semana ${res.sem_desde === res.sem_hasta ? res.sem_desde : res.sem_desde + ' – ' + res.sem_hasta}</span>
+        <span class="bd-pill-meta"><i class="fas fa-hashtag me-1"></i>Semana ${SEM_DESDE === SEM_HASTA ? SEM_DESDE : SEM_DESDE + ' – ' + SEM_HASTA}</span>
         <span class="bd-pill-meta"><i class="fas fa-ruler me-1"></i>${esc(prod.unidad || '')}</span>
         <span class="bd-pill-meta"><i class="fas fa-layer-group me-1"></i>${esc(res.producto.maestro || 'Sin Maestro')}</span>
         <span class="bd-pill-meta"><i class="fas fa-code me-1"></i>${res.num_mapeos || 0} Mapeos</span>
