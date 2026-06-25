@@ -57,12 +57,14 @@ function _configurarColumnasPorVista(modo) {
 
     if (modo === 'por_pedido') {
         $('th[data-column="DBBatidos_Nombre"]').hide();
+        $('th[data-column="NombrePromocion"]').hide();
         $('th[data-column="Medida"]').hide();
         $('th[data-column="Cantidad"]').hide();
         if (puedeAnalizarBot) $('.col-atencion-ia').show();
         $('#thAccionesPedido').show();
     } else {
         $('th[data-column="DBBatidos_Nombre"]').show();
+        $('th[data-column="NombrePromocion"]').show();
         $('th[data-column="Medida"]').show();
         $('th[data-column="Cantidad"]').show();
         $('.col-atencion-ia').hide();
@@ -79,6 +81,7 @@ function cambiarVista(modo) {
     // Limpiar filtros que solo existen en por_producto
     if (modo === 'por_pedido') {
         delete filtrosActivos['DBBatidos_Nombre'];
+        delete filtrosActivos['NombrePromocion'];
         delete filtrosActivos['Medida'];
         delete filtrosActivos['Cantidad'];
     }
@@ -168,9 +171,9 @@ function mostrarSkeleton() {
         cols.push('w-50');
     } else {
         // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente,
-        // Producto, Medida, Cantidad, Puntos, Cajero, [Monto], Modalidad, Anulado
+        // Producto, Promoción, Medida, Cantidad, Puntos, Cajero, [Monto], Modalidad, Anulado
         cols = ['w-70','w-50','w-60','w-40','w-50','w-80',
-                'w-90','w-50','w-40','w-40','w-60'];
+                'w-90','w-70','w-50','w-40','w-40','w-60'];
         if (puedeVerMontos) cols.push('w-50');
         cols.push('w-70','w-50');
     }
@@ -271,6 +274,7 @@ function renderizarTablaPorProducto(datos) {
         tr.append(`<td>${membresia}</td>`);
         tr.append(`<td>${row.NombreCliente || '-'}</td>`);
         tr.append(`<td>${row.DBBatidos_Nombre || '-'}</td>`);
+        tr.append(`<td>${row.NombrePromocion || '-'}</td>`);
         tr.append(`<td>${row.Medida || '-'}</td>`);
         tr.append(`<td>${row.Cantidad || 0}</td>`);
         tr.append(`<td>${row.Puntos || 0}</td>`);
@@ -349,9 +353,9 @@ function mostrarMensajeVacio(mensaje, colspan = null) {
             // + Monto (cond), Modalidad, Anulado = 3, + IA (cond), + Acciones = 1
             colspan = 12 + (puedeVerMontos ? 1 : 0) + (puedeAnalizarBot ? 1 : 0);
         } else {
-            // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente, Producto, Medida,
-            // Cantidad, Puntos, Cajero = 11 + Monto (cond), Modalidad, Anulado = 3
-            colspan = 14 + (puedeVerMontos ? 1 : 0);
+            // Sucursal, Pedido, Fecha, Hora, Membresía, Cliente, Producto, Promoción, Medida,
+            // Cantidad, Puntos, Cajero = 12 + Monto (cond), Modalidad, Anulado = 3
+            colspan = 15 + (puedeVerMontos ? 1 : 0);
         }
     }
     tbody.html(`

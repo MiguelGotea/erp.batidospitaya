@@ -13,6 +13,7 @@ try {
     
     $columnasPermitidas = [
         'Sucursal_Nombre',
+        'NombrePromocion',
         'Medida',
         'Modalidad',
         'Anulado'
@@ -36,14 +37,26 @@ try {
         return;
     }
     
-    $sql = "SELECT DISTINCT v.$columna as valor
-            FROM VentasGlobalesAccessCSV v
-            LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
-            WHERE (b.CodGrupo IS NULL OR (b.CodGrupo != 25 AND b.CodGrupo != 11))
-AND v.$columna IS NOT NULL
-AND v.$columna != ''
-ORDER BY v.$columna ASC
-LIMIT 100";
+    if ($columna === 'NombrePromocion') {
+        $sql = "SELECT DISTINCT p.Nombre as valor
+                FROM VentasGlobalesAccessCSV v
+                LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
+                INNER JOIN promociones_access_csv p ON v.CodigoPromocion = p.CodPromocion
+                WHERE (b.CodGrupo IS NULL OR (b.CodGrupo != 25 AND b.CodGrupo != 11))
+                AND p.Nombre IS NOT NULL
+                AND p.Nombre != ''
+                ORDER BY p.Nombre ASC
+                LIMIT 100";
+    } else {
+        $sql = "SELECT DISTINCT v.$columna as valor
+                FROM VentasGlobalesAccessCSV v
+                LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
+                WHERE (b.CodGrupo IS NULL OR (b.CodGrupo != 25 AND b.CodGrupo != 11))
+                AND v.$columna IS NOT NULL
+                AND v.$columna != ''
+                ORDER BY v.$columna ASC
+                LIMIT 100";
+    }
 $stmt = $conn->prepare($sql);
 $stmt->execute();
 $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -82,6 +82,17 @@ try {
         $where[] = "v.Medida IN (" . implode(',', $placeholders) . ")";
     }
     
+    // Filtro NombrePromocion solo en modo por_producto
+    if ($modo === 'por_producto' && isset($filtros['NombrePromocion']) && is_array($filtros['NombrePromocion']) && count($filtros['NombrePromocion']) > 0) {
+        $placeholders = [];
+        foreach ($filtros['NombrePromocion'] as $idx => $valor) {
+            $key = ":promocion_$idx";
+            $placeholders[] = $key;
+            $params[$key] = $valor;
+        }
+        $where[] = "p.Nombre IN (" . implode(',', $placeholders) . ")";
+    }
+    
     if (isset($filtros['Modalidad']) && is_array($filtros['Modalidad']) && count($filtros['Modalidad']) > 0) {
         $placeholders = [];
         foreach ($filtros['Modalidad'] as $idx => $valor) {
@@ -127,7 +138,7 @@ try {
         } else {
             $columnas_validas = [
                 'Sucursal_Nombre', 'CodPedido', 'Fecha', 'Hora',
-                'CodCliente', 'DBBatidos_Nombre', 'Medida', 'Cantidad', 'Puntos',
+                'CodCliente', 'DBBatidos_Nombre', 'NombrePromocion', 'Medida', 'Cantidad', 'Puntos',
                 'Caja', 'Precio', 'Modalidad', 'Anulado'
             ];
         }
@@ -135,6 +146,8 @@ try {
             $direccion = strtoupper($orden['direccion']) === 'DESC' ? 'DESC' : 'ASC';
             if ($orden['columna'] === 'NombreCliente') {
                 $orderClause = "ORDER BY c.nombre $direccion, c.apellido $direccion";
+            } elseif ($orden['columna'] === 'NombrePromocion') {
+                $orderClause = "ORDER BY p.Nombre $direccion";
             } else {
                 $orderClause = "ORDER BY v.{$orden['columna']} $direccion";
             }
@@ -166,6 +179,7 @@ try {
                 FROM VentasGlobalesAccessCSV v
                 LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
                 LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
+                LEFT JOIN promociones_access_csv p ON v.CodigoPromocion = p.CodPromocion
                 $whereClause
                 GROUP BY v.CodPedido, v.local
                 $orderClause
@@ -183,6 +197,7 @@ try {
                         ELSE ''
                     END as NombreCliente,
                     v.DBBatidos_Nombre,
+                    p.Nombre AS NombrePromocion,
                     v.Medida,
                     v.Cantidad,
                     v.Puntos,
@@ -193,6 +208,7 @@ try {
                 FROM VentasGlobalesAccessCSV v
                 LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
                 LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
+                LEFT JOIN promociones_access_csv p ON v.CodigoPromocion = p.CodPromocion
                 $whereClause
                 $orderClause
                 LIMIT :offset, :limit";
@@ -223,6 +239,7 @@ try {
                     FROM VentasGlobalesAccessCSV v
                     LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
                     LEFT JOIN clientesclub c ON v.CodCliente = c.membresia
+                    LEFT JOIN promociones_access_csv p ON v.CodigoPromocion = p.CodPromocion
                     $whereClause";
         $stmtTotales = $conn->prepare($sqlTotales);
         foreach ($params as $key => $value) {
