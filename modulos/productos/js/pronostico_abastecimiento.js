@@ -348,7 +348,6 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
         const prodConPlan = Object.values(conPlan).flat();
         const stockRonda1 = {};
         const preingresosHoy = {};
-        const preingresosReales = {};
         const diasProyRonda1 = {};
         if (prodConPlan.length) {
             const fdPron = new FormData();
@@ -364,7 +363,6 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
             if (resPron.ok) {
                 Object.entries(resPron.stocks || {}).forEach(([id, val]) => { stockRonda1[String(id)] = val; });
                 Object.entries(resPron.preingresos_hoy || {}).forEach(([id, val]) => { preingresosHoy[String(id)] = val; });
-                Object.entries(resPron.preingresos_reales || {}).forEach(([id, val]) => { preingresosReales[String(id)] = val; });
                 Object.entries(resPron.dias_proy || {}).forEach(([id, val]) => { diasProyRonda1[String(id)] = val; });
             }
         }
@@ -451,18 +449,10 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         }
                     }
 
-                    const pr = preingresosReales[String(p.id_pp)]?.[fecha];
-                    const preingresoRealRondaPaq = (pr !== null && pr !== undefined && pr > 0) ? (pr / df) : null;
-
-                    // Calcular stock post-despacho para esta ronda
+                    // Calcular stock post-despacho para esta ronda usando el despacho real (redondeado hacia arriba)
                     const invBeforePaq = (stockD1Paq ?? 0) + (window.pa_include_preingreso ? preHoyPaq : 0);
-                    const despPronPaq = Math.max(0, Math.ceil((smfSlot ?? 0) - invBeforePaq));
-                    
-                    let despFinalPaq = despPronPaq;
-                    if (window.pa_include_preingreso && preingresoRealRondaPaq !== null) {
-                        despFinalPaq = preingresoRealRondaPaq;
-                    }
-                    const stockPostDespachoPaq = invBeforePaq + despFinalPaq;
+                    const despRealPaq = Math.max(0, Math.ceil((smfSlot ?? 0) - invBeforePaq));
+                    const stockPostDespachoPaq = invBeforePaq + despRealPaq;
 
                     if (!p._porRonda) p._porRonda = {};
                     p._porRonda[slot.round] = {
@@ -474,10 +464,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         sMinSlot: maximos.sMinSlot, // stock mínimo ajustado
                         cd_dinamico: cd,
                         ciclo: ciclo,
-                        despPronPaq,
-                        preingresoRealRondaPaq,
-                        despFinalPaq,
-                        stockPostDespachoPaq
+                        stockPostDespachoPaq: stockPostDespachoPaq
                     };
 
                 });
@@ -529,9 +516,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     const stockD1Paq = invTeoricoAyerPaq; // Exactly yesterday's theoretical stock (no future projection)
                     const smfSlot = maximos.smfSlot;
                     
-                    const prHoy = preingresosReales[String(p.id_pp)]?.[todayD];
-                    const preingresoRealRondaPaq = (prHoy !== null && prHoy !== undefined && prHoy > 0) ? (prHoy / df) : null;
-                    const despPronPaq = stockD1Paq !== null ? Math.max(0, Math.ceil((smfSlot ?? 0) - stockD1Paq)) : null;
+                    const despRealPaq = stockD1Paq !== null ? Math.max(0, Math.ceil((smfSlot ?? 0) - stockD1Paq)) : null;
 
                     if (!p._porRonda) p._porRonda = {};
                     p._porRonda[0] = {
@@ -543,9 +528,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         sMinSlot: maximos.sMinSlot,
                         cd_dinamico: cd,
                         ciclo: ciclo,
-                        despPronPaq,
-                        preingresoRealRondaPaq,
-                        despFinalPaq: preingresoRealRondaPaq !== null && window.pa_include_preingreso ? preingresoRealRondaPaq : despPronPaq,
+                        despPron: despRealPaq,
                         stockPostDespachoPaq: null // Not tracked for history
                     };
                 });
@@ -647,9 +630,10 @@ function consolidarResultados(storeResults) {
                     if (pre !== null && pre !== undefined) item._preHoyTotal = (item._preHoyTotal ?? 0) + parseFloat(pre.toFixed(2));
                     if (invTA !== null && invTA !== undefined) item._invTeoricoAyerTotal = (item._invTeoricoAyerTotal ?? 0) + parseFloat(invTA.toFixed(2));
 
-                    item._despPronTotal = (item._despPronTotal ?? 0) + (rd.despPronPaq ?? 0);
-                    if (rd.preingresoRealRondaPaq !== null && rd.preingresoRealRondaPaq !== undefined) item._preRealRondaTotal = (item._preRealRondaTotal ?? 0) + rd.preingresoRealRondaPaq;
-                    item._despFinalTotal = (item._despFinalTotal ?? 0) + (rd.despFinalPaq ?? 0);
+                    let stockD1Paq_sub = sd;
+                    if (window.pa_include_preingreso && stockD1Paq_sub !== null && pre) stockD1Paq_sub += pre;
+                    let sub_despPron = stockD1Paq_sub !== null ? Math.max(0, Math.ceil((smfRound ?? 0) - stockD1Paq_sub)) : 0;
+                    item._despTotal = (item._despTotal ?? 0) + sub_despPron;
 
                     item._porTienda[cod] = {
                         nombre: slot.nombre, round: slot.round,
@@ -658,10 +642,7 @@ function consolidarResultados(storeResults) {
                         stock_maximo: smRound,
                         stock_max_final: smfRound,
                         stockD1Paq: sd, preHoyPaq: pre, invTeoricoAyerPaq: invTA,
-                        cd_dinamico: rd.cd_dinamico,
-                        despPronPaq: rd.despPronPaq,
-                        preingresoRealRondaPaq: rd.preingresoRealRondaPaq,
-                        despFinalPaq: rd.despFinalPaq
+                        cd_dinamico: p._porRonda?.[slot.round]?.cd_dinamico
                     };
                 });
             });
@@ -807,7 +788,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
     let rows = '';
 
     items.forEach(p => {
-        let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay, cdDisplay, csDisplay, invTeoricoAyerPaq, despPronPaq, preRealRondaPaq, despFinalPaq;
+        let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay, cdDisplay, csDisplay, invTeoricoAyerPaq, despTotalConsolidado;
         if (isConsolidado) {
             stockD1Paq_base = p._stockD1Total;
             preHoyPaq = p._preHoyTotal;
@@ -817,9 +798,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
             cdDisplay = p._cdTotal !== undefined ? p._cdTotal : null;
             csDisplay = p._csTotal !== undefined ? p._csTotal : null;
             invTeoricoAyerPaq = p._invTeoricoAyerTotal;
-            despPronPaq = p._despPronTotal;
-            preRealRondaPaq = p._preRealRondaTotal;
-            despFinalPaq = p._despFinalTotal;
+            despTotalConsolidado = p._despTotal;
         } else {
             const rd = p._porRonda?.[round] ?? {};
             stockD1Paq_base = rd.stockD1Paq;
@@ -829,9 +808,6 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
             sMinDisplay = rd.sMinSlot ?? p.stock_minimo;
             cdDisplay = rd.cd_dinamico ?? (p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null);
             invTeoricoAyerPaq = rd.invTeoricoAyerPaq;
-            despPronPaq = rd.despPronPaq;
-            preRealRondaPaq = rd.preingresoRealRondaPaq;
-            despFinalPaq = rd.despFinalPaq;
         }
 
         if (csDisplay === undefined) {
@@ -845,6 +821,8 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
             stockD1Paq += preHoyPaq;
         }
 
+        let despPron = isConsolidado ? despTotalConsolidado : (stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null);
+
         // Convert to Unid de control for display
         const sMinDisplayCtrl = sMinDisplay !== null && sMinDisplay !== undefined ? sMinDisplay * df : null;
         const smDisplayCtrl = smDisplay !== null && smDisplay !== undefined ? smDisplay * df : null;
@@ -852,9 +830,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         const invTeoricoAyerCtrl = invTeoricoAyerPaq !== null && invTeoricoAyerPaq !== undefined ? invTeoricoAyerPaq * df : null;
         const stockD1Ctrl = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq * df : null;
         const preHoyCtrl = preHoyPaq !== null && preHoyPaq !== undefined ? preHoyPaq * df : null;
-        const despPronCtrl = despPronPaq !== null && despPronPaq !== undefined ? despPronPaq * df : null;
-        const preRealRondaCtrl = preRealRondaPaq !== null && preRealRondaPaq !== undefined ? preRealRondaPaq * df : null;
-        const despFinalCtrl = despFinalPaq !== null && despFinalPaq !== undefined ? despFinalPaq * df : null;
+        const despPronCtrl = despPron !== null && despPron !== undefined ? despPron * df : null;
 
         const smfRefCtrl = smfDisplayCtrl ?? 0;
         let stockHtml;
@@ -878,21 +854,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         }
 
         let despHtmlCtrl = despPronCtrl === null || despPronCtrl === undefined ? '<span class="pa-na">—</span>' : `<span class="pa-desp-val ${despPronCtrl > 0 ? 'needs' : 'ok'}">${despPronCtrl.toFixed(1)}</span>`;
-        if (window.pa_include_preingreso && preRealRondaCtrl !== null && preRealRondaCtrl !== undefined) {
-            despHtmlCtrl = `<del class="text-muted" style="font-size:0.9em; display:block;">${despHtmlCtrl}</del>`;
-        }
-
-        let despHtmlPaq = despPronPaq === null || despPronPaq === undefined ? '<span class="pa-na">—</span>' : `<span class="pa-desp-val ${despPronPaq > 0 ? 'needs' : 'ok'}">${despPronPaq.toFixed(1)}</span>`;
-        if (window.pa_include_preingreso && preRealRondaPaq !== null && preRealRondaPaq !== undefined) {
-            despHtmlPaq = `<del class="text-muted" style="font-size:0.9em; display:block;">${despHtmlPaq}</del>`;
-        }
-
-        let realHtmlPaq = '<span class="pa-na">—</span>';
-        if (preRealRondaPaq !== null && preRealRondaPaq !== undefined) {
-            realHtmlPaq = `<span style="color:#0ea5e9; font-weight:bold; font-size:1.1em;">${preRealRondaPaq.toFixed(1)}</span>`;
-        }
-
-        let finalHtmlPaq = despFinalPaq === null || despFinalPaq === undefined ? '<span class="pa-na">—</span>' : `<span class="pa-desp-val ${despFinalPaq > 0 ? 'needs' : 'ok'}">${despFinalPaq.toFixed(1)}</span>`;
+        let despHtmlPaq = despPron === null || despPron === undefined ? '<span class="pa-na">—</span>' : `<span class="pa-desp-val ${despPron > 0 ? 'needs' : 'ok'}">${despPron.toFixed(1)}</span>`;
 
         const smfCell = smfDisplayCtrl !== null && smfDisplayCtrl !== undefined
             ? fmt2(smfDisplayCtrl)
@@ -922,8 +884,6 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
                 <td class="pa-col-desp">${despHtmlCtrl}</td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td class="pa-col-desp">${despHtmlPaq}</td>
-                <td class="pa-col-desp" style="background:#f0f9ff;">${realHtmlPaq}</td>
-                <td class="pa-col-desp" style="font-weight:bold;">${finalHtmlPaq}</td>
             </tr>
             ${buildSubRowsTiendas(p, slotKey)}`;
         } else {
@@ -951,8 +911,6 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
                 <td class="pa-col-desp">${despHtmlCtrl}</td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td class="pa-col-desp">${despHtmlPaq}</td>
-                <td class="pa-col-desp" style="background:#f0f9ff;">${realHtmlPaq}</td>
-                <td class="pa-col-desp" style="font-weight:bold;">${finalHtmlPaq}</td>
             </tr>
             <tr class="pa-chart-sub d-none" data-slot-key="${slotKey}" data-pp-id="${p.id_pp}">
                 <td colspan="${colspan}" class="p-0">
@@ -976,10 +934,10 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
     });
 
     const isChecked = window.pa_include_preingreso ? 'checked' : '';
-    const thIngresoPrevio = isHoy ? 'Ingreso Previo<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Despacho de hoy)</small>' : `Ingreso Previo<br>
-            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Despacho de hoy)</small><br>
+    const thDespachoEnCurso = isHoy ? 'Despacho en curso<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small>' : `Despacho en curso<br>
+            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small><br>
             <div class="form-check form-switch d-inline-block mt-1">
-                <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Usar despachos reales en la proyección" ${isChecked}>
+                <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Incluir despachos de hoy" ${isChecked}>
             </div>`;
 
     const thDatosCompletos = window.PA_DATOS_COMPLETOS ? `<th>Stock Máx Ajustado<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th><th>Inv. Teórico Ayer<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>` : '';
@@ -997,12 +955,10 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         <th>Requerido Total<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         ${thDatosCompletos}
         <th>Pronostico de inventario al dia de despacho<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
-        <th style="width: 100px;">${thIngresoPrevio}</th>
-        <th>Despacho sugerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
+        <th style="width: 100px;">${thDespachoEnCurso}</th>
+        <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         <th>Presentacion de despacho</th>
-        <th>Despacho sugerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid despacho)</small></th>
-        <th>Despacho Real<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Confirmado)</small></th>
-        <th>A Pedir<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid despacho)</small></th>
+        <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid despacho)</small></th>
     </tr></thead>`;
 
     return `<table class="pa-table">${thead}<tbody>${rows || '<tr class="pa-no-data-row"><td colspan="12">Sin productos</td></tr>'}</tbody></table>`;
@@ -1018,20 +974,14 @@ function buildSubRowsTiendas(item, slotKey) {
         if (window.pa_include_preingreso && stockD1Paq !== null && td.preHoyPaq) {
             stockD1Paq += td.preHoyPaq;
         }
+        let despPron = stockD1Paq !== null ? Math.max(0, Math.ceil((smf ?? 0) - stockD1Paq)) : null;
 
         const stockD1Ctrl = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq * df : null;
         const smfCtrl = smf * df;
         const smCtrl = (td.stock_maximo ?? 0) * df;
         const sMinCtrl = (td.sMinSlot ?? td.stock_minimo ?? 0) * df;
         const preHoyCtrl = td.preHoyPaq !== null && td.preHoyPaq !== undefined ? td.preHoyPaq * df : null;
-        
-        let despPronPaq = td.despPronPaq;
-        let preRealRondaPaq = td.preingresoRealRondaPaq;
-        let despFinalPaq = td.despFinalPaq;
-
-        const despPronCtrl = despPronPaq !== null && despPronPaq !== undefined ? despPronPaq * df : null;
-        const preRealRondaCtrl = preRealRondaPaq !== null && preRealRondaPaq !== undefined ? preRealRondaPaq * df : null;
-        const despFinalCtrl = despFinalPaq !== null && despFinalPaq !== undefined ? despFinalPaq * df : null;
+        const despPronCtrl = despPron !== null && despPron !== undefined ? despPron * df : null;
         const invTeoricoAyerCtrl = td.invTeoricoAyerPaq !== null && td.invTeoricoAyerPaq !== undefined ? td.invTeoricoAyerPaq * df : null;
 
         let sHtml;
@@ -1050,28 +1000,13 @@ function buildSubRowsTiendas(item, slotKey) {
             preHtml = '<span class="pa-na">—</span>';
         }
 
-        let dHtmlCtrl = (despPronCtrl === null || despPronCtrl === undefined)
+        const dHtmlCtrl = (despPronCtrl === null || despPronCtrl === undefined)
             ? '<span class="pa-na">—</span>'
             : `<span class="pa-desp-val ${despPronCtrl > 0 ? 'needs' : 'ok'}">${despPronCtrl.toFixed(1)}</span>`;
-        if (window.pa_include_preingreso && preRealRondaCtrl !== null && preRealRondaCtrl !== undefined) {
-            dHtmlCtrl = `<del class="text-muted" style="font-size:0.9em; display:block;">${dHtmlCtrl}</del>`;
-        }
             
-        let dHtmlPaq = (despPronPaq === null || despPronPaq === undefined)
+        const dHtmlPaq = (despPron === null || despPron === undefined)
             ? '<span class="pa-na">—</span>'
-            : `<span class="pa-desp-val ${despPronPaq > 0 ? 'needs' : 'ok'}">${despPronPaq.toFixed(1)}</span>`;
-        if (window.pa_include_preingreso && preRealRondaPaq !== null && preRealRondaPaq !== undefined) {
-            dHtmlPaq = `<del class="text-muted" style="font-size:0.9em; display:block;">${dHtmlPaq}</del>`;
-        }
-
-        let rHtmlPaq = '<span class="pa-na">—</span>';
-        if (preRealRondaPaq !== null && preRealRondaPaq !== undefined) {
-            rHtmlPaq = `<span style="color:#0ea5e9; font-weight:bold; font-size:1.1em;">${preRealRondaPaq.toFixed(1)}</span>`;
-        }
-
-        let fHtmlPaq = (despFinalPaq === null || despFinalPaq === undefined)
-            ? '<span class="pa-na">—</span>'
-            : `<span class="pa-desp-val ${despFinalPaq > 0 ? 'needs' : 'ok'}">${despFinalPaq.toFixed(1)}</span>`;
+            : `<span class="pa-desp-val ${despPron > 0 ? 'needs' : 'ok'}">${despPron.toFixed(1)}</span>`;
 
         let tdCdDisplay = td.cd_dinamico !== null && td.cd_dinamico !== undefined ? td.cd_dinamico : (td.cons_semanal !== null && td.cons_semanal !== undefined ? (td.cons_semanal / 7) : null);
         let tdCsDisplay = tdCdDisplay !== null ? tdCdDisplay * 7 : null;
@@ -1092,8 +1027,6 @@ function buildSubRowsTiendas(item, slotKey) {
             <td class="pa-col-desp">${dHtmlCtrl}</td>
             <td></td>
             <td class="pa-col-desp">${dHtmlPaq}</td>
-            <td class="pa-col-desp" style="background:#f0f9ff;">${rHtmlPaq}</td>
-            <td class="pa-col-desp" style="font-weight:bold;">${fHtmlPaq}</td>
         </tr>`;
     });
     return rows;
@@ -1121,7 +1054,7 @@ function exportarPronosticoExcel() {
 
             // Recorrer los items
             slot.items.forEach(p => {
-                let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay, cdDisplay, csDisplay, invTeoricoAyerPaq, despPronPaq, preRealRondaPaq, despFinalPaq;
+                let stockD1Paq_base, preHoyPaq, smfDisplay, smDisplay, sMinDisplay, cdDisplay, csDisplay, invTeoricoAyerPaq, despTotalConsolidado;
                 if (currentAgendaData.isConsolidado) {
                     stockD1Paq_base = p._stockD1Total;
                     preHoyPaq = p._preHoyTotal;
@@ -1131,9 +1064,7 @@ function exportarPronosticoExcel() {
                     cdDisplay = p._cdTotal !== undefined ? p._cdTotal : null;
                     csDisplay = p._csTotal !== undefined ? p._csTotal : null;
                     invTeoricoAyerPaq = p._invTeoricoAyerTotal;
-                    despPronPaq = p._despPronTotal;
-                    preRealRondaPaq = p._preRealRondaTotal;
-                    despFinalPaq = p._despFinalTotal;
+                    despTotalConsolidado = p._despTotal;
                 } else {
                     const rd = p._porRonda?.[slot.round] ?? {};
                     stockD1Paq_base = rd.stockD1Paq;
@@ -1144,15 +1075,14 @@ function exportarPronosticoExcel() {
                     cdDisplay = rd.cd_dinamico ?? (p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null);
                     csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
                     invTeoricoAyerPaq = rd.invTeoricoAyerPaq;
-                    despPronPaq = rd.despPronPaq;
-                    preRealRondaPaq = rd.preingresoRealRondaPaq;
-                    despFinalPaq = rd.despFinalPaq;
                 }
 
                 let stockD1Paq = stockD1Paq_base;
-                if (!isHoy && window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq) {
+                if (window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq) {
                     stockD1Paq += preHoyPaq;
                 }
+
+                let despPron = currentAgendaData.isConsolidado ? despTotalConsolidado : (stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null);
 
                 const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
 
@@ -1163,9 +1093,7 @@ function exportarPronosticoExcel() {
                 const invTeoricoAyerCtrl = invTeoricoAyerPaq !== null && invTeoricoAyerPaq !== undefined ? invTeoricoAyerPaq * df : null;
                 const stockD1Ctrl = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq * df : null;
                 const preHoyCtrl = preHoyPaq !== null && preHoyPaq !== undefined ? preHoyPaq * df : null;
-                const despPronCtrl = despPronPaq !== null && despPronPaq !== undefined ? despPronPaq * df : null;
-                const preRealRondaCtrl = preRealRondaPaq !== null && preRealRondaPaq !== undefined ? preRealRondaPaq * df : null;
-                const despFinalCtrl = despFinalPaq !== null && despFinalPaq !== undefined ? despFinalPaq * df : null;
+                const despPronCtrl = despPron !== null && despPron !== undefined ? despPron * df : null;
 
                 let pronosticoInv = stockD1Ctrl !== null && stockD1Ctrl !== undefined ? stockD1Ctrl.toFixed(1) : 'Sin datos';
                 let despachoEnCurso = window.pa_include_preingreso && preHoyCtrl ? preHoyCtrl.toFixed(1) : '0.0';
@@ -1187,12 +1115,10 @@ function exportarPronosticoExcel() {
                 }
                 
                 obj["Pronostico de inventario al dia de despacho (Unid. de control)"] = pronosticoInv;
-                obj["Ingreso Previo (Despacho de hoy)"] = despachoEnCurso;
-                obj["Despacho sugerido (Unid. de control)"] = despPronCtrl !== null ? parseFloat(despPronCtrl).toFixed(1) : '-';
+                obj["Despacho en curso"] = despachoEnCurso;
+                obj["Despacho requerido (Unid. de control)"] = despPronCtrl !== null ? parseFloat(despPronCtrl).toFixed(1) : '-';
                 obj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
-                obj["Despacho sugerido (Unid despacho)"] = despPronPaq !== null ? parseFloat(despPronPaq).toFixed(1) : '-';
-                obj["Despacho Real Confirmado"] = preRealRondaPaq !== null && preRealRondaPaq !== undefined ? parseFloat(preRealRondaPaq).toFixed(1) : '-';
-                obj["A Pedir (Unid despacho)"] = despFinalPaq !== null && despFinalPaq !== undefined ? parseFloat(despFinalPaq).toFixed(1) : '-';
+                obj["Despacho requerido (Unid despacho)"] = despPron !== null ? parseFloat(despPron).toFixed(1) : '-';
                 
                 datosExportar.push(obj);
 
@@ -1203,13 +1129,11 @@ function exportarPronosticoExcel() {
                         let sub_stockD1Paq = td.stockD1Paq;
                         let sub_sMinSlot = td.sMinSlot ?? td.stock_minimo;
 
-                        if (!isHoy && window.pa_include_preingreso && sub_stockD1Paq !== null && td.preHoyPaq) {
+                        if (window.pa_include_preingreso && sub_stockD1Paq !== null && td.preHoyPaq) {
                             sub_stockD1Paq += td.preHoyPaq;
                         }
 
-                        let sub_despPronPaq = td.despPronPaq;
-                        let sub_preRealRondaPaq = td.preingresoRealRondaPaq;
-                        let sub_despFinalPaq = td.despFinalPaq;
+                        let sub_despPron = sub_stockD1Paq !== null ? Math.max(0, Math.ceil((sub_smfDisplay ?? 0) - sub_stockD1Paq)) : null;
 
                         const sub_sMinDisplayCtrl = sub_sMinSlot !== null && sub_sMinSlot !== undefined ? sub_sMinSlot * df : null;
                         const sub_smDisplayCtrl = sub_smDisplay !== null && sub_smDisplay !== undefined ? sub_smDisplay * df : null;
@@ -1217,7 +1141,7 @@ function exportarPronosticoExcel() {
                         const sub_invTeoricoAyerCtrl = td.invTeoricoAyerPaq !== null && td.invTeoricoAyerPaq !== undefined ? td.invTeoricoAyerPaq * df : null;
                         const sub_stockD1Ctrl = sub_stockD1Paq !== null && sub_stockD1Paq !== undefined ? sub_stockD1Paq * df : null;
                         const sub_preHoyCtrl = td.preHoyPaq !== null && td.preHoyPaq !== undefined ? td.preHoyPaq * df : null;
-                        const sub_despPronCtrl = sub_despPronPaq !== null && sub_despPronPaq !== undefined ? sub_despPronPaq * df : null;
+                        const sub_despPronCtrl = sub_despPron !== null && sub_despPron !== undefined ? sub_despPron * df : null;
 
                         let sub_pronosticoInv = sub_stockD1Ctrl !== null && sub_stockD1Ctrl !== undefined ? sub_stockD1Ctrl.toFixed(1) : 'Sin datos';
                         let sub_despachoEnCurso = window.pa_include_preingreso && sub_preHoyCtrl ? sub_preHoyCtrl.toFixed(1) : '0.0';
@@ -1242,12 +1166,10 @@ function exportarPronosticoExcel() {
                         }
                         
                         subObj["Pronostico de inventario al dia de despacho (Unid. de control)"] = sub_pronosticoInv;
-                        subObj["Ingreso Previo (Despacho de hoy)"] = sub_despachoEnCurso;
-                        subObj["Despacho sugerido (Unid. de control)"] = sub_despPronCtrl !== null ? parseFloat(sub_despPronCtrl).toFixed(1) : '-';
+                        subObj["Despacho en curso"] = sub_despachoEnCurso;
+                        subObj["Despacho requerido (Unid. de control)"] = sub_despPronCtrl !== null ? parseFloat(sub_despPronCtrl).toFixed(1) : '-';
                         subObj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
-                        subObj["Despacho sugerido (Unid despacho)"] = sub_despPronPaq !== null ? parseFloat(sub_despPronPaq).toFixed(1) : '-';
-                        subObj["Despacho Real Confirmado"] = sub_preRealRondaPaq !== null && sub_preRealRondaPaq !== undefined ? parseFloat(sub_preRealRondaPaq).toFixed(1) : '-';
-                        subObj["A Pedir (Unid despacho)"] = sub_despFinalPaq !== null && sub_despFinalPaq !== undefined ? parseFloat(sub_despFinalPaq).toFixed(1) : '-';
+                        subObj["Despacho requerido (Unid despacho)"] = sub_despPron !== null ? parseFloat(sub_despPron).toFixed(1) : '-';
 
                         datosExportar.push(subObj);
                     });
@@ -1278,12 +1200,10 @@ function exportarPronosticoExcel() {
 
     wscols.push(
         { wch: 25 }, // Pronóstico Inventario
-        { wch: 18 }, // Ingreso Previo
-        { wch: 18 }, // Despacho sugerido (Unid. de control)
+        { wch: 18 }, // Despacho en curso
+        { wch: 18 }, // Despacho requerido (Unid. de control)
         { wch: 25 }, // Presentación de despacho
-        { wch: 18 },  // Despacho sugerido (Unid despacho)
-        { wch: 18 },  // Despacho Real Confirmado
-        { wch: 18 }   // A Pedir (Unid despacho)
+        { wch: 18 }  // Despacho requerido (Unid despacho)
     );
     ws['!cols'] = wscols;
 
@@ -1313,18 +1233,21 @@ function recalcularChaining(storeResults) {
                 const rd = p._porRonda[round];
                 if (!rd) return;
 
-                const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
-                
-                if (round > 1) {
+                if (round === 1) {
+                    const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
+                    const despRealPaq = Math.max(0, Math.ceil((rd.smfSlot ?? 0) - invBeforePaq));
+                    rd.stockPostDespachoPaq = invBeforePaq + despRealPaq;
+                } else {
                     const prevRound = p._porRonda[round - 1];
+                    const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
                     const prevConsPaq = prevRound ? (prevRound.cd_dinamico * prevRound.ciclo) / df : 0;
-                    rd.stockD1Paq = Math.max(0, (prevRound?.stockPostDespachoPaq ?? 0) - prevConsPaq);
-                }
 
-                const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
-                rd.despPronPaq = Math.max(0, Math.ceil((rd.smfSlot ?? 0) - invBeforePaq));
-                rd.despFinalPaq = (window.pa_include_preingreso && rd.preingresoRealRondaPaq !== null && rd.preingresoRealRondaPaq !== undefined) ? rd.preingresoRealRondaPaq : rd.despPronPaq;
-                rd.stockPostDespachoPaq = invBeforePaq + rd.despFinalPaq;
+                    rd.stockD1Paq = Math.max(0, (prevRound?.stockPostDespachoPaq ?? 0) - prevConsPaq);
+
+                    const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
+                    const despRealPaq = Math.max(0, Math.ceil((rd.smfSlot ?? 0) - invBeforePaq));
+                    rd.stockPostDespachoPaq = invBeforePaq + despRealPaq;
+                }
             });
         });
     });
