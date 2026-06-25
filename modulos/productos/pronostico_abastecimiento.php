@@ -72,14 +72,14 @@ try {
                         <div class="col-6 col-md-auto">
                             <label class="pa-label" for="pa-desde">Semana Desde</label>
                             <input type="number" id="pa-desde" class="form-control form-control-sm pa-input"
-                                style="width:110px" min="1" max="9999" placeholder="ej: <?php echo $semDesdeDefault; ?>"
+                                style="width:110px" min="<?php echo !empty($semActual) ? max(1, $semActual - 5) : 1; ?>" max="9999" placeholder="ej: <?php echo $semDesdeDefault; ?>"
                                 value="<?php echo $semDesdeDefault; ?>">
                         </div>
 
                         <div class="col-6 col-md-auto">
                             <label class="pa-label" for="pa-hasta">Semana Hasta</label>
                             <input type="number" id="pa-hasta" class="form-control form-control-sm pa-input"
-                                style="width:110px" min="1" max="9999" placeholder="ej: <?php echo $semHastaDefault; ?>"
+                                style="width:110px" min="<?php echo !empty($semActual) ? max(1, $semActual - 5) : 1; ?>" max="9999" placeholder="ej: <?php echo $semHastaDefault; ?>"
                                 value="<?php echo $semHastaDefault; ?>">
                         </div>
 
@@ -111,7 +111,7 @@ try {
                                 </span>
                             <?php endif; ?>
                             <button id="pa-btn-calcular" class="btn pa-btn-calcular">
-                                <i class="bi bi-calendar2-week me-1"></i>Calcular Agenda
+                                <i class="bi bi-calendar2-week me-1"></i>Calcular Despacho
                             </button>
                         </div>
 
@@ -124,7 +124,7 @@ try {
                     <h5>Pronóstico de Abastecimiento</h5>
                     <p class="text-muted" style="max-width:400px;margin:0 auto">
                         Ingresa el rango de semanas, la semana de corte y la sucursal,
-                        luego haz clic en <strong>Calcular Agenda</strong>.
+                        luego haz clic en <strong>Calcular Despacho</strong>.
                     </p>
                 </div>
 

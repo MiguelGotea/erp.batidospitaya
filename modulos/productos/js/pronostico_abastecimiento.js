@@ -834,9 +834,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         if (stockD1Ctrl === null || stockD1Ctrl === undefined) {
             stockHtml = '<span class="pa-na">Sin datos</span>';
         } else {
-            const pct = smfRefCtrl > 0 ? stockD1Ctrl / smfRefCtrl : 0;
-            const cls = pct >= 0.5 ? 'positive' : pct >= 0.25 ? 'low' : 'critical';
-            stockHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Ctrl.toFixed(1)}</span>`;
+            stockHtml = `<span class="pa-stock-d1">${stockD1Ctrl.toFixed(1)}</span>`;
         }
 
         let preHtml = '';
@@ -987,9 +985,7 @@ function buildSubRowsTiendas(item, slotKey) {
         if (stockD1Ctrl === null || stockD1Ctrl === undefined) {
             sHtml = '<span class="pa-na">Sin datos</span>';
         } else {
-            const pct = smfCtrl > 0 ? stockD1Ctrl / smfCtrl : 0;
-            const cls = pct >= 0.5 ? 'positive' : pct >= 0.25 ? 'low' : 'critical';
-            sHtml = `<span class="pa-stock-d1 ${cls}">${stockD1Ctrl.toFixed(1)}</span>`;
+            sHtml = `<span class="pa-stock-d1">${stockD1Ctrl.toFixed(1)}</span>`;
         }
 
         let preHtml = '';
