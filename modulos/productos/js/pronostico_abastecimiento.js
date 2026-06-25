@@ -1100,10 +1100,10 @@ function exportarPronosticoExcel() {
                 let despachoEnCurso = window.pa_include_preingreso && preHoyCtrl ? preHoyCtrl.toFixed(1) : '0.0';
 
                 let obj = {
+                    "Tienda": tiendaPrincipal,
                     "Fecha de Despacho": fecha,
                     "Grupo": PA_LABELS[cat] || cat,
                     "Producto": p.nombre,
-                    "Tienda": tiendaPrincipal,
                     "Pronostico consumo semana (Unid. de control)": csDisplay !== null ? parseFloat(csDisplay).toFixed(1) : '',
                     "Pronostico consumo dia (Unid. de control)": cdDisplay !== null ? parseFloat(cdDisplay).toFixed(1) : '',
                     "Stock Minimo (Unid. de control)": sMinDisplayCtrl !== null ? parseFloat(sMinDisplayCtrl).toFixed(1) : '',
@@ -1151,10 +1151,10 @@ function exportarPronosticoExcel() {
                         let sub_csDisplay = sub_cdDisplay !== null ? sub_cdDisplay * 7 : null;
 
                         let subObj = {
+                            "Tienda": td.nombre,
                             "Fecha de Despacho": fecha,
                             "Grupo": PA_LABELS[cat] || cat,
                             "Producto": p.nombre,
-                            "Tienda": td.nombre,
                             "Pronostico consumo semana (Unid. de control)": sub_csDisplay !== null ? parseFloat(sub_csDisplay).toFixed(1) : '',
                             "Pronostico consumo dia (Unid. de control)": sub_cdDisplay !== null ? parseFloat(sub_cdDisplay).toFixed(1) : '',
                             "Stock Minimo (Unid. de control)": sub_sMinDisplayCtrl !== null ? parseFloat(sub_sMinDisplayCtrl).toFixed(1) : '',
@@ -1183,22 +1183,29 @@ function exportarPronosticoExcel() {
     const ws = XLSX.utils.json_to_sheet(datosExportar);
 
     // Auto-ajustar ancho de columnas
-    const wscols = [
+    let wscols = [
+        { wch: 25 }, // Tienda
         { wch: 18 }, // Fecha de Despacho
         { wch: 25 }, // Grupo
         { wch: 40 }, // Producto
-        { wch: 25 }, // Tienda
-        { wch: 25 }, // Presentación de Despacho
-        { wch: 15 }, // Consumo Diario
-        { wch: 15 }, // Consumo Semanal
+        { wch: 18 }, // Consumo Semanal
+        { wch: 18 }, // Consumo Diario
         { wch: 15 }, // Stock Mín
-        { wch: 15 }, // Stock Máx
-        { wch: 18 }, // Stock Máx Ajustado
-        { wch: 18 }, // Inv. Teórico Ayer
+        { wch: 15 }  // Requerido Total
+    ];
+
+    if (window.PA_DATOS_COMPLETOS) {
+        wscols.push({ wch: 18 }); // Stock Máx Ajustado
+        wscols.push({ wch: 18 }); // Inv. Teórico Ayer
+    }
+
+    wscols.push(
         { wch: 25 }, // Pronóstico Inventario
         { wch: 18 }, // Despacho en curso
-        { wch: 15 }  // Despacho
-    ];
+        { wch: 18 }, // Despacho requerido (Unid. de control)
+        { wch: 25 }, // Presentación de despacho
+        { wch: 18 }  // Despacho requerido (Unid despacho)
+    );
     ws['!cols'] = wscols;
 
     XLSX.utils.book_append_sheet(wb, ws, "Pronóstico");
