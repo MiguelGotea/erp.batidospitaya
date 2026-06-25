@@ -1073,6 +1073,9 @@ function exportarPronosticoExcel() {
                     smfDisplay = rd.smfSlot ?? p.stock_max_final;
                     smDisplay = rd.smSlot ?? p.stock_maximo;
                     sMinDisplay = rd.sMinSlot ?? p.stock_minimo;
+                    cdDisplay = rd.cd_dinamico ?? (p.cons_semanal !== null && p.cons_semanal !== undefined ? (p.cons_semanal / 7) : null);
+                    csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
+                    invTeoricoAyerPaq = rd.invTeoricoAyerPaq;
                 }
 
                 let stockD1Paq = stockD1Paq_base;
