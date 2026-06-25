@@ -584,6 +584,7 @@ async function calcularPronosticoAbastKardex(
 
         let stockD1R1 = null;
         let preHoyPaq = 0;
+        let despachosReales = {};
 
         if (rondas.length > 0 && rondas[0].round === 1) {
             const fechaD1R1 = addDays(prod.fecha_proximo_despacho, -1);
@@ -612,6 +613,9 @@ async function calcularPronosticoAbastKardex(
                     }
                     const ph = resPron.preingresos_hoy[String(idPP)];
                     preHoyPaq = (ph !== null && ph !== undefined && ph > 0) ? (ph / df) : 0;
+                    if (resPron.despachos_reales) {
+                        despachosReales = resPron.despachos_reales[String(idPP)] || {};
+                    }
                 }
             } catch (e) { }
         }
@@ -635,7 +639,31 @@ async function calcularPronosticoAbastKardex(
             }
 
             const invBeforePaq = (stockD1Paq ?? 0) + (r.round === 1 && kardexDespCursoEnabled ? preHoyPaq : 0);
-            const despachoPron = Math.max(0, Math.ceil(r.smfSlot - invBeforePaq));
+            let despachoPron = Math.max(0, Math.ceil(r.smfSlot - invBeforePaq));
+
+            if (kardexDespCursoEnabled) {
+                let realEncontrado = false;
+                if (window.lastStoreResults && window.lastStoreResults[codSuc]) {
+                    const tienda = window.lastStoreResults[codSuc];
+                    if (tienda.agendaMap && tienda.agendaMap[r.fecha]) {
+                        Object.values(tienda.agendaMap[r.fecha]).forEach(slot => {
+                            if (slot.items) {
+                                const p = slot.items.find(x => String(x.id_pp) === String(idPP));
+                                if (p && p._porRonda && p._porRonda[r.round]) {
+                                    const dr = p._porRonda[r.round].despachoRealRondaPaq;
+                                    if (dr !== null && dr !== undefined) {
+                                        despachoPron = dr;
+                                        realEncontrado = true;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                if (!realEncontrado && despachosReales[r.fecha] !== undefined && despachosReales[r.fecha] !== null) {
+                    despachoPron = despachosReales[r.fecha] / df;
+                }
+            }
 
             prevRoundPostDespachoPaq = invBeforePaq + despachoPron;
 
