@@ -464,6 +464,7 @@ try {
 
     <script>
         window.PA_DATOS_COMPLETOS = <?php echo $permisoDatosCompletos ? 'true' : 'false'; ?>;
+        window.PA_SEMANA_ACTUAL = <?php echo !empty($semActual) ? $semActual : 'null'; ?>;
     </script>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
