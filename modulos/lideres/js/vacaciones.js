@@ -164,7 +164,7 @@ if (operarioInput && sugerenciasDiv) {
 // =====================================================
 // MANEJO DE OPERARIOS DINÁMICOS POR SUCURSAL
 // =====================================================
-function cargarOperariosSucursal(codSucursal, selectId, fechaRef = '') {
+function cargarOperariosSucursal(codSucursal, selectId, fechaRef = '', incluirBaja = false) {
     const selectOperario = document.getElementById(selectId);
     if (!selectOperario) return;
 
@@ -178,6 +178,9 @@ function cargarOperariosSucursal(codSucursal, selectId, fechaRef = '') {
     let url = `ajax/vacaciones_ajax.php?action=obtener_operarios&sucursal=${codSucursal}`;
     if (fechaRef) {
         url += `&fecha=${fechaRef}`;
+    }
+    if (incluirBaja) {
+        url += `&incluir_baja=1`;
     }
 
     fetch(url)
@@ -193,7 +196,10 @@ function cargarOperariosSucursal(codSucursal, selectId, fechaRef = '') {
                     const nombreCompleto = operario.Nombre + ' ' +
                         (operario.Apellido || '') + ' ' +
                         (operario.Apellido2 || '');
-                    options += `<option value="${operario.CodOperario}">${nombreCompleto.trim()}</option>`;
+                    const esBaja = operario.es_baja == 1;
+                    const tagBaja = esBaja ? ' (Baja)' : '';
+                    const styleExtra = esBaja ? ' style="color:#999; font-style:italic;"' : '';
+                    options += `<option value="${operario.CodOperario}"${styleExtra}>${nombreCompleto.trim()}${tagBaja}</option>`;
                 });
             } else {
                 options = '<option value="">No hay colaboradores disponibles</option>';
@@ -477,8 +483,10 @@ function actualizarPorcentajeEdicion(tipoFalta) {
 function recargarOperariosModal(prefijo) {
     const sucSel = document.getElementById(prefijo + '_sucursal');
     const fechaInput = document.getElementById(prefijo + '_fecha_inicio');
+    const checkBaja = document.getElementById(prefijo + '_incluir_baja');
+    const incluirBaja = checkBaja ? checkBaja.checked : false;
     if (sucSel && fechaInput) {
-        cargarOperariosSucursal(sucSel.value, prefijo + '_operario', fechaInput.value);
+        cargarOperariosSucursal(sucSel.value, prefijo + '_operario', fechaInput.value, incluirBaja);
     }
 }
 

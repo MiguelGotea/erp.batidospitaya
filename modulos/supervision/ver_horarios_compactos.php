@@ -1899,7 +1899,12 @@ function diaAplicaParaSucursalCompleto($horario, $dia, $codSucursal)
 
         // Función para cambiar sucursal (solo para cargos que tienen selector)
         function cambiarSucursal() {
-            var semana = document.getElementById('semana').value;
+            // Intentar obtener la semana del select; si no existe (líderes con botones),
+            // tomarla del parámetro de la URL actual.
+            var semanaEl = document.getElementById('semana');
+            var semana = semanaEl
+                ? semanaEl.value
+                : (new URLSearchParams(window.location.search).get('semana') || '');
             var sucursal = document.getElementById('sucursal').value;
 
             if (semana && sucursal) {
