@@ -241,6 +241,9 @@ async function calcularAgenda() {
     if (!semDesde || !semHasta) errores.push('Ingresa el rango de semanas (Desde / Hasta).');
     if (!semCorte) errores.push('Ingresa la Semana de Corte para el pronóstico D-1.');
     if (!sucursal) errores.push('Selecciona una sucursal.');
+    const minSemana = parseInt($('#pa-desde').attr('min')) || 1;
+    if (semDesde && semDesde < minSemana) errores.push(`La semana "Desde" no puede ser menor a ${minSemana}.`);
+    if (semHasta && semHasta < minSemana) errores.push(`La semana "Hasta" no puede ser menor a ${minSemana}.`);
     if (semDesde && semHasta && semDesde > semHasta) errores.push('La semana "Desde" debe ser ≤ que "Hasta".');
     if (semCorte && semDesde && semHasta && (semCorte < semDesde || semCorte > semHasta))
         errores.push(`La semana de corte (${semCorte}) debe estar dentro del rango ${semDesde}–${semHasta}.`);
