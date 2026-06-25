@@ -304,16 +304,19 @@ try {
         $st5->execute(array_merge([$semDesde, $semHasta], $allCodsBalance, ["[Pp]itaya[[:space:]]+{$codSuc}([^0-9]|\$)"]));
         $addMov($st5->fetchAll(PDO::FETCH_ASSOC), 1);
         
-        // 13f. Preingresos de HOY (solo para el toggle Despacho en Curso)
-        $preingresosHoyByPP = [];
-        $stHoy = $conn->prepare("SELECT pre.Fecha, sub.CodCotizacion, sub.Cantidad FROM msaccess_masivo_SubPreIngresosPitaya sub INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya = sub.CodPreIngresoPitaya WHERE pre.Fecha = ? AND sub.CodCotizacion IN ($phCods) AND pre.Destino REGEXP ?");
-        $stHoy->execute(array_merge([$hoy], $allCodsBalance, ["[Pp]itaya[[:space:]]+{$codSuc}([^0-9]|\$)"]));
-        foreach ($stHoy->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        // 13f. Despachos Reales (Preingresos) desde HOY hacia el futuro (incluye el de Hoy)
+        $despachosRealesByPPFecha = [];
+        $fechaLimite = date('Y-m-d', strtotime('+30 days'));
+        $stFuturo = $conn->prepare("SELECT pre.Fecha, sub.CodCotizacion, sub.Cantidad FROM msaccess_masivo_SubPreIngresosPitaya sub INNER JOIN msaccess_masivo_PreIngresoPitaya pre ON pre.CodPreIngresoPitaya = sub.CodPreIngresoPitaya WHERE pre.Fecha BETWEEN ? AND ? AND sub.CodCotizacion IN ($phCods) AND pre.Destino REGEXP ?");
+        $stFuturo->execute(array_merge([$hoy, $fechaLimite], $allCodsBalance, ["[Pp]itaya[[:space:]]+{$codSuc}([^0-9]|\$)"]));
+        foreach ($stFuturo->fetchAll(PDO::FETCH_ASSOC) as $r) {
             $cod = (int)$r['CodCotizacion']; 
+            $fec = $r['Fecha'];
             foreach ($idsPP as $tid) {
                 if (isset($codMapBalanceAll[$tid][$cod])) {
-                    if (!isset($preingresosHoyByPP[$tid])) $preingresosHoyByPP[$tid] = 0;
-                    $preingresosHoyByPP[$tid] += round((float)$r['Cantidad'] * $codMapBalanceAll[$tid][$cod]['factor'], 4);
+                    if (!isset($despachosRealesByPPFecha[$tid])) $despachosRealesByPPFecha[$tid] = [];
+                    if (!isset($despachosRealesByPPFecha[$tid][$fec])) $despachosRealesByPPFecha[$tid][$fec] = 0;
+                    $despachosRealesByPPFecha[$tid][$fec] += round((float)$r['Cantidad'] * $codMapBalanceAll[$tid][$cod]['factor'], 4);
                 }
             }
         }
@@ -411,15 +414,25 @@ try {
         }
     }
 
-    // 15. Cálculo final: balance diario + proyección DOW
     $stocks = [];
     $preingresosHoyRes = [];
+    $despachosRealesRes = [];
     $diasProyRes = [];
     foreach ($idsPP as $targetId) {
         $fechaD1 = $fechasD1Clean[$targetId] ?? null;
 
-        // Default preingreso hoy
-        $preingresosHoyRes[(string)$targetId] = round($preingresosHoyByPP[$targetId] ?? 0, 2);
+        // Default preingreso hoy (backward compatibility)
+        $preingresosHoyRes[(string)$targetId] = round($despachosRealesByPPFecha[$targetId][$hoy] ?? 0, 2);
+
+        // Despachos reales estructurados por fecha
+        if (isset($despachosRealesByPPFecha[$targetId])) {
+            $despachosRealesRes[(string)$targetId] = [];
+            foreach ($despachosRealesByPPFecha[$targetId] as $f => $val) {
+                $despachosRealesRes[(string)$targetId][$f] = round($val, 2);
+            }
+        } else {
+            $despachosRealesRes[(string)$targetId] = new stdClass(); // Objeto vacío para JSON
+        }
 
         // Sin fecha asignada → null
         if (!$fechaD1) { $stocks[(string)$targetId] = null; continue; }
@@ -463,7 +476,7 @@ try {
         $diasProyRes[(string)$targetId] = $diasD1;
     }
 
-    echo json_encode(['ok' => true, 'stocks' => $stocks, 'preingresos_hoy' => $preingresosHoyRes, 'dias_proy' => $diasProyRes], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['ok' => true, 'stocks' => $stocks, 'preingresos_hoy' => $preingresosHoyRes, 'despachos_reales' => $despachosRealesRes, 'dias_proy' => $diasProyRes], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);
