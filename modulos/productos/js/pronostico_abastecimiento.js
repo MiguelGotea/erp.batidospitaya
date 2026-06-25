@@ -1041,6 +1041,12 @@ function exportarPronosticoExcel() {
 
     let datosExportar = [];
 
+    let tiendaPrincipal = 'Consolidado';
+    if (!currentAgendaData.isConsolidado && window.lastStoreResults) {
+        const sr = Object.values(window.lastStoreResults)[0];
+        if (sr && sr.nombre) tiendaPrincipal = sr.nombre;
+    }
+
     currentAgendaData.fechasOrdenadas.forEach(fecha => {
         const agenda = currentAgendaData.agendaMap[fecha];
         PA_GRUPOS.forEach(cat => {
@@ -1093,7 +1099,7 @@ function exportarPronosticoExcel() {
                 let obj = {
                     "Fecha de Despacho": fecha,
                     "Grupo": PA_LABELS[cat] || cat,
-                    "Producto": productoNombre,
+                    "Producto": p.nombre,
                     "Tienda": tiendaPrincipal,
                     "Pronostico consumo semana (Unid. de control)": csDisplay !== null ? parseFloat(csDisplay).toFixed(1) : '',
                     "Pronostico consumo dia (Unid. de control)": cdDisplay !== null ? parseFloat(cdDisplay).toFixed(1) : '',
@@ -1144,7 +1150,7 @@ function exportarPronosticoExcel() {
                         let subObj = {
                             "Fecha de Despacho": fecha,
                             "Grupo": PA_LABELS[cat] || cat,
-                            "Producto": productoNombre,
+                            "Producto": p.nombre,
                             "Tienda": td.nombre,
                             "Pronostico consumo semana (Unid. de control)": sub_csDisplay !== null ? parseFloat(sub_csDisplay).toFixed(1) : '',
                             "Pronostico consumo dia (Unid. de control)": sub_cdDisplay !== null ? parseFloat(sub_cdDisplay).toFixed(1) : '',
