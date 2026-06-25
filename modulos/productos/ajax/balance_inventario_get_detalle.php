@@ -101,7 +101,7 @@ try {
     
     // 1. Todos los productos base para construir maestroToBase
     $rMetaAll = $conn->prepare("
-        SELECT pp.id, pp.id_unidad_producto AS unid, pp.cantidad AS cant, pp.id_producto_maestro AS mid
+        SELECT pp.id, pp.id_unidad_producto AS unid, pp.cantidad AS cant, pp.id_producto_maestro AS mid, pp.Id_receta_producto
         FROM producto_presentacion pp
         WHERE pp.presentacion_basica_inventario=1 AND pp.Activo='SI'
     ");
@@ -110,12 +110,14 @@ try {
     foreach ($rMetaAll->fetchAll(PDO::FETCH_ASSOC) as $pm) {
         $mid = (int) $pm['mid'];
         if ($mid > 0) {
-            // Nota: Si hay varios base para un maestro, el último gana (igual que en get_datos.php)
-            $maestroToBase[$mid] = [
-                'base_pp_id' => (int)$pm['id'], 
-                'base_unid'  => (int)$pm['unid'], 
-                'base_cant'  => max((float)$pm['cant'], 0.001)
-            ];
+            // Priorizar el que NO es receta
+            if (!isset($maestroToBase[$mid]) || empty($pm['Id_receta_producto'])) {
+                $maestroToBase[$mid] = [
+                    'base_pp_id' => (int)$pm['id'], 
+                    'base_unid'  => (int)$pm['unid'], 
+                    'base_cant'  => max((float)$pm['cant'], 0.001)
+                ];
+            }
         }
     }
 
