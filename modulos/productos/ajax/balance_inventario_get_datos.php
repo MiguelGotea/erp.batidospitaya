@@ -80,7 +80,8 @@ try {
         if ($mid > 0) {
             // Si no existe, lo agregamos.
             // Si ya existe, pero el actual es insumo crudo (sin receta), sobreescribimos para priorizar el crudo.
-            if (!isset($maestroToBase[$mid]) || empty($pm['Id_receta_producto'])) {
+            $esReceta = !empty($pm['Id_receta_producto']) && $pm['Id_receta_producto'] !== '0';
+            if (!isset($maestroToBase[$mid]) || !$esReceta) {
                 $maestroToBase[$mid] = ['base_pp_id' => $pid, 'base_unid' => (int) $pm['id_unidad'], 'base_cant' => max((float) $pm['pp_cant'], 0.001)];
             }
         }
