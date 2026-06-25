@@ -72,12 +72,26 @@ try {
         $convIndex[(int)$c['f']][(int)$c['i']] = $c['fac'] != 0 ? 1/(float)$c['fac'] : 0;
     }
     // ── Maestro → Base map ────────────────────────────────────
-    $rMetaAll = $conn->prepare("SELECT pp.id, pp.id_unidad_producto AS unid, pp.cantidad AS cant, pp.id_producto_maestro AS mid FROM producto_presentacion pp WHERE pp.presentacion_basica_inventario=1 AND pp.Activo='SI'");
+    $rMetaAll = $conn->prepare("
+        SELECT pp.id, pp.id_unidad_producto AS unid, pp.cantidad AS cant, pp.id_producto_maestro AS mid, pp.Id_receta_producto
+        FROM producto_presentacion pp
+        WHERE pp.presentacion_basica_inventario=1 AND pp.Activo='SI'
+        ORDER BY pp.Nombre ASC
+    ");
     $rMetaAll->execute();
     $maestroToBase = [];
     foreach ($rMetaAll->fetchAll(PDO::FETCH_ASSOC) as $pm) {
-        $mid = (int)$pm['mid'];
-        if ($mid > 0) $maestroToBase[$mid] = ['base_pp_id' => (int)$pm['id'], 'base_unid' => (int)$pm['unid'], 'base_cant' => max((float)$pm['cant'], 0.001)];
+        $mid = (int) $pm['mid'];
+        if ($mid > 0) {
+            $esReceta = !empty($pm['Id_receta_producto']) && $pm['Id_receta_producto'] !== '0';
+            if (!isset($maestroToBase[$mid]) || !$esReceta) {
+                $maestroToBase[$mid] = [
+                    'base_pp_id' => (int)$pm['id'], 
+                    'base_unid'  => (int)$pm['unid'], 
+                    'base_cant'  => max((float)$pm['cant'], 0.001)
+                ];
+            }
+        }
     }
 
     // ── Cascade Map ───────────────────────────────────────────
