@@ -369,6 +369,14 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
 
         fechasOrdenadas.forEach(fecha => {
             Object.entries(agendaMap[fecha]).forEach(([cat, slot]) => {
+                let hayDespachoGrupo = false;
+                slot.items.forEach(p => {
+                    const dr = despachosReales[String(p.id_pp)]?.[fecha];
+                    if (dr !== undefined && dr !== null) {
+                        hayDespachoGrupo = true;
+                    }
+                });
+
                 slot.items.forEach(p => {
                     const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
                     const ciclo = slot.cicloSlot;                        // ciclo real de esta ronda
@@ -405,8 +413,10 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     let invTeoricoAyerPaq = null;
 
                     const dr = despachosReales[String(p.id_pp)]?.[fecha];
-                    if (dr !== undefined && dr !== null && dr > 0) {
+                    if (dr !== undefined && dr !== null) {
                         despachoRealRondaPaq = dr / df;
+                    } else if (hayDespachoGrupo) {
+                        despachoRealRondaPaq = 0;
                     }
 
                     if (slot.round === 1) {
@@ -486,6 +496,14 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
         if (hasHoy) {
             hoyData = {};
             Object.entries(hoyMap).forEach(([cat, slot]) => {
+                let hayDespachoGrupoHoy = false;
+                slot.items.forEach(p => {
+                    const ph = despachosReales[String(p.id_pp)]?.[todayD];
+                    if (ph !== undefined && ph !== null) {
+                        hayDespachoGrupoHoy = true;
+                    }
+                });
+
                 slot.items.forEach(p => {
                     const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
                     const ciclo = slot.cicloSlot;
@@ -522,7 +540,12 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     const invTeoricoAyerPaq = (su !== null && su !== undefined) ? (su / df) : null;
                     const ph = despachosReales[String(p.id_pp)]?.[todayD];
                     const preHoyPaq = (ph !== undefined && ph !== null && ph > 0) ? (ph / df) : 0;
-                    const despachoRealRondaPaq = preHoyPaq > 0 ? preHoyPaq : null; // Para hoy, el real es el preHoy
+                    let despachoRealRondaPaq = null;
+                    if (ph !== undefined && ph !== null) {
+                        despachoRealRondaPaq = ph / df;
+                    } else if (hayDespachoGrupoHoy) {
+                        despachoRealRondaPaq = 0;
+                    }
 
                     const stockD1Paq = invTeoricoAyerPaq; // Exactly yesterday's theoretical stock (no future projection)
                     const smfSlot = maximos.smfSlot;
@@ -872,7 +895,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         
         let despHtmlRealCtrl = '';
         if (isHoy) {
-             despHtmlRealCtrl = preHoyCtrl !== null && preHoyCtrl !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${preHoyCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+             despHtmlRealCtrl = realRondaCtrl !== null && realRondaCtrl !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
         } else {
              despHtmlRealCtrl = realRondaCtrl !== null && realRondaCtrl !== undefined ? `<span>${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
         }
@@ -1056,7 +1079,7 @@ function buildSubRowsTiendas(item, slotKey) {
                  finalHtmlPaq = `<span class="pa-desp-val ${despAUsar > 0 ? 'needs' : 'ok'}">${despAUsar.toFixed(1)}</span>`;
              }
              if(td.round === 0) {
-                 despHtmlRealCtrl = preHoyCtrl !== null && preHoyCtrl !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${preHoyCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+                 despHtmlRealCtrl = realRondaCtrl !== null ? `<span class="pa-desp-val ok" style="color:blue;">${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
                  finalHtmlPaq = despAUsar !== null ? `<span class="pa-desp-val ok" style="color:blue;">${despAUsar.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
                  despHtmlSugeridoCtrl = `<del class="text-muted" style="font-size: 0.9em;">${despSugeridoCtrl.toFixed(1)}</del>`;
              }
