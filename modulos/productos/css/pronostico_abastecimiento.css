@@ -388,7 +388,7 @@ body { background: var(--pa-bg); font-family: 'Inter', sans-serif; color: var(--
     line-height: 1;
 }
 .pa-desp-val.needs { color: #10b981; }
-.pa-desp-val.ok { color: #9ca3af; font-weight: 500; font-size: 14px; }
+.pa-desp-val.ok { color: var(--pa-text); font-weight: 700; font-size: 13px; }
 .pa-desp-val.loading { color: var(--pa-muted); font-size: 13px; font-weight: 500; }
 
 .pa-stock-d1 { font-size: 13px; font-weight: 700; }
