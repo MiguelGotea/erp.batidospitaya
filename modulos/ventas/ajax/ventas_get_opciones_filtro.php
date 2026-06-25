@@ -38,15 +38,11 @@ try {
     }
     
     if ($columna === 'NombrePromocion') {
-        $sql = "SELECT DISTINCT p.Nombre as valor
-                FROM VentasGlobalesAccessCSV v
-                LEFT JOIN DBBatidos b ON v.CodProducto = b.CodBatido
-                INNER JOIN promociones_access_csv p ON v.CodigoPromocion = p.CodPromocion
-                WHERE (b.CodGrupo IS NULL OR (b.CodGrupo != 25 AND b.CodGrupo != 11))
-                AND p.Nombre IS NOT NULL
-                AND p.Nombre != ''
-                ORDER BY p.Nombre ASC
-                LIMIT 100";
+        $sql = "SELECT DISTINCT Nombre as valor
+                FROM promociones_access_csv
+                WHERE Nombre IS NOT NULL
+                AND Nombre != ''
+                ORDER BY Nombre ASC";
     } else {
         $sql = "SELECT DISTINCT v.$columna as valor
                 FROM VentasGlobalesAccessCSV v
@@ -54,8 +50,7 @@ try {
                 WHERE (b.CodGrupo IS NULL OR (b.CodGrupo != 25 AND b.CodGrupo != 11))
                 AND v.$columna IS NOT NULL
                 AND v.$columna != ''
-                ORDER BY v.$columna ASC
-                LIMIT 100";
+                ORDER BY v.$columna ASC";
     }
 $stmt = $conn->prepare($sql);
 $stmt->execute();
