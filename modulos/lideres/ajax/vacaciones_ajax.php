@@ -33,41 +33,77 @@ try {
                 $fechaReferencia = date('Y-m-d');
             }
 
-            // Traer colaboradores filtrando por fecha de liquidación activa y rango de asignación
-            $stmt = $conn->prepare("
-                SELECT DISTINCT o.CodOperario, o.Nombre, o.Apellido, o.Apellido2
-                FROM Operarios o
-                INNER JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
-                LEFT JOIN (
-                    -- Obtener el último contrato de cada operario
-                    SELECT c1.cod_operario, c1.fecha_liquidacion
-                    FROM Contratos c1
-                    INNER JOIN (
-                        SELECT cod_operario, MAX(CodContrato) as max_contrato
-                        FROM Contratos
-                        GROUP BY cod_operario
-                    ) c2 ON c1.cod_operario = c2.cod_operario AND c1.CodContrato = c2.max_contrato
-                ) c ON o.CodOperario = c.cod_operario
-                WHERE anc.Sucursal = ?
-                AND o.Operativo = 1
-                AND anc.Fecha <= ?
-                AND (anc.Fin IS NULL OR anc.Fin = '0000-00-00' OR anc.Fin >= ?)
-                AND o.CodOperario NOT IN (
-                    SELECT DISTINCT anc2.CodOperario 
-                    FROM AsignacionNivelesCargos anc2
-                    WHERE anc2.CodNivelesCargos = 27
-                    AND anc2.Fecha <= ?
-                    AND (anc2.Fin IS NULL OR anc2.Fin = '0000-00-00' OR anc2.Fin >= ?)
-                )
-                -- Filtrar liquidados
-                AND (
-                    c.fecha_liquidacion IS NULL 
-                    OR c.fecha_liquidacion = '0000-00-00'
-                    OR c.fecha_liquidacion > ?
-                )
-                ORDER BY o.Nombre, o.Apellido
-            ");
-            $stmt->execute([$codSucursal, $fechaReferencia, $fechaReferencia, $fechaReferencia, $fechaReferencia, $fechaReferencia]);
+            // Parámetro para incluir colaboradores de baja (solo para usuarios con puedeAprobar)
+            $incluirBaja = ($puedeAprobar && ($_GET['incluir_baja'] ?? '0') === '1');
+
+            if ($incluirBaja) {
+                // Query extendido: incluye activos e históricos (de baja) de la sucursal
+                // Los de baja aparecen al final con es_baja = 1
+                $stmt = $conn->prepare("
+                    SELECT DISTINCT o.CodOperario, o.Nombre, o.Apellido, o.Apellido2,
+                        CASE 
+                            WHEN o.Operativo = 0 THEN 1
+                            WHEN c.fecha_liquidacion IS NOT NULL 
+                                 AND c.fecha_liquidacion != '0000-00-00'
+                                 AND c.fecha_liquidacion <= CURDATE() THEN 1
+                            ELSE 0
+                        END AS es_baja
+                    FROM Operarios o
+                    INNER JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
+                    LEFT JOIN (
+                        SELECT c1.cod_operario, c1.fecha_liquidacion
+                        FROM Contratos c1
+                        INNER JOIN (
+                            SELECT cod_operario, MAX(CodContrato) as max_contrato
+                            FROM Contratos
+                            GROUP BY cod_operario
+                        ) c2 ON c1.cod_operario = c2.cod_operario AND c1.CodContrato = c2.max_contrato
+                    ) c ON o.CodOperario = c.cod_operario
+                    WHERE anc.Sucursal = ?
+                    AND o.CodOperario NOT IN (
+                        SELECT DISTINCT anc2.CodOperario 
+                        FROM AsignacionNivelesCargos anc2
+                        WHERE anc2.CodNivelesCargos = 27
+                    )
+                    ORDER BY es_baja ASC, o.Nombre, o.Apellido
+                ");
+                $stmt->execute([$codSucursal]);
+            } else {
+                // Query normal: solo activos con contrato vigente
+                $stmt = $conn->prepare("
+                    SELECT DISTINCT o.CodOperario, o.Nombre, o.Apellido, o.Apellido2
+                    FROM Operarios o
+                    INNER JOIN AsignacionNivelesCargos anc ON o.CodOperario = anc.CodOperario
+                    LEFT JOIN (
+                        SELECT c1.cod_operario, c1.fecha_liquidacion
+                        FROM Contratos c1
+                        INNER JOIN (
+                            SELECT cod_operario, MAX(CodContrato) as max_contrato
+                            FROM Contratos
+                            GROUP BY cod_operario
+                        ) c2 ON c1.cod_operario = c2.cod_operario AND c1.CodContrato = c2.max_contrato
+                    ) c ON o.CodOperario = c.cod_operario
+                    WHERE anc.Sucursal = ?
+                    AND o.Operativo = 1
+                    AND anc.Fecha <= ?
+                    AND (anc.Fin IS NULL OR anc.Fin = '0000-00-00' OR anc.Fin >= ?)
+                    AND o.CodOperario NOT IN (
+                        SELECT DISTINCT anc2.CodOperario 
+                        FROM AsignacionNivelesCargos anc2
+                        WHERE anc2.CodNivelesCargos = 27
+                        AND anc2.Fecha <= ?
+                        AND (anc2.Fin IS NULL OR anc2.Fin = '0000-00-00' OR anc2.Fin >= ?)
+                    )
+                    AND (
+                        c.fecha_liquidacion IS NULL 
+                        OR c.fecha_liquidacion = '0000-00-00'
+                        OR c.fecha_liquidacion > ?
+                    )
+                    ORDER BY o.Nombre, o.Apellido
+                ");
+                $stmt->execute([$codSucursal, $fechaReferencia, $fechaReferencia, $fechaReferencia, $fechaReferencia, $fechaReferencia]);
+            }
+
             $operarios = $stmt->fetchAll();
             echo json_encode($operarios);
             break;
@@ -376,12 +412,14 @@ try {
                     continue;
                 }
 
-                // Validar liquidación y contrato
-                if (fechaPosteriorLiquidacion($falta['cod_operario'], $falta['fecha_falta'])) {
-                    throw new Exception('No se puede editar: posterior a la liquidación del colaborador');
-                }
-                if (!operarioTieneContrato($falta['cod_operario'])) {
-                    throw new Exception('El colaborador no tiene un contrato registrado.');
+                // Validar liquidación y contrato (se omite para aprobadores: pueden editar registros de baja)
+                if (!$puedeAprobar) {
+                    if (fechaPosteriorLiquidacion($falta['cod_operario'], $falta['fecha_falta'])) {
+                        throw new Exception('No se puede editar: posterior a la liquidación del colaborador');
+                    }
+                    if (!operarioTieneContrato($falta['cod_operario'])) {
+                        throw new Exception('El colaborador no tiene un contrato registrado.');
+                    }
                 }
 
                 // Verificar que la suma de otros registros del mismo día no supere 1.00

@@ -50,7 +50,7 @@ try {
         $codigoSucursal = $sucursal['codigo_sucursal'];
 
         // --- GRUPO VENDEDORES ---
-        $sqlVendedor = "SELECT id as config_id, cantidad_real, cantidad_adicional, obligatorio, visible_web, salario_propuesto, COALESCE(nivel_urgencia, 1) as nivel_urgencia, ruta_pdf_cargo, ruta_banner
+        $sqlVendedor = "SELECT id as config_id, cantidad_real, cantidad_adicional, obligatorio, visible_web, salario_propuesto, COALESCE(nivel_urgencia, 1) as nivel_urgencia, ruta_pdf_cargo, ruta_banner, descripcion, responsabilidades, requisitos, habilidades
                         FROM plazas_cargos 
                         WHERE sucursal = :sucursal 
                         AND area = 'Sucursales'
@@ -69,6 +69,10 @@ try {
         $sucursal['vendedor_urgencia'] = $vendedor ? ($vendedor['nivel_urgencia'] ?? 1) : 1;
         $sucursal['vendedor_pdf'] = $vendedor ? $vendedor['ruta_pdf_cargo'] : '';
         $sucursal['vendedor_banner'] = $vendedor ? $vendedor['ruta_banner'] : '';
+        $sucursal['vendedor_descripcion'] = $vendedor ? $vendedor['descripcion'] : '';
+        $sucursal['vendedor_responsabilidades'] = $vendedor ? $vendedor['responsabilidades'] : '';
+        $sucursal['vendedor_requisitos'] = $vendedor ? $vendedor['requisitos'] : '';
+        $sucursal['vendedor_habilidades'] = $vendedor ? $vendedor['habilidades'] : '';
 
         // Vendedores Cubiertos
         $sqlCubVendedor = "SELECT COUNT(DISTINCT anc.CodOperario) as total
@@ -86,7 +90,7 @@ try {
         $sucursal['vendedor_cubierto'] = $cubVendedor ? $cubVendedor['total'] : 0;
 
         // --- GRUPO LÍDERES ---
-        $sqlLider = "SELECT id as config_id, cantidad_real, cantidad_adicional, obligatorio, visible_web, salario_propuesto, COALESCE(nivel_urgencia, 1) as nivel_urgencia, ruta_pdf_cargo, ruta_banner
+        $sqlLider = "SELECT id as config_id, cantidad_real, cantidad_adicional, obligatorio, visible_web, salario_propuesto, COALESCE(nivel_urgencia, 1) as nivel_urgencia, ruta_pdf_cargo, ruta_banner, descripcion, responsabilidades, requisitos, habilidades
                      FROM plazas_cargos 
                      WHERE sucursal = :sucursal 
                      AND area = 'Sucursales'
@@ -105,6 +109,11 @@ try {
         $sucursal['lider_urgencia'] = $lider ? ($lider['nivel_urgencia'] ?? 1) : 1;
         $sucursal['lider_pdf'] = $lider ? $lider['ruta_pdf_cargo'] : '';
         $sucursal['lider_banner'] = $lider ? $lider['ruta_banner'] : '';
+        $sucursal['lider_descripcion'] = $lider ? $lider['descripcion'] : '';
+        $sucursal['lider_responsabilidades'] = $lider ? $lider['responsabilidades'] : '';
+        $sucursal['lider_requisitos'] = $lider ? $lider['requisitos'] : '';
+        $sucursal['lider_habilidades'] = $lider ? $lider['habilidades'] : '';
+
 
 
 

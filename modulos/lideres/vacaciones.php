@@ -1039,6 +1039,15 @@ function obtenerTiposFaltaConPorcentajes()
                             <select id="subsidio_operario" name="cod_operario" class="form-select" required>
                                 <option value="">Seleccione un colaborador</option>
                             </select>
+                            <?php if ($puedeAprobar): ?>
+                            <div class="form-check mt-1">
+                                <input class="form-check-input" type="checkbox" id="subsidio_incluir_baja"
+                                    onchange="recargarOperariosModal('subsidio')">
+                                <label class="form-check-label small text-muted" for="subsidio_incluir_baja">
+                                    Incluir colaboradores de baja
+                                </label>
+                            </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="mb-3">
@@ -1214,6 +1223,15 @@ function obtenerTiposFaltaConPorcentajes()
                             <select id="nueva_operario" name="cod_operario" class="form-select" required>
                                 <option value="">Seleccione un colaborador</option>
                             </select>
+                            <?php if ($puedeAprobar): ?>
+                            <div class="form-check mt-1">
+                                <input class="form-check-input" type="checkbox" id="nueva_incluir_baja"
+                                    onchange="recargarOperariosModal('nueva')">
+                                <label class="form-check-label small text-muted" for="nueva_incluir_baja">
+                                    Incluir colaboradores de baja
+                                </label>
+                            </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="mb-3">
@@ -1321,14 +1339,14 @@ function obtenerTiposFaltaConPorcentajes()
                     <button type="button" class="btn-modern btn-modern-secondary"
                         data-bs-dismiss="modal">Cancelar</button>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn-modern" style="background:#17a2b8;color:#fff;"
+                        <button type="button" class="btn-modern" style="background:#17a2b8;color:#fff; display:none;"
                             onclick="imprimirBoletaVacacionesV2()">
                             <i class="fas fa-print me-2"></i>Imprimir
                         </button>
                         <?php if (tienePermiso('registro_vacaciones', 'imprimir_ticket', $cargoOperario)): ?>
                         <button type="button" class="btn-modern" style="background:#6f42c1;color:#fff;"
                             onclick="imprimirTicketTermicoVacacion()">
-                            <i class="fas fa-receipt me-2"></i>Ticket Térmico
+                            <i class="fas fa-receipt me-2"></i>Ticket
                         </button>
                         <?php endif; ?>
                     </div>
@@ -1498,7 +1516,7 @@ function obtenerTiposFaltaConPorcentajes()
                             <label for="falta_sucursal"
                                 class="form-label small fw-bold text-muted text-uppercase">Sucursal:</label>
                             <select id="falta_sucursal" name="cod_sucursal" class="form-select" required
-                                onchange="cargarOperariosSucursal(this.value, 'falta_operario')">
+                                onchange="recargarOperariosModal('falta')">
                                 <?php if ($esRH): ?>
                                     <?php foreach (obtenerTodasSucursales() as $sucursal): ?>
                                         <option value="<?= $sucursal['codigo'] ?>"><?= htmlspecialchars($sucursal['nombre']) ?>
@@ -1539,6 +1557,15 @@ function obtenerTiposFaltaConPorcentajes()
                             <select id="falta_operario" name="cod_operario" class="form-select" required>
                                 <option value="">Seleccione un colaborador</option>
                             </select>
+                            <?php if ($puedeAprobar): ?>
+                            <div class="form-check mt-1">
+                                <input class="form-check-input" type="checkbox" id="falta_incluir_baja"
+                                    onchange="recargarOperariosModal('falta')">
+                                <label class="form-check-label small text-muted" for="falta_incluir_baja">
+                                    Incluir colaboradores de baja
+                                </label>
+                            </div>
+                            <?php endif; ?>
                         </div>
 
                         <?php if ($puedeAprobar): ?>
