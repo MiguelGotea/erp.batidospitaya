@@ -124,6 +124,29 @@ $(document).ready(() => {
     $('#pa-agenda').on('change', '.pa-toggle-preingreso', function () {
         window.pa_include_preingreso = $(this).is(':checked');
         if (window.lastStoreResults && currentAgendaData) {
+            const expandedTiendas = [];
+            $('.pa-row-expandible').each(function() {
+                if ($(this).find('.pa-expand-icon').hasClass('rotated')) {
+                    expandedTiendas.push({
+                        ppId: $(this).data('pp-id'),
+                        sk: $(this).data('slot-key')
+                    });
+                }
+            });
+
+            const expandedCharts = [];
+            $('.pa-row-expandible-charts').each(function() {
+                if ($(this).find('.pa-expand-icon').hasClass('rotated')) {
+                    expandedCharts.push({
+                        ppId: $(this).data('pp-id'),
+                        sk: $(this).data('slot-key'),
+                        sucursal: $(this).data('sucursal'),
+                        fechaDespacho: $(this).data('fecha-despacho'),
+                        ciclo: $(this).data('ciclo')
+                    });
+                }
+            });
+
             recalcularChaining(window.lastStoreResults);
 
             if (currentAgendaData.isConsolidado) {
@@ -133,6 +156,32 @@ $(document).ready(() => {
 
             renderAgenda(currentAgendaData.agendaMap, currentAgendaData.fechasOrdenadas, currentAgendaData.sinPlan, currentAgendaData.isConsolidado, currentAgendaData.nTiendas, currentAgendaData.hoyData);
             $('#pa-search-producto').trigger('input');
+
+            expandedTiendas.forEach(item => {
+                const $row = $(`.pa-row-expandible[data-pp-id="${item.ppId}"][data-slot-key="${item.sk}"]`);
+                if ($row.length) {
+                    $row.find('.pa-expand-icon').addClass('rotated');
+                    $(`.pa-tienda-sub[data-pp-id="${item.ppId}"][data-slot-key="${item.sk}"]`).removeClass('d-none');
+                }
+            });
+
+            const semDesde = $('#pa-desde').val();
+            const semHasta = $('#pa-hasta').val();
+            const semCorte = $('#pa-corte').val();
+
+            expandedCharts.forEach(item => {
+                const $row = $(`.pa-row-expandible-charts[data-pp-id="${item.ppId}"][data-slot-key="${item.sk}"]`);
+                if ($row.length) {
+                    $row.find('.pa-expand-icon').addClass('rotated');
+                    const $sub = $(`.pa-chart-sub[data-pp-id="${item.ppId}"][data-slot-key="${item.sk}"]`);
+                    $sub.removeClass('d-none');
+                    $sub.data('loaded', true);
+                    
+                    if (window.cargarGraficasParaFila) {
+                        window.cargarGraficasParaFila(item.ppId, item.sk, item.sucursal, semDesde, semHasta, semCorte, item.fechaDespacho, item.ciclo);
+                    }
+                }
+            });
         }
     });
 
