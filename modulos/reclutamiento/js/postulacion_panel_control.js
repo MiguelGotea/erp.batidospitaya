@@ -1242,3 +1242,21 @@ async function guardarHabilidades() {
     }
 }
 
+/**
+ * Inserta una etiqueta HTML alrededor del texto seleccionado en un textarea.
+ * Permite formatear contenido sin necesidad de escribir HTML manualmente.
+ * @param {string} idTextarea - ID del textarea objetivo
+ * @param {string} tag - Etiqueta HTML a aplicar (b, i, p, br, etc.)
+ */
+function insertarHtmlTag(idTextarea, tag) {
+    const ta = document.getElementById(idTextarea);
+    if (!ta) return;
+    const s = ta.selectionStart, e = ta.selectionEnd;
+    const sel = ta.value.substring(s, e);
+    const rep = (tag === 'br') ? sel + '<br>' : `<${tag}>${sel}</${tag}>`;
+    ta.value = ta.value.substring(0, s) + rep + ta.value.substring(e);
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = s + rep.length;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+}
+

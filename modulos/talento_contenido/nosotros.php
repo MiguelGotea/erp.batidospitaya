@@ -157,14 +157,33 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                             <div class="row g-3">
                                 <div class="col-md-12">
                                     <label class="form-label fw-bold">Párrafo 1 (Introducción)</label>
+                                    <div class="form-text small text-muted">Usa los botones para aplicar formato sin escribir código HTML.</div>
+                                    <div class="html-toolbar mb-1">
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo1','b')" title="Negrita"><i class="bi bi-type-bold"></i></button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo1','i')" title="Cursiva"><i class="bi bi-type-italic"></i></button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo1','p')" title="Párrafo"><i class="bi bi-paragraph"></i></button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo1','br')" title="Salto de línea"><i class="bi bi-arrow-return-left"></i></button>
+                                    </div>
                                     <textarea class="form-control" name="parrafo_1" id="txtParrafo1" rows="3" required></textarea>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label fw-bold">Párrafo 2 (Valores y Trabajo en equipo)</label>
+                                    <div class="html-toolbar mb-1">
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo2','b')" title="Negrita"><i class="bi bi-type-bold"></i></button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo2','i')" title="Cursiva"><i class="bi bi-type-italic"></i></button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo2','p')" title="Párrafo"><i class="bi bi-paragraph"></i></button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo2','br')" title="Salto de línea"><i class="bi bi-arrow-return-left"></i></button>
+                                    </div>
                                     <textarea class="form-control" name="parrafo_2" id="txtParrafo2" rows="3" required></textarea>
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label fw-bold">Párrafo 3 (Visión y Expansión)</label>
+                                    <div class="html-toolbar mb-1">
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo3','b')" title="Negrita"><i class="bi bi-type-bold"></i></button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo3','i')" title="Cursiva"><i class="bi bi-type-italic"></i></button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo3','p')" title="Párrafo"><i class="bi bi-paragraph"></i></button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtParrafo3','br')" title="Salto de línea"><i class="bi bi-arrow-return-left"></i></button>
+                                    </div>
                                     <textarea class="form-control" name="parrafo_3" id="txtParrafo3" rows="3" required></textarea>
                                 </div>
                                 <div class="col-md-4">
@@ -349,6 +368,15 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                                     <option value="1">Activo (Visible)</option>
                                     <option value="0">Inactivo (Oculto)</option>
                                 </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Color de Fondo de la Tarjeta</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="color" class="form-control form-control-color" name="color_fondo" id="statColorFondo" value="#FFC80C" title="Elige el color de fondo">
+                                    <input type="text" class="form-control form-control-sm" id="statColorFondoHex" placeholder="#FFC80C" style="width:100px"
+                                           oninput="document.getElementById('statColorFondo').value=this.value">
+                                </div>
+                                <div class="form-text small">Color de la tarjeta en el portal. Deja el predeterminado si no sabes cuál elegir.</div>
                             </div>
                             <!-- Auditoría -->
                             <div class="col-12" id="statAuditBox" style="display: none;">
@@ -701,6 +729,9 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
             $('#statEtiqueta').val(stat.etiqueta);
             $('#statOrden').val(stat.orden);
             $('#statActivo').val(stat.activo);
+            const cf = stat.color_fondo || '#FFC80C';
+            $('#statColorFondo').val(cf);
+            $('#statColorFondoHex').val(cf);
 
             // Cargar datos de auditoría
             $('#statAuditCreador').text(`${stat.creador_nombre || 'N/D'} el ${stat.fecha_creacion}`);
@@ -744,6 +775,24 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                     });
                 }
             });
+        }
+        // Sincronizar hex input con color picker
+        $('#statColorFondo').on('input', function() { $('#statColorFondoHex').val(this.value); });
+
+        /**
+         * Inserta una etiqueta HTML alrededor del texto seleccionado en un textarea.
+         * Permite formatear contenido sin saber HTML manualmente.
+         */
+        function insertarHtmlTag(idTextarea, tag) {
+            const ta = document.getElementById(idTextarea);
+            if (!ta) return;
+            const s = ta.selectionStart, e = ta.selectionEnd;
+            const sel = ta.value.substring(s, e);
+            const rep = (tag === 'br') ? sel + '<br>' : `<${tag}>${sel}</${tag}>`;
+            ta.value = ta.value.substring(0, s) + rep + ta.value.substring(e);
+            ta.focus();
+            ta.selectionStart = ta.selectionEnd = s + rep.length;
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
         }
     </script>
 </body>
