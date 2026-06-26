@@ -859,8 +859,34 @@ function addStockLines(idPP, sk, chartId, allDays) {
         const wls_n = parseInt(row.attr('data-wls-n')) || 0;
         const wls_lff = row.attr('data-wls-lff');
         const dSM = parseFloat(row.attr('data-dsm')) || 0;
-        const cicloSlot = parseFloat(row.attr('data-ciclo')) || 0;
+        const cicloSlotFijo = parseFloat(row.attr('data-ciclo')) || 0;
         const ratio = parseFloat(row.attr('data-ratio')) || 1;
+
+        const planTipo = row.attr('data-plan-tipo');
+        let planDias = [];
+        try { planDias = JSON.parse(row.attr('data-plan-dias') || '[]'); } catch(e) {}
+        const planSemanas = parseInt(row.attr('data-plan-semanas')) || 1;
+        const diasCiclo = parseInt(row.attr('data-dias-ciclo')) || 7;
+
+        const calcularCicloSlot = (fechaStr) => {
+            if (!planTipo) return cicloSlotFijo;
+            if (planTipo === 'n_semanas') return planSemanas * 7;
+            if (planTipo === 'dias_semana') {
+                let dias = Array.isArray(planDias) ? planDias.map(Number) : [];
+                dias.sort((a, b) => a - b);
+                const n = dias.length;
+                if (n === 0 || n === 1) return 7;
+                const dt = new Date(fechaStr + 'T12:00:00');
+                const dowJS = dt.getDay();
+                const dowDispatch = (dowJS + 6) % 7;
+                for (let d = 1; d <= 7; d++) {
+                    const next = (dowDispatch + d) % 7;
+                    if (dias.includes(next)) return d;
+                }
+                return 7 / n;
+            }
+            return diasCiclo;
+        };
 
         const chart = instanciasCharts[chartId];
         if (!chart) return;
@@ -893,8 +919,9 @@ function addStockLines(idPP, sk, chartId, allDays) {
             }
             const cd = getDynamicCd(day);
             const sMin = cd * dSM;
-            // Usamos cicloSlot de la fila, tal como lo hace calcularStockMaxSlot
-            const sMaxUso = (cd * cicloSlot) + sMin;
+            
+            const ciclo = calcularCicloSlot(day);
+            const sMaxUso = (cd * ciclo) + sMin;
             const sMaxFinal = sMaxUso * ratio;
             
             minData.push(sMin);
