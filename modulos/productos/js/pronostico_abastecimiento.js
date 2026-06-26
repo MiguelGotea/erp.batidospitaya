@@ -1002,7 +1002,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
 
     const isChecked = window.pa_include_preingreso ? 'checked' : '';
     const thDespachoReal = `Despacho Real<br>
-            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Registrado)</small><br>
+            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small><br>
             <div class="form-check form-switch d-inline-block mt-1">
                 <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Usar despachos reales en la proyección" ${isChecked}>
             </div>`;
@@ -1197,7 +1197,7 @@ function exportarPronosticoExcel() {
                 
                 obj["Pronostico de inventario al dia de despacho (Unid. de control)"] = pronosticoInv;
                 obj["Despacho requerido (Unid. de control)"] = sugCtrl !== null ? parseFloat(sugCtrl).toFixed(1) : '-';
-                obj["Despacho Real Registrado"] = despachoRealInfo;
+                obj["Despacho Real (Unid. de control)"] = despachoRealInfo;
                 obj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
                 obj["Despacho requerido (Unid despacho)"] = despAUsar !== null ? parseFloat(despAUsar).toFixed(1) : '-';
                 
@@ -1251,7 +1251,7 @@ function exportarPronosticoExcel() {
                         
                         subObj["Pronostico de inventario al dia de despacho (Unid. de control)"] = sub_pronosticoInv;
                         subObj["Despacho requerido (Unid. de control)"] = sub_sugCtrl !== null ? parseFloat(sub_sugCtrl).toFixed(1) : '-';
-                        subObj["Despacho Real Registrado"] = sub_despachoRealInfo;
+                        subObj["Despacho Real (Unid. de control)"] = sub_despachoRealInfo;
                         subObj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
                         subObj["Despacho requerido (Unid despacho)"] = sub_aUsar !== null ? parseFloat(sub_aUsar).toFixed(1) : '-';
 
@@ -1285,7 +1285,7 @@ function exportarPronosticoExcel() {
     wscols.push(
         { wch: 25 }, // Pronóstico Inventario
         { wch: 20 }, // Despacho requerido
-        { wch: 20 }, // Despacho Real Registrado
+        { wch: 20 }, // Despacho Real (Unid. de control)
         { wch: 25 }, // Presentación de despacho
         { wch: 18 }  // Despacho requerido
     );
