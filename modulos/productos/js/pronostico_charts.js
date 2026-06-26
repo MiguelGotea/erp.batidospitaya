@@ -888,6 +888,23 @@ function addStockLines(idPP, sk, chartId, allDays) {
             return diasCiclo;
         };
 
+        const getMostRecentDispatchDay = (fechaStr) => {
+            if (planTipo !== 'dias_semana') return fechaStr;
+            let dias = Array.isArray(planDias) ? planDias.map(Number) : [];
+            if (dias.length === 0 || dias.length === 7) return fechaStr;
+            
+            let curDt = new Date(fechaStr + 'T12:00:00');
+            for(let i=0; i<7; i++) {
+                const dowJS = curDt.getDay();
+                const dowDispatch = (dowJS + 6) % 7;
+                if (dias.includes(dowDispatch)) {
+                    return curDt.toISOString().split('T')[0];
+                }
+                curDt.setDate(curDt.getDate() - 1);
+            }
+            return fechaStr;
+        };
+
         const chart = instanciasCharts[chartId];
         if (!chart) return;
 
@@ -920,7 +937,8 @@ function addStockLines(idPP, sk, chartId, allDays) {
             const cd = getDynamicCd(day);
             const sMin = cd * dSM;
             
-            const ciclo = calcularCicloSlot(day);
+            const dispatchDay = getMostRecentDispatchDay(day);
+            const ciclo = calcularCicloSlot(dispatchDay);
             const sMaxUso = (cd * ciclo) + sMin;
             const sMaxFinal = sMaxUso * ratio;
             
