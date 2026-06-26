@@ -586,8 +586,9 @@ async function calcularPronosticoAbastKardex(
 
         let stockD1R1 = null;
         let preHoyPaq = 0;
+        let despachosReales = {};
 
-        if (rondas.length > 0 && rondas[0].round === 1) {
+        if (rondas.length > 0) {
             const fechaD1R1 = addDays(primeraFechaAgenda, -1);
             const fdPron = new FormData();
             fdPron.append('semana_desde', semDesde);
@@ -600,17 +601,20 @@ async function calcularPronosticoAbastKardex(
             try {
                 const resPron = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method: 'POST', body: fdPron }).then(r => r.json());
                 if (resPron.ok) {
-                    const su = resPron.stocks[String(idPP)];
-                    const dP = resPron.dias_proy[String(idPP)] || 0;
-                    if (su !== null && su !== undefined) {
-                        let proyD1 = su;
-                        if (dP > 0) {
-                            for (let k = 0; k < dP; k++) {
-                                const dStr = addDays(fechaD1R1, -k);
-                                proyD1 -= getDynamicCd(dStr);
+                    despachosReales = resPron.despachos_reales[String(idPP)] || {};
+                    if (rondas[0].round === 1) {
+                        const su = resPron.stocks[String(idPP)];
+                        const dP = resPron.dias_proy[String(idPP)] || 0;
+                        if (su !== null && su !== undefined) {
+                            let proyD1 = su;
+                            if (dP > 0) {
+                                for (let k = 0; k < dP; k++) {
+                                    const dStr = addDays(fechaD1R1, -k);
+                                    proyD1 -= getDynamicCd(dStr);
+                                }
                             }
+                            stockD1R1 = Math.max(0, proyD1 / df);
                         }
-                        stockD1R1 = Math.max(0, proyD1 / df);
                     }
                     const ph = resPron.preingresos_hoy[String(idPP)];
                     preHoyPaq = 0; // Forced to 0 just like in pronostico_abastecimiento.js
@@ -637,11 +641,18 @@ async function calcularPronosticoAbastKardex(
             }
 
             const invBeforePaq = (stockD1Paq ?? 0) + (r.round === 1 && kardexDespCursoEnabled ? preHoyPaq : 0);
-            const despachoPron = Math.max(0, Math.ceil(r.smfSlot - invBeforePaq));
+            const despSugeridoPaq = Math.max(0, Math.ceil(r.smfSlot - invBeforePaq));
 
-            prevRoundPostDespachoPaq = invBeforePaq + despachoPron;
+            let despachoAUsarPaq = despSugeridoPaq;
+            let isReal = false;
+            if (kardexDespCursoEnabled && despachosReales[r.fecha] !== undefined && despachosReales[r.fecha] !== null) {
+                despachoAUsarPaq = despachosReales[r.fecha] / df;
+                isReal = true;
+            }
 
-            despachosPorRonda[r.fecha] = { despacho: despachoPron, stockD1Paq, round: r.round, stockPostDespachoPaq: prevRoundPostDespachoPaq };
+            prevRoundPostDespachoPaq = invBeforePaq + despachoAUsarPaq;
+
+            despachosPorRonda[r.fecha] = { despacho: despachoAUsarPaq, stockD1Paq, round: r.round, stockPostDespachoPaq: prevRoundPostDespachoPaq, isReal };
         });
 
         const forecastData = new Array(allDays.length).fill(null);
@@ -667,9 +678,9 @@ async function calcularPronosticoAbastKardex(
             }
 
             if (despachosPorRonda[day]) {
-                const { despacho, round: rnd } = despachosPorRonda[day];
+                const { despacho, round: rnd, isReal } = despachosPorRonda[day];
                 balFc = balFc + despacho * df;
-                dispatchMarkers.push({ idx: i, val: balFc, rnd, despacho });
+                dispatchMarkers.push({ idx: i, val: balFc, rnd, despacho, isPreingreso: isReal });
             }
 
             forecastData[i] = balFc;
