@@ -231,12 +231,15 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
     // --- NUEVA LÓGICA VISUAL 2: Tendencia Ajustada ---
     let proyW1_ajust, proyW2_ajust, proyW3_ajust, proyActual_ajust = null;
     if (regSlope < 0) {
-        let ultimas = valsCalc.slice(-3);
-        let promUltimas = ultimas.length > 0 ? ultimas.reduce((a,b)=>a+b,0)/ultimas.length : 0;
-        proyW1_ajust = proyW2_ajust = proyW3_ajust = round2(promUltimas);
-        if (esSemActualEnRango) proyActual_ajust = round2(promUltimas);
+        let ultimas2 = valsCalc.slice(-2);
+        let maxUltimas2 = ultimas2.length > 0 ? Math.max(...ultimas2) : 0;
+        proyW1_ajust = proyW2_ajust = proyW3_ajust = round2(maxUltimas2);
+        if (esSemActualEnRango) proyActual_ajust = round2(maxUltimas2);
     } else {
-        proyW1_ajust = proyW1; proyW2_ajust = proyW2; proyW3_ajust = proyW3; proyActual_ajust = proyActual;
+        proyW1_ajust = proyW1; 
+        proyW2_ajust = proyW2; 
+        proyW3_ajust = proyW3; 
+        proyActual_ajust = proyActual;
     }
     const proyDataAjust = [...semanasNros.map(n => n === semanaActual ? proyActual_ajust : null), proyW1_ajust, proyW2_ajust, proyW3_ajust];
     datasets.push({
