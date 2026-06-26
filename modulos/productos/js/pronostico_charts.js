@@ -184,7 +184,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
 
     const proyData = [...semanasNros.map(n => n === semanaActual ? proyActual : null), proyW1, proyW2, proyW3];
     datasets.push({
-        label: `Proyección (WLS Actual)`,
+        label: `Proyeccion`,
         data: proyData,
         borderColor: '#f39c12',
         backgroundColor: 'rgba(243,156,18,.12)',
@@ -198,65 +198,6 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
         type: 'line',
         spanGaps: true,
         order: 0,
-    });
-
-    // --- NUEVA LÓGICA VISUAL 1: EMA con Limpieza ---
-    let alphaEma = 0.4;
-    let meanVals = valsCalc.length > 0 ? valsCalc.reduce((a,b)=>a+b,0)/valsCalc.length : 0;
-    let umbralCaida = meanVals * 0.7; // 30% de caida permitida
-    let cleanedVals = valsCalc.map(v => v < umbralCaida ? meanVals : v);
-    let valEma = cleanedVals.length > 0 ? cleanedVals[0] : 0;
-    for(let i=1; i<cleanedVals.length; i++) {
-        valEma = alphaEma * cleanedVals[i] + (1 - alphaEma) * valEma;
-    }
-    let proyEMA = round2(valEma);
-    const proyDataEMA = [...semanasNros.map(n => n === semanaActual ? proyEMA : null), proyEMA, proyEMA, proyEMA];
-    datasets.push({
-        label: `Pronóstico EMA Limpio`,
-        data: proyDataEMA,
-        borderColor: '#8e44ad',
-        backgroundColor: 'rgba(142,68,173,.12)',
-        borderWidth: 2,
-        borderDash: [4, 4],
-        pointRadius: [...semanasNros.map(n => n === semanaActual ? 5 : 0), 5, 5, 5],
-        pointStyle: 'circle',
-        pointBackgroundColor: '#8e44ad',
-        fill: false,
-        tension: 0,
-        type: 'line',
-        spanGaps: true,
-        order: 1,
-    });
-
-    // --- NUEVA LÓGICA VISUAL 2: Tendencia Ajustada ---
-    let proyW1_ajust, proyW2_ajust, proyW3_ajust, proyActual_ajust = null;
-    if (regSlope < 0) {
-        let ultimas2 = valsCalc.slice(-2);
-        let maxUltimas2 = ultimas2.length > 0 ? Math.max(...ultimas2) : 0;
-        proyW1_ajust = proyW2_ajust = proyW3_ajust = round2(maxUltimas2);
-        if (esSemActualEnRango) proyActual_ajust = round2(maxUltimas2);
-    } else {
-        proyW1_ajust = proyW1; 
-        proyW2_ajust = proyW2; 
-        proyW3_ajust = proyW3; 
-        proyActual_ajust = proyActual;
-    }
-    const proyDataAjust = [...semanasNros.map(n => n === semanaActual ? proyActual_ajust : null), proyW1_ajust, proyW2_ajust, proyW3_ajust];
-    datasets.push({
-        label: `Tendencia Ajustada`,
-        data: proyDataAjust,
-        borderColor: '#2980b9',
-        backgroundColor: 'rgba(41,128,185,.12)',
-        borderWidth: 2,
-        borderDash: [4, 4],
-        pointRadius: [...semanasNros.map(n => n === semanaActual ? 5 : 0), 5, 5, 5],
-        pointStyle: 'rect',
-        pointBackgroundColor: '#2980b9',
-        fill: false,
-        tension: 0,
-        type: 'line',
-        spanGaps: true,
-        order: 2,
     });
 
     const chartId = `tend-${sk}-${idInsumoSel}`;

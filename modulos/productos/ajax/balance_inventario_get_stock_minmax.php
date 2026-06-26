@@ -88,6 +88,14 @@ function calcularProyeccionWLS(array $valores): array
     $slope = (($sum_w * $sum_wxy) - ($sum_wx * $sum_wy)) / $denominator;
     $intercept = ($sum_wy - $slope * $sum_wx) / $sum_w;
 
+    // Tendencia Ajustada: si la tendencia es negativa, anulamos la pendiente y usamos el máximo de las 2 últimas semanas.
+    if ($slope < 0) {
+        $ultimas2 = array_slice($valores, -2);
+        $max_ultimas2 = !empty($ultimas2) ? max($ultimas2) : 0.0;
+        $slope = 0.0;
+        $intercept = (float)$max_ultimas2;
+    }
+
     $w1 = max(0.0, $slope * ($n + 1) + $intercept);
     $w2 = max(0.0, $slope * ($n + 2) + $intercept);
     $w3 = max(0.0, $slope * ($n + 3) + $intercept);
