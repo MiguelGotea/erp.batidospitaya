@@ -942,11 +942,11 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
 
         let despHtmlSugeridoCtrl = despSugeridoCtrl === null || despSugeridoCtrl === undefined ? '<span class="pa-na">—</span>' : `<span>${despSugeridoCtrl.toFixed(1)}</span>`;
         
-        let despHtmlRealCtrl = '';
+        let despHtmlRealPaq = '';
         if (isHoy) {
-             despHtmlRealCtrl = realRondaCtrl !== null && realRondaCtrl !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+             despHtmlRealPaq = despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
         } else {
-             despHtmlRealCtrl = realRondaCtrl !== null && realRondaCtrl !== undefined ? `<span>${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+             despHtmlRealPaq = despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined ? `<span>${despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
         }
 
         let finalHtmlCtrl = '';
@@ -958,7 +958,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
              let isReal = (window.pa_include_preingreso && realRondaCtrl !== null && realRondaCtrl !== undefined);
              if (isReal && !isHoy) {
                  despHtmlSugeridoCtrl = `<del class="text-muted" style="font-size: 0.9em;">${despSugeridoCtrl.toFixed(1)}</del>`;
-                 despHtmlRealCtrl = `<span class="fw-bold" style="color:#2563eb;">${realRondaCtrl.toFixed(1)}</span>`;
+                 despHtmlRealPaq = `<span class="fw-bold" style="color:#2563eb;">${despachoRealRondaPaq.toFixed(1)}</span>`;
                  finalHtmlCtrl = `<span class="pa-desp-val ok" style="background:#dbeafe; color:#1d4ed8; border-color:#93c5fd;">${despAUsarCtrl.toFixed(1)}</span>`;
                  finalHtmlPaq = `<span class="pa-desp-val ok" style="background:#dbeafe; color:#1d4ed8; border-color:#93c5fd;">${despAUsar.toFixed(1)}</span>`;
              } else {
@@ -966,7 +966,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
                  finalHtmlPaq = `<span class="pa-desp-val ${despAUsar > 0 ? 'needs' : 'ok'}">${despAUsar.toFixed(1)}</span>`;
              }
              if(isHoy) {
-                 finalHtmlCtrl = despHtmlRealCtrl;
+                 finalHtmlCtrl = realRondaCtrl !== null && realRondaCtrl !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
                  finalHtmlPaq = despAUsar !== null ? `<span class="pa-desp-val ok" style="color:blue;">${despAUsar.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
                  despHtmlSugeridoCtrl = `<del class="text-muted" style="font-size: 0.9em;">${despSugeridoCtrl.toFixed(1)}</del>`;
              }
@@ -997,9 +997,9 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
                 ${tdDatosCompletos}
                 <td class="pa-col-desp">${stockHtml}</td>
                 <td class="pa-col-desp text-center">${despHtmlSugeridoCtrl}</td>
-                <td class="pa-col-desp text-center" style="background:#f8fafc;">${despHtmlRealCtrl}</td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td class="pa-col-desp">${finalHtmlPaq}</td>
+                <td class="pa-col-desp text-center" style="background:#f8fafc;">${despHtmlRealPaq}</td>
             </tr>
             ${buildSubRowsTiendas(p, slotKey)}`;
         } else {
@@ -1024,9 +1024,9 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
                 ${tdDatosCompletos}
                 <td class="pa-col-desp">${stockHtml}</td>
                 <td class="pa-col-desp text-center">${despHtmlSugeridoCtrl}</td>
-                <td class="pa-col-desp text-center" style="background:#f8fafc;">${despHtmlRealCtrl}</td>
                 <td><span class="pa-unit">${esc(p.despacho_presentacion || p.unidad || '—')}</span></td>
                 <td class="pa-col-desp">${finalHtmlPaq}</td>
+                <td class="pa-col-desp text-center" style="background:#f8fafc;">${despHtmlRealPaq}</td>
             </tr>
             <tr class="pa-chart-sub d-none" data-slot-key="${slotKey}" data-pp-id="${p.id_pp}">
                 <td colspan="${colspan}" class="p-0">
@@ -1051,7 +1051,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
 
     const isChecked = window.pa_include_preingreso ? 'checked' : '';
     const thDespachoReal = `Despacho Real<br>
-            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small><br>
+            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. Despacho)</small><br>
             <div class="form-check form-switch d-inline-block mt-1">
                 <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Usar despachos reales en la proyección" ${isChecked}>
             </div>`;
@@ -1072,9 +1072,9 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         ${thDatosCompletos}
         <th>Pronostico de inventario al dia de despacho<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
-        <th style="width: 100px;">${thDespachoReal}</th>
         <th>Presentacion de despacho</th>
         <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid despacho)</small></th>
+        <th style="width: 100px;">${thDespachoReal}</th>
     </tr></thead>`;
 
     return `<table class="pa-table">${thead}<tbody>${rows || '<tr class="pa-no-data-row"><td colspan="12">Sin productos</td></tr>'}</tbody></table>`;
@@ -1113,22 +1113,22 @@ function buildSubRowsTiendas(item, slotKey) {
         }
 
         let despHtmlSugeridoCtrl = despSugeridoCtrl === null || despSugeridoCtrl === undefined ? '<span class="pa-na">—</span>' : `<span>${despSugeridoCtrl.toFixed(1)}</span>`;
-        let despHtmlRealCtrl = realRondaCtrl !== null && realRondaCtrl !== undefined ? `<span>${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+        let despHtmlRealPaq = td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined ? `<span>${td.despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
 
         let finalHtmlPaq = '';
         if (despAUsar === null || despAUsar === undefined) {
              finalHtmlPaq = '<span class="pa-na">—</span>';
         } else {
-             let isReal = (window.pa_include_preingreso && realRondaCtrl !== null && realRondaCtrl !== undefined);
+             let isReal = (window.pa_include_preingreso && td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined);
              if (isReal && td.round !== 0) {
                  despHtmlSugeridoCtrl = `<del class="text-muted" style="font-size: 0.9em;">${despSugeridoCtrl.toFixed(1)}</del>`;
-                 despHtmlRealCtrl = `<span class="fw-bold" style="color:#2563eb;">${realRondaCtrl.toFixed(1)}</span>`;
+                 despHtmlRealPaq = `<span class="fw-bold" style="color:#2563eb;">${td.despachoRealRondaPaq.toFixed(1)}</span>`;
                  finalHtmlPaq = `<span class="pa-desp-val ok" style="background:#dbeafe; color:#1d4ed8; border-color:#93c5fd;">${despAUsar.toFixed(1)}</span>`;
              } else {
                  finalHtmlPaq = `<span class="pa-desp-val ${despAUsar > 0 ? 'needs' : 'ok'}">${despAUsar.toFixed(1)}</span>`;
              }
              if(td.round === 0) {
-                 despHtmlRealCtrl = realRondaCtrl !== null ? `<span class="pa-desp-val ok" style="color:blue;">${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+                 despHtmlRealPaq = td.despachoRealRondaPaq !== null ? `<span class="pa-desp-val ok" style="color:blue;">${td.despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
                  finalHtmlPaq = despAUsar !== null ? `<span class="pa-desp-val ok" style="color:blue;">${despAUsar.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
                  despHtmlSugeridoCtrl = `<del class="text-muted" style="font-size: 0.9em;">${despSugeridoCtrl.toFixed(1)}</del>`;
              }
@@ -1150,9 +1150,9 @@ function buildSubRowsTiendas(item, slotKey) {
             ${tdDatosCompletos}
             <td class="pa-col-desp">${sHtml}</td>
             <td class="pa-col-desp text-center">${despHtmlSugeridoCtrl}</td>
-            <td class="pa-col-desp text-center" style="background:#f8fafc;">${despHtmlRealCtrl}</td>
             <td></td>
             <td class="pa-col-desp">${finalHtmlPaq}</td>
+            <td class="pa-col-desp text-center" style="background:#f8fafc;">${despHtmlRealPaq}</td>
         </tr>`;
     });
     return rows;
@@ -1246,9 +1246,9 @@ function exportarPronosticoExcel() {
                 
                 obj["Pronostico de inventario al dia de despacho (Unid. de control)"] = pronosticoInv;
                 obj["Despacho requerido (Unid. de control)"] = sugCtrl !== null ? parseFloat(sugCtrl).toFixed(1) : '-';
-                obj["Despacho Real (Unid. de control)"] = despachoRealInfo;
                 obj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
                 obj["Despacho requerido (Unid despacho)"] = despAUsar !== null ? parseFloat(despAUsar).toFixed(1) : '-';
+                obj["Despacho Real (Unid. Despacho)"] = realRondaPaq !== null && realRondaPaq !== undefined ? parseFloat(realRondaPaq).toFixed(1) : '-';
                 
                 datosExportar.push(obj);
 
@@ -1300,9 +1300,9 @@ function exportarPronosticoExcel() {
                         
                         subObj["Pronostico de inventario al dia de despacho (Unid. de control)"] = sub_pronosticoInv;
                         subObj["Despacho requerido (Unid. de control)"] = sub_sugCtrl !== null ? parseFloat(sub_sugCtrl).toFixed(1) : '-';
-                        subObj["Despacho Real (Unid. de control)"] = sub_despachoRealInfo;
                         subObj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
                         subObj["Despacho requerido (Unid despacho)"] = sub_aUsar !== null ? parseFloat(sub_aUsar).toFixed(1) : '-';
+                        subObj["Despacho Real (Unid. Despacho)"] = sub_realPaq !== null && sub_realPaq !== undefined ? parseFloat(sub_realPaq).toFixed(1) : '-';
 
                         datosExportar.push(subObj);
                     });
@@ -1334,9 +1334,9 @@ function exportarPronosticoExcel() {
     wscols.push(
         { wch: 25 }, // Pronóstico Inventario
         { wch: 20 }, // Despacho requerido
-        { wch: 20 }, // Despacho Real (Unid. de control)
         { wch: 25 }, // Presentación de despacho
-        { wch: 18 }  // Despacho requerido
+        { wch: 18 }, // Despacho requerido
+        { wch: 20 }  // Despacho Real (Unid. Despacho)
     );
     ws['!cols'] = wscols;
 
