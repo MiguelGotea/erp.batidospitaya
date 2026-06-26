@@ -564,8 +564,10 @@ async function calcularPronosticoAbastKardex(
         const hoyStrBase = hoyDBase.toISOString().split('T')[0];
         const baseCd = getDynamicCd(hoyStrBase || allDays[0]);
 
+        const primeraFechaAgenda = prod.hoy_es_despacho ? hoyStrBase : prod.fecha_proximo_despacho;
+
         const rondas = [];
-        let cur = prod.fecha_proximo_despacho;
+        let cur = primeraFechaAgenda;
         let round = 1;
         let prevCycle = 0;
         let prevCdRonda = baseCd;
@@ -586,7 +588,7 @@ async function calcularPronosticoAbastKardex(
         let preHoyPaq = 0;
 
         if (rondas.length > 0 && rondas[0].round === 1) {
-            const fechaD1R1 = addDays(prod.fecha_proximo_despacho, -1);
+            const fechaD1R1 = addDays(primeraFechaAgenda, -1);
             const fdPron = new FormData();
             fdPron.append('semana_desde', semDesde);
             fdPron.append('semana_hasta', semHasta);
@@ -611,7 +613,7 @@ async function calcularPronosticoAbastKardex(
                         stockD1R1 = Math.max(0, proyD1 / df);
                     }
                     const ph = resPron.preingresos_hoy[String(idPP)];
-                    preHoyPaq = (ph !== null && ph !== undefined && ph > 0) ? (ph / df) : 0;
+                    preHoyPaq = 0; // Forced to 0 just like in pronostico_abastecimiento.js
                 }
             } catch (e) { }
         }
