@@ -154,7 +154,7 @@ $(document).ready(() => {
                 currentAgendaData.agendaMap = cons.agendaMap;
             }
 
-            renderAgenda(currentAgendaData.agendaMap, currentAgendaData.fechasOrdenadas, currentAgendaData.sinPlan, currentAgendaData.isConsolidado, currentAgendaData.nTiendas, currentAgendaData.hoyData);
+            renderAgenda(currentAgendaData.agendaMap, currentAgendaData.fechasOrdenadas, currentAgendaData.sinPlan, currentAgendaData.isConsolidado, currentAgendaData.nTiendas, currentAgendaData.auditoriaData);
             $('#pa-search-producto').trigger('input');
 
             expandedTiendas.forEach(item => {
@@ -312,8 +312,8 @@ async function calcularAgenda() {
             const datos = await calcularDatosParaSucursal(semDesde, semHasta, semCorte, sucursal);
             if (!datos) return;
             window.lastStoreResults = { [sucursal]: { ...datos, nombre: $('#pa-sucursal option:selected').text(), codigo: sucursal } };
-            currentAgendaData = { agendaMap: datos.agendaMap, fechasOrdenadas: datos.fechasOrdenadas, sinPlan: datos.sinPlan, isConsolidado: false, nTiendas: 1, hoyData: datos.hoyData };
-            renderAgenda(datos.agendaMap, datos.fechasOrdenadas, datos.sinPlan, false, 1, datos.hoyData);
+            currentAgendaData = { agendaMap: datos.agendaMap, fechasOrdenadas: datos.fechasOrdenadas, sinPlan: datos.sinPlan, isConsolidado: false, nTiendas: 1, auditoriaData: datos.auditoriaData };
+            renderAgenda(datos.agendaMap, datos.fechasOrdenadas, datos.sinPlan, false, 1, datos.auditoriaData);
             showDatos();
         }
     } catch (err) {

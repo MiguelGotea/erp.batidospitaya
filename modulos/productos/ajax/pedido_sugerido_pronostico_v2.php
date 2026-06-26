@@ -441,7 +441,7 @@ try {
         // EXCEPCIÓN: si la semana está incompleta, fechaFinRango es un domingo futuro;
         // en ese caso permitimos fecha_D1 dentro de la semana actual (>= hoy) porque
         // la proyección arranca desde ayer (anchorVal) hacia adelante.
-        $esD1ValidaSemIncompleta = $semanaActualIncompleta && $fechaD1 >= $hoy;
+        $esD1ValidaSemIncompleta = $semanaActualIncompleta && $fechaD1 >= $ayer;
         if ($fechaD1 <= $fechaFinRango && !$esD1ValidaSemIncompleta) {
             $stocks[(string)$targetId] = null; continue;
         }
