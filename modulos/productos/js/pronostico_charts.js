@@ -609,6 +609,8 @@ async function calcularPronosticoAbastKardex(
         let stockD1R1 = null;
         let preHoyPaq = 0;
         let despachosReales = {};
+        let allDespachosReales = {};
+        const groupProds = (resPedido.productos || []).filter(p => p.categoria_insumo === prod.categoria_insumo);
 
         if (rondas.length > 0) {
             const fechaD1R1 = addDays(primeraFechaAgenda, -1);
@@ -617,13 +619,19 @@ async function calcularPronosticoAbastKardex(
             fdPron.append('semana_hasta', semHasta);
             fdPron.append('semana_corte', semCorte);
             fdPron.append('cod_sucursal', codSuc);
-            fdPron.append('ids_pp[]', idPP);
-            fdPron.append(`fechas_d1[${idPP}]`, fechaD1R1);
+            
+            groupProds.forEach(p => {
+                const fProxima = p.hoy_es_despacho ? hoyStrBase : p.fecha_proximo_despacho;
+                const fD1 = addDays(fProxima, -1);
+                fdPron.append('ids_pp[]', p.id_pp);
+                fdPron.append(`fechas_d1[${p.id_pp}]`, fD1);
+            });
 
             try {
                 const resPron = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method: 'POST', body: fdPron }).then(r => r.json());
                 if (resPron.ok) {
-                    despachosReales = resPron.despachos_reales[String(idPP)] || {};
+                    allDespachosReales = resPron.despachos_reales || {};
+                    despachosReales = allDespachosReales[String(idPP)] || {};
                     if (rondas[0].round === 1) {
                         const su = resPron.stocks[String(idPP)];
                         const dP = resPron.dias_proy[String(idPP)] || 0;
@@ -649,6 +657,14 @@ async function calcularPronosticoAbastKardex(
         const kardexDespCursoEnabled = window.pa_include_preingreso;
 
         rondas.forEach(r => {
+            let hayDespachoGrupo = false;
+            groupProds.forEach(p => {
+                const drGroup = allDespachosReales[String(p.id_pp)]?.[r.fecha];
+                if (drGroup !== undefined && drGroup !== null) {
+                    hayDespachoGrupo = true;
+                }
+            });
+
             let stockD1Paq;
 
             if (r.round === 1) {
@@ -667,9 +683,16 @@ async function calcularPronosticoAbastKardex(
 
             let despachoAUsarPaq = despSugeridoPaq;
             let isReal = false;
-            if (kardexDespCursoEnabled && despachosReales[r.fecha] !== undefined && despachosReales[r.fecha] !== null) {
-                despachoAUsarPaq = despachosReales[r.fecha] / df;
-                isReal = true;
+            
+            if (kardexDespCursoEnabled) {
+                const dr = despachosReales[r.fecha];
+                if (dr !== undefined && dr !== null) {
+                    despachoAUsarPaq = dr / df;
+                    isReal = true;
+                } else if (hayDespachoGrupo) {
+                    despachoAUsarPaq = 0;
+                    isReal = true;
+                }
             }
 
             prevRoundPostDespachoPaq = invBeforePaq + despachoAUsarPaq;
