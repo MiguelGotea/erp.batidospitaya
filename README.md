@@ -43,7 +43,7 @@ Para trabajar en este proyecto localmente, asegúrate de tener configurado tu en
 
 ### Scripts de Ayuda
 Usa los scripts en `.scripts/` para agilizar tus commits y pushes:
-- `.\.scripts\gitpush.ps1`: Sube todos los cambios y activa el deploy.
+- `.\.scripts\gitpush_erp.ps1`: Sube todos los cambios y activa el deploy.
 
 ---
 

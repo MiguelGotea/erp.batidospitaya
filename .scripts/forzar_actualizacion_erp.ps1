@@ -15,7 +15,7 @@ git reset --hard origin/dev
 
 # 4. Limpiar archivos y carpetas que no estén en GitHub (excepto este script)
 Write-Host "Eliminando archivos no rastreados..." -ForegroundColor Yellow
-git clean -fd -e .scripts/forzar_actualizacion.ps1
+git clean -fd -e .scripts/forzar_actualizacion_erp.ps1
 
 Write-Host "`n¡Éxito! Tu código local ahora es una copia exacta de la nube (dev)." -ForegroundColor Green
 Write-Host "Se han descartado todos los cambios locales en menu_lateral.php, permissions.php y demás." -ForegroundColor Green

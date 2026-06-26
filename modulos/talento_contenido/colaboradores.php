@@ -104,6 +104,21 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                             <i class="bi bi-tags-fill me-2"></i>Catálogo de Habilidades
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="noticias.php">
+                            <i class="bi bi-newspaper me-2"></i>Noticias y Novedades
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="nosotros.php">
+                            <i class="bi bi-info-circle-fill me-2"></i>Sobre Nosotros
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="configuracion.php">
+                            <i class="bi bi-gear-fill me-2"></i>Beneficios y Config.
+                        </a>
+                    </li>
                 </ul>
 
                 <div class="card shadow-sm border-0">
