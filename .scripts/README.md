@@ -9,13 +9,13 @@ Esta carpeta contiene los scripts para realizar despliegues del ERP.
 ### Subir todos los cambios (push global):
 ```powershell
 # Desde la raíz del proyecto
-.\.scripts\gitpush.ps1
+.\.scripts\gitpush_erp.ps1
 ```
 
 ### Desde cualquier ubicación:
 ```powershell
 cd "c:\Users\migue\Desktop\Sistema\Pitaya Web\VisualCode\erp.batidospitaya.com"
-.\.scripts\gitpush.ps1
+.\.scripts\gitpush_erp.ps1
 ```
 
 ---

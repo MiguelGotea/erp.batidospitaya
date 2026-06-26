@@ -20,7 +20,7 @@ if ($currentBranch -ne 'dev') {
     exit
 }
 
-# 3. Sincronizar (Igual que actualizar.ps1)
+# 3. Sincronizar (Igual que actualizar_erp.ps1)
 Write-Host ''
 Write-Host '1. Trayendo cambios de la nube (fetch + rebase)...' -ForegroundColor Cyan
 git fetch origin
