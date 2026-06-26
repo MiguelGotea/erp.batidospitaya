@@ -933,7 +933,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         if (isHoy) {
              despHtmlRealPaq = despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
         } else {
-             despHtmlRealPaq = despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined ? `<span>${despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+             despHtmlRealPaq = despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined ? `<del class="text-muted" style="font-size: 0.9em;">${despachoRealRondaPaq.toFixed(1)}</del>` : '<span class="pa-na">—</span>';
         }
 
         let finalHtmlCtrl = '';
@@ -944,13 +944,12 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         } else {
              let isReal = (window.pa_include_preingreso && realRondaCtrl !== null && realRondaCtrl !== undefined);
              if (isReal && !isHoy) {
-                 despHtmlSugeridoCtrl = `<del class="text-muted" style="font-size: 0.9em;">${despSugeridoCtrl.toFixed(1)}</del>`;
-                 despHtmlRealPaq = `<span class="fw-bold" style="color:#2563eb;">${despachoRealRondaPaq.toFixed(1)}</span>`;
-                 finalHtmlCtrl = `<span class="pa-desp-val ok" style="background:#dbeafe; color:#1d4ed8; border-color:#93c5fd;">${despAUsarCtrl.toFixed(1)}</span>`;
-                 finalHtmlPaq = `<span class="pa-desp-val ok" style="background:#dbeafe; color:#1d4ed8; border-color:#93c5fd;">${despAUsar.toFixed(1)}</span>`;
+                 despHtmlRealPaq = `<span class="pa-desp-val ${despachoRealRondaPaq > 0 ? 'needs' : 'ok'} fw-bold">${despachoRealRondaPaq.toFixed(1)}</span>`;
+                 finalHtmlCtrl = `<span class="pa-desp-val ${despSugeridoCtrl > 0 ? 'needs' : 'ok'}">${despSugeridoCtrl.toFixed(1)}</span>`;
+                 finalHtmlPaq = `<del class="text-muted" style="font-size: 0.9em;">${despSugerido.toFixed(1)}</del>`;
              } else {
-                 finalHtmlCtrl = `<span class="pa-desp-val ${despAUsarCtrl > 0 ? 'needs' : 'ok'}">${despAUsarCtrl.toFixed(1)}</span>`;
-                 finalHtmlPaq = `<span class="pa-desp-val ${despAUsar > 0 ? 'needs' : 'ok'}">${despAUsar.toFixed(1)}</span>`;
+                 finalHtmlCtrl = `<span class="pa-desp-val ${despSugeridoCtrl > 0 ? 'needs' : 'ok'}">${despSugeridoCtrl.toFixed(1)}</span>`;
+                 finalHtmlPaq = `<span class="pa-desp-val ${despSugerido > 0 ? 'needs' : 'ok'}">${despSugerido.toFixed(1)}</span>`;
              }
              if(isHoy) {
                  finalHtmlCtrl = realRondaCtrl !== null && realRondaCtrl !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
@@ -1100,7 +1099,13 @@ function buildSubRowsTiendas(item, slotKey) {
         }
 
         let despHtmlSugeridoCtrl = despSugeridoCtrl === null || despSugeridoCtrl === undefined ? '<span class="pa-na">—</span>' : `<span>${despSugeridoCtrl.toFixed(1)}</span>`;
-        let despHtmlRealPaq = td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined ? `<span>${td.despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+        
+        let despHtmlRealPaq = '';
+        if (td.round === 0) {
+             despHtmlRealPaq = td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${td.despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+        } else {
+             despHtmlRealPaq = td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined ? `<del class="text-muted" style="font-size: 0.9em;">${td.despachoRealRondaPaq.toFixed(1)}</del>` : '<span class="pa-na">—</span>';
+        }
 
         let finalHtmlPaq = '';
         if (despAUsar === null || despAUsar === undefined) {
@@ -1108,11 +1113,10 @@ function buildSubRowsTiendas(item, slotKey) {
         } else {
              let isReal = (window.pa_include_preingreso && td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined);
              if (isReal && td.round !== 0) {
-                 despHtmlSugeridoCtrl = `<del class="text-muted" style="font-size: 0.9em;">${despSugeridoCtrl.toFixed(1)}</del>`;
-                 despHtmlRealPaq = `<span class="fw-bold" style="color:#2563eb;">${td.despachoRealRondaPaq.toFixed(1)}</span>`;
-                 finalHtmlPaq = `<span class="pa-desp-val ok" style="background:#dbeafe; color:#1d4ed8; border-color:#93c5fd;">${despAUsar.toFixed(1)}</span>`;
+                 despHtmlRealPaq = `<span class="pa-desp-val ${td.despachoRealRondaPaq > 0 ? 'needs' : 'ok'} fw-bold">${td.despachoRealRondaPaq.toFixed(1)}</span>`;
+                 finalHtmlPaq = `<del class="text-muted" style="font-size: 0.9em;">${despSugerido.toFixed(1)}</del>`;
              } else {
-                 finalHtmlPaq = `<span class="pa-desp-val ${despAUsar > 0 ? 'needs' : 'ok'}">${despAUsar.toFixed(1)}</span>`;
+                 finalHtmlPaq = `<span class="pa-desp-val ${despSugerido > 0 ? 'needs' : 'ok'}">${despSugerido.toFixed(1)}</span>`;
              }
              if(td.round === 0) {
                  despHtmlRealPaq = td.despachoRealRondaPaq !== null ? `<span class="pa-desp-val ok" style="color:blue;">${td.despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
