@@ -364,22 +364,23 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
 
         const limit = limitStr();
         const agendaMap = {};
-        const hoyMap = {};
+        const auditoriaMap = {};
         const todayD = todayStr();
-        let hasHoy = false;
+        let hasAuditoria = false;
 
         // ─── Construir el agendaMap con ciclo real por ronda ─────────────
         // Para dias_semana cada despacho puede tener un ciclo distinto (ej: Lun=3d, Mié=4d).
         // calcularCicloSlot() computa los días reales desde la fecha concreta del despacho
         // hasta el siguiente, de modo que el stock_max_final varía entre rondas.
         Object.entries(conPlan).forEach(([cat, items]) => {
-            if (items[0] && items[0].hoy_es_despacho) {
-                const cicloHoy = calcularCicloSlot(items[0], todayD);
-                hoyMap[cat] = { items, round: 0, cicloSlot: cicloHoy };
-                hasHoy = true;
+            if (items[0] && items[0].fecha_ultimo_despacho) {
+                const uDate = items[0].fecha_ultimo_despacho;
+                const cicloAud = calcularCicloSlot(items[0], uDate);
+                auditoriaMap[cat] = { items, round: 0, cicloSlot: cicloAud, fecha: uDate };
+                hasAuditoria = true;
             }
 
-            let cur = items[0].fecha_proximo_despacho;
+            let cur = (items[0] && items[0].hoy_es_despacho) ? todayD : items[0].fecha_proximo_despacho;
             let round = 1;
             while (cur <= limit) {
                 if (!agendaMap[cur]) agendaMap[cur] = {};
@@ -405,8 +406,9 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
             fdPron.append('semana_corte', semCorte);
             fdPron.append('cod_sucursal', codSuc);
             prodConPlan.forEach(p => {
+                const primeraFechaAgenda = p.hoy_es_despacho ? todayD : p.fecha_proximo_despacho;
                 fdPron.append('ids_pp[]', p.id_pp);
-                fdPron.append(`fechas_d1[${p.id_pp}]`, addDaysStr(p.fecha_proximo_despacho, -1));
+                fdPron.append(`fechas_d1[${p.id_pp}]`, addDaysStr(primeraFechaAgenda, -1));
             });
             const resPron = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method: 'POST', body: fdPron }).then(r => r.json());
             if (resPron.ok) {
@@ -502,8 +504,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
 
                         stockD1Paq = (proyD1 !== null) ? Math.max(0, proyD1 / df) : null;
                         invTeoricoAyerPaq = (su !== null && su !== undefined) ? (su / df) : null;
-                        const ph = despachosReales[String(p.id_pp)]?.[todayStr()];
-                        preHoyPaq = (ph !== undefined && ph !== null && ph > 0) ? (ph / df) : 0;
+                        preHoyPaq = 0;
                     } else {
                         // Rondas siguientes: simular stock a partir de la ronda anterior
                         const prevRound = p._porRonda?.[slot.round - 1];
@@ -516,7 +517,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     }
 
                     // Calcular stock post-despacho para esta ronda
-                    const invBeforePaq = (stockD1Paq ?? 0) + (slot.round === 1 && window.pa_include_preingreso ? preHoyPaq : 0);
+                    const invBeforePaq = (stockD1Paq ?? 0);
                     const despSugeridoPaq = Math.max(0, Math.ceil((smfSlot ?? 0) - invBeforePaq));
                     const despachoAUsarPaq = (window.pa_include_preingreso && despachoRealRondaPaq !== null) ? despachoRealRondaPaq : despSugeridoPaq;
                     const stockPostDespachoPaq = invBeforePaq + despachoAUsarPaq;
@@ -540,16 +541,17 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
             });
         });
 
-        // Cálculos para HOY (Auditoría) si aplica
-        let hoyData = null;
-        if (hasHoy) {
-            hoyData = {};
-            Object.entries(hoyMap).forEach(([cat, slot]) => {
-                let hayDespachoGrupoHoy = false;
+        // Cálculos para Auditoría
+        let auditoriaData = null;
+        if (hasAuditoria) {
+            auditoriaData = {};
+            Object.entries(auditoriaMap).forEach(([cat, slot]) => {
+                let hayDespachoGrupoAud = false;
+                const uDate = slot.fecha;
                 slot.items.forEach(p => {
-                    const ph = despachosReales[String(p.id_pp)]?.[todayD];
+                    const ph = despachosReales[String(p.id_pp)]?.[uDate];
                     if (ph !== undefined && ph !== null) {
-                        hayDespachoGrupoHoy = true;
+                        hayDespachoGrupoAud = true;
                     }
                 });
 
@@ -562,41 +564,29 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     let wls_x = p.wls_n ?? 0;
                     if (resPedido.wls_last_fecha_fin) {
                         const dF = new Date(resPedido.wls_last_fecha_fin + 'T23:59:59');
-                        const dD = new Date(todayD + 'T12:00:00');
+                        const dD = new Date(uDate + 'T12:00:00');
                         const diffDays = Math.round((dD - dF) / (1000 * 60 * 60 * 24));
                         const x_offset = Math.ceil(diffDays / 7);
                         wls_x += x_offset;
                     } else {
-                        wls_x = Math.floor(p._current_wls_x || (p.wls_n ?? 0) + 1);
+                        wls_x = Math.floor(p._current_wls_x || (p.wls_n ?? 0));
                     }
                     const semC_ronda = Math.max(0, (wls_m * wls_x) + wls_b);
                     const cd = semC_ronda / 7;
 
-                    const dSM = p.dias_stock_min ?? 0;
-                    const sMinUso = cd * dSM;
-                    const sMaxUso = (cd * ciclo) + sMinUso;
-                    let ratio = 1;
-                    if (p.es_ajustado && p.stock_maximo > 0 && p.stock_max_final !== null) {
-                        ratio = (p.stock_max_final * df) / (p.stock_maximo * df);
-                    }
-                    const maximos = {
-                        smSlot: sMaxUso / df,
-                        smfSlot: (sMaxUso * ratio) / df,
-                        sMinSlot: sMinUso / df
-                    };
+                    const maximos = calcularStockMaxSlot(p, ciclo, cd);
 
                     const su = stockRonda1[String(p.id_pp)];
                     const invTeoricoAyerPaq = (su !== null && su !== undefined) ? (su / df) : null;
-                    const ph = despachosReales[String(p.id_pp)]?.[todayD];
-                    const preHoyPaq = (ph !== undefined && ph !== null && ph > 0) ? (ph / df) : 0;
+                    const ph = despachosReales[String(p.id_pp)]?.[uDate];
                     let despachoRealRondaPaq = null;
                     if (ph !== undefined && ph !== null) {
                         despachoRealRondaPaq = ph / df;
-                    } else if (hayDespachoGrupoHoy) {
+                    } else if (hayDespachoGrupoAud) {
                         despachoRealRondaPaq = 0;
                     }
 
-                    const stockD1Paq = invTeoricoAyerPaq; // Exactly yesterday's theoretical stock (no future projection)
+                    const stockD1Paq = invTeoricoAyerPaq; 
                     const smfSlot = maximos.smfSlot;
                     
                     const despSugeridoPaq = stockD1Paq !== null ? Math.max(0, Math.ceil((smfSlot ?? 0) - stockD1Paq)) : null;
@@ -604,7 +594,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     if (!p._porRonda) p._porRonda = {};
                     p._porRonda[0] = {
                         stockD1Paq,
-                        preHoyPaq,
+                        preHoyPaq: 0,
                         despachoRealRondaPaq,
                         invTeoricoAyerPaq,
                         smSlot: maximos.smSlot,
@@ -616,11 +606,11 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                         stockPostDespachoPaq: null // Not tracked for history
                     };
                 });
-                hoyData[cat] = slot;
+                auditoriaData[cat] = slot;
             });
         }
 
-        return { agendaMap, fechasOrdenadas, sinPlan, hoyData };
+        return { agendaMap, fechasOrdenadas, sinPlan, auditoriaData };
     } catch (err) {
         console.warn(`calcularDatosParaSucursal(${codSuc}):`, err);
         return null;
@@ -717,7 +707,6 @@ function consolidarResultados(storeResults) {
                     if (sug !== null && sug !== undefined) item._sugTotal = (item._sugTotal ?? 0) + parseFloat(sug.toFixed(2));
 
                     let stockD1Paq_sub = sd;
-                    if (window.pa_include_preingreso && stockD1Paq_sub !== null && pre && slot.round === 1) stockD1Paq_sub += pre;
                     let sub_despSugerido = stockD1Paq_sub !== null ? Math.max(0, Math.ceil((smfRound ?? 0) - stockD1Paq_sub)) : 0;
                     let sub_aUsar = (window.pa_include_preingreso && real !== null && real !== undefined) ? real : sub_despSugerido;
 
@@ -748,7 +737,7 @@ function consolidarResultados(storeResults) {
     return { agendaMap, fechasOrdenadas: fechasOrdenadas.filter(f => agendaMap[f]), sinPlan };
 }
 
-function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false, nTiendas = 1, hoyData = null) {
+function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false, nTiendas = 1, auditoriaData = null) {
     const $w = $('#pa-warnings').empty();
     const spk = Object.keys(sinPlan);
     if (spk.length) {
@@ -760,23 +749,21 @@ function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false
 
     let html = '';
 
-    if (hoyData && !isConsolidado) {
-        const todayStrVal = todayStr();
-        const info = formatDateHeader(todayStrVal);
+    if (auditoriaData && !isConsolidado) {
         html += `
         <div class="pa-date-block pa-date-hoy" style="border: 2px solid #0ea5e9; padding: 10px; border-radius: 12px; background: #f0f9ff; margin-bottom: 2rem;">
             <div class="pa-date-header" style="cursor: pointer;" onclick="$('#pa-cats-hoy').slideToggle(); $(this).find('.pa-expand-date-icon').toggleClass('rotated');">
                 <div class="pa-date-pill" style="background:#0ea5e9; color:white;">
-                    <div class="pa-date-day-num" style="color:white;">${info.day}</div>
+                    <div class="pa-date-day-num" style="color:white;"><i class="bi bi-clock-history"></i></div>
                     <div class="pa-date-info">
-                        <div class="pa-date-weekday" style="color:white;">Hoy (Auditoría de Despacho)</div>
-                        <div class="pa-date-monthyear" style="color:rgba(255,255,255,0.9);">${info.month} ${info.year}</div>
+                        <div class="pa-date-weekday" style="color:white;">Auditoría de Último Despacho</div>
+                        <div class="pa-date-monthyear" style="color:rgba(255,255,255,0.9);">Anterior</div>
                     </div>
                 </div>
                 <div class="pa-date-line" style="border-color:#bae6fd;"></div>
                 <i class="bi bi-chevron-down pa-expand-date-icon" style="color: #0ea5e9; font-size: 1.5rem; transition: transform 0.3s; margin-left: 10px;"></i>
             </div>
-            <div class="pa-cats-row" id="pa-cats-hoy">${buildCatsHtml(hoyData, isConsolidado, todayStrVal, true)}</div>
+            <div class="pa-cats-row" id="pa-cats-hoy" style="display: none;">${buildCatsHtml(auditoriaData, isConsolidado, 'AUD', true)}</div>
         </div>`;
     }
 
@@ -1050,7 +1037,9 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
     });
 
     const isChecked = window.pa_include_preingreso ? 'checked' : '';
-    const thDespachoReal = `Despacho Real<br>
+    const thDespachoReal = isHoy ? `Despacho Real<br>
+            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. Despacho)</small>` :
+            `Despacho Real<br>
             <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. Despacho)</small><br>
             <div class="form-check form-switch d-inline-block mt-1">
                 <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Usar despachos reales en la proyección" ${isChecked}>
@@ -1087,10 +1076,7 @@ function buildSubRowsTiendas(item, slotKey) {
         const df = item.despacho_factor > 0 ? item.despacho_factor : 1;
 
         let stockD1Paq = td.stockD1Paq;
-        let includeHoy = (window.pa_include_preingreso && stockD1Paq !== null && td.preHoyPaq && td.round === 1);
-        if (includeHoy) {
-            stockD1Paq += td.preHoyPaq;
-        }
+        let includeHoy = false;
 
         let despSugerido = stockD1Paq !== null ? Math.max(0, Math.ceil((smf ?? 0) - stockD1Paq)) : null;
         let despAUsar = (window.pa_include_preingreso && td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined) ? td.despachoRealRondaPaq : despSugerido;
