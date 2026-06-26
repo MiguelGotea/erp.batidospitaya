@@ -281,9 +281,18 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
 
                             <!-- Contenido completo (HTML permitido) -->
                             <div class="col-12">
-                                <label for="notContenido" class="form-label fw-bold">Contenido Completo (HTML permitido) <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="notContenido" name="contenido" rows="10" required placeholder="Escribe el artículo completo aquí. Puedes usar etiquetas HTML básicas como <p>, <strong>, <ul>, <li>..."></textarea>
-                                <div class="form-text small">Tip: Podés dar formato usando etiquetas como <code>&lt;p&gt;párrafo&lt;/p&gt;</code> o <code>&lt;strong&gt;negrita&lt;/strong&gt;</code>.</div>
+                                <label for="notContenido" class="form-label fw-bold">Contenido Completo <span class="text-danger">*</span></label>
+                                <div class="html-toolbar mb-1" role="group">
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('notContenido','b')" title="Negrita"><i class="bi bi-type-bold"></i> Negrita</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('notContenido','i')" title="Cursiva"><i class="bi bi-type-italic"></i> Cursiva</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('notContenido','p')" title="Párrafo"><i class="bi bi-paragraph"></i> Párrafo</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('notContenido','br')" title="Salto de línea"><i class="bi bi-arrow-return-left"></i> Salto</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('notContenido','ul')" title="Lista"><i class="bi bi-list-ul"></i> Lista</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('notContenido','li')" title="Ítem de lista"><i class="bi bi-dot"></i> Ítem</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('notContenido','h2')" title="Título"><i class="bi bi-type-h2"></i> Título</button>
+                                </div>
+                                <div class="form-text text-muted small mb-1">Selecciona texto y haz clic en un botón para aplicar formato.</div>
+                                <textarea class="form-control" id="notContenido" name="contenido" rows="10" required placeholder="Escribe el artículo completo aquí..."></textarea>
                             </div>
 
                             <!-- Foto de portada -->
@@ -362,6 +371,22 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/talento_contenido.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    <script>
+        /**
+         * Inserta una etiqueta HTML alrededor del texto seleccionado en un textarea.
+         */
+        function insertarHtmlTag(idTextarea, tag) {
+            const ta = document.getElementById(idTextarea);
+            if (!ta) return;
+            const s = ta.selectionStart, e = ta.selectionEnd;
+            const sel = ta.value.substring(s, e);
+            const rep = (tag === 'br') ? sel + '<br>' : `<${tag}>${sel}</${tag}>`;
+            ta.value = ta.value.substring(0, s) + rep + ta.value.substring(e);
+            ta.focus();
+            ta.selectionStart = ta.selectionEnd = s + rep.length;
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    </script>
 </body>
 
 </html>

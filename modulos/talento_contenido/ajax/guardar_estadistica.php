@@ -24,6 +24,7 @@ $sufijo = isset($_POST['sufijo']) ? trim($_POST['sufijo']) : '';
 $etiqueta = isset($_POST['etiqueta']) ? trim($_POST['etiqueta']) : '';
 $orden = isset($_POST['orden']) ? intval($_POST['orden']) : 0;
 $activo = isset($_POST['activo']) ? intval($_POST['activo']) : 1;
+$color_fondo = isset($_POST['color_fondo']) ? trim($_POST['color_fondo']) : '#FFC80C';
 
 if (empty($icono) || empty($etiqueta)) {
     http_response_code(400);
@@ -34,18 +35,18 @@ if (empty($icono) || empty($etiqueta)) {
 try {
     if (empty($id)) {
         // Insertar
-        $sql = "INSERT INTO talento_estadisticas (icono, valor_numero, sufijo, etiqueta, orden, activo, usuario_creador, fecha_creacion)
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+        $sql = "INSERT INTO talento_estadisticas (icono, valor_numero, sufijo, etiqueta, orden, activo, color_fondo, usuario_creador, fecha_creacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$icono, $valor_numero, $sufijo, $etiqueta, $orden, $activo, $codOperario]);
+        $stmt->execute([$icono, $valor_numero, $sufijo, $etiqueta, $orden, $activo, $color_fondo, $codOperario]);
         echo json_encode(['success' => true, 'mensaje' => 'Estadística creada con éxito']);
     } else {
         // Actualizar
         $sql = "UPDATE talento_estadisticas 
-                SET icono = ?, valor_numero = ?, sufijo = ?, etiqueta = ?, orden = ?, activo = ?, usuario_modifica = ?, fecha_modificacion = NOW()
+                SET icono = ?, valor_numero = ?, sufijo = ?, etiqueta = ?, orden = ?, activo = ?, color_fondo = ?, usuario_modifica = ?, fecha_modificacion = NOW()
                 WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$icono, $valor_numero, $sufijo, $etiqueta, $orden, $activo, $codOperario, $id]);
+        $stmt->execute([$icono, $valor_numero, $sufijo, $etiqueta, $orden, $activo, $color_fondo, $codOperario, $id]);
         echo json_encode(['success' => true, 'mensaje' => 'Estadística actualizada con éxito']);
     }
 } catch (Exception $e) {

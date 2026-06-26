@@ -400,6 +400,15 @@ $puedeEditar = tienePermiso('postulacion_panel_control', 'editar', $cargoOperari
                     <div id="modalDescripcionForm" style="display:none;">
                         <div class="mb-3">
                             <label class="form-label fw-semibold"><i class="bi bi-card-text me-1 text-primary"></i> Descripción pública</label>
+                            <?php if ($puedeEditar): ?>
+                            <div class="html-toolbar mb-1" role="group">
+                                <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtDescripcion','b')" title="Negrita"><i class="bi bi-type-bold"></i> Negrita</button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtDescripcion','i')" title="Cursiva"><i class="bi bi-type-italic"></i> Cursiva</button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtDescripcion','p')" title="Párrafo"><i class="bi bi-paragraph"></i> Párrafo</button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary" onclick="insertarHtmlTag('txtDescripcion','br')" title="Salto de línea"><i class="bi bi-arrow-return-left"></i> Salto</button>
+                            </div>
+                            <div class="form-text text-muted small mb-1">Selecciona texto y haz clic en un botón para aplicar formato.</div>
+                            <?php endif; ?>
                             <textarea id="txtDescripcion" class="form-control" rows="4"
                                 placeholder="Describe el cargo de forma atractiva para los postulantes..."
                                 <?php echo !$puedeEditar ? 'readonly' : ''; ?>></textarea>
