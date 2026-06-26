@@ -934,15 +934,21 @@ function addStockLines(idPP, sk, chartId, allDays) {
                 maxData.push(null);
                 continue;
             }
-            const cd = getDynamicCd(day);
-            const sMin = cd * dSM;
             
+            // Stock Mínimo cambia semanalmente basado en la fecha actual (no se ata a despachos)
+            const cdSemanal = getDynamicCd(day);
+            const sMinHoy = cdSemanal * dSM;
+            
+            // Requerido Total cambia por bloques de despacho
             const dispatchDay = getMostRecentDispatchDay(day);
+            const cdDispatch = getDynamicCd(dispatchDay);
             const ciclo = calcularCicloSlot(dispatchDay);
-            const sMaxUso = (cd * ciclo) + sMin;
+            const sMinDispatch = cdDispatch * dSM;
+            
+            const sMaxUso = (cdDispatch * ciclo) + sMinDispatch;
             const sMaxFinal = sMaxUso * ratio;
             
-            minData.push(sMin);
+            minData.push(sMinHoy);
             maxData.push(sMaxFinal);
         }
 
