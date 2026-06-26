@@ -139,6 +139,14 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
             if (Math.abs(denom) > 0.001) {
                 regSlope = (n_ * sumXY - sumX * sumY) / denom;
                 regIntercept = (sumY - regSlope * sumX) / n_;
+
+                if (regSlope < 0) {
+                    let ultimas2 = yV.slice(-2);
+                    let maxUlt2 = ultimas2.length > 0 ? Math.max(...ultimas2) : 0;
+                    regSlope = 0;
+                    regIntercept = maxUlt2;
+                }
+
                 proyW1 = Math.max(0, round2(regSlope * (ultimaSem + 1) + regIntercept));
                 proyW2 = Math.max(0, round2(regSlope * (ultimaSem + 2) + regIntercept));
                 proyW3 = Math.max(0, round2(regSlope * (ultimaSem + 3) + regIntercept));
@@ -182,9 +190,23 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
         },
     ];
 
+    // Detección para la leyenda visual
+    let isAjustado = false;
+    let sum_w=0, sum_wx=0, sum_wy=0, sum_wxx=0, sum_wxy=0;
+    valsCalc.forEach((y, i) => {
+        let x = i + 1; let w = x;
+        sum_w += w; sum_wx += w*x; sum_wy += w*y; sum_wxx += w*x*x; sum_wxy += w*x*y;
+    });
+    let denomWLS = (sum_w * sum_wxx) - (sum_wx * sum_wx);
+    if (Math.abs(denomWLS) > 0.001) {
+        let rawSlope = ((sum_w * sum_wxy) - (sum_wx * sum_wy)) / denomWLS;
+        if (rawSlope < -0.001) isAjustado = true;
+    }
+    let proyLabel = isAjustado ? 'Proyección (Ajuste p/Caída: Máx 2 sem)' : 'Proyección';
+
     const proyData = [...semanasNros.map(n => n === semanaActual ? proyActual : null), proyW1, proyW2, proyW3];
     datasets.push({
-        label: `Proyeccion`,
+        label: proyLabel,
         data: proyData,
         borderColor: '#f39c12',
         backgroundColor: 'rgba(243,156,18,.12)',
