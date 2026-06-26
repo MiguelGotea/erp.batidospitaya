@@ -684,7 +684,7 @@ async function calcularPronosticoAbastKardex(
         const pointHoverRadii = forecastData.map((v, i) => i === _idxObj ? 13 : 4);
         const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
 
-        const pronLabel = `Pronóstico c/Abastecimiento`;
+        const pronLabel = `Pronóstico de Inventario`;
         datasets.push({
             label: pronLabel,
             data: forecastData,
@@ -763,7 +763,7 @@ function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsPr
     const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
 
     datasets.push({
-        label: `Pronóstico c/Abastecimiento`,
+        label: `Pronóstico de Inventario`,
         data: forecastData,
         borderColor: '#8e44ad',
         backgroundColor: 'rgba(142,68,173,0.06)',
@@ -882,7 +882,7 @@ function addStockLines(idPP, sk, chartId, allDays) {
         });
 
         chart.data.datasets.push({
-            label: 'Stock Máx Final *',
+            label: 'Requerido Total *',
             data: maxData,
             borderColor: '#6d597a',
             backgroundColor: 'transparent',
