@@ -147,12 +147,12 @@ try {
                     </style>
 
                     <!-- Buscador de Insumos -->
-                    <div class="row mb-3">
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                                <input type="text" id="pa-search-producto" class="form-control"
-                                    placeholder="Buscar insumo...">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="position-relative">
+                                <i class="bi bi-search position-absolute" style="left: 16px; top: 50%; transform: translateY(-50%); z-index: 10; color: var(--pa-muted); font-size: 16px;"></i>
+                                <input type="text" id="pa-search-producto" class="form-control pa-input w-100"
+                                    placeholder="Buscar insumo..." style="padding-left: 44px; height: 46px !important; font-size: 14px !important; border-radius: 12px !important;">
                             </div>
                         </div>
                     </div>
