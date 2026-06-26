@@ -100,8 +100,8 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
 
     // Promedio recalculado sin semana en curso
     let promCalc = prom;
+    const valsCalc = semanasCalc.map(n => item.por_semana[n] || 0);
     if (semanasCalc.length > 0) {
-        const valsCalc = semanasCalc.map(n => item.por_semana[n] || 0);
         const valsPos = valsCalc.filter(v => v > 0);
         promCalc = valsPos.length > 0 ? valsPos.reduce((a, b) => a + b, 0) / valsPos.length : prom;
     }
@@ -184,7 +184,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
 
     const proyData = [...semanasNros.map(n => n === semanaActual ? proyActual : null), proyW1, proyW2, proyW3];
     datasets.push({
-        label: `Proyeccion`,
+        label: `Proyección (WLS Actual)`,
         data: proyData,
         borderColor: '#f39c12',
         backgroundColor: 'rgba(243,156,18,.12)',
@@ -198,6 +198,83 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
         type: 'line',
         spanGaps: true,
         order: 0,
+    });
+
+    // --- NUEVA LÓGICA VISUAL 1: EMA con Limpieza ---
+    let alphaEma = 0.4;
+    let meanVals = valsCalc.length > 0 ? valsCalc.reduce((a,b)=>a+b,0)/valsCalc.length : 0;
+    let umbralCaida = meanVals * 0.7; // 30% de caida permitida
+    let cleanedVals = valsCalc.map(v => v < umbralCaida ? meanVals : v);
+    let valEma = cleanedVals.length > 0 ? cleanedVals[0] : 0;
+    for(let i=1; i<cleanedVals.length; i++) {
+        valEma = alphaEma * cleanedVals[i] + (1 - alphaEma) * valEma;
+    }
+    let proyEMA = round2(valEma);
+    const proyDataEMA = [...semanasNros.map(n => n === semanaActual ? proyEMA : null), proyEMA, proyEMA, proyEMA];
+    datasets.push({
+        label: `Pronóstico EMA Limpio`,
+        data: proyDataEMA,
+        borderColor: '#8e44ad',
+        backgroundColor: 'rgba(142,68,173,.12)',
+        borderWidth: 2,
+        borderDash: [4, 4],
+        pointRadius: [...semanasNros.map(n => n === semanaActual ? 5 : 0), 5, 5, 5],
+        pointStyle: 'circle',
+        pointBackgroundColor: '#8e44ad',
+        fill: false,
+        tension: 0,
+        type: 'line',
+        spanGaps: true,
+        order: 1,
+    });
+
+    // --- NUEVA LÓGICA VISUAL 2: Tendencia Ajustada ---
+    let proyW1_ajust, proyW2_ajust, proyW3_ajust, proyActual_ajust = null;
+    if (regSlope < 0) {
+        let ultimas = valsCalc.slice(-3);
+        let promUltimas = ultimas.length > 0 ? ultimas.reduce((a,b)=>a+b,0)/ultimas.length : 0;
+        proyW1_ajust = proyW2_ajust = proyW3_ajust = round2(promUltimas);
+        if (esSemActualEnRango) proyActual_ajust = round2(promUltimas);
+    } else {
+        if (semanasCalc.length >= 3) {
+            let xV_adj = semanasCalc.slice(0, -1);
+            let yV_adj = valsCalc.slice(0, -1);
+            let n_adj = xV_adj.length;
+            let sumX_adj = xV_adj.reduce((a, b) => a + b, 0);
+            let sumY_adj = yV_adj.reduce((a, b) => a + b, 0);
+            let sumXY_adj = xV_adj.reduce((acc, x, i) => acc + x * yV_adj[i], 0);
+            let sumX2_adj = xV_adj.reduce((acc, x) => acc + x * x, 0);
+            let denom_adj = n_adj * sumX2_adj - sumX_adj * sumX_adj;
+            let regSlope_adj = regSlope;
+            let regIntercept_adj = regIntercept;
+            if (Math.abs(denom_adj) > 0.001) {
+                regSlope_adj = (n_adj * sumXY_adj - sumX_adj * sumY_adj) / denom_adj;
+                regIntercept_adj = (sumY_adj - regSlope_adj * sumX_adj) / n_adj;
+            }
+            proyW1_ajust = Math.max(0, round2(regSlope_adj * (ultimaSem + 1) + regIntercept_adj));
+            proyW2_ajust = Math.max(0, round2(regSlope_adj * (ultimaSem + 2) + regIntercept_adj));
+            proyW3_ajust = Math.max(0, round2(regSlope_adj * (ultimaSem + 3) + regIntercept_adj));
+            if (esSemActualEnRango) proyActual_ajust = Math.max(0, round2(regSlope_adj * semanaActual + regIntercept_adj));
+        } else {
+            proyW1_ajust = proyW1; proyW2_ajust = proyW2; proyW3_ajust = proyW3; proyActual_ajust = proyActual;
+        }
+    }
+    const proyDataAjust = [...semanasNros.map(n => n === semanaActual ? proyActual_ajust : null), proyW1_ajust, proyW2_ajust, proyW3_ajust];
+    datasets.push({
+        label: `Tendencia Ajustada`,
+        data: proyDataAjust,
+        borderColor: '#2980b9',
+        backgroundColor: 'rgba(41,128,185,.12)',
+        borderWidth: 2,
+        borderDash: [4, 4],
+        pointRadius: [...semanasNros.map(n => n === semanaActual ? 5 : 0), 5, 5, 5],
+        pointStyle: 'rect',
+        pointBackgroundColor: '#2980b9',
+        fill: false,
+        tension: 0,
+        type: 'line',
+        spanGaps: true,
+        order: 2,
     });
 
     const chartId = `tend-${sk}-${idInsumoSel}`;
