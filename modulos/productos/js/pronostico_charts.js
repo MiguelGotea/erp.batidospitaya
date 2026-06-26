@@ -236,28 +236,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
         proyW1_ajust = proyW2_ajust = proyW3_ajust = round2(promUltimas);
         if (esSemActualEnRango) proyActual_ajust = round2(promUltimas);
     } else {
-        if (semanasCalc.length >= 3) {
-            let xV_adj = semanasCalc.slice(0, -1);
-            let yV_adj = valsCalc.slice(0, -1);
-            let n_adj = xV_adj.length;
-            let sumX_adj = xV_adj.reduce((a, b) => a + b, 0);
-            let sumY_adj = yV_adj.reduce((a, b) => a + b, 0);
-            let sumXY_adj = xV_adj.reduce((acc, x, i) => acc + x * yV_adj[i], 0);
-            let sumX2_adj = xV_adj.reduce((acc, x) => acc + x * x, 0);
-            let denom_adj = n_adj * sumX2_adj - sumX_adj * sumX_adj;
-            let regSlope_adj = regSlope;
-            let regIntercept_adj = regIntercept;
-            if (Math.abs(denom_adj) > 0.001) {
-                regSlope_adj = (n_adj * sumXY_adj - sumX_adj * sumY_adj) / denom_adj;
-                regIntercept_adj = (sumY_adj - regSlope_adj * sumX_adj) / n_adj;
-            }
-            proyW1_ajust = Math.max(0, round2(regSlope_adj * (ultimaSem + 1) + regIntercept_adj));
-            proyW2_ajust = Math.max(0, round2(regSlope_adj * (ultimaSem + 2) + regIntercept_adj));
-            proyW3_ajust = Math.max(0, round2(regSlope_adj * (ultimaSem + 3) + regIntercept_adj));
-            if (esSemActualEnRango) proyActual_ajust = Math.max(0, round2(regSlope_adj * semanaActual + regIntercept_adj));
-        } else {
-            proyW1_ajust = proyW1; proyW2_ajust = proyW2; proyW3_ajust = proyW3; proyActual_ajust = proyActual;
-        }
+        proyW1_ajust = proyW1; proyW2_ajust = proyW2; proyW3_ajust = proyW3; proyActual_ajust = proyActual;
     }
     const proyDataAjust = [...semanasNros.map(n => n === semanaActual ? proyActual_ajust : null), proyW1_ajust, proyW2_ajust, proyW3_ajust];
     datasets.push({
