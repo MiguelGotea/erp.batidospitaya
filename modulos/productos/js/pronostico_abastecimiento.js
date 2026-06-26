@@ -1021,11 +1021,11 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         <th>Stock Minimo<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(${dsmText} - Unid. de control)</small></th>
         <th>Requerido Total<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         ${thDatosCompletos}
-        <th>Pronostico de inventario<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(al día de despacho)</small></th>
-        <th>Despacho Sugerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Pronóstico)</small></th>
+        <th>Pronostico de inventario al dia de despacho<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
+        <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         <th style="width: 100px;">${thDespachoReal}</th>
         <th>Presentacion de despacho</th>
-        <th>A Pedir<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid despacho)</small></th>
+        <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid despacho)</small></th>
     </tr></thead>`;
 
     return `<table class="pa-table">${thead}<tbody>${rows || '<tr class="pa-no-data-row"><td colspan="12">Sin productos</td></tr>'}</tbody></table>`;
@@ -1196,10 +1196,10 @@ function exportarPronosticoExcel() {
                 }
                 
                 obj["Pronostico de inventario al dia de despacho (Unid. de control)"] = pronosticoInv;
-                obj["Despacho Sugerido (Pronóstico)"] = sugCtrl !== null ? parseFloat(sugCtrl).toFixed(1) : '-';
+                obj["Despacho requerido (Unid. de control)"] = sugCtrl !== null ? parseFloat(sugCtrl).toFixed(1) : '-';
                 obj["Despacho Real Registrado"] = despachoRealInfo;
                 obj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
-                obj["A Pedir (Unid despacho)"] = despAUsar !== null ? parseFloat(despAUsar).toFixed(1) : '-';
+                obj["Despacho requerido (Unid despacho)"] = despAUsar !== null ? parseFloat(despAUsar).toFixed(1) : '-';
                 
                 datosExportar.push(obj);
 
@@ -1250,10 +1250,10 @@ function exportarPronosticoExcel() {
                         }
                         
                         subObj["Pronostico de inventario al dia de despacho (Unid. de control)"] = sub_pronosticoInv;
-                        subObj["Despacho Sugerido (Pronóstico)"] = sub_sugCtrl !== null ? parseFloat(sub_sugCtrl).toFixed(1) : '-';
+                        subObj["Despacho requerido (Unid. de control)"] = sub_sugCtrl !== null ? parseFloat(sub_sugCtrl).toFixed(1) : '-';
                         subObj["Despacho Real Registrado"] = sub_despachoRealInfo;
                         subObj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
-                        subObj["A Pedir (Unid despacho)"] = sub_aUsar !== null ? parseFloat(sub_aUsar).toFixed(1) : '-';
+                        subObj["Despacho requerido (Unid despacho)"] = sub_aUsar !== null ? parseFloat(sub_aUsar).toFixed(1) : '-';
 
                         datosExportar.push(subObj);
                     });
@@ -1284,10 +1284,10 @@ function exportarPronosticoExcel() {
 
     wscols.push(
         { wch: 25 }, // Pronóstico Inventario
-        { wch: 20 }, // Despacho Sugerido
+        { wch: 20 }, // Despacho requerido
         { wch: 20 }, // Despacho Real Registrado
         { wch: 25 }, // Presentación de despacho
-        { wch: 18 }  // A Pedir
+        { wch: 18 }  // Despacho requerido
     );
     ws['!cols'] = wscols;
 
