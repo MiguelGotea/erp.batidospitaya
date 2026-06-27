@@ -34,7 +34,19 @@ try {
         'hero_beneficios_desc',
         'cultura_titulo',
         'cultura_subtitulo',
-        'cultura_cita'
+        'cultura_cita',
+        // Personalización visual del portal
+        'footer_descripcion',
+        'color_marca',
+        'color_marca_hover',
+        'color_header',
+        'color_footer',
+        'color_fondo',
+        'color_texto',
+        'imagen_fondo',
+        'imagen_fondo_opacidad',
+        'imagen_fondo_repetir',
+        'imagen_fondo_size',
     ];
 
     $stmt = $conn->prepare("UPDATE talento_configuracion SET valor = ?, usuario_modifica = ?, fecha_modificacion = NOW() WHERE clave = ?");

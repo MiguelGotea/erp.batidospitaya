@@ -178,6 +178,134 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                     </div>
                 </div>
 
+                <!-- SECCIÓN 1b: APARIENCIA VISUAL DEL PORTAL -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold text-dark mb-1"><i class="bi bi-palette me-2"></i>Apariencia Visual del Portal de Talento</h5>
+                        <p class="text-muted small mb-3">Personaliza los colores, fondo de página y el texto del pie de página. Los cambios se aplican en vivo al subir los archivos al servidor.</p>
+
+                        <form id="formPersonalizacion">
+                            <div class="row g-3">
+
+                                <!-- Texto Footer -->
+                                <div class="col-12">
+                                    <label class="form-label fw-bold"><i class="bi bi-layout-text-sidebar me-1"></i> Texto Descriptivo del Footer</label>
+                                    <input type="text" class="form-control" name="footer_descripcion" id="cfgFooterDesc"
+                                        placeholder="Ej: Energía natural, hábitos positivos y experiencia WOW.">
+                                    <div class="form-text small">Frase que aparece en el pie de página bajo el nombre Batidos Pitaya.</div>
+                                </div>
+
+                                <!-- Colores principales -->
+                                <div class="col-12"><hr class="my-1"><p class="fw-bold mb-1 small text-muted text-uppercase">Colores Corporativos</p></div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Color Principal de Marca</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" class="form-control form-control-color" name="color_marca" id="cfgColorMarca" value="#51B8AC">
+                                        <input type="text" class="form-control form-control-sm" id="cfgColorMarcaHex" placeholder="#51B8AC" style="width:100px"
+                                               oninput="document.getElementById('cfgColorMarca').value=this.value">
+                                    </div>
+                                    <div class="form-text small">Color de botones, links y detalles primarios.</div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Color de Marca (Hover)</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" class="form-control form-control-color" name="color_marca_hover" id="cfgColorMarcaHover" value="#0E544C">
+                                        <input type="text" class="form-control form-control-sm" id="cfgColorMarcaHoverHex" placeholder="#0E544C" style="width:100px"
+                                               oninput="document.getElementById('cfgColorMarcaHover').value=this.value">
+                                    </div>
+                                    <div class="form-text small">Color al pasar el cursor sobre botones y links.</div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Color del Header (Barra Superior)</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" class="form-control form-control-color" name="color_header" id="cfgColorHeader" value="#0E544C">
+                                        <input type="text" class="form-control form-control-sm" id="cfgColorHeaderHex" placeholder="#0E544C" style="width:100px"
+                                               oninput="document.getElementById('cfgColorHeader').value=this.value">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Color del Footer (Pie de Página)</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" class="form-control form-control-color" name="color_footer" id="cfgColorFooter" value="#0E544C">
+                                        <input type="text" class="form-control form-control-sm" id="cfgColorFooterHex" placeholder="#0E544C" style="width:100px"
+                                               oninput="document.getElementById('cfgColorFooter').value=this.value">
+                                    </div>
+                                </div>
+
+                                <!-- Fondo de página -->
+                                <div class="col-12"><hr class="my-1"><p class="fw-bold mb-1 small text-muted text-uppercase">Fondo de Página</p></div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Color de Fondo de Página</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" class="form-control form-control-color" name="color_fondo" id="cfgColorFondo" value="#ffffff">
+                                        <input type="text" class="form-control form-control-sm" id="cfgColorFondoHex" placeholder="#ffffff" style="width:100px"
+                                               oninput="document.getElementById('cfgColorFondo').value=this.value">
+                                    </div>
+                                    <div class="form-text small">Color base del fondo del sitio.</div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Color del Texto General</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" class="form-control form-control-color" name="color_texto" id="cfgColorTexto" value="#333333">
+                                        <input type="text" class="form-control form-control-sm" id="cfgColorTextoHex" placeholder="#333333" style="width:100px"
+                                               oninput="document.getElementById('cfgColorTexto').value=this.value">
+                                    </div>
+                                    <div class="form-text small">Color del texto de contenido general.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Imagen de Fondo (Ruta relativa o URL)</label>
+                                    <input type="text" class="form-control" name="imagen_fondo" id="cfgImagenFondo"
+                                        placeholder="Ej: assets/img/fondo_patron.png (dejar en blanco para sin imagen)">
+                                    <div class="form-text small">Ruta de la imagen de fondo del portal. Si no hay imagen, se usa solo el color de fondo.</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Opacidad de Imagen de Fondo</label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="range" class="form-range" name="imagen_fondo_opacidad" id="cfgImagenFondoOpacidad"
+                                            min="0" max="1" step="0.05" value="0.15"
+                                            oninput="document.getElementById('cfgImagenFondoOpacidadVal').textContent=parseFloat(this.value).toFixed(2)">
+                                        <span id="cfgImagenFondoOpacidadVal" class="text-muted fw-bold" style="width:40px">0.15</span>
+                                    </div>
+                                    <div class="form-text small">0 = invisible, 1 = completamente visible.</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Repetición de Imagen de Fondo</label>
+                                    <select class="form-select" name="imagen_fondo_repetir" id="cfgImagenFondoRepetir">
+                                        <option value="repeat">repeat (repetir en X e Y)</option>
+                                        <option value="repeat-x">repeat-x (solo horizontal)</option>
+                                        <option value="repeat-y">repeat-y (solo vertical)</option>
+                                        <option value="no-repeat">no-repeat (no repetir)</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Tamaño de Imagen de Fondo</label>
+                                    <select class="form-select" name="imagen_fondo_size" id="cfgImagenFondoSize">
+                                        <option value="auto">auto (tamaño original)</option>
+                                        <option value="cover">cover (cubrir toda la pantalla)</option>
+                                        <option value="contain">contain (mantener proporciones)</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                            <?php if ($canEdit): ?>
+                            <div class="mt-3 text-end">
+                                <button type="submit" class="btn btn-primary-custom px-4"><i class="bi bi-save me-2"></i>Guardar Apariencia</button>
+                            </div>
+                            <?php endif; ?>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- SECCIÓN 2: BENEFICIOS CLAVE -->
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-body">
@@ -402,6 +530,32 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                 });
             });
 
+            // Guardar apariencia visual del portal
+            $('#formPersonalizacion').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: 'ajax/guardar_configuracion.php',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    dataType: 'json',
+                    success: function(res) {
+                        Swal.fire('¡Éxito!', res.mensaje, 'success');
+                    },
+                    error: function(xhr) {
+                        let err = xhr.responseJSON ? xhr.responseJSON.error : 'Error desconocido';
+                        Swal.fire('Error', err, 'error');
+                    }
+                });
+            });
+
+            // Sincronizar color pickers con sus inputs hex
+            $('#cfgColorMarca').on('input', function() { $('#cfgColorMarcaHex').val(this.value); });
+            $('#cfgColorMarcaHover').on('input', function() { $('#cfgColorMarcaHoverHex').val(this.value); });
+            $('#cfgColorHeader').on('input', function() { $('#cfgColorHeaderHex').val(this.value); });
+            $('#cfgColorFooter').on('input', function() { $('#cfgColorFooterHex').val(this.value); });
+            $('#cfgColorFondo').on('input', function() { $('#cfgColorFondoHex').val(this.value); });
+            $('#cfgColorTexto').on('input', function() { $('#cfgColorTextoHex').val(this.value); });
+
             // Guardar beneficio
             $('#formBeneficio').on('submit', function(e) {
                 e.preventDefault();
@@ -450,6 +604,7 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                 method: 'GET',
                 dataType: 'json',
                 success: function(data) {
+                    // Contacto y redes
                     $('#cfgEmailUser').val(data.email_reclutamiento || '');
                     $('#cfgEmailDom').val(data.email_reclutamiento_dom || '');
                     $('#cfgTelefono').val(data.telefono_principal || '');
@@ -463,6 +618,36 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                     $('#cfgCulturaTitulo').val(data.cultura_titulo || '');
                     $('#cfgCulturaSub').val(data.cultura_subtitulo || '');
                     $('#cfgCulturaCita').val(data.cultura_cita || '');
+
+                    // Apariencia visual
+                    $('#cfgFooterDesc').val(data.footer_descripcion || '');
+
+                    const cm = data.color_marca || '#51B8AC';
+                    $('#cfgColorMarca').val(cm); $('#cfgColorMarcaHex').val(cm);
+
+                    const cmh = data.color_marca_hover || '#0E544C';
+                    $('#cfgColorMarcaHover').val(cmh); $('#cfgColorMarcaHoverHex').val(cmh);
+
+                    const ch = data.color_header || '#0E544C';
+                    $('#cfgColorHeader').val(ch); $('#cfgColorHeaderHex').val(ch);
+
+                    const cf = data.color_footer || '#0E544C';
+                    $('#cfgColorFooter').val(cf); $('#cfgColorFooterHex').val(cf);
+
+                    const cbg = data.color_fondo || '#ffffff';
+                    $('#cfgColorFondo').val(cbg); $('#cfgColorFondoHex').val(cbg);
+
+                    const ct = data.color_texto || '#333333';
+                    $('#cfgColorTexto').val(ct); $('#cfgColorTextoHex').val(ct);
+
+                    $('#cfgImagenFondo').val(data.imagen_fondo || '');
+
+                    const op = parseFloat(data.imagen_fondo_opacidad || '0.15');
+                    $('#cfgImagenFondoOpacidad').val(op);
+                    $('#cfgImagenFondoOpacidadVal').text(op.toFixed(2));
+
+                    $('#cfgImagenFondoRepetir').val(data.imagen_fondo_repetir || 'repeat');
+                    $('#cfgImagenFondoSize').val(data.imagen_fondo_size || 'auto');
                 },
                 error: function() {
                     console.error('Error al cargar configuraciones generales.');
