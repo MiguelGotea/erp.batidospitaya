@@ -4,16 +4,30 @@ require_once '../../../core/database/conexion.php';
 header('Content-Type: application/json');
 
 try {
-    $fecha    = isset($_POST['fecha'])    ? $_POST['fecha']    : null;
-    $sucursal = isset($_POST['sucursal']) ? $_POST['sucursal'] : null;
+    $fecha        = isset($_POST['fecha'])        ? $_POST['fecha'] : null;
+    $sucursal     = isset($_POST['sucursal'])     ? $_POST['sucursal'] : null;
+    $cod_operario = isset($_POST['cod_operario']) ? (int)$_POST['cod_operario'] : null;
+    $cod_cierre   = isset($_POST['cod_cierre'])   ? (int)$_POST['cod_cierre'] : null;
 
-    if (!$fecha || !$sucursal) {
+    if (!$fecha || !$sucursal || !$cod_operario) {
         echo json_encode(['success' => false, 'message' => 'Faltan parámetros requeridos.']);
         exit;
     }
 
     // msaccess_masivo_Compras.Sucursal usa el mismo valor que sucursales.codigo.
     // Se filtra directo sin pasar por sucursales.id (NUNCA usar sucursales.id).
+
+    // Determinar si este es el último cierre del día para aplicar lógica de facturas "huérfanas"
+    $stmtMaxCierre = $conn->prepare("SELECT MAX(CodigoCierre) FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal");
+    $stmtMaxCierre->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+    $maxCodigoCierre = $stmtMaxCierre->fetchColumn();
+    $esUltimoCierre = ($cod_cierre == $maxCodigoCierre);
+
+    $condicionOperario = " AND (c.CodOperario = :cod_operario";
+    if ($esUltimoCierre) {
+        $condicionOperario .= " OR c.CodOperario IS NULL OR c.CodOperario = '' OR c.CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal)";
+    }
+    $condicionOperario .= ")";
 
     $sql = "SELECT
                 c.CodIngresoAlmacen,
@@ -29,11 +43,13 @@ try {
             WHERE c.Fecha    = :fecha
               AND c.Sucursal = :sucursal
               AND c.Tipo     = 'CAJA'
+              $condicionOperario
             ORDER BY c.CodIngresoAlmacen ASC";
 
     $stmt = $conn->prepare($sql);
     $stmt->bindValue(':fecha',    $fecha);
     $stmt->bindValue(':sucursal', $sucursal);
+    $stmt->bindValue(':cod_operario', $cod_operario, PDO::PARAM_INT);
     $stmt->execute();
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

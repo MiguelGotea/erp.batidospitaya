@@ -137,15 +137,29 @@ try {
     }
 
     // ── 7. Compras de Caja (del día, Tipo = CAJA) ─────────────────────────────
+    // Determinar si este es el último cierre del día
+    $stmtMaxCierre = $conn->prepare("SELECT MAX(CodigoCierre) FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal");
+    $stmtMaxCierre->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+    $maxCodigoCierre = $stmtMaxCierre->fetchColumn();
+    $esUltimoCierre = ($cod_cierre == $maxCodigoCierre);
+
+    $condicionOperario = " AND (CodOperario = :cod_operario";
+    if ($esUltimoCierre) {
+        $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal)";
+    }
+    $condicionOperario .= ")";
+
     $stmtComp = $conn->prepare(
         "SELECT SUM(COALESCE(CostoTotal, 0)) AS total
          FROM msaccess_masivo_Compras
          WHERE Fecha    = :fecha
            AND Sucursal = :sucursal
-           AND Tipo     = 'CAJA'"
+           AND Tipo     = 'CAJA'
+           $condicionOperario"
     );
     $stmtComp->bindValue(':fecha',    $fecha);
     $stmtComp->bindValue(':sucursal', $sucursal);
+    $stmtComp->bindValue(':cod_operario', $cod_operario, PDO::PARAM_INT);
     $stmtComp->execute();
     $rowComp      = $stmtComp->fetch(PDO::FETCH_ASSOC);
     $compras_caja = (float)($rowComp['total'] ?? 0);

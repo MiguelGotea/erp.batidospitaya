@@ -622,7 +622,9 @@ function abrirDetalleCompras() {
         dataType: 'json',
         data: {
             fecha:    $('#filtroFecha').val(),
-            sucursal: $('#filtroSucursal').val()
+            sucursal: $('#filtroSucursal').val(),
+            cod_operario: cierreActivo.CodOperario,
+            cod_cierre: cierreActivo.CodigoCierre
         },
         success: function (resp) {
             if (!resp.success) {

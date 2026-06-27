@@ -321,10 +321,29 @@ try {
             $aligeramientos += $monto;
         }
 
-        $stmtComp = $conn->prepare("SELECT SUM(COALESCE(CostoTotal, 0)) AS total FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA'");
-        $stmtComp->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+        $esUltimoCierre = !empty($p['isLastClosure']);
+        $codOperarioCierre = $p['CodOperario'];
+
+        $condicionOperario = " AND (CodOperario = :cod_operario";
+        if ($esUltimoCierre) {
+            $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal)";
+        }
+        $condicionOperario .= ")";
+
+        $stmtComp = $conn->prepare("SELECT SUM(COALESCE(CostoTotal, 0)) AS total FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA'" . $condicionOperario);
+        $stmtComp->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'cod_operario' => $codOperarioCierre]);
         $rowComp = $stmtComp->fetch(PDO::FETCH_ASSOC);
         $compras_caja = (float)($rowComp['total'] ?? 0);
+
+        if ($esUltimoCierre) {
+            $sqlHuerfanas = "SELECT COUNT(*) FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA' AND (CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal))";
+            $stmtHuerfanas = $conn->prepare($sqlHuerfanas);
+            $stmtHuerfanas->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+            $countHuerfanas = (int)$stmtHuerfanas->fetchColumn();
+            if ($countHuerfanas > 0) {
+                $alertas[] = ['tipo' => 'warning', 'texto' => "Facturas de compras reasignadas: $countHuerfanas sin cierre de turno"];
+            }
+        }
 
         $mf_cor = (float)$p['MFCor'];
         $mf_dol = (float)$p['MFDol'];
