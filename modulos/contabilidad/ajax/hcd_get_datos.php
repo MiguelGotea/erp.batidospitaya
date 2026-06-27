@@ -258,7 +258,7 @@ try {
         }
 
         if (!empty($p['tiene_precierre_anulado'])) {
-            $alertas[] = ['tipo' => 'danger', 'texto' => 'Precierre Anulado'];
+            $alertas[] = ['tipo' => 'danger', 'texto' => 'Cierre Anulado'];
         }
 
         $fecha = $p['Fecha'];
@@ -335,7 +335,7 @@ try {
         $faltanteGuardado = (float)$p['Faltante'];
 
         if (abs($faltanteCalculado - $faltanteGuardado) > 5) {
-            $alertas[] = ['tipo' => 'danger', 'texto' => 'Incongruencia de Balance (Calculado C$ ' . number_format($faltanteCalculado, 1) . ' vs Guardado C$ ' . number_format($faltanteGuardado, 1) . ')'];
+            $alertas[] = ['tipo' => 'danger', 'texto' => 'Incongruencia de Balance'];
         }
 
         $p['alertas'] = $alertas;

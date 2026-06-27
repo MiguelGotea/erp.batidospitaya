@@ -123,7 +123,7 @@ function renderizarTabla(datos) {
         // Renderizar Alertas
         let alertasHtml = '';
         if (row.alertas && row.alertas.length > 0) {
-            alertasHtml = row.alertas.map(a => `<div class="badge bg-${a.tipo} mb-1" style="white-space: normal; text-align: left; display: block;">${escHtml(a.texto)}</div>`).join('');
+            alertasHtml = '<div class="d-flex flex-wrap gap-1">' + row.alertas.map(a => `<span class="badge bg-${a.tipo}">${escHtml(a.texto)}</span>`).join('') + '</div>';
         } else {
             alertasHtml = '<span class="text-muted small">—</span>';
         }
