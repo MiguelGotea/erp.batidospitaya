@@ -666,6 +666,52 @@ function abrirDetalleCompras() {
     });
 }
 
+// ── Modal: detalle de aligeramientos ─────────────────────────
+function abrirDetalleAligeramientos() {
+    if (!cierreActivo || !datosCierre || !datosCierre.aligeramientos_detalle) return;
+
+    $('#modalAligeramientosSubtitle').text(`Fecha: ${formatFecha($('#filtroFecha').val())}`);
+    
+    const rows = datosCierre.aligeramientos_detalle;
+    let html = '';
+    let totalMonto = 0;
+
+    rows.forEach(function (r) {
+        const hora = r.hora ? formatHora(r.hora) : '—';
+        const montoOriginal = parseFloat(r.monto) || 0;
+        const montoConvertido = parseFloat(r.monto_convertido) || 0;
+        const denominacion = r.denominacion ? r.denominacion.toUpperCase() : '—';
+        
+        let denomIcon = '';
+        if (denominacion.includes('DOLAR') || denominacion.includes('DÓLAR')) {
+            denomIcon = '<i class="bi bi-currency-dollar text-success me-1"></i>';
+        } else {
+            denomIcon = '<span class="text-secondary fw-bold me-1">C$</span>';
+        }
+
+        html += `
+            <tr>
+                <td>${hora}</td>
+                <td>${denomIcon}${denominacion}</td>
+                <td class="text-end fw-semibold">${montoOriginal.toLocaleString('es-NI', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                <td class="text-end fw-bold text-pitaya">${fmt(montoConvertido)}</td>
+            </tr>
+        `;
+        totalMonto += montoConvertido;
+    });
+
+    if (rows.length === 0) {
+        html = '<tr><td colspan="4" class="text-center text-muted py-4">Sin depósitos/aligeramientos considerados en este balance</td></tr>';
+    }
+
+    $('#tbodyDetalleAligeramientos').html(html);
+    $('#modalTotalAligeramientos').text(rows.length);
+    $('#modalTotalMontoAligeramientos').text(fmt(totalMonto));
+
+    const modal = new bootstrap.Modal(document.getElementById('modalDetalleAligeramientos'));
+    modal.show();
+}
+
 // ── Utilidades ───────────────────────────────────────────────
 function fmt(val) {
     const n = parseFloat(val) || 0;

@@ -114,34 +114,55 @@ try {
         }
     }
 
-    // ── 6. Aligeramientos (depósitos del día, todos los cierres) ─────────────
-    $stmtDep = $conn->prepare(
-        "SELECT d.Monto, d.Denominacion
-         FROM msaccess_masivo_Depositos d
-         WHERE d.Fecha    = :fecha
-           AND d.Sucursal = :sucursal"
-    );
-    $stmtDep->bindValue(':fecha',    $fecha);
-    $stmtDep->bindValue(':sucursal', $sucursal);
-    $stmtDep->execute();
-    $rowsDep = $stmtDep->fetchAll(PDO::FETCH_ASSOC);
-
-    $aligeramientos = 0;
-    foreach ($rowsDep as $dep) {
-        $monto = (float)$dep['Monto'];
-        $denom = strtolower(trim($dep['Denominacion']));
-        if ($denom === 'dolares' || $denom === 'dólares') {
-            $monto = $monto * $tipo_cambio;
-        }
-        $aligeramientos += $monto;
-    }
-
-    // ── 7. Compras de Caja (del día, Tipo = CAJA) ─────────────────────────────
     // Determinar si este es el último cierre del día
     $stmtMaxCierre = $conn->prepare("SELECT MAX(CodigoCierre) FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal");
     $stmtMaxCierre->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
     $maxCodigoCierre = $stmtMaxCierre->fetchColumn();
     $esUltimoCierre = ($cod_cierre == $maxCodigoCierre);
+
+    // Obtener la hora inicial del primer cierre del día
+    $stmtMin = $conn->prepare("SELECT MIN(HoraInicial) FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal");
+    $stmtMin->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+    $minHoraInicial = $stmtMin->fetchColumn();
+
+    // ── 6. Aligeramientos (depósitos del día, acumulativos por cierre) ───────
+    $sqlDep = "SELECT d.Monto, d.Denominacion, d.Hora
+               FROM msaccess_masivo_Depositos d
+               WHERE d.Fecha = :fecha AND d.Sucursal = :sucursal";
+    
+    if (!$esUltimoCierre && $hora_final) {
+        $sqlDep .= " AND d.Hora >= :min_hora AND d.Hora <= :hora_final";
+    }
+    
+    $stmtDep = $conn->prepare($sqlDep);
+    $stmtDep->bindValue(':fecha', $fecha);
+    $stmtDep->bindValue(':sucursal', $sucursal);
+    if (!$esUltimoCierre && $hora_final) {
+        $stmtDep->bindValue(':min_hora', $minHoraInicial);
+        $stmtDep->bindValue(':hora_final', $hora_final);
+    }
+    $stmtDep->execute();
+    $rowsDep = $stmtDep->fetchAll(PDO::FETCH_ASSOC);
+
+    $aligeramientos = 0;
+    $aligeramientos_detalle = [];
+    foreach ($rowsDep as $dep) {
+        $monto = (float)$dep['Monto'];
+        $denom = strtolower(trim($dep['Denominacion']));
+        $montoConvertido = $monto;
+        if ($denom === 'dolares' || $denom === 'dólares') {
+            $montoConvertido = $monto * $tipo_cambio;
+        }
+        $aligeramientos += $montoConvertido;
+        $aligeramientos_detalle[] = [
+            'hora' => $dep['Hora'] ?? '',
+            'monto' => $monto,
+            'denominacion' => $dep['Denominacion'],
+            'monto_convertido' => $montoConvertido
+        ];
+    }
+
+    // ── 7. Compras de Caja (del día, Tipo = CAJA) ─────────────────────────────
 
     // Obtener los CodOperario de todos los cierres del día HASTA el actual
     $stmtOps = $conn->prepare("SELECT DISTINCT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal AND CodigoCierre <= :cod_cierre");
@@ -205,6 +226,7 @@ try {
         // Balance de Efectivo
         'caja_inicial'    => $caja_inicial,
         'aligeramientos'  => $aligeramientos,
+        'aligeramientos_detalle' => $aligeramientos_detalle,
         'compras_caja'    => $compras_caja,
         'conteo_caja'     => $conteo_caja,
         'tipo_cambio'     => $tipo_cambio,

@@ -208,6 +208,10 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
                                         <span class="bcd-efectivo-label">
                                             <span class="bcd-sign bcd-sign-minus">−</span>
                                             Aligeramientos
+                                            <button class="bcd-btn-detail ms-1" onclick="abrirDetalleAligeramientos()"
+                                                title="Ver detalle aligeramientos">
+                                                <i class="bi bi-search"></i>
+                                            </button>
                                         </span>
                                         <span class="bcd-efectivo-value" id="efAligeramientos">—</span>
                                     </div>
@@ -432,6 +436,67 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
                             <tbody id="tbodyDetalleCompras">
                                 <tr>
                                     <td colspan="7" class="text-center py-4 text-muted">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-white">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL: Detalle de Aligeramientos
+    ============================================================ -->
+    <div class="modal fade" id="modalDetalleAligeramientos" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
+                <div class="modal-header border-0 py-3 px-4" style="background:#0E544C; color:#fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width:40px; height:40px;">
+                            <i class="bi bi-piggy-bank fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Detalle de Aligeramientos</h5>
+                            <p class="small mb-0 opacity-75" id="modalAligeramientosSubtitle">Depósitos considerados en este balance</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="p-3 border-bottom bg-light">
+                        <div class="row g-2">
+                            <div class="col">
+                                <div class="bcd-modal-stat">
+                                    <span class="bcd-modal-stat-label">Total Depósitos</span>
+                                    <span class="bcd-modal-stat-value" id="modalTotalAligeramientos">0</span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="bcd-modal-stat">
+                                    <span class="bcd-modal-stat-label">Monto Total</span>
+                                    <span class="bcd-modal-stat-value text-pitaya" id="modalTotalMontoAligeramientos">C$ 0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Hora</th>
+                                    <th>Denominación</th>
+                                    <th class="text-end">Monto Original</th>
+                                    <th class="text-end">Monto Convertido (C$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyDetalleAligeramientos">
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">Cargando...</td>
                                 </tr>
                             </tbody>
                         </table>

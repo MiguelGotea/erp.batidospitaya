@@ -310,9 +310,23 @@ try {
             }
         }
 
-        $stmtDep = $conn->prepare("SELECT Monto, Denominacion FROM msaccess_masivo_Depositos WHERE Fecha = :fecha AND Sucursal = :sucursal");
-        $stmtDep->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+        $esUltimoCierre = !empty($p['isLastClosure']);
+        $codCierreActual = $p['CodigoCierre'];
+
+        $sqlDep = "SELECT Monto, Denominacion, Hora FROM msaccess_masivo_Depositos WHERE Fecha = :fecha AND Sucursal = :sucursal";
+        if (!$esUltimoCierre && !empty($p['HoraFinal'])) {
+            $sqlDep .= " AND Hora >= :min_hora AND Hora <= :hora_final";
+        }
+        $stmtDep = $conn->prepare($sqlDep);
+        $stmtDep->bindValue(':fecha', $fecha);
+        $stmtDep->bindValue(':sucursal', $sucursal);
+        if (!$esUltimoCierre && !empty($p['HoraFinal'])) {
+            $stmtDep->bindValue(':min_hora', $p['minHoraInicialDia']);
+            $stmtDep->bindValue(':hora_final', $p['HoraFinal']);
+        }
+        $stmtDep->execute();
         $rowsDep = $stmtDep->fetchAll(PDO::FETCH_ASSOC);
+        
         $aligeramientos = 0;
         foreach ($rowsDep as $dep) {
             $monto = (float)$dep['Monto'];
@@ -321,8 +335,16 @@ try {
             $aligeramientos += $monto;
         }
 
-        $esUltimoCierre = !empty($p['isLastClosure']);
-        $codCierreActual = $p['CodigoCierre'];
+        if ($esUltimoCierre) {
+            $stmtDepFuera = $conn->prepare("SELECT Hora FROM msaccess_masivo_Depositos WHERE Fecha = :fecha AND Sucursal = :sucursal AND (Hora < :minHora OR Hora > :maxHora) ORDER BY Hora ASC");
+            $stmtDepFuera->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'minHora' => $p['minHoraInicialDia'], 'maxHora' => $p['maxHoraFinalDia']]);
+            $depsFuera = $stmtDepFuera->fetchAll(PDO::FETCH_ASSOC);
+            if ($depsFuera) {
+                $horasFormat = array_map(function($r) { return $r['Hora'] ? date("h:i A", strtotime($r['Hora'])) : '—'; }, $depsFuera);
+                $horasFormat = array_unique($horasFormat);
+                $alertas[] = ['tipo' => 'warning', 'texto' => 'Aligeramientos fuera de horario de turnos: ' . implode(', ', $horasFormat)];
+            }
+        }
 
         // Obtener los CodOperario de todos los cierres del día HASTA el actual
         $stmtOps = $conn->prepare("SELECT DISTINCT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal AND CodigoCierre <= :cod_cierre");
