@@ -56,6 +56,16 @@ function horaAMinutos(h) {
     return parseInt(parts[0] || 0) * 60 + parseInt(parts[1] || 0);
 }
 
+// Determina si un cierre se considera anulado (duración < 30 min)
+function esCierreAnulado(c) {
+    if (!c.HoraInicial || !c.HoraFinal) return false;
+    const ini = horaAMinutos(c.HoraInicial);
+    const fin = horaAMinutos(c.HoraFinal);
+    let diff = fin - ini;
+    if (diff < 0) diff += 24 * 60; // Por si cruza la medianoche
+    return diff < 30;
+}
+
 // ── Inicialización ───────────────────────────────────────────
 $(document).ready(function () {
     // Leer parámetros que vienen del Historial de Cierres
@@ -159,12 +169,14 @@ function renderizarSidebar() {
         const hi = c.HoraInicial ? formatHora(c.HoraInicial) : '--:--';
         const hf = c.HoraFinal   ? formatHora(c.HoraFinal)   : '--:--';
         const tienePrec = g.precierres.length > 0;
+        const badgeAnulado = esCierreAnulado(c) ? '<span class="badge bg-danger ms-1" style="font-size: 0.65rem;">Anulado</span>' : '';
 
         list.append(`
             <div class="bcd-cierre-item" id="item-cierre-${idx}" onclick="seleccionarGrupo(${idx})">
                 <span class="ci-code">
                     <i class="bi bi-receipt me-1"></i>Cierre #${c.CodigoCierre}
                     ${tienePrec ? `<span class="ci-badge-prec" title="${g.precierres.length} precierre(s)">${g.precierres.length}</span>` : ''}
+                    ${badgeAnulado}
                 </span>
                 <span class="ci-horario">
                     <i class="bi bi-clock"></i>
@@ -197,11 +209,13 @@ function renderizarTabsPrecierre(grupo, cierreSeleccionado) {
 
     // Tab del cierre final (primer tab)
     const esFinal = cierreSeleccionado.CodigoCierre === grupo.final.CodigoCierre;
+    const badgeAnuladoFinal = esCierreAnulado(grupo.final) ? '<span class="badge bg-danger ms-1" style="font-size: 0.6rem;">Anulado</span>' : '';
     const tabFinal = $(`
         <button class="bcd-tab-item ${esFinal ? 'active' : ''}" 
                 onclick="cargarCierre(gruposCierres[getIdxGrupoActivo()].final, getIdxGrupoActivo())">
             <i class="bi bi-patch-check-fill me-1"></i>
             Cierre Final <span class="bcd-tab-code">#${grupo.final.CodigoCierre}</span>
+            ${badgeAnuladoFinal}
         </button>
     `);
     tabsContainer.append(tabFinal);
@@ -209,11 +223,13 @@ function renderizarTabsPrecierre(grupo, cierreSeleccionado) {
     // Tabs de precierres (desc por CodigoCierre)
     grupo.precierres.forEach(function (p) {
         const esActivo = cierreSeleccionado.CodigoCierre === p.CodigoCierre;
+        const badgeAnuladoPrec = esCierreAnulado(p) ? '<span class="badge bg-danger ms-1" style="font-size: 0.6rem;">Anulado</span>' : '';
         const tabPrec = $(`
             <button class="bcd-tab-item bcd-tab-precierre ${esActivo ? 'active' : ''}" 
                     onclick="cargarCierre(gruposCierres[getIdxGrupoActivo()].precierres.find(x => x.CodigoCierre === ${p.CodigoCierre}), getIdxGrupoActivo())">
                 <i class="bi bi-clock-history me-1"></i>
                 Precierre <span class="bcd-tab-code">#${p.CodigoCierre}</span>
+                ${badgeAnuladoPrec}
             </button>
         `);
         tabsContainer.append(tabPrec);
@@ -286,8 +302,18 @@ function cargarCierre(cierre, idxGrupo) {
 function renderizarDetalle() {
     const d = datosCierre;
 
+    const ini = horaAMinutos(d.hora_inicial);
+    const fin = horaAMinutos(d.hora_final);
+    let diff = fin - ini;
+    if (diff < 0) diff += 24 * 60;
+    const isAnulado = (d.hora_inicial && d.hora_final && diff < 30);
+
     // Encabezado
-    $('#detCodigoCierre').text(d.cod_cierre);
+    if (isAnulado) {
+        $('#detCodigoCierre').html(`${d.cod_cierre} <span class="badge bg-danger ms-2">Anulado</span>`);
+    } else {
+        $('#detCodigoCierre').text(d.cod_cierre);
+    }
     $('#detCajero').text(d.cajero);
     $('#detFecha').text(formatFecha(d.fecha));
     $('#detTurno').text(`${formatHora(d.hora_inicial)} — ${formatHora(d.hora_final)}`);
