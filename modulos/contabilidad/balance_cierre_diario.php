@@ -424,13 +424,14 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
                                     <th>Proveedor</th>
                                     <th>Destino</th>
                                     <th>Cantidad</th>
+                                    <th>Colaborador</th>
                                     <th class="text-end">Costo Total</th>
                                     <th>Observaciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyDetalleCompras">
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">Cargando...</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">Cargando...</td>
                                 </tr>
                             </tbody>
                         </table>

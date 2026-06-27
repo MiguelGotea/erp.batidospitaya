@@ -609,7 +609,7 @@ function abrirDetalleCompras() {
     if (!cierreActivo) return;
 
     $('#modalComprasSubtitle').text(`Fecha: ${formatFecha($('#filtroFecha').val())}`);
-    $('#tbodyDetalleCompras').html('<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div> Cargando...</td></tr>');
+    $('#tbodyDetalleCompras').html('<tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div> Cargando...</td></tr>');
     $('#modalTotalCompras').text('...');
     $('#modalTotalCostoCompras').text('...');
 
@@ -637,12 +637,14 @@ function abrirDetalleCompras() {
             let html = '';
 
             rows.forEach(function (r) {
+                const cajero = r.cajero ? r.cajero : (r.CodOperario ? `Op #${r.CodOperario}` : '—');
                 html += `
                     <tr>
                         <td>${r.NumeroFactura || '—'}</td>
                         <td>${r.CodProveedor || '—'}</td>
                         <td>${r.Destino || '—'}</td>
                         <td>${r.Cantidad || '—'}</td>
+                        <td>${cajero}</td>
                         <td class="text-end fw-semibold">${fmt(parseFloat(r.CostoTotal) || 0)}</td>
                         <td>${r.Observaciones || ''}</td>
                     </tr>
@@ -651,7 +653,7 @@ function abrirDetalleCompras() {
             });
 
             if (rows.length === 0) {
-                html = '<tr><td colspan="6" class="text-center text-muted py-4">Sin compras de caja en esta fecha</td></tr>';
+                html = '<tr><td colspan="7" class="text-center text-muted py-4">Sin compras de caja en esta fecha</td></tr>';
             }
 
             $('#tbodyDetalleCompras').html(html);

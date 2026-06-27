@@ -44,8 +44,15 @@ try {
                 c.CostoTotal,
                 c.Observaciones,
                 c.Tipo,
-                c.Fecha
+                c.Fecha,
+                c.CodOperario,
+                TRIM(REGEXP_REPLACE(CONCAT_WS(' ',
+                    COALESCE(o.Nombre,''),
+                    COALESCE(o.Nombre2,''),
+                    COALESCE(o.Apellido,''),
+                    COALESCE(o.Apellido2,'')), '[ ]+', ' ')) AS cajero
             FROM msaccess_masivo_Compras c
+            LEFT JOIN Operarios o ON o.CodOperario = c.CodOperario
             WHERE c.Fecha    = :fecha
               AND c.Sucursal = :sucursal
               AND c.Tipo     = 'CAJA'
