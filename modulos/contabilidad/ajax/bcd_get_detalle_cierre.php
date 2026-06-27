@@ -151,7 +151,7 @@ try {
 
     $condicionOperario = " AND (CodOperario IN ($operarios_in)";
     if ($esUltimoCierre) {
-        $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal)";
+        $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha2 AND Sucursal = :sucursal2)";
     }
     $condicionOperario .= ")";
 
@@ -165,6 +165,10 @@ try {
     );
     $stmtComp->bindValue(':fecha',    $fecha);
     $stmtComp->bindValue(':sucursal', $sucursal);
+    if ($esUltimoCierre) {
+        $stmtComp->bindValue(':fecha2',    $fecha);
+        $stmtComp->bindValue(':sucursal2', $sucursal);
+    }
     $stmtComp->execute();
     $rowComp      = $stmtComp->fetch(PDO::FETCH_ASSOC);
     $compras_caja = (float)($rowComp['total'] ?? 0);

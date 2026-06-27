@@ -31,7 +31,7 @@ try {
 
     $condicionOperario = " AND (c.CodOperario IN ($operarios_in)";
     if ($esUltimoCierre) {
-        $condicionOperario .= " OR c.CodOperario IS NULL OR c.CodOperario = '' OR c.CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal)";
+        $condicionOperario .= " OR c.CodOperario IS NULL OR c.CodOperario = '' OR c.CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha2 AND Sucursal = :sucursal2)";
     }
     $condicionOperario .= ")";
 
@@ -55,6 +55,10 @@ try {
     $stmt = $conn->prepare($sql);
     $stmt->bindValue(':fecha',    $fecha);
     $stmt->bindValue(':sucursal', $sucursal);
+    if ($esUltimoCierre) {
+        $stmt->bindValue(':fecha2',    $fecha);
+        $stmt->bindValue(':sucursal2', $sucursal);
+    }
     $stmt->execute();
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

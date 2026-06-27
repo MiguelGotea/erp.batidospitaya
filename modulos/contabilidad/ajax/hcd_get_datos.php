@@ -332,19 +332,26 @@ try {
 
         $condicionOperario = " AND (CodOperario IN ($operarios_in)";
         if ($esUltimoCierre) {
-            $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal)";
+            $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha2 AND Sucursal = :sucursal2)";
         }
         $condicionOperario .= ")";
 
         $stmtComp = $conn->prepare("SELECT SUM(COALESCE(CostoTotal, 0)) AS total FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA'" . $condicionOperario);
-        $stmtComp->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+        
+        $paramsComp = ['fecha' => $fecha, 'sucursal' => $sucursal];
+        if ($esUltimoCierre) {
+            $paramsComp['fecha2'] = $fecha;
+            $paramsComp['sucursal2'] = $sucursal;
+        }
+        $stmtComp->execute($paramsComp);
+        
         $rowComp = $stmtComp->fetch(PDO::FETCH_ASSOC);
         $compras_caja = (float)($rowComp['total'] ?? 0);
 
         if ($esUltimoCierre) {
-            $sqlHuerfanas = "SELECT COUNT(*) FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA' AND (CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal))";
+            $sqlHuerfanas = "SELECT COUNT(*) FROM msaccess_masivo_Compras WHERE Fecha = :fecha1 AND Sucursal = :sucursal1 AND Tipo = 'CAJA' AND (CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha2 AND Sucursal = :sucursal2))";
             $stmtHuerfanas = $conn->prepare($sqlHuerfanas);
-            $stmtHuerfanas->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+            $stmtHuerfanas->execute(['fecha1' => $fecha, 'sucursal1' => $sucursal, 'fecha2' => $fecha, 'sucursal2' => $sucursal]);
             $countHuerfanas = (int)$stmtHuerfanas->fetchColumn();
             if ($countHuerfanas > 0) {
                 $alertas[] = ['tipo' => 'warning', 'texto' => "Facturas de compras reasignadas: $countHuerfanas sin cierre de turno"];
