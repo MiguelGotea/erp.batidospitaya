@@ -247,8 +247,15 @@ try {
     $paginados = array_slice($cierresFinales, $offset, $porPagina);
 
     // ── Enriquecer Paginados con Alertas ──────────────────────────────────────
+    $hoy = date('Y-m-d');
     foreach ($paginados as &$p) {
         $alertas = [];
+
+        // No evaluar ninguna alerta si el cierre corresponde al día en curso
+        if ($p['Fecha'] === $hoy) {
+            $p['alertas'] = [];
+            continue;
+        }
 
         if (!empty($p['tiene_precierre_anulado'])) {
             $alertas[] = ['tipo' => 'danger', 'texto' => 'Precierre Anulado'];
