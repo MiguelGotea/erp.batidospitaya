@@ -143,7 +143,13 @@ try {
     $maxCodigoCierre = $stmtMaxCierre->fetchColumn();
     $esUltimoCierre = ($cod_cierre == $maxCodigoCierre);
 
-    $condicionOperario = " AND (CodOperario = :cod_operario";
+    // Obtener los CodOperario de todos los cierres del día HASTA el actual
+    $stmtOps = $conn->prepare("SELECT DISTINCT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal AND CodigoCierre <= :cod_cierre");
+    $stmtOps->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'cod_cierre' => $cod_cierre]);
+    $operarios = $stmtOps->fetchAll(PDO::FETCH_COLUMN);
+    $operarios_in = empty($operarios) ? "0" : implode(',', array_map('intval', array_filter($operarios)));
+
+    $condicionOperario = " AND (CodOperario IN ($operarios_in)";
     if ($esUltimoCierre) {
         $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal)";
     }
@@ -159,7 +165,6 @@ try {
     );
     $stmtComp->bindValue(':fecha',    $fecha);
     $stmtComp->bindValue(':sucursal', $sucursal);
-    $stmtComp->bindValue(':cod_operario', $cod_operario, PDO::PARAM_INT);
     $stmtComp->execute();
     $rowComp      = $stmtComp->fetch(PDO::FETCH_ASSOC);
     $compras_caja = (float)($rowComp['total'] ?? 0);

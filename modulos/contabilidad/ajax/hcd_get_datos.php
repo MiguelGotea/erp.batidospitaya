@@ -322,16 +322,22 @@ try {
         }
 
         $esUltimoCierre = !empty($p['isLastClosure']);
-        $codOperarioCierre = $p['CodOperario'];
+        $codCierreActual = $p['CodigoCierre'];
 
-        $condicionOperario = " AND (CodOperario = :cod_operario";
+        // Obtener los CodOperario de todos los cierres del día HASTA el actual
+        $stmtOps = $conn->prepare("SELECT DISTINCT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal AND CodigoCierre <= :cod_cierre");
+        $stmtOps->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'cod_cierre' => $codCierreActual]);
+        $operarios = $stmtOps->fetchAll(PDO::FETCH_COLUMN);
+        $operarios_in = empty($operarios) ? "0" : implode(',', array_map('intval', array_filter($operarios)));
+
+        $condicionOperario = " AND (CodOperario IN ($operarios_in)";
         if ($esUltimoCierre) {
             $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal)";
         }
         $condicionOperario .= ")";
 
         $stmtComp = $conn->prepare("SELECT SUM(COALESCE(CostoTotal, 0)) AS total FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA'" . $condicionOperario);
-        $stmtComp->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'cod_operario' => $codOperarioCierre]);
+        $stmtComp->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
         $rowComp = $stmtComp->fetch(PDO::FETCH_ASSOC);
         $compras_caja = (float)($rowComp['total'] ?? 0);
 
