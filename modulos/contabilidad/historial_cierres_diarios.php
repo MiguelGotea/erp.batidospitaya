@@ -88,6 +88,7 @@ $puedeExportar = tienePermiso('balance_cierre_diario', 'exportar', $cargoOperari
                                     Observaciones
                                     <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
+                                <th>Alertas</th>
                                 <th style="width:90px; text-align:center;">Ver</th>
                             </tr>
                         </thead>

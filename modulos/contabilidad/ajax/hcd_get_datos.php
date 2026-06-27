@@ -41,6 +41,11 @@ try {
                 cd.CodOperario,
                 cd.Faltante,
                 cd.Observaciones,
+                cd.MFCor,
+                cd.MFDol,
+                cd.TotalPOS,
+                cd.TotalTransferencia,
+                cd.TotalPedidosYa,
                 COALESCE(s.nombre, CONCAT('Sucursal ', cd.Sucursal)) AS nombre_sucursal,
                 TRIM(REGEXP_REPLACE(CONCAT_WS(' ',
                     COALESCE(o.Nombre,''),
@@ -92,6 +97,13 @@ try {
             }
         }
 
+        $minHoraInicial = "23:59:59";
+        $maxHoraFinal   = "00:00:00";
+        foreach ($lista as $c) {
+             if (!empty($c['HoraInicial']) && $c['HoraInicial'] < $minHoraInicial) $minHoraInicial = $c['HoraInicial'];
+             if (!empty($c['HoraFinal']) && $c['HoraFinal'] > $maxHoraFinal) $maxHoraFinal = $c['HoraFinal'];
+        }
+
         // Extraer el cierre final de cada grupo y ordenarlos por HoraInicial ASC
         $finalesDia = [];
         foreach ($grupos as $g) {
@@ -99,6 +111,20 @@ try {
             usort($ordenados, fn($a, $b) => (int)$b['CodigoCierre'] - (int)$a['CodigoCierre']);
             $final                    = $ordenados[0];
             $final['num_precierres']  = count($ordenados) - 1;
+            
+            $tiene_precierre_anulado = false;
+            foreach ($ordenados as $c) {
+                $ini = horaAMin($c['HoraInicial']);
+                $fin = horaAMin($c['HoraFinal']);
+                $diff = $fin - $ini;
+                if ($diff < 0) $diff += 24 * 60;
+                if ($diff < 30) {
+                    $tiene_precierre_anulado = true;
+                    break;
+                }
+            }
+            $final['tiene_precierre_anulado'] = $tiene_precierre_anulado;
+            
             $final['cajero'] = trim($final['cajero'] ?? '');
             if ($final['cajero'] === '') {
                 $final['cajero'] = 'Sin cajero';
@@ -109,10 +135,8 @@ try {
         // Ordenar los finales del día por HoraInicial ASC para calcular el desagregado
         usort($finalesDia, fn($a, $b) => horaAMin($a['HoraInicial']) - horaAMin($b['HoraInicial']));
 
-        // Calcular FaltanteDesagregado: cierre_i - cierre_(i-1);
-        // el primer cierre del día conserva su propio Faltante
         $faltanteAnterior = null;
-        foreach ($finalesDia as &$fila) {
+        foreach ($finalesDia as $idx => &$fila) {
             $faltanteActual = (int)($fila['Faltante'] ?? 0);
             if ($faltanteAnterior === null) {
                 $fila['FaltanteDesagregado'] = $faltanteActual;
@@ -120,6 +144,11 @@ try {
                 $fila['FaltanteDesagregado'] = $faltanteActual - $faltanteAnterior;
             }
             $faltanteAnterior = $faltanteActual;
+            
+            $fila['isFirstClosure'] = ($idx === 0);
+            $fila['isLastClosure']  = ($idx === count($finalesDia) - 1);
+            $fila['minHoraInicialDia'] = $minHoraInicial;
+            $fila['maxHoraFinalDia'] = $maxHoraFinal;
         }
         unset($fila);
 
@@ -216,6 +245,95 @@ try {
     $total    = count($cierresFinales);
     $offset   = ($pagina - 1) * $porPagina;
     $paginados = array_slice($cierresFinales, $offset, $porPagina);
+
+    // ── Enriquecer Paginados con Alertas ──────────────────────────────────────
+    foreach ($paginados as &$p) {
+        $alertas = [];
+
+        if (!empty($p['tiene_precierre_anulado'])) {
+            $alertas[] = ['tipo' => 'danger', 'texto' => 'Precierre Anulado'];
+        }
+
+        $fecha = $p['Fecha'];
+        $sucursal = $p['Sucursal'];
+
+        // Facturación fuera de rango
+        if (!empty($p['isFirstClosure'])) {
+            $stmtFuera = $conn->prepare("SELECT Hora FROM VentasGlobalesAccessCSV WHERE Fecha = :fecha AND local = :sucursal AND Anulado = 0 AND Hora < :minHora ORDER BY Hora ASC");
+            $stmtFuera->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'minHora' => $p['minHoraInicialDia']]);
+            $fuera = $stmtFuera->fetchAll(PDO::FETCH_ASSOC);
+            if ($fuera) {
+                $horasFormat = array_map(function($r) { return date("h:i A", strtotime($r['Hora'])); }, $fuera);
+                $horasFormat = array_unique($horasFormat);
+                $alertas[] = ['tipo' => 'warning', 'texto' => 'Facturas antes de apertura: ' . implode(', ', $horasFormat)];
+            }
+        }
+        if (!empty($p['isLastClosure'])) {
+            $stmtFuera2 = $conn->prepare("SELECT Hora FROM VentasGlobalesAccessCSV WHERE Fecha = :fecha AND local = :sucursal AND Anulado = 0 AND Hora > :maxHora ORDER BY Hora ASC");
+            $stmtFuera2->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'maxHora' => $p['maxHoraFinalDia']]);
+            $fuera = $stmtFuera2->fetchAll(PDO::FETCH_ASSOC);
+            if ($fuera) {
+                $horasFormat = array_map(function($r) { return date("h:i A", strtotime($r['Hora'])); }, $fuera);
+                $horasFormat = array_unique($horasFormat);
+                $alertas[] = ['tipo' => 'warning', 'texto' => 'Facturas después de cierre: ' . implode(', ', $horasFormat)];
+            }
+        }
+
+        // Faltante Calculado vs Guardado
+        $stmtEI = $conn->prepare("SELECT Dinero, TipoCambio_C FROM msaccess_masivo_EstadoInicial WHERE Fecha = :fecha AND Sucursal = :sucursal LIMIT 1");
+        $stmtEI->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+        $rowEI = $stmtEI->fetch(PDO::FETCH_ASSOC);
+        $caja_inicial = $rowEI ? (float)$rowEI['Dinero'] : 0;
+        $tipo_cambio  = $rowEI ? (float)$rowEI['TipoCambio_C'] : 1;
+        if ($tipo_cambio <= 0) $tipo_cambio = 1;
+
+        $sqlVentas = "SELECT sub.Modalidad, SUM(sub.MontoFactura) AS total
+                      FROM (
+                          SELECT DISTINCT v.CodPedido, v.Modalidad, v.MontoFactura
+                          FROM VentasGlobalesAccessCSV v
+                          WHERE v.Fecha = :fecha AND v.local = :sucursal AND v.Anulado = 0 AND v.Hora <= :hora_final
+                      ) sub GROUP BY sub.Modalidad";
+        $stmtV = $conn->prepare($sqlVentas);
+        $stmtV->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'hora_final' => $p['HoraFinal']]);
+        $rowsVentas = $stmtV->fetchAll(PDO::FETCH_ASSOC);
+        $efectivo_sistema = 0;
+        foreach ($rowsVentas as $rv) {
+            if (strtoupper(trim($rv['Modalidad'])) === 'EFECTIVO') {
+                $efectivo_sistema = (float)$rv['total'];
+            }
+        }
+
+        $stmtDep = $conn->prepare("SELECT Monto, Denominacion FROM msaccess_masivo_Depositos WHERE Fecha = :fecha AND Sucursal = :sucursal");
+        $stmtDep->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+        $rowsDep = $stmtDep->fetchAll(PDO::FETCH_ASSOC);
+        $aligeramientos = 0;
+        foreach ($rowsDep as $dep) {
+            $monto = (float)$dep['Monto'];
+            $denom = strtolower(trim($dep['Denominacion']));
+            if ($denom === 'dolares' || $denom === 'dólares') $monto *= $tipo_cambio;
+            $aligeramientos += $monto;
+        }
+
+        $stmtComp = $conn->prepare("SELECT SUM(COALESCE(CostoTotal, 0)) AS total FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA'");
+        $stmtComp->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+        $rowComp = $stmtComp->fetch(PDO::FETCH_ASSOC);
+        $compras_caja = (float)($rowComp['total'] ?? 0);
+
+        $mf_cor = (float)$p['MFCor'];
+        $mf_dol = (float)$p['MFDol'];
+        $conteo_caja = $mf_cor + ($mf_dol * $tipo_cambio);
+
+        $efectivoAEntregar = $caja_inicial + $efectivo_sistema - $aligeramientos - $compras_caja;
+        $faltanteCalculado = $conteo_caja - $efectivoAEntregar;
+        $faltanteGuardado = (float)$p['Faltante'];
+
+        if (abs($faltanteCalculado - $faltanteGuardado) > 5) {
+            $alertas[] = ['tipo' => 'danger', 'texto' => 'Incongruencia de Balance (Calculado C$ ' . number_format($faltanteCalculado, 1) . ' vs Guardado C$ ' . number_format($faltanteGuardado, 1) . ')'];
+        }
+
+        $p['alertas'] = $alertas;
+    }
+    unset($p);
 
     echo json_encode(['success' => true, 'datos' => $paginados, 'total_registros' => $total]);
 

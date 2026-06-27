@@ -57,7 +57,7 @@ $(document).ready(function () {
 // ── Cargar datos ──────────────────────────────────────────────
 function cargarDatos() {
     const tbody = $('#hcdTbody');
-    tbody.html('<tr><td colspan="10" class="text-center py-5"><div class="spinner-border text-success spinner-border-sm"></div> <span class="text-muted ms-2">Cargando historial...</span></td></tr>');
+    tbody.html('<tr><td colspan="11" class="text-center py-5"><div class="spinner-border text-success spinner-border-sm"></div> <span class="text-muted ms-2">Cargando historial...</span></td></tr>');
 
     $.ajax({
         url:      'ajax/hcd_get_datos.php',
@@ -71,7 +71,7 @@ function cargarDatos() {
         },
         success: function (resp) {
             if (!resp.success) {
-                tbody.html(`<tr><td colspan="10" class="text-center text-danger py-4">${resp.message || 'Error al cargar datos'}</td></tr>`);
+                tbody.html(`<tr><td colspan="11" class="text-center text-danger py-4">${resp.message || 'Error al cargar datos'}</td></tr>`);
                 return;
             }
             totalRegistros = resp.total_registros;
@@ -80,7 +80,7 @@ function cargarDatos() {
             actualizarIndicadoresFiltros();
         },
         error: function () {
-            tbody.html('<tr><td colspan="10" class="text-center text-danger py-4">Error de conexión con el servidor.</td></tr>');
+            tbody.html('<tr><td colspan="11" class="text-center text-danger py-4">Error de conexión con el servidor.</td></tr>');
         }
     });
 }
@@ -93,7 +93,7 @@ function renderizarTabla(datos) {
     if (!datos || datos.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="10">
+                <td colspan="11">
                     <div class="hcd-empty">
                         <i class="bi bi-inbox"></i>
                         <p>No se encontraron cierres con los filtros aplicados.</p>
@@ -120,6 +120,14 @@ function renderizarTabla(datos) {
         // URL para botón Ver: pasa fecha, sucursal y código de cierre
         const urlVer = `balance_cierre_diario.php?fecha=${encodeURIComponent(row.Fecha)}&sucursal=${encodeURIComponent(row.Sucursal)}&cierre=${encodeURIComponent(row.CodigoCierre)}`;
 
+        // Renderizar Alertas
+        let alertasHtml = '';
+        if (row.alertas && row.alertas.length > 0) {
+            alertasHtml = row.alertas.map(a => `<div class="badge bg-${a.tipo} mb-1" style="white-space: normal; text-align: left; display: block;">${escHtml(a.texto)}</div>`).join('');
+        } else {
+            alertasHtml = '<span class="text-muted small">—</span>';
+        }
+
         const tr = `
             <tr>
                 <td>${escHtml(row.nombre_sucursal || '—')}</td>
@@ -131,6 +139,7 @@ function renderizarTabla(datos) {
                 <td class="text-nowrap">${hiStr}</td>
                 <td class="text-nowrap">${hfStr}</td>
                 <td>${escHtml(obs || '—')}</td>
+                <td>${alertasHtml}</td>
                 <td class="text-center">
                     <a href="${urlVer}" target="_blank" class="btn-hcd-ver">
                         <i class="bi bi-eye"></i> Ver
