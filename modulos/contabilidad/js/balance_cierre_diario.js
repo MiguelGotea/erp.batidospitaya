@@ -410,15 +410,15 @@ function renderizarDetalle() {
         if (coincide) {
             tooltipTitle = "El resultado calculado coincide con el cierre real guardado en caja.";
             iconHtml = `<i class="bi bi-check-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="${tooltipTitle}" style="font-size: 1.25rem; cursor: pointer;"></i>`;
-            elCalc.html(`${calcText} (Coincide)`).css({ opacity: 0.8, fontWeight: 'normal', color: 'inherit' }).removeClass('text-danger fw-bold');
+            // No mostramos el texto si coincide
         } else {
             tooltipTitle = "Incongruencia detectada: El resultado calculado difiere del cierre real.";
             iconHtml = `<i class="bi bi-exclamation-triangle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="${tooltipTitle}" style="font-size: 1.25rem; cursor: pointer;"></i>`;
             elCalc.html(`${calcText} (Incongruencia)`).css({ opacity: 1 }).addClass('text-danger fw-bold');
+            elCalc.show();
         }
 
         elSync.html(iconHtml).show();
-        elCalc.show();
 
         // Inicializar el tooltip de Bootstrap 5
         if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
