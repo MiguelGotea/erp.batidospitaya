@@ -609,7 +609,7 @@ function abrirDetalleCompras() {
     if (!cierreActivo) return;
 
     $('#modalComprasSubtitle').text(`Fecha: ${formatFecha($('#filtroFecha').val())}`);
-    $('#tbodyDetalleCompras').html('<tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div> Cargando...</td></tr>');
+    $('#tbodyDetalleCompras').html('<tr><td colspan="8" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div> Cargando...</td></tr>');
     $('#modalTotalCompras').text('...');
     $('#modalTotalCostoCompras').text('...');
 
@@ -624,11 +624,12 @@ function abrirDetalleCompras() {
             fecha:    $('#filtroFecha').val(),
             sucursal: $('#filtroSucursal').val(),
             cod_operario: cierreActivo.CodOperario,
-            cod_cierre: cierreActivo.CodigoCierre
+            cod_cierre: cierreActivo.CodigoCierre,
+            hora_final: cierreActivo.HoraFinal
         },
         success: function (resp) {
             if (!resp.success) {
-                $('#tbodyDetalleCompras').html(`<tr><td colspan="6" class="text-center text-danger py-3">${resp.message}</td></tr>`);
+                $('#tbodyDetalleCompras').html(`<tr><td colspan="8" class="text-center text-danger py-3">${resp.message}</td></tr>`);
                 return;
             }
 
@@ -637,9 +638,11 @@ function abrirDetalleCompras() {
             let html = '';
 
             rows.forEach(function (r) {
+                const hora = r.Hora ? formatHora(r.Hora) : '—';
                 const cajero = r.cajero ? r.cajero : (r.CodOperario ? `Op #${r.CodOperario}` : '—');
                 html += `
                     <tr>
+                        <td>${hora}</td>
                         <td>${r.NumeroFactura || '—'}</td>
                         <td>${r.CodProveedor || '—'}</td>
                         <td>${r.Destino || '—'}</td>
@@ -653,7 +656,7 @@ function abrirDetalleCompras() {
             });
 
             if (rows.length === 0) {
-                html = '<tr><td colspan="7" class="text-center text-muted py-4">Sin compras de caja en esta fecha</td></tr>';
+                html = '<tr><td colspan="8" class="text-center text-muted py-4">Sin compras de caja en esta fecha</td></tr>';
             }
 
             $('#tbodyDetalleCompras').html(html);
@@ -661,7 +664,7 @@ function abrirDetalleCompras() {
             $('#modalTotalCostoCompras').text(fmt(totalCosto));
         },
         error: function () {
-            $('#tbodyDetalleCompras').html('<tr><td colspan="6" class="text-center text-danger py-3">Error de conexión</td></tr>');
+            $('#tbodyDetalleCompras').html('<tr><td colspan="8" class="text-center text-danger py-3">Error de conexión</td></tr>');
         }
     });
 }

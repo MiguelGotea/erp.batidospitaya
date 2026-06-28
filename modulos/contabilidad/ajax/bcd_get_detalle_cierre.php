@@ -163,32 +163,20 @@ try {
     }
 
     // ── 7. Compras de Caja (del día, Tipo = CAJA) ─────────────────────────────
-
-    // Obtener los CodOperario de todos los cierres del día HASTA el actual
-    $stmtOps = $conn->prepare("SELECT DISTINCT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal AND CodigoCierre <= :cod_cierre");
-    $stmtOps->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'cod_cierre' => $cod_cierre]);
-    $operarios = $stmtOps->fetchAll(PDO::FETCH_COLUMN);
-    $operarios_in = empty($operarios) ? "0" : implode(',', array_map('intval', array_filter($operarios)));
-
-    $condicionOperario = " AND (CodOperario IN ($operarios_in)";
-    if ($esUltimoCierre) {
-        $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha2 AND Sucursal = :sucursal2)";
+    $sqlComp = "SELECT SUM(COALESCE(CostoTotal, 0)) AS total
+                FROM msaccess_masivo_Compras
+                WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA'";
+    
+    if (!$esUltimoCierre && $hora_final) {
+        $sqlComp .= " AND Hora >= :min_hora AND Hora <= :hora_final";
     }
-    $condicionOperario .= ")";
-
-    $stmtComp = $conn->prepare(
-        "SELECT SUM(COALESCE(CostoTotal, 0)) AS total
-         FROM msaccess_masivo_Compras
-         WHERE Fecha    = :fecha
-           AND Sucursal = :sucursal
-           AND Tipo     = 'CAJA'
-           $condicionOperario"
-    );
-    $stmtComp->bindValue(':fecha',    $fecha);
+    
+    $stmtComp = $conn->prepare($sqlComp);
+    $stmtComp->bindValue(':fecha', $fecha);
     $stmtComp->bindValue(':sucursal', $sucursal);
-    if ($esUltimoCierre) {
-        $stmtComp->bindValue(':fecha2',    $fecha);
-        $stmtComp->bindValue(':sucursal2', $sucursal);
+    if (!$esUltimoCierre && $hora_final) {
+        $stmtComp->bindValue(':min_hora', $minHoraInicial);
+        $stmtComp->bindValue(':hora_final', $hora_final);
     }
     $stmtComp->execute();
     $rowComp      = $stmtComp->fetch(PDO::FETCH_ASSOC);

@@ -424,6 +424,7 @@ $paramCierre = isset($_GET['cierre']) ? (int) $_GET['cierre'] : 0;
                         <table class="table table-sm table-hover mb-0">
                             <thead class="table-dark">
                                 <tr>
+                                    <th>Hora</th>
                                     <th>Nº Factura</th>
                                     <th>Proveedor</th>
                                     <th>Destino</th>

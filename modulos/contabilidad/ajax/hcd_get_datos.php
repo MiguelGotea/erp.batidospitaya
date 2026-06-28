@@ -336,47 +336,53 @@ try {
         }
 
         if ($esUltimoCierre) {
-            $stmtDepFuera = $conn->prepare("SELECT Hora FROM msaccess_masivo_Depositos WHERE Fecha = :fecha AND Sucursal = :sucursal AND (Hora < :minHora OR Hora > :maxHora) ORDER BY Hora ASC");
+            $stmtDepFuera = $conn->prepare("SELECT Hora FROM msaccess_masivo_Depositos WHERE Fecha = :fecha AND Sucursal = :sucursal AND Hora != '' AND Hora IS NOT NULL AND (Hora < :minHora OR Hora > :maxHora) ORDER BY Hora ASC");
             $stmtDepFuera->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'minHora' => $p['minHoraInicialDia'], 'maxHora' => $p['maxHoraFinalDia']]);
             $depsFuera = $stmtDepFuera->fetchAll(PDO::FETCH_ASSOC);
             if ($depsFuera) {
-                $horasFormat = array_map(function($r) { return $r['Hora'] ? date("h:i A", strtotime($r['Hora'])) : '—'; }, $depsFuera);
+                $horasFormat = array_map(function($r) { return date("h:i A", strtotime($r['Hora'])); }, $depsFuera);
                 $horasFormat = array_unique($horasFormat);
                 $alertas[] = ['tipo' => 'warning', 'texto' => 'Aligeramientos fuera de horario de turnos: ' . implode(', ', $horasFormat)];
             }
+
+            $stmtDepSinHora = $conn->prepare("SELECT COUNT(*) FROM msaccess_masivo_Depositos WHERE Fecha = :fecha AND Sucursal = :sucursal AND (Hora IS NULL OR Hora = '')");
+            $stmtDepSinHora->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+            $countDepSinHora = (int)$stmtDepSinHora->fetchColumn();
+            if ($countDepSinHora > 0) {
+                $alertas[] = ['tipo' => 'warning', 'texto' => "Aligeramientos sin hora registrada: $countDepSinHora"];
+            }
         }
 
-        // Obtener los CodOperario de todos los cierres del día HASTA el actual
-        $stmtOps = $conn->prepare("SELECT DISTINCT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal AND CodigoCierre <= :cod_cierre");
-        $stmtOps->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'cod_cierre' => $codCierreActual]);
-        $operarios = $stmtOps->fetchAll(PDO::FETCH_COLUMN);
-        $operarios_in = empty($operarios) ? "0" : implode(',', array_map('intval', array_filter($operarios)));
-
-        $condicionOperario = " AND (CodOperario IN ($operarios_in)";
-        if ($esUltimoCierre) {
-            $condicionOperario .= " OR CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha2 AND Sucursal = :sucursal2)";
+        $sqlComp = "SELECT SUM(COALESCE(CostoTotal, 0)) AS total FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA'";
+        if (!$esUltimoCierre && !empty($p['HoraFinal'])) {
+            $sqlComp .= " AND Hora >= :min_hora AND Hora <= :hora_final";
         }
-        $condicionOperario .= ")";
-
-        $stmtComp = $conn->prepare("SELECT SUM(COALESCE(CostoTotal, 0)) AS total FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA'" . $condicionOperario);
-        
-        $paramsComp = ['fecha' => $fecha, 'sucursal' => $sucursal];
-        if ($esUltimoCierre) {
-            $paramsComp['fecha2'] = $fecha;
-            $paramsComp['sucursal2'] = $sucursal;
+        $stmtComp = $conn->prepare($sqlComp);
+        $stmtComp->bindValue(':fecha', $fecha);
+        $stmtComp->bindValue(':sucursal', $sucursal);
+        if (!$esUltimoCierre && !empty($p['HoraFinal'])) {
+            $stmtComp->bindValue(':min_hora', $p['minHoraInicialDia']);
+            $stmtComp->bindValue(':hora_final', $p['HoraFinal']);
         }
-        $stmtComp->execute($paramsComp);
-        
+        $stmtComp->execute();
         $rowComp = $stmtComp->fetch(PDO::FETCH_ASSOC);
         $compras_caja = (float)($rowComp['total'] ?? 0);
 
         if ($esUltimoCierre) {
-            $sqlHuerfanas = "SELECT COUNT(*) FROM msaccess_masivo_Compras WHERE Fecha = :fecha1 AND Sucursal = :sucursal1 AND Tipo = 'CAJA' AND (CodOperario IS NULL OR CodOperario = '' OR CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha2 AND Sucursal = :sucursal2))";
-            $stmtHuerfanas = $conn->prepare($sqlHuerfanas);
-            $stmtHuerfanas->execute(['fecha1' => $fecha, 'sucursal1' => $sucursal, 'fecha2' => $fecha, 'sucursal2' => $sucursal]);
-            $countHuerfanas = (int)$stmtHuerfanas->fetchColumn();
-            if ($countHuerfanas > 0) {
-                $alertas[] = ['tipo' => 'warning', 'texto' => "Facturas de compras reasignadas: $countHuerfanas sin cierre de turno"];
+            $stmtCompFuera = $conn->prepare("SELECT Hora FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA' AND Hora != '' AND Hora IS NOT NULL AND (Hora < :minHora OR Hora > :maxHora) ORDER BY Hora ASC");
+            $stmtCompFuera->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'minHora' => $p['minHoraInicialDia'], 'maxHora' => $p['maxHoraFinalDia']]);
+            $compsFuera = $stmtCompFuera->fetchAll(PDO::FETCH_ASSOC);
+            if ($compsFuera) {
+                $horasFormat = array_map(function($r) { return date("h:i A", strtotime($r['Hora'])); }, $compsFuera);
+                $horasFormat = array_unique($horasFormat);
+                $alertas[] = ['tipo' => 'warning', 'texto' => 'Facturas de compras fuera de horario de turnos: ' . implode(', ', $horasFormat)];
+            }
+
+            $stmtCompSinHora = $conn->prepare("SELECT COUNT(*) FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA' AND (Hora IS NULL OR Hora = '')");
+            $stmtCompSinHora->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+            $countCompSinHora = (int)$stmtCompSinHora->fetchColumn();
+            if ($countCompSinHora > 0) {
+                $alertas[] = ['tipo' => 'warning', 'texto' => "Facturas de compras sin hora registrada: $countCompSinHora"];
             }
         }
 

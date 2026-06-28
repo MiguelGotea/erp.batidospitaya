@@ -8,6 +8,7 @@ try {
     $sucursal     = isset($_POST['sucursal'])     ? $_POST['sucursal'] : null;
     $cod_operario = isset($_POST['cod_operario']) ? (int)$_POST['cod_operario'] : null;
     $cod_cierre   = isset($_POST['cod_cierre'])   ? (int)$_POST['cod_cierre'] : null;
+    $hora_final   = isset($_POST['hora_final'])   ? $_POST['hora_final'] : null;
 
     if (!$fecha || !$sucursal || !$cod_operario) {
         echo json_encode(['success' => false, 'message' => 'Faltan parámetros requeridos.']);
@@ -23,17 +24,10 @@ try {
     $maxCodigoCierre = $stmtMaxCierre->fetchColumn();
     $esUltimoCierre = ($cod_cierre == $maxCodigoCierre);
 
-    // Obtener los CodOperario de todos los cierres del día HASTA el actual
-    $stmtOps = $conn->prepare("SELECT DISTINCT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal AND CodigoCierre <= :cod_cierre");
-    $stmtOps->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'cod_cierre' => $cod_cierre]);
-    $operarios = $stmtOps->fetchAll(PDO::FETCH_COLUMN);
-    $operarios_in = empty($operarios) ? "0" : implode(',', array_map('intval', array_filter($operarios)));
-
-    $condicionOperario = " AND (c.CodOperario IN ($operarios_in)";
-    if ($esUltimoCierre) {
-        $condicionOperario .= " OR c.CodOperario IS NULL OR c.CodOperario = '' OR c.CodOperario NOT IN (SELECT CodOperario FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha2 AND Sucursal = :sucursal2)";
-    }
-    $condicionOperario .= ")";
+    // Obtener la hora inicial del primer cierre del día
+    $stmtMin = $conn->prepare("SELECT MIN(HoraInicial) FROM msaccess_masivo_CierreDiario WHERE Fecha = :fecha AND Sucursal = :sucursal");
+    $stmtMin->execute(['fecha' => $fecha, 'sucursal' => $sucursal]);
+    $minHoraInicial = $stmtMin->fetchColumn();
 
     $sql = "SELECT
                 c.CodIngresoAlmacen,
@@ -45,6 +39,7 @@ try {
                 c.Observaciones,
                 c.Tipo,
                 c.Fecha,
+                c.Hora,
                 c.CodOperario,
                 TRIM(REGEXP_REPLACE(CONCAT_WS(' ',
                     COALESCE(o.Nombre,''),
@@ -55,16 +50,20 @@ try {
             LEFT JOIN Operarios o ON o.CodOperario = c.CodOperario
             WHERE c.Fecha    = :fecha
               AND c.Sucursal = :sucursal
-              AND c.Tipo     = 'CAJA'
-              $condicionOperario
-            ORDER BY c.CodIngresoAlmacen ASC";
+              AND c.Tipo     = 'CAJA'";
+
+    if (!$esUltimoCierre && $hora_final) {
+        $sql .= " AND c.Hora >= :min_hora AND c.Hora <= :hora_final";
+    }
+
+    $sql .= " ORDER BY c.CodIngresoAlmacen ASC";
 
     $stmt = $conn->prepare($sql);
     $stmt->bindValue(':fecha',    $fecha);
     $stmt->bindValue(':sucursal', $sucursal);
-    if ($esUltimoCierre) {
-        $stmt->bindValue(':fecha2',    $fecha);
-        $stmt->bindValue(':sucursal2', $sucursal);
+    if (!$esUltimoCierre && $hora_final) {
+        $stmt->bindValue(':min_hora', $minHoraInicial);
+        $stmt->bindValue(':hora_final', $hora_final);
     }
     $stmt->execute();
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
