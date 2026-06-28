@@ -195,11 +195,11 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                                 <input type="text" class="form-control" id="colCargo" name="cargo" required placeholder="Ej: Líder de Tienda">
                             </div>
                             
-                            <!-- Departamento -->
-                            <div class="col-md-6">
-                                <label for="colDepartamento" class="form-label fw-bold">Departamento / Área <span class="text-danger">*</span></label>
-                                <select class="form-select" id="colDepartamento" name="departamento" required>
-                                    <option value="" disabled selected>Selecciona una opción</option>
+                            <!-- Departamento (Ocultado del modal por solicitud, no requerido) -->
+                            <div class="col-md-6" style="display: none;">
+                                <label for="colDepartamento" class="form-label fw-bold">Departamento / Área</label>
+                                <select class="form-select" id="colDepartamento" name="departamento">
+                                    <option value="General" selected>General</option>
                                     <option value="Operaciones y Tiendas">Operaciones y Tiendas</option>
                                     <option value="Logística y Suministros">Logística y Suministros</option>
                                     <option value="Administración y Finanzas">Administración y Finanzas</option>
@@ -239,7 +239,7 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                                     <div class="col">
                                         <label for="colFoto" class="form-label fw-bold">Fotografía del Colaborador</label>
                                         <input type="file" class="form-control" id="colFoto" name="foto" accept="image/jpeg,image/png,image/webp">
-                                        <div class="form-text small">Recomendado: Cuadrada (400x400px), JPG/WebP. Tamaño máx: 2MB.</div>
+                                        <div class="form-text small">Recomendado: Cuadrada (400x400px), JPG/WebP. Tamaño máx: 50MB.</div>
                                     </div>
                                 </div>
                             </div>
