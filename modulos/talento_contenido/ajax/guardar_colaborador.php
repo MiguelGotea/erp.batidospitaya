@@ -31,7 +31,7 @@ try {
     $orden = isset($_POST['orden']) ? intval($_POST['orden']) : 0;
     $activo = isset($_POST['activo']) ? intval($_POST['activo']) : 1;
 
-    if (empty($nombre) || empty($cargo) || empty($departamento) || empty($testimonio)) {
+    if (empty($nombre) || empty($cargo) || empty($testimonio)) {
         throw new Exception("Por favor rellena todos los campos obligatorios (*).");
     }
 
@@ -45,8 +45,8 @@ try {
             throw new Exception("El tipo de archivo de imagen no está permitido (solo JPG, PNG o WebP).");
         }
 
-        if ($file['size'] > 2 * 1024 * 1024) {
-            throw new Exception("La imagen excede el tamaño máximo permitido de 2MB.");
+        if ($file['size'] > 50 * 1024 * 1024) {
+            throw new Exception("La imagen excede el tamaño máximo permitido de 50MB.");
         }
 
         // Crear carpeta destino si no existe

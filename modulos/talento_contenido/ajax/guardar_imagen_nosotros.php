@@ -46,10 +46,10 @@ if (!in_array($mime, $allowed)) {
     exit();
 }
 
-$maxSize = 5 * 1024 * 1024; // 5MB
+$maxSize = 50 * 1024 * 1024; // 50MB
 if ($file['size'] > $maxSize) {
     http_response_code(400);
-    echo json_encode(['error' => 'La imagen supera el tamaño máximo de 5MB.']);
+    echo json_encode(['error' => 'La imagen supera el tamaño máximo de 50MB.']);
     exit();
 }
 
