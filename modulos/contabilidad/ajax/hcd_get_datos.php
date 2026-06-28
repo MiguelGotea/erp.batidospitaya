@@ -270,9 +270,8 @@ try {
             $stmtFuera->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'minHora' => $p['minHoraInicialDia']]);
             $fuera = $stmtFuera->fetchAll(PDO::FETCH_ASSOC);
             if ($fuera) {
-                $horasFormat = array_map(function($r) { return date("h:i A", strtotime($r['Hora'])); }, $fuera);
-                $horasFormat = array_unique($horasFormat);
-                $alertas[] = ['tipo' => 'warning', 'texto' => 'Facturas antes de apertura: ' . implode(', ', $horasFormat)];
+                $cantidad = count($fuera);
+                $alertas[] = ['tipo' => 'warning', 'texto' => "Facturas antes de apertura: $cantidad"];
             }
         }
         if (!empty($p['isLastClosure'])) {
@@ -280,9 +279,8 @@ try {
             $stmtFuera2->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'maxHora' => $p['maxHoraFinalDia']]);
             $fuera = $stmtFuera2->fetchAll(PDO::FETCH_ASSOC);
             if ($fuera) {
-                $horasFormat = array_map(function($r) { return date("h:i A", strtotime($r['Hora'])); }, $fuera);
-                $horasFormat = array_unique($horasFormat);
-                $alertas[] = ['tipo' => 'warning', 'texto' => 'Facturas después de cierre: ' . implode(', ', $horasFormat)];
+                $cantidad = count($fuera);
+                $alertas[] = ['tipo' => 'warning', 'texto' => "Facturas después de cierre: $cantidad"];
             }
         }
 
@@ -340,9 +338,8 @@ try {
             $stmtDepFuera->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'minHora' => $p['minHoraInicialDia'], 'maxHora' => $p['maxHoraFinalDia']]);
             $depsFuera = $stmtDepFuera->fetchAll(PDO::FETCH_ASSOC);
             if ($depsFuera) {
-                $horasFormat = array_map(function($r) { return date("h:i A", strtotime($r['Hora'])); }, $depsFuera);
-                $horasFormat = array_unique($horasFormat);
-                $alertas[] = ['tipo' => 'warning', 'texto' => 'Aligeramientos fuera de horario de turnos: ' . implode(', ', $horasFormat)];
+                $cantidad = count($depsFuera);
+                $alertas[] = ['tipo' => 'warning', 'texto' => "Aligeramientos fuera de horario de turnos: $cantidad"];
             }
 
             $stmtDepSinHora = $conn->prepare("SELECT COUNT(*) FROM msaccess_masivo_Depositos WHERE Fecha = :fecha AND Sucursal = :sucursal AND (Hora IS NULL OR Hora = '')");
@@ -373,9 +370,8 @@ try {
             $stmtCompFuera->execute(['fecha' => $fecha, 'sucursal' => $sucursal, 'minHora' => $p['minHoraInicialDia'], 'maxHora' => $p['maxHoraFinalDia']]);
             $compsFuera = $stmtCompFuera->fetchAll(PDO::FETCH_ASSOC);
             if ($compsFuera) {
-                $horasFormat = array_map(function($r) { return date("h:i A", strtotime($r['Hora'])); }, $compsFuera);
-                $horasFormat = array_unique($horasFormat);
-                $alertas[] = ['tipo' => 'warning', 'texto' => 'Facturas de compras fuera de horario de turnos: ' . implode(', ', $horasFormat)];
+                $cantidad = count($compsFuera);
+                $alertas[] = ['tipo' => 'warning', 'texto' => "Facturas de compras fuera de horario de turnos: $cantidad"];
             }
 
             $stmtCompSinHora = $conn->prepare("SELECT COUNT(*) FROM msaccess_masivo_Compras WHERE Fecha = :fecha AND Sucursal = :sucursal AND Tipo = 'CAJA' AND (Hora IS NULL OR Hora = '')");
