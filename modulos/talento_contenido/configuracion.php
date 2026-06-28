@@ -259,11 +259,39 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                                     <div class="form-text small">Color del texto de contenido general.</div>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Imagen de Fondo (Ruta relativa o URL)</label>
-                                    <input type="text" class="form-control" name="imagen_fondo" id="cfgImagenFondo"
-                                        placeholder="Ej: assets/img/fondo_patron.png (dejar en blanco para sin imagen)">
-                                    <div class="form-text small">Ruta de la imagen de fondo del portal. Si no hay imagen, se usa solo el color de fondo.</div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold"><i class="bi bi-card-image me-1"></i> Imagen de Fondo del Portal</label>
+                                    <!-- Campo oculto que guarda la ruta actual; se actualiza por JS al subir una imagen nueva -->
+                                    <input type="hidden" name="imagen_fondo" id="cfgImagenFondo">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <?php if ($canEdit): ?>
+                                        <input type="file" class="form-control" id="inputImagenFondo"
+                                               accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                                               onchange="previsualizarFondo(this)"
+                                               style="max-width: 340px;">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSubirFondo"
+                                                onclick="subirImagenFondo()">
+                                            <i class="bi bi-cloud-upload me-1"></i> Subir imagen
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" id="btnQuitarFondo"
+                                                onclick="quitarImagenFondo()" style="display:none;">
+                                            <i class="bi bi-x-circle me-1"></i> Quitar fondo
+                                        </button>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="form-text small">Si no hay imagen, se usa solo el color de fondo. Formatos: JPG, PNG, WebP, SVG, GIF. Máx: 20 MB.</div>
+                                    <!-- Vista previa antes de subir -->
+                                    <div id="fondoPreviewWrapper" class="mt-2" style="display:none;">
+                                        <p class="small fw-bold text-muted mb-1">Vista previa:</p>
+                                        <img id="fondoPreview" src="" alt="Vista previa del fondo"
+                                             style="max-width:100%; max-height:140px; border-radius:6px; border:1px solid #dee2e6; object-fit:cover;">
+                                    </div>
+                                    <!-- Fondo actual guardado en BD -->
+                                    <div id="fondoActualWrapper" class="mt-2" style="display:none;">
+                                        <p class="small fw-bold text-muted mb-1">Imagen de fondo actual:</p>
+                                        <img id="fondoActual" src="" alt="Fondo actual"
+                                             style="max-width:100%; max-height:140px; border-radius:6px; border:1px solid #dee2e6; object-fit:cover;">
+                                    </div>
                                 </div>
 
                                 <div class="col-md-4">
@@ -368,6 +396,47 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                                     <tr><td colspan="5" class="text-center py-4">Cargando checklist de cultura...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 4: BANNER ÚNETE AL EQUIPO -->
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold text-dark mb-1"><i class="bi bi-image me-2"></i>Banner "Únete al Equipo"</h5>
+                        <p class="text-muted small mb-3">Imagen de banner que aparece en la parte superior de la pestaña <strong>Únete al Equipo</strong> del portal de talento. Formatos permitidos: JPG, PNG, WebP. Tamaño máximo: 20 MB.</p>
+
+                        <?php if ($canEdit): ?>
+                        <form id="formBannerUnete" enctype="multipart/form-data">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Seleccionar imagen</label>
+                                    <input type="file" class="form-control" name="banner_unete" id="inputBannerUnete"
+                                           accept="image/jpeg,image/png,image/webp,image/gif"
+                                           onchange="previsualizarBanner(this)" required>
+                                    <div class="form-text small">Recomendado: imagen panorámica (p. ej. 1920 × 480 px).</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary-custom w-100">
+                                        <i class="bi bi-cloud-upload me-1"></i> Subir Banner
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <?php endif; ?>
+
+                        <!-- Vista previa antes de subir -->
+                        <div class="mt-3" id="bannerUnetePreviewWrapper" style="display:none;">
+                            <p class="small fw-bold text-muted mb-1">Vista previa:</p>
+                            <img id="bannerUnetePreview" src="" alt="Vista previa del banner"
+                                 style="width:100%; max-height:220px; object-fit:cover; border-radius:8px; border:1px solid #dee2e6;">
+                        </div>
+
+                        <!-- Banner actualmente guardado en BD -->
+                        <div class="mt-3" id="bannerUneteActualWrapper" style="display:none;">
+                            <p class="small fw-bold text-muted mb-1">Banner actual en el portal:</p>
+                            <img id="bannerUneteActual" src="" alt="Banner actual"
+                                 style="width:100%; max-height:220px; object-fit:cover; border-radius:8px; border:1px solid #dee2e6;">
                         </div>
                     </div>
                 </div>
@@ -512,6 +581,33 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
             cargarBeneficios();
             cargarCultura();
 
+            // Subir banner Únete al Equipo
+            $('#formBannerUnete').on('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                $.ajax({
+                    url: 'ajax/guardar_banner_unete.php',
+                    method: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    success: function(res) {
+                        Swal.fire('¡Éxito!', res.mensaje, 'success');
+                        // Mostrar el banner recién subido como banner actual
+                        const portalBase = 'https://talento.batidospitaya.com/';
+                        $('#bannerUneteActual').attr('src', portalBase + res.ruta_publica + '?t=' + Date.now());
+                        $('#bannerUneteActualWrapper').show();
+                        $('#bannerUnetePreviewWrapper').hide();
+                        $('#formBannerUnete')[0].reset();
+                    },
+                    error: function(xhr) {
+                        const err = xhr.responseJSON ? xhr.responseJSON.error : 'Error de comunicación';
+                        Swal.fire('Error', err, 'error');
+                    }
+                });
+            });
+
             // Guardar configuración general
             $('#formConfiguracion').on('submit', function(e) {
                 e.preventDefault();
@@ -597,6 +693,96 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
             });
         });
 
+        // --- PREVISUALIZACIÓN FONDO DE PÁGINA ---
+        function previsualizarFondo(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#fondoPreview').attr('src', e.target.result);
+                    $('#fondoPreviewWrapper').show();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function subirImagenFondo() {
+            const input = document.getElementById('inputImagenFondo');
+            if (!input.files || input.files.length === 0) {
+                Swal.fire('Aviso', 'Selecciona primero una imagen.', 'warning');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('imagen_fondo', input.files[0]);
+            $('#btnSubirFondo').prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i> Subiendo...');
+            $.ajax({
+                url: 'ajax/guardar_imagen_fondo.php',
+                method: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: 'json',
+                success: function(res) {
+                    // Actualizar el campo oculto para que formPersonalizacion lo incluya
+                    $('#cfgImagenFondo').val(res.ruta_publica);
+                    // Mostrar como imagen actual
+                    const portalBase = 'https://talento.batidospitaya.com/';
+                    $('#fondoActual').attr('src', portalBase + res.ruta_publica + '?t=' + Date.now());
+                    $('#fondoActualWrapper').show();
+                    $('#fondoPreviewWrapper').hide();
+                    $('#btnQuitarFondo').show();
+                    Swal.fire('¡Éxito!', res.mensaje, 'success');
+                    input.value = '';
+                },
+                error: function(xhr) {
+                    const err = xhr.responseJSON ? xhr.responseJSON.error : 'Error de comunicación';
+                    Swal.fire('Error', err, 'error');
+                },
+                complete: function() {
+                    $('#btnSubirFondo').prop('disabled', false).html('<i class="bi bi-cloud-upload me-1"></i> Subir imagen');
+                }
+            });
+        }
+
+        function quitarImagenFondo() {
+            Swal.fire({
+                title: '¿Quitar imagen de fondo?',
+                text: 'El portal usará solo el color de fondo seleccionado.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, quitar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('#cfgImagenFondo').val('');
+                    $('#fondoActualWrapper').hide();
+                    $('#fondoPreviewWrapper').hide();
+                    $('#btnQuitarFondo').hide();
+                    // Guardar el vaciado inmediatamente
+                    $.ajax({
+                        url: 'ajax/guardar_configuracion.php',
+                        method: 'POST',
+                        data: { imagen_fondo: '' },
+                        dataType: 'json',
+                        success: function() {
+                            Swal.fire('Listo', 'Imagen de fondo eliminada del portal.', 'success');
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- PREVISUALIZACIÓN BANNER ---
+        function previsualizarBanner(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#bannerUnetePreview').attr('src', e.target.result);
+                    $('#bannerUnetePreviewWrapper').show();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
         // --- CONFIGURACIÓN GENERAL ---
         function cargarConfiguracion() {
             $.ajax({
@@ -648,6 +834,22 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
 
                     $('#cfgImagenFondoRepetir').val(data.imagen_fondo_repetir || 'repeat');
                     $('#cfgImagenFondoSize').val(data.imagen_fondo_size || 'auto');
+
+                    // Mostrar banner actual si existe en BD
+                    if (data.banner_unete) {
+                        const portalBase = 'https://talento.batidospitaya.com/';
+                        $('#bannerUneteActual').attr('src', portalBase + data.banner_unete + '?t=' + Date.now());
+                        $('#bannerUneteActualWrapper').show();
+                    }
+
+                    // Mostrar imagen de fondo actual si existe en BD
+                    if (data.imagen_fondo) {
+                        const portalBase = 'https://talento.batidospitaya.com/';
+                        $('#cfgImagenFondo').val(data.imagen_fondo);
+                        $('#fondoActual').attr('src', portalBase + data.imagen_fondo + '?t=' + Date.now());
+                        $('#fondoActualWrapper').show();
+                        $('#btnQuitarFondo').show();
+                    }
                 },
                 error: function() {
                     console.error('Error al cargar configuraciones generales.');
