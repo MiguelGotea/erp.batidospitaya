@@ -112,19 +112,6 @@ try {
             $final                    = $ordenados[0];
             $final['num_precierres']  = count($ordenados) - 1;
             
-            $tiene_precierre_anulado = false;
-            foreach ($ordenados as $c) {
-                $ini = horaAMin($c['HoraInicial']);
-                $fin = horaAMin($c['HoraFinal']);
-                $diff = $fin - $ini;
-                if ($diff < 0) $diff += 24 * 60;
-                if ($diff < 30) {
-                    $tiene_precierre_anulado = true;
-                    break;
-                }
-            }
-            $final['tiene_precierre_anulado'] = $tiene_precierre_anulado;
-            
             $final['cajero'] = trim($final['cajero'] ?? '');
             if ($final['cajero'] === '') {
                 $final['cajero'] = 'Sin cajero';
@@ -255,10 +242,6 @@ try {
         if ($p['Fecha'] === $hoy) {
             $p['alertas'] = [];
             continue;
-        }
-
-        if (!empty($p['tiene_precierre_anulado'])) {
-            $alertas[] = ['tipo' => 'danger', 'texto' => 'Cierre Anulado'];
         }
 
         $fecha = $p['Fecha'];
