@@ -131,7 +131,7 @@ function renderizarTabla(datos) {
         let btnAnular = '';
         if (typeof PUEDE_ANULAR !== 'undefined' && PUEDE_ANULAR) {
             btnAnular = `
-                <button onclick="anularCierre('${row.Fecha}', '${row.Sucursal}', '${row.CodigoCierre}')" class="btn-hcd-ver ms-1" style="color: #dc3545; border-color: transparent;" title="Anular Cierre">
+                <button onclick="anularCierre('${row.Fecha}', '${row.Sucursal}', '${row.CodigoCierre}')" class="btn btn-sm text-white ms-1" style="background-color: #51b8ac; border-color: #51b8ac;" title="Anular Cierre">
                     <i class="bi bi-x-circle"></i> Anular
                 </button>
             `;
@@ -150,7 +150,7 @@ function renderizarTabla(datos) {
                 <td>${escHtml(obs || '—')}</td>
                 <td>${alertasHtml}</td>
                 <td class="text-center" style="white-space: nowrap;">
-                    <a href="${urlVer}" target="_blank" class="btn-hcd-ver">
+                    <a href="${urlVer}" target="_blank" class="btn btn-sm text-white" style="background-color: #51b8ac; border-color: #51b8ac;">
                         <i class="bi bi-eye"></i> Ver
                     </a>
                     ${btnAnular}
