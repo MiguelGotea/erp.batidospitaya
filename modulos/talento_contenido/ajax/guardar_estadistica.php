@@ -19,7 +19,7 @@ if (!tienePermiso('talento_contenido', $action, $cargoOperario)) {
 }
 
 $icono = isset($_POST['icono']) ? trim($_POST['icono']) : '';
-$valor_numero = isset($_POST['valor_numero']) ? intval($_POST['valor_numero']) : 0;
+$valor_numero = isset($_POST['valor_numero']) ? trim($_POST['valor_numero']) : '';
 $sufijo = isset($_POST['sufijo']) ? trim($_POST['sufijo']) : '';
 $etiqueta = isset($_POST['etiqueta']) ? trim($_POST['etiqueta']) : '';
 $orden = isset($_POST['orden']) ? intval($_POST['orden']) : 0;
