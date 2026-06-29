@@ -236,7 +236,7 @@ function renderizarTabla(datos) {
         tr.append(`<td>${renderizarEstadoEditable(row.id, row.status)}</td>`);
 
         // Agendado - con estilos según estado
-        const fechaAgendadoHTML = renderizarFechaAgendado(row.fecha_inicio, row.status);
+        const fechaAgendadoHTML = renderizarFechaAgendado(row);
         tr.append(`<td class="col-agendado">${fechaAgendadoHTML}</td>`);
 
         // Foto
@@ -834,14 +834,23 @@ function formatearFecha(fecha) {
 }
 
 // Renderizar fecha agendado con estilos según estado
-function renderizarFechaAgendado(fechaInicio, status) {
-    if (!fechaInicio) {
-        return '<span class="fecha-sin-programar">Pendiente</span>';
+function renderizarFechaAgendado(row) {
+    const fechaInicio = row.fecha_inicio;
+    const status = row.status;
+    const ticketId = row.id;
+    const totalFotosTrabajo = parseInt(row.total_fotos_trabajo) || 0;
+
+    if (status === 'finalizado') {
+        const displayDate = fechaInicio ? formatearFecha(fechaInicio) : 'Finalizado';
+        let fotosHtml = '';
+        if (totalFotosTrabajo > 0) {
+            fotosHtml = `<span class="badge bg-light text-dark ms-1" style="font-size: 0.7em; padding: 0.2em 0.5em;"><i class="fas fa-camera"></i> ${totalFotosTrabajo}</span>`;
+        }
+        return `<span class="fecha-sin-programar" style="cursor: pointer; background-color: #28a745; border-color: #28a745; color: white;" onclick="verTrabajoFinalizado(${ticketId})" title="Ver trabajo realizado"><i class="bi bi-check-circle"></i> ${displayDate}${fotosHtml}</span>`;
     }
 
-    // Si está finalizado, mostrar con menos realce
-    if (status === 'finalizado') {
-        return `<span class="fecha-finalizado">${formatearFecha(fechaInicio)}</span>`;
+    if (!fechaInicio) {
+        return '<span class="fecha-sin-programar">Pendiente</span>';
     }
 
     // Calcular semana actual
@@ -870,6 +879,111 @@ function renderizarFechaAgendado(fechaInicio, status) {
 
     // Si ya pasó la fecha (atrasado)
     return `<span class="fecha-sin-programar"><i class="bi bi-exclamation-triangle"></i> ${formatearFecha(fechaInicio)}</span>`;
+}
+
+// Función para ver el trabajo finalizado
+function verTrabajoFinalizado(ticketId) {
+    $.ajax({
+        url: 'ajax/historial_get_trabajo_finalizado.php',
+        method: 'GET',
+        data: { ticket_id: ticketId },
+        dataType: 'json',
+        success: function (response) {
+            if (response.success && response.tarea) {
+                $('#modalTrabajoFinalizadoDesc').text(response.tarea.trabajo_realizado || 'Sin descripción');
+                
+                const carouselInner = $('#carouselTrabajoFinalizadoInner');
+                carouselInner.empty();
+
+                const totalFotos = response.fotos ? response.fotos.length : 0;
+
+                if (totalFotos > 0) {
+                    response.fotos.forEach((foto, index) => {
+                        const activeClass = index === 0 ? 'active' : '';
+                        const isHeic = foto.foto.toLowerCase().endsWith('.heic') || foto.foto.toLowerCase().endsWith('.heif');
+                        const imgId = `img-trabajo-photo-${index}`;
+                        const loaderId = `loader-trabajo-${imgId}`;
+
+                        carouselInner.append(`
+                            <div class="carousel-item ${activeClass}">
+                                <div class="d-flex justify-content-center align-items-center position-relative" style="min-height: 250px; background: #f8f9fa;">
+                                    <div id="${loaderId}" class="carousel-foto-loader">
+                                        <div class="spinner-border" role="status" style="color: #0E544C; width: 3rem; height: 3rem;">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                        <div class="mt-2 text-muted" style="font-size:0.85rem;">Cargando foto...</div>
+                                    </div>
+                                    <img id="${imgId}"
+                                         class="d-block carousel-foto-img w-100"
+                                         style="object-fit: contain; max-height: 60vh; display: none;"
+                                         alt="Foto Evidencia ${index + 1}"
+                                         onerror="this.style.display='block'; document.getElementById('${loaderId}').style.display='none'; this.src='/core/assets/img/broken-image.png';">
+                                </div>
+                            </div>
+                        `);
+
+                        if (isHeic) {
+                            fetch(foto.foto)
+                                .then(res => res.blob())
+                                .then(blob => heic2any({ blob, toType: "image/jpeg", quality: 0.6 }))
+                                .then(conversionResult => {
+                                    const url = URL.createObjectURL(Array.isArray(conversionResult) ? conversionResult[0] : conversionResult);
+                                    const imgEl = document.getElementById(imgId);
+                                    const loaderEl = document.getElementById(loaderId);
+                                    if (imgEl) {
+                                        imgEl.onload = function () {
+                                            if (loaderEl) loaderEl.style.display = 'none';
+                                            imgEl.style.display = 'block';
+                                        };
+                                        imgEl.src = url;
+                                    }
+                                })
+                                .catch(e => {
+                                    console.error("Error converting HEIC:", e);
+                                    const loaderEl = document.getElementById(loaderId);
+                                    const imgEl = document.getElementById(imgId);
+                                    if (loaderEl) loaderEl.style.display = 'none';
+                                    if (imgEl) imgEl.style.display = 'block';
+                                });
+                        } else {
+                            const imgEl = document.getElementById(imgId);
+                            const loaderEl = document.getElementById(loaderId);
+                            if (imgEl) {
+                                imgEl.onload = function () {
+                                    if (loaderEl) loaderEl.style.display = 'none';
+                                    imgEl.style.display = 'block';
+                                };
+                                imgEl.onerror = function () {
+                                    if (loaderEl) loaderEl.style.display = 'none';
+                                    imgEl.style.display = 'block';
+                                };
+                                imgEl.src = foto.foto;
+                            }
+                        }
+                    });
+
+                    // Mostrar u ocultar flechas según cantidad de fotos
+                    const prevBtn = document.querySelector('#carouselTrabajoFinalizado .carousel-control-prev');
+                    const nextBtn = document.querySelector('#carouselTrabajoFinalizado .carousel-control-next');
+                    if (prevBtn) prevBtn.style.display = totalFotos > 1 ? '' : 'none';
+                    if (nextBtn) nextBtn.style.display = totalFotos > 1 ? '' : 'none';
+                    
+                    $('#carouselTrabajoFinalizado').show();
+                    $('#noTrabajoFotosMsg').hide();
+                } else {
+                    $('#carouselTrabajoFinalizado').hide();
+                    $('#noTrabajoFotosMsg').show();
+                }
+
+                $('#modalVerTrabajoFinalizado').modal('show');
+            } else {
+                alert('No se encontró información del trabajo finalizado para este ticket.');
+            }
+        },
+        error: function () {
+            alert('Error al cargar la información del trabajo.');
+        }
+    });
 }
 
 // ========== FUNCIONES PARA CALENDARIO DE RANGO DE FECHAS (UN SOLO CALENDARIO) ==========

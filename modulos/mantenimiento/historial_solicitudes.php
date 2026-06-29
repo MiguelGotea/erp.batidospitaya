@@ -401,6 +401,45 @@ function getTextoUrgencia($nivel)
         </div>
     </div>
 
+    <!-- Modal para ver el trabajo finalizado -->
+    <div class="modal fade" id="modalVerTrabajoFinalizado" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header border-0 pb-0" style="background-color: #0E544C; color: white; border-radius: 1rem 1rem 0 0; padding: 1.2rem 1.5rem;">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-check-circle me-2 text-success"></i>Trabajo Finalizado</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary text-uppercase" style="font-size: 0.85rem; letter-spacing: 0.5px;">📋 Descripción del trabajo realizado</h6>
+                        <div class="p-3 bg-white border rounded shadow-sm" id="modalTrabajoFinalizadoDesc" style="white-space: pre-wrap;"></div>
+                    </div>
+                    
+                    <div>
+                        <h6 class="fw-bold text-secondary text-uppercase" style="font-size: 0.85rem; letter-spacing: 0.5px;">📷 Evidencia Fotográfica</h6>
+                        
+                        <div id="noTrabajoFotosMsg" class="alert alert-secondary text-center" style="display: none;">
+                            <i class="fas fa-image text-muted mb-2" style="font-size: 2rem;"></i><br>
+                            No hay fotos registradas
+                        </div>
+
+                        <div id="carouselTrabajoFinalizado" class="carousel slide bg-dark rounded overflow-hidden shadow-sm" style="display: none;">
+                            <div class="carousel-inner" id="carouselTrabajoFinalizadoInner">
+                                <!-- Fotos cargadas vía AJAX -->
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselTrabajoFinalizado" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselTrabajoFinalizado" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
         /* ── Cámara Premium (Historial Solicitudes) ── */
         .ag-cam-grid {

@@ -85,7 +85,8 @@ try {
     // Consulta principal con paginación
     $sql = "SELECT t.*, 
                    s.nombre as nombre_sucursal,
-                   (SELECT COUNT(*) FROM mtto_tickets_fotos WHERE ticket_id = t.id) as total_fotos
+                   (SELECT COUNT(*) FROM mtto_tickets_fotos WHERE ticket_id = t.id) as total_fotos,
+                   (SELECT COUNT(*) FROM mtto_informe_tareas_fotos tf JOIN mtto_informe_tareas mt ON tf.tarea_id = mt.id WHERE mt.ticket_id = t.id) as total_fotos_trabajo
             FROM mtto_tickets t
             LEFT JOIN sucursales s ON t.cod_sucursal = s.codigo
             $where_sql
