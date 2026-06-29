@@ -24,15 +24,7 @@ try {
         exit;
     }
 
-    // Crear la tabla si no existe
-    $sqlCreate = "CREATE TABLE IF NOT EXISTS anulacion_cierres_diarios (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        CodigoCierre INT NOT NULL,
-        Sucursal VARCHAR(50) NOT NULL,
-        fecha_solicitud DATETIME DEFAULT CURRENT_TIMESTAMP,
-        status INT DEFAULT 0
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-    $conn->exec($sqlCreate);
+    // El esquema de la tabla anulacion_cierres_diarios debe existir en BD
 
     // Obtener todos los cierres del día para la sucursal, ordenados por CodigoCierre ASC
     $sql = "SELECT CodigoCierre, HoraInicial, HoraFinal 
