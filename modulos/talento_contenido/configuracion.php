@@ -441,6 +441,47 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                     </div>
                 </div>
 
+                <!-- SECCIÓN 5: IMAGEN DE INDICADORES (SOBRE NOSOTROS) -->
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold text-dark mb-1"><i class="bi bi-image me-2"></i>Imagen de Indicadores (Sobre Nosotros)</h5>
+                        <p class="text-muted small mb-3">Imagen que aparece al lado izquierdo de las tarjetas de estadísticas/indicadores en la sección <strong>Sobre Nosotros</strong>. Formatos permitidos: JPG, PNG, WebP. Tamaño máximo: 20 MB.</p>
+
+                        <?php if ($canEdit): ?>
+                        <form id="formImagenStats" enctype="multipart/form-data">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Seleccionar imagen</label>
+                                    <input type="file" class="form-control" name="imagen_stats_nosotros" id="inputImagenStats"
+                                           accept="image/jpeg,image/png,image/webp,image/gif"
+                                           onchange="previsualizarImagenStats(this)" required>
+                                    <div class="form-text small">Recomendado: imagen de mano con batido sin fondo (transparente) para integrarse mejor.</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary-custom w-100">
+                                        <i class="bi bi-cloud-upload me-1"></i> Subir Imagen
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <?php endif; ?>
+
+                        <!-- Vista previa antes de subir -->
+                        <div class="mt-3" id="imagenStatsPreviewWrapper" style="display:none;">
+                            <p class="small fw-bold text-muted mb-1">Vista previa:</p>
+                            <img id="imagenStatsPreview" src="" alt="Vista previa de la imagen"
+                                 style="max-width:250px; max-height:250px; object-fit:contain; border-radius:8px; border:1px solid #dee2e6;">
+                        </div>
+
+                        <!-- Imagen actualmente guardada en BD -->
+                        <div class="mt-3" id="imagenStatsActualWrapper" style="display:none;">
+                            <p class="small fw-bold text-muted mb-1">Imagen actual en el portal:</p>
+                            <img id="imagenStatsActual" src="" alt="Imagen actual"
+                                 style="max-width:250px; max-height:250px; object-fit:contain; border-radius:8px; border:1px solid #dee2e6;">
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -600,6 +641,32 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                         $('#bannerUneteActualWrapper').show();
                         $('#bannerUnetePreviewWrapper').hide();
                         $('#formBannerUnete')[0].reset();
+                    },
+                    error: function(xhr) {
+                        const err = xhr.responseJSON ? xhr.responseJSON.error : 'Error de comunicación';
+                        Swal.fire('Error', err, 'error');
+                    }
+                });
+            });
+
+            // Subir imagen de indicadores (Sobre Nosotros)
+            $('#formImagenStats').on('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                $.ajax({
+                    url: 'ajax/guardar_imagen_stats.php',
+                    method: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    success: function(res) {
+                        Swal.fire('¡Éxito!', res.mensaje, 'success');
+                        const portalBase = 'https://talento.batidospitaya.com/';
+                        $('#imagenStatsActual').attr('src', portalBase + res.ruta_publica + '?t=' + Date.now());
+                        $('#imagenStatsActualWrapper').show();
+                        $('#imagenStatsPreviewWrapper').hide();
+                        $('#formImagenStats')[0].reset();
                     },
                     error: function(xhr) {
                         const err = xhr.responseJSON ? xhr.responseJSON.error : 'Error de comunicación';
@@ -783,6 +850,18 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
             }
         }
 
+        // --- PREVISUALIZACIÓN IMAGEN STATS ---
+        function previsualizarImagenStats(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#imagenStatsPreview').attr('src', e.target.result);
+                    $('#imagenStatsPreviewWrapper').show();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
         // --- CONFIGURACIÓN GENERAL ---
         function cargarConfiguracion() {
             $.ajax({
@@ -840,6 +919,13 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                         const portalBase = 'https://talento.batidospitaya.com/';
                         $('#bannerUneteActual').attr('src', portalBase + data.banner_unete + '?t=' + Date.now());
                         $('#bannerUneteActualWrapper').show();
+                    }
+
+                    // Mostrar imagen de indicadores actual si existe en BD
+                    if (data.imagen_stats_nosotros) {
+                        const portalBase = 'https://talento.batidospitaya.com/';
+                        $('#imagenStatsActual').attr('src', portalBase + data.imagen_stats_nosotros + '?t=' + Date.now());
+                        $('#imagenStatsActualWrapper').show();
                     }
 
                     // Mostrar imagen de fondo actual si existe en BD
