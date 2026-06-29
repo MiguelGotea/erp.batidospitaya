@@ -937,7 +937,7 @@ foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales) {
     </script>
     
     <script>
-    (function () {
+    document.addEventListener('DOMContentLoaded', function () {
         const btnExportar = document.getElementById('btnExportarFab');
         if (btnExportar) {
             btnExportar.addEventListener('click', function() {
@@ -972,7 +972,7 @@ foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales) {
                 document.body.removeChild(link);
             });
         }
-    })();
+    });
     </script>
     
     <!-- Botón Flotante con opciones -->
