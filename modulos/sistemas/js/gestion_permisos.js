@@ -343,7 +343,7 @@ function renderizarContenidoAccion(accion, areas, permisos) {
             const tienePermiso = permisos[accion.id] && permisos[accion.id][cargo.CodNivelesCargos] === 'allow';
             return `
                             <div class="cargo-item" data-cargo-id="${cargo.CodNivelesCargos}">
-                                <span class="cargo-nombre">${cargo.Nombre}</span>
+                                <span class="cargo-nombre">${cargo.Nombre} <span class="badge bg-light text-secondary border ms-1" style="font-size: 0.75em;" title="CodNivelesCargos">${cargo.CodNivelesCargos}</span></span>
                                 <label class="toggle-switch">
                                     <input type="checkbox" 
                                            ${tienePermiso ? 'checked' : ''}
