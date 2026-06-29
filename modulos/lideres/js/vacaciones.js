@@ -704,6 +704,10 @@ function mostrarModalEditarAprobar(ids, nombre, sucursal, fechaDesde, fechaHasta
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarFalta'));
         modal.show();
+
+        // Resetear el bloqueo de envío al abrir el modal
+        const formEditar = document.getElementById('formEditarFalta');
+        if (formEditar) formEditar.dispatchEvent(new CustomEvent('resetLock'));
     });
 }
 
@@ -714,8 +718,12 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
     const form = document.getElementById(formId);
     if (!form) return;
 
+    let enviando = false;
+
     form.addEventListener('submit', function (e) {
         e.preventDefault();
+
+        if (enviando) return false;
 
         // Validaciones genéricas
         const codOperario = form.querySelector('[name="cod_operario"]').value;
@@ -841,9 +849,10 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
         const formData = new FormData(form);
         formData.append('categoria_falta', categoriaFalta);
 
-        // Mostrar loading
+        // Mostrar loading y bloquear
         const submitBtn = form.querySelector('button[type="submit"]') || document.querySelector(`button[type="submit"][form="${formId}"]`);
         const originalText = submitBtn ? submitBtn.innerHTML : '';
+        enviando = true;
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
             submitBtn.disabled = true;
@@ -860,6 +869,7 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
                     window.location.reload();
                 } else {
                     alert('Error: ' + data.error);
+                    enviando = false;
                     if (submitBtn) {
                         submitBtn.innerHTML = originalText;
                         submitBtn.disabled = false;
@@ -869,6 +879,7 @@ function procesarEnvioHibrido(formId, categoriaFalta) {
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error de conexión al guardar el registro. Intente nuevamente.');
+                enviando = false;
                 if (submitBtn) {
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
@@ -947,8 +958,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Procesar edición/aprobación por RRHH ─────────────────────
     const formEditar = document.getElementById('formEditarFalta');
     if (formEditar) {
+        let formEditarEnviando = false;
+
+        // Resetear el bloqueo cuando se reabre el modal
+        formEditar.addEventListener('resetLock', function () {
+            formEditarEnviando = false;
+            const submitBtn = formEditar.querySelector('button[type="submit"]');
+            if (submitBtn && submitBtn.disabled) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Guardar Cambios';
+            }
+        });
+
         formEditar.addEventListener('submit', function (e) {
             e.preventDefault();
+
+            if (formEditarEnviando) return false;
+
             const id = document.getElementById('editar_id').value;
             const tipoFalta = document.getElementById('editar_tipo').value;
             const observacionesRrhh = document.getElementById('editar_observaciones_rrhh').value.trim();
@@ -987,6 +1013,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const submitBtn = formEditar.querySelector('button[type="submit"]') || document.querySelector(`button[type="submit"][form="formEditarFalta"]`);
             const originalText = submitBtn ? submitBtn.innerHTML : '';
+            formEditarEnviando = true;
             if (submitBtn) {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
                 submitBtn.disabled = true;
@@ -1011,6 +1038,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         window.location.reload();
                     } else {
                         alert('Error: ' + data.error);
+                        formEditarEnviando = false;
                         if (submitBtn) {
                             submitBtn.innerHTML = originalText;
                             submitBtn.disabled = false;
@@ -1020,6 +1048,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .catch(error => {
                     console.error('Error:', error);
                     alert('Error al actualizar el registro.');
+                    formEditarEnviando = false;
                     if (submitBtn) {
                         submitBtn.innerHTML = originalText;
                         submitBtn.disabled = false;

@@ -13,14 +13,28 @@ if (!tienePermiso('talento_contenido', 'editar', $usuario['CodNivelesCargos'])) 
     exit();
 }
 
-// Ruta física donde se almacenará la imagen de los indicadores
-$dirNosotros = realpath(__DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros');
-if (!$dirNosotros || !is_dir($dirNosotros)) {
-    $nuevaRuta = __DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros';
+// Ruta física donde se almacenará la imagen de los indicadores.
+// En Hostinger los dominios tienen rutas absolutas separadas.
+$rutasIntento = [
+    '/files/domains/talento.batidospitaya.com/public_html/uploads/nosotros',
+    realpath(__DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros'),
+];
+$dirNosotros = null;
+foreach ($rutasIntento as $ruta) {
+    if ($ruta && is_dir($ruta)) {
+        $dirNosotros = $ruta;
+        break;
+    }
+}
+if (!$dirNosotros) {
+    $nuevaRuta = '/files/domains/talento.batidospitaya.com/public_html/uploads/nosotros';
     if (!mkdir($nuevaRuta, 0755, true)) {
-        http_response_code(500);
-        echo json_encode(['error' => 'No se puede crear el directorio de subida.']);
-        exit();
+        $nuevaRuta = __DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros';
+        if (!mkdir($nuevaRuta, 0755, true)) {
+            http_response_code(500);
+            echo json_encode(['error' => 'No se puede crear el directorio de subida.']);
+            exit();
+        }
     }
     $dirNosotros = realpath($nuevaRuta);
 }
@@ -44,10 +58,10 @@ if (!in_array($mime, $allowed)) {
     exit();
 }
 
-$maxSize = 20 * 1024 * 1024; // 20 MB
+$maxSize = 50 * 1024 * 1024; // 50 MB
 if ($file['size'] > $maxSize) {
     http_response_code(400);
-    echo json_encode(['error' => 'La imagen supera el tamaño máximo de 20MB.']);
+    echo json_encode(['error' => 'La imagen supera el tamaño máximo de 50MB.']);
     exit();
 }
 

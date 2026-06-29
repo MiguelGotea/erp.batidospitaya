@@ -356,7 +356,12 @@ if (_elNuevaSucursal) {
 }
 
 if (_elFormNueva) {
+    var formNuevaEnviado = false;
     _elFormNueva.addEventListener('submit', function (e) {
+        if (formNuevaEnviado) {
+            e.preventDefault();
+            return false;
+        }
         var fotoInput = document.getElementById('nueva_foto');
         if (!fotoInput.files || fotoInput.files.length === 0) {
             alert('Debe seleccionar una foto como evidencia');
@@ -375,6 +380,31 @@ if (_elFormNueva) {
             e.preventDefault();
             alert('Este colaborador no tiene registro de contrato. Por favor contactar con el área de RH antes de registrar una tardanza.');
             return false;
+        }
+
+        formNuevaEnviado = true;
+        var submitBtn = _elFormNueva.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Registrando...';
+        }
+        return true;
+    });
+}
+
+var _elFormEditar = document.getElementById('formEditarTardanza');
+if (_elFormEditar) {
+    var formEditarEnviado = false;
+    _elFormEditar.addEventListener('submit', function (e) {
+        if (formEditarEnviado) {
+            e.preventDefault();
+            return false;
+        }
+        formEditarEnviado = true;
+        var submitBtn = _elFormEditar.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
         }
         return true;
     });
@@ -791,8 +821,17 @@ function mostrarModalRegistroRapido(codOperario, fecha, codSucursal, minutos, su
         }
     });
 
+    var formRapidoEnviado = false;
     document.getElementById('formRegistroRapido').addEventListener('submit', function (e) {
+        if (formRapidoEnviado) { e.preventDefault(); return false; }
         if (!validarFormularioRapido()) { e.preventDefault(); return false; }
+
+        formRapidoEnviado = true;
+        var submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Registrando...';
+        }
         return true;
     });
 }

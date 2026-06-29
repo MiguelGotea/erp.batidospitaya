@@ -279,18 +279,29 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                                         </button>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="form-text small">Si no hay imagen, se usa solo el color de fondo. Formatos: JPG, PNG, WebP, SVG, GIF. Máx: 20 MB.</div>
+                                    <div class="form-text small">Si no hay imagen, se usa solo el color de fondo. Formatos: JPG, PNG, WebP, SVG, GIF. Máx: 50 MB.</div>
                                     <!-- Vista previa antes de subir -->
                                     <div id="fondoPreviewWrapper" class="mt-2" style="display:none;">
-                                        <p class="small fw-bold text-muted mb-1">Vista previa:</p>
+                                        <p class="small fw-bold text-muted mb-1">Vista previa (antes de subir):</p>
                                         <img id="fondoPreview" src="" alt="Vista previa del fondo"
                                              style="max-width:100%; max-height:140px; border-radius:6px; border:1px solid #dee2e6; object-fit:cover;">
                                     </div>
-                                    <!-- Fondo actual guardado en BD -->
+                                    <!-- Fondo actual guardado en BD (cargado desde talento.batidospitaya.com) -->
                                     <div id="fondoActualWrapper" class="mt-2" style="display:none;">
-                                        <p class="small fw-bold text-muted mb-1">Imagen de fondo actual:</p>
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <p class="small fw-bold text-muted mb-0">Imagen de fondo actual en el portal:</p>
+                                            <span class="badge bg-info text-dark" style="font-size:0.7rem;">
+                                                <i class="bi bi-globe me-1"></i>talento.batidospitaya.com
+                                            </span>
+                                        </div>
                                         <img id="fondoActual" src="" alt="Fondo actual"
-                                             style="max-width:100%; max-height:140px; border-radius:6px; border:1px solid #dee2e6; object-fit:cover;">
+                                             style="max-width:100%; max-height:180px; border-radius:6px; border:2px solid #51B8AC; object-fit:cover;"
+                                             onerror="this.style.display='none'; document.getElementById('fondoActualError').style.display='block';">
+                                        <div id="fondoActualError" class="alert alert-warning py-1 px-2 mt-1 small" style="display:none;">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            No se pudo cargar la imagen desde <strong>talento.batidospitaya.com</strong>. 
+                                            Verifica que el archivo exista en <code>uploads/fondos/</code> del dominio de talento.
+                                        </div>
                                     </div>
                                 </div>
 
@@ -404,7 +415,7 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                 <div class="card shadow-sm border-0 mt-4">
                     <div class="card-body">
                         <h5 class="card-title fw-bold text-dark mb-1"><i class="bi bi-image me-2"></i>Banner "Únete al Equipo"</h5>
-                        <p class="text-muted small mb-3">Imagen de banner que aparece en la parte superior de la pestaña <strong>Únete al Equipo</strong> del portal de talento. Formatos permitidos: JPG, PNG, WebP. Tamaño máximo: 20 MB.</p>
+                        <p class="text-muted small mb-3">Imagen de banner que aparece en la parte superior de la pestaña <strong>Únete al Equipo</strong> del portal de talento. Formatos permitidos: JPG, PNG, WebP. Tamaño máximo: 50 MB.</p>
 
                         <?php if ($canEdit): ?>
                         <form id="formBannerUnete" enctype="multipart/form-data">
@@ -445,7 +456,7 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                 <div class="card shadow-sm border-0 mt-4">
                     <div class="card-body">
                         <h5 class="card-title fw-bold text-dark mb-1"><i class="bi bi-image me-2"></i>Imagen de Indicadores (Sobre Nosotros)</h5>
-                        <p class="text-muted small mb-3">Imagen que aparece al lado izquierdo de las tarjetas de estadísticas/indicadores en la sección <strong>Sobre Nosotros</strong>. Formatos permitidos: JPG, PNG, WebP. Tamaño máximo: 20 MB.</p>
+                        <p class="text-muted small mb-3">Imagen que aparece al lado izquierdo de las tarjetas de estadísticas/indicadores en la sección <strong>Sobre Nosotros</strong>. Formatos permitidos: JPG, PNG, WebP. Tamaño máximo: 50 MB.</p>
 
                         <?php if ($canEdit): ?>
                         <form id="formImagenStats" enctype="multipart/form-data">

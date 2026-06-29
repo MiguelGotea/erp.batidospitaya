@@ -241,7 +241,12 @@ function cargarOperariosSucursal(codSucursal, fechaFalta) {
 }
 
 // Validar formulario antes de enviar
+let formNuevaEnviado = false;
 document.getElementById('formNuevaFalta').addEventListener('submit', function (e) {
+    if (formNuevaEnviado) {
+        e.preventDefault();
+        return false;
+    }
     const fechaInput = document.getElementById('nueva_fecha');
     const fechaSeleccionada = new Date(fechaInput.value);
     const fechaActual = new Date();
@@ -271,6 +276,7 @@ document.getElementById('formNuevaFalta').addEventListener('submit', function (e
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
     submitBtn.disabled = true;
+    formNuevaEnviado = true;
 
     // Hacer petición AJAX para verificar si realmente hubo falta
     fetch('ajax/verificar_falta_real.php', {
@@ -291,6 +297,7 @@ document.getElementById('formNuevaFalta').addEventListener('submit', function (e
                 alert(data.error);
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
+                formNuevaEnviado = false;
             } else if (data.existe_falta) {
                 document.getElementById('formNuevaFalta').submit();
             } else {
@@ -310,11 +317,13 @@ document.getElementById('formNuevaFalta').addEventListener('submit', function (e
                     } else {
                         submitBtn.innerHTML = originalText;
                         submitBtn.disabled = false;
+                        formNuevaEnviado = false;
                     }
                 } else {
                     alert('No se puede registrar falta: El colaborador tiene marcaciones registradas para esta fecha o no tenía horario programado con estado Activo, Otra.Tienda, Subsidio o Vacaciones.');
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
+                    formNuevaEnviado = false;
                 }
             }
         })
@@ -323,6 +332,7 @@ document.getElementById('formNuevaFalta').addEventListener('submit', function (e
             alert('Error al verificar la falta. Intente nuevamente.');
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
+            formNuevaEnviado = false;
         });
 
     return false;
@@ -355,8 +365,16 @@ function formatearFechaLocal(fechaStr) {
 }
 
 // Función para mostrar el tipo de falta correcto en el modal de edición
+let formEditarEnviado = false;
 function mostrarModalEditarFalta(id, nombre, sucursal, fecha, tipo, observaciones, observaciones_rrhh, fotoPath) {
     console.log('Datos recibidos:', { id, nombre, sucursal, fecha, tipo, observaciones, observaciones_rrhh, fotoPath });
+
+    formEditarEnviado = false;
+    const submitBtn = document.querySelector('#formEditarFalta button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save" style="margin-right: 8px;"></i> Guardar Cambios';
+    }
 
     document.getElementById('editar_id').value = id;
     document.getElementById('editar_nombre').textContent = nombre;
@@ -423,6 +441,10 @@ function mostrarModalEditarFalta(id, nombre, sucursal, fecha, tipo, observacione
 
 // Validar formulario de edición
 document.getElementById('formEditarFalta').addEventListener('submit', function (e) {
+    if (formEditarEnviado) {
+        e.preventDefault();
+        return false;
+    }
     const observacionesRRHH = document.getElementById('editar_observaciones_rrhh').value.trim();
 
     if (!observacionesRRHH) {
@@ -431,6 +453,12 @@ document.getElementById('formEditarFalta').addEventListener('submit', function (
         return false;
     }
 
+    formEditarEnviado = true;
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
+    }
     return true;
 });
 
