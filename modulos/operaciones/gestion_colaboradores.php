@@ -408,6 +408,7 @@ foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales) {
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/gestion_colaboradores.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
@@ -460,11 +461,6 @@ foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales) {
                         </div>
 
                         <div class="nav-right" style="display: flex; align-items: center; gap: 10px;">
-                            <?php if ($tienePermisoExportar): ?>
-                                <button type="button" id="btnExportar" class="btn btn-outline-success" style="border-radius: 20px; font-size: 13px; padding: 6px 16px;">
-                                    <i class="fas fa-file-excel"></i> Exportar
-                                </button>
-                            <?php endif; ?>
                             <div style="position: relative;">
                                 <i class="bi bi-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 14px; pointer-events: none;"></i>
                                 <input
@@ -942,7 +938,7 @@ foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales) {
     
     <script>
     (function () {
-        const btnExportar = document.getElementById('btnExportar');
+        const btnExportar = document.getElementById('btnExportarFab');
         if (btnExportar) {
             btnExportar.addEventListener('click', function() {
                 const datos = <?= json_encode($datosExportar, JSON_UNESCAPED_UNICODE) ?>;
@@ -978,6 +974,23 @@ foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales) {
         }
     })();
     </script>
+    
+    <!-- Botón Flotante con opciones -->
+    <?php if ($tienePermisoExportar): ?>
+        <div class="fab-container">
+            <div class="fab-options">
+                <div class="fab-option" id="btnExportarFab">
+                    <span class="fab-label">Exportar CSV</span>
+                    <div class="fab-icon-holder" style="background: #198754;"><i class="fas fa-file-excel"></i></div>
+                </div>
+            </div>
+            <div class="btn-floating-pitaya" title="Herramientas">
+                <i class="fas fa-wrench"></i>
+            </div>
+        </div>
+    <?php endif; ?>
+    <!-- FAB Draggable: permite mover el botón flotante libremente en el viewport -->
+    <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>
 
 </html>
