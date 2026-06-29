@@ -151,17 +151,6 @@ function getTextoUrgencia($nivel)
                                 </div>
                             <?php endforeach; ?>
                         </div>
-
-                        <!-- Botón Informe Global Excel -->
-                        <div class="quick-access-export-row">
-                            <button id="btnInformeGlobal" class="btn-informe-global" onclick="descargarInformeGlobal()" title="Descargar informe Excel con los filtros activos">
-                                <i class="bi bi-file-earmark-excel-fill"></i>
-                                <span>Informe Global</span>
-                            </button>
-                            <span class="informe-global-hint">
-                                <i class="bi bi-info-circle"></i> Exporta todos los registros con los filtros aplicados actualmente
-                            </span>
-                        </div>
                     </div>
                 <?php endif; ?>
 
@@ -266,10 +255,15 @@ function getTextoUrgencia($nivel)
         </div>
     </div>
 
-    <!-- Botón Flotante con opciones (Solo si tiene permiso de nuevo_registro) -->
-    <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'nuevo_registro', $cargoOperario)): ?>
+    <!-- Botón Flotante con opciones -->
+    <?php 
+        $tienePermisoNuevoRegistro = tienePermiso('historial_solicitudes_mantenimiento', 'nuevo_registro', $cargoOperario);
+        $tienePermisoVistaTodas = tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario);
+        if ($tienePermisoNuevoRegistro || $tienePermisoVistaTodas): 
+    ?>
         <div class="fab-container">
             <div class="fab-options">
+                <?php if ($tienePermisoNuevoRegistro): ?>
                 <a href="formulario_equipos.php" class="fab-option">
                     <span class="fab-label">Mtto de Equipo</span>
                     <div class="fab-icon-holder"><i class="fas fa-laptop"></i></div>
@@ -278,6 +272,14 @@ function getTextoUrgencia($nivel)
                     <span class="fab-label">Mtto de Area</span>
                     <div class="fab-icon-holder"><i class="fas fa-tools"></i></div>
                 </a>
+                <?php endif; ?>
+                
+                <?php if ($tienePermisoVistaTodas): ?>
+                <a href="#" class="fab-option" onclick="descargarInformeGlobal(); return false;">
+                    <span class="fab-label">Informe Global</span>
+                    <div class="fab-icon-holder" style="background-color: #217346;"><i class="fas fa-file-excel"></i></div>
+                </a>
+                <?php endif; ?>
             </div>
             <div class="btn-floating-pitaya" title="Herramientas">
                 <i class="fas fa-wrench"></i>
