@@ -96,8 +96,8 @@ try {
 
                         <div class="col-6 col-md-auto">
                             <label class="pa-label" for="pa-crecimiento-esperado"
-                                title="Índice de Crecimiento Esperado: Porcentaje que forzará el crecimiento de la proyección si es mayor al crecimiento natural.">
-                                Crecimiento Esp. (%)
+                                title="Índice de Crecimiento Mínimo Esperado: Porcentaje que forzará el crecimiento de la proyección si es mayor al crecimiento natural.">
+                                Crecimiento Mínimo Esperado (%)
                             </label>
                             <input type="number" id="pa-crecimiento-esperado" class="form-control form-control-sm pa-input"
                                 style="width:110px" min="0" max="1000" placeholder="ej: 0"
