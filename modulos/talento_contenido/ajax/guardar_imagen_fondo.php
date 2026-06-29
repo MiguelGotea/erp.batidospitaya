@@ -13,14 +13,32 @@ if (!tienePermiso('talento_contenido', 'editar', $usuario['CodNivelesCargos'])) 
     exit();
 }
 
-// Directorio de fondos en el portal de talento
-$dirFondos = realpath(__DIR__ . '/../../../../talento.batidospitaya/uploads/fondos');
-if (!$dirFondos || !is_dir($dirFondos)) {
-    $nuevaRuta = __DIR__ . '/../../../../talento.batidospitaya/uploads/fondos';
+// Directorio de fondos en el portal de talento.
+// En Hostinger los dos dominios tienen DocumentRoots separados, por lo que
+// la ruta relativa entre repos NO funciona en producción. Usamos la ruta
+// absoluta del servidor. En local (dev) el fallback relativo también se intenta.
+$rutasIntento = [
+    '/files/domains/talento.batidospitaya.com/public_html/uploads/fondos',
+    realpath(__DIR__ . '/../../../../talento.batidospitaya/uploads/fondos'),
+];
+$dirFondos = null;
+foreach ($rutasIntento as $ruta) {
+    if ($ruta && is_dir($ruta)) {
+        $dirFondos = $ruta;
+        break;
+    }
+}
+if (!$dirFondos) {
+    // Intentar crear con la ruta de Hostinger
+    $nuevaRuta = '/files/domains/talento.batidospitaya.com/public_html/uploads/fondos';
     if (!mkdir($nuevaRuta, 0755, true)) {
-        http_response_code(500);
-        echo json_encode(['error' => 'No se puede crear el directorio de subida. Verifica la ruta del servidor.']);
-        exit();
+        // Fallback local
+        $nuevaRuta = __DIR__ . '/../../../../talento.batidospitaya/uploads/fondos';
+        if (!mkdir($nuevaRuta, 0755, true)) {
+            http_response_code(500);
+            echo json_encode(['error' => 'No se puede crear el directorio de subida. Verifica la ruta del servidor.']);
+            exit();
+        }
     }
     $dirFondos = realpath($nuevaRuta);
 }
@@ -44,10 +62,10 @@ if (!in_array($mime, $allowed)) {
     exit();
 }
 
-$maxSize = 20 * 1024 * 1024; // 20 MB
+$maxSize = 50 * 1024 * 1024; // 50 MB
 if ($file['size'] > $maxSize) {
     http_response_code(400);
-    echo json_encode(['error' => 'La imagen supera el tamaño máximo de 20 MB.']);
+    echo json_encode(['error' => 'La imagen supera el tamaño máximo de 50 MB.']);
     exit();
 }
 

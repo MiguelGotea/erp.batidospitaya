@@ -144,7 +144,6 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                                         <th style="width: 70px;">Foto</th>
                                         <th>Nombre</th>
                                         <th>Cargo</th>
-                                        <th>Departamento</th>
                                         <th style="max-width: 300px;">Testimonio</th>
                                         <th style="width: 80px;" class="text-center">Orden</th>
                                         <th style="width: 90px;" class="text-center">Estado</th>
@@ -153,7 +152,48 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                                 </thead>
                                 <tbody id="tbodyColaboradores">
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Áreas de la Empresa Section -->
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                            <div>
+                                <h5 class="card-title fw-bold text-dark mb-0">Áreas de la Empresa (Nuestro Equipo)</h5>
+                                <p class="text-muted small mb-0">Gestión de las áreas que se muestran en el carrusel superior de la pestaña Nuestro Equipo.</p>
+                            </div>
+                            <?php if ($canCreate): ?>
+                            <button class="btn btn-primary-custom d-flex align-items-center gap-2" onclick="abrirModalNuevaArea()">
+                                <i class="bi bi-plus-circle-fill"></i> Agregar Área
+                            </button>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle" id="tablaAreas">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 80px;">Icono</th>
+                                        <th>Título</th>
+                                        <th>Descripción</th>
+                                        <th style="width: 80px;" class="text-center">Orden</th>
+                                        <th style="width: 90px;" class="text-center">Estado</th>
+                                        <th style="width: 120px;" class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyAreas">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
                                             <div class="spinner-border text-primary" role="status">
                                                 <span class="visually-hidden">Cargando...</span>
                                             </div>
@@ -249,6 +289,64 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                     <div class="modal-footer border-0 p-3 bg-light">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary-custom px-4" id="btnGuardarColaborador">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formulario Área -->
+    <div class="modal fade" id="modalArea" tabindex="-1" aria-labelledby="modalAreaLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form id="formArea">
+                    <input type="hidden" id="areaId" name="id">
+                    
+                    <div class="modal-header bg-dark text-white border-0">
+                        <h5 class="modal-title fw-bold" id="modalAreaLabel">Agregar Área</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <!-- Icono -->
+                            <div class="col-md-6">
+                                <label for="areaIcono" class="form-label fw-bold">Icono (Clase de Bootstrap Icons) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="areaIcono" name="icono" required placeholder="Ej: bi-shop, bi-truck, bi-people-fill">
+                                <div class="form-text small">Usa clases de <a href="https://icons.getbootstrap.com/" target="_blank">Bootstrap Icons</a>.</div>
+                            </div>
+                            
+                            <!-- Título -->
+                            <div class="col-md-6">
+                                <label for="areaTitulo" class="form-label fw-bold">Título / Nombre del Área <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="areaTitulo" name="titulo" required placeholder="Ej: Operaciones y Tiendas">
+                            </div>
+                            
+                            <!-- Orden -->
+                            <div class="col-md-6">
+                                <label for="areaOrden" class="form-label fw-bold">Orden <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="areaOrden" name="orden" min="0" value="0" required>
+                            </div>
+                            
+                            <!-- Activo -->
+                            <div class="col-md-6 d-flex align-items-end pb-2">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="areaActivo" name="activo" value="1" checked>
+                                    <label class="form-check-label fw-bold" for="areaActivo">Activa</label>
+                                </div>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="col-12">
+                                <label for="areaDescripcion" class="form-label fw-bold">Descripción <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="areaDescripcion" name="descripcion" rows="4" required placeholder="Escribe una breve descripción del área aquí..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-0 p-3 bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary-custom px-4" id="btnGuardarArea">Guardar</button>
                     </div>
                 </form>
             </div>

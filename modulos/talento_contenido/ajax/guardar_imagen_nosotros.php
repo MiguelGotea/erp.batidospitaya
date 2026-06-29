@@ -13,19 +13,33 @@ if (!tienePermiso('talento_contenido', 'editar', $usuario['CodNivelesCargos'])) 
     exit();
 }
 
-// Ruta física donde se almacenarán las imágenes de nosotros
-// El ERP y el portal de talento comparten el mismo servidor Hostinger,
-// pero tienen DocumentRoots diferentes. Ajusta la ruta absoluta si es necesario.
-define('TALENTO_UPLOADS_NOSOTROS', realpath(__DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros'));
-
-if (!TALENTO_UPLOADS_NOSOTROS || !is_dir(TALENTO_UPLOADS_NOSOTROS)) {
-    // Intentar crear el directorio si no existe
-    if (!mkdir(__DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros', 0755, true)) {
-        http_response_code(500);
-        echo json_encode(['error' => 'No se puede crear el directorio de subida. Verifica la ruta del servidor.']);
-        exit();
+// Ruta física donde se almacenarán las imágenes de nosotros.
+// En Hostinger los dominios tienen rutas absolutas separadas; la ruta
+// relativa entre repos no funciona en producción.
+$rutasIntentoNos = [
+    '/files/domains/talento.batidospitaya.com/public_html/uploads/nosotros',
+    realpath(__DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros'),
+];
+$dirNosotrosImg = null;
+foreach ($rutasIntentoNos as $ruta) {
+    if ($ruta && is_dir($ruta)) {
+        $dirNosotrosImg = $ruta;
+        break;
     }
 }
+if (!$dirNosotrosImg) {
+    $nuevaRuta = '/files/domains/talento.batidospitaya.com/public_html/uploads/nosotros';
+    if (!mkdir($nuevaRuta, 0755, true)) {
+        $nuevaRuta = __DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros';
+        if (!mkdir($nuevaRuta, 0755, true)) {
+            http_response_code(500);
+            echo json_encode(['error' => 'No se puede crear el directorio de subida. Verifica la ruta del servidor.']);
+            exit();
+        }
+    }
+    $dirNosotrosImg = realpath($nuevaRuta);
+}
+define('TALENTO_UPLOADS_NOSOTROS', $dirNosotrosImg);
 
 if (!isset($_FILES['imagen_nosotros']) || $_FILES['imagen_nosotros']['error'] !== UPLOAD_ERR_OK) {
     http_response_code(400);

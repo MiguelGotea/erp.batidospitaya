@@ -289,8 +289,21 @@ $sucursalFijada = ($esRestringido && count($sucursales) === 1) ? $sucursales[0][
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="id" id="sol_id">
-                    <input type="hidden" name="cod_operario" id="sol_cod_operario">
-                    <input type="hidden" name="cod_sucursal" id="sol_cod_sucursal">
+
+                    <!-- Sucursal -->
+                    <?php if ($mostrarSelectSucursal): ?>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sucursal <span class="text-danger">*</span></label>
+                        <select name="cod_sucursal" id="sol_cod_sucursal" class="form-select" required>
+                            <option value="">Seleccione una sucursal</option>
+                            <?php foreach ($sucursales as $s): ?>
+                                <option value="<?= $s['codigo'] ?>"><?= $s['nombre'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php else: ?>
+                        <input type="hidden" name="cod_sucursal" id="sol_cod_sucursal" value="<?= htmlspecialchars($sucursalFijada ?? '') ?>">
+                    <?php endif; ?>
 
                     <!-- Fecha -->
                     <div class="mb-3">
@@ -299,22 +312,12 @@ $sucursalFijada = ($esRestringido && count($sucursales) === 1) ? $sucursales[0][
                             required>
                     </div>
 
-                    <!-- Colaborador con búsqueda -->
+                    <!-- Colaborador -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Colaborador <span class="text-danger">*</span></label>
-                        <div class="position-relative">
-                            <input type="text" id="sol_operario_search" class="form-control"
-                                placeholder="Buscar colaborador..." autocomplete="off">
-                            <div id="sol-sugerencias" class="list-group position-absolute w-100 shadow-sm"
-                                style="display:none;z-index:2000;max-height:200px;overflow-y:auto;"></div>
-                        </div>
-                        <div id="sol_operario_seleccionado" class="mt-1" style="display:none;">
-                            <span class="badge bg-success fs-6" id="sol_operario_badge"></span>
-                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-1"
-                                onclick="limpiarOperarioModal()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
+                        <select name="cod_operario" id="sol_cod_operario" class="form-select" required>
+                            <option value="">Seleccione un colaborador</option>
+                        </select>
                     </div>
 
                     <!-- Horas Extras -->

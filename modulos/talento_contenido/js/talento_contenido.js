@@ -12,6 +12,10 @@ document.addEventListener('DOMContentLoaded', function () {
         inicializarFiltroPortadaNoticia();
     }
 
+    if (document.getElementById('tablaAreas')) {
+        cargarAreas();
+    }
+
     // Inicializar envíos de formularios
     const formColaborador = document.getElementById('formColaborador');
     if (formColaborador) {
@@ -26,6 +30,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const formNoticia = document.getElementById('formNoticia');
     if (formNoticia) {
         formNoticia.addEventListener('submit', guardarNoticia);
+    }
+
+    const formArea = document.getElementById('formArea');
+    if (formArea) {
+        formArea.addEventListener('submit', guardarArea);
     }
 });
 
@@ -47,7 +56,7 @@ async function cargarColaboradores() {
         console.error('Error:', error);
         document.getElementById('tbodyColaboradores').innerHTML = `
             <tr>
-                <td colspan="8" class="text-center text-danger py-4">
+                <td colspan="7" class="text-center text-danger py-4">
                     <i class="bi bi-exclamation-triangle-fill fs-4 d-block mb-2"></i>
                     Error al cargar los colaboradores: ${error.message}
                 </td>
@@ -61,7 +70,7 @@ function renderizarColaboradores(datos) {
     tbody.innerHTML = '';
 
     if (datos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay colaboradores registrados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay colaboradores registrados</td></tr>';
         return;
     }
 
@@ -105,7 +114,6 @@ function renderizarColaboradores(datos) {
             </td>
             <td><strong>${escapeHtml(col.nombre)}</strong></td>
             <td>${escapeHtml(col.cargo)}</td>
-            <td><span class="badge bg-light text-dark border">${escapeHtml(col.departamento || 'No asignado')}</span></td>
             <td><small class="text-muted text-wrap d-block" style="max-height: 60px; overflow-y: auto;">"${escapeHtml(col.testimonio || '')}"</small></td>
             <td class="text-center">${col.orden}</td>
             <td class="text-center">${estadoBadge}</td>
@@ -822,6 +830,188 @@ function eliminarFotoGaleria(fotoId) {
             } catch (error) {
                 console.error('Error:', error);
                 Swal.fire('Error', error.message || 'No se pudo eliminar la foto', 'error');
+            }
+        }
+    });
+}
+
+// ==============================================================================
+// SECCIÓN: ÁREAS DE LA EMPRESA
+// ==============================================================================
+
+async function cargarAreas() {
+    try {
+        const response = await fetch('ajax/get_areas.php', { method: 'POST' });
+        const data = await response.json();
+
+        // En caso de que devuelva error directo
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        renderizarAreas(data);
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('tbodyAreas').innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-danger py-4">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 d-block mb-2"></i>
+                    Error al cargar las áreas: ${error.message}
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function renderizarAreas(datos) {
+    const tbody = document.getElementById('tbodyAreas');
+    tbody.innerHTML = '';
+
+    if (!datos || datos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay áreas de empresa registradas</td></tr>';
+        return;
+    }
+
+    datos.forEach(area => {
+        const estadoBadge = area.activo == 1 
+            ? '<span class="badge bg-success">Activa</span>' 
+            : '<span class="badge bg-secondary">Inactiva</span>';
+
+        const btnEditar = canEdit 
+            ? `<button class="btn btn-sm btn-outline-primary me-1" onclick="editarArea(${area.id})" title="Editar"><i class="bi bi-pencil"></i></button>` 
+            : '';
+        const btnEliminar = canDelete 
+            ? `<button class="btn btn-sm btn-outline-danger" onclick="eliminarArea(${area.id}, '${escapeHtml(area.titulo)}')" title="Eliminar"><i class="bi bi-trash"></i></button>` 
+            : '';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <div class="fs-4 text-secondary text-center">
+                    <i class="bi ${escapeHtml(area.icono || 'bi-square')}"></i>
+                </div>
+            </td>
+            <td><strong>${escapeHtml(area.titulo)}</strong></td>
+            <td><small class="text-muted text-wrap d-block" style="max-height: 80px; overflow-y: auto;">${escapeHtml(area.descripcion || '')}</small></td>
+            <td class="text-center">${area.orden}</td>
+            <td class="text-center">${estadoBadge}</td>
+            <td class="text-center">
+                <div class="d-flex justify-content-center">
+                    ${btnEditar}
+                    ${btnEliminar}
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function abrirModalNuevaArea() {
+    document.getElementById('formArea').reset();
+    document.getElementById('areaId').value = '';
+    document.getElementById('modalAreaLabel').textContent = 'Agregar Área';
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalArea'));
+    modal.show();
+}
+
+async function editarArea(id) {
+    try {
+        // Obtenemos todas y filtramos localmente o por ajax. Como get_areas devuelve todas, podemos filtrar localmente
+        const response = await fetch('ajax/get_areas.php', { method: 'POST' });
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        const area = data.find(a => a.id == id);
+        if (area) {
+            document.getElementById('areaId').value = area.id;
+            document.getElementById('areaIcono').value = area.icono;
+            document.getElementById('areaTitulo').value = area.titulo;
+            document.getElementById('areaOrden').value = area.orden;
+            document.getElementById('areaDescripcion').value = area.descripcion;
+            document.getElementById('areaActivo').checked = area.activo == 1;
+
+            document.getElementById('modalAreaLabel').textContent = 'Editar Área';
+            const modal = new bootstrap.Modal(document.getElementById('modalArea'));
+            modal.show();
+        } else {
+            throw new Error("Área no encontrada.");
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire('Error', 'No se pudo obtener el detalle del área', 'error');
+    }
+}
+
+async function guardarArea(e) {
+    e.preventDefault();
+    const btnSubmit = document.getElementById('btnGuardarArea');
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+
+    try {
+        const formData = new FormData(this);
+        // Si el switch está apagado, forzar activo = 0
+        if (!document.getElementById('areaActivo').checked) {
+            formData.set('activo', '0');
+        } else {
+            formData.set('activo', '1');
+        }
+
+        const response = await fetch('ajax/guardar_area.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            Swal.fire('¡Éxito!', data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('modalArea')).hide();
+            cargarAreas();
+        } else {
+            throw new Error(data.error || data.mensaje);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire('Error', error.message || 'No se pudo guardar el área', 'error');
+    } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Guardar';
+    }
+}
+
+function eliminarArea(id, titulo) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: `Eliminarás el área "${titulo}" de forma permanente del portal público.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch('ajax/eliminar_area.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `id=${id}`
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire('¡Eliminado!', data.message, 'success');
+                    cargarAreas();
+                } else {
+                    throw new Error(data.error || data.mensaje);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', error.message || 'No se pudo eliminar el área', 'error');
             }
         }
     });
