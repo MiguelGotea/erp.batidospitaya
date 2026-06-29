@@ -19,6 +19,9 @@ if (!tienePermiso('balance_cierre_diario', 'vista', $cargoOperario)) {
 
 // Permiso para exportar Excel
 $puedeExportar = tienePermiso('balance_cierre_diario', 'exportar', $cargoOperario);
+
+// Permiso para anular
+$puedeAnular = tienePermiso('balance_cierre_diario', 'anular', $cargoOperario);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -134,6 +137,9 @@ $puedeExportar = tienePermiso('balance_cierre_diario', 'exportar', $cargoOperari
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const PUEDE_ANULAR = <?php echo $puedeAnular ? 'true' : 'false'; ?>;
+    </script>
     <script src="js/historial_cierres_diarios.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
     <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
 </body>

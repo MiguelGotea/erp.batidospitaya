@@ -128,6 +128,15 @@ function renderizarTabla(datos) {
             alertasHtml = '<span class="text-muted small">—</span>';
         }
 
+        let btnAnular = '';
+        if (typeof PUEDE_ANULAR !== 'undefined' && PUEDE_ANULAR) {
+            btnAnular = `
+                <button onclick="anularCierre('${row.Fecha}', '${row.Sucursal}', '${row.CodigoCierre}')" class="btn-hcd-ver ms-1" style="color: #dc3545; border-color: transparent;" title="Anular Cierre">
+                    <i class="bi bi-x-circle"></i> Anular
+                </button>
+            `;
+        }
+
         const tr = `
             <tr>
                 <td>${escHtml(row.nombre_sucursal || '—')}</td>
@@ -140,10 +149,11 @@ function renderizarTabla(datos) {
                 <td class="text-nowrap">${hfStr}</td>
                 <td>${escHtml(obs || '—')}</td>
                 <td>${alertasHtml}</td>
-                <td class="text-center">
+                <td class="text-center" style="white-space: nowrap;">
                     <a href="${urlVer}" target="_blank" class="btn-hcd-ver">
                         <i class="bi bi-eye"></i> Ver
                     </a>
+                    ${btnAnular}
                 </td>
             </tr>
         `;
@@ -570,4 +580,33 @@ function descargarExcel() {
     document.body.appendChild(form);
     form.submit();
     document.body.removeChild(form);
+}
+
+// ── Anular Cierre ─────────────────────────────────────────────
+function anularCierre(fecha, sucursal, codigoCierre) {
+    if (!confirm(`¿Está seguro que desea anular el cierre #${codigoCierre} y todos sus precierres asociados?`)) {
+        return;
+    }
+
+    $.ajax({
+        url: 'ajax/hcd_anular_cierre.php',
+        method: 'POST',
+        dataType: 'json',
+        data: {
+            fecha: fecha,
+            sucursal: sucursal,
+            codigo_cierre: codigoCierre
+        },
+        success: function(resp) {
+            if (resp.success) {
+                alert('Solicitud de anulación enviada correctamente. Se procesará pronto en tienda.');
+                cargarDatos();
+            } else {
+                alert('Error: ' + (resp.message || 'Desconocido'));
+            }
+        },
+        error: function() {
+            alert('Error de conexión con el servidor.');
+        }
+    });
 }
