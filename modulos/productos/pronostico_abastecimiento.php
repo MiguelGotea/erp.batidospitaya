@@ -21,6 +21,7 @@ if (!tienePermiso('pronostico_abastecimiento', 'vista', $cargoOperario)) {
 }
 
 $permisoDatosCompletos = tienePermiso('pronostico_abastecimiento', 'datos_completos', $cargoOperario);
+$permisoAuditoriaPasada = tienePermiso('pronostico_abastecimiento', 'auditoria_pasada', $cargoOperario);
 
 $version = mt_rand(1, 10000);
 
@@ -474,6 +475,7 @@ try {
 
     <script>
         window.PA_DATOS_COMPLETOS = <?php echo $permisoDatosCompletos ? 'true' : 'false'; ?>;
+        window.PA_AUDITORIA_PASADA = <?php echo $permisoAuditoriaPasada ? 'true' : 'false'; ?>;
         window.PA_SEMANA_ACTUAL = <?php echo !empty($semActual) ? $semActual : 'null'; ?>;
     </script>
 

@@ -771,7 +771,7 @@ function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false
 
     let html = '';
 
-    if (auditoriaData && !isConsolidado) {
+    if (auditoriaData && !isConsolidado && window.PA_AUDITORIA_PASADA) {
         html += `
         <div class="pa-date-block pa-date-hoy" style="border: 2px solid #0ea5e9; padding: 10px; border-radius: 12px; background: #f0f9ff; margin-bottom: 2rem;">
             <div class="pa-date-header" style="cursor: pointer;" onclick="$('#pa-cats-hoy').slideToggle(); $(this).find('.pa-expand-date-icon').toggleClass('rotated');">
