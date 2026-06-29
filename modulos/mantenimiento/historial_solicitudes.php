@@ -210,7 +210,9 @@ function getTextoUrgencia($nivel)
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
                                 <th style="width: 50px;">Foto</th>
-                                <th style="width: 50px;">IA</th>
+                                <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'consulta_ia', $cargoOperario)): ?>
+                                    <th style="width: 50px;">IA</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody id="tablaSolicitudesBody">

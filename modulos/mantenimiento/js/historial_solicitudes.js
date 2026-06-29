@@ -247,15 +247,16 @@ function renderizarTabla(datos) {
         tr.append(`<td>${btnFoto}</td>`);
 
         // IA
-        const esAnalizable = (
-            tienepermiso('consulta_ia') &&
-            ['solicitado', 'agendado'].includes(row.status) &&
-            row.tipo_formulario === 'mantenimiento_general'
-        );
-        const btnIA = esAnalizable
-            ? `<button class="btn-ia-icon" id="btn-ia-${row.id}" onclick="analizarConIA(${row.id})" title="Analizar con IA"><i class="bi bi-robot"></i></button>`
-            : `<button class="btn-ia-icon disabled" disabled title="No disponible para este estado o tipo"><i class="bi bi-robot"></i></button>`;
-        tr.append(`<td>${btnIA}</td>`);
+        if (tienepermiso('consulta_ia')) {
+            const esAnalizable = (
+                ['solicitado', 'agendado'].includes(row.status) &&
+                row.tipo_formulario === 'mantenimiento_general'
+            );
+            const btnIA = esAnalizable
+                ? `<button class="btn-ia-icon" id="btn-ia-${row.id}" onclick="analizarConIA(${row.id})" title="Analizar con IA"><i class="bi bi-robot"></i></button>`
+                : `<button class="btn-ia-icon disabled" disabled title="No disponible para este estado o tipo"><i class="bi bi-robot"></i></button>`;
+            tr.append(`<td>${btnIA}</td>`);
+        }
 
         tbody.append(tr);
     });
