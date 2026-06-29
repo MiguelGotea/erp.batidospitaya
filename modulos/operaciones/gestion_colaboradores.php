@@ -981,7 +981,7 @@ foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales) {
             <div class="fab-options">
                 <div class="fab-option" id="btnExportarFab">
                     <span class="fab-label">Exportar CSV</span>
-                    <div class="fab-icon-holder" style="background: #198754;"><i class="fas fa-file-excel"></i></div>
+                    <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
                 </div>
             </div>
             <div class="btn-floating-pitaya" title="Herramientas">
