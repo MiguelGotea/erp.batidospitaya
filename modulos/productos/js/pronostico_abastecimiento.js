@@ -86,7 +86,7 @@ function calcularStockMaxSlot(p, cicloSlot, cd_dinamico = null) {
 }
 
 let currentAgendaData = null;
-window.pa_include_preingreso = false;
+window.pa_dias_despacho_real = {};
 
 $(document).ready(() => {
     cargarSucursales();
@@ -122,7 +122,12 @@ $(document).ready(() => {
         }
     });
     $('#pa-agenda').on('change', '.pa-toggle-preingreso', function () {
-        window.pa_include_preingreso = $(this).is(':checked');
+        const isChecked = $(this).is(':checked');
+        const fecha = $(this).data('fecha');
+        if (fecha) {
+            window.pa_dias_despacho_real[fecha] = isChecked;
+        }
+
         if (window.lastStoreResults && currentAgendaData) {
             const expandedTiendas = [];
             $('.pa-row-expandible').each(function() {
@@ -406,7 +411,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                 if (!agendaMap[cur]) agendaMap[cur] = {};
                 // cicloSlot = días reales que este despacho debe abastecer
                 const cicloSlot = calcularCicloSlot(items[0], cur);
-                agendaMap[cur][cat] = { items, round, cicloSlot };
+                agendaMap[cur][cat] = { items, round, cicloSlot, fecha: cur };
                 cur = addDaysStr(cur, cicloSlot);
                 round++;
             }
@@ -539,7 +544,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
                     // Calcular stock post-despacho para esta ronda
                     const invBeforePaq = (stockD1Paq ?? 0);
                     const despSugeridoPaq = Math.max(0, Math.ceil((smfSlot ?? 0) - invBeforePaq));
-                    const despachoAUsarPaq = (window.pa_include_preingreso && despachoRealRondaPaq !== null) ? despachoRealRondaPaq : despSugeridoPaq;
+                    const despachoAUsarPaq = ((window.pa_dias_despacho_real[fecha] || false) && despachoRealRondaPaq !== null) ? despachoRealRondaPaq : despSugeridoPaq;
                     const stockPostDespachoPaq = invBeforePaq + despachoAUsarPaq;
 
                     if (!p._porRonda) p._porRonda = {};
@@ -729,7 +734,7 @@ function consolidarResultados(storeResults) {
 
                     let stockD1Paq_sub = sd;
                     let sub_despSugerido = stockD1Paq_sub !== null ? Math.max(0, Math.ceil((smfRound ?? 0) - stockD1Paq_sub)) : 0;
-                    let sub_aUsar = (window.pa_include_preingreso && real !== null && real !== undefined) ? real : sub_despSugerido;
+                    let sub_aUsar = ((window.pa_dias_despacho_real[fecha] || false) && real !== null && real !== undefined) ? real : sub_despSugerido;
 
                     item._sugTotalCalc = (item._sugTotalCalc ?? 0) + sub_despSugerido;
                     item._aUsarTotal = (item._aUsarTotal ?? 0) + sub_aUsar;
@@ -747,7 +752,7 @@ function consolidarResultados(storeResults) {
                     };
                 });
             });
-            agendaMap[fecha][cat] = { items: Object.values(byPP), tiendas, isConsolidado: true };
+            agendaMap[fecha][cat] = { items: Object.values(byPP), tiendas, isConsolidado: true, fecha: fecha };
         });
         if (!Object.keys(agendaMap[fecha]).length) delete agendaMap[fecha];
     });
@@ -811,11 +816,12 @@ function renderAgenda(agendaMap, fechasOrdenadas, sinPlan, isConsolidado = false
     $('#pa-agenda').html(html || '<p class="text-muted text-center p-5">Sin datos para mostrar.</p>');
 }
 
-function buildCatsHtml(cats, isConsolidado, fecha, isHoy = false) {
+function buildCatsHtml(cats, isConsolidado, fechaArg, isHoy = false) {
     let html = '';
     PA_GRUPOS.forEach(cat => {
         if (!cats[cat]) return;
         const slot = cats[cat];
+        const fecha = isHoy ? slot.fecha : fechaArg;
 
         // Badge de ronda / tiendas
         let badge;
@@ -853,12 +859,12 @@ function buildCatsHtml(cats, isConsolidado, fecha, isHoy = false) {
                 }
 
                 let s_final = s_base;
-                if (!isHoy && window.pa_include_preingreso && s_final !== null && pre_hoy) {
+                if (!isHoy && (window.pa_dias_despacho_real[fecha] || false) && s_final !== null && pre_hoy) {
                     s_final += pre_hoy;
                 }
                 let despSugerido = s_final !== null ? Math.max(0, Math.ceil((smf ?? 0) - s_final)) : null;
                 let real = isConsolidado ? p._realTotal : (p._porRonda?.[slot.round]?.despachoRealRondaPaq);
-                let despAUsar = (window.pa_include_preingreso && real !== null && real !== undefined) ? real : despSugerido;
+                let despAUsar = ((window.pa_dias_despacho_real[fecha] || false) && real !== null && real !== undefined) ? real : despSugerido;
 
                 if (despAUsar !== null && despAUsar !== undefined) totalDespacho += despAUsar;
             });
@@ -876,14 +882,14 @@ function buildCatsHtml(cats, isConsolidado, fecha, isHoy = false) {
                 ${badgeB}
             </div>
             <div class="pa-table-wrap">
-                ${buildTablaProductos(slot, isConsolidado, slotKey, isHoy)}
+                ${buildTablaProductos(slot, isConsolidado, slotKey, isHoy, fecha)}
             </div>
         </div>`;
     });
     return html;
 }
 
-function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
+function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false, fecha = '') {
     const items = slot.items;
     const round = slot.round;
     let rows = '';
@@ -927,13 +933,13 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
 
         let stockD1Paq = stockD1Paq_base;
-        let includeHoy = (!isHoy && window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq && round === 1);
+        let includeHoy = (!isHoy && (window.pa_dias_despacho_real[fecha] || false) && stockD1Paq !== null && preHoyPaq && round === 1);
         if (includeHoy) {
             stockD1Paq += preHoyPaq;
         }
 
         let despSugerido = isConsolidado ? sugTotalConsolidado : (stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null);
-        let despAUsar = isConsolidado ? aUsarTotalConsolidado : ((window.pa_include_preingreso && despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined) ? despachoRealRondaPaq : despSugerido);
+        let despAUsar = isConsolidado ? aUsarTotalConsolidado : (((window.pa_dias_despacho_real[fecha] || false) && despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined) ? despachoRealRondaPaq : despSugerido);
 
         // Convert to Unid de control for display
         const sMinDisplayCtrl = sMinDisplay !== null && sMinDisplay !== undefined ? sMinDisplay * df : null;
@@ -970,7 +976,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
              finalHtmlCtrl = '<span class="pa-na">—</span>';
              finalHtmlPaq = '<span class="pa-na">—</span>';
         } else {
-             let isReal = (window.pa_include_preingreso && realRondaCtrl !== null && realRondaCtrl !== undefined);
+             let isReal = ((window.pa_dias_despacho_real[fecha] || false) && realRondaCtrl !== null && realRondaCtrl !== undefined);
              if (isReal && !isHoy) {
                  despHtmlRealPaq = `<span class="pa-desp-val ${despachoRealRondaPaq > 0 ? 'needs' : 'ok'} fw-bold">${despachoRealRondaPaq.toFixed(1)}</span>`;
                  finalHtmlCtrl = `<span class="pa-desp-val ${despSugeridoCtrl > 0 ? 'needs' : 'ok'}">${despSugeridoCtrl.toFixed(1)}</span>`;
@@ -1015,7 +1021,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
                 <td class="pa-col-desp">${finalHtmlPaq}</td>
                 <td class="pa-col-desp text-center" style="background:#f8fafc;">${despHtmlRealPaq}</td>
             </tr>
-            ${buildSubRowsTiendas(p, slotKey)}`;
+            ${buildSubRowsTiendas(p, slotKey, fecha)}`;
         } else {
             const dsStr = slotKey.split('-')[0];
             const fDesp = `${dsStr.substring(0, 4)}-${dsStr.substring(4, 6)}-${dsStr.substring(6, 8)}`;
@@ -1064,13 +1070,13 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
         }
     });
 
-    const isChecked = window.pa_include_preingreso ? 'checked' : '';
+    const isChecked = (window.pa_dias_despacho_real[fecha] || false) ? 'checked' : '';
     const thDespachoReal = isHoy ? `Despacho Real<br>
             <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. Despacho)</small>` :
             `Despacho Real<br>
             <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. Despacho)</small><br>
             <div class="form-check form-switch d-inline-block mt-1">
-                <input class="form-check-input pa-toggle-preingreso" type="checkbox" title="Usar despachos reales en la proyección" ${isChecked}>
+                <input class="form-check-input pa-toggle-preingreso" type="checkbox" data-fecha="${fecha}" title="Usar despachos reales en la proyección" ${isChecked}>
             </div>`;
 
     const thDatosCompletos = window.PA_DATOS_COMPLETOS ? `<th>Stock Máx Ajustado<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th><th>Inv. Teórico Ayer<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>` : '';
@@ -1097,7 +1103,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
     return `<table class="pa-table">${thead}<tbody>${rows || '<tr class="pa-no-data-row"><td colspan="12">Sin productos</td></tr>'}</tbody></table>`;
 }
 
-function buildSubRowsTiendas(item, slotKey) {
+function buildSubRowsTiendas(item, slotKey, fecha) {
     let rows = '';
     Object.entries(item._porTienda || {}).forEach(([cod, td]) => {
         const smf = td.stock_max_final ?? 0;
@@ -1107,7 +1113,7 @@ function buildSubRowsTiendas(item, slotKey) {
         let includeHoy = false;
 
         let despSugerido = stockD1Paq !== null ? Math.max(0, Math.ceil((smf ?? 0) - stockD1Paq)) : null;
-        let despAUsar = (window.pa_include_preingreso && td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined) ? td.despachoRealRondaPaq : despSugerido;
+        let despAUsar = ((window.pa_dias_despacho_real[fecha] || false) && td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined) ? td.despachoRealRondaPaq : despSugerido;
 
         const stockD1Ctrl = stockD1Paq !== null && stockD1Paq !== undefined ? stockD1Paq * df : null;
         const smfCtrl = smf * df;
@@ -1139,7 +1145,7 @@ function buildSubRowsTiendas(item, slotKey) {
         if (despAUsar === null || despAUsar === undefined) {
              finalHtmlPaq = '<span class="pa-na">—</span>';
         } else {
-             let isReal = (window.pa_include_preingreso && td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined);
+             let isReal = ((window.pa_dias_despacho_real[fecha] || false) && td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined);
              if (isReal && td.round !== 0) {
                  despHtmlRealPaq = `<span class="pa-desp-val ${td.despachoRealRondaPaq > 0 ? 'needs' : 'ok'} fw-bold">${td.despachoRealRondaPaq.toFixed(1)}</span>`;
                  finalHtmlPaq = `<del class="text-muted" style="font-size: 0.9em;">${despSugerido.toFixed(1)}</del>`;
@@ -1229,14 +1235,14 @@ function exportarPronosticoExcel() {
                 }
 
                 let stockD1Paq = stockD1Paq_base;
-                let includeHoy = (window.pa_include_preingreso && stockD1Paq !== null && preHoyPaq && slot.round === 1);
+                let includeHoy = ((window.pa_dias_despacho_real[fecha] || false) && stockD1Paq !== null && preHoyPaq && slot.round === 1);
                 if (includeHoy) {
                     stockD1Paq += preHoyPaq;
                 }
                 
                 let realRondaPaq = currentAgendaData.isConsolidado ? p._realTotal : (p._porRonda?.[slot.round]?.despachoRealRondaPaq);
                 let sugPaq = currentAgendaData.isConsolidado ? p._sugTotalCalc : (stockD1Paq !== null ? Math.max(0, Math.ceil((smfDisplay ?? 0) - stockD1Paq)) : null);
-                let despAUsar = currentAgendaData.isConsolidado ? p._aUsarTotal : ((window.pa_include_preingreso && realRondaPaq !== null && realRondaPaq !== undefined) ? realRondaPaq : sugPaq);
+                let despAUsar = currentAgendaData.isConsolidado ? p._aUsarTotal : (((window.pa_dias_despacho_real[fecha] || false) && realRondaPaq !== null && realRondaPaq !== undefined) ? realRondaPaq : sugPaq);
 
                 const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
 
@@ -1284,14 +1290,14 @@ function exportarPronosticoExcel() {
                         let sub_stockD1Paq = td.stockD1Paq;
                         let sub_sMinSlot = td.sMinSlot ?? td.stock_minimo;
 
-                        let sub_includeHoy = (window.pa_include_preingreso && sub_stockD1Paq !== null && td.preHoyPaq && td.round === 1);
+                        let sub_includeHoy = ((window.pa_dias_despacho_real[fecha] || false) && sub_stockD1Paq !== null && td.preHoyPaq && td.round === 1);
                         if (sub_includeHoy) {
                             sub_stockD1Paq += td.preHoyPaq;
                         }
 
                         let sub_sugPaq = sub_stockD1Paq !== null ? Math.max(0, Math.ceil((sub_smfDisplay ?? 0) - sub_stockD1Paq)) : null;
                         let sub_realPaq = td.despachoRealRondaPaq;
-                        let sub_aUsar = (window.pa_include_preingreso && sub_realPaq !== null && sub_realPaq !== undefined) ? sub_realPaq : sub_sugPaq;
+                        let sub_aUsar = ((window.pa_dias_despacho_real[fecha] || false) && sub_realPaq !== null && sub_realPaq !== undefined) ? sub_realPaq : sub_sugPaq;
 
                         const sub_sMinDisplayCtrl = sub_sMinSlot !== null && sub_sMinSlot !== undefined ? sub_sMinSlot * df : null;
                         const sub_smDisplayCtrl = sub_smDisplay !== null && sub_smDisplay !== undefined ? sub_smDisplay * df : null;
@@ -1378,7 +1384,7 @@ function recalcularChaining(storeResults) {
             Object.values(sr.agendaMap[fecha] || {}).forEach(slot => {
                 (slot.items || []).forEach(p => {
                     if (!byPP[p.id_pp]) byPP[p.id_pp] = [];
-                    byPP[p.id_pp].push({ slot, p });
+                    byPP[p.id_pp].push({ slot, p, fecha });
                 });
             });
         });
@@ -1388,13 +1394,14 @@ function recalcularChaining(storeResults) {
             arr.forEach(item => {
                 const p = item.p;
                 const round = item.slot.round;
+                const fecha = item.fecha;
                 const rd = p._porRonda[round];
                 if (!rd) return;
 
                 if (round === 1) {
-                    const invBeforePaq = (rd.stockD1Paq ?? 0) + (window.pa_include_preingreso ? rd.preHoyPaq : 0);
+                    const invBeforePaq = (rd.stockD1Paq ?? 0) + ((window.pa_dias_despacho_real[fecha] || false) ? rd.preHoyPaq : 0);
                     rd.despSugeridoPaq = Math.max(0, Math.ceil((rd.smfSlot ?? 0) - invBeforePaq));
-                    const despachoAUsarPaq = (window.pa_include_preingreso && rd.despachoRealRondaPaq !== null && rd.despachoRealRondaPaq !== undefined) ? rd.despachoRealRondaPaq : rd.despSugeridoPaq;
+                    const despachoAUsarPaq = ((window.pa_dias_despacho_real[fecha] || false) && rd.despachoRealRondaPaq !== null && rd.despachoRealRondaPaq !== undefined) ? rd.despachoRealRondaPaq : rd.despSugeridoPaq;
                     rd.stockPostDespachoPaq = invBeforePaq + despachoAUsarPaq;
                 } else {
                     const prevRound = p._porRonda[round - 1];
@@ -1405,7 +1412,7 @@ function recalcularChaining(storeResults) {
 
                     const invBeforePaq = rd.stockD1Paq ?? 0; // Solo en ronda 1 se suma preHoyPaq
                     rd.despSugeridoPaq = Math.max(0, Math.ceil((rd.smfSlot ?? 0) - invBeforePaq));
-                    const despachoAUsarPaq = (window.pa_include_preingreso && rd.despachoRealRondaPaq !== null && rd.despachoRealRondaPaq !== undefined) ? rd.despachoRealRondaPaq : rd.despSugeridoPaq;
+                    const despachoAUsarPaq = ((window.pa_dias_despacho_real[fecha] || false) && rd.despachoRealRondaPaq !== null && rd.despachoRealRondaPaq !== undefined) ? rd.despachoRealRondaPaq : rd.despSugeridoPaq;
                     rd.stockPostDespachoPaq = invBeforePaq + despachoAUsarPaq;
                 }
             });
