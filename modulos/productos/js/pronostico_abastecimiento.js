@@ -346,9 +346,29 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
         const prodFiltrados = (resPedido.productos || []).filter(p => PA_GRUPOS.includes(p.categoria_insumo));
         if (!prodFiltrados.length) return null;
 
+        const ice = parseFloat($('#pa-crecimiento-esperado').val()) || 0;
+
         const porCat = {};
         PA_GRUPOS.forEach(c => porCat[c] = []);
         prodFiltrados.forEach(p => {
+            p._wls_orig_m = p.wls_m;
+            p._wls_orig_b = p.wls_b;
+            p._wls_m_forced = false;
+
+            const m = p.wls_m ?? 0;
+            const b = p.wls_b ?? 0;
+            const n = p.wls_n ?? 0;
+            let base_val = Math.max(0, (m * n) + b);
+
+            if (ice > 0) {
+                let expected_m = base_val * (ice / 100);
+                if (expected_m > m) {
+                    p.wls_m = expected_m;
+                    p.wls_b = base_val - (expected_m * n);
+                    p._wls_m_forced = true;
+                }
+            }
+
             p._wls_lff = resPedido.wls_last_fecha_fin;
             porCat[p.categoria_insumo]?.push(p);
         });
@@ -678,7 +698,7 @@ function consolidarResultados(storeResults) {
                             dias_stock_min: p.dias_stock_min,
                             cons_semanal: 0, stock_minimo: 0, stock_maximo: 0, stock_max_final: 0,
                             _sMinTotal: 0, _smTotal: 0, _smfTotal: 0,
-                            _stockD1Total: null, _preHoyTotal: null, _invTeoricoAyerTotal: null, _porTienda: {}
+                            _stockD1Total: null, _preHoyTotal: null, _invTeoricoAyerTotal: null, _porTienda: {}, _wls_m_forced: false
                         };
                     }
                     const item = byPP[p.id_pp];
@@ -697,6 +717,7 @@ function consolidarResultados(storeResults) {
                     item._smfTotal = (item._smfTotal ?? 0) + parseFloat(smfRound.toFixed(2));
                     item._cdTotal = (item._cdTotal ?? 0) + parseFloat(cdDinamicoRound.toFixed(2));
                     item._csTotal = (item._csTotal ?? 0) + parseFloat((cdDinamicoRound * 7).toFixed(2));
+                    item._wls_m_forced = item._wls_m_forced || p._wls_m_forced;
 
                     const rd = p._porRonda?.[slot.round] ?? {};
                     const sd = rd.stockD1Paq, pre = rd.preHoyPaq, invTA = rd.invTeoricoAyerPaq, real = rd.despachoRealRondaPaq, sug = rd.despSugeridoPaq;
@@ -721,7 +742,8 @@ function consolidarResultados(storeResults) {
                         stock_max_final: smfRound,
                         stockD1Paq: sd, preHoyPaq: pre, invTeoricoAyerPaq: invTA,
                         despachoRealRondaPaq: real, despSugeridoPaq: sub_despSugerido, despAUsarPaq: sub_aUsar,
-                        cd_dinamico: p._porRonda?.[slot.round]?.cd_dinamico
+                        cd_dinamico: p._porRonda?.[slot.round]?.cd_dinamico,
+                        _wls_m_forced: p._wls_m_forced
                     };
                 });
             });
@@ -896,6 +918,12 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
             csDisplay = cdDisplay !== null ? cdDisplay * 7 : null;
         }
 
+        let forcedArrow = '';
+        if (p._wls_m_forced) {
+            forcedArrow = ' <i class="fas fa-arrow-up text-primary" title="Crecimiento forzado por porcentaje esperado" style="font-size:0.9em;"></i>';
+        }
+        let csHtml = csDisplay !== null ? fmt2(csDisplay) + forcedArrow : fmt2(null);
+
         const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
 
         let stockD1Paq = stockD1Paq_base;
@@ -976,7 +1004,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
             rows += `
             <tr class="pa-row-expandible" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}">
                 <td><div class="d-flex align-items-center"><div class="pa-prod-name">${esc(p.nombre)}</div><i class="bi bi-chevron-right pa-expand-icon ms-2" style="margin-right: 0;"></i></div></td>
-                <td>${csDisplay !== null ? fmt2(csDisplay) : fmt2(null)}</td>
+                <td>${csHtml}</td>
                 <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
                 <td>${fmt2(sMinDisplayCtrl)}</td>
                 <td>${fmt2(smDisplayCtrl)}</td>
@@ -1004,7 +1032,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false) {
                 data-wls-m="${p.wls_m ?? 0}" data-wls-b="${p.wls_b ?? 0}" data-wls-n="${p.wls_n ?? 0}" data-wls-lff="${p._wls_lff || ''}" data-dsm="${p.dias_stock_min ?? 0}" data-ratio="${rowRatio}"
                 data-plan-tipo="${esc(p.plan_tipo_frecuencia || '')}" data-plan-dias="${esc(JSON.stringify(p.plan_dias_semana || []))}" data-plan-semanas="${p.plan_intervalo_semanas || 1}" data-dias-ciclo="${p.dias_ciclo || 7}">
                 <td><div class="d-flex align-items-center"><div class="pa-prod-name">${esc(p.nombre)}</div><i class="bi bi-chevron-right pa-expand-icon ms-2" style="margin-right: 0;"></i></div></td>
-                <td>${csDisplay !== null ? fmt2(csDisplay) : fmt2(null)}</td>
+                <td>${csHtml}</td>
                 <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
                 <td>${fmt2(sMinDisplayCtrl)}</td>
                 <td>${fmt2(smDisplayCtrl)}</td>
@@ -1127,6 +1155,12 @@ function buildSubRowsTiendas(item, slotKey) {
 
         let tdCdDisplay = td.cd_dinamico !== null && td.cd_dinamico !== undefined ? td.cd_dinamico : (td.cons_semanal !== null && td.cons_semanal !== undefined ? (td.cons_semanal / 7) : null);
         let tdCsDisplay = tdCdDisplay !== null ? tdCdDisplay * 7 : null;
+        let subForcedArrow = '';
+        if (td._wls_m_forced) {
+            subForcedArrow = ' <i class="fas fa-arrow-up text-primary" title="Crecimiento forzado por porcentaje esperado" style="font-size:0.9em;"></i>';
+        }
+        let tdCsHtml = tdCsDisplay !== null ? fmt2(tdCsDisplay) + subForcedArrow : fmt2(null);
+
         let tdInvTAHtml = (invTeoricoAyerCtrl === null || invTeoricoAyerCtrl === undefined) ? '<span class="pa-na">—</span>' : `<span>${invTeoricoAyerCtrl.toFixed(1)}</span>`;
         
         const tdDatosCompletos = window.PA_DATOS_COMPLETOS ? `<td>${fmt2(smfCtrl)}</td><td class="pa-col-desp">${tdInvTAHtml}</td>` : '';
@@ -1134,7 +1168,7 @@ function buildSubRowsTiendas(item, slotKey) {
         rows += `
         <tr class="pa-tienda-row pa-tienda-sub d-none" data-slot-key="${slotKey}" data-pp-id="${item.id_pp}">
             <td><span class="pa-tienda-badge">${esc(td.nombre)}</span></td>
-            <td>${tdCsDisplay !== null ? fmt2(tdCsDisplay) : fmt2(null)}</td>
+            <td>${tdCsHtml}</td>
             <td>${tdCdDisplay !== null ? fmt2(tdCdDisplay) : fmt2(null)}</td>
             <td>${fmt2(sMinCtrl)}</td>
             <td>${fmt2(smCtrl)}</td>

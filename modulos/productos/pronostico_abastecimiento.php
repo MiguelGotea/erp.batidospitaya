@@ -93,6 +93,16 @@ try {
                                 placeholder="ej: <?php echo $semHastaDefault; ?>">
                         </div>
 
+                        <div class="col-6 col-md-auto">
+                            <label class="pa-label" for="pa-crecimiento-esperado"
+                                title="Índice de Crecimiento Esperado: Porcentaje que forzará el crecimiento de la proyección si es mayor al crecimiento natural.">
+                                Crecimiento Esp. (%)
+                            </label>
+                            <input type="number" id="pa-crecimiento-esperado" class="form-control form-control-sm pa-input"
+                                style="width:110px" min="0" max="1000" placeholder="ej: 0"
+                                value="0">
+                        </div>
+
                         <div class="col-12 col-md">
                             <label class="pa-label" for="pa-sucursal">
                                 Sucursal <span class="text-danger">*</span>

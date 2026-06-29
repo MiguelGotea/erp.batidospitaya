@@ -110,12 +110,24 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
     let proyW1 = round2(promCalc), proyW2 = round2(promCalc), proyW3 = round2(promCalc);
     let regSlope = 0, regIntercept = promCalc;
     let proyActual = null;
+    let ice = parseFloat($('#pa-crecimiento-esperado').val()) || 0;
+    let m_forced = false;
 
     if (item.wls_n !== undefined && item.wls_n > 0) {
         regSlope = item.wls_m !== undefined ? item.wls_m : 0;
         regIntercept = item.wls_b !== undefined ? item.wls_b : promCalc;
         let n_activa = item.wls_n;
         let ultima_semana_activa = semanasNros[item.wls_first_idx + n_activa - 1];
+
+        let base_val = Math.max(0, (regSlope * n_activa) + regIntercept);
+        if (ice > 0) {
+            let expected_m = base_val * (ice / 100);
+            if (expected_m > regSlope) {
+                regSlope = expected_m;
+                regIntercept = base_val - (regSlope * n_activa);
+                m_forced = true;
+            }
+        }
 
         let calcWLS = (sem) => Math.max(0, round2(regSlope * (n_activa + (sem - ultima_semana_activa)) + regIntercept));
 
@@ -145,6 +157,16 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
                     let maxUlt2 = ultimas2.length > 0 ? Math.max(...ultimas2) : 0;
                     regSlope = 0;
                     regIntercept = maxUlt2;
+                }
+
+                let base_val = Math.max(0, (regSlope * ultimaSem) + regIntercept);
+                if (ice > 0) {
+                    let expected_m = base_val * (ice / 100);
+                    if (expected_m > regSlope) {
+                        regSlope = expected_m;
+                        regIntercept = base_val - (regSlope * ultimaSem);
+                        m_forced = true;
+                    }
                 }
 
                 proyW1 = Math.max(0, round2(regSlope * (ultimaSem + 1) + regIntercept));
@@ -203,6 +225,9 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
         if (rawSlope < -0.001) isAjustado = true;
     }
     let proyLabel = isAjustado ? 'Proyección (Ajuste p/Caída: Máx 2 sem)' : 'Proyección';
+    if (m_forced) {
+        proyLabel = `Proyección (Forzada por Crecimiento Esperado ${ice}%)`;
+    }
 
     const proyData = [...semanasNros.map(n => n === semanaActual ? proyActual : null), proyW1, proyW2, proyW3];
     datasets.push({
@@ -519,6 +544,20 @@ async function calcularPronosticoAbastKardex(
             _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsProy, datasets, fmtKardex);
             _finalizarChartKardex(datasets, ctx, chartId, labels);
             return;
+        }
+
+        const ice = parseFloat($('#pa-crecimiento-esperado').val()) || 0;
+        const m_orig = prod.wls_m ?? 0;
+        const b_orig = prod.wls_b ?? 0;
+        const n_orig = prod.wls_n ?? 0;
+        let base_val = Math.max(0, (m_orig * n_orig) + b_orig);
+
+        if (ice > 0) {
+            let expected_m = base_val * (ice / 100);
+            if (expected_m > m_orig) {
+                prod.wls_m = expected_m;
+                prod.wls_b = base_val - (expected_m * n_orig);
+            }
         }
 
         const addDays = (d, n) => {
