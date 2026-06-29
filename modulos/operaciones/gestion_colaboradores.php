@@ -17,6 +17,7 @@ if (!$tienePermisoVista) {
 $tienePermisoPlanificacion = tienePermiso('administracion_colaboradores_lideres', 'planificacion', $cargoOperario);
 $tienePermisoEditar = tienePermiso('administracion_colaboradores_lideres', 'editar_colaborador', $cargoOperario);
 $tienePermisoEditarSupervisor = tienePermiso('administracion_colaboradores_lideres', 'editar_supervisor', $cargoOperario);
+$tienePermisoExportar = tienePermiso('administracion_colaboradores_lideres', 'exportar', $cargoOperario);
 
 // Obtener cargo principal
 $cargoUsuario = obtenerCargoPrincipalUsuario($_SESSION['usuario_id']);
@@ -360,6 +361,38 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
         );
     }
 }
+
+// Preparar datos para exportar
+$datosExportar = [];
+$semana_str = "Semana " . ($semanaMostrar['numero_semana'] ?? 'N/A');
+$rango_fechas = formatoFecha($semanaMostrar['fecha_inicio'] ?? '') . " - " . formatoFecha($semanaMostrar['fecha_fin'] ?? '');
+
+foreach ($sucursalesAgrupadas as $departamentoNombre => $sucursales) {
+    foreach ($sucursales as $sucursal) {
+        $supervisores_arr = [];
+        if (!empty($sucursal['supervisores'])) {
+            foreach ($sucursal['supervisores'] as $sup) {
+                $supervisores_arr[] = trim($sup['Nombre'] . ' ' . $sup['Apellido']);
+            }
+        }
+        $supervisores_str = empty($supervisores_arr) ? 'Sin supervisor' : implode(', ', $supervisores_arr);
+        
+        $colaboradores = $colaboradoresPorSucursal[$sucursal['codigo']] ?? ['lideres' => [], 'colaboradores' => []];
+        $todos = array_merge($colaboradores['lideres'], $colaboradores['colaboradores']);
+        
+        foreach ($todos as $col) {
+            $datosExportar[] = [
+                'Semana' => $semana_str,
+                'Rango Fechas' => $rango_fechas,
+                'Tienda' => $sucursal['nombre'],
+                'Colaborador' => $col['nombre'],
+                'Cargo' => $col['cargo_nombre'],
+                'Supervisor' => $supervisores_str,
+                'Departamento' => $departamentoNombre
+            ];
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -427,6 +460,11 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                         </div>
 
                         <div class="nav-right" style="display: flex; align-items: center; gap: 10px;">
+                            <?php if ($tienePermisoExportar): ?>
+                                <button type="button" id="btnExportar" class="btn btn-outline-success" style="border-radius: 20px; font-size: 13px; padding: 6px 16px;">
+                                    <i class="fas fa-file-excel"></i> Exportar
+                                </button>
+                            <?php endif; ?>
                             <div style="position: relative;">
                                 <i class="bi bi-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 14px; pointer-events: none;"></i>
                                 <input
@@ -899,6 +937,45 @@ foreach ($sucursalesAgrupadas as $departamento => $sucursales) {
                 alert('Error de conexión.');
             });
         });
+    })();
+    </script>
+    
+    <script>
+    (function () {
+        const btnExportar = document.getElementById('btnExportar');
+        if (btnExportar) {
+            btnExportar.addEventListener('click', function() {
+                const datos = <?= json_encode($datosExportar, JSON_UNESCAPED_UNICODE) ?>;
+                if (!datos || datos.length === 0) {
+                    alert('No hay datos para exportar en esta semana.');
+                    return;
+                }
+
+                // Convertir a CSV
+                const separador = ',';
+                const llaves = Object.keys(datos[0]);
+                
+                const csv = [
+                    llaves.join(separador),
+                    ...datos.map(fila => llaves.map(llave => {
+                        let valor = fila[llave] || '';
+                        valor = String(valor).replace(/"/g, '""');
+                        return `"${valor}"`;
+                    }).join(separador))
+                ].join('\r\n');
+
+                // Crear y descargar archivo (incluye BOM para Excel)
+                const blob = new Blob(["\ufeff", csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'Colaboradores_Equipos_Tiendas.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        }
     })();
     </script>
 </body>
