@@ -241,11 +241,6 @@ function getTextoUrgencia($nivel)
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 bg-light" style="border-radius: 0 0 1rem 1rem;">
-                    <div class="mb-4">
-                        <button class="btn btn-outline-danger w-100 rounded-pill shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2" style="border-width: 2px; max-width: 300px; margin: 0 auto;" onclick="limpiarFiltrosAccesoRapido(); bootstrap.Modal.getInstance(document.getElementById('modalFiltroSucursales')).hide();">
-                            <i class="bi bi-trash"></i> Limpiar Filtros
-                        </button>
-                    </div>
                     <div class="d-flex flex-wrap gap-2 justify-content-center">
                         <?php foreach ($sucursales as $suc): ?>
                             <?php 

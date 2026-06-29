@@ -1052,23 +1052,7 @@ function aplicarAccesoRapido(sucursal, element) {
     }, 500);
 }
 
-function limpiarFiltrosAccesoRapido() {
-    // Limpiar objeto de filtros
-    filtrosActivos = {};
 
-    // Si el filtro de sucursal está bloqueado, restaurar el filtro por defecto
-    if (typeof filtroSucursalBloqueado !== 'undefined' && filtroSucursalBloqueado && typeof codigoSucursalBusqueda !== 'undefined') {
-        filtrosActivos['nombre_sucursal'] = [codigoSucursalBusqueda];
-    }
-
-    // UI Update: Quitar activos de chips
-    $('.branch-chip').removeClass('active');
-
-    // Recargar datos
-    paginaActual = 1;
-    cargarDatos();
-    actualizarIndicadoresFiltros();
-}
 // ========== FUNCIONES DE SUPER EDICIÓN ==========
 
 // Renderizar título editable
