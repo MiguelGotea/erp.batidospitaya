@@ -1213,7 +1213,7 @@ function cambiarEstado(ticketId, statusActual) {
     const opciones = `
         <div style="padding: 0.5rem;">
             <div style="font-weight: 600; margin-bottom: 0.5rem;">Seleccionar estado:</div>
-            ${Object.keys(textosEstado).map(status => {
+            ${['solicitado', 'finalizado', 'cancelado'].map(status => {
         const color = coloresEstado[status];
         const selected = status === statusActual ? '✓ ' : '';
         const texto = textosEstado[status];
