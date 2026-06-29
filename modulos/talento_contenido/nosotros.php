@@ -348,7 +348,7 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Número de la Estadística <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" name="valor_numero" id="statValor" required>
+                                <input type="text" class="form-control" name="valor_numero" id="statValor" required placeholder="Ej: 1.5M, 2016, 14">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Sufijo del Número</label>
