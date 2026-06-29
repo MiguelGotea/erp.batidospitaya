@@ -87,7 +87,7 @@ try {
 
     // Insertar todos los CodigoCierre del grupo afectado a la cola de anulación
     $conn->beginTransaction();
-    $stmtInsert = $conn->prepare("INSERT INTO anulacion_cierres_diarios (CodigoCierre, Sucursal, status) VALUES (:codigo, :sucursal, 0)");
+    $stmtInsert = $conn->prepare("INSERT INTO anulacion_cierres_diarios (CodigoCierre, Sucursal, status, cod_usuario_anula) VALUES (:codigo, :sucursal, 0, :usuario)");
     
     $insertados = 0;
     foreach ($grupoAfectado['todos'] as $c) {
@@ -97,7 +97,8 @@ try {
         if (!$stmtCheck->fetch()) {
             $stmtInsert->execute([
                 'codigo' => $c['CodigoCierre'],
-                'sucursal' => $sucursal
+                'sucursal' => $sucursal,
+                'usuario' => $usuario['CodOperario']
             ]);
             $insertados++;
         }

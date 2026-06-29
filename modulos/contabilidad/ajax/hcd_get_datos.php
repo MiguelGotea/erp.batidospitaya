@@ -235,48 +235,23 @@ try {
 
     // ── Enriquecer Paginados con Alertas ──────────────────────────────────────
     $hoy = date('Y-m-d');
-    
-    // Validar si es una tabla existente
-    $tablaExiste = false;
-    $chk = $conn->query("SHOW TABLES LIKE 'anulacion_cierres_diarios'");
-    if ($chk && $chk->rowCount() > 0) {
-        $tablaExiste = true;
-        $stmtStatus = $conn->prepare("SELECT status FROM anulacion_cierres_diarios WHERE CodigoCierre = :codigo ORDER BY id DESC LIMIT 1");
-    }
+
+    // Obtener anulaciones en proceso
+    $stmtAnulaciones = $conn->query("SELECT CodigoCierre FROM anulacion_cierres_diarios WHERE status = 0");
+    $anulacionesPendientes = $stmtAnulaciones->fetchAll(PDO::FETCH_COLUMN);
+    $anulacionesSet = array_flip($anulacionesPendientes);
 
     foreach ($paginados as &$p) {
         $alertas = [];
+        $codCierreActual = $p['CodigoCierre'];
 
-        // Revisar estatus de anulación
-        $en_proceso = false;
-        if ($tablaExiste) {
-            $stmtStatus->execute(['codigo' => $p['CodigoCierre']]);
-            $anulStatus = $stmtStatus->fetchColumn();
-            if ($anulStatus !== false && (int)$anulStatus === 0) {
-                $en_proceso = true;
-            }
+        if (isset($anulacionesSet[$codCierreActual])) {
+            $alertas[] = ['tipo' => 'info', 'texto' => 'Anulación en proceso'];
         }
 
-        $ini = horaAMin($p['HoraInicial']);
-        $fin = horaAMin($p['HoraFinal']);
-        $diffFinal = $fin - $ini;
-        if ($diffFinal < 0) $diffFinal += 24 * 60;
-        $ya_anulado = ($diffFinal < 30);
-
-        $p['anulacion_en_proceso'] = $en_proceso;
-        $p['anulado'] = $ya_anulado;
-
-        if ($ya_anulado) {
-            $alertas[] = ['tipo' => 'danger', 'texto' => 'Cierre Anulado'];
-        } elseif ($en_proceso) {
-            $alertas[] = ['tipo' => 'warning', 'texto' => 'En proceso de anulación'];
-        } elseif (!empty($p['tiene_precierre_anulado'])) {
-            $alertas[] = ['tipo' => 'danger', 'texto' => 'Precierre Anulado'];
-        }
-
-        // No evaluar alertas de balance/turno temporal si el cierre corresponde al día en curso
+        // No evaluar ninguna alerta si el cierre corresponde al día en curso
         if ($p['Fecha'] === $hoy) {
-            $p['alertas'] = $alertas;
+            $p['alertas'] = [];
             continue;
         }
 

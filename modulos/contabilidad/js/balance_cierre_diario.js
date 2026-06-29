@@ -310,7 +310,8 @@ function renderizarDetalle() {
 
     // Encabezado
     if (isAnulado) {
-        $('#detCodigoCierre').html(`${d.cod_cierre} <span class="badge bg-danger ms-2">Anulado</span>`);
+        let textoAnulado = d.usuario_anula ? `Anulado por: ${d.usuario_anula}` : 'Anulado';
+        $('#detCodigoCierre').html(`${d.cod_cierre} <span class="badge bg-danger ms-2">${textoAnulado}</span>`);
     } else {
         $('#detCodigoCierre').text(d.cod_cierre);
     }

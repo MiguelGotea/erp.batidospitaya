@@ -190,6 +190,22 @@ try {
     // Conteo de Caja - Caja Inicial + Aligeramientos + Compras
     $efectivo_fisico = $conteo_caja - $caja_inicial + $aligeramientos + $compras_caja;
 
+    // ── 10. Información de Anulación ───────────────────────────────────────────
+    $usuario_anula = null;
+    $stmtAnul = $conn->prepare("
+        SELECT CONCAT(COALESCE(o.Nombre,''), ' ', COALESCE(o.Nombre2,''), ' ', COALESCE(o.Apellido,''), ' ', COALESCE(o.Apellido2,'')) AS nombre_completo
+        FROM anulacion_cierres_diarios ac
+        LEFT JOIN Operarios o ON ac.cod_usuario_anula = o.CodOperario
+        WHERE ac.CodigoCierre = :cod
+        LIMIT 1
+    ");
+    $stmtAnul->bindValue(':cod', $cod_cierre, PDO::PARAM_INT);
+    $stmtAnul->execute();
+    $rowAnul = $stmtAnul->fetch(PDO::FETCH_ASSOC);
+    if ($rowAnul && trim($rowAnul['nombre_completo']) !== '') {
+        $usuario_anula = trim(preg_replace('/\s+/', ' ', $rowAnul['nombre_completo']));
+    }
+
     // ── Armar respuesta ───────────────────────────────────────────────────────
     $datos = [
         // Encabezado
@@ -222,6 +238,7 @@ try {
 
         // Observaciones
         'observaciones' => $observaciones,
+        'usuario_anula' => $usuario_anula,
     ];
 
     echo json_encode(['success' => true, 'datos' => $datos]);
