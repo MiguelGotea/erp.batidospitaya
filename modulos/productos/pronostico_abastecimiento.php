@@ -100,7 +100,7 @@ try {
                             </label>
                             <input type="number" id="pa-crecimiento-esperado" class="form-control form-control-sm pa-input"
                                 style="width:110px" min="0" max="1000" placeholder="ej: 0"
-                                value="0">
+                                value="0" oninput="if(this.value < 0) this.value = 0;">
                         </div>
 
                         <div class="col-12 col-md">
