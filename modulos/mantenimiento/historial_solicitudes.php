@@ -241,26 +241,20 @@ function getTextoUrgencia($nivel)
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 bg-light" style="border-radius: 0 0 1rem 1rem;">
-                    <div class="row g-3">
-                        <div class="col-12 mb-2">
-                            <button class="btn btn-outline-danger w-100 rounded-pill shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2" style="border-width: 2px;" onclick="limpiarFiltrosAccesoRapido(); bootstrap.Modal.getInstance(document.getElementById('modalFiltroSucursales')).hide();">
-                                <i class="bi bi-trash"></i> Limpiar Filtros
-                            </button>
-                        </div>
+                    <div class="mb-4">
+                        <button class="btn btn-outline-danger w-100 rounded-pill shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2" style="border-width: 2px; max-width: 300px; margin: 0 auto;" onclick="limpiarFiltrosAccesoRapido(); bootstrap.Modal.getInstance(document.getElementById('modalFiltroSucursales')).hide();">
+                            <i class="bi bi-trash"></i> Limpiar Filtros
+                        </button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center">
                         <?php foreach ($sucursales as $suc): ?>
                             <?php 
                                 if ($filtro_sucursal_bloqueado && $suc['nombre_sucursal'] !== $codigo_sucursal_busqueda) continue;
                             ?>
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <div class="branch-card p-3 bg-white shadow-sm rounded-4 text-center border-0 d-flex flex-column align-items-center justify-content-center h-100" style="cursor: pointer; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 0.5rem 1rem rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 .125rem .25rem rgba(0,0,0,.075)';" data-sucursal="<?php echo $suc['nombre_sucursal']; ?>" 
-                                     onclick="aplicarAccesoRapido('<?php echo $suc['nombre_sucursal']; ?>', this); bootstrap.Modal.getInstance(document.getElementById('modalFiltroSucursales')).hide();">
-                                    <div class="branch-card-icon mb-2" style="font-size: 2rem; color: #0E544C;">
-                                        <i class="bi bi-shop"></i>
-                                    </div>
-                                    <div class="branch-card-text fw-semibold text-dark text-truncate w-100" style="font-size: 0.95rem;" title="<?php echo $suc['nombre_sucursal']; ?>">
-                                        <?php echo $suc['nombre_sucursal']; ?>
-                                    </div>
-                                </div>
+                            <div class="branch-card px-3 py-2 bg-white shadow-sm rounded-pill border d-flex align-items-center gap-2" style="cursor: pointer; transition: all 0.2s; border-color: #e0e0e0 !important;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';" data-sucursal="<?php echo $suc['nombre_sucursal']; ?>" 
+                                 onclick="aplicarAccesoRapido('<?php echo $suc['nombre_sucursal']; ?>', this); bootstrap.Modal.getInstance(document.getElementById('modalFiltroSucursales')).hide();">
+                                <i class="bi bi-shop text-primary" style="font-size: 1.1rem; color: #0E544C !important;"></i>
+                                <span class="fw-semibold text-dark" style="font-size: 0.9rem;"><?php echo $suc['nombre_sucursal']; ?></span>
                             </div>
                         <?php endforeach; ?>
                     </div>
