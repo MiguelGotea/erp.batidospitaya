@@ -128,31 +128,7 @@ function getTextoUrgencia($nivel)
             <div class="container-fluid p-3">
                 <!-- Header -->
 
-                <!-- Panel de Acceso Rápido -->
-                <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
-                    <div class="quick-access-wrapper">
-                        <div class="quick-access-title">
-                            <i class="bi bi-lightning-charge-fill"></i>
-                            Accesos Rápidos por Sucursal
-                        </div>
-                        <div class="quick-access-chips" id="quickAccessChips">
-                            <div class="branch-chip clear-filters" onclick="limpiarFiltrosAccesoRapido()">
-                                <i class="bi bi-trash"></i> Limpiar Filtros
-                            </div>
-                            <?php foreach ($sucursales as $suc): ?>
-                                <?php 
-                                    // Si el filtro de sucursal está bloqueado, solo mostrar la sucursal del usuario
-                                    if ($filtro_sucursal_bloqueado && $suc['nombre_sucursal'] !== $codigo_sucursal_busqueda) continue;
-                                ?>
-                                <div class="branch-chip" data-sucursal="<?php echo $suc['nombre_sucursal']; ?>" 
-                                     onclick="aplicarAccesoRapido('<?php echo $suc['nombre_sucursal']; ?>', this)">
-                                    <i class="bi bi-shop"></i>
-                                    <?php echo $suc['nombre_sucursal']; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
+
 
                 <!-- Tabla de solicitudes -->
                 <div class="table-responsive">
@@ -255,6 +231,45 @@ function getTextoUrgencia($nivel)
         </div>
     </div>
 
+    <!-- Modal Filtrar Sucursales (Acceso Rápido) -->
+    <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
+    <div class="modal fade" id="modalFiltroSucursales" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow-premium border-0 rounded-4">
+                <div class="modal-header border-0 pb-0" style="background-color: #0E544C; color: white; border-radius: 1rem 1rem 0 0; padding: 1.2rem 1.5rem;">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Accesos Rápidos por Sucursal</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light" style="border-radius: 0 0 1rem 1rem;">
+                    <div class="row g-3">
+                        <div class="col-12 mb-2">
+                            <button class="btn btn-outline-danger w-100 rounded-pill shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2" style="border-width: 2px;" onclick="limpiarFiltrosAccesoRapido(); bootstrap.Modal.getInstance(document.getElementById('modalFiltroSucursales')).hide();">
+                                <i class="bi bi-trash"></i> Limpiar Filtros
+                            </button>
+                        </div>
+                        <?php foreach ($sucursales as $suc): ?>
+                            <?php 
+                                if ($filtro_sucursal_bloqueado && $suc['nombre_sucursal'] !== $codigo_sucursal_busqueda) continue;
+                            ?>
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <div class="branch-card p-3 bg-white shadow-sm rounded-4 text-center border-0 d-flex flex-column align-items-center justify-content-center h-100" style="cursor: pointer; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 0.5rem 1rem rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 .125rem .25rem rgba(0,0,0,.075)';" data-sucursal="<?php echo $suc['nombre_sucursal']; ?>" 
+                                     onclick="aplicarAccesoRapido('<?php echo $suc['nombre_sucursal']; ?>', this); bootstrap.Modal.getInstance(document.getElementById('modalFiltroSucursales')).hide();">
+                                    <div class="branch-card-icon mb-2" style="font-size: 2rem; color: #0E544C;">
+                                        <i class="bi bi-shop"></i>
+                                    </div>
+                                    <div class="branch-card-text fw-semibold text-dark text-truncate w-100" style="font-size: 0.95rem;" title="<?php echo $suc['nombre_sucursal']; ?>">
+                                        <?php echo $suc['nombre_sucursal']; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Botón Flotante con opciones -->
     <?php 
         $tienePermisoNuevoRegistro = tienePermiso('historial_solicitudes_mantenimiento', 'nuevo_registro', $cargoOperario);
@@ -275,6 +290,10 @@ function getTextoUrgencia($nivel)
                 <?php endif; ?>
                 
                 <?php if ($tienePermisoVistaTodas): ?>
+                <a href="#" class="fab-option" data-bs-toggle="modal" data-bs-target="#modalFiltroSucursales">
+                    <span class="fab-label">Accesos Rápidos</span>
+                    <div class="fab-icon-holder" style="background-color: #ffc107; color: #000;"><i class="bi bi-lightning-charge-fill"></i></div>
+                </a>
                 <a href="#" class="fab-option" onclick="descargarInformeGlobal(); return false;">
                     <span class="fab-label">Informe Global</span>
                     <div class="fab-icon-holder" style="background-color: #217346;"><i class="fas fa-file-excel"></i></div>
