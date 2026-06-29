@@ -286,11 +286,11 @@ function getTextoUrgencia($nivel)
                 <?php if ($tienePermisoVistaTodas): ?>
                 <a href="#" class="fab-option" data-bs-toggle="modal" data-bs-target="#modalFiltroSucursales">
                     <span class="fab-label">Accesos Rápidos</span>
-                    <div class="fab-icon-holder" style="background-color: #ffc107; color: #000;"><i class="bi bi-lightning-charge-fill"></i></div>
+                    <div class="fab-icon-holder"><i class="bi bi-lightning-charge-fill"></i></div>
                 </a>
-                <a href="#" class="fab-option" onclick="descargarInformeGlobal(); return false;">
+                <a href="#" class="fab-option" id="btnInformeGlobal" onclick="descargarInformeGlobal(); return false;">
                     <span class="fab-label">Informe Global</span>
-                    <div class="fab-icon-holder" style="background-color: #217346;"><i class="fas fa-file-excel"></i></div>
+                    <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
                 </a>
                 <?php endif; ?>
             </div>
