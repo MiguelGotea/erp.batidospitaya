@@ -1396,12 +1396,22 @@ function actualizarResolucion(ticketId, nuevaResolucion) {
  */
 function descargarInformeGlobal() {
     const btn = document.getElementById('btnInformeGlobal');
-    if (!btn) return;
 
     // Estado de carga
-    btn.disabled = true;
-    btn.classList.add('loading');
-    btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> <span>Generando...</span>';
+    if (btn) {
+        btn.style.pointerEvents = 'none';
+        btn.classList.add('loading');
+        
+        const label = btn.querySelector('.fab-label');
+        const icon = btn.querySelector('.fab-icon-holder i');
+        
+        if (label && icon) {
+            label.innerText = 'Generando...';
+            icon.className = 'fas fa-spinner fa-spin';
+        } else {
+            btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> <span>Generando...</span>';
+        }
+    }
 
     // ── Filtros del informe (SIEMPRE todas las sucursales) ───────────────────
     const filtrosExport = {};
@@ -1441,9 +1451,20 @@ function descargarInformeGlobal() {
 
     // Restaurar botón (no existe evento "descarga completada" en submit nativo)
     setTimeout(function () {
-        btn.disabled = false;
-        btn.classList.remove('loading');
-        btn.innerHTML = '<i class="bi bi-file-earmark-excel-fill"></i> <span>Informe Global</span>';
+        if (btn) {
+            btn.style.pointerEvents = 'auto';
+            btn.classList.remove('loading');
+            
+            const label = btn.querySelector('.fab-label');
+            const icon = btn.querySelector('.fab-icon-holder i');
+            
+            if (label && icon) {
+                label.innerText = 'Informe Global';
+                icon.className = 'fas fa-file-excel';
+            } else {
+                btn.innerHTML = '<i class="bi bi-file-earmark-excel-fill"></i> <span>Informe Global</span>';
+            }
+        }
     }, 4000);
 }
 
