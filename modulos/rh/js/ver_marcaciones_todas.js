@@ -248,7 +248,7 @@ function renderizarTabla(datos) {
                 }
             }
 
-            if (esTardanza || esFalta) {
+            if ((esTardanza || esFalta) && filtroIncidencias !== 'feriados') {
                 const dataJust = esTardanza ? row.tardanza_data : row.falta_data;
                 const solicitada = esTardanza ? row.tardanza_solicitada : row.falta_solicitada;
 

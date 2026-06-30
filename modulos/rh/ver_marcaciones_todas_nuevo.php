@@ -1832,7 +1832,7 @@ function verificarTardanzaYaRegistrada(
                                                     title="Ver solo FALTAS">
                                                     <i class="fas fa-user-slash"></i>
                                                 </span>
-                                                <span class="tri-btn" style="color: #0d6efd;" onclick="setFiltroIncidencias('feriados')"
+                                                <span class="tri-btn primary" onclick="setFiltroIncidencias('feriados')"
                                                     title="Ver solo FERIADOS">
                                                     <i class="fas fa-umbrella-beach"></i>
                                                 </span>

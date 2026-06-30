@@ -1075,38 +1075,38 @@ a.btn {
     justify-content: center;
     border-radius: 50%;
     transition: all 0.2s ease;
-    opacity: 0.4;
-    color: white;
+    color: #adb5bd; /* Gris claro por defecto */
+    background: transparent;
 }
 
 .tri-btn:hover {
-    opacity: 0.8;
+    color: #ffffff;
     transform: scale(1.1);
 }
 
 .tri-btn.active {
     opacity: 1;
-    background: rgba(255, 255, 255, 0.2);
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
 .tri-btn.neutral.active {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.3);
+    background: #6c757d;
 }
 
-.tri-btn.positive.active {
-    color: #e0f2f1;
-    /* Verde esmeralda claro */
-    background: #28a745;
-    /* Verde sólido */
+.tri-btn.warning.active {
+    color: #212529;
+    background: #ffc107;
 }
 
-.tri-btn.negative.active {
-    color: #ffebee;
-    /* Rojo suave */
+.tri-btn.danger.active {
+    color: #ffffff;
     background: #dc3545;
-    /* Rojo sólido */
+}
+
+.tri-btn.primary.active {
+    color: #ffffff;
+    background: #0d6efd;
 }
 
 /* ========================================
