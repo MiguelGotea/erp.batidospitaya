@@ -2821,7 +2821,7 @@ function verificarTardanzaYaRegistrada(
     <?php endif; ?>
 
     <!-- Botón Flotante con opciones (Exportar) -->
-    <?php if ($esContabilidad || $esOperaciones || $canExportMarcacionesBd): ?>
+    <?php if ($esContabilidad || $esOperaciones || $canExportMarcacionesBd || (isset($esSolicitudVacaciones) && $esSolicitudVacaciones)): ?>
         <div class="fab-container">
             <div class="fab-options">
                 <?php if ($canExportMarcacionesBd): ?>
@@ -2877,6 +2877,12 @@ function verificarTardanzaYaRegistrada(
                         <div class="fab-icon-holder"><i
                                 class="fas fa-list"></i></div>
                     </a>
+                <?php endif; ?>
+                <?php if (isset($esSolicitudVacaciones) && $esSolicitudVacaciones): ?>
+                    <div class="fab-option" onclick="mostrarModalNuevaVacacion()">
+                        <span class="fab-label">Solicitud de vacaciones</span>
+                        <div class="fab-icon-holder"><i class="fas fa-umbrella-beach"></i></div>
+                    </div>
                 <?php endif; ?>
             </div>
             <div class="btn-floating-pitaya" title="Exportar">
