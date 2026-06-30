@@ -207,13 +207,22 @@ function getTextoUrgencia($nivel)
     <!-- Modal para fotos -->
     <div class="modal fade" id="modalFotos" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header" style="background-color: #0E544C; color: white;">
-                    <h5 class="modal-title">Fotos de la Solicitud</h5>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-image fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Fotos de la Solicitud</h5>
+                            <p class="small mb-0 opacity-75">Evidencia fotográfica adjunta al ticket</p>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div id="carouselFotos" class="carousel slide">
+                <div class="modal-body p-4 bg-light">
+                    <div id="carouselFotos" class="carousel slide bg-dark rounded overflow-hidden shadow-sm">
                         <div class="carousel-inner" id="carouselFotosInner">
                             <!-- Fotos cargadas vía AJAX -->
                         </div>
@@ -235,12 +244,21 @@ function getTextoUrgencia($nivel)
     <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
     <div class="modal fade" id="modalFiltroSucursales" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content shadow-premium border-0 rounded-4">
-                <div class="modal-header border-0 pb-0" style="background-color: #0E544C; color: white; border-radius: 1rem 1rem 0 0; padding: 1.2rem 1.5rem;">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Accesos Rápidos por Sucursal</h5>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="bi bi-lightning-charge-fill fs-4 text-warning"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Accesos Rápidos por Sucursal</h5>
+                            <p class="small mb-0 opacity-75">Filtra rápidamente los tickets por sucursal</p>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4 bg-light" style="border-radius: 0 0 1rem 1rem;">
+                <div class="modal-body p-4 bg-light">
                     <div class="d-flex flex-wrap gap-2 justify-content-center">
                         <?php foreach ($sucursales as $suc): ?>
                             <?php 
@@ -335,12 +353,21 @@ function getTextoUrgencia($nivel)
     <!-- Modal Registrar Trabajo Realizado (Finalizar Ticket) -->
     <div class="modal fade" id="finalizarTicketModal" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content shadow-premium border-0 rounded-4">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold text-primary"><i class="fas fa-tools me-2"></i>Registrar Trabajo Realizado</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="stopCamera()"></button>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-tools fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Registrar Trabajo Realizado</h5>
+                            <p class="small mb-0 opacity-75">Documenta la finalización de este ticket</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopCamera()"></button>
                 </div>
-                <div class="modal-body p-4 pt-3">
+                <div class="modal-body p-4 bg-light">
                     <form id="formFinalizarTicket">
                         <input type="hidden" name="ticket_id" id="finalizar_ticket_id">
                         <input type="hidden" name="status" value="finalizado">
@@ -392,10 +419,12 @@ function getTextoUrgencia($nivel)
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer border-0 p-3 px-4 pb-4">
-                    <button type="button" class="btn btn-light rounded-pill px-4"
+                <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between">
+                    <button type="button" class="btn-modern btn-modern-secondary"
                         data-bs-dismiss="modal" onclick="stopCamera()">Cancelar</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="guardarFinalizacionDirecta()">Guardar Registro</button>
+                    <button type="button" class="btn-modern btn-modern-primary" onclick="guardarFinalizacionDirecta()">
+                        <i class="fas fa-save me-2"></i>Guardar Registro
+                    </button>
                 </div>
             </div>
         </div>
@@ -404,9 +433,18 @@ function getTextoUrgencia($nivel)
     <!-- Modal para ver el trabajo finalizado -->
     <div class="modal fade" id="modalVerTrabajoFinalizado" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content shadow-premium border-0 rounded-4">
-                <div class="modal-header border-0 pb-0" style="background-color: #0E544C; color: white; border-radius: 1rem 1rem 0 0; padding: 1.2rem 1.5rem;">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-check-circle me-2 text-success"></i>Trabajo Finalizado</h5>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-check-circle fs-4 text-success"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Trabajo Finalizado</h5>
+                            <p class="small mb-0 opacity-75">Detalles del registro del ticket completado</p>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 bg-light">
