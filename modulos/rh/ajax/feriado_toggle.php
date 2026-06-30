@@ -47,13 +47,8 @@ try {
             $observacionAdicional = 'Solicita: Pagado';
         }
     } elseif ($accion === 'descansado') {
-        if ($esRRHH_o_Admin) {
-            $nuevoEstado = 'Descansado';
-            $observacionAdicional = 'Aprobado (Compensado)';
-        } else {
-            $nuevoEstado = 'Pendiente';
-            $observacionAdicional = 'Solicita: Descansado';
-        }
+        $nuevoEstado = 'Descansado';
+        $observacionAdicional = 'Compensado (Descanso)';
     } elseif ($accion === 'pendiente') {
         $nuevoEstado = 'Pendiente';
         $observacionAdicional = 'Regresado a Pendiente';
@@ -62,10 +57,10 @@ try {
     if ($registro) {
         // Actualizar
         $obs = $registro['observaciones'];
-        // Si no es RRHH, actualizamos la observación y forzamos el estado a Pendiente
-        if (!$esRRHH_o_Admin && ($accion === 'pagado' || $accion === 'descansado')) {
+        // Si no es RRHH, actualizamos la observación y forzamos el estado a Pendiente SOLO para pagado
+        if (!$esRRHH_o_Admin && $accion === 'pagado') {
             $obs = $observacionAdicional;
-        } elseif ($esRRHH_o_Admin) {
+        } elseif ($esRRHH_o_Admin || $accion === 'descansado') {
             $obs = $observacionAdicional;
         }
         $stmtUpd = $conn->prepare("UPDATE FeriadosStatus SET estado = ?, observaciones = ?, actualizado_por = ?, fecha_actualizacion = NOW() WHERE id = ?");

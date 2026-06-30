@@ -1795,18 +1795,22 @@ function verificarTardanzaYaRegistrada(
                                         <i class="bi bi-funnel filter-icon" onclick="toggleFilter(this)"></i>
                                     </th>
                                     <th style="text-align: center;">Horario Programado</th>
+                                    <!-- OCULTADO POR SOLICITUD DEL USUARIO
                                     <?php if ($esLider): ?>
                                         <th style="text-align: center;">Horas Programadas</th>
                                     <?php endif; ?>
+                                    -->
                                     <th style="text-align: center;">Horario Marcado</th>
                                     <?php if ($esFotoMarcacion): ?>
                                         <th style="text-align: center; min-width: 100px;">
                                             <i class="bi bi-camera-video"></i> Foto
                                         </th>
                                     <?php endif; ?>
+                                    <!-- OCULTADO POR SOLICITUD DEL USUARIO
                                     <?php if ($esLider): ?>
                                         <th style="text-align: center;">Horas Trabajadas</th>
                                     <?php endif; ?>
+                                    -->
                                     <th style="display:none;">Diferencia Entrada</th>
                                     <th style="display:none;">Diferencia Salida</th>
                                     <?php if ($esOperaciones): ?>
@@ -1827,6 +1831,10 @@ function verificarTardanzaYaRegistrada(
                                                 <span class="tri-btn danger" onclick="setFiltroIncidencias('faltas')"
                                                     title="Ver solo FALTAS">
                                                     <i class="fas fa-user-slash"></i>
+                                                </span>
+                                                <span class="tri-btn" style="color: #0d6efd;" onclick="setFiltroIncidencias('feriados')"
+                                                    title="Ver solo FERIADOS">
+                                                    <i class="fas fa-umbrella-beach"></i>
                                                 </span>
                                             </div>
                                         </div>

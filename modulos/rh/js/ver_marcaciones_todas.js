@@ -147,11 +147,13 @@ function renderizarTabla(datos) {
         }
         tr.append(`<td class="text-center">${horarioProgramado}</td>`);
 
-        // Horas Programadas (SOLO SI ES LÍDER)
+        // Horas Programadas (OCULTADA A PETICIÓN DEL USUARIO)
+        /*
         if (PERMISOS_USUARIO.esLider) {
             const horasProgramadas = calcularHoras(row.hora_entrada_programada, row.hora_salida_programada);
             tr.append(`<td class="text-center" style="font-weight:bold;">${horasProgramadas}</td>`);
         }
+        */
 
         // Horario Marcado - FORMATO HH:MM
         let horarioMarcado = '-';
@@ -206,11 +208,13 @@ function renderizarTabla(datos) {
             tr.append(`<td class="text-center" style="padding:6px 8px;">${fotoHtml}</td>`);
         }
 
-        // Horas Trabajadas (SOLO SI ES LÍDER)
+        // Horas Trabajadas (OCULTADA A PETICIÓN DEL USUARIO)
+        /*
         if (PERMISOS_USUARIO.esLider) {
             const horasTrabajadas = calcularHoras(row.hora_ingreso, row.hora_salida);
             tr.append(`<td class="text-center">${horasTrabajadas}</td>`);
         }
+        */
 
         // Diferencia Entrada (OCULTA - pero se renderiza para mantener estructura)
         // Estas columnas están ocultas con CSS en el HTML
@@ -384,7 +388,7 @@ function renderizarTabla(datos) {
 // Calcular colspan para mensaje de "no hay registros"
 function calcularColspan() {
     let cols = 7; // Semana, Sucursal, Colaborador, Cargo, Fecha, Turno Programado, Horario Programado
-    if (PERMISOS_USUARIO.esLider) cols += 2; // Horas Programadas, Horas Trabajadas
+    // if (PERMISOS_USUARIO.esLider) cols += 2; // Horas Programadas, Horas Trabajadas (OCULTAS)
     cols += 1; // Horario Marcado
     if (PERMISOS_USUARIO.esFotoMarcacion) cols += 1; // Foto DVR
     // Las columnas de Diferencia Entrada y Salida están ocultas por CSS, no se cuentan aquí.
@@ -1038,6 +1042,8 @@ function setFiltroIncidencias(estado) {
         $('.tri-btn.warning').addClass('active');
     } else if (estado === 'faltas') {
         $('.tri-btn.danger').addClass('active');
+    } else if (estado === 'feriados') {
+        $('.tri-btn[onclick="setFiltroIncidencias(\'feriados\')"]').addClass('active');
     }
 
     // Reiniciar a la primera página y recargar desde el servidor para que la paginación sea correcta

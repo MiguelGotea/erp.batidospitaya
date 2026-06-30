@@ -710,6 +710,8 @@ try {
                     return ($esTardanza || $r['tardanza_solicitada']);
                 } else if ($incidenciasFiltro === 'faltas') {
                     return ($esFalta || $r['falta_solicitada']);
+                } else if ($incidenciasFiltro === 'feriados') {
+                    return $r['es_feriado'];
                 }
                 return true;
             });
