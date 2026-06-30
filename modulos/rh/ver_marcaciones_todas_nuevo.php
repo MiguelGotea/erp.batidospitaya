@@ -1542,6 +1542,7 @@ function verificarTardanzaYaRegistrada(
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
     <link rel="stylesheet" href="css/ver_marcaciones_todas.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
@@ -1570,63 +1571,6 @@ function verificarTardanzaYaRegistrada(
                 <?php endif; ?>
 
                 <!-- En _nuevo.php el filtro de la columna "Sucursal" de la tabla maneja la selección; el selector superior no es necesario -->
-
-                <!-- Toolbar de exportación (solo para perfiles con permisos de exportación) -->
-                <?php if ($esContabilidad || $esOperaciones || $canExportMarcacionesBd): ?>
-                    <div class="toolbar-container"
-                        style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
-                        <?php if ($canExportMarcacionesBd): ?>
-                            <a id="btn-exportar-excel"
-                               href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
-                                'modo' => $modoVista,
-                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                'desde' => $fechaDesde,
-                                'hasta' => $fechaHasta,
-                                'activo' => $filtroActivo,
-                                'operario_id' => $operario_id,
-                                'exportar_excel' => 1
-                            ]) ?>" class="btn btn-sm btn-success" title="Exportar Todo (aplica filtros activos)">
-                                <i class="fas fa-file-excel"></i> Todo
-                            </a>
-                        <?php endif; ?>
-                        <?php if ($esContabilidad): ?>
-                            <a id="btn-exportar-faltas"
-                               href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
-                                'modo' => $modoVista,
-                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                'desde' => $fechaDesde,
-                                'hasta' => $fechaHasta,
-                                'activo' => $filtroActivo,
-                                'operario_id' => $operario_id,
-                                'exportar_faltas' => 1
-                            ]) ?>" class="btn btn-sm btn-danger" title="Exportar Faltas">
-                                <i class="fas fa-user-slash"></i> Faltas
-                            </a>
-                            <a id="btn-exportar-tardanzas"
-                               href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
-                                'modo' => $modoVista,
-                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                'desde' => $fechaDesde,
-                                'hasta' => $fechaHasta,
-                                'activo' => $filtroActivo,
-                                'operario_id' => $operario_id,
-                                'exportar_tardanzas' => 1
-                            ]) ?>" class="btn btn-sm btn-warning" style="color: #000;" title="Exportar Tardanzas">
-                                <i class="fas fa-clock"></i> Tardanzas
-                            </a>
-                            <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
-                                'modo' => $modoVista,
-                                'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
-                                'desde' => $fechaDesde,
-                                'hasta' => $fechaHasta,
-                                'activo' => $filtroActivo,
-                                'operario_id' => $operario_id
-                            ]) ?>" class="btn btn-sm btn-info" style="color: white;" title="Tardanzas Detalle">
-                                <i class="fas fa-list"></i> Detalle
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
 
                 <div class="table-container" style="margin-top: 0;">
                     <?php if (empty($marcaciones)): ?>
@@ -2530,6 +2474,77 @@ function verificarTardanzaYaRegistrada(
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Entendido</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Flotante con opciones (Exportar) -->
+    <?php if ($esContabilidad || $esOperaciones || $canExportMarcacionesBd): ?>
+        <div class="fab-container">
+            <div class="fab-options">
+                <?php if ($canExportMarcacionesBd): ?>
+                    <a id="btn-exportar-excel"
+                       href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
+                        'modo' => $modoVista,
+                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                        'desde' => $fechaDesde,
+                        'hasta' => $fechaHasta,
+                        'activo' => $filtroActivo,
+                        'operario_id' => $operario_id,
+                        'exportar_excel' => 1
+                    ]) ?>" class="fab-option text-decoration-none">
+                        <span class="fab-label">Exportar Todo</span>
+                        <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
+                    </a>
+                <?php endif; ?>
+                <?php if ($esContabilidad): ?>
+                    <a id="btn-exportar-faltas"
+                       href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
+                        'modo' => $modoVista,
+                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                        'desde' => $fechaDesde,
+                        'hasta' => $fechaHasta,
+                        'activo' => $filtroActivo,
+                        'operario_id' => $operario_id,
+                        'exportar_faltas' => 1
+                    ]) ?>" class="fab-option text-decoration-none">
+                        <span class="fab-label">Exportar Faltas</span>
+                        <div class="fab-icon-holder" style="background-color: #dc3545; color: white;"><i class="fas fa-user-slash"></i></div>
+                    </a>
+                    <a id="btn-exportar-tardanzas"
+                       href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
+                        'modo' => $modoVista,
+                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                        'desde' => $fechaDesde,
+                        'hasta' => $fechaHasta,
+                        'activo' => $filtroActivo,
+                        'operario_id' => $operario_id,
+                        'exportar_tardanzas' => 1
+                    ]) ?>" class="fab-option text-decoration-none">
+                        <span class="fab-label">Exportar Tardanzas</span>
+                        <div class="fab-icon-holder" style="background-color: #ffc107; color: black;"><i class="fas fa-clock"></i></div>
+                    </a>
+                    <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
+                        'modo' => $modoVista,
+                        'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
+                        'desde' => $fechaDesde,
+                        'hasta' => $fechaHasta,
+                        'activo' => $filtroActivo,
+                        'operario_id' => $operario_id
+                    ]) ?>" class="fab-option text-decoration-none">
+                        <span class="fab-label">Detalle Tardanzas</span>
+                        <div class="fab-icon-holder" style="background-color: #0dcaf0; color: white;"><i class="fas fa-list"></i></div>
+                    </a>
+                <?php endif; ?>
+            </div>
+            <div class="btn-floating-pitaya" title="Exportar">
+                <i class="fas fa-file-export"></i>
+            </div>
+        </div>
+        <!-- FAB Draggable -->
+        <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    <?php endif; ?>
+
 </body>
 
 </html>
