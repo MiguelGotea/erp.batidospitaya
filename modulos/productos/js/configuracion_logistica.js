@@ -207,6 +207,20 @@ function renderizarContenido(codigo) {
                </small>`
             : '';
 
+        let metaFilaAdicional = '';
+        if (cat.codigo === 'G') {
+            metaFilaAdicional = `
+                <div class="mt-2 text-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary w-100" 
+                            style="font-size: 11px;" 
+                            onclick="abrirConfiguracionGrupoG('${codigo}')"
+                            title="Configurar un Stock Mínimo por cada producto (Fijo en unidades)">
+                        <i class="bi bi-gear-fill me-1"></i>Stock Unitario
+                    </button>
+                </div>
+            `;
+        }
+
         filas += `
             <tr data-sucursal="${codigo}" data-codigo-insumo="${cat.codigo}">
                 <td>
@@ -214,6 +228,7 @@ function renderizarContenido(codigo) {
                         <span class="badge-categoria badge-${cat.codigo}">${cat.codigo}</span>
                         <span class="nombre-categoria">${cat.nombre}</span>
                         ${metaFila}
+                        ${metaFilaAdicional}
                     </div>
                 </td>
                 <td>
@@ -418,5 +433,145 @@ function mostrarError(mensaje) {
         title: 'Error',
         text: mensaje,
         confirmButtonColor: '#51B8AC'
+    });
+}
+
+// ====================================================
+// Configuración por Producto Específico Grupo G
+// ====================================================
+
+function abrirConfiguracionGrupoG(codigoSucursal) {
+    const modal = new bootstrap.Modal(document.getElementById('modalConfigGrupoG'));
+    document.getElementById('contenedorTablaGrupoG').innerHTML = '';
+    
+    // Mostrar loader
+    $('#loaderGrupoG').removeClass('d-none');
+    $('#contenedorTablaGrupoG').addClass('d-none');
+    
+    modal.show();
+
+    $.ajax({
+        url: 'ajax/configuracion_logistica_get_stock_g.php',
+        method: 'POST',
+        data: { codigo_sucursal: codigoSucursal },
+        dataType: 'json',
+        success: function (res) {
+            $('#loaderGrupoG').addClass('d-none');
+            $('#contenedorTablaGrupoG').removeClass('d-none');
+            
+            if (res.success) {
+                renderTablaGrupoG(codigoSucursal, res.productos);
+            } else {
+                mostrarError('Error al cargar productos: ' + res.message);
+                modal.hide();
+            }
+        },
+        error: function () {
+            $('#loaderGrupoG').addClass('d-none');
+            $('#contenedorTablaGrupoG').removeClass('d-none');
+            mostrarError('Error de conexión al cargar productos del Grupo G.');
+            modal.hide();
+        }
+    });
+}
+
+function renderTablaGrupoG(codigoSucursal, productos) {
+    if (!productos || productos.length === 0) {
+        $('#contenedorTablaGrupoG').html('<div class="alert alert-warning">No se encontraron productos del Grupo G activos.</div>');
+        return;
+    }
+
+    const roAttr = puedeEditar ? '' : 'disabled';
+    const onFocusAttr = 'onfocus="this.dataset.initial = this.value"';
+
+    let tbodyHTML = productos.map(p => {
+        let maestro = p.nombre_maestro ? `<span class="badge bg-secondary me-1" style="font-size:10px">${p.nombre_maestro}</span><br>` : '';
+        let stockValue = p.stock_minimo_unidades !== null && p.stock_minimo_unidades !== undefined ? p.stock_minimo_unidades : '';
+        return `
+            <tr>
+                <td style="vertical-align: middle">
+                    <div style="font-size: 13px; font-weight: 500">${maestro}${p.Nombre}</div>
+                </td>
+                <td style="vertical-align: middle" class="text-center text-muted small">
+                    ${p.unidad || '—'}
+                </td>
+                <td style="width: 140px; vertical-align: middle">
+                    <input type="number" step="0.0001" min="0" class="form-control form-control-sm"
+                           placeholder="Días globales"
+                           value="${stockValue}"
+                           ${roAttr} ${onFocusAttr}
+                           onblur="guardarStockGrupoG('${codigoSucursal}', ${p.id_producto_presentacion}, this.value, this)">
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    const tabla = `
+        <table class="table table-bordered table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Producto</th>
+                    <th class="text-center">U. Base</th>
+                    <th>Stock Mín. (Fijo)</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tbodyHTML}
+            </tbody>
+        </table>
+    `;
+
+    $('#contenedorTablaGrupoG').html(tabla);
+}
+
+function guardarStockGrupoG(codigoSucursal, idPP, valor, inputEl) {
+    if (!puedeEditar) return;
+    
+    // Si no cambió o se dejó en blanco un valor que ya estaba en blanco, no enviar
+    let current = valor.trim();
+    let initial = (inputEl.dataset.initial || '').trim();
+    if (current === initial) return;
+    
+    // Si se borra, en realidad debería enviarse 0 u otro indicador (se envía vacío, el PHP no permite, 
+    // entonces forzamos a 0 si dejan vacío o que PHP asimile 0)
+    // El PHP valida `$stockMin === ''` como error, así que mandamos 0 si es vacío para vaciarlo? 
+    // Wait, let's keep it as is, we send it, PHP handles it as 0 if they type 0. 
+    // If empty => fallback to 0 in PHP? No, let's cast back to 0.
+    if (current === '') {
+        current = '0';
+        $(inputEl).val('0');
+    }
+
+    const $input = $(inputEl);
+    $input.addClass('guardando');
+    
+    $.ajax({
+        url: 'ajax/configuracion_logistica_save_stock_g.php',
+        method: 'POST',
+        data: {
+            codigo_sucursal: codigoSucursal,
+            id_producto_presentacion: idPP,
+            stock_minimo_unidades: current
+        },
+        dataType: 'json',
+        success: function(res) {
+            $input.removeClass('guardando');
+            if (res.success) {
+                // Éxito silente, toast
+                Swal.fire({
+                    icon: 'success', title: 'Guardado', timer: 1000, 
+                    showConfirmButton: false, toast: true, position: 'top-end'
+                });
+                inputEl.dataset.initial = current;
+            } else {
+                mostrarError('Error al guardar: ' + res.message);
+                $(inputEl).val(initial); // revertir
+            }
+        },
+        error: function() {
+            $input.removeClass('guardando');
+            mostrarError('Error de conexión.');
+            $(inputEl).val(initial); // revertir
+        }
     });
 }

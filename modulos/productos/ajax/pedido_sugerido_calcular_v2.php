@@ -781,6 +781,17 @@ try {
         $planDespacho[$pdRow['categoria_insumo']] = $pdRow;
 
 
+    // 6. Stocks Mínimos Fijos (Solo Grupo G)
+    $stmtStockG = $conn->prepare("
+        SELECT id_producto_presentacion, stock_minimo_unidades 
+        FROM configuracion_logistica_stock_producto 
+        WHERE cod_sucursal = ?
+    ");
+    $stmtStockG->execute([$codSucursal]);
+    $stocksMinimosG = [];
+    foreach ($stmtStockG->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $stocksMinimosG[(int)$row['id_producto_presentacion']] = (float)$row['stock_minimo_unidades'];
+    }
 
     // 7. Cálculos finales
     $res = [];
@@ -840,7 +851,12 @@ try {
         $dD = $diasPrep   ?? ($cP ? (float)$cP['dias_desfase']  : 0);
 
         $diaC = $semC / 7;
-        $sMin = $diaC * $dSM;
+        
+        if ($cat === 'G' && isset($stocksMinimosG[$idP])) {
+            $sMin = $stocksMinimosG[$idP];
+        } else {
+            $sMin = $diaC * $dSM;
+        }
         $sMax = ($diaC * $dC) + $sMin;
         // sumB sigue acumulando en unidades de uso (se convierte a paquetes después)
         if ($cat === 'B')
