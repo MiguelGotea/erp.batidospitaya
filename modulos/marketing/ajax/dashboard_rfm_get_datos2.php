@@ -14,6 +14,7 @@ if (isset($conn)) {
     try {
         @$conn->exec("SET SESSION max_statement_time = 300");
         @$conn->exec("SET SESSION max_execution_time = 300000");
+        @$conn->exec("SET SESSION group_concat_max_len = 1000000");
     } catch (Exception $e) {}
 }
 
@@ -289,24 +290,23 @@ function calcRetention($conn, $where, $params)
         $paramsH1 = [':p_inicio' => $p_inicio, ':p_fin' => $p_fin];
         if (isset($params[':suc_local'])) $paramsH1[':p_suc_local'] = $params[':suc_local'];
 
-        $stmtH1 = $conn->prepare("SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0");
-        $stmtH1->execute($paramsH1);
-        $h1 = (int)$stmtH1->fetchColumn();
+        // Tabla temporal H1: clientes del periodo ANTERIOR (cohorte base)
+        $conn->exec("CREATE TEMPORARY TABLE IF NOT EXISTS tmp_ret_h1 (CodCliente INT, PRIMARY KEY(CodCliente))");
+        $conn->exec("TRUNCATE TABLE tmp_ret_h1");
+        $stmtInsH1 = $conn->prepare("INSERT IGNORE INTO tmp_ret_h1 (CodCliente) SELECT DISTINCT CodCliente FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0");
+        $stmtInsH1->execute($paramsH1);
+
+        $h1 = (int)$conn->query("SELECT COUNT(*) FROM tmp_ret_h1")->fetchColumn();
         if ($h1 === 0) return ['rate' => 0, 'h1' => 0, 'h2' => 0];
 
-        $combined = $params;
-        $combined[':p_inicio'] = $p_inicio;
-        $combined[':p_fin']    = $p_fin;
-        if (isset($params[':suc_local'])) $combined[':p_suc_local'] = $params[':suc_local'];
+        // Tabla temporal H2: clientes del periodo ACTUAL que también estuvieron en H1
+        $conn->exec("CREATE TEMPORARY TABLE IF NOT EXISTS tmp_ret_h2 (CodCliente INT, PRIMARY KEY(CodCliente))");
+        $conn->exec("TRUNCATE TABLE tmp_ret_h2");
+        $stmtInsH2 = $conn->prepare("INSERT IGNORE INTO tmp_ret_h2 (CodCliente) SELECT DISTINCT CodCliente FROM VentasGlobalesAccessCSV $where AND CodCliente > 0");
+        $stmtInsH2->execute($params);
 
-        $stmtH2 = $conn->prepare("
-            SELECT COUNT(t1.CodCliente) 
-            FROM (SELECT DISTINCT CodCliente FROM VentasGlobalesAccessCSV $where AND CodCliente > 0) t1
-            INNER JOIN (SELECT DISTINCT CodCliente FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0) t2 
-            ON t1.CodCliente = t2.CodCliente
-        ");
-        $stmtH2->execute($combined);
-        $h2 = (int)$stmtH2->fetchColumn();
+        // COUNT de intersección usando JOIN entre tablas temporales (O(n) con PKs, no full scan)
+        $h2 = (int)$conn->query("SELECT COUNT(*) FROM tmp_ret_h2 t2 INNER JOIN tmp_ret_h1 t1 ON t2.CodCliente = t1.CodCliente")->fetchColumn();
 
         return ['rate' => round(($h2 / $h1) * 100, 2), 'h1' => $h1, 'h2' => $h2];
     } catch (Exception $e) {
