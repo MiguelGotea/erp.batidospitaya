@@ -107,6 +107,7 @@ try {
                     c.celular,
                     c.fecha_nacimiento,
                     c.correo,
+                    c.cedula,
                     c.fecha_registro,
                     c.nombre_sucursal,
                     (SELECT MAX(v.Fecha) 
