@@ -3214,20 +3214,27 @@ function verificarTardanzaYaRegistrada(
     ?>
     <div class="modal fade" id="modalSolicitudHE" tabindex="-1">
         <div class="modal-dialog">
-            <form id="formSolicitudHE" class="modal-content">
-                <div class="modal-header" style="background:#0E544C;color:#fff;">
-                    <h5 class="modal-title">
-                        <i class="fas fa-clock me-2"></i>Solicitar Horas Extras
-                    </h5>
+            <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-clock fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0 text-white">Solicitar Horas Extras</h5>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <form id="formSolicitudHE">
+                <div class="modal-body p-3 bg-light">
                     <input type="hidden" name="id" id="he_sol_id">
 
                     <?php if ($mostrarSelectSucursalHE && !$sucursalFijadaHE): ?>
                     <!-- Sucursal -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Sucursal <span class="text-danger">*</span></label>
+                        <label for="he_sol_cod_sucursal" class="form-label small fw-bold text-muted text-uppercase">Tienda:</label>
                         <select name="cod_sucursal" id="he_sol_cod_sucursal" class="form-select" required>
                             <option value="">Seleccione una sucursal</option>
                             <?php foreach ($sucursalesHE as $s): ?>
@@ -3241,13 +3248,13 @@ function verificarTardanzaYaRegistrada(
 
                     <!-- Fecha -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Fecha <span class="text-danger">*</span></label>
+                        <label for="he_sol_fecha" class="form-label small fw-bold text-muted text-uppercase">Fecha:</label>
                         <input type="date" name="fecha" id="he_sol_fecha" class="form-control" value="<?= date('Y-m-d') ?>" required>
                     </div>
 
                     <!-- Colaborador -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Colaborador <span class="text-danger">*</span></label>
+                        <label for="he_sol_cod_operario" class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
                         <select name="cod_operario" id="he_sol_cod_operario" class="form-select" required>
                             <option value="">Seleccione un colaborador</option>
                         </select>
@@ -3255,24 +3262,25 @@ function verificarTardanzaYaRegistrada(
 
                     <!-- Horas Extras -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Horas Extras <span class="text-danger">*</span></label>
+                        <label for="he_sol_horas" class="form-label small fw-bold text-muted text-uppercase">Horas Extras:</label>
                         <input type="number" step="0.5" min="0.5" name="horas" id="he_sol_horas" class="form-control" required>
                     </div>
 
                     <!-- Motivo -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Motivo de la Solicitud <span class="text-danger">*</span></label>
+                        <label for="he_sol_motivo" class="form-label small fw-bold text-muted text-uppercase">Motivo de la Solicitud:</label>
                         <textarea name="motivo_solicitud" id="he_sol_motivo" class="form-control" rows="3" required
                             placeholder="Explique por qué se realizaron las horas extras..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success" id="he_btnEnviar">
-                        <i class="fas fa-paper-plane me-1"></i>Enviar Solicitud
+                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap gap-2">
+                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn-modern btn-modern-primary" id="he_btnEnviar">
+                        <i class="fas fa-save me-2"></i>Guardar
                     </button>
                 </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
