@@ -109,7 +109,11 @@ function renderizarTabla(datos) {
         tr.append(`<td>${row.nombre_cargo || '-'}</td>`);
 
         // Fecha
-        tr.append(`<td>${formatearFecha(row.fecha)}</td>`);
+        let fechaHtml = formatearFecha(row.fecha);
+        if (row.es_feriado) {
+            fechaHtml += `<br><span class="badge bg-danger mt-1" style="font-size: 0.7em;">${escHtml(row.nombre_feriado)}</span>`;
+        }
+        tr.append(`<td class="text-center">${fechaHtml}</td>`);
 
         // Turno Programado (Estado del Día) - CON TAGS
         let estadoHtml = '-';
@@ -137,7 +141,9 @@ function renderizarTabla(datos) {
         if (row.hora_entrada_programada && row.hora_salida_programada) {
             const entrada = formatearHora(row.hora_entrada_programada);
             const salida = formatearHora(row.hora_salida_programada);
-            horarioProgramado = `<span class="compact-time">${entrada} - ${salida}</span>`;
+            let horasProg = calcularHoras(row.hora_entrada_programada, row.hora_salida_programada);
+            let horasProgDec = horasProg !== '-' ? parseFloat(horasProg).toFixed(1) : '-';
+            horarioProgramado = `<span class="compact-time">${entrada} - ${salida} <span class="text-muted" style="font-size: 0.85em;">(${horasProgDec})</span></span>`;
         }
         tr.append(`<td class="text-center">${horarioProgramado}</td>`);
 
@@ -161,8 +167,10 @@ function renderizarTabla(datos) {
         if (row.hora_ingreso && row.hora_salida) {
             const entrada = formatearHora(row.hora_ingreso);
             const salida = formatearHora(row.hora_salida);
+            let horasTrab = calcularHoras(row.hora_ingreso, row.hora_salida);
+            let horasTrabDec = horasTrab !== '-' ? parseFloat(horasTrab).toFixed(1) : '-';
             horarioMarcado = `<div class="d-flex flex-column align-items-center">
-                <span class="compact-time">${entrada} - ${salida}</span>
+                <span class="compact-time">${entrada} - ${salida} <span class="text-muted" style="font-size: 0.85em;">(${horasTrabDec})</span></span>
                 ${tagSucursal}
             </div>`;
         } else if (row.hora_ingreso) {
@@ -328,6 +336,35 @@ function renderizarTabla(datos) {
                     </div>
                 `;
             }
+        }
+
+        // Feriado Toggle
+        if (row.es_feriado) {
+            let feriadoStatus = row.feriado_status ? row.feriado_status.toLowerCase() : 'null';
+            let statusTitle = row.feriado_status || 'No Solicitado';
+            
+            let extraLabel = '';
+            if (row.feriado_status === 'Pendiente') {
+                extraLabel = '<br><span style="font-size:0.7em; color:#ffc107;"><i class="fas fa-clock"></i> Esperando Aprob.</span>';
+            }
+
+            let toggleHtml = `
+                <div class="mt-2 text-center" style="min-width: 100px;">
+                    <div class="tri-state-toggle state-${feriadoStatus}" 
+                         data-operario="${row.CodOperario}" 
+                         data-fecha="${row.fecha}" 
+                         data-horas="${row.horas_trabajadas}" 
+                         data-id="${row.id || ''}" 
+                         title="Feriado: ${statusTitle}">
+                        <div class="tri-state-indicator"></div>
+                        <div class="tri-state-btn btn-descansado" onclick="cambiarEstadoFeriado(this, 'descansado')" title="Compensar (Descanso)">D</div>
+                        <div class="tri-state-btn btn-pendiente" onclick="cambiarEstadoFeriado(this, 'pendiente')" title="Pendiente">P</div>
+                        <div class="tri-state-btn btn-pagado" onclick="cambiarEstadoFeriado(this, 'pagado')" title="Pagar">$$</div>
+                    </div>
+                    ${extraLabel}
+                </div>
+            `;
+            accionesHtml += toggleHtml;
         }
 
         tr.append(`<td class="text-center"><div class="rh-actions-cell">${accionesHtml}</div></td>`);
@@ -1384,4 +1421,83 @@ function actualizarLabelOffset() {
         txt = `<strong>${signo}${offsetSegundos}s</strong>`;
     }
     $('#fotoOffsetLabel').html(txt);
+}
+
+/**
+ * Handle Feriado Tri-State Toggle click
+ */
+function cambiarEstadoFeriado(btn, newState) {
+    let $toggle = $(btn).closest('.tri-state-toggle');
+    let codOperario = $toggle.data('operario');
+    let fecha = $toggle.data('fecha');
+    let horas = $toggle.data('horas');
+    let idMarcacion = $toggle.data('id') || null;
+    let currentState = '';
+
+    if ($toggle.hasClass('state-descansado')) currentState = 'descansado';
+    else if ($toggle.hasClass('state-pagado')) currentState = 'pagado';
+    else if ($toggle.hasClass('state-pendiente')) currentState = 'pendiente';
+    else currentState = 'null';
+
+    // Si ya está en ese estado o es null->pendiente (que es el default visual), ignorar
+    if (currentState === newState || (currentState === 'null' && newState === 'pendiente')) {
+        return;
+    }
+
+    // Mostrar un spinner en el indicador visualmente mientras se procesa
+    let $indicator = $toggle.find('.tri-state-indicator');
+    let originalBg = $indicator.css('background');
+    $indicator.css('background', '#ccc').html('<i class="fas fa-spinner fa-spin" style="font-size:10px; margin-top:2px;"></i>');
+
+    $.ajax({
+        url: 'ajax/feriado_toggle.php',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            cod_operario: codOperario,
+            fecha_feriado: fecha,
+            accion: newState,
+            horas_trabajadas: horas,
+            id_marcacion: idMarcacion
+        }),
+        dataType: 'json',
+        success: function(response) {
+            $indicator.empty(); // Quitar spinner
+            $indicator.css('background', ''); // Restaurar control por CSS
+
+            if (response.success) {
+                // Actualizar estado visual
+                $toggle.removeClass('state-descansado state-pagado state-pendiente state-null');
+                $toggle.addClass('state-' + response.estado.toLowerCase());
+                
+                // Mostrar alerta breve (toast)
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2500,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Feriado actualizado: ' + response.estado
+                });
+                
+                // Recargar datos para actualizar la UI correctamente (el label extra, etc.)
+                cargarDatos();
+            } else {
+                Swal.fire('Error', response.message || 'Error al actualizar', 'error');
+                // Restaurar visualmente si falló
+                $toggle.removeClass('state-descansado state-pagado state-pendiente state-null');
+                $toggle.addClass('state-' + currentState);
+            }
+        },
+        error: function() {
+            $indicator.empty();
+            $indicator.css('background', '');
+            Swal.fire('Error', 'Error de conexión', 'error');
+            $toggle.removeClass('state-descansado state-pagado state-pendiente state-null');
+            $toggle.addClass('state-' + currentState);
+        }
+    });
 }

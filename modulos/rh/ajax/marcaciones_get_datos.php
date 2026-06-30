@@ -239,6 +239,27 @@ try {
     $stmtFaltasEx->execute([$fechaDesdeMarcaciones, $fechaHastaMarcaciones]);
     $faltasExistentes = $stmtFaltasEx->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
 
+    // PASO 2.7: Obtener feriados para el rango de fechas
+    $sqlFeriados = "SELECT id, fecha, nombre FROM feriadosnic WHERE fecha BETWEEN ? AND ?";
+    $stmtFeriados = $conn->prepare($sqlFeriados);
+    $stmtFeriados->execute([$fechaDesdeMarcaciones, $fechaHastaMarcaciones]);
+    $feriadosExistentes = [];
+    foreach ($stmtFeriados->fetchAll(PDO::FETCH_ASSOC) as $f) {
+        $feriadosExistentes[$f['fecha']] = $f['nombre'];
+    }
+
+    // PASO 2.8: Obtener FeriadosStatus
+    $sqlFeriadosStatus = "SELECT id, cod_operario, fecha_feriado, estado FROM FeriadosStatus WHERE fecha_feriado BETWEEN ? AND ?";
+    $stmtFeriadosStatus = $conn->prepare($sqlFeriadosStatus);
+    $stmtFeriadosStatus->execute([$fechaDesdeMarcaciones, $fechaHastaMarcaciones]);
+    $feriadosStatusExistentes = [];
+    foreach ($stmtFeriadosStatus->fetchAll(PDO::FETCH_ASSOC) as $fs) {
+        if (!isset($feriadosStatusExistentes[$fs['cod_operario']])) {
+            $feriadosStatusExistentes[$fs['cod_operario']] = [];
+        }
+        $feriadosStatusExistentes[$fs['cod_operario']][$fs['fecha_feriado']] = $fs;
+    }
+
     // PASO 3: Combinar horarios programados con marcaciones
     $resultado = [];
     $diasSemana = ['', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
@@ -270,6 +291,15 @@ try {
 
             $diaSemana = $fecha->format('N'); // 1=lunes, 7=domingo
             $nombreDia = $diasSemana[$diaSemana];
+
+            $esFeriado = isset($feriadosExistentes[$fechaStr]);
+            $nombreFeriado = $esFeriado ? $feriadosExistentes[$fechaStr] : null;
+            $feriadoStatus = null;
+            $feriadoStatusId = null;
+            if ($esFeriado && isset($feriadosStatusExistentes[$horario['cod_operario']][$fechaStr])) {
+                $feriadoStatus = $feriadosStatusExistentes[$horario['cod_operario']][$fechaStr]['estado'];
+                $feriadoStatusId = $feriadosStatusExistentes[$horario['cod_operario']][$fechaStr]['id'];
+            }
 
             // SI YA SALIÓ DE LA EMPRESA, NO MOSTRAR NADA PARA FECHAS POSTERIORES
             if (!empty($horario['fecha_salida']) && $fechaStr > $horario['fecha_salida']) {
@@ -348,6 +378,10 @@ try {
                             'foto_salida_existe'  => $_fotoSalidaExiste,
                             'foto_entrada_path'   => $_fotoEntradaExiste ? '/modulos/rh/uploads/marcaciones/marcacion_' . $_mId . '_entrada.jpg' : null,
                             'foto_salida_path'    => $_fotoSalidaExiste  ? '/modulos/rh/uploads/marcaciones/marcacion_' . $_mId . '_salida.jpg'  : null,
+                            'es_feriado'          => $esFeriado,
+                            'nombre_feriado'      => $nombreFeriado,
+                            'feriado_status'      => $feriadoStatus,
+                            'feriado_status_id'   => $feriadoStatusId,
                         ];
 
                         // Verificar si hay tardanza solicitada
@@ -399,6 +433,10 @@ try {
                         'foto_salida_existe'  => false,
                         'foto_entrada_path'   => null,
                         'foto_salida_path'    => null,
+                        'es_feriado'          => $esFeriado,
+                        'nombre_feriado'      => $nombreFeriado,
+                        'feriado_status'      => $feriadoStatus,
+                        'feriado_status_id'   => $feriadoStatusId,
                     ];
 
                     // Verificar si hay falta solicitada
@@ -578,6 +616,15 @@ try {
                 }
             }
 
+            $esFeriadoSH = isset($feriadosExistentes[$msh['fecha']]);
+            $nombreFeriadoSH = $esFeriadoSH ? $feriadosExistentes[$msh['fecha']] : null;
+            $feriadoStatusSH = null;
+            $feriadoStatusIdSH = null;
+            if ($esFeriadoSH && isset($feriadosStatusExistentes[$msh['CodOperario']][$msh['fecha']])) {
+                $feriadoStatusSH = $feriadosStatusExistentes[$msh['CodOperario']][$msh['fecha']]['estado'];
+                $feriadoStatusIdSH = $feriadosStatusExistentes[$msh['CodOperario']][$msh['fecha']]['id'];
+            }
+
             // Verificar existencia de fotos para esta marcación
             $_mIdSH = $msh['id'];
             $_fotoEntradaSH = $_mIdSH && file_exists($uploadMarcaciones . '/marcacion_' . $_mIdSH . '_entrada.jpg');
@@ -615,6 +662,10 @@ try {
                 'foto_salida_existe'      => $_fotoSalidaSH,
                 'foto_entrada_path'       => $_fotoEntradaSH ? '/modulos/rh/uploads/marcaciones/marcacion_' . $_mIdSH . '_entrada.jpg' : null,
                 'foto_salida_path'        => $_fotoSalidaSH  ? '/modulos/rh/uploads/marcaciones/marcacion_' . $_mIdSH . '_salida.jpg'  : null,
+                'es_feriado'              => $esFeriadoSH,
+                'nombre_feriado'          => $nombreFeriadoSH,
+                'feriado_status'          => $feriadoStatusSH,
+                'feriado_status_id'       => $feriadoStatusIdSH,
             ];
         }
     }

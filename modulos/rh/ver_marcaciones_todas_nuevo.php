@@ -2566,6 +2566,60 @@ function verificarTardanzaYaRegistrada(
 
 
     <style>
+        /* Estilos del Feriado Tri-State Toggle */
+        .tri-state-toggle {
+            display: flex;
+            justify-content: center;
+            background: #e9ecef;
+            border-radius: 20px;
+            padding: 2px;
+            position: relative;
+            width: 100px;
+            margin: 0 auto;
+        }
+        .tri-state-btn {
+            flex: 1;
+            text-align: center;
+            font-size: 0.75em;
+            cursor: pointer;
+            z-index: 2;
+            padding: 2px 0;
+            color: #495057;
+            transition: color 0.3s;
+        }
+        .tri-state-indicator {
+            position: absolute;
+            top: 2px;
+            bottom: 2px;
+            width: 33.33%;
+            border-radius: 18px;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+        .tri-state-toggle.state-descansado .tri-state-indicator {
+            left: 2px;
+            background: #0d6efd;
+        }
+        .tri-state-toggle.state-pendiente .tri-state-indicator {
+            left: 33.33%;
+            background: #ffc107;
+        }
+        .tri-state-toggle.state-null .tri-state-indicator {
+            left: 33.33%;
+            background: #adb5bd;
+        }
+        .tri-state-toggle.state-pagado .tri-state-indicator {
+            left: calc(66.66% - 2px);
+            background: #198754;
+        }
+        .tri-state-toggle.state-descansado .btn-descansado,
+        .tri-state-toggle.state-pendiente .btn-pendiente,
+        .tri-state-toggle.state-null .btn-pendiente,
+        .tri-state-toggle.state-pagado .btn-pagado {
+            color: white;
+            font-weight: bold;
+        }
+
         /* Ajuste de z-index para evitar que el backdrop cubra el modal */
         #pageHelpModal {
             z-index: 1060 !important;
