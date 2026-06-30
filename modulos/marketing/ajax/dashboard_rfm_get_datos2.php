@@ -51,27 +51,33 @@ try {
         $params[':suc_local'] = $codigo_local;
     }
 
+    if (in_array($seccion, ['evolucion', 'habitos'])) {
+        $conn->exec("CREATE TEMPORARY TABLE IF NOT EXISTS tmp_pedidos_club_rfm (local INT, CodPedido VARCHAR(50), KEY(local, CodPedido))");
+        $conn->exec("TRUNCATE TABLE tmp_pedidos_club_rfm");
+        
+        $sqlTmp = "INSERT INTO tmp_pedidos_club_rfm (local, CodPedido) 
+                   SELECT DISTINCT local, CodPedido 
+                   FROM VentasGlobalesAccessCSV $whereSimple AND CodCliente > 0";
+        $stmtTmp = $conn->prepare($sqlTmp);
+        $stmtTmp->execute($params);
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // SECCIÓN: evolucion + sucursales  (necesita $clientSegments y $clientes)
     // ══════════════════════════════════════════════════════════════════════════
     if ($seccion === 'evolucion') {
-        $paramsFO = [':fo_i' => $fecha_inicio, ':fo_f' => $fecha_fin];
-
         $sqlEvol = "
             SELECT S.numero_semana as Semana, V.CodPedido, MAX(V.CodCliente) as CodCliente
             FROM VentasGlobalesAccessCSV V
             JOIN SemanasSistema S ON V.Fecha BETWEEN S.fecha_inicio AND S.fecha_fin
-            INNER JOIN (
-                SELECT DISTINCT local, CodPedido FROM VentasGlobalesAccessCSV
-                WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0
-            ) fo ON V.local = fo.local AND V.CodPedido = fo.CodPedido
+            INNER JOIN tmp_pedidos_club_rfm fo ON V.local = fo.local AND V.CodPedido = fo.CodPedido
             WHERE V.Anulado = 0 AND V.Fecha BETWEEN :f_inicio AND :f_fin
         ";
         if ($sucursal && $sucursal !== 'todas') $sqlEvol .= " AND V.local = :suc_local";
         $sqlEvol .= " GROUP BY S.numero_semana, V.local, V.CodPedido ORDER BY S.fecha_inicio ASC";
 
         $stmtEvol = $conn->prepare($sqlEvol);
-        $stmtEvol->execute(array_merge($params, $paramsFO));
+        $stmtEvol->execute($params);
         $evolutionRaw = $stmtEvol->fetchAll(PDO::FETCH_ASSOC);
 
         $evolutionDetail = [];
@@ -136,9 +142,8 @@ try {
     // SECCIÓN: habitos + UltimoProducto
     // ══════════════════════════════════════════════════════════════════════════
     if ($seccion === 'habitos') {
-        $paramsFO     = [':fo_i' => $fecha_inicio, ':fo_f' => $fecha_fin];
         $whereSimpleV = str_replace(['Anulado', 'Fecha', ' local '], ['v.Anulado', 'v.Fecha', ' v.local '], $whereSimple);
-        $joinClub     = " INNER JOIN (SELECT DISTINCT local, CodPedido FROM VentasGlobalesAccessCSV WHERE CodCliente > 0 AND Fecha BETWEEN :fo_i AND :fo_f AND Anulado = 0) fo ON v.local = fo.local AND v.CodPedido = fo.CodPedido ";
+        $joinClub     = " INNER JOIN tmp_pedidos_club_rfm fo ON v.local = fo.local AND v.CodPedido = fo.CodPedido ";
 
         // Medida
         $stmtMed = $conn->prepare("
@@ -147,7 +152,7 @@ try {
             JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
             $joinClub $whereSimpleV AND g.Tipo IN ('Batido', 'Limonada') GROUP BY v.Medida
         ");
-        $stmtMed->execute(array_merge($params, $paramsFO));
+        $stmtMed->execute($params);
         $h_medida = $stmtMed->fetchAll(PDO::FETCH_KEY_PAIR);
 
         // Modalidad + Promo
@@ -162,7 +167,7 @@ try {
             AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
             GROUP BY v.Modalidad, EsPromo
         ");
-        $stmtHab->execute(array_merge($params, $paramsFO));
+        $stmtHab->execute($params);
         $h_modalidad = [];
         $h_promo = ['si' => 0, 'no' => 0];
         foreach ($stmtHab->fetchAll(PDO::FETCH_ASSOC) as $hr) {
@@ -179,7 +184,7 @@ try {
                    COUNT(DISTINCT CONCAT(v.local, '-', v.CodPedido)) as Count
             FROM VentasGlobalesAccessCSV v $joinClub $whereSimpleV GROUP BY Hour, Day
         ");
-        $stmtHeat->execute(array_merge($params, $paramsFO));
+        $stmtHeat->execute($params);
         $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);
 
         // Top Productos
@@ -192,7 +197,7 @@ try {
             AND g.Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles')
             GROUP BY Product ORDER BY Count DESC LIMIT 10
         ");
-        $stmtTP->execute(array_merge($params, $paramsFO));
+        $stmtTP->execute($params);
         $top_products = $stmtTP->fetchAll(PDO::FETCH_ASSOC);
 
         ob_get_clean();
@@ -218,17 +223,24 @@ try {
         // UltimoProducto
         $ultimo_producto = [];
         if (!empty($clientes)) {
-            $ids      = array_column($clientes, 'CodCliente');
-            $inClause = implode(',', array_map('intval', $ids));
-            $sqlLast  = "
-                SELECT v.CodCliente, v.DBBatidos_Nombre
+            $conn->exec("CREATE TEMPORARY TABLE IF NOT EXISTS tmp_clientes_rfm (CodCliente INT, PRIMARY KEY(CodCliente))");
+            $conn->exec("TRUNCATE TABLE tmp_clientes_rfm");
+            
+            $ids = array_column($clientes, 'CodCliente');
+            $chunks = array_chunk($ids, 1000);
+            foreach ($chunks as $chunk) {
+                $values = array_map(fn($id) => '(' . intval($id) . ')', $chunk);
+                $conn->exec("INSERT INTO tmp_clientes_rfm (CodCliente) VALUES " . implode(',', $values));
+            }
+
+            // Using GROUP_CONCAT to avoid nested loop joining of VentasGlobalesAccessCSV
+            $sqlLast = "
+                SELECT v.CodCliente, 
+                       SUBSTRING_INDEX(GROUP_CONCAT(v.DBBatidos_Nombre ORDER BY v.Fecha DESC, v.Hora DESC SEPARATOR '||'), '||', 1) as DBBatidos_Nombre
                 FROM VentasGlobalesAccessCSV v
-                INNER JOIN (
-                    SELECT CodCliente, MAX(Fecha) as MaxF, MAX(Hora) as MaxH
-                    FROM VentasGlobalesAccessCSV
-                    WHERE CodCliente IN ($inClause) AND Anulado = 0
-                    GROUP BY CodCliente
-                ) t ON v.CodCliente = t.CodCliente AND v.Fecha = t.MaxF AND v.Hora = t.MaxH
+                INNER JOIN tmp_clientes_rfm tc ON v.CodCliente = tc.CodCliente
+                WHERE v.Anulado = 0 AND v.DBBatidos_Nombre IS NOT NULL AND v.DBBatidos_Nombre != ''
+                GROUP BY v.CodCliente
             ";
             $ultimo_producto = $conn->query($sqlLast)->fetchAll(PDO::FETCH_KEY_PAIR);
         }
