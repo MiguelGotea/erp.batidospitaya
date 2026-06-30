@@ -347,9 +347,9 @@ function renderizarTabla(datos) {
             let feriadoStatus = row.feriado_status ? row.feriado_status.toLowerCase() : 'null';
             let statusTitle = row.feriado_status || 'No Solicitado';
             
-            let extraLabel = '';
+            let pendienteTitle = 'Pendiente';
             if (row.feriado_status === 'Pendiente') {
-                extraLabel = '<br><span style="font-size:0.7em; color:#ffc107;"><i class="fas fa-clock"></i> Esperando Aprob.</span>';
+                pendienteTitle = 'Solicitud de feriado pagado';
             }
 
             let toggleHtml = `
@@ -362,10 +362,9 @@ function renderizarTabla(datos) {
                          title="Feriado: ${statusTitle}">
                         <div class="tri-state-indicator"></div>
                         <div class="tri-state-btn btn-descansado" onclick="cambiarEstadoFeriado(this, 'descansado')" title="Compensar (Descanso)">D</div>
-                        <div class="tri-state-btn btn-pendiente" onclick="cambiarEstadoFeriado(this, 'pendiente')" title="Pendiente">P</div>
+                        <div class="tri-state-btn btn-pendiente" onclick="cambiarEstadoFeriado(this, 'pendiente')" title="${pendienteTitle}">P</div>
                         <div class="tri-state-btn btn-pagado" onclick="cambiarEstadoFeriado(this, 'pagado')" title="Pagar">$$</div>
                     </div>
-                    ${extraLabel}
                 </div>
             `;
             accionesHtml += toggleHtml;
