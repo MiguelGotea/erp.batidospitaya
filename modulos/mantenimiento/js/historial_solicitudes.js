@@ -237,7 +237,7 @@ function renderizarTabla(datos) {
 
         // Agendado - con estilos según estado
         const fechaAgendadoHTML = renderizarFechaAgendado(row);
-        tr.append(`<td class="col-agendado">${fechaAgendadoHTML}</td>`);
+        tr.append(`<td class="col-agendado text-center">${fechaAgendadoHTML}</td>`);
 
         // Foto
         const tieneFotos = parseInt(row.total_fotos) > 0;

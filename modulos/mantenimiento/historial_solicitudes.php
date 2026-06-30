@@ -170,7 +170,7 @@ function getTextoUrgencia($nivel)
                                     Estado
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>
-                                <th data-column="fecha_inicio" data-type="daterange">
+                                <th data-column="fecha_inicio" data-type="daterange" class="text-center">
                                     Agendado
                                     <i class="fas fa-filter filter-icon" onclick="toggleFilter(this)"></i>
                                 </th>

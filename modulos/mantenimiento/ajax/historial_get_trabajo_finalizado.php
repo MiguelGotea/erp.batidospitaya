@@ -36,6 +36,11 @@ try {
     
     $fotos = $db->fetchAll($sqlFotos, [$tarea['id']]);
     
+    // Agregar ruta completa a cada foto
+    foreach ($fotos as &$foto) {
+        $foto['foto'] = 'uploads/evidencias/' . $foto['foto'];
+    }
+    
     echo json_encode([
         'success' => true,
         'tarea' => $tarea,
