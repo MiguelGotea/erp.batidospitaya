@@ -19,6 +19,7 @@ $esCambiarFotoMarcacion = tienePermiso('historial_marcaciones_globales', 'cambia
 $canExportMarcacionesBd = tienePermiso('historial_marcaciones_globales', 'exportar_marcaciones_bd', $usuario['CodNivelesCargos']);
 
 $esSolicitudVacaciones = tienePermiso('historial_marcaciones_globales', 'solicitud_vacaciones', $usuario['CodNivelesCargos']);
+$esSolicitudHorasExtras = tienePermiso('historial_marcaciones_globales', 'solicitud_horas_extras', $usuario['CodNivelesCargos']);
 
 /**
  * Funciones y lógica para Solicitud de Vacaciones migrada
@@ -3124,7 +3125,7 @@ function verificarTardanzaYaRegistrada(
     <?php endif; ?>
 
     <!-- Botón Flotante con opciones (Exportar) -->
-    <?php if ($esContabilidad || $esOperaciones || $canExportMarcacionesBd || (isset($esSolicitudVacaciones) && $esSolicitudVacaciones)): ?>
+    <?php if ($esContabilidad || $esOperaciones || $canExportMarcacionesBd || (isset($esSolicitudVacaciones) && $esSolicitudVacaciones) || (isset($esSolicitudHorasExtras) && $esSolicitudHorasExtras)): ?>
         <div class="fab-container">
             <div class="fab-options">
                 <?php if ($canExportMarcacionesBd): ?>
@@ -3184,6 +3185,12 @@ function verificarTardanzaYaRegistrada(
                         <div class="fab-icon-holder"><i class="fas fa-umbrella-beach"></i></div>
                     </div>
                 <?php endif; ?>
+                <?php if (isset($esSolicitudHorasExtras) && $esSolicitudHorasExtras): ?>
+                    <div class="fab-option" onclick="abrirModalHorasExtras()">
+                        <span class="fab-label">Solicitar Horas Extras</span>
+                        <div class="fab-icon-holder"><i class="fas fa-clock"></i></div>
+                    </div>
+                <?php endif; ?>
             </div>
             <div class="btn-floating-pitaya" title="Exportar">
                 <i class="fas fa-file-export"></i>
@@ -3191,6 +3198,235 @@ function verificarTardanzaYaRegistrada(
         </div>
         <!-- FAB Draggable -->
         <script src="/core/assets/js/fab_button.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    <?php endif; ?>
+
+    <?php if (isset($esSolicitudHorasExtras) && $esSolicitudHorasExtras): ?>
+    <!-- ===================== MODAL SOLICITAR HORAS EXTRAS (migrado desde horas_extras_manual.php) ===================== -->
+    <?php
+    // Determinar sucursales disponibles para el usuario en el contexto de horas extras
+    if ($esLider) {
+        $sucursalesHE = isset($sucursalesLider) ? $sucursalesLider : obtenerSucursalesLider($usuario['CodOperario']);
+    } else {
+        $sucursalesHE = obtenerTodasSucursales();
+    }
+    $mostrarSelectSucursalHE = true;
+    $sucursalFijadaHE = (count($sucursalesHE) === 1 && $esLider) ? $sucursalesHE[0]['codigo'] : null;
+    ?>
+    <div class="modal fade" id="modalSolicitudHE" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="formSolicitudHE" class="modal-content">
+                <div class="modal-header" style="background:#0E544C;color:#fff;">
+                    <h5 class="modal-title">
+                        <i class="fas fa-clock me-2"></i>Solicitar Horas Extras
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="he_sol_id">
+
+                    <?php if ($mostrarSelectSucursalHE && !$sucursalFijadaHE): ?>
+                    <!-- Sucursal -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sucursal <span class="text-danger">*</span></label>
+                        <select name="cod_sucursal" id="he_sol_cod_sucursal" class="form-select" required>
+                            <option value="">Seleccione una sucursal</option>
+                            <?php foreach ($sucursalesHE as $s): ?>
+                                <option value="<?= $s['codigo'] ?>"><?= htmlspecialchars($s['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php else: ?>
+                        <input type="hidden" name="cod_sucursal" id="he_sol_cod_sucursal" value="<?= htmlspecialchars($sucursalFijadaHE ?? '') ?>">
+                    <?php endif; ?>
+
+                    <!-- Fecha -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Fecha <span class="text-danger">*</span></label>
+                        <input type="date" name="fecha" id="he_sol_fecha" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                    </div>
+
+                    <!-- Colaborador -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Colaborador <span class="text-danger">*</span></label>
+                        <select name="cod_operario" id="he_sol_cod_operario" class="form-select" required>
+                            <option value="">Seleccione un colaborador</option>
+                        </select>
+                    </div>
+
+                    <!-- Horas Extras -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Horas Extras <span class="text-danger">*</span></label>
+                        <input type="number" step="0.5" min="0.5" name="horas" id="he_sol_horas" class="form-control" required>
+                    </div>
+
+                    <!-- Motivo -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Motivo de la Solicitud <span class="text-danger">*</span></label>
+                        <textarea name="motivo_solicitud" id="he_sol_motivo" class="form-control" rows="3" required
+                            placeholder="Explique por qué se realizaron las horas extras..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success" id="he_btnEnviar">
+                        <i class="fas fa-paper-plane me-1"></i>Enviar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        // ─── Config Horas Extras (desde marcaciones) ──────────────────────────────
+        var HE_sucursalFijada = '<?= htmlspecialchars($sucursalFijadaHE ?? '') ?>';
+        var HE_esLider       = <?= $esLider ? 'true' : 'false' ?>;
+        var HE_ajaxBase      = '/modulos/operaciones/ajax/';
+        var he_guardando     = false;
+
+        // Abrir modal
+        window.abrirModalHorasExtras = function() {
+            document.getElementById('formSolicitudHE').reset();
+            document.getElementById('he_sol_id').value = '';
+
+            var localNow = new Date();
+            var ds = localNow.getFullYear() + '-' +
+                String(localNow.getMonth() + 1).padStart(2, '0') + '-' +
+                String(localNow.getDate()).padStart(2, '0');
+            document.getElementById('he_sol_fecha').value = ds;
+
+            var sucSelect = document.getElementById('he_sol_cod_sucursal');
+            if (HE_sucursalFijada) {
+                sucSelect.value = HE_sucursalFijada;
+            }
+
+            var sucursal = sucSelect ? sucSelect.value : HE_sucursalFijada;
+            var fecha    = document.getElementById('he_sol_fecha').value;
+            if (sucursal && fecha) {
+                heCargarOperarios(sucursal, fecha);
+            } else {
+                var sel = document.getElementById('he_sol_cod_operario');
+                sel.innerHTML = '<option value="">Primero seleccione una sucursal y fecha</option>';
+                sel.disabled = true;
+            }
+
+            new bootstrap.Modal(document.getElementById('modalSolicitudHE')).show();
+        };
+
+        // Cargar operarios via AJAX (reutiliza el endpoint de operaciones)
+        function heCargarOperarios(codSucursal, fecha, selectedId) {
+            var sel = document.getElementById('he_sol_cod_operario');
+            if (!codSucursal || !fecha) {
+                sel.innerHTML = '<option value="">Seleccione sucursal y fecha primero</option>';
+                sel.disabled = true;
+                return;
+            }
+            sel.innerHTML = '<option value="">⏳ Cargando colaboradores...</option>';
+            sel.disabled = true;
+
+            fetch(HE_ajaxBase + 'horas_extras_manual_obtener_operarios.php?sucursal=' +
+                encodeURIComponent(codSucursal) + '&fecha=' + encodeURIComponent(fecha))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    sel.disabled = false;
+                    if (!data || data.length === 0) {
+                        sel.innerHTML = '<option value="">No hay colaboradores activos para esta fecha</option>';
+                        return;
+                    }
+                    var opts = '<option value="">Seleccione un colaborador</option>';
+                    data.forEach(function(op) {
+                        opts += '<option value="' + op.CodOperario + '">' +
+                            op.nombre_completo + ' (' + (op.cargo_nombre || 'Sin cargo') + ')</option>';
+                    });
+                    sel.innerHTML = opts;
+                    if (selectedId) sel.value = selectedId;
+                })
+                .catch(function() {
+                    sel.disabled = false;
+                    sel.innerHTML = '<option value="">❌ Error al cargar colaboradores</option>';
+                });
+        }
+
+        // Listeners: cambio de sucursal o fecha → recargar operarios
+        document.addEventListener('DOMContentLoaded', function() {
+            var sucSelEl = document.getElementById('he_sol_cod_sucursal');
+            var fechaEl  = document.getElementById('he_sol_fecha');
+
+            if (sucSelEl && sucSelEl.tagName === 'SELECT') {
+                sucSelEl.addEventListener('change', function() {
+                    heCargarOperarios(this.value, fechaEl.value);
+                });
+            }
+            fechaEl.addEventListener('change', function() {
+                var suc = sucSelEl ? sucSelEl.value : HE_sucursalFijada;
+                heCargarOperarios(suc, this.value);
+            });
+
+            // Submit del formulario
+            document.getElementById('formSolicitudHE').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (he_guardando) return;
+
+                var codOp = document.getElementById('he_sol_cod_operario').value;
+                if (!codOp) {
+                    alert('Por favor seleccione un colaborador.');
+                    document.getElementById('he_sol_cod_operario').focus();
+                    return;
+                }
+
+                var btnEnviar = document.getElementById('he_btnEnviar');
+                var originalHTML = btnEnviar.innerHTML;
+                he_guardando = true;
+                btnEnviar.disabled = true;
+                btnEnviar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Enviando...';
+
+                var formData = new FormData(document.getElementById('formSolicitudHE'));
+                formData.append('action', 'guardar');
+
+                // Convertir a URLSearchParams para enviar como application/x-www-form-urlencoded
+                var params = new URLSearchParams();
+                formData.forEach(function(val, key) { params.append(key, val); });
+
+                fetch(HE_ajaxBase + 'horas_extras_manual_guardar.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    btnEnviar.disabled = false;
+                    btnEnviar.innerHTML = originalHTML;
+                    he_guardando = false;
+
+                    if (res.success) {
+                        var modalEl = document.getElementById('modalSolicitudHE');
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Solicitud enviada!',
+                                text: 'La solicitud de horas extras fue registrada correctamente.',
+                                confirmButtonColor: '#0E544C'
+                            });
+                        } else {
+                            alert('Solicitud enviada correctamente.');
+                        }
+                    } else {
+                        alert('Error: ' + (res.message || 'Ocurrió un error al guardar.'));
+                    }
+                })
+                .catch(function() {
+                    btnEnviar.disabled = false;
+                    btnEnviar.innerHTML = originalHTML;
+                    he_guardando = false;
+                    alert('Error de red o del servidor al guardar la solicitud.');
+                });
+            });
+        });
+    })();
+    </script>
     <?php endif; ?>
 
 </body>

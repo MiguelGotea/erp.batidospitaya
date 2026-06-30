@@ -84,7 +84,9 @@ try {
         } else {
             $puedeSolicitar = tienePermiso('horas_extras_manual', 'solicitar', $cargoUsuario);
             $puedeGestionar = tienePermiso('horas_extras_manual', 'gestionar', $cargoUsuario);
-            if (!$puedeSolicitar && !$puedeGestionar) {
+            // Permiso alternativo: usuarios con acceso desde ver_marcaciones (solicitud_horas_extras)
+            $puedeSolicitarDesdeMarcaciones = tienePermiso('historial_marcaciones_globales', 'solicitud_horas_extras', $cargoUsuario);
+            if (!$puedeSolicitar && !$puedeGestionar && !$puedeSolicitarDesdeMarcaciones) {
                 throw new Exception("No tiene permisos para crear una nueva solicitud.");
             }
         }
