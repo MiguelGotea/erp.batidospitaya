@@ -207,7 +207,7 @@ function getTextoUrgencia($nivel)
     <!-- Modal para fotos -->
     <div class="modal fade" id="modalFotos" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
                 <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
@@ -244,7 +244,7 @@ function getTextoUrgencia($nivel)
     <?php if (tienePermiso('historial_solicitudes_mantenimiento', 'vista_todas_sucursales', $cargoOperario)): ?>
     <div class="modal fade" id="modalFiltroSucursales" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
                 <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
@@ -353,7 +353,7 @@ function getTextoUrgencia($nivel)
     <!-- Modal Registrar Trabajo Realizado (Finalizar Ticket) -->
     <div class="modal fade" id="finalizarTicketModal" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
                 <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
@@ -433,12 +433,12 @@ function getTextoUrgencia($nivel)
     <!-- Modal para ver el trabajo finalizado -->
     <div class="modal fade" id="modalVerTrabajoFinalizado" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
                 <div class="modal-header border-0 py-3 px-4" style="background: #0E544C; color: #fff;">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
                             style="width: 40px; height: 40px;">
-                            <i class="fas fa-check-circle fs-4 text-success"></i>
+                            <i class="fas fa-check-circle fs-4"></i>
                         </div>
                         <div>
                             <h5 class="modal-title fw-bold mb-0">Trabajo Finalizado</h5>
