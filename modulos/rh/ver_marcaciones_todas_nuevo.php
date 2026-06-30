@@ -761,7 +761,7 @@ if (
     // El parámetro sucursal_filtro[] contiene los CÓDIGOS de sucursal seleccionados
     if (!empty($_GET['sucursal_filtro']) && is_array($_GET['sucursal_filtro'])) {
         $sucursalesFiltroExport = array_map('strval', $_GET['sucursal_filtro']);
-        $marcaciones = array_filter($marcaciones, function($m) use ($sucursalesFiltroExport) {
+        $marcaciones = array_filter($marcaciones, function ($m) use ($sucursalesFiltroExport) {
             return in_array(strval($m['sucursal_codigo']), $sucursalesFiltroExport);
         });
         $marcaciones = array_values($marcaciones);
@@ -770,14 +770,14 @@ if (
     // Aplicar filtro de semana si viene en GET
     if (isset($_GET['semana_min']) && $_GET['semana_min'] !== '') {
         $semanaMin = intval($_GET['semana_min']);
-        $marcaciones = array_filter($marcaciones, function($m) use ($semanaMin) {
+        $marcaciones = array_filter($marcaciones, function ($m) use ($semanaMin) {
             return intval($m['numero_semana']) >= $semanaMin;
         });
         $marcaciones = array_values($marcaciones);
     }
     if (isset($_GET['semana_max']) && $_GET['semana_max'] !== '') {
         $semanaMax = intval($_GET['semana_max']);
-        $marcaciones = array_filter($marcaciones, function($m) use ($semanaMax) {
+        $marcaciones = array_filter($marcaciones, function ($m) use ($semanaMax) {
             return intval($m['numero_semana']) <= $semanaMax;
         });
         $marcaciones = array_values($marcaciones);
@@ -786,7 +786,7 @@ if (
     // Aplicar filtro de colaborador si viene en GET
     if (!empty($_GET['colaborador_filtro']) && is_array($_GET['colaborador_filtro'])) {
         $colaboradoresFiltroExport = array_map('strval', $_GET['colaborador_filtro']);
-        $marcaciones = array_filter($marcaciones, function($m) use ($colaboradoresFiltroExport) {
+        $marcaciones = array_filter($marcaciones, function ($m) use ($colaboradoresFiltroExport) {
             return in_array(strval($m['CodOperario']), $colaboradoresFiltroExport);
         });
         $marcaciones = array_values($marcaciones);
@@ -795,7 +795,7 @@ if (
     // Aplicar filtro de cargo si viene en GET
     if (!empty($_GET['cargo_filtro']) && is_array($_GET['cargo_filtro'])) {
         $cargosFiltroExport = array_map('strval', $_GET['cargo_filtro']);
-        $marcaciones = array_filter($marcaciones, function($m) use ($cargosFiltroExport) {
+        $marcaciones = array_filter($marcaciones, function ($m) use ($cargosFiltroExport) {
             return in_array(strval($m['codigo_cargo']), $cargosFiltroExport);
         });
         $marcaciones = array_values($marcaciones);
@@ -804,7 +804,7 @@ if (
     // Aplicar filtro de estado_dia (Turno Programado) si viene en GET
     if (!empty($_GET['estado_dia_filtro']) && is_array($_GET['estado_dia_filtro'])) {
         $estadosFiltroExport = array_map('strval', $_GET['estado_dia_filtro']);
-        $marcaciones = array_filter($marcaciones, function($m) use ($estadosFiltroExport) {
+        $marcaciones = array_filter($marcaciones, function ($m) use ($estadosFiltroExport) {
             return in_array(strval($m['estado_dia']), $estadosFiltroExport);
         });
         $marcaciones = array_values($marcaciones);
@@ -818,7 +818,8 @@ if (
         }
         // Configurar headers para descarga de archivo Excel con rango de fechas
         $labelSucursal = (!empty($_GET['sucursal_filtro']) && is_array($_GET['sucursal_filtro']))
-            ? implode('_', array_map(function($s) { return preg_replace('/[^a-zA-Z0-9]/', '', $s); }, $_GET['sucursal_filtro']))
+            ? implode('_', array_map(function ($s) {
+                return preg_replace('/[^a-zA-Z0-9]/', '', $s); }, $_GET['sucursal_filtro']))
             : ($modoVista === 'todas' ? 'todas_sucursales' : preg_replace('/[^a-zA-Z0-9_\-]/', '_', $nombreSucursal ?? 'sucursal'));
         $nombreArchivo = "marcaciones_{$labelSucursal}_{$fechaDesde}_a_{$fechaHasta}.xls";
         header('Content-Type: application/vnd.ms-excel; charset=utf-8');
@@ -2098,10 +2099,10 @@ function verificarTardanzaYaRegistrada(
                 function aplicarFiltrosLider() {
                     let sucursal, modo;
 
-                // Para líderes: usar el selector si existe (multi-sucursal), sino la asignada
-                const selectSucursal = document.getElementById('sucursal_lider_select');
-                sucursal = selectSucursal ? selectSucursal.value : '<?= $sucursalSeleccionada ?? ($sucursales[0]['codigo'] ?? '') ?>';
-                modo = 'sucursal';
+                    // Para líderes: usar el selector si existe (multi-sucursal), sino la asignada
+                    const selectSucursal = document.getElementById('sucursal_lider_select');
+                    sucursal = selectSucursal ? selectSucursal.value : '<?= $sucursalSeleccionada ?? ($sucursales[0]['codigo'] ?? '') ?>';
+                    modo = 'sucursal';
 
                     const operario_id = document.getElementById('operario_id') ? document.getElementById('operario_id').value : '';
                     const numeroSemana = document.getElementById('numero_semana') ? document.getElementById('numero_semana').value : '';
@@ -2223,7 +2224,7 @@ function verificarTardanzaYaRegistrada(
 
     <!-- ── Modal Visor Foto Marcación DVR (Premium) ── -->
     <div class="modal fade" id="modalFotoMarcacion" tabindex="-1" data-bs-backdrop="false"
-         aria-labelledby="fotoModalTituloLabel" aria-hidden="true">
+        aria-labelledby="fotoModalTituloLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width:720px;">
             <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
 
@@ -2231,37 +2232,40 @@ function verificarTardanzaYaRegistrada(
                 <div class="modal-header border-0 py-3 px-4" style="background:#0E544C; color:#fff;">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
-                             style="width:40px; height:40px; flex-shrink:0;">
+                            style="width:40px; height:40px; flex-shrink:0;">
                             <i class="bi bi-camera-fill fs-5"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0 text-white" id="fotoModalTituloLabel" style="color: #ffffff !important;">
-                                <span id="fotoModalTitulo" class="text-white" style="color: #ffffff !important;">Foto DVR &mdash; Marcación</span>
+                            <h5 class="modal-title fw-bold mb-0 text-white" id="fotoModalTituloLabel"
+                                style="color: #ffffff !important;">
+                                <span id="fotoModalTitulo" class="text-white" style="color: #ffffff !important;">Foto
+                                    DVR &mdash; Marcación</span>
                             </h5>
-                            <p class="small mb-0 opacity-75 text-white-50" id="fotoModalSubtitulo" style="color: rgba(255, 255, 255, 0.75) !important;"></p>
+                            <p class="small mb-0 opacity-75 text-white-50" id="fotoModalSubtitulo"
+                                style="color: rgba(255, 255, 255, 0.75) !important;"></p>
                         </div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white ms-auto"
-                            data-bs-dismiss="modal" onclick="cerrarModalFoto()" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"
+                        onclick="cerrarModalFoto()" aria-label="Cerrar"></button>
                 </div>
 
                 <!-- Body -->
                 <div class="modal-body p-4 pb-0" style="background:#ffffff;">
 
                     <!-- Contenedor imagen -->
-                    <div id="fotoModalContenedor"
-                         style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:12px;
+                    <div id="fotoModalContenedor" style="background:#f8f9fa; border:1px solid #dee2e6; border-radius:12px;
                                 min-height:260px; display:flex; align-items:center;
                                 justify-content:center; overflow:hidden;">
                         <span style="color:#adb5bd; font-size:.88rem; text-align:center;">
-                            <i class="bi bi-camera" style="font-size:2.2rem; display:block; margin-bottom:8px; opacity:.35;"></i>
+                            <i class="bi bi-camera"
+                                style="font-size:2.2rem; display:block; margin-bottom:8px; opacity:.35;"></i>
                             Iniciando captura&hellip;
                         </span>
                     </div>
 
                     <!-- Controles de tiempo -->
                     <div id="fotoOffsetControls"
-                         style="margin-top:16px; <?= !$esCambiarFotoMarcacion ? 'display:none;' : '' ?>">
+                        style="margin-top:16px; <?= !$esCambiarFotoMarcacion ? 'display:none;' : '' ?>">
 
                         <!-- Label estado actual -->
                         <div class="text-center mb-3" style="font-size:.8rem; color:#6c757d;">
@@ -2274,30 +2278,31 @@ function verificarTardanzaYaRegistrada(
 
                             <!-- Toggle Antes / Después -->
                             <div class="btn-group btn-group-sm" role="group" aria-label="Dirección del offset">
-                                <input type="radio" class="btn-check" name="fotoOffsetDir" id="dirAntes" value="-1" checked>
-                                <label class="btn btn-outline-secondary" for="dirAntes" style="font-size:.8rem; padding:5px 14px;">
+                                <input type="radio" class="btn-check" name="fotoOffsetDir" id="dirAntes" value="-1"
+                                    checked>
+                                <label class="btn btn-outline-secondary" for="dirAntes"
+                                    style="font-size:.8rem; padding:5px 14px;">
                                     <i class="bi bi-skip-backward-fill"></i> Antes
                                 </label>
                                 <input type="radio" class="btn-check" name="fotoOffsetDir" id="dirDespues" value="1">
-                                <label class="btn btn-outline-secondary" for="dirDespues" style="font-size:.8rem; padding:5px 14px;">
+                                <label class="btn btn-outline-secondary" for="dirDespues"
+                                    style="font-size:.8rem; padding:5px 14px;">
                                     Después <i class="bi bi-skip-forward-fill"></i>
                                 </label>
                             </div>
 
                             <!-- Input segundos -->
                             <div class="input-group input-group-sm" style="max-width:130px;">
-                                <input type="number" id="fotoOffsetInput"
-                                       class="form-control text-center"
-                                       value="0" min="0" max="3600" placeholder="0"
-                                       onkeydown="if(event.key==='Enter') aplicarOffsetFoto()"
-                                       style="font-weight:700; font-size:.9rem;">
+                                <input type="number" id="fotoOffsetInput" class="form-control text-center" value="0"
+                                    min="0" max="3600" placeholder="0"
+                                    onkeydown="if(event.key==='Enter') aplicarOffsetFoto()"
+                                    style="font-weight:700; font-size:.9rem;">
                                 <span class="input-group-text" style="font-size:.8rem; color:#6c757d;">seg</span>
                             </div>
 
                             <!-- Botón capturar -->
-                            <button type="button" class="btn-modern btn-modern-primary"
-                                    onclick="aplicarOffsetFoto()"
-                                    style="padding:7px 20px; font-size:.82rem;">
+                            <button type="button" class="btn-modern btn-modern-primary" onclick="aplicarOffsetFoto()"
+                                style="padding:7px 20px; font-size:.82rem;">
                                 <i class="bi bi-camera-fill"></i> Capturar
                             </button>
 
@@ -2310,8 +2315,8 @@ function verificarTardanzaYaRegistrada(
 
                 <!-- Footer -->
                 <div class="modal-footer border-0 px-4 pt-2 pb-4 bg-white d-flex justify-content-end">
-                    <button type="button" class="btn-modern btn-modern-secondary"
-                            data-bs-dismiss="modal" onclick="cerrarModalFoto()">
+                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal"
+                        onclick="cerrarModalFoto()">
                         Cerrar
                     </button>
                 </div>
@@ -2483,8 +2488,7 @@ function verificarTardanzaYaRegistrada(
         <div class="fab-container">
             <div class="fab-options">
                 <?php if ($canExportMarcacionesBd): ?>
-                    <a id="btn-exportar-excel"
-                       href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
+                    <a id="btn-exportar-excel" href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
                         'modo' => $modoVista,
                         'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
                         'desde' => $fechaDesde,
@@ -2493,13 +2497,12 @@ function verificarTardanzaYaRegistrada(
                         'operario_id' => $operario_id,
                         'exportar_excel' => 1
                     ]) ?>" class="fab-option text-decoration-none">
-                        <span class="fab-label">Exportar Todo</span>
+                        <span class="fab-label">Exportar</span>
                         <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
                     </a>
                 <?php endif; ?>
                 <?php if ($esContabilidad): ?>
-                    <a id="btn-exportar-faltas"
-                       href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
+                    <a id="btn-exportar-faltas" href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
                         'modo' => $modoVista,
                         'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
                         'desde' => $fechaDesde,
@@ -2509,10 +2512,10 @@ function verificarTardanzaYaRegistrada(
                         'exportar_faltas' => 1
                     ]) ?>" class="fab-option text-decoration-none">
                         <span class="fab-label">Exportar Faltas</span>
-                        <div class="fab-icon-holder" style="background-color: #dc3545; color: white;"><i class="fas fa-user-slash"></i></div>
+                        <div class="fab-icon-holder" style="background-color: #dc3545; color: white;"><i
+                                class="fas fa-user-slash"></i></div>
                     </a>
-                    <a id="btn-exportar-tardanzas"
-                       href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
+                    <a id="btn-exportar-tardanzas" href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
                         'modo' => $modoVista,
                         'sucursal' => $modoVista === 'sucursal' ? $sucursalSeleccionada : '',
                         'desde' => $fechaDesde,
@@ -2522,7 +2525,8 @@ function verificarTardanzaYaRegistrada(
                         'exportar_tardanzas' => 1
                     ]) ?>" class="fab-option text-decoration-none">
                         <span class="fab-label">Exportar Tardanzas</span>
-                        <div class="fab-icon-holder" style="background-color: #ffc107; color: black;"><i class="fas fa-clock"></i></div>
+                        <div class="fab-icon-holder" style="background-color: #ffc107; color: black;"><i
+                                class="fas fa-clock"></i></div>
                     </a>
                     <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
                         'modo' => $modoVista,
@@ -2533,7 +2537,8 @@ function verificarTardanzaYaRegistrada(
                         'operario_id' => $operario_id
                     ]) ?>" class="fab-option text-decoration-none">
                         <span class="fab-label">Detalle Tardanzas</span>
-                        <div class="fab-icon-holder" style="background-color: #0dcaf0; color: white;"><i class="fas fa-list"></i></div>
+                        <div class="fab-icon-holder" style="background-color: #0dcaf0; color: white;"><i
+                                class="fas fa-list"></i></div>
                     </a>
                 <?php endif; ?>
             </div>
