@@ -533,6 +533,7 @@ function mostrarModalNuevaVacacion() {
         if (form) form.reset();
         const infoRango = document.getElementById('info-rango');
         if (infoRango) infoRango.style.display = 'none';
+        if (typeof window.vacEliminarPreview === 'function') window.vacEliminarPreview('formNuevaVacacion');
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNuevaVacacion'));
         modal.show();
@@ -557,6 +558,7 @@ function mostrarModalNuevoSubsidio() {
         if (form) form.reset();
         const infoRango = document.getElementById('info-rango-subsidio');
         if (infoRango) infoRango.style.display = 'none';
+        if (typeof window.vacEliminarPreview === 'function') window.vacEliminarPreview('formNuevoSubsidio');
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNuevoSubsidio'));
         modal.show();
@@ -581,6 +583,7 @@ function mostrarModalNuevaFaltaPermiso() {
         if (form) form.reset();
         const infoRango = document.getElementById('info-rango-falta');
         if (infoRango) infoRango.style.display = 'none';
+        if (typeof window.vacEliminarPreview === 'function') window.vacEliminarPreview('formNuevaFalta');
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNuevaFalta'));
         modal.show();
