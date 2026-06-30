@@ -143,31 +143,43 @@ try {
     // ══════════════════════════════════════════════════════════════════════════
     if ($seccion === 'habitos') {
         $whereSimpleV = str_replace(['Anulado', 'Fecha', ' local '], ['v.Anulado', 'v.Fecha', ' v.local '], $whereSimple);
-        $joinClub     = " INNER JOIN tmp_pedidos_club_rfm fo ON v.local = fo.local AND v.CodPedido = fo.CodPedido ";
 
-        // Medida
-        $stmtMed = $conn->prepare("
-            SELECT v.Medida, COUNT(*) as Count FROM VentasGlobalesAccessCSV v
+        // CREATE A MASTER TEMP TABLE FOR HABITS TO AVOID 4 FULL SCANS
+        $conn->exec("CREATE TEMPORARY TABLE IF NOT EXISTS tmp_vtas_habitos (
+            Medida VARCHAR(50), Modalidad VARCHAR(50), CodigoPromocion VARCHAR(50), 
+            Hora TIME, Fecha DATE, local INT, CodPedido VARCHAR(50), 
+            Tipo VARCHAR(50), DBBatidos_Nombre VARCHAR(100)
+        )");
+        $conn->exec("TRUNCATE TABLE tmp_vtas_habitos");
+
+        $sqlV = "
+            INSERT INTO tmp_vtas_habitos (Medida, Modalidad, CodigoPromocion, Hora, Fecha, local, CodPedido, Tipo, DBBatidos_Nombre)
+            SELECT v.Medida, v.Modalidad, v.CodigoPromocion, v.Hora, v.Fecha, v.local, v.CodPedido, g.Tipo, v.DBBatidos_Nombre
+            FROM VentasGlobalesAccessCSV v
+            INNER JOIN tmp_pedidos_club_rfm fo ON v.local = fo.local AND v.CodPedido = fo.CodPedido
             JOIN DBBatidos d ON v.CodProducto = d.CodBatido
             JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-            $joinClub $whereSimpleV AND g.Tipo IN ('Batido', 'Limonada') GROUP BY v.Medida
+            $whereSimpleV
+        ";
+        $stmtV = $conn->prepare($sqlV);
+        $stmtV->execute($params);
+
+        // Medida
+        $stmtMed = $conn->query("
+            SELECT Medida, COUNT(*) as Count FROM tmp_vtas_habitos
+            WHERE Tipo IN ('Batido', 'Limonada') GROUP BY Medida
         ");
-        $stmtMed->execute($params);
         $h_medida = $stmtMed->fetchAll(PDO::FETCH_KEY_PAIR);
 
         // Modalidad + Promo
-        $stmtHab = $conn->prepare("
-            SELECT v.Modalidad,
-                   (v.CodigoPromocion IS NOT NULL AND v.CodigoPromocion <> '' AND v.CodigoPromocion <> '5') as EsPromo,
+        $stmtHab = $conn->query("
+            SELECT Modalidad,
+                   (CodigoPromocion IS NOT NULL AND CodigoPromocion <> '' AND CodigoPromocion <> '5') as EsPromo,
                    COUNT(*) as Count
-            FROM VentasGlobalesAccessCSV v
-            JOIN DBBatidos d ON v.CodProducto = d.CodBatido
-            JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-            $joinClub $whereSimpleV
-            AND g.Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
-            GROUP BY v.Modalidad, EsPromo
+            FROM tmp_vtas_habitos
+            WHERE Tipo IN ('Batido', 'Limonada', 'Bowl', 'Membresia', 'Pitaya Store', 'Waffles')
+            GROUP BY Modalidad, EsPromo
         ");
-        $stmtHab->execute($params);
         $h_modalidad = [];
         $h_promo = ['si' => 0, 'no' => 0];
         foreach ($stmtHab->fetchAll(PDO::FETCH_ASSOC) as $hr) {
@@ -178,26 +190,21 @@ try {
         }
 
         // Heatmap
-        $stmtHeat = $conn->prepare("
-            SELECT HOUR(v.Hora) as Hour,
-                   CASE WHEN DAYOFWEEK(v.Fecha) = 1 THEN 7 ELSE DAYOFWEEK(v.Fecha) - 1 END as Day,
-                   COUNT(DISTINCT CONCAT(v.local, '-', v.CodPedido)) as Count
-            FROM VentasGlobalesAccessCSV v $joinClub $whereSimpleV GROUP BY Hour, Day
+        $stmtHeat = $conn->query("
+            SELECT HOUR(Hora) as Hour,
+                   CASE WHEN DAYOFWEEK(Fecha) = 1 THEN 7 ELSE DAYOFWEEK(Fecha) - 1 END as Day,
+                   COUNT(DISTINCT CONCAT(local, '-', CodPedido)) as Count
+            FROM tmp_vtas_habitos GROUP BY Hour, Day
         ");
-        $stmtHeat->execute($params);
         $heatmap = $stmtHeat->fetchAll(PDO::FETCH_ASSOC);
 
         // Top Productos
-        $stmtTP = $conn->prepare("
-            SELECT v.DBBatidos_Nombre as Product, COUNT(*) as Count
-            FROM VentasGlobalesAccessCSV v
-            JOIN DBBatidos d ON v.CodProducto = d.CodBatido
-            JOIN GrupoProductosVenta g ON d.CodGrupo = g.CodGrupo
-            $joinClub $whereSimpleV
-            AND g.Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles')
+        $stmtTP = $conn->query("
+            SELECT DBBatidos_Nombre as Product, COUNT(*) as Count
+            FROM tmp_vtas_habitos
+            WHERE Tipo IN ('Batido', 'Bowl', 'Limonada', 'Pitaya Store', 'Waffles')
             GROUP BY Product ORDER BY Count DESC LIMIT 10
         ");
-        $stmtTP->execute($params);
         $top_products = $stmtTP->fetchAll(PDO::FETCH_ASSOC);
 
         ob_get_clean();
@@ -234,15 +241,19 @@ try {
             }
 
             // Using GROUP_CONCAT to avoid nested loop joining of VentasGlobalesAccessCSV
+            // Bound to last 12 months to avoid full table scan execution times.
             $sqlLast = "
                 SELECT v.CodCliente, 
                        SUBSTRING_INDEX(GROUP_CONCAT(v.DBBatidos_Nombre ORDER BY v.Fecha DESC, v.Hora DESC SEPARATOR '||'), '||', 1) as DBBatidos_Nombre
                 FROM VentasGlobalesAccessCSV v
                 INNER JOIN tmp_clientes_rfm tc ON v.CodCliente = tc.CodCliente
                 WHERE v.Anulado = 0 AND v.DBBatidos_Nombre IS NOT NULL AND v.DBBatidos_Nombre != ''
+                  AND v.Fecha >= DATE_SUB(:f_inicio, INTERVAL 1 YEAR)
                 GROUP BY v.CodCliente
             ";
-            $ultimo_producto = $conn->query($sqlLast)->fetchAll(PDO::FETCH_KEY_PAIR);
+            $stmtLast = $conn->prepare($sqlLast);
+            $stmtLast->execute([':f_inicio' => $fecha_inicio]);
+            $ultimo_producto = $stmtLast->fetchAll(PDO::FETCH_KEY_PAIR);
         }
 
         ob_get_clean();
@@ -289,9 +300,10 @@ function calcRetention($conn, $where, $params)
         if (isset($params[':suc_local'])) $combined[':p_suc_local'] = $params[':suc_local'];
 
         $stmtH2 = $conn->prepare("
-            SELECT COUNT(DISTINCT CodCliente) FROM VentasGlobalesAccessCSV $where
-            AND CodCliente > 0
-            AND CodCliente IN (SELECT CodCliente FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0)
+            SELECT COUNT(t1.CodCliente) 
+            FROM (SELECT DISTINCT CodCliente FROM VentasGlobalesAccessCSV $where AND CodCliente > 0) t1
+            INNER JOIN (SELECT DISTINCT CodCliente FROM VentasGlobalesAccessCSV $whereH1 AND CodCliente > 0) t2 
+            ON t1.CodCliente = t2.CodCliente
         ");
         $stmtH2->execute($combined);
         $h2 = (int)$stmtH2->fetchColumn();
