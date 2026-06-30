@@ -175,7 +175,8 @@ function cargarOperariosSucursal(codSucursal, selectId, fechaRef = '', incluirBa
 
     selectOperario.innerHTML = '<option value="">⏳ Cargando colaboradores...</option>';
 
-    let url = `ajax/vacaciones_ajax.php?action=obtener_operarios&sucursal=${codSucursal}`;
+    let basePath = (window.CONFIG_VACACIONES && window.CONFIG_VACACIONES.ajaxPath) ? window.CONFIG_VACACIONES.ajaxPath : 'ajax/vacaciones_ajax.php';
+    let url = `${basePath}?action=obtener_operarios&sucursal=${codSucursal}`;
     if (fechaRef) {
         url += `&fecha=${fechaRef}`;
     }

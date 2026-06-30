@@ -2484,6 +2484,342 @@ function verificarTardanzaYaRegistrada(
         </div>
     </div>
 
+    <?php if (isset($esSolicitudVacaciones) && $esSolicitudVacaciones): ?>
+    <link rel="stylesheet" href="/core/assets/css/modales_premium.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="../lideres/css/vacaciones.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <style>
+        #vacModalCamara {
+            z-index: 1070 !important;
+        }
+    </style>
+
+    <!-- Modal para nueva vacación por rango -->
+    <div class="modal fade" id="modalNuevaVacacion" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow" style="border-radius: 8px;">
+                <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 40px; height: 40px;">
+                            <i class="fas fa-umbrella-beach fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0 text-white">Solicitud de vacaciones</h5>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3 bg-light">
+                    <form id="formNuevaVacacion" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="registrar_vacaciones" value="1">
+
+                        <div class="mb-3">
+                            <label for="nueva_sucursal"
+                                class="form-label small fw-bold text-muted text-uppercase">Tienda:</label>
+                            <select id="nueva_sucursal" name="cod_sucursal" class="form-select" required>
+                                <?php foreach ($sucursales as $sucursal): ?>
+                                    <option value="<?= $sucursal['codigo'] ?>">
+                                        <?= htmlspecialchars($sucursal['nombre']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="nueva_fecha_inicio"
+                                    class="form-label small fw-bold text-muted text-uppercase">Fecha Inicio:</label>
+                                <input type="date" id="nueva_fecha_inicio" name="fecha_inicio" class="form-control"
+                                    required onchange="actualizarInfoRangoVacacion()">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="nueva_fecha_fin"
+                                    class="form-label small fw-bold text-muted text-uppercase">Fecha Fin:</label>
+                                <input type="date" id="nueva_fecha_fin" name="fecha_fin" class="form-control" required onchange="actualizarInfoRangoVacacion()">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="nueva_dias_intervalo"
+                                    class="form-label small fw-bold text-muted text-uppercase">Días intervalo:</label>
+                                <input type="text" id="nueva_dias_intervalo" class="form-control bg-light" readonly value="0">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nueva_operario"
+                                class="form-label small fw-bold text-muted text-uppercase">Colaborador:</label>
+                            <select id="nueva_operario" name="cod_operario" class="form-select" required>
+                                <option value="">Seleccione un colaborador</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" style="display:none;">
+                            <label for="nueva_tipo" class="form-label small fw-bold text-muted text-uppercase">Tipo:</label>
+                            <input type="hidden" id="nueva_tipo" name="tipo_falta" value="Vacaciones">
+                            <input type="hidden" name="aprobado" value="0">
+                        </div>
+
+                        <input type="hidden" name="cantidad_dias" value="1.00">
+
+                        <div class="mb-3" style="display: none;">
+                            <label for="nueva_observaciones"
+                                class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                            <textarea id="nueva_observaciones" name="observaciones" class="form-control" rows="2"
+                                style="resize: none;">solicitud de vacaciones</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia
+                                (Obligatoria):</label>
+                            <div class="input-group">
+                                <input type="file" id="nueva_foto" name="foto_falta" class="form-control"
+                                    accept="image/*" required>
+                                <button type="button" class="btn btn-success"
+                                    onclick="vacAbrirCamara('formNuevaVacacion')" title="Tomar foto con cámara">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Selecciona una imagen o usa la cámara (máx. 5MB)</small>
+                            <div class="vac-foto-preview" id="vacacion_preview">
+                                <img id="vacacion_preview_img" src="" alt="Vista previa">
+                                <button type="button" class="vac-preview-remove"
+                                    onclick="vacEliminarPreview('formNuevaVacacion')"
+                                    title="Eliminar foto">&times;</button>
+                            </div>
+                        </div>
+
+                        <div id="info-rango" class="alert alert-info py-2" style="display: none;">
+                            <p class="mb-1"><strong>Resumen del rango seleccionado:</strong></p>
+                            <p class="mb-0 small" id="info-dias-totales">Días totales en rango: 0</p>
+                            <p id="info-dias-laborables" style="display:none;">Días laborables (L-V): 0</p>
+                            <p class="mb-0 small fw-bold" id="info-vacaciones">Días a registrar como vacaciones: 0</p>
+                            <p style="display:none;"><small><i>Nota: Se excluyen sábados y domingos</i></small></p>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap gap-2">
+                    <button type="button" class="btn-modern btn-modern-secondary"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <div class="d-flex gap-2">
+                        <?php if (tienePermiso('registro_vacaciones', 'imprimir_ticket', $cargoUsuario)): ?>
+                        <button type="button" class="btn-modern" style="background:#6f42c1;color:#fff;"
+                            onclick="imprimirTicketTermicoVacacion()">
+                            <i class="fas fa-receipt me-2"></i>Ticket
+                        </button>
+                        <?php endif; ?>
+                    </div>
+                    <button type="submit" form="formNuevaVacacion" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== MODAL CÁMARA PREMIUM (vacaciones) ===================== -->
+    <div class="modal fade" id="vacModalCamara" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px !important; overflow: hidden;">
+                <!-- Header -->
+                <div class="modal-header bg-dark text-white border-0 py-2 px-3">
+                    <h6 class="modal-title mb-0"><i class="fas fa-camera me-2"></i> Tomar Evidencia</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="vac-cam-focus-status" class="badge bg-secondary"
+                            style="font-size:0.65rem;">AUTO</span>
+                        <button type="button" class="btn-close btn-close-white" onclick="vacCerrarCamara()"></button>
+                    </div>
+                </div>
+
+                <!-- Viewport -->
+                <div id="vac-camera-viewport" style="min-height: 320px;">
+                    <video id="vac-video" autoplay playsinline muted></video>
+                    <div id="vac-cam-grid"></div>
+                    <div id="vac-focus-ring"></div>
+                    <div id="vac-focus-toast">Toca para enfocar</div>
+                    <canvas id="vac-canvas" style="display:none;"></canvas>
+                </div>
+
+                <!-- Controles -->
+                <div class="vac-cam-controls">
+                    <div class="d-flex align-items-center justify-content-between mt-3">
+                        <!-- Cancelar -->
+                        <button type="button"
+                            class="btn btn-outline-secondary btn-sm rounded-pill px-3 text-white border-secondary"
+                            onclick="vacCerrarCamara()">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </button>
+                        <!-- Capturar -->
+                        <button type="button" class="vac-btn-capture" onclick="vacCapturarFoto()" title="Tomar foto">
+                            <i class="fas fa-circle" style="color:#e74c3c;"></i>
+                        </button>
+                        <!-- Linterna -->
+                        <button type="button" id="vac-btnTorch" class="vac-btn-torch" onclick="vacToggleLinterna()"
+                            title="Linterna" style="display:none;">
+                            <i class="fas fa-bolt"></i>
+                        </button>
+                        <div id="vac-btnTorchPlaceholder" style="width:42px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.CONFIG_VACACIONES = {
+            operariosData: [{
+                id: 0,
+                nombre: 'Todos los colaboradores'
+            },
+                <?php foreach ($operarios as $op): ?> {
+                    id: <?php echo $op['CodOperario']; ?>,
+                    nombre: '<?php echo addslashes($op['nombre_completo']); ?>'
+                },
+                <?php endforeach; ?>
+            ],
+            puedeAprobar: false,
+            esRH: false,
+            jefeNombre: '<?= addslashes(trim(($usuario['Nombre'] ?? '') . ' ' . ($usuario['Apellido'] ?? ''))) ?>',
+            ajaxPath: '../lideres/ajax/vacaciones_ajax.php',
+            sucursalesIpImpresora: {
+                <?php
+                $todasSucs = obtenerTodasSucursales();
+                foreach ($todasSucs as $s):
+                    if (!empty($s['ip_impresora'])):
+                ?>
+                "<?= htmlspecialchars($s['codigo']) ?>": "<?= htmlspecialchars($s['ip_impresora']) ?>",
+                <?php endif; endforeach; ?>
+            }
+        };
+
+        async function imprimirTicketTermicoVacacion() {
+            const sucursalSel = document.getElementById('nueva_sucursal');
+            const codSucursal = sucursalSel ? sucursalSel.value : '';
+            const tienda = sucursalSel ? sucursalSel.options[sucursalSel.selectedIndex]?.text?.trim() : '';
+
+            const mapaIPs = (window.CONFIG_VACACIONES && window.CONFIG_VACACIONES.sucursalesIpImpresora)
+                ? window.CONFIG_VACACIONES.sucursalesIpImpresora : {};
+            const ipImpresora = mapaIPs[codSucursal] || null;
+
+            if (!ipImpresora) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin impresora configurada',
+                    text: `La sucursal "${tienda}" no tiene una IP de impresora térmica configurada.`,
+                    confirmButtonColor: '#0E544C'
+                });
+                return;
+            }
+
+            const jefe = window.CONFIG_VACACIONES.jefeNombre || '';
+            const hoy = new Date();
+            const fechaEmision = ('0' + hoy.getDate()).slice(-2) + '/' +
+                ('0' + (hoy.getMonth() + 1)).slice(-2) + '/' + hoy.getFullYear();
+
+            const operarioSel = document.getElementById('nueva_operario');
+            const nombre = operarioSel ? operarioSel.options[operarioSel.selectedIndex]?.text?.trim() : '';
+            const fechaInicio = document.getElementById('nueva_fecha_inicio')?.value || '';
+            const fechaFin = document.getElementById('nueva_fecha_fin')?.value || '';
+
+            let totalDias = '';
+            if (fechaInicio && fechaFin) {
+                const d1 = new Date(fechaInicio + 'T00:00:00');
+                const d2 = new Date(fechaFin + 'T00:00:00');
+                if (d2 >= d1) {
+                    const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+                    totalDias = diff + (diff === 1 ? ' día' : ' días');
+                }
+            }
+
+            let fechaInicioFmt = '';
+            let fechaFinFmt = '';
+            if (fechaInicio) {
+                const [y, m, d] = fechaInicio.split('-');
+                fechaInicioFmt = `${d}/${m}/${y}`;
+            }
+            if (fechaFin) {
+                const [y, m, d] = fechaFin.split('-');
+                fechaFinFmt = `${d}/${m}/${y}`;
+            }
+
+            const lineas = [
+                '================================',
+                '    SOLICITUD DE VACACIONES',
+                '        BATIDOS PITAYA',
+                '================================',
+                `Tienda: ${tienda.substring(0, 24)}`,
+                `Jefe:   ${jefe.substring(0, 24)}`,
+                `Emision:${fechaEmision}`,
+                '--------------------------------',
+                'DATOS DEL COLABORADOR',
+                '--------------------------------',
+                `Nombre: ${nombre.substring(0, 24)}`,
+                '',
+                `Desde:  ${fechaInicioFmt}`,
+                `Hasta:  ${fechaFinFmt}`,
+                `Total:  ${totalDias}`,
+                '',
+                '================================',
+                'Firma del colaborador:',
+                '',
+                '',
+                '_______________________________',
+                '',
+                'Firma del jefe directo:',
+                '',
+                '',
+                '_______________________________',
+                '',
+            ];
+
+            Swal.fire({
+                title: 'Enviando a la impresora...',
+                html: 'Conectando con el servidor de impresión de la tienda.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const respuesta = await fetch(`https://${ipImpresora}:3000/imprimir`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lineas }),
+                    signal: AbortSignal.timeout(8000)
+                });
+
+                const resultado = await respuesta.json();
+
+                if (resultado.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Impreso con éxito!',
+                        text: 'El ticket de solicitud de vacaciones ha sido impreso.',
+                        confirmButtonColor: '#0E544C'
+                    });
+                    const submitBtn = document.querySelector('button[type="submit"][form="formNuevaVacacion"]');
+                    if (submitBtn) submitBtn.click();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de impresión',
+                        text: resultado.error || 'Ocurrió un error al enviar el ticket.',
+                        confirmButtonColor: '#0E544C'
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se pudo conectar',
+                    text: `No se pudo conectar al servidor http://${ipImpresora}:3000.`,
+                    confirmButtonColor: '#0E544C'
+                });
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../lideres/js/vacaciones.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
+    <?php endif; ?>
+
     <!-- Botón Flotante con opciones (Exportar) -->
     <?php if ($esContabilidad || $esOperaciones || $canExportMarcacionesBd): ?>
         <div class="fab-container">
