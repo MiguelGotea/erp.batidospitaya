@@ -1858,12 +1858,20 @@ function verificarTardanzaYaRegistrada(
 
             <!-- Modal para registrar tardanza manual -->
             <div class="modal" id="modalTardanzaManual" style="display: none;">
-                <div class="modal-content" style="max-width: 500px;">
-                    <div class="modal-header">
-                        <h2 class="modal-title">Registrar Justificación de Tardanza</h2>
-                        <button class="modal-close" onclick="cerrarModalTardanza()">&times;</button>
+                <div class="modal-content border-0 shadow" style="max-width: 500px; border-radius: 8px; padding: 0; overflow: hidden;">
+                    <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-clock fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0 text-white">Justificación de Tardanza</h5>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" onclick="cerrarModalTardanza()"></button>
                     </div>
-                    <form id="formTardanzaManual" method="post" enctype="multipart/form-data">
+                    <form id="formTardanzaManual" method="post" enctype="multipart/form-data" class="bg-light p-3">
                         <input type="hidden" name="registrar_tardanza_marcacion" value="1">
                         <input type="hidden" id="tm_cod_operario" name="cod_operario">
                         <input type="hidden" id="tm_cod_sucursal" name="cod_sucursal">
@@ -1896,8 +1904,8 @@ function verificarTardanzaYaRegistrada(
                                 <span class="info-value" id="tm_hora_marcada"></span>
                             </div>
 
-                            <div class="form-group">
-                                <label for="tm_tipo_justificacion" class="form-label">Tipo de Justificación:</label>
+                            <div class="mb-3">
+                                <label for="tm_tipo_justificacion" class="form-label small fw-bold text-muted text-uppercase">Tipo de Justificación:</label>
                                 <select id="tm_tipo_justificacion" name="tipo_justificacion" class="form-select"
                                     required>
                                     <option value="llave">Problema con llave</option>
@@ -1908,27 +1916,38 @@ function verificarTardanzaYaRegistrada(
                                 </select>
                             </div>
 
-                            <div class="form-group">
-                                <label for="tm_foto" class="form-label">Foto
-                                    (obligatorio):</label>
-                                <input type="file" id="tm_foto" name="foto" class="form-input" accept="image/*"
-                                    required>
-                                <img id="tm_foto_preview" class="photo-preview" src="#" alt="Vista previa"
-                                    style="display: none;">
+                            <div class="mb-3">
+                                <label for="tm_foto" class="form-label small fw-bold text-muted text-uppercase">Foto
+                                    (obligatoria):</label>
+                                <div class="input-group">
+                                    <input type="file" id="tm_foto" name="foto" class="form-control" accept="image/*" required>
+                                    <button type="button" class="btn btn-success"
+                                        onclick="vacAbrirCamara('formTardanzaManual')" title="Tomar foto con cámara">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">Selecciona una imagen o usa la cámara (máx. 5MB)</small>
+                                <div class="vac-foto-preview mt-2" id="tm_foto_preview_container" style="display: none; position: relative;">
+                                    <img id="tm_foto_preview_img" src="" alt="Vista previa" style="max-width: 100%; border-radius: 4px;">
+                                    <button type="button" class="vac-preview-remove btn-close" style="position: absolute; top: 5px; right: 5px; background-color: rgba(255,255,255,0.8); border-radius: 50%; padding: 0.5rem;"
+                                        onclick="vacEliminarPreview('formTardanzaManual')"
+                                        title="Eliminar foto"></button>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="tm_observaciones" class="form-label">Observaciones:</label>
-                                <textarea id="tm_observaciones" name="observaciones" class="form-textarea"
-                                    placeholder="Describa la razón de la tardanza..."></textarea>
+                            <div class="mb-3">
+                                <label for="tm_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                                <textarea id="tm_observaciones" name="observaciones" class="form-control" rows="2"
+                                    placeholder="Describa la razón de la tardanza..." style="resize: none;"></textarea>
                             </div>
                         </div>
 
-                        <div class="modal-footer">
+                        <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap gap-2">
                             <button type="button" onclick="cerrarModalTardanza()"
-                                class="btn btn-secondary">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Enviar
-                                Solicitud</button>
+                                class="btn-modern btn-modern-secondary">Cancelar</button>
+                            <button type="submit" class="btn-modern btn-modern-primary">
+                                <i class="fas fa-save me-2"></i>Enviar Solicitud
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -1936,12 +1955,20 @@ function verificarTardanzaYaRegistrada(
 
             <!-- Modal para registrar falta manual -->
             <div class="modal" id="modalFaltaManual" style="display: none;">
-                <div class="modal-content" style="max-width: 500px;">
-                    <div class="modal-header">
-                        <h2 class="modal-title">Registrar Justificacion de Falta</h2>
-                        <button class="modal-close" onclick="cerrarModalFalta()">&times;</button>
+                <div class="modal-content border-0 shadow" style="max-width: 500px; border-radius: 8px; padding: 0; overflow: hidden;">
+                    <div class="modal-header border-0 py-3 px-3" style="background: #0E544C; color: #fff;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;">
+                                <i class="fas fa-user-slash fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0 text-white">Justificacion de Falta</h5>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" onclick="cerrarModalFalta()"></button>
                     </div>
-                    <form id="formFaltaManual" method="post" enctype="multipart/form-data">
+                    <form id="formFaltaManual" method="post" enctype="multipart/form-data" class="bg-light p-3">
                         <input type="hidden" name="registrar_falta_marcacion" value="1">
                         <input type="hidden" id="fm_cod_operario" name="cod_operario">
                         <input type="hidden" id="fm_cod_sucursal" name="cod_sucursal">
@@ -1968,30 +1995,39 @@ function verificarTardanzaYaRegistrada(
                                 <span class="info-value" id="fm_hora_programada"></span>
                             </div>
 
-                            <div class="form-group">
-                                <label for="fm_observaciones" class="form-label">Observaciones:</label>
-                                <textarea id="fm_observaciones" name="observaciones" class="form-textarea"
+                            <div class="mb-3">
+                                <label for="fm_observaciones" class="form-label small fw-bold text-muted text-uppercase">Observaciones:</label>
+                                <textarea id="fm_observaciones" name="observaciones" class="form-control" rows="2"
                                     placeholder="Describa la razón de la falta... (Ej: No se presentó, enfermedad, etc.)"
-                                    required></textarea>
+                                    style="resize: none;" required></textarea>
                             </div>
 
-                            <div class="form-group">
-                                <label for="fm_foto" class="form-label">Foto
-                                    (obligatorio):</label>
-                                <input type="file" id="fm_foto" name="foto" class="form-input" accept="image/*"
-                                    required>
-                                <small class="form-text text-muted">Toma una foto de la
-                                    evidencia (máx. 5MB)</small>
-                                <img id="fm_foto_preview" class="photo-preview" src="#" alt="Vista previa"
-                                    style="display: none;">
+                            <div class="mb-3">
+                                <label for="fm_foto" class="form-label small fw-bold text-muted text-uppercase">Foto
+                                    (obligatoria):</label>
+                                <div class="input-group">
+                                    <input type="file" id="fm_foto" name="foto" class="form-control" accept="image/*" required>
+                                    <button type="button" class="btn btn-success"
+                                        onclick="vacAbrirCamara('formFaltaManual')" title="Tomar foto con cámara">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">Toma una foto de la evidencia (máx. 5MB)</small>
+                                <div class="vac-foto-preview mt-2" id="fm_foto_preview_container" style="display: none; position: relative;">
+                                    <img id="fm_foto_preview_img" src="" alt="Vista previa" style="max-width: 100%; border-radius: 4px;">
+                                    <button type="button" class="vac-preview-remove btn-close" style="position: absolute; top: 5px; right: 5px; background-color: rgba(255,255,255,0.8); border-radius: 50%; padding: 0.5rem;"
+                                        onclick="vacEliminarPreview('formFaltaManual')"
+                                        title="Eliminar foto"></button>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="modal-footer">
+                        <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap gap-2">
                             <button type="button" onclick="cerrarModalFalta()"
-                                class="btn btn-secondary">Cancelar</button>
-                            <button type="submit" class="btn btn-danger">Registrar
-                                Falta</button>
+                                class="btn-modern btn-modern-secondary">Cancelar</button>
+                            <button type="submit" class="btn-modern" style="background-color: #dc3545; color: white;">
+                                <i class="fas fa-save me-2"></i>Registrar Falta
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -2073,27 +2109,34 @@ function verificarTardanzaYaRegistrada(
                     document.getElementById('modalTardanzaManual').style.display = 'none';
                     // Limpiar el formulario
                     document.getElementById('formTardanzaManual').reset();
-                    document.getElementById('tm_foto_preview').style.display = 'none';
+                    if (typeof vacEliminarPreview === 'function') {
+                        vacEliminarPreview('formTardanzaManual');
+                    } else {
+                        const container = document.getElementById('tm_foto_preview_container');
+                        if (container) container.style.display = 'none';
+                        const img = document.getElementById('tm_foto_preview_img');
+                        if (img) img.src = '';
+                    }
                 }
 
-                // Vista previa de la foto
+                // Vista previa de la foto (cuando se selecciona archivo manualmente)
                 const tmFoto = document.getElementById('tm_foto');
                 if (tmFoto) {
                     tmFoto.addEventListener('change', function (e) {
-                        const preview = document.getElementById('tm_foto_preview');
+                        const container = document.getElementById('tm_foto_preview_container');
+                        const img = document.getElementById('tm_foto_preview_img');
                         const file = e.target.files[0];
 
                         if (file) {
                             const reader = new FileReader();
                             reader.onload = function (e) {
-                                if (preview) {
-                                    preview.src = e.target.result;
-                                    preview.style.display = 'block';
-                                }
+                                if (img) img.src = e.target.result;
+                                if (container) container.style.display = 'block';
                             }
                             reader.readAsDataURL(file);
                         } else {
-                            if (preview) preview.style.display = 'none';
+                            if (container) container.style.display = 'none';
+                            if (img) img.src = '';
                         }
                     });
                 }
@@ -2192,27 +2235,34 @@ function verificarTardanzaYaRegistrada(
                     document.getElementById('modalFaltaManual').style.display = 'none';
                     // Limpiar el formulario
                     document.getElementById('formFaltaManual').reset();
-                    document.getElementById('fm_foto_preview').style.display = 'none';
+                    if (typeof vacEliminarPreview === 'function') {
+                        vacEliminarPreview('formFaltaManual');
+                    } else {
+                        const container = document.getElementById('fm_foto_preview_container');
+                        if (container) container.style.display = 'none';
+                        const img = document.getElementById('fm_foto_preview_img');
+                        if (img) img.src = '';
+                    }
                 }
 
-                // Vista previa de la foto para falta
+                // Vista previa de la foto para falta (cuando se selecciona archivo manualmente)
                 const fmFoto = document.getElementById('fm_foto');
                 if (fmFoto) {
                     fmFoto.addEventListener('change', function (e) {
-                        const preview = document.getElementById('fm_foto_preview');
+                        const container = document.getElementById('fm_foto_preview_container');
+                        const img = document.getElementById('fm_foto_preview_img');
                         const file = e.target.files[0];
 
                         if (file) {
                             const reader = new FileReader();
                             reader.onload = function (e) {
-                                if (preview) {
-                                    preview.src = e.target.result;
-                                    preview.style.display = 'block';
-                                }
+                                if (img) img.src = e.target.result;
+                                if (container) container.style.display = 'block';
                             }
                             reader.readAsDataURL(file);
                         } else {
-                            if (preview) preview.style.display = 'none';
+                            if (container) container.style.display = 'none';
+                            if (img) img.src = '';
                         }
                     });
                 }

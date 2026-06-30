@@ -1528,7 +1528,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const VAC_FOTO_MAP = {
         formNuevoSubsidio: { inputId: 'subsidio_foto', previewId: 'subsidio_preview', previewImgId: 'subsidio_preview_img' },
         formNuevaVacacion: { inputId: 'nueva_foto', previewId: 'vacacion_preview', previewImgId: 'vacacion_preview_img' },
-        formNuevaFalta: { inputId: 'falta_foto', previewId: 'falta_preview', previewImgId: 'falta_preview_img' }
+        formNuevaFalta: { inputId: 'falta_foto', previewId: 'falta_preview', previewImgId: 'falta_preview_img' },
+        formTardanzaManual: { inputId: 'tm_foto', previewId: 'tm_foto_preview_container', previewImgId: 'tm_foto_preview_img' },
+        formFaltaManual: { inputId: 'fm_foto', previewId: 'fm_foto_preview_container', previewImgId: 'fm_foto_preview_img' }
     };
 
     // Inicializar modal Bootstrap cuando el DOM esté listo
