@@ -2757,8 +2757,17 @@ function verificarTardanzaYaRegistrada(
                                     style="resize: none;">solicitud de vacaciones</textarea>
                             </div>
 
+                            <?php if ($esSolicitudVacaciones): ?>
                             <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Foto de Evidencia
+                                <button type="button" class="btn-modern w-100" style="background:#6f42c1;color:#fff;"
+                                    onclick="imprimirTicketTermicoVacacion()">
+                                    <i class="fas fa-receipt me-2"></i>Imprimir Ticket
+                                </button>
+                            </div>
+                            <?php endif; ?>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Foto de Boleta
                                     (Obligatoria):</label>
                                 <div class="input-group">
                                     <input type="file" id="nueva_foto" name="foto_falta" class="form-control"
@@ -2789,14 +2798,6 @@ function verificarTardanzaYaRegistrada(
                     <div class="modal-footer border-0 p-3 bg-white d-flex justify-content-between flex-nowrap gap-2">
                         <button type="button" class="btn-modern btn-modern-secondary"
                             data-bs-dismiss="modal">Cancelar</button>
-                        <div class="d-flex gap-2">
-                            <?php if (tienePermiso('registro_vacaciones', 'imprimir_ticket', $cargoUsuario)): ?>
-                                <button type="button" class="btn-modern" style="background:#6f42c1;color:#fff;"
-                                    onclick="imprimirTicketTermicoVacacion()">
-                                    <i class="fas fa-receipt me-2"></i>Ticket
-                                </button>
-                            <?php endif; ?>
-                        </div>
                         <button type="submit" form="formNuevaVacacion" class="btn-modern btn-modern-primary">
                             <i class="fas fa-save me-2"></i>Guardar
                         </button>
