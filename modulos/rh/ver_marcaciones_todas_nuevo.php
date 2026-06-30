@@ -2513,7 +2513,7 @@ function verificarTardanzaYaRegistrada(
                         'exportar_faltas' => 1
                     ]) ?>" class="fab-option text-decoration-none">
                         <span class="fab-label">Exportar Faltas</span>
-                        <div class="fab-icon-holder" style="background-color: #dc3545; color: white;"><i
+                        <div class="fab-icon-holder"><i
                                 class="fas fa-user-slash"></i></div>
                     </a>
                     <a id="btn-exportar-tardanzas" href="ver_marcaciones_todas_nuevo.php?<?= http_build_query([
@@ -2526,7 +2526,7 @@ function verificarTardanzaYaRegistrada(
                         'exportar_tardanzas' => 1
                     ]) ?>" class="fab-option text-decoration-none">
                         <span class="fab-label">Exportar Tardanzas</span>
-                        <div class="fab-icon-holder" style="background-color: #ffc107; color: black;"><i
+                        <div class="fab-icon-holder"><i
                                 class="fas fa-clock"></i></div>
                     </a>
                     <a href="exportar_tardanzas_detalle.php?<?= http_build_query([
@@ -2538,7 +2538,7 @@ function verificarTardanzaYaRegistrada(
                         'operario_id' => $operario_id
                     ]) ?>" class="fab-option text-decoration-none">
                         <span class="fab-label">Detalle Tardanzas</span>
-                        <div class="fab-icon-holder" style="background-color: #0dcaf0; color: white;"><i
+                        <div class="fab-icon-holder"><i
                                 class="fas fa-list"></i></div>
                     </a>
                 <?php endif; ?>
