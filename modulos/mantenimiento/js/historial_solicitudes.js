@@ -844,9 +844,9 @@ function renderizarFechaAgendado(row) {
         const displayDate = fechaInicio ? formatearFecha(fechaInicio) : 'Finalizado';
         let fotosHtml = '';
         if (totalFotosTrabajo > 0) {
-            fotosHtml = `<span class="badge bg-light text-dark ms-1" style="font-size: 0.7em; padding: 0.2em 0.5em;"><i class="fas fa-camera"></i> ${totalFotosTrabajo}</span>`;
+            fotosHtml = `<span class="foto-count-badge">${totalFotosTrabajo}</span>`;
         }
-        return `<span class="fecha-sin-programar" style="cursor: pointer; background-color: #28a745; border-color: #28a745; color: white;" onclick="verTrabajoFinalizado(${ticketId})" title="Ver trabajo realizado"><i class="bi bi-check-circle"></i> ${displayDate}${fotosHtml}</span>`;
+        return `<span class="fecha-sin-programar" style="cursor: pointer; position: relative; color: #28a745; background-color: rgba(40, 167, 69, 0.1); border-color: #28a745;" onclick="verTrabajoFinalizado(${ticketId})" title="Ver trabajo realizado">${displayDate}${fotosHtml}</span>`;
     }
 
     if (!fechaInicio) {
