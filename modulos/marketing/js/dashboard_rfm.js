@@ -102,37 +102,47 @@ async function cargarDatos() {
             return r.json();
         };
 
-        // Lanzar en paralelo y procesar cada una al llegar
-        fetchSeccion('evolucion').then(d => {
-            if (d.success) {
-                updateEvolutionChart(d.evolution || []);
-                if (d.branch_analysis && Object.keys(d.branch_analysis).length)
-                    updateBranchCharts(d.branch_analysis, data1.summary.ticket_club);
+        // Lanzar secuencialmente para no saturar la base de datos y evitar 504 Timeout
+        try {
+            const dEvolucion = await fetchSeccion('evolucion');
+            if (dEvolucion.success) {
+                updateEvolutionChart(dEvolucion.evolution || []);
+                if (dEvolucion.branch_analysis && Object.keys(dEvolucion.branch_analysis).length)
+                    updateBranchCharts(dEvolucion.branch_analysis, data1.summary.ticket_club);
             }
-        }).catch(e => console.warn('evolucion error', e));
+        } catch (e) {
+            console.warn('evolucion error', e);
+        }
 
-        fetchSeccion('habitos').then(d => {
-            if (d.success && d.habits) updateHabitSection(d.habits);
-        }).catch(e => console.warn('habitos error', e));
+        try {
+            const dHabitos = await fetchSeccion('habitos');
+            if (dHabitos.success && dHabitos.habits) updateHabitSection(dHabitos.habits);
+        } catch (e) {
+            console.warn('habitos error', e);
+        }
 
-        fetchSeccion('retencion').then(d => {
-            if (d.success) {
-                if (d.retention) {
-                    animateValue('kpiRetention', d.retention.rate, false, '%');
+        try {
+            const dRetencion = await fetchSeccion('retencion');
+            if (dRetencion.success) {
+                if (dRetencion.retention) {
+                    animateValue('kpiRetention', dRetencion.retention.rate, false, '%');
                     $('#tipRetention').attr('title',
-                        `<div class="tooltip-data-row"><span>Cohorte (Previo):</span> <span>${d.retention.h1}</span></div>` +
-                        `<div class="tooltip-data-row"><span>Retornaron:</span> <span>${d.retention.h2}</span></div>` +
+                        `<div class="tooltip-data-row"><span>Cohorte (Previo):</span> <span>${dRetencion.retention.h1}</span></div>` +
+                        `<div class="tooltip-data-row"><span>Retornaron:</span> <span>${dRetencion.retention.h2}</span></div>` +
                         `<div class="tooltip-formula">Clientes del periodo anterior que volvieron en este periodo.</div>`
                     );
                 }
-                if (d.ultimo_producto) {
-                    fullClientData.forEach(c => { c.UltimoProducto = d.ultimo_producto[c.CodCliente] || '--'; });
+                if (dRetencion.ultimo_producto) {
+                    fullClientData.forEach(c => { c.UltimoProducto = dRetencion.ultimo_producto[c.CodCliente] || '--'; });
                     filteredData = [...fullClientData];
                     renderPaginatedTable();
                 }
             }
-        }).catch(e => console.warn('retencion error', e))
-          .finally(() => mostrarCargandoFase2(false));
+        } catch (e) {
+            console.warn('retencion error', e);
+        }
+        
+        mostrarCargandoFase2(false);
 
     } catch (error) {
         console.error(error);
