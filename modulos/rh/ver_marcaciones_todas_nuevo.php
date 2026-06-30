@@ -18,6 +18,193 @@ $esFotoMarcacion = tienePermiso('historial_marcaciones_globales', 'foto_marcacio
 $esCambiarFotoMarcacion = tienePermiso('historial_marcaciones_globales', 'cambiar_foto_marcacion', $usuario['CodNivelesCargos']);
 $canExportMarcacionesBd = tienePermiso('historial_marcaciones_globales', 'exportar_marcaciones_bd', $usuario['CodNivelesCargos']);
 
+$esSolicitudVacaciones = tienePermiso('historial_marcaciones_globales', 'solicitud_vacaciones', $usuario['CodNivelesCargos']);
+
+/**
+ * Funciones y lógica para Solicitud de Vacaciones migrada
+ */
+if ($esSolicitudVacaciones) {
+    if (!function_exists('obtenerPorcentajePagoTipoFalta')) {
+        function obtenerPorcentajePagoTipoFalta($tipoFalta)
+        {
+            global $conn;
+            $stmt = $conn->prepare("
+                SELECT porcentaje_pago 
+                FROM tipos_falta 
+                WHERE codigo = ? 
+                LIMIT 1
+            ");
+            $stmt->execute([$tipoFalta]);
+            $result = $stmt->fetch();
+            return $result ? $result['porcentaje_pago'] : 0;
+        }
+    }
+
+    if (!function_exists('obtenerDiasLaborablesEnRango')) {
+        function obtenerDiasLaborablesEnRango($fechaInicio, $fechaFin)
+        {
+            $dias = [];
+            try {
+                $fechaActual = new DateTime($fechaInicio);
+                $fechaFinObj = new DateTime($fechaFin);
+                while ($fechaActual <= $fechaFinObj) {
+                    $dias[] = $fechaActual->format('Y-m-d');
+                    $fechaActual->modify('+1 day');
+                }
+            } catch (Exception $e) {
+                error_log("Error obteniendo días en rango: " . $e->getMessage());
+            }
+            return $dias;
+        }
+    }
+
+    if (!function_exists('obtenerTiposFaltaConPorcentajes')) {
+        function obtenerTiposFaltaConPorcentajes()
+        {
+            global $conn;
+            $stmt = $conn->prepare("
+                SELECT codigo, nombre, porcentaje_pago, descripcion 
+                FROM tipos_falta 
+                WHERE activo = 1 
+                ORDER BY nombre
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll();
+        }
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_vacaciones'])) {
+        try {
+            $codOperario = (int) $_POST['cod_operario'];
+            $fechaInicio = $_POST['fecha_inicio'];
+            $fechaFin = $_POST['fecha_fin'];
+            $codSucursal = $_POST['cod_sucursal'];
+            $observaciones = $_POST['observaciones'] ?? '';
+            $tipoFalta = $_POST['tipo_falta'] ?? 'Vacaciones';
+
+            if (empty($fechaInicio) || empty($fechaFin)) {
+                throw new Exception('Debe seleccionar ambas fechas');
+            }
+            if ($fechaInicio > $fechaFin) {
+                throw new Exception('La fecha de inicio no puede ser mayor que la fecha fin');
+            }
+            if (!isset($_FILES['foto_falta']) || $_FILES['foto_falta']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('Debe subir una foto como evidencia');
+            }
+
+            $foto = $_FILES['foto_falta'];
+            if ($foto['size'] > 5 * 1024 * 1024) {
+                throw new Exception('La foto no debe exceder los 5MB');
+            }
+
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!in_array($foto['type'], $allowedTypes)) {
+                throw new Exception('Solo se permiten imágenes JPEG, PNG o GIF');
+            }
+
+            $porcentajePago = obtenerPorcentajePagoTipoFalta($tipoFalta);
+
+            $codContrato = null;
+            $stmt_contrato = $conn->prepare("
+                SELECT CodContrato 
+                FROM Contratos 
+                WHERE cod_operario = ? 
+                ORDER BY inicio_contrato DESC, CodContrato DESC 
+                LIMIT 1
+            ");
+            $stmt_contrato->execute([$codOperario]);
+            $contrato = $stmt_contrato->fetch();
+            if ($contrato) {
+                $codContrato = $contrato['CodContrato'];
+            }
+
+            $diasLaborables = obtenerDiasLaborablesEnRango($fechaInicio, $fechaFin);
+
+            if (empty($diasLaborables)) {
+                throw new Exception('No hay días en el rango seleccionado');
+            }
+
+            $extension = pathinfo($foto['name'], PATHINFO_EXTENSION);
+            $nombreFoto = 'vacacion_' . $codOperario . '_' . date('YmdHis') . '.' . $extension;
+            $rutaRelativa = '/uploads/faltas_manual/' . $nombreFoto;
+            $uploadDir = __DIR__ . '/../../uploads/faltas_manual/';
+
+            if (!file_exists($uploadDir)) {
+                if (!mkdir($uploadDir, 0755, true)) {
+                    throw new Exception('No se pudo crear el directorio de uploads');
+                }
+            }
+            if (!is_writable($uploadDir)) {
+                throw new Exception('El directorio de uploads no tiene permisos de escritura');
+            }
+
+            $rutaCompleta = $uploadDir . $nombreFoto;
+            if (!move_uploaded_file($foto['tmp_name'], $rutaCompleta)) {
+                throw new Exception('Error al guardar la foto en el servidor. Verifique permisos.');
+            }
+
+            $registrosExitosos = 0;
+            $errores = [];
+
+            foreach ($diasLaborables as $dia) {
+                $stmt = $conn->prepare("
+                    SELECT id FROM faltas_manual 
+                    WHERE cod_operario = ? AND fecha_falta = ?
+                    LIMIT 1
+                ");
+                $stmt->execute([$codOperario, $dia]);
+                if ($stmt->fetch()) {
+                    $errores[] = "Ya existe un registro para el día " . date('d/m/Y', strtotime($dia));
+                    continue;
+                }
+
+                $stmt = $conn->prepare("
+                    INSERT INTO faltas_manual (
+                        cod_operario, fecha_falta, cod_sucursal, 
+                        tipo_falta, observaciones, observaciones_rrhh, foto_path, registrado_por, cod_contrato, porcentaje_pago
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                if (
+                    $stmt->execute([
+                        $codOperario,
+                        $dia,
+                        $codSucursal,
+                        $tipoFalta,
+                        $observaciones,
+                        null,
+                        $rutaRelativa,
+                        $_SESSION['usuario_id'],
+                        $codContrato,
+                        $porcentajePago
+                    ])
+                ) {
+                    $registrosExitosos++;
+                } else {
+                    $errores[] = "Error al registrar vacaciones para " . date('d/m/Y', strtotime($dia));
+                }
+            }
+
+            if ($registrosExitosos > 0) {
+                $mensaje = "Se registraron $registrosExitosos días de vacaciones correctamente";
+                if (!empty($errores)) {
+                    $mensaje .= ". Hubo " . count($errores) . " errores: " . implode(', ', array_slice($errores, 0, 3));
+                    if (count($errores) > 3) {
+                        $mensaje .= "... (y " . (count($errores) - 3) . " más)";
+                    }
+                }
+                $_SESSION['exito'] = $mensaje;
+            } else {
+                $_SESSION['error'] = "No se pudo registrar ningún día de vacaciones. " . implode(', ', $errores);
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+        }
+
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit();
+    }
+}
+
 // Obtener operarios según el tipo de usuario
 if ($esLider) {
     // Para líderes: operarios de TODAS sus sucursales asignadas
