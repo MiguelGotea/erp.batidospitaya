@@ -819,7 +819,8 @@ if (
         // Configurar headers para descarga de archivo Excel con rango de fechas
         $labelSucursal = (!empty($_GET['sucursal_filtro']) && is_array($_GET['sucursal_filtro']))
             ? implode('_', array_map(function ($s) {
-                return preg_replace('/[^a-zA-Z0-9]/', '', $s); }, $_GET['sucursal_filtro']))
+                return preg_replace('/[^a-zA-Z0-9]/', '', $s);
+            }, $_GET['sucursal_filtro']))
             : ($modoVista === 'todas' ? 'todas_sucursales' : preg_replace('/[^a-zA-Z0-9_\-]/', '_', $nombreSucursal ?? 'sucursal'));
         $nombreArchivo = "marcaciones_{$labelSucursal}_{$fechaDesde}_a_{$fechaHasta}.xls";
         header('Content-Type: application/vnd.ms-excel; charset=utf-8');
