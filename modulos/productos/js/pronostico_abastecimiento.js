@@ -897,13 +897,42 @@ function buildCatsHtml(cats, isConsolidado, fechaArg, isHoy = false) {
                 if (despAUsar !== null && despAUsar !== undefined) totalDespacho += despAUsar;
             });
             const capVal = (window.resPedido && window.resPedido.capacidad_paquetes !== null && window.resPedido.capacidad_paquetes !== undefined) ? window.resPedido.capacidad_paquetes : '';
-            badgeB = `<div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
-                <div class="input-group input-group-sm mb-0" style="width: 140px; height:24px;" title="Capacidad de Congelador (paquetes)">
-                    <span class="input-group-text" style="font-size:11px; padding:0 6px;"><i class="bi bi-snow2"></i></span>
-                    <input type="number" class="form-control pa-input-cap-b" style="font-size:12px; height:24px; padding:0 6px;" placeholder="Cap." value="${capVal}">
-                    <span class="input-group-text" style="font-size:11px; padding:0 6px;">paq</span>
+            
+            let pct = 0;
+            let pctText = 'N/A';
+            let colorBg = '#f3f4f6';
+            let colorText = '#374151';
+            
+            const capNumber = parseFloat(capVal);
+            if (!isNaN(capNumber) && capNumber > 0) {
+                pct = Math.round((totalDespacho / capNumber) * 100);
+                pctText = pct + '%';
+                if (pct < 90) {
+                    // Verde
+                    colorBg = '#dcfce7'; 
+                    colorText = '#14532d'; 
+                } else if (pct <= 95) {
+                    // Amarillo
+                    colorBg = '#fef3c7'; 
+                    colorText = '#78350f'; 
+                } else {
+                    // Rojo
+                    colorBg = '#fee2e2'; 
+                    colorText = '#7f1d1d'; 
+                }
+            }
+
+            badgeB = `<div style="margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                <div style="font-size:12px; color:#4b5563; font-weight:600; display:flex; align-items:center; gap:6px;">
+                    Congelados Paquetes (Cap.: 
+                    <input type="number" class="pa-input-cap-b" style="width:60px; height:22px; text-align:center; border:1px solid #d1d5db; border-radius:4px; font-size:12px; padding:0; outline:none;" placeholder="Cap." value="${capVal}">
+                    )
                 </div>
-                <span class="pa-round-badge" style="background:rgba(14,165,233,0.1); color:#0ea5e9; font-size:13px; font-weight:800; padding:4px 12px;">Total Despacho: ${totalDespacho}</span>
+                <div class="pa-round-badge" style="background:${colorBg}; color:${colorText}; font-size:13px; font-weight:800; padding:4px 12px; border: 1px solid rgba(0,0,0,0.05); display:inline-flex; align-items:center; gap:6px;">
+                    <span>Despacho: ${totalDespacho}</span>
+                    <span style="opacity:0.4;">|</span>
+                    <span>${pctText}</span>
+                </div>
             </div>`;
         }
 
