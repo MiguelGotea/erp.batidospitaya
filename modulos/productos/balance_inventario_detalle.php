@@ -507,14 +507,15 @@ try {
                 });
         }
 
-        function renderChart(res, stockMinVal, stockMaxFinalVal) {
+        function renderChart(res) {
             const regs = res.registros || [];
-            const t = res.totales_tipo;
-            const invIni = t.inv_inicial || 0;
+            const t = res.totales_tipo || {};
+            const invCorte = t.inv_inicial || 0;
             const invFin = t.inv_final || 0;
+            const pivotDate = res.fecha_inicio_corte;
             const consTeoDiario = res.consumo_teorico_diario || {};
+            const puntosDomingo = res.puntos_domingo || {};
 
-            // Generar lista de todos los días en el rango
             const start = new Date(res.fecha_inicio + 'T12:00:00');
             const end = new Date(res.fecha_fin + 'T12:00:00');
             const allDays = [];
@@ -524,7 +525,6 @@ try {
                 curr.setDate(curr.getDate() + 1);
             }
 
-            // Movimientos por fecha (ajustes, despachos, mermas)
             const movsPorFecha = {};
             regs.forEach(r => {
                 if (r.tipo === 'inv_inicial' || r.tipo === 'inv_final') return;
@@ -534,82 +534,80 @@ try {
                 movsPorFecha[r.fecha] += val;
             });
 
-            const labels = ['Inicial (S' + res.semana_ant + ')'];
-            const stockTeoData = [invIni];
+            const pivotIdx = pivotDate ? allDays.indexOf(pivotDate) : 0;
+            const pIdx = pivotIdx >= 0 ? pivotIdx : 0;
 
-            let balTeo = invIni;
+            const stockTeoData = new Array(allDays.length).fill(null);
+            let balFwd = invCorte;
+            
+            for (let i = pIdx; i < allDays.length; i++) {
+                const mov = movsPorFecha[allDays[i]] || 0;
+                const cTeo = consTeoDiario[allDays[i]] || 0;
+                balFwd = balFwd + mov - cTeo;
+                stockTeoData[i] = balFwd;
+            }
 
-            allDays.forEach(day => {
-                const mov = movsPorFecha[day] || 0;
-                const cTeo = consTeoDiario[day] || 0;
-                balTeo = balTeo + mov - cTeo;
+            if (pIdx > 0) {
+                let balBwd = invCorte;
+                stockTeoData[pIdx - 1] = balBwd;
+                for (let i = pIdx - 2; i >= 0; i--) {
+                    const mov = movsPorFecha[allDays[i + 1]] || 0;
+                    const cTeo = consTeoDiario[allDays[i + 1]] || 0;
+                    balBwd = balBwd - mov + cTeo;
+                    stockTeoData[i] = balBwd;
+                }
+            }
 
+            const labels = allDays.map(day => {
                 const dObj = new Date(day + 'T12:00:00');
-                const dLabel = dObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-
-                labels.push(dLabel);
-                stockTeoData.push(balTeo);
+                return dObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
             });
 
-            // Puntos finales para destacar
-            const realFinalPoint = new Array(labels.length).fill(null);
-            realFinalPoint[labels.length - 1] = invFin;
+            const corteMarkerIdx = pIdx > 0 ? pIdx - 1 : pIdx;
+            const corteMarker = new Array(labels.length).fill(null);
+            corteMarker[corteMarkerIdx] = invCorte;
+
+            const domingoData = allDays.map(day => {
+                const v = puntosDomingo[day];
+                return (v !== undefined && v !== null) ? v : null;
+            });
+
+            const realFinalPoint = new Array(allDays.length).fill(null);
+            realFinalPoint[allDays.length - 1] = invFin;
 
             const ctx = document.getElementById('existenciaChart').getContext('2d');
             if (window.myChart) window.myChart.destroy();
 
-            // Datasets base
             const datasets = [
                 {
-                    label: 'Stock Teórico (Ventas + Kardex)',
+                    label: 'Stock Teórico',
                     data: stockTeoData,
                     borderColor: '#51B8AC',
-                    backgroundColor: 'rgba(81, 184, 172, 0.1)',
+                    backgroundColor: 'rgba(81,184,172,0.1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.3,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#fff',
+                    pointRadius: 2,
                 },
                 {
-                    label: 'Inventario Físico Real (Conteo)',
-                    data: realFinalPoint,
+                    label: `Corte S${SEM_CORTE}`,
+                    data: corteMarker,
+                    borderColor: '#f39c12',
+                    backgroundColor: '#f39c12',
+                    pointRadius: 8,
+                    pointStyle: 'triangle',
+                    showLine: false,
+                },
+                {
+                    label: 'Inv. Físico',
+                    data: domingoData,
                     borderColor: '#e74c3c',
                     backgroundColor: '#e74c3c',
-                    pointRadius: 8,
+                    pointRadius: 5,
                     pointStyle: 'rectRot',
                     showLine: false,
                 }
             ];
-
-            // Líneas de Stock Mín y Stock Máx Final (horizontales)
-            const n = labels.length;
-            if (stockMinVal !== null && stockMinVal !== undefined) {
-                datasets.push({
-                    label: 'Stock Mínimo *',
-                    data: new Array(n).fill(stockMinVal),
-                    borderColor: '#f9a825',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    borderDash: [6, 4],
-                    pointRadius: 0,
-                    fill: false,
-                    tension: 0,
-                });
-            }
-            if (stockMaxFinalVal !== null && stockMaxFinalVal !== undefined) {
-                datasets.push({
-                    label: 'Stock Máx Final *',
-                    data: new Array(n).fill(stockMaxFinalVal),
-                    borderColor: '#6d597a',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    borderDash: [6, 4],
-                    pointRadius: 0,
-                    fill: false,
-                    tension: 0,
-                });
-            }
 
             window.myChart = new Chart(ctx, {
                 type: 'line',
@@ -618,11 +616,7 @@ try {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: { boxWidth: 10, font: { size: 9, weight: 'bold' }, padding: 15 }
-                        },
+                        legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
                         tooltip: {
                             mode: 'index',
                             intersect: false,
@@ -638,103 +632,18 @@ try {
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: false,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            ticks: { font: { size: 10 } }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 }
-                        }
+                        y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } }
                     }
                 }
             });
             document.getElementById('bdChartWrap').classList.remove('d-none');
-        }
+            
+            const badge = document.getElementById('bdChartStockBadge');
+            if (badge) badge.style.display = 'none';
 
-        // ── Cargar Stock Mín y Stock Máx Final desde pedido sugerido ────────────
-        function cargarStockMinMax() {
-            // Semana analizada: usamos SEM_HASTA (semana principal del balance)
-            const semAnalisis = SEM_HASTA;
-            // Primera sucursal del filtro (puede ser múltiple, tomamos la primera)
-            const primeraSuc = SUCS_RAW ? SUCS_RAW.split(',')[0].trim() : '';
-
-            const fd = new FormData();
-            fd.append('id_pp', ID_PP);
-            fd.append('sem_analisis', semAnalisis);
-            fd.append('sem_actual', SEM_ACTUAL);
-            if (primeraSuc) fd.append('cod_sucursal', primeraSuc);
-
-            fetch(AJAX + 'balance_inventario_get_stock_minmax.php', { method: 'POST', body: fd })
-                .then(r => r.json())
-                .then(res => {
-                    if (!res.ok || (res.stock_minimo === null && res.stock_max_final === null)) return;
-
-                    // Actualizar el gráfico con las nuevas líneas
-                    if (window.myChart) {
-                        const n = window.myChart.data.labels.length;
-
-                        // Eliminar datasets de stock min/max previos si existieran
-                        window.myChart.data.datasets = window.myChart.data.datasets
-                            .filter(ds => !ds.label.includes('Stock Mín') && !ds.label.includes('Stock Máx Final'));
-
-                        if (res.stock_minimo !== null) {
-                            window.myChart.data.datasets.push({
-                                label: 'Stock Mínimo *',
-                                data: new Array(n).fill(res.stock_minimo),
-                                borderColor: '#f9a825',
-                                backgroundColor: 'transparent',
-                                borderWidth: 2,
-                                borderDash: [6, 4],
-                                pointRadius: 0,
-                                fill: false,
-                                tension: 0,
-                            });
-                        }
-                        if (res.stock_max_final !== null) {
-                            window.myChart.data.datasets.push({
-                                label: 'Stock Máx Final *',
-                                data: new Array(n).fill(res.stock_max_final),
-                                borderColor: '#6d597a',
-                                backgroundColor: 'transparent',
-                                borderWidth: 2,
-                                borderDash: [6, 4],
-                                pointRadius: 0,
-                                fill: false,
-                                tension: 0,
-                            });
-                        }
-                        window.myChart.update();
-
-                        // Badge en el título
-                        const badge = document.getElementById('bdChartStockBadge');
-                        if (badge) {
-                            let parts = [];
-                            if (res.stock_minimo !== null) parts.push('Mín: ' + fmt(res.stock_minimo, 2));
-                            if (res.stock_max_final !== null) parts.push('Máx: ' + fmt(res.stock_max_final, 2));
-                            if (parts.length) {
-                                badge.textContent = '* ' + parts.join(' · ');
-                                badge.style.display = '';
-                            }
-                        }
-                    }
-
-                    // Nota si se retrocedieron semanas
-                    const notaEl = document.getElementById('bdChartNota');
-                    const notaTxt = document.getElementById('bdChartNotaText');
-                    if (notaEl && notaTxt && res.retrocedido) {
-                        notaTxt.textContent =
-                            `* Las líneas de Stock Mín y Máx se calculan con las semanas ${res.sem_desde}–${res.sem_hasta} ` +
-                            `(se retrocedió 1 semana desde la semana actual ${res.sem_actual} para usar solo semanas con datos completos de 7 días).`;
-                        notaEl.style.display = '';
-                    } else if (notaEl && notaTxt) {
-                        notaTxt.textContent =
-                            `* Stock Mín y Máx calculados con semanas ${res.sem_desde}–${res.sem_hasta} (últimas 5 semanas completas).`;
-                        notaEl.style.display = '';
-                    }
-                })
-                .catch(() => { /* silencioso */ });
+            const notaEl = document.getElementById('bdChartNota');
+            if (notaEl) notaEl.style.display = 'none';
         }
 
         function renderDetalle(res) {
@@ -756,7 +665,6 @@ try {
 
             // Chart
             renderChart(res);
-            cargarStockMinMax();
 
             // Resumen de Totales
             const t = res.totales_tipo;
