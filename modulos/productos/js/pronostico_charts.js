@@ -262,6 +262,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
             plugins: {
                 legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true, font: { size: 10 } } },
                 tooltip: {
+                    usePointStyle: true,
                     callbacks: {
                         label: function(context) {
                             if (context.raw === null) return null;
@@ -423,7 +424,7 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
 
     const datasets = [
         {
-            label: 'Stock Teórico',
+            label: 'Existencia real',
             data: stockTeoData,
             borderColor: '#51B8AC',
             backgroundColor: 'rgba(81,184,172,0.1)',
@@ -434,7 +435,7 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
             pointStyle: 'circle',
         },
         {
-            label: `Corte S${semCorte}`,
+            label: 'Conteo fisico base',
             data: corteMarker,
             borderColor: '#e74c3c',
             backgroundColor: '#e74c3c',
@@ -443,7 +444,7 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
             showLine: false,
         },
         {
-            label: 'Inv. Físico',
+            label: 'Conteo fisico historico',
             data: domingoData,
             borderColor: '#f39c12',
             backgroundColor: '#f39c12',
@@ -506,6 +507,7 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
             plugins: {
                 legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 }, usePointStyle: true } },
                 tooltip: {
+                    usePointStyle: true,
                     mode: 'index',
                     intersect: false,
                     callbacks: {
@@ -806,7 +808,7 @@ async function calcularPronosticoAbastKardex(
         const pointHoverRadii = forecastData.map((v, i) => i === _idxObj ? 13 : 4);
         const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
 
-        const pronLabel = `Proyección de Inventario`;
+        const pronLabel = `Proyeccion de existencias`;
         datasets.push({
             label: pronLabel,
             data: forecastData,
@@ -851,7 +853,7 @@ async function calcularPronosticoAbastKardex(
 
             if (hasProy) {
                 datasets.push({
-                    label: `🚧 Despacho Programado (Proyección)`,
+                    label: `Despacho futuro proyectado`,
                     data: dispDataProy,
                     despachoAmounts: dispAmountsProy,
                     borderColor: '#0ea5e9',
@@ -864,7 +866,7 @@ async function calcularPronosticoAbastKardex(
             }
             if (hasReal) {
                 datasets.push({
-                    label: `🚧 Despacho Programado (Real/Curso)`,
+                    label: `Despacho futuro agendado`,
                     data: dispDataReal,
                     despachoAmounts: dispAmountsReal,
                     despachoTypes: new Array(allDays.length).fill('curso'),
@@ -908,7 +910,7 @@ function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsPr
     const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
 
     datasets.push({
-        label: `Proyección de Inventario`,
+        label: `Proyeccion de existencias`,
         data: forecastData,
         borderColor: '#0ea5e9',
         backgroundColor: 'rgba(14, 165, 233, 0.06)',
@@ -934,6 +936,7 @@ function _finalizarChartKardex(datasets, ctx, chartId, labels) {
             plugins: {
                 legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 }, usePointStyle: true } },
                 tooltip: {
+                    usePointStyle: true,
                     mode: 'index',
                     intersect: false,
                     callbacks: {
@@ -1085,7 +1088,7 @@ function addStockLines(idPP, sk, chartId, allDays) {
         }
 
         chart.data.datasets.push({
-            label: 'Stock Mínimo *',
+            label: 'Stock Mínimo',
             data: minData,
             borderColor: '#e74c3c',
             backgroundColor: 'transparent',
@@ -1099,7 +1102,7 @@ function addStockLines(idPP, sk, chartId, allDays) {
         });
 
         chart.data.datasets.push({
-            label: 'Requerido Total *',
+            label: 'Requerido Total',
             data: maxData,
             borderColor: '#6d597a',
             backgroundColor: 'transparent',
