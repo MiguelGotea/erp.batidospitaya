@@ -873,6 +873,7 @@ try {
             'prom_consumo' => round($prom, 4),
             'desv_estandar' => 0, // deprecado, mantenido para compatibilidad
             'cons_semanal' => round($semC, 4),
+            'dias_stock_min' => $dSM,
             'cons_diario' => round($diaC, 6),
             'stock_minimo' => round($sMin, 4),
             'stock_maximo' => round($sMax, 4),
