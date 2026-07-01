@@ -431,21 +431,22 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
             fill: true,
             tension: 0.3,
             pointRadius: 2,
+            pointStyle: 'circle',
         },
         {
             label: `Corte S${semCorte}`,
             data: corteMarker,
-            borderColor: '#f39c12',
-            backgroundColor: '#f39c12',
+            borderColor: '#e74c3c',
+            backgroundColor: '#e74c3c',
             pointRadius: 8,
-            pointStyle: 'triangle',
+            pointStyle: 'rectRot',
             showLine: false,
         },
         {
             label: 'Inv. Físico',
             data: domingoData,
-            borderColor: '#e74c3c',
-            backgroundColor: '#e74c3c',
+            borderColor: '#f39c12',
+            backgroundColor: '#f39c12',
             pointRadius: 5,
             pointStyle: 'rectRot',
             showLine: false,
@@ -503,7 +504,7 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
+                legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 }, usePointStyle: true } },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
@@ -823,35 +824,58 @@ async function calcularPronosticoAbastKardex(
         });
 
         if (dispatchMarkers.length > 0) {
-            const dispData = new Array(allDays.length).fill(null);
-            const dispRadius = new Array(allDays.length).fill(0);
-            const dispAmounts = new Array(allDays.length).fill(null);
-            const dispTypes = new Array(allDays.length).fill('proy');
-            const pStyles = new Array(allDays.length).fill('triangle');
-            const bgColors = new Array(allDays.length).fill('#27ae60');
+            const dispDataProy = new Array(allDays.length).fill(null);
+            const dispRadiusProy = new Array(allDays.length).fill(0);
+            const dispAmountsProy = new Array(allDays.length).fill(null);
+
+            const dispDataReal = new Array(allDays.length).fill(null);
+            const dispRadiusReal = new Array(allDays.length).fill(0);
+            const dispAmountsReal = new Array(allDays.length).fill(null);
+
+            let hasProy = false;
+            let hasReal = false;
 
             dispatchMarkers.forEach(m => {
-                dispData[m.idx] = m.val;
-                dispRadius[m.idx] = 10;
-                dispAmounts[m.idx] = m.despacho;
                 if (m.isPreingreso) {
-                    dispTypes[m.idx] = 'curso';
-                    pStyles[m.idx] = 'circle';
-                    bgColors[m.idx] = '#2980b9';
+                    dispDataReal[m.idx] = m.val;
+                    dispRadiusReal[m.idx] = 10;
+                    dispAmountsReal[m.idx] = m.despacho;
+                    hasReal = true;
+                } else {
+                    dispDataProy[m.idx] = m.val;
+                    dispRadiusProy[m.idx] = 10;
+                    dispAmountsProy[m.idx] = m.despacho;
+                    hasProy = true;
                 }
             });
-            datasets.push({
-                label: `🚧 Despacho(s) programado/curso`,
-                data: dispData,
-                despachoAmounts: dispAmounts,
-                despachoTypes: dispTypes,
-                borderColor: bgColors,
-                backgroundColor: bgColors,
-                pointRadius: dispRadius,
-                pointHoverRadius: 13,
-                pointStyle: pStyles,
-                showLine: false,
-            });
+
+            if (hasProy) {
+                datasets.push({
+                    label: `🚧 Despacho Programado (Proyección)`,
+                    data: dispDataProy,
+                    despachoAmounts: dispAmountsProy,
+                    borderColor: '#0ea5e9',
+                    backgroundColor: '#0ea5e9',
+                    pointRadius: dispRadiusProy,
+                    pointHoverRadius: 13,
+                    pointStyle: 'circle',
+                    showLine: false,
+                });
+            }
+            if (hasReal) {
+                datasets.push({
+                    label: `🚧 Despacho Programado (Real/Curso)`,
+                    data: dispDataReal,
+                    despachoAmounts: dispAmountsReal,
+                    despachoTypes: new Array(allDays.length).fill('curso'),
+                    borderColor: '#2980b9',
+                    backgroundColor: '#2980b9',
+                    pointRadius: dispRadiusReal,
+                    pointHoverRadius: 13,
+                    pointStyle: 'circle',
+                    showLine: false,
+                });
+            }
         }
 
         _finalizarChartKardex(datasets, ctx, chartId, labels);
@@ -908,7 +932,7 @@ function _finalizarChartKardex(datasets, ctx, chartId, labels) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
+                legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 }, usePointStyle: true } },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
@@ -1070,7 +1094,8 @@ function addStockLines(idPP, sk, chartId, allDays) {
             pointRadius: 0,
             fill: false,
             tension: 0,
-            stepped: true
+            stepped: true,
+            pointStyle: 'line'
         });
 
         chart.data.datasets.push({
@@ -1083,7 +1108,8 @@ function addStockLines(idPP, sk, chartId, allDays) {
             pointRadius: 0,
             fill: false,
             tension: 0,
-            stepped: true
+            stepped: true,
+            pointStyle: 'line'
         });
         
         chart.update();
