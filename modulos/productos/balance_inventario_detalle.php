@@ -517,6 +517,7 @@ try {
             const puntosDomingo = res.puntos_domingo || {};
 
             const start = new Date(res.fecha_inicio + 'T12:00:00');
+            start.setDate(start.getDate() - 1); // Incluir el domingo anterior para el punto de corte inicial
             const end = new Date(res.fecha_fin + 'T12:00:00');
             const allDays = [];
             let curr = new Date(start);
