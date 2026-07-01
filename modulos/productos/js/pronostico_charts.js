@@ -198,7 +198,9 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
             tension: 0.3,
             fill: true,
             pointRadius: [...valores.map(() => 4), 0, 0, 0],
-            pointBackgroundColor: '#51B8AC',
+            pointBackgroundColor: 'rgba(81,184,172,0.1)',
+            pointBorderColor: '#51B8AC',
+            pointBorderWidth: 2,
         },
         {
             label: `Promedio`,
@@ -281,7 +283,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
                                     }
                                 }
                             }
-                            return `${labelStr}: ${formatNum(context.raw)}`;
+                            return `${labelStr}: ${parseFloat(context.raw).toLocaleString('es-NI', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
                         }
                     }
                 }
@@ -422,9 +424,10 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
     const invIniRangoData = new Array(allDays.length).fill(null);
     if (invIniRango !== null) invIniRangoData[0] = invIniRango;
 
+    const _ayerFmtStr = ayerDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).replace('.', '').replace(' ', '-').replace(/\b[a-z]/g, c => c.toUpperCase());
     const datasets = [
         {
-            label: 'Existencia real',
+            label: `Existencia real al ${_ayerFmtStr}`,
             data: stockTeoData,
             borderColor: '#51B8AC',
             backgroundColor: 'rgba(81,184,172,0.1)',
@@ -521,7 +524,7 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
                                 extra = ` (+${qty} paq ${tpe})`;
                             }
                             if (label) label += ': ';
-                            label += fmtKardex(context.raw, 2) + extra;
+                            label += fmtKardex(context.raw, 1) + extra;
                             return label;
                         }
                     }
@@ -804,10 +807,6 @@ async function calcularPronosticoAbastKardex(
         const _finalPoint = new Array(allDays.length).fill(null);
         if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
 
-        const pointRadii = forecastData.map((v, i) => i === _idxObj ? 11 : 2);
-        const pointHoverRadii = forecastData.map((v, i) => i === _idxObj ? 13 : 4);
-        const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
-
         const pronLabel = `Proyeccion de existencias`;
         datasets.push({
             label: pronLabel,
@@ -818,9 +817,9 @@ async function calcularPronosticoAbastKardex(
             borderDash: [10, 5],
             fill: false,
             tension: 0.2,
-            pointRadius: pointRadii,
-            pointHoverRadius: pointHoverRadii,
-            pointStyle: pointStyles,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            pointStyle: 'circle',
             pointBackgroundColor: '#0ea5e9',
             spanGaps: true,
         });
@@ -905,10 +904,6 @@ function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsPr
     const _finalPoint = new Array(allDays.length).fill(null);
     if (_idxObj >= 0 && _valObj !== null) _finalPoint[_idxObj] = _valObj;
 
-    const pointRadii = forecastData.map((v, i) => i === _idxObj ? 11 : 2);
-    const pointHoverRadii = forecastData.map((v, i) => i === _idxObj ? 13 : 4);
-    const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
-
     datasets.push({
         label: `Proyeccion de existencias`,
         data: forecastData,
@@ -918,9 +913,9 @@ function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsPr
         borderDash: [10, 5],
         fill: false,
         tension: 0.2,
-        pointRadius: pointRadii,
-        pointHoverRadius: pointHoverRadii,
-        pointStyle: pointStyles,
+        pointRadius: 2,
+        pointHoverRadius: 4,
+        pointStyle: 'circle',
         pointBackgroundColor: '#0ea5e9',
         spanGaps: false,
     });
@@ -950,7 +945,7 @@ function _finalizarChartKardex(datasets, ctx, chartId, labels) {
                                 extra = ` (+${qty} paq ${tpe})`;
                             }
                             if (label) label += ': ';
-                            label += (typeof fmtKardex === 'function' ? fmtKardex(context.raw, 2) : context.raw.toFixed(2)) + extra;
+                            label += (typeof fmtKardex === 'function' ? fmtKardex(context.raw, 1) : context.raw.toFixed(1)) + extra;
                             return label;
                         }
                     }
