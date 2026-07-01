@@ -870,6 +870,12 @@ function buildCatsHtml(cats, isConsolidado, fechaArg, isHoy = false) {
 
                 if (despAUsar !== null && despAUsar !== undefined) totalDespacho += despAUsar;
             });
+            const capVal = (window.resPedido && window.resPedido.capacidad_paquetes !== null && window.resPedido.capacidad_paquetes !== undefined) ? window.resPedido.capacidad_paquetes : '';
+            
+            let pct = 0;
+            let pctText = 'N/A';
+            let colorBg = '#f3f4f6';
+            let colorText = '#374151';
             
             const capNumber = parseFloat(capVal);
             if (!isNaN(capNumber) && capNumber > 0) {
