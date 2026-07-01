@@ -653,7 +653,13 @@ try {
             const totales = res.totales_tipo || {};
 
             // Header
-            document.getElementById('bdNombreProd').textContent = prod.Nombre || prod.nombre || '—';
+            const nombreProd = prod.Nombre || prod.nombre || '—';
+            document.getElementById('bdNombreProd').textContent = nombreProd;
+            
+            const headerTitle = document.querySelector('.header-title');
+            if (headerTitle) {
+                headerTitle.textContent = 'Detalle de Balance - ' + nombreProd;
+            }
             document.getElementById('bdMetaRow').innerHTML = `
         <span class="bd-pill-meta"><i class="fas fa-hashtag me-1"></i>Semana ${SEM_DESDE === SEM_HASTA ? SEM_DESDE : SEM_DESDE + ' – ' + SEM_HASTA}</span>
         <span class="bd-pill-meta"><i class="fas fa-ruler me-1"></i>${esc(prod.unidad || '')}</span>
@@ -741,9 +747,7 @@ try {
                                 <th style="width:90px">Fecha</th>
                                 <th>Sucursal</th>
                                 ${tipo === 'despacho' ? '<th>Destino</th>' : ''}
-                                <th style="width:80px">Cod.</th>
                                 <th>Producto Original</th>
-                                <th style="width:90px">Conv.</th>
                                 <th class="td-num" style="width:80px">Factor</th>
                                 <th class="td-num" style="width:90px">Qty Orig</th>
                                 <th class="td-num" style="width:100px">Qty Base</th>
@@ -752,7 +756,7 @@ try {
                         <tbody id="tbody_${tipo}"></tbody>
                         <tfoot>
                             <tr class="bd-totales-row">
-                                <td colspan="${tipo === 'despacho' ? 7 : 6}" style="text-align:right;font-size:.7rem;letter-spacing:.05em">TOTAL ${def.label.toUpperCase()}</td>
+                                <td colspan="${tipo === 'despacho' ? 5 : 4}" style="text-align:right;font-size:.7rem;letter-spacing:.05em">TOTAL ${def.label.toUpperCase()}</td>
                                 <td></td><td></td>
                                 <td class="td-num">${fmt(total, 2)}</td>
                             </tr>
@@ -768,19 +772,23 @@ try {
                     return;
                 }
                 rows.forEach(r => {
-                    const convBadge = `<span class="bd-conv-badge bd-conv-${esc(r.tipo_conversion)}">${esc(r.tipo_conversion)}</span>`;
                     const tr = document.createElement('tr');
+                    
+                    let qtyOrigHtml = fmt(r.qty_original, 2);
+                    if (tipo === 'despacho' && r.qty_original < 0) {
+                        const hasPositive = rows.some(o => o.fecha === r.fecha && o.qty_original > 0 && o.suc_nombre === r.suc_nombre && o.nombre_original === r.nombre_original);
+                        const tag = hasPositive ? 'Corrección' : 'Devolución';
+                        qtyOrigHtml += `<br><span style="font-size:0.6rem; background:#ffe082; border-radius:3px; padding:1px 4px; color:#333; display:inline-block; margin-top:2px;">${tag}</span>`;
+                    }
 
                     tr.innerHTML = `
                 <td class="td-center">${r.semana}</td>
                 <td>${esc(r.fecha)}</td>
                 <td style="font-weight:600">${esc(r.suc_nombre)}</td>
                 ${tipo === 'despacho' ? `<td style="font-size:.68rem;color:#888">${esc(r.destino_texto || '')}</td>` : ''}
-                <td class="td-center" style="font-family:monospace;color:#888">${r.cod_cotizacion}</td>
                 <td style="font-size:.75rem">${r.nombre_original ? esc(r.nombre_original) : '<span style="opacity:.35;font-style:italic">—</span>'}</td>
-                <td class="td-center">${convBadge}</td>
                 <td class="td-num" style="color:#999;font-size:.7rem">×${r.factor}</td>
-                <td class="td-num" style="color:#777">${fmt(r.qty_original, 2)}</td>
+                <td class="td-num" style="color:#777">${qtyOrigHtml}</td>
                 <td class="td-num" style="color:#0E544C">${fmt(r.qty_base, 2)}</td>
             `;
                     tbody.appendChild(tr);
@@ -827,39 +835,12 @@ try {
 
             subtitle.textContent = `${res.total_filas} registros · Total: ${fmt2(res.total_consumo)} ${pp.unidad}`;
 
-            // ── Info strip
-            const infoHtml = `
-        <div class="bd-cteo-info">
-            <span><strong>Presentación:</strong> ${esc(pp.nombre)}</span>
-            <span><strong>Categoría:</strong> <span class="bd-pill-meta" style="font-size:.68rem">${esc(pp.categoria_insumo || '—')}</span></span>
-            <span><strong>Unidad ERP:</strong> ${esc(pp.unidad)}</span>
-            <span><strong>pp_cantidad:</strong> ${pp.pp_cant}</span>
-            <span><strong>Registros:</strong> ${res.total_filas}</span>
-            <span><strong>Total:</strong> <span style="color:#e65100;font-weight:800">${fmt2(res.total_consumo)}</span></span>
-        </div>`;
-
-            // ── Leyenda
-            const leyendaHtml = `
-        <div class="bd-cteo-legend">
-            <span class="bd-audit-badge bd-audit-p1">P1</span><span style="color:#555">Porción directa — redondea al 0.5</span>
-            <span class="bd-audit-badge bd-audit-p2">P2</span><span style="color:#555">Cotización base — 4 dec</span>
-            <span class="bd-audit-badge bd-audit-p3">P3</span><span style="color:#555">Fallback — 4 dec</span>
-            ${nDec > 0
-                    ? `<span class="ms-2" style="background:#fff8e1;border-radius:3px;padding:2px 6px;font-size:.7rem"><i class="fas fa-exclamation-triangle text-warning me-1"></i>${nDec} fila(s) redondeadas</span>`
-                    : ''}
-        </div>`;
-
-            // ── Alerta P1
-            const alertaHtml = nDec > 0
-                ? `<div class="bd-cteo-alerta warn"><i class="fas fa-exclamation-triangle me-1"></i><strong>${nDec} fila(s) P1</strong> tuvieron consumo crudo redondeado al 0.5 más cercano.</div>`
-                : `<div class="bd-cteo-alerta ok"><i class="fas fa-check-circle me-1"></i>Todos los cálculos P1 caen exactamente en múltiplos de 0.5.</div>`;
-
             // ── Thead
             const thead = `<tr>
         <th style="width:42px">Sem</th>
         <th style="width:82px">Fecha</th>
         <th>Sucursal</th>
-        <th>Batido</th>
+        <th>Producto Final</th>
         <th>Ingrediente</th>
         <th style="width:52px">Und.</th>
         <th class="td-num" style="width:54px">Ventas</th>
@@ -869,8 +850,6 @@ try {
         <th class="td-num" style="width:58px">pp_cant</th>
         <th class="td-num" style="width:62px">Crudo</th>
         <th class="td-num" style="width:72px">Final</th>
-        <th style="width:42px">Tipo</th>
-        <th style="width:90px">Nivel</th>
     </tr>`;
 
             // ── Tbody
@@ -897,7 +876,7 @@ try {
                 tbody += `<tr style="font-size:.72rem;${rowBg}">
                     <td class="td-center">${f.semana}</td>
             <td style="white-space:nowrap">${esc(f.fecha)}</td>
-            <td style="font-weight:600;font-size:.7rem">${esc(f.sucursal)}</td>
+            <td style="font-weight:600;font-size:.7rem">${esc(f.suc_nombre || f.sucursal)}</td>
             <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.nombre_batido)}">${esc(f.nombre_batido)}</td>
             <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.nombre_ingrediente)}">${esc(f.nombre_ingrediente)}</td>
             <td style="font-size:.68rem;color:#888">${esc(f.unidad_access)}</td>
@@ -908,8 +887,6 @@ try {
             <td class="td-num">${f.pp_cantidad}</td>
             <td class="td-num" style="color:#555">${f.consumo_crudo}</td>
             <td class="td-num" style="color:#0E544C;font-weight:700">${f.consumo_final} ${diffBadge}</td>
-            <td>${tipoHtml}</td>
-            <td style="font-size:.62rem;color:#999">${esc(f.nivel)}</td>
         </tr>`;
             });
 
@@ -918,14 +895,9 @@ try {
         <td colspan="11" style="text-align:right;font-size:.7rem;letter-spacing:.05em">TOTAL CONSUMO TEÓRICO</td>
         <td class="td-num">${fmt(sumCrudo, 2)}</td>
         <td class="td-num" style="color:#e65100">${fmt(sumFinal, 2)}</td>
-        <td colspan="2"></td>
     </tr>`;
 
             content.innerHTML = `
-        ${infoHtml}
-        ${leyendaHtml}
-        ${alertaHtml}
-
         <div class="bd-tbl-wrap" style="max-height:520px">
             <table class="bd-tbl">
                 <thead>${thead}</thead>
