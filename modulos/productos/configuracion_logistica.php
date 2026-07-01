@@ -153,38 +153,6 @@ $version = mt_rand(1, 10000);
         </div>
     </div>
 
-    <!-- Modal de Configuración Stock Grupo G -->
-    <div class="modal fade" id="modalConfigGrupoG" tabindex="-1" aria-labelledby="modalConfigGrupoGLabel" aria-hidden="true"
-        data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-warning-pitaya text-white" style="background-color: var(--pitaya-warning, #f0ad4e);">
-                    <h5 class="modal-title" id="modalConfigGrupoGLabel">
-                        <i class="bi bi-gear me-2"></i>
-                        Stock Mínimo por Producto - Grupo G
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <div class="p-3 bg-light border-bottom text-muted small">
-                        Aquí puedes configurar un stock mínimo fijo en unidades para cada producto del Grupo G asociado a la sucursal activa. El cambio se guarda automáticamente al editar. Si lo dejas vacío, usará la configuración global de días de stock.
-                    </div>
-                    <div class="loader-container d-none p-4 text-center" id="loaderGrupoG">
-                        <div class="loader"></div>
-                        <span class="small text-muted d-block mt-2">Cargando productos...</span>
-                    </div>
-                    <div class="table-responsive p-3" id="contenedorTablaGrupoG">
-                        <!-- Generado por JS -->
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
