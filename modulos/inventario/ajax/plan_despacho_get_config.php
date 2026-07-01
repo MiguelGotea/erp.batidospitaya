@@ -32,6 +32,7 @@ try {
             pds.dias_semana,
             pds.dias_preparacion,
             pds.activo,
+            pds.dias_stock_minimo,
             pds.modificado_por,
             CONCAT(o.Nombre, ' ', o.Apellido) AS modificado_por_nombre,
             pds.fecha_actualizacion
@@ -59,6 +60,7 @@ try {
             'dias_semana'          => $row['dias_semana'] ? json_decode($row['dias_semana'], true) : [],
             'dias_preparacion'     => $row['dias_preparacion'] !== null ? (int)$row['dias_preparacion'] : 1,
             'activo'               => $row['activo'] !== null ? (int)$row['activo'] : 1,
+            'dias_stock_minimo'    => $row['dias_stock_minimo'] !== null ? (float)$row['dias_stock_minimo'] : null,
             'modificado_por_nombre'=> $row['modificado_por_nombre'],
             'fecha_actualizacion'  => $row['fecha_actualizacion'],
         ];

@@ -748,15 +748,13 @@ try {
 
     // 5. Config Logística
     $stmtS = $conn->prepare("
-        SELECT dias_stock_minimo,
-               capacidad_congelados,
+        SELECT capacidad_congelados,
                capacidad_congelados_paquetes
         FROM configuracion_logistica_sucursal
         WHERE cod_sucursal = ?
     ");
     $stmtS->execute([$codSucursal]);
     $cS  = $stmtS->fetch();
-    $dSM = $cS ? (float)$cS['dias_stock_minimo'] : 0;
     $capC = $cS ? (float)$cS['capacidad_congelados'] : null;           // legacy (porciones)
     $capCPaquetes = ($cS && $cS['capacidad_congelados_paquetes'] !== null)
         ? (float)$cS['capacidad_congelados_paquetes']
@@ -771,7 +769,7 @@ try {
     // 5b. Plan de despacho por categoría
     $stmtPD = $conn->prepare("
         SELECT categoria_insumo, tipo_frecuencia, intervalo_semanas, dia_despacho,
-               semana_ancla, dias_semana, dias_preparacion, activo
+               semana_ancla, dias_semana, dias_preparacion, activo, dias_stock_minimo
         FROM plan_despacho_sucursal
         WHERE cod_sucursal = ? AND activo = 1
     ");
@@ -849,6 +847,7 @@ try {
         // Fallback a configuracion_logistica_producto si no hay plan
         $dC = $cicloReal  ?? ($cP ? (float)$cP['dias_ciclo']   : 0);
         $dD = $diasPrep   ?? ($cP ? (float)$cP['dias_desfase']  : 0);
+        $dSM = $planCat ? (float) ($planCat['dias_stock_minimo'] ?? 0) : 0;
 
         $diaC = $semC / 7;
         $sMinCalc = $diaC * $dSM;

@@ -18,7 +18,7 @@ try {
     }
 
     // Lista blanca de campos permitidos
-    $campos_permitidos = ['dias_stock_minimo', 'capacidad_congelados'];
+    $campos_permitidos = ['capacidad_congelados'];
     if (!in_array($campo, $campos_permitidos)) {
         throw new Exception('Campo no permitido.');
     }

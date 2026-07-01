@@ -186,15 +186,14 @@ try {
 
     /* 3. Config logística de la sucursal (o primera disponible si no se especificó) */
     if ($codSuc) {
-        $stmtS = $conn->prepare("SELECT dias_stock_minimo, capacidad_congelados
+        $stmtS = $conn->prepare("SELECT capacidad_congelados
                                   FROM configuracion_logistica_sucursal WHERE cod_sucursal = ?");
         $stmtS->execute([$codSuc]);
     } else {
-        $stmtS = $conn->query("SELECT dias_stock_minimo, capacidad_congelados
+        $stmtS = $conn->query("SELECT capacidad_congelados
                                FROM configuracion_logistica_sucursal LIMIT 1");
     }
     $cS = $stmtS->fetch();
-    $dSM = $cS ? (float) $cS['dias_stock_minimo'] : 0;
     $capC = $cS ? (float) $cS['capacidad_congelados'] : null;
 
     /* Config logística del producto por categoría */
@@ -207,6 +206,20 @@ try {
         $stmtCLP = $conn->prepare($sql);
         $stmtCLP->execute($params);
         $cP = $stmtCLP->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /* Plan de despacho (para dias_stock_minimo) */
+    $dSM = 0;
+    if ($cat) {
+        $paramsPDS = $codSuc ? [$codSuc, $cat] : [$cat];
+        $sqlPDS = $codSuc
+            ? "SELECT dias_stock_minimo FROM plan_despacho_sucursal WHERE cod_sucursal = ? AND categoria_insumo = ? AND activo = 1 LIMIT 1"
+            : "SELECT dias_stock_minimo FROM plan_despacho_sucursal WHERE categoria_insumo = ? AND activo = 1 LIMIT 1";
+        $stmtPDS = $conn->prepare($sqlPDS);
+        $stmtPDS->execute($paramsPDS);
+        if ($rowPDS = $stmtPDS->fetch()) {
+            $dSM = (float)$rowPDS['dias_stock_minimo'];
+        }
     }
 
     if (!$cP) {

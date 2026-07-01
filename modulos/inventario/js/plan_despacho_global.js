@@ -144,6 +144,11 @@ function buildCatRow(cod, cat, cfg) {
             </div>
             <span class="pdg-dias-semana-fields text-muted small ${!isNSem ? '' : 'd-none'}">—</span>
         </td>
+        <!-- Días Stock Mínimo -->
+        <td style="min-width:110px;">
+            <input type="number" class="form-control form-control-sm pdg-dias-stock-minimo"
+                value="${cfg && cfg.dias_stock_minimo !== null && cfg.dias_stock_minimo !== undefined ? cfg.dias_stock_minimo : ''}" min="0" step="0.5" placeholder="Ej: 3" ${disabled}>
+        </td>
     </tr>`;
 }
 
@@ -190,6 +195,7 @@ function buildContent(cod, data) {
                         <th>Frecuencia</th>
                         <th>Día Despacho</th>
                         <th>Sem. Ancla <i class="bi bi-question-circle text-white-50 small"></i></th>
+                        <th style="min-width:110px;">Días Stock Mín.</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -352,6 +358,8 @@ function collectRowData(cod, cat) {
 
     data.dias_preparacion = 1; // Default
     data.activo = 1; // Default
+    const diasSM = $tr.find('.pdg-dias-stock-minimo').val();
+    data.dias_stock_minimo = diasSM !== '' ? diasSM : '';
 
     // Cat B: capacidad congelador
     if (cat === 'B') {

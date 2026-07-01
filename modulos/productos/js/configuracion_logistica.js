@@ -164,19 +164,6 @@ function renderizarContenido(codigo) {
             <div class="card-body">
                 <div class="encabezado-campos">
                     <div class="campo-encabezado">
-                        <label for="dias_stock_minimo_${codigo}">
-                            <i class="bi bi-calendar-week me-1"></i>Días Stock Mínimo
-                        </label>
-                        <input type="number" min="0" step="1"
-                               id="dias_stock_minimo_${codigo}"
-                               class="input-encabezado"
-                               value="${dataSuc.dias_stock_minimo ?? ''}"
-                               placeholder="Ej: 3"
-                               ${roAttr}
-                               ${onFocusAttr}
-                               onblur="guardarSucursal('${codigo}', 'dias_stock_minimo', this.value, this)">
-                    </div>
-                    <div class="campo-encabezado">
                         <label for="capacidad_congelados_${codigo}">
                             <i class="bi bi-snow me-1"></i>Capacidad Congelados
                         </label>

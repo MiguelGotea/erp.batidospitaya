@@ -161,17 +161,16 @@ try {
 
     /* 3. Config logística de la sucursal (o primera disponible si no se especificó) */
     if ($codSuc) {
-        $stmtS = $conn->prepare("SELECT dias_stock_minimo, capacidad_congelados,
+        $stmtS = $conn->prepare("SELECT capacidad_congelados,
                                          capacidad_congelados_paquetes
                                   FROM configuracion_logistica_sucursal WHERE cod_sucursal = ?");
         $stmtS->execute([$codSuc]);
     } else {
-        $stmtS = $conn->query("SELECT dias_stock_minimo, capacidad_congelados,
+        $stmtS = $conn->query("SELECT capacidad_congelados,
                                capacidad_congelados_paquetes
                                FROM configuracion_logistica_sucursal LIMIT 1");
     }
     $cS  = $stmtS->fetch();
-    $dSM = $cS ? (float)$cS['dias_stock_minimo'] : 0;
     $capC= $cS ? (float)$cS['capacidad_congelados'] : null;
     $capCPaquetesSMM = ($cS && $cS['capacidad_congelados_paquetes'] !== null)
         ? (float)$cS['capacidad_congelados_paquetes']
@@ -209,7 +208,7 @@ try {
     $planCatSMM = null;
     if ($cat && $codSuc) {
         $stmtPDSMM = $conn->prepare("
-            SELECT tipo_frecuencia, intervalo_semanas, dias_semana, dias_preparacion, activo
+            SELECT tipo_frecuencia, intervalo_semanas, dias_semana, dias_preparacion, activo, dias_stock_minimo
             FROM plan_despacho_sucursal
             WHERE cod_sucursal = ? AND categoria_insumo = ? AND activo = 1
             LIMIT 1
@@ -223,6 +222,7 @@ try {
 
     $dC = $cicloRealSMM ?? (float)$cP['dias_ciclo'];
     $dD = $diasPrepSMM  ?? (float)$cP['dias_desfase'];
+    $dSM = $planCatSMM ? (float) ($planCatSMM['dias_stock_minimo'] ?? 0) : 0;
 
     /* 4. Consumo por semana del producto en la ventana activa
           Misma estrategia que pedido_sugerido_calcular.php:

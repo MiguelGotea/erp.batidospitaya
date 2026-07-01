@@ -17,6 +17,7 @@ $semana_ancla      = isset($_POST['semana_ancla'])     && $_POST['semana_ancla']
 $dias_semana_raw   = trim($_POST['dias_semana']       ?? '');
 $dias_preparacion  = isset($_POST['dias_preparacion']) ? max(0, (int)$_POST['dias_preparacion']) : 1;
 $activo            = isset($_POST['activo'])            ? (int)(bool)$_POST['activo'] : 1;
+$dias_stock_minimo = isset($_POST['dias_stock_minimo']) && $_POST['dias_stock_minimo'] !== '' ? (float)$_POST['dias_stock_minimo'] : null;
 
 // Campos Cat B
 $cap_paquetes = isset($_POST['capacidad_congelados_paquetes']) && $_POST['capacidad_congelados_paquetes'] !== ''
@@ -75,12 +76,12 @@ try {
             INSERT INTO plan_despacho_sucursal
                 (cod_sucursal, categoria_insumo, tipo_frecuencia,
                  intervalo_semanas, dia_despacho, semana_ancla,
-                 dias_semana, dias_preparacion, activo,
+                 dias_semana, dias_preparacion, activo, dias_stock_minimo,
                  creado_por, modificado_por)
             VALUES
                 (:cod_sucursal, :categoria_insumo, 'n_semanas',
                  :intervalo_semanas, :dia_despacho, :semana_ancla,
-                 NULL, :dias_preparacion, :activo,
+                 NULL, :dias_preparacion, :activo, :dias_stock_minimo,
                  :creado_por, :modificado_por)
             ON DUPLICATE KEY UPDATE
                 tipo_frecuencia   = 'n_semanas',
@@ -90,6 +91,7 @@ try {
                 dias_semana       = NULL,
                 dias_preparacion  = VALUES(dias_preparacion),
                 activo            = VALUES(activo),
+                dias_stock_minimo = VALUES(dias_stock_minimo),
                 modificado_por    = VALUES(modificado_por)
         ";
         $params = [
@@ -100,6 +102,7 @@ try {
             ':semana_ancla'      => $semana_ancla,
             ':dias_preparacion'  => $dias_preparacion,
             ':activo'            => $activo,
+            ':dias_stock_minimo' => $dias_stock_minimo,
             ':creado_por'        => $codOperario,
             ':modificado_por'    => $codOperario,
         ];
@@ -108,12 +111,12 @@ try {
             INSERT INTO plan_despacho_sucursal
                 (cod_sucursal, categoria_insumo, tipo_frecuencia,
                  intervalo_semanas, dia_despacho, semana_ancla,
-                 dias_semana, dias_preparacion, activo,
+                 dias_semana, dias_preparacion, activo, dias_stock_minimo,
                  creado_por, modificado_por)
             VALUES
                 (:cod_sucursal, :categoria_insumo, 'dias_semana',
                  NULL, NULL, NULL,
-                 :dias_semana, :dias_preparacion, :activo,
+                 :dias_semana, :dias_preparacion, :activo, :dias_stock_minimo,
                  :creado_por, :modificado_por)
             ON DUPLICATE KEY UPDATE
                 tipo_frecuencia   = 'dias_semana',
@@ -123,6 +126,7 @@ try {
                 dias_semana       = VALUES(dias_semana),
                 dias_preparacion  = VALUES(dias_preparacion),
                 activo            = VALUES(activo),
+                dias_stock_minimo = VALUES(dias_stock_minimo),
                 modificado_por    = VALUES(modificado_por)
         ";
         $params = [
@@ -131,6 +135,7 @@ try {
             ':dias_semana'      => $dias_semana_json,
             ':dias_preparacion' => $dias_preparacion,
             ':activo'           => $activo,
+            ':dias_stock_minimo' => $dias_stock_minimo,
             ':creado_por'       => $codOperario,
             ':modificado_por'   => $codOperario,
         ];

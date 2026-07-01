@@ -657,15 +657,6 @@ try {
             $sucIdsPresentes[] = $idsSucursales[$key];
     }
 
-    $configSucursales = []; // [cod_sucursal] => dias_stock_minimo
-    if (!empty($sucIdsPresentes)) {
-        $phS = implode(',', array_fill(0, count($sucIdsPresentes), '?'));
-        $stmtCS = $conn->prepare("SELECT cod_sucursal, dias_stock_minimo FROM configuracion_logistica_sucursal WHERE cod_sucursal IN ($phS)");
-        $stmtCS->execute($sucIdsPresentes);
-        foreach ($stmtCS->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $configSucursales[$row['cod_sucursal']] = (float) $row['dias_stock_minimo'];
-        }
-    }
 
     $configProductos = []; // [cod_sucursal][categoria] => {ajuste_demanda, ...}
     if (!empty($sucIdsPresentes)) {
@@ -777,7 +768,6 @@ try {
             $semC = $wlsResSuc['promedio'];
 
             $sucCod = $idsSucursales[strtolower(trim($suc))] ?? null;
-            $dSM = $sucCod ? ($configSucursales[$sucCod] ?? 0) : 0;
             $cat = $meta['categoria_insumo'];
             $cP = $sucCod ? ($configProductos[$sucCod][$cat] ?? null) : null;
             $adj = $cP ? (float) $cP['ajuste'] : 0;

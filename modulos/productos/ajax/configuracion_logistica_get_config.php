@@ -1,7 +1,7 @@
 <?php
 // ajax/configuracion_logistica_get_config.php
 // Retorna la configuración logística completa de una sucursal:
-//   - dataSuc: { dias_stock_minimo, capacidad_congelados, meta de auditoría }
+//   - dataSuc: { capacidad_congelados, meta de auditoría }
 //   - dataProds: { 'A': { dias_ciclo, dias_desfase, ... }, 'B': { ... }, ... }
 
 require_once '../../../core/auth/auth.php';
@@ -18,7 +18,6 @@ try {
     // --- 1. Encabezado de sucursal ---
     $sqlSuc = "
         SELECT
-            cls.dias_stock_minimo,
             cls.capacidad_congelados,
             cls.fecha_creacion,
             cls.fecha_actualizacion,
