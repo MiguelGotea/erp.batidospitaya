@@ -250,7 +250,7 @@ $(document).ready(() => {
         const sucursal = $('#pa-sucursal').val();
         if(!sucursal) return;
         $.ajax({
-            url: 'ajax/plan_despacho_save_capacidad_b.php',
+            url: '../inventario/ajax/plan_despacho_save_capacidad_b.php',
             method: 'POST',
             data: { cod_sucursal: sucursal, capacidad_congelados_paquetes: val },
             dataType: 'json'
