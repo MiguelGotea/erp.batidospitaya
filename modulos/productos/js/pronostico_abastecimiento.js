@@ -59,13 +59,6 @@ function calcularCicloSlot(p, fechaStr) {
  * @returns {number|null}
  */
 function calcularStockMaxSlot(p, cicloSlot, cd_dinamico = null) {
-    if (p.plan_tipo_frecuencia !== 'dias_semana') {
-        // Para n_semanas el ciclo es fijo
-        return {
-            smSlot: p.stock_maximo,
-            smfSlot: p.stock_max_final
-        };
-    }
     // Nueva fórmula: Consumo Diario * Ciclo + Stock Mínimo Base
     const cd = cd_dinamico !== null ? cd_dinamico : (p.cons_diario ?? 0);
     const dSM = p.dias_stock_min ?? 0;
