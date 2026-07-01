@@ -746,30 +746,10 @@ try {
         $conAgg[$idPP][$sem] = ($conAgg[$idPP][$sem] ?? 0) + $cons;
     }
 
-    // 5. Config Logística
-    $stmtS = $conn->prepare("
-        SELECT capacidad_congelados,
-               capacidad_congelados_paquetes
-        FROM configuracion_logistica_sucursal
-        WHERE cod_sucursal = ?
-    ");
-    $stmtS->execute([$codSucursal]);
-    $cS  = $stmtS->fetch();
-    $capC = $cS ? (float)$cS['capacidad_congelados'] : null;           // legacy (porciones)
-    $capCPaquetes = ($cS && $cS['capacidad_congelados_paquetes'] !== null)
-        ? (float)$cS['capacidad_congelados_paquetes']
-        : null;
-
-    $stmtP = $conn->prepare("SELECT codigo_insumo, dias_ciclo, dias_desfase, ajuste_demanda FROM configuracion_logistica_producto WHERE cod_sucursal = ?");
-    $stmtP->execute([$codSucursal]);
-    $cPs = [];
-    foreach ($stmtP->fetchAll() as $row)
-        $cPs[$row['codigo_insumo']] = $row;
-
-    // 5b. Plan de despacho por categoría
+    // 5. Plan de despacho por categoría
     $stmtPD = $conn->prepare("
         SELECT categoria_insumo, tipo_frecuencia, intervalo_semanas, dia_despacho,
-               semana_ancla, dias_semana, dias_preparacion, activo, dias_stock_minimo
+               semana_ancla, dias_semana, dias_preparacion, activo, dias_stock_minimo, capacidad_congelados_paquetes
         FROM plan_despacho_sucursal
         WHERE cod_sucursal = ? AND activo = 1
     ");
@@ -777,6 +757,17 @@ try {
     $planDespacho = []; // [categoria => row]
     foreach ($stmtPD->fetchAll(PDO::FETCH_ASSOC) as $pdRow)
         $planDespacho[$pdRow['categoria_insumo']] = $pdRow;
+
+    $capCPaquetes = isset($planDespacho['B']['capacidad_congelados_paquetes']) 
+        ? (float)$planDespacho['B']['capacidad_congelados_paquetes'] 
+        : null;
+    $capC = null;
+
+    $stmtP = $conn->prepare("SELECT codigo_insumo, dias_ciclo, dias_desfase, ajuste_demanda FROM configuracion_logistica_producto WHERE cod_sucursal = ?");
+    $stmtP->execute([$codSucursal]);
+    $cPs = [];
+    foreach ($stmtP->fetchAll() as $row)
+        $cPs[$row['codigo_insumo']] = $row;
 
     // 5c. Stock Manual Registrado (Grupo G)
     $stmtG = $conn->prepare("
@@ -1038,13 +1029,9 @@ try {
         }
     }
 
-    // Preferir capacidad en paquetes (nueva) sobre la legacy en porciones
+    // Capacidad en paquetes (nueva) 
     if ($capCPaquetes !== null && $sumB_paquetes > 0) {
         $facC = min(1.0, $capCPaquetes / $sumB_paquetes);
-    } elseif ($capC !== null && $sumB > 0) {
-        // Fallback legacy (porciones) — se mantiene hasta que todas las sucursales
-        // tengan configurado capacidad_congelados_paquetes
-        $facC = min(1.0, $capC / $sumB);
     } else {
         $facC = null;
     }

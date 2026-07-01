@@ -244,6 +244,32 @@ $(document).ready(() => {
             }
         });
     });
+
+    $('#pa-agenda').on('change', '.pa-input-cap-b', function() {
+        const val = $(this).val();
+        const sucursal = $('#pa-sucursal').val();
+        if(!sucursal) return;
+        $.ajax({
+            url: 'ajax/plan_despacho_save_capacidad_b.php',
+            method: 'POST',
+            data: { cod_sucursal: sucursal, capacidad_congelados_paquetes: val },
+            dataType: 'json'
+        }).done(function(res) {
+            if(res.success) {
+                if (window.resPedido) {
+                    window.resPedido.capacidad_paquetes = val !== '' ? parseInt(val) : null;
+                }
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Capacidad guardada', showConfirmButton: false, timer: 2000 });
+                // We could recalculate here if needed, but it's optional as capacity just sets the limit
+                // To apply the visual red coloring dynamically, we can trigger a recalculation:
+                if (currentAgendaData) {
+                    calcularAgenda(new Event('click')); // Rerun to recompute capacity usage factors
+                }
+            } else {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al guardar capacidad', showConfirmButton: false, timer: 3000 });
+            }
+        });
+    });
 });
 
 
@@ -870,7 +896,15 @@ function buildCatsHtml(cats, isConsolidado, fechaArg, isHoy = false) {
 
                 if (despAUsar !== null && despAUsar !== undefined) totalDespacho += despAUsar;
             });
-            badgeB = `<span class="pa-round-badge" style="margin-left:auto; background:rgba(14,165,233,0.1); color:#0ea5e9; font-size:13px; font-weight:800; padding:4px 12px;">Total Despacho: ${totalDespacho}</span>`;
+            const capVal = (window.resPedido && window.resPedido.capacidad_paquetes !== null && window.resPedido.capacidad_paquetes !== undefined) ? window.resPedido.capacidad_paquetes : '';
+            badgeB = `<div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+                <div class="input-group input-group-sm mb-0" style="width: 140px; height:24px;" title="Capacidad de Congelador (paquetes)">
+                    <span class="input-group-text" style="font-size:11px; padding:0 6px;"><i class="bi bi-snow2"></i></span>
+                    <input type="number" class="form-control pa-input-cap-b" style="font-size:12px; height:24px; padding:0 6px;" placeholder="Cap." value="${capVal}">
+                    <span class="input-group-text" style="font-size:11px; padding:0 6px;">paq</span>
+                </div>
+                <span class="pa-round-badge" style="background:rgba(14,165,233,0.1); color:#0ea5e9; font-size:13px; font-weight:800; padding:4px 12px;">Total Despacho: ${totalDespacho}</span>
+            </div>`;
         }
 
         const slotKey = `${fecha.replace(/-/g, '')}-${cat}${isHoy ? '-HOY' : ''}`;

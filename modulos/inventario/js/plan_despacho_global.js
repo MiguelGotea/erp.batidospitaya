@@ -91,6 +91,13 @@ function buildCatRow(cod, cat, cfg) {
                     <i class="bi ${info.icon}"></i>${cat} – ${info.nombre}
                 </span>
                 ${cat === 'G' ? `<button type="button" class="btn btn-sm btn-outline-success mt-1" onclick="abrirConfigStockG('${cod}', '${escHtml(PDG.sucursales.find(s => s.codigo === cod)?.nombre || '')}')" ${disabled}><i class="bi bi-box-seam me-1"></i>Stock Mín. Registrado</button>` : ''}
+                ${cat === 'B' ? `<div class="mt-1 d-flex flex-column" style="gap:4px">
+                    <label class="form-label small fw-bold mb-0 text-muted">Capacidad Congelador</label>
+                    <div class="input-group input-group-sm mb-1" style="width: 130px;">
+                        <input type="number" class="form-control pdg-cap-congelados" value="${cfg && cfg.capacidad_congelados_paquetes !== null && cfg.capacidad_congelados_paquetes !== undefined ? cfg.capacidad_congelados_paquetes : ''}" min="0" placeholder="Ej: 120" ${disabled}>
+                        <span class="input-group-text">paq</span>
+                    </div>
+                </div>` : ''}
             </div>
         </td>
         <!-- Tipo -->
@@ -152,37 +159,8 @@ function buildCatRow(cod, cat, cfg) {
     </tr>`;
 }
 
-function buildCongeladorSection(cap) {
-    if (!PUEDE_EDITAR) {
-        return `<div class="pdg-congelador-card d-none">
-            <div class="pdg-congelador-title"><i class="bi bi-snow2"></i>Capacidad Congelador (Cat B)</div>
-            <div class="row g-2">
-                <div class="col-auto"><strong>${cap.paquetes ?? '—'}</strong> paquetes</div>
-                <div class="col">${cap.obs ? `<span class="text-muted small">${cap.obs}</span>` : ''}</div>
-            </div>
-        </div>`;
-    }
-    return `<div class="pdg-congelador-card d-none">
-        <div class="pdg-congelador-title"><i class="bi bi-snow2"></i>Capacidad Congelador (Categoría B)</div>
-        <div class="row g-2 align-items-end">
-            <div class="col-auto">
-                <label class="form-label small fw-bold mb-1">Capacidad (paquetes)</label>
-                <input type="number" class="form-control form-control-sm" id="capCongelados"
-                    value="${cap.paquetes ?? ''}" min="0" placeholder="Ej: 120" style="width:110px;">
-            </div>
-            <div class="col">
-                <label class="form-label small fw-bold mb-1">Observaciones</label>
-                <input type="text" class="form-control form-control-sm" id="capCongeladosObs"
-                    value="${cap.obs ?? ''}" placeholder="Ej: 2 congeladores de 60 paq c/u" maxlength="200">
-            </div>
-        </div>
-        <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>
-            Este valor se guarda al presionar <strong>Guardar</strong> en la fila de <strong>Congelados (B)</strong>.</p>
-    </div>`;
-}
-
 function buildContent(cod, data) {
-    const { plan, capacidad_congelados } = data;
+    const { plan } = data;
     let rows = Object.keys(PDG.CATEGORIAS).map(cat => buildCatRow(cod, cat, plan[cat] || null)).join('');
 
     return `<div class="pdg-fade-in">
@@ -201,7 +179,6 @@ function buildContent(cod, data) {
                 <tbody>${rows}</tbody>
             </table>
         </div>
-        ${buildCongeladorSection(capacidad_congelados)}
     </div>`;
 }
 
@@ -324,8 +301,6 @@ function bindRowEvents(cod) {
         if ($tr.length) {
             const cat = $tr.data('cat');
             if(cat) saveRow(cod, cat);
-        } else if ($(this).closest('.pdg-congelador-card').length) {
-            saveRow(cod, 'B'); // Guardar cat B si cambia el congelador
         }
     });
 }
@@ -363,8 +338,8 @@ function collectRowData(cod, cat) {
 
     // Cat B: capacidad congelador
     if (cat === 'B') {
-        data.capacidad_congelados_paquetes = $('#capCongelados').val();
-        data.capacidad_congelados_obs = $('#capCongeladosObs').val();
+        const cap = $tr.find('.pdg-cap-congelados').val();
+        data.capacidad_congelados_paquetes = cap !== '' ? cap : '';
     }
 
     return data;
@@ -393,10 +368,6 @@ function saveRow(cod, cat) {
                 }
                 
                 Object.assign(PDG.configCache[cod].plan[cat], cachePayload);
-                if (cat === 'B') {
-                    PDG.configCache[cod].capacidad_congelados.paquetes = payload.capacidad_congelados_paquetes;
-                    PDG.configCache[cod].capacidad_congelados.obs = payload.capacidad_congelados_obs;
-                }
             }
             renderGlobalCalendar();
         } else {

@@ -159,22 +159,7 @@ try {
         exit();
     }
 
-    /* 3. Config logística de la sucursal (o primera disponible si no se especificó) */
-    if ($codSuc) {
-        $stmtS = $conn->prepare("SELECT capacidad_congelados,
-                                         capacidad_congelados_paquetes
-                                  FROM configuracion_logistica_sucursal WHERE cod_sucursal = ?");
-        $stmtS->execute([$codSuc]);
-    } else {
-        $stmtS = $conn->query("SELECT capacidad_congelados,
-                               capacidad_congelados_paquetes
-                               FROM configuracion_logistica_sucursal LIMIT 1");
-    }
-    $cS  = $stmtS->fetch();
-    $capC= $cS ? (float)$cS['capacidad_congelados'] : null;
-    $capCPaquetesSMM = ($cS && $cS['capacidad_congelados_paquetes'] !== null)
-        ? (float)$cS['capacidad_congelados_paquetes']
-        : null;
+    /* 3. (Deprecado: capacidad global de congelador eliminada para consultas individuales) */
 
     /* Config logística del producto por categoría */
     $cP   = null;
@@ -522,17 +507,8 @@ try {
     $sMin      = $diaC * $dSM;
     $sMax      = $diaC * ($dC + $dD + $dSM);
 
-    /* Factor congelados (cat B) — prioriza capacidad en paquetes */
+    /* Factor congelados (cat B) — Removido en cálculos individuales */
     $sMaxFinal = $sMax;
-    if ($cat === 'B' && $sMax > 0) {
-        // Preferir capacidad en paquetes. Para la gráfica, aplicar factor proporcional
-        // al stock_max de este producto individual.
-        $capEfectiva = $capCPaquetesSMM ?? $capC;
-        if ($capEfectiva !== null) {
-            $facC      = min(1.0, $capEfectiva / $sMax);
-            $sMaxFinal = $sMax * $facC;
-        }
-    }
 
     /* ─────────────────────────────────────────────────────────────────────
        IMPORTANTE: devolvemos los valores en UNIDADES DE CONTROL (misma

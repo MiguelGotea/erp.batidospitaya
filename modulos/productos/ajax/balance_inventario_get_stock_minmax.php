@@ -184,17 +184,7 @@ try {
         exit();
     }
 
-    /* 3. Config logística de la sucursal (o primera disponible si no se especificó) */
-    if ($codSuc) {
-        $stmtS = $conn->prepare("SELECT capacidad_congelados
-                                  FROM configuracion_logistica_sucursal WHERE cod_sucursal = ?");
-        $stmtS->execute([$codSuc]);
-    } else {
-        $stmtS = $conn->query("SELECT capacidad_congelados
-                               FROM configuracion_logistica_sucursal LIMIT 1");
-    }
-    $cS = $stmtS->fetch();
-    $capC = $cS ? (float) $cS['capacidad_congelados'] : null;
+    /* 3. (Deprecado: capacidad global de congelador eliminada para consultas individuales) */
 
     /* Config logística del producto por categoría */
     $cP = null;
@@ -559,13 +549,9 @@ try {
     $sMin = $diaC * $dSM;
     $sMax = $diaC * ($dC + $dD + $dSM);
 
-    /* Factor congelados (cat B) — se aplica igual que en pedido_sugerido */
+    /* Factor congelados (cat B) — Removido en cálculos individuales */
     $sMaxFinal = $sMax;
     $facC = 1.0;
-    if ($cat === 'B' && $capC !== null && $sMax > 0) {
-        $facC = min(1.0, $capC / $sMax);
-        $sMaxFinal = $sMax * $facC;
-    }
 
     /* ─────────────────────────────────────────────────────────────────────
        IMPORTANTE: devolvemos los valores en UNIDADES DE CONTROL (misma

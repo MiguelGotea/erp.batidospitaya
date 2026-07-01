@@ -22,7 +22,6 @@ $dias_stock_minimo = isset($_POST['dias_stock_minimo']) && $_POST['dias_stock_mi
 // Campos Cat B
 $cap_paquetes = isset($_POST['capacidad_congelados_paquetes']) && $_POST['capacidad_congelados_paquetes'] !== ''
     ? (int)$_POST['capacidad_congelados_paquetes'] : null;
-$cap_obs      = trim($_POST['capacidad_congelados_obs'] ?? '');
 
 /* ── Validaciones ── */
 $errores = [];
@@ -70,6 +69,8 @@ $nombreOp   = trim($usuario['Nombre'] . ' ' . $usuario['Apellido']);
 try {
     $conn->beginTransaction();
 
+    $final_cap_paquetes = ($categoria_insumo === 'B') ? $cap_paquetes : null;
+
     /* ── INSERT … ON DUPLICATE KEY UPDATE ── */
     if ($tipo_frecuencia === 'n_semanas') {
         $sql = "
@@ -77,11 +78,13 @@ try {
                 (cod_sucursal, categoria_insumo, tipo_frecuencia,
                  intervalo_semanas, dia_despacho, semana_ancla,
                  dias_semana, dias_preparacion, activo, dias_stock_minimo,
+                 capacidad_congelados_paquetes,
                  creado_por, modificado_por)
             VALUES
                 (:cod_sucursal, :categoria_insumo, 'n_semanas',
                  :intervalo_semanas, :dia_despacho, :semana_ancla,
                  NULL, :dias_preparacion, :activo, :dias_stock_minimo,
+                 :capacidad_congelados_paquetes,
                  :creado_por, :modificado_por)
             ON DUPLICATE KEY UPDATE
                 tipo_frecuencia   = 'n_semanas',
@@ -92,6 +95,7 @@ try {
                 dias_preparacion  = VALUES(dias_preparacion),
                 activo            = VALUES(activo),
                 dias_stock_minimo = VALUES(dias_stock_minimo),
+                capacidad_congelados_paquetes = VALUES(capacidad_congelados_paquetes),
                 modificado_por    = VALUES(modificado_por)
         ";
         $params = [
@@ -103,6 +107,7 @@ try {
             ':dias_preparacion'  => $dias_preparacion,
             ':activo'            => $activo,
             ':dias_stock_minimo' => $dias_stock_minimo,
+            ':capacidad_congelados_paquetes' => $final_cap_paquetes,
             ':creado_por'        => $codOperario,
             ':modificado_por'    => $codOperario,
         ];
@@ -112,11 +117,13 @@ try {
                 (cod_sucursal, categoria_insumo, tipo_frecuencia,
                  intervalo_semanas, dia_despacho, semana_ancla,
                  dias_semana, dias_preparacion, activo, dias_stock_minimo,
+                 capacidad_congelados_paquetes,
                  creado_por, modificado_por)
             VALUES
                 (:cod_sucursal, :categoria_insumo, 'dias_semana',
                  NULL, NULL, NULL,
                  :dias_semana, :dias_preparacion, :activo, :dias_stock_minimo,
+                 :capacidad_congelados_paquetes,
                  :creado_por, :modificado_por)
             ON DUPLICATE KEY UPDATE
                 tipo_frecuencia   = 'dias_semana',
@@ -127,6 +134,7 @@ try {
                 dias_preparacion  = VALUES(dias_preparacion),
                 activo            = VALUES(activo),
                 dias_stock_minimo = VALUES(dias_stock_minimo),
+                capacidad_congelados_paquetes = VALUES(capacidad_congelados_paquetes),
                 modificado_por    = VALUES(modificado_por)
         ";
         $params = [
@@ -136,6 +144,7 @@ try {
             ':dias_preparacion' => $dias_preparacion,
             ':activo'           => $activo,
             ':dias_stock_minimo' => $dias_stock_minimo,
+            ':capacidad_congelados_paquetes' => $final_cap_paquetes,
             ':creado_por'       => $codOperario,
             ':modificado_por'   => $codOperario,
         ];
@@ -143,22 +152,6 @@ try {
 
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
-
-    /* ── Cat B: actualizar capacidad congelador ── */
-    if ($categoria_insumo === 'B') {
-        // Intentar UPDATE primero; si no existe fila, no la creamos (la tabla puede no tener fila de logística aún)
-        $stmtB = $conn->prepare("
-            UPDATE configuracion_logistica_sucursal
-            SET capacidad_congelados_paquetes = :paquetes,
-                capacidad_congelados_obs      = :obs
-            WHERE cod_sucursal = :cod
-        ");
-        $stmtB->execute([
-            ':paquetes' => $cap_paquetes,
-            ':obs'      => $cap_obs !== '' ? $cap_obs : null,
-            ':cod'      => $cod_sucursal,
-        ]);
-    }
 
     /* ── Obtener fecha y nombre actualizados ── */
     $stmtMeta = $conn->prepare("

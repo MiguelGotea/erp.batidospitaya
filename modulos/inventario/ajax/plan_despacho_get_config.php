@@ -33,6 +33,7 @@ try {
             pds.dias_preparacion,
             pds.activo,
             pds.dias_stock_minimo,
+            pds.capacidad_congelados_paquetes,
             pds.modificado_por,
             CONCAT(o.Nombre, ' ', o.Apellido) AS modificado_por_nombre,
             pds.fecha_actualizacion
@@ -61,29 +62,16 @@ try {
             'dias_preparacion'     => $row['dias_preparacion'] !== null ? (int)$row['dias_preparacion'] : 1,
             'activo'               => $row['activo'] !== null ? (int)$row['activo'] : 1,
             'dias_stock_minimo'    => $row['dias_stock_minimo'] !== null ? (float)$row['dias_stock_minimo'] : null,
+            'capacidad_congelados_paquetes' => $row['capacidad_congelados_paquetes'] !== null ? (int)$row['capacidad_congelados_paquetes'] : null,
             'modificado_por_nombre'=> $row['modificado_por_nombre'],
             'fecha_actualizacion'  => $row['fecha_actualizacion'],
         ];
     }
 
-    /* ── Capacidad congelador Cat B ── */
-    $stmtCap = $conn->prepare("
-        SELECT capacidad_congelados_paquetes, capacidad_congelados_obs
-        FROM configuracion_logistica_sucursal
-        WHERE cod_sucursal = ?
-        LIMIT 1
-    ");
-    $stmtCap->execute([$cod_sucursal]);
-    $cap = $stmtCap->fetch(PDO::FETCH_ASSOC);
-
     echo json_encode([
         'success' => true,
         'data'    => [
-            'plan'                 => $plan,
-            'capacidad_congelados' => [
-                'paquetes' => $cap ? $cap['capacidad_congelados_paquetes'] : null,
-                'obs'      => $cap ? $cap['capacidad_congelados_obs']      : null,
-            ]
+            'plan' => $plan,
         ]
     ]);
 
