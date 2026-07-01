@@ -754,14 +754,12 @@ try {
             $umbral = max(0.01, $meanNonZero * 0.10);
 
             $firstIdx = null;
-            $lastIdx = null;
             foreach ($valsParaVentana as $i => $v) {
-                if ($v >= $umbral) {
-                    if ($firstIdx === null)
-                        $firstIdx = $i;
-                    $lastIdx = $i;
+                if ($v >= $umbral && $firstIdx === null) {
+                    $firstIdx = $i;
                 }
             }
+            $lastIdx = ($firstIdx !== null) ? count($valsParaVentana) - 1 : null;
 
             if ($firstIdx === null) {
                 $stockMaxPorSucursal[$suc] = 0;
@@ -830,14 +828,12 @@ try {
             $umbralG = max(0.01, $meanNonZeroG * 0.10);
 
             $firstIdxG = null;
-            $lastIdxG = null;
             foreach ($valsParaVentanaGlobal as $i => $v) {
-                if ($v >= $umbralG) {
-                    if ($firstIdxG === null)
-                        $firstIdxG = $i;
-                    $lastIdxG = $i;
+                if ($v >= $umbralG && $firstIdxG === null) {
+                    $firstIdxG = $i;
                 }
             }
+            $lastIdxG = ($firstIdxG !== null) ? count($valsParaVentanaGlobal) - 1 : null;
             if ($firstIdxG !== null && $lastIdxG !== null && $lastIdxG >= $firstIdxG) {
                 $nActivaG = $lastIdxG - $firstIdxG + 1;
                 $valsActivoG = array_slice($valsParaVentanaGlobal, $firstIdxG, $nActivaG);

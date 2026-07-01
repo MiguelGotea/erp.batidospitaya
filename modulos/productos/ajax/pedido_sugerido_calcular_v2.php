@@ -796,16 +796,14 @@ try {
         // (artefactos de redondeo, conversión, cambio de insumo).
         $umbral = max(0.01, $meanNonZero * 0.10);
 
-        // Paso 2: detectar ventana activa con umbral relativo
+        // Paso 2: detectar ventana activa (corte solo cola hacia atrás)
         $firstIdx = null;
-        $lastIdx = null;
         foreach ($vals as $i => $v) {
-            if ($v >= $umbral) {
-                if ($firstIdx === null)
-                    $firstIdx = $i;
-                $lastIdx = $i;
+            if ($v >= $umbral && $firstIdx === null) {
+                $firstIdx = $i;
             }
         }
+        $lastIdx = ($firstIdx !== null) ? count($vals) - 1 : null;
         if ($firstIdx === null)
             continue; // Todo por debajo del umbral → descartar
 
