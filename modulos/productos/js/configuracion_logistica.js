@@ -144,43 +144,8 @@ function renderizarContenido(codigo) {
     const roAttr = puedeEditar ? '' : 'disabled';
 
     // --------------------------
-    // Card de Encabezado
+    // Card de Encabezado (Obsoleta, variables movidas a plan_despacho_sucursal)
     // --------------------------
-    const metaSucHTML = dataSuc.fecha_actualizacion
-        ? `<span class="meta-encabezado">
-               Última actualización: <strong>${dataSuc.fecha_actualizacion}</strong>
-           </span>`
-        : '';
-
-    const onFocusAttr = 'onfocus="this.dataset.initial = this.value"';
-
-    const cardEncabezado = `
-        <div class="card-encabezado">
-            <div class="card-header-custom">
-                <i class="bi bi-building-gear"></i>
-                Parámetros Globales de Sucursal
-                ${!puedeEditar ? '<span class="ms-2 badge bg-secondary fw-normal" style="font-size:11px;"><i class="bi bi-eye me-1"></i>Solo lectura</span>' : ''}
-            </div>
-            <div class="card-body">
-                <div class="encabezado-campos">
-                    <div class="campo-encabezado">
-                        <label for="capacidad_congelados_${codigo}">
-                            <i class="bi bi-snow me-1"></i>Capacidad Congelados
-                        </label>
-                        <input type="number" min="0" step="0.01"
-                               id="capacidad_congelados_${codigo}"
-                               class="input-encabezado"
-                               value="${dataSuc.capacidad_congelados ?? ''}"
-                               placeholder="Ej: 150.00"
-                               ${roAttr}
-                               ${onFocusAttr}
-                               onblur="guardarSucursal('${codigo}', 'capacidad_congelados', this.value, this)">
-                    </div>
-                </div>
-                <div class="mt-2">${metaSucHTML}</div>
-            </div>
-        </div>
-    `;
 
     // --------------------------
     // Tabla de Categorías
@@ -268,52 +233,9 @@ function renderizarContenido(codigo) {
         </div>
     `;
 
-    $(`#panel-${codigo}`).html(cardEncabezado + cardTabla);
+    $(`#panel-${codigo}`).html(cardTabla);
 }
 
-// ====================================================
-// Guardar campo de encabezado (sucursal)
-// ====================================================
-function guardarSucursal(codigoSucursal, campo, valor, inputEl) {
-    if (!puedeEditar) return;
-    
-    // Evitar guardado si el valor no ha cambiado
-    if (valor === (inputEl.dataset.initial ?? '')) return;
-    
-    const $input = $(inputEl);
-    $input.addClass('guardando');
-
-    $.ajax({
-        url: 'ajax/configuracion_logistica_save_sucursal.php',
-        method: 'POST',
-        data: {
-            codigo_sucursal: codigoSucursal,
-            campo: campo,
-            valor: valor
-        },
-        dataType: 'json',
-        success: function (res) {
-            $input.removeClass('guardando');
-            if (res.success) {
-                // Actualizar cache local
-                if (!configuraciones[codigoSucursal]) configuraciones[codigoSucursal] = { sucursal: {}, productos: {} };
-                configuraciones[codigoSucursal].sucursal[campo] = valor;
-                if (res.meta) {
-                    Object.assign(configuraciones[codigoSucursal].sucursal, res.meta);
-                }
-                mostrarExito('Guardado correctamente');
-            } else {
-                mostrarError('Error al guardar: ' + res.message);
-            }
-        },
-        error: function () {
-            $input.removeClass('guardando');
-            mostrarError('Error de conexión al guardar.');
-        }
-    });
-}
-
-// ====================================================
 // Guardar campo de tabla por categoría
 // ====================================================
 function guardarProducto(codigoSucursal, codigoInsumo, campo, valor, inputEl) {

@@ -15,23 +15,8 @@ try {
         throw new Exception('Código de sucursal requerido.');
     }
 
-    // --- 1. Encabezado de sucursal ---
-    $sqlSuc = "
-        SELECT
-            cls.capacidad_congelados,
-            cls.fecha_creacion,
-            cls.fecha_actualizacion,
-            CONCAT(oc.Nombre, ' ', oc.Apellido) AS creado_por_nombre,
-            CONCAT(om.Nombre, ' ', om.Apellido) AS modificado_por_nombre
-        FROM configuracion_logistica_sucursal cls
-        LEFT JOIN Operarios oc ON cls.creado_por   = oc.CodOperario
-        LEFT JOIN Operarios om ON cls.modificado_por = om.CodOperario
-        WHERE cls.cod_sucursal = ?
-        LIMIT 1
-    ";
-    $stmtSuc = $conn->prepare($sqlSuc);
-    $stmtSuc->execute([$codigo_sucursal]);
-    $dataSuc = $stmtSuc->fetch(PDO::FETCH_ASSOC) ?: (object)[];
+    // --- 1. Encabezado de sucursal (Obsoleto, datos movidos a plan_despacho_sucursal) ---
+    $dataSuc = [];
 
     // --- 2. Configuración por categoría de insumo ---
     $sqlProd = "
