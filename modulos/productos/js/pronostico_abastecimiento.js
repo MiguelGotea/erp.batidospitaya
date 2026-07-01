@@ -853,6 +853,7 @@ function buildCatsHtml(cats, isConsolidado, fechaArg, isHoy = false) {
         let badgeB = '';
         if (cat === 'B') {
             let totalDespacho = 0;
+            let totalOcupacion = 0;
             slot.items.forEach(p => {
                 let s_base, pre_hoy, smf;
                 if (isConsolidado) {
@@ -875,6 +876,10 @@ function buildCatsHtml(cats, isConsolidado, fechaArg, isHoy = false) {
                 let despAUsar = ((window.pa_dias_despacho_real[fecha] || false) && real !== null && real !== undefined) ? real : despSugerido;
 
                 if (despAUsar !== null && despAUsar !== undefined) totalDespacho += despAUsar;
+                
+                let inventarioProyectado = s_final !== null ? Math.max(0, s_final) : 0;
+                let despachoAActual = despAUsar !== null && despAUsar !== undefined ? despAUsar : 0;
+                totalOcupacion += (inventarioProyectado + despachoAActual);
             });
             const capVal = (window.resPedido && window.resPedido.capacidad_paquetes !== null && window.resPedido.capacidad_paquetes !== undefined) ? window.resPedido.capacidad_paquetes : '';
             
@@ -885,7 +890,7 @@ function buildCatsHtml(cats, isConsolidado, fechaArg, isHoy = false) {
             
             const capNumber = parseFloat(capVal);
             if (!isNaN(capNumber) && capNumber > 0) {
-                pct = Math.round((totalDespacho / capNumber) * 100);
+                pct = Math.round((totalOcupacion / capNumber) * 100);
                 pctText = pct + '%';
                 if (pct < 90) {
                     // Verde
