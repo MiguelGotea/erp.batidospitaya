@@ -19,13 +19,16 @@ if (empty($codSucursal)) {
 }
 
 try {
-    $sql = "SELECT p.id as id_producto_presentacion, p.Nombre as nombre, p.presentacion,
+    $sql = "SELECT p.id as id_producto_presentacion, p.Nombre as nombre, COALESCE(p.presentacion, u.nombre) as presentacion,
                    COALESCE(c.stock_minimo_unidades, 0) as stock_minimo_unidades
             FROM producto_presentacion p
+            LEFT JOIN unidad_producto u ON u.id = p.id_unidad_producto
             LEFT JOIN configuracion_logistica_stock_producto c 
                    ON c.id_producto_presentacion = p.id AND c.cod_sucursal = ?
             WHERE p.Activo = 'SI' 
               AND p.categoria_insumo = 'G'
+              AND p.presentacion_basica_inventario = 1
+              AND p.Id_receta_producto IS NULL
             ORDER BY p.Nombre ASC";
     
     $stmt = $conn->prepare($sql);
