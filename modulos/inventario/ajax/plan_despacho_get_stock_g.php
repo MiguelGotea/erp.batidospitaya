@@ -26,7 +26,6 @@ try {
                    ON c.id_producto_presentacion = p.id AND c.cod_sucursal = ?
             WHERE p.Activo = 'SI' 
               AND p.categoria_insumo = 'G'
-              AND p.presentacion_basica_inventario = 1
             ORDER BY p.Nombre ASC";
     
     $stmt = $conn->prepare($sql);
