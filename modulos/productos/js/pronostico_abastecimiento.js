@@ -349,6 +349,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
             // Lanzar error con mensaje del servidor para que calcularAgenda lo capture y muestre al usuario
             throw new Error(resPedido.msg || 'Error al calcular el pedido sugerido.');
         }
+        window.resPedido = resPedido;
 
         const prodFiltrados = (resPedido.productos || []).filter(p => PA_GRUPOS.includes(p.categoria_insumo));
         if (!prodFiltrados.length) return null;
@@ -637,7 +638,7 @@ async function calcularDatosParaSucursal(semDesde, semHasta, semCorte, codSuc) {
             });
         }
 
-        return { agendaMap, fechasOrdenadas, sinPlan, auditoriaData };
+        return { agendaMap, fechasOrdenadas, sinPlan, auditoriaData, capacidad_paquetes: resPedido.capacidad_paquetes };
     } catch (err) {
         console.warn(`calcularDatosParaSucursal(${codSuc}):`, err);
         return null;
@@ -648,11 +649,15 @@ async function calcularAgendaConsolidada(semDesde, semHasta, semCorte) {
     const total = PA_SUCURSALES.length;
     const storeResults = {};
 
+    let sumCapacidad = 0;
     for (let i = 0; i < PA_SUCURSALES.length; i++) {
         const suc = PA_SUCURSALES[i];
         setLoaderStep(`Calculando tienda ${i + 1} de ${total}: ${suc.nombre}…`);
         const datos = await calcularDatosParaSucursal(semDesde, semHasta, semCorte, suc.codigo);
-        if (datos) storeResults[suc.codigo] = { ...datos, nombre: suc.nombre, codigo: suc.codigo };
+        if (datos) {
+            storeResults[suc.codigo] = { ...datos, nombre: suc.nombre, codigo: suc.codigo };
+            if (datos.capacidad_paquetes) sumCapacidad += datos.capacidad_paquetes;
+        }
     }
 
     if (!Object.keys(storeResults).length) {
@@ -670,6 +675,7 @@ async function calcularAgendaConsolidada(semDesde, semHasta, semCorte) {
     }
 
     window.lastStoreResults = storeResults;
+    window.resPedido = { capacidad_paquetes: sumCapacidad };
     currentAgendaData = { agendaMap: cons.agendaMap, fechasOrdenadas: cons.fechasOrdenadas, sinPlan: cons.sinPlan, isConsolidado: true, nTiendas: Object.keys(storeResults).length };
     renderAgenda(cons.agendaMap, cons.fechasOrdenadas, cons.sinPlan, true, Object.keys(storeResults).length);
     showDatos();
