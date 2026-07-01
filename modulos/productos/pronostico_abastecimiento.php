@@ -45,7 +45,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pronóstico de Abastecimiento · Pitaya ERP</title>
+    <title>Proyección de Abastecimiento · Pitaya ERP</title>
     <meta name="description" content="Agenda cronológica de despachos futuros proyectados por sucursal e insumo.">
     <link rel="icon" href="../../core/assets/img/icon12.png" type="image/png">
 
@@ -63,7 +63,7 @@ try {
 
     <div class="main-container">
         <div class="sub-container">
-            <?php echo renderHeader($usuario, 'Pronóstico de Abastecimiento'); ?>
+            <?php echo renderHeader($usuario, 'Proyección de Abastecimiento'); ?>
 
             <div class="pa-wrapper p-2">
 
@@ -87,7 +87,7 @@ try {
 
                         <div class="col-6 col-md-auto">
                             <label class="pa-label" for="pa-corte"
-                                title="Semana cuyo inventario real (domingo) sirve como base del pronóstico D-1">
+                                title="Semana cuyo inventario real (domingo) sirve como base de la proyección D-1">
                                 Sem. Corte
                             </label>
                             <input type="number" id="pa-corte" class="form-control form-control-sm pa-input"
@@ -143,7 +143,7 @@ try {
                 <!-- ══ ESTADO INICIAL ══ -->
                 <div id="pa-panel-inicial" class="pa-empty-state">
                     <div class="pa-empty-icon"><i class="bi bi-calendar2-week"></i></div>
-                    <h5>Pronóstico de Abastecimiento</h5>
+                    <h5>Proyección de Abastecimiento</h5>
                     <p class="text-muted" style="max-width:400px;margin:0 auto">
                         Ingresa el rango de semanas, la semana de corte y la sucursal,
                         luego haz clic en <strong>Calcular Despacho</strong>.
@@ -196,11 +196,11 @@ try {
         <div class="fab-container">
             <div class="fab-options">
                 <div class="fab-option" onclick="exportarPronosticoConsumoExcel()">
-                    <span class="fab-label">Descargar Pronóstico de Consumo</span>
+                    <span class="fab-label">Descargar Proyección de Consumo</span>
                     <div class="fab-icon-holder"><i class="fas fa-chart-line"></i></div>
                 </div>
                 <div class="fab-option" onclick="exportarPronosticoExcel()">
-                    <span class="fab-label">Descargar pronóstico de despacho</span>
+                    <span class="fab-label">Descargar proyección de despacho</span>
                     <div class="fab-icon-holder"><i class="fas fa-file-excel"></i></div>
                 </div>
             </div>
@@ -248,9 +248,9 @@ try {
                             <div class="p-3 bg-light rounded-3 h-100 border">
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i> Demanda Base</h6>
                                 <ul class="small text-muted mb-0">
-                                    <li><b>Pronostico consumo dia (WLS):</b> Proyección calculada mediante regresión lineal
+                                    <li><b>Proyección consumo dia (WLS):</b> Proyección calculada mediante regresión lineal
                                         ponderada dividida entre 7 para dar mayor peso a la tendencia reciente.</li>
-                                    <li><b>Proyección Futura:</b> Tasa plana constante. Se usa el Pronostico consumo dia WLS
+                                    <li><b>Proyección Futura:</b> Tasa plana constante. Se usa el Proyección consumo dia WLS
                                         actual para proyectar el descuento de stock futuro sin variaciones.</li>
                                 </ul>
                             </div>
@@ -260,10 +260,10 @@ try {
                                 <h6 class="fw-bold small mb-2"><i class="bi bi-box-seam me-1"></i> Niveles de Stock</h6>
                                 <ul class="small text-muted mb-0">
                                     <li><b>Stock Minimo:</b>
-                                        <code>(Pronostico consumo dia × Días Stock Mínimo)</code>
+                                        <code>(Proyección consumo dia × Días Stock Mínimo)</code>
                                     </li>
                                     <li><b>Requerido Total:</b>
-                                        <code>(Pronostico consumo dia × Ciclo) + Stock Minimo Base</code>
+                                        <code>(Proyección consumo dia × Ciclo) + Stock Minimo Base</code>
                                     </li>
                                 </ul>
                             </div>
@@ -306,10 +306,10 @@ try {
                     <!-- Pronóstico Inteligente WLS -->
                     <div class="mb-4 p-3 rounded-3 border" style="background:#f3e8ff;border-color:#d8b4fe !important;">
                         <h6 class="fw-bold small d-flex align-items-center gap-2 mb-2" style="color:#7e22ce;">
-                            <i class="bi bi-graph-up-arrow"></i> Pronóstico Inteligente (Tendencia Reciente WLS)
+                            <i class="bi bi-graph-up-arrow"></i> Proyección Inteligente (Tendencia Reciente WLS)
                         </h6>
                         <ul class="text-secondary small mb-0">
-                            <li>El cálculo de <b>Pronostico consumo dia</b> da <b>más importancia a lo reciente</b>, asignando
+                            <li>El cálculo de <b>Proyección consumo dia</b> da <b>más importancia a lo reciente</b>, asignando
                                 mayor peso a las semanas más cercanas para reaccionar rápido a cambios de demanda.</li>
                             <li>La fórmula detecta la <b>tendencia de crecimiento o decrecimiento</b>, y con base en
                                 ello proyecta un consumo diario estimado.</li>
@@ -343,15 +343,15 @@ try {
                                         (excluye ceros estructurales de inicio/fin).</li>
                                     <li class="mb-1"><b>Desv. Estándar:</b> <i>(Obsoleto, se mantiene solo de
                                             referencia)</i> Qué tanto variaba el consumo.</li>
-                                    <li class="mb-1"><b>Pronostico consumo dia:</b> Proyección inteligente basada en Mínimos
+                                    <li class="mb-1"><b>Proyección consumo dia:</b> Proyección inteligente basada en Mínimos
                                         Cuadrados Ponderados (WLS) dividida entre 7 que detecta tendencias y da más peso
                                         a las ventas recientes para predecir el consumo con mayor exactitud.</li>
-                                    <li class="mb-1"><b>Pronostico consumo semana:</b> Proyección de consumo equivalente al
+                                    <li class="mb-1"><b>Proyección consumo semana:</b> Proyección de consumo equivalente al
                                         Consumo Diario multiplicado por 7.</li>
                                     <li class="mb-1"><b>Cap. Base (Final):</b> El Requerido Total ya ajustado a lo que cabe
                                         físicamente en tienda.</li>
                                     <li class="mb-1"><b>Inv. Teórico Ayer:</b> Inventario calculado hasta el día de
-                                        ayer, usado como punto de partida en la ecuación de Pronóstico Inventario.</li>
+                                        ayer, usado como punto de partida en la ecuación de Proyección Inventario.</li>
                                     <li class="mb-1"><b>Sugerencia:</b> La resta entre el Requerido Total y tu
                                         Inventario Actual.</li>
                                 </ul>

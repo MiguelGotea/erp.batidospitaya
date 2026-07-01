@@ -187,22 +187,23 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
     ];
 
     const valores = semanasNros.map(n => round2(item.por_semana[n] || 0));
+    const _hoyFmtStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).replace('.', '').replace(' ', '-').replace(/\b[a-z]/g, c => c.toUpperCase());
     let datasets = [
         {
-            label: 'Consumo Real',
+            label: `Real ${_hoyFmtStr}`,
             data: [...valores, null, null, null],
             backgroundColor: 'rgba(81,184,172,.35)',
-            borderColor: '#0E544C',
+            borderColor: '#51B8AC',
             borderWidth: 2,
             tension: 0.3,
             fill: true,
             pointRadius: [...valores.map(() => 4), 0, 0, 0],
-            pointBackgroundColor: '#0E544C',
+            pointBackgroundColor: '#51B8AC',
         },
         {
-            label: `Promedio Semanal: ${formatNum(round2(promCalc))}`,
+            label: `Promedio`,
             data: [...semanasNros.map(n => n === semanaActual ? null : round2(promCalc)), null, null, null],
-            borderColor: '#e67e22',
+            borderColor: '#27ae60',
             borderWidth: 1.5,
             borderDash: [5, 4],
             pointRadius: 0,
@@ -224,22 +225,19 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
         let rawSlope = ((sum_w * sum_wxy) - (sum_wx * sum_wy)) / denomWLS;
         if (rawSlope < -0.001) isAjustado = true;
     }
-    let proyLabel = isAjustado ? 'Proyección (Ajuste p/Caída: Máx 2 sem)' : 'Proyección';
-    if (m_forced) {
-        proyLabel = `Proyección (Forzada por Crecimiento Esperado ${ice}%)`;
-    }
+    let proyLabel = 'Proyección';
 
     const proyData = [...semanasNros.map(n => n === semanaActual ? proyActual : null), proyW1, proyW2, proyW3];
     datasets.push({
         label: proyLabel,
         data: proyData,
-        borderColor: '#f39c12',
-        backgroundColor: 'rgba(243,156,18,.12)',
+        borderColor: '#0ea5e9',
+        backgroundColor: 'rgba(14, 165, 233, 0.12)',
         borderWidth: 2.5,
         borderDash: [6, 4],
         pointRadius: [...semanasNros.map(n => n === semanaActual ? 6 : 0), 6, 6, 6],
-        pointStyle: 'triangle',
-        pointBackgroundColor: '#f39c12',
+        pointStyle: 'circle',
+        pointBackgroundColor: '#0ea5e9',
         fill: false,
         tension: 0,
         type: 'line',
@@ -261,7 +259,25 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true, font: { size: 10 } } }
+                legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true, font: { size: 10 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.raw === null) return null;
+                            let labelStr = context.dataset.label || '';
+                            if (context.datasetIndex === 0) { // Consumo Real
+                                const semanaIdx = context.dataIndex;
+                                const fechaFinStr = data.semanas[semanaIdx]?.fecha_fin;
+                                if (fechaFinStr) {
+                                    const dObj = new Date(fechaFinStr + 'T12:00:00');
+                                    const fmtDt = dObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).replace('.', '').replace(' ', '-').replace(/\b[a-z]/g, c => c.toUpperCase());
+                                    labelStr = `Real al ${fmtDt}`;
+                                }
+                            }
+                            return `${labelStr}: ${formatNum(context.raw)}`;
+                        }
+                    }
+                }
             },
             scales: {
                 y: { beginAtZero: true, grid: { color: '#e8f0f4' }, ticks: { font: { size: 10 }, callback: v => formatNum(v) } },
@@ -783,12 +799,12 @@ async function calcularPronosticoAbastKardex(
         const pointHoverRadii = forecastData.map((v, i) => i === _idxObj ? 13 : 4);
         const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
 
-        const pronLabel = `Pronóstico de Inventario`;
+        const pronLabel = `Proyección de Inventario`;
         datasets.push({
             label: pronLabel,
             data: forecastData,
-            borderColor: '#8e44ad',
-            backgroundColor: 'rgba(142,68,173,0.06)',
+            borderColor: '#0ea5e9',
+            backgroundColor: 'rgba(14, 165, 233, 0.06)',
             borderWidth: 2.5,
             borderDash: [10, 5],
             fill: false,
@@ -796,7 +812,7 @@ async function calcularPronosticoAbastKardex(
             pointRadius: pointRadii,
             pointHoverRadius: pointHoverRadii,
             pointStyle: pointStyles,
-            pointBackgroundColor: '#8e44ad',
+            pointBackgroundColor: '#0ea5e9',
             spanGaps: true,
         });
 
@@ -862,10 +878,10 @@ function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsPr
     const pointStyles = forecastData.map((v, i) => i === _idxObj ? 'crossRot' : 'circle');
 
     datasets.push({
-        label: `Pronóstico de Inventario`,
+        label: `Proyección de Inventario`,
         data: forecastData,
-        borderColor: '#8e44ad',
-        backgroundColor: 'rgba(142,68,173,0.06)',
+        borderColor: '#0ea5e9',
+        backgroundColor: 'rgba(14, 165, 233, 0.06)',
         borderWidth: 2.5,
         borderDash: [10, 5],
         fill: false,
@@ -873,7 +889,7 @@ function _buildSimpleForecast(anchorVal, anchorIdx, allDays, fechaObj, getConsPr
         pointRadius: pointRadii,
         pointHoverRadius: pointHoverRadii,
         pointStyle: pointStyles,
-        pointBackgroundColor: '#8e44ad',
+        pointBackgroundColor: '#0ea5e9',
         spanGaps: false,
     });
 }
@@ -1041,7 +1057,7 @@ function addStockLines(idPP, sk, chartId, allDays) {
         chart.data.datasets.push({
             label: 'Stock Mínimo *',
             data: minData,
-            borderColor: '#f9a825',
+            borderColor: '#e74c3c',
             backgroundColor: 'transparent',
             borderWidth: 2,
             borderDash: [6, 4],

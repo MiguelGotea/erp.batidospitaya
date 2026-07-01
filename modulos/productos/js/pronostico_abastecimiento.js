@@ -1002,14 +1002,14 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false, fecha 
             stockHtml = '<span class="pa-na">Sin datos</span>';
         } else {
             let extraIcon = includeHoy ? ` <i class="bi bi-info-circle-fill text-info ms-1" style="font-size:10px" title="Incluye +${preHoyCtrl.toFixed(1)} recibido en auditoría de hoy"></i>` : '';
-            stockHtml = `<span class="pa-stock-d1">${stockD1Ctrl.toFixed(1)}</span>${extraIcon}`;
+            stockHtml = `<span>${fmt2(stockD1Ctrl)}</span>${extraIcon}`;
         }
 
         let despHtmlSugeridoCtrl = despSugeridoCtrl === null || despSugeridoCtrl === undefined ? '<span class="pa-na">—</span>' : `<span>${despSugeridoCtrl.toFixed(1)}</span>`;
         
         let despHtmlRealPaq = '';
         if (isHoy) {
-             despHtmlRealPaq = despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+             despHtmlRealPaq = despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined ? `<span class="pa-desp-val" style="${despachoRealRondaPaq > 0 ? 'color:blue;' : ''}">${despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
         } else {
              despHtmlRealPaq = despachoRealRondaPaq !== null && despachoRealRondaPaq !== undefined ? `<del class="text-muted" style="font-size: 0.9em;">${despachoRealRondaPaq.toFixed(1)}</del>` : '<span class="pa-na">—</span>';
         }
@@ -1022,16 +1022,16 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false, fecha 
         } else {
              let isReal = ((window.pa_dias_despacho_real[fecha] || false) && realRondaCtrl !== null && realRondaCtrl !== undefined);
              if (isReal && !isHoy) {
-                 despHtmlRealPaq = `<span class="pa-desp-val ${despachoRealRondaPaq > 0 ? 'needs' : 'ok'} fw-bold">${despachoRealRondaPaq.toFixed(1)}</span>`;
-                 finalHtmlCtrl = `<span class="pa-desp-val ${despSugeridoCtrl > 0 ? 'needs' : 'ok'}">${despSugeridoCtrl.toFixed(1)}</span>`;
+                 despHtmlRealPaq = `<span class="pa-desp-val fw-bold" style="${despachoRealRondaPaq > 0 ? 'color:blue;' : ''}">${despachoRealRondaPaq.toFixed(1)}</span>`;
+                 finalHtmlCtrl = `<span class="pa-desp-val" style="${despSugeridoCtrl > 0 ? 'color:blue;' : ''}">${despSugeridoCtrl.toFixed(1)}</span>`;
                  finalHtmlPaq = `<del class="text-muted" style="font-size: 0.9em;">${despSugerido.toFixed(1)}</del>`;
              } else {
-                 finalHtmlCtrl = `<span class="pa-desp-val ${despSugeridoCtrl > 0 ? 'needs' : 'ok'}">${despSugeridoCtrl.toFixed(1)}</span>`;
-                 finalHtmlPaq = `<span class="pa-desp-val ${despSugerido > 0 ? 'needs' : 'ok'}">${despSugerido.toFixed(1)}</span>`;
+                 finalHtmlCtrl = `<span class="pa-desp-val" style="${despSugeridoCtrl > 0 ? 'color:blue;' : ''}">${despSugeridoCtrl.toFixed(1)}</span>`;
+                 finalHtmlPaq = `<span class="pa-desp-val" style="${despSugerido > 0 ? 'color:blue;' : ''}">${despSugerido.toFixed(1)}</span>`;
              }
              if(isHoy) {
-                 finalHtmlCtrl = realRondaCtrl !== null && realRondaCtrl !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
-                 finalHtmlPaq = despAUsar !== null ? `<span class="pa-desp-val ok" style="color:blue;">${despAUsar.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+                 finalHtmlCtrl = realRondaCtrl !== null && realRondaCtrl !== undefined ? `<span class="pa-desp-val" style="${realRondaCtrl > 0 ? 'color:blue;' : ''}">${realRondaCtrl.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+                 finalHtmlPaq = despAUsar !== null ? `<span class="pa-desp-val" style="${despAUsar > 0 ? 'color:blue;' : ''}">${despAUsar.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
                  despHtmlSugeridoCtrl = `<del class="text-muted" style="font-size: 0.9em;">${despSugeridoCtrl.toFixed(1)}</del>`;
              }
         }
@@ -1117,11 +1117,11 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false, fecha 
     const isChecked = (window.pa_dias_despacho_real[fecha] || false) ? 'checked' : '';
     const thDespachoReal = isHoy ? `Despacho Real<br>
             <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. Despacho)</small>` :
-            `Despacho Real<br>
-            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. Despacho)</small><br>
-            <div class="form-check form-switch d-inline-block mt-1">
+            `<div class="form-check form-switch d-inline-block mb-1">
                 <input class="form-check-input pa-toggle-preingreso" type="checkbox" data-fecha="${fecha}" title="Usar despachos reales en la proyección" ${isChecked}>
-            </div>`;
+            </div><br>
+            Despacho Real<br>
+            <small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. Despacho)</small>`;
 
     const thDatosCompletos = window.PA_DATOS_COMPLETOS ? `<th>Stock Máx Ajustado<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th><th>Inv. Teórico Ayer<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>` : '';
 
@@ -1132,12 +1132,12 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false, fecha 
 
     const thead = `<thead><tr>
         <th style="text-align:left">Producto</th>
-        <th>Pronostico consumo semana<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
-        <th>Pronostico consumo dia<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
+        <th>Proyección consumo semana<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
+        <th>Proyección consumo dia<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         <th>Stock Minimo<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(${dsmText} - Unid. de control)</small></th>
         <th>Requerido Total<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         ${thDatosCompletos}
-        <th>Pronostico de inventario al dia de despacho<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
+        <th>Proyección de inventario al dia de despacho<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid. de control)</small></th>
         <th>Presentacion de despacho</th>
         <th>Despacho requerido<br><small style="font-size:9px;color:#9ca3af;font-weight:normal;text-transform:none;letter-spacing:normal;">(Unid despacho)</small></th>
@@ -1173,14 +1173,14 @@ function buildSubRowsTiendas(item, slotKey, fecha) {
             sHtml = '<span class="pa-na">Sin datos</span>';
         } else {
             let extraIcon = includeHoy ? ` <i class="bi bi-info-circle-fill text-info ms-1" style="font-size:10px"></i>` : '';
-            sHtml = `<span class="pa-stock-d1">${stockD1Ctrl.toFixed(1)}</span>${extraIcon}`;
+            sHtml = `<span>${fmt2(stockD1Ctrl)}</span>${extraIcon}`;
         }
 
         let despHtmlSugeridoCtrl = despSugeridoCtrl === null || despSugeridoCtrl === undefined ? '<span class="pa-na">—</span>' : `<span>${despSugeridoCtrl.toFixed(1)}</span>`;
         
         let despHtmlRealPaq = '';
         if (td.round === 0) {
-             despHtmlRealPaq = td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined ? `<span class="pa-desp-val ok" style="color:blue;">${td.despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+             despHtmlRealPaq = td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined ? `<span class="pa-desp-val" style="${td.despachoRealRondaPaq > 0 ? 'color:blue;' : ''}">${td.despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
         } else {
              despHtmlRealPaq = td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined ? `<del class="text-muted" style="font-size: 0.9em;">${td.despachoRealRondaPaq.toFixed(1)}</del>` : '<span class="pa-na">—</span>';
         }
@@ -1191,14 +1191,14 @@ function buildSubRowsTiendas(item, slotKey, fecha) {
         } else {
              let isReal = ((window.pa_dias_despacho_real[fecha] || false) && td.despachoRealRondaPaq !== null && td.despachoRealRondaPaq !== undefined);
              if (isReal && td.round !== 0) {
-                 despHtmlRealPaq = `<span class="pa-desp-val ${td.despachoRealRondaPaq > 0 ? 'needs' : 'ok'} fw-bold">${td.despachoRealRondaPaq.toFixed(1)}</span>`;
+                 despHtmlRealPaq = `<span class="pa-desp-val fw-bold" style="${td.despachoRealRondaPaq > 0 ? 'color:blue;' : ''}">${td.despachoRealRondaPaq.toFixed(1)}</span>`;
                  finalHtmlPaq = `<del class="text-muted" style="font-size: 0.9em;">${despSugerido.toFixed(1)}</del>`;
              } else {
-                 finalHtmlPaq = `<span class="pa-desp-val ${despSugerido > 0 ? 'needs' : 'ok'}">${despSugerido.toFixed(1)}</span>`;
+                 finalHtmlPaq = `<span class="pa-desp-val" style="${despSugerido > 0 ? 'color:blue;' : ''}">${despSugerido.toFixed(1)}</span>`;
              }
              if(td.round === 0) {
-                 despHtmlRealPaq = td.despachoRealRondaPaq !== null ? `<span class="pa-desp-val ok" style="color:blue;">${td.despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
-                 finalHtmlPaq = despAUsar !== null ? `<span class="pa-desp-val ok" style="color:blue;">${despAUsar.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+                 despHtmlRealPaq = td.despachoRealRondaPaq !== null ? `<span class="pa-desp-val" style="${td.despachoRealRondaPaq > 0 ? 'color:blue;' : ''}">${td.despachoRealRondaPaq.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
+                 finalHtmlPaq = despAUsar !== null ? `<span class="pa-desp-val" style="${despAUsar > 0 ? 'color:blue;' : ''}">${despAUsar.toFixed(1)}</span>` : '<span class="pa-na">—</span>';
                  despHtmlSugeridoCtrl = `<del class="text-muted" style="font-size: 0.9em;">${despSugeridoCtrl.toFixed(1)}</del>`;
              }
         }
@@ -1308,8 +1308,8 @@ function exportarPronosticoExcel() {
                     "Fecha de Despacho": fecha,
                     "Grupo": PA_LABELS[cat] || cat,
                     "Producto": p.nombre,
-                    "Pronostico consumo semana (Unid. de control)": csDisplay !== null ? parseFloat(csDisplay).toFixed(1) : '',
-                    "Pronostico consumo dia (Unid. de control)": cdDisplay !== null ? parseFloat(cdDisplay).toFixed(1) : '',
+                    "Proyección consumo semana (Unid. de control)": csDisplay !== null ? parseFloat(csDisplay).toFixed(1) : '',
+                    "Proyección consumo dia (Unid. de control)": cdDisplay !== null ? parseFloat(cdDisplay).toFixed(1) : '',
                     "Stock Minimo (Unid. de control)": sMinDisplayCtrl !== null ? parseFloat(sMinDisplayCtrl).toFixed(1) : '',
                     "Requerido Total (Unid. de control)": smDisplayCtrl !== null ? parseFloat(smDisplayCtrl).toFixed(1) : ''
                 };
@@ -1319,7 +1319,7 @@ function exportarPronosticoExcel() {
                     obj["Inv. Teórico Ayer (Unid. de control)"] = invTeoricoAyerCtrl !== null ? parseFloat(invTeoricoAyerCtrl).toFixed(1) : '';
                 }
                 
-                obj["Pronostico de inventario al dia de despacho (Unid. de control)"] = pronosticoInv;
+                obj["Proyección de inventario al dia de despacho (Unid. de control)"] = pronosticoInv;
                 obj["Despacho requerido (Unid. de control)"] = sugCtrl !== null ? parseFloat(sugCtrl).toFixed(1) : '-';
                 obj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
                 obj["Despacho requerido (Unid despacho)"] = despAUsar !== null ? parseFloat(despAUsar).toFixed(1) : '-';
@@ -1362,8 +1362,8 @@ function exportarPronosticoExcel() {
                             "Fecha de Despacho": fecha,
                             "Grupo": PA_LABELS[cat] || cat,
                             "Producto": p.nombre,
-                            "Pronostico consumo semana (Unid. de control)": sub_csDisplay !== null ? parseFloat(sub_csDisplay).toFixed(1) : '',
-                            "Pronostico consumo dia (Unid. de control)": sub_cdDisplay !== null ? parseFloat(sub_cdDisplay).toFixed(1) : '',
+                            "Proyección consumo semana (Unid. de control)": sub_csDisplay !== null ? parseFloat(sub_csDisplay).toFixed(1) : '',
+                            "Proyección consumo dia (Unid. de control)": sub_cdDisplay !== null ? parseFloat(sub_cdDisplay).toFixed(1) : '',
                             "Stock Minimo (Unid. de control)": sub_sMinDisplayCtrl !== null ? parseFloat(sub_sMinDisplayCtrl).toFixed(1) : '',
                             "Requerido Total (Unid. de control)": sub_smDisplayCtrl !== null ? parseFloat(sub_smDisplayCtrl).toFixed(1) : ''
                         };
@@ -1373,7 +1373,7 @@ function exportarPronosticoExcel() {
                             subObj["Inv. Teórico Ayer (Unid. de control)"] = sub_invTeoricoAyerCtrl !== null ? parseFloat(sub_invTeoricoAyerCtrl).toFixed(1) : '';
                         }
                         
-                        subObj["Pronostico de inventario al dia de despacho (Unid. de control)"] = sub_pronosticoInv;
+                        subObj["Proyección de inventario al dia de despacho (Unid. de control)"] = sub_pronosticoInv;
                         subObj["Despacho requerido (Unid. de control)"] = sub_sugCtrl !== null ? parseFloat(sub_sugCtrl).toFixed(1) : '-';
                         subObj["Presentacion de despacho"] = p.despacho_presentacion || p.unidad || '-';
                         subObj["Despacho requerido (Unid despacho)"] = sub_aUsar !== null ? parseFloat(sub_aUsar).toFixed(1) : '-';
@@ -1415,7 +1415,7 @@ function exportarPronosticoExcel() {
     );
     ws['!cols'] = wscols;
 
-    XLSX.utils.book_append_sheet(wb, ws, "Pronóstico");
+    XLSX.utils.book_append_sheet(wb, ws, "Proyección");
 
     let nombreArchivo = `Pronostico_Abastecimiento_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, nombreArchivo);
@@ -1574,7 +1574,7 @@ function exportarPronosticoConsumoExcel() {
         });
         const wsTienda = XLSX.utils.json_to_sheet(datosTienda);
         wsTienda['!cols'] = [{ wch: 25 }, { wch: 40 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
-        XLSX.utils.book_append_sheet(wb, wsTienda, "Pronóstico Consumo");
+        XLSX.utils.book_append_sheet(wb, wsTienda, "Proyección Consumo");
     }
 
     let nombreArchivo = `Pronostico_Consumo_${new Date().toISOString().slice(0, 10)}.xlsx`;
