@@ -272,7 +272,11 @@ function addDaysStr(d, n) {
     return dt.toISOString().split('T')[0];
 }
 function todayStr() { return new Date().toISOString().split('T')[0]; }
-function limitStr() { return addDaysStr(todayStr(), PA_DIAS_FUTURO); }
+function limitStr() {
+    const customDate = $('#pa-fecha-limite').val();
+    if (customDate) return customDate;
+    return addDaysStr(todayStr(), PA_DIAS_FUTURO);
+}
 function formatDateHeader(ds) {
     const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];

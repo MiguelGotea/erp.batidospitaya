@@ -22,6 +22,7 @@ if (!tienePermiso('pronostico_abastecimiento', 'vista', $cargoOperario)) {
 
 $permisoDatosCompletos = tienePermiso('pronostico_abastecimiento', 'datos_completos', $cargoOperario);
 $permisoAuditoriaPasada = tienePermiso('pronostico_abastecimiento', 'auditoria_pasada', $cargoOperario);
+$permisoPronosticoExtendido = tienePermiso('pronostico_abastecimiento', 'pronostico_extendido', $cargoOperario);
 
 $version = mt_rand(1, 10000);
 
@@ -103,6 +104,16 @@ try {
                                 style="width:110px" min="0" max="1000" placeholder="ej: 0"
                                 value="0" oninput="if(this.value < 0) this.value = 0;">
                         </div>
+
+                        <?php if ($permisoPronosticoExtendido): ?>
+                        <div class="col-6 col-md-auto">
+                            <label class="pa-label" for="pa-fecha-limite"
+                                title="Fecha hasta la cual se proyectarán los despachos. Si se deja vacío, se usarán los días por defecto.">
+                                Despachos Hasta
+                            </label>
+                            <input type="date" id="pa-fecha-limite" class="form-control form-control-sm pa-input">
+                        </div>
+                        <?php endif; ?>
 
                         <div class="col-12 col-md">
                             <label class="pa-label" for="pa-sucursal">
