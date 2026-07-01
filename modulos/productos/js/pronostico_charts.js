@@ -695,7 +695,6 @@ async function calcularPronosticoAbastKardex(
 
         const despachosPorRonda = {};
         let prevRoundPostDespachoPaq = null;
-        const kardexDespCursoEnabled = window.pa_include_preingreso;
 
         rondas.forEach(r => {
             let hayDespachoGrupo = false;
@@ -719,13 +718,15 @@ async function calcularPronosticoAbastKardex(
                 }
             }
 
-            const invBeforePaq = (stockD1Paq ?? 0) + (r.round === 1 && kardexDespCursoEnabled ? preHoyPaq : 0);
+            const invBeforePaq = (stockD1Paq ?? 0) + (r.round === 1 ? preHoyPaq : 0);
             const despSugeridoPaq = Math.max(0, Math.ceil(r.smfSlot - invBeforePaq));
 
             let despachoAUsarPaq = despSugeridoPaq;
             let isReal = false;
             
-            if (kardexDespCursoEnabled) {
+            const isDespachoRealActive = (window.pa_dias_despacho_real && window.pa_dias_despacho_real[r.fecha]) || false;
+            
+            if (isDespachoRealActive) {
                 const dr = despachosReales[r.fecha];
                 if (dr !== undefined && dr !== null) {
                     despachoAUsarPaq = dr / df;
@@ -758,7 +759,8 @@ async function calcularPronosticoAbastKardex(
 
             balFc = balFc - getConsProyAligned(day);
 
-            if (day === hoyStrLocal && kardexDespCursoEnabled && preHoyPaq > 0) {
+            const isDespachoRealActiveForR1 = (window.pa_dias_despacho_real && window.pa_dias_despacho_real[primeraFechaAgenda]) || false;
+            if (day === hoyStrLocal && isDespachoRealActiveForR1 && preHoyPaq > 0) {
                 balFc = balFc + preHoyPaq * df;
                 dispatchMarkers.push({ idx: i, val: balFc, rnd: 'Curso', despacho: preHoyPaq, isPreingreso: true });
             }
