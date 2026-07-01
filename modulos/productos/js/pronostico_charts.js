@@ -192,7 +192,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
         {
             label: `Real ${_hoyFmtStr}`,
             data: [...valores, null, null, null],
-            backgroundColor: 'rgba(81,184,172,.35)',
+            backgroundColor: 'rgba(81,184,172,0.1)',
             borderColor: '#51B8AC',
             borderWidth: 2,
             tension: 0.3,
@@ -210,6 +210,7 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
             fill: false,
             tension: 0,
             type: 'line',
+            pointStyle: 'line',
         },
     ];
 
@@ -267,11 +268,16 @@ function renderChartTendencia(canvas, data, idInsumoSel, sk) {
                             let labelStr = context.dataset.label || '';
                             if (context.datasetIndex === 0) { // Consumo Real
                                 const semanaIdx = context.dataIndex;
-                                const fechaFinStr = data.semanas[semanaIdx]?.fecha_fin;
-                                if (fechaFinStr) {
-                                    const dObj = new Date(fechaFinStr + 'T12:00:00');
-                                    const fmtDt = dObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).replace('.', '').replace(' ', '-').replace(/\b[a-z]/g, c => c.toUpperCase());
-                                    labelStr = `Real al ${fmtDt}`;
+                                const weekNum = parseInt(context.label);
+                                if (weekNum === semanaActual) {
+                                    labelStr = `Real al ${_hoyFmtStr}`;
+                                } else {
+                                    const fechaFinStr = data.semanas[semanaIdx]?.fecha_fin;
+                                    if (fechaFinStr) {
+                                        const dObj = new Date(fechaFinStr + 'T12:00:00');
+                                        const fmtDt = dObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).replace('.', '').replace(' ', '-').replace(/\b[a-z]/g, c => c.toUpperCase());
+                                        labelStr = `Real al ${fmtDt}`;
+                                    }
                                 }
                             }
                             return `${labelStr}: ${formatNum(context.raw)}`;

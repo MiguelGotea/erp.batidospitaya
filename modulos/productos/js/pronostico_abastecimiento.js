@@ -1097,7 +1097,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false, fecha 
                 <td colspan="${colspan}" class="p-0">
                     <div class="pa-charts-container d-flex flex-wrap flex-md-nowrap" style="width: 100%; border-top: 1px solid #eee; background: #fafafa;">
                         <div class="pa-chart-wrapper w-100 w-md-50 p-3" style="border-right: 1px solid #eee;">
-                            <div class="fw-bold mb-2 text-center" style="color:#0E544C; font-size: 0.85rem;"><i class="fas fa-chart-line me-2"></i>Consumo Real y Pronostico (Unidades de Control)</div>
+                            <div class="fw-bold mb-2 text-center" style="color:#0E544C; font-size: 0.85rem;"><i class="fas fa-chart-line me-2"></i>Consumo Real y Proyeccion (Unidades de Control)</div>
                             <div style="height: 320px; position: relative;">
                                 <canvas id="chart-tend-${slotKey}-${p.id_pp}"></canvas>
                             </div>
