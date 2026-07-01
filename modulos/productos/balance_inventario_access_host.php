@@ -428,11 +428,17 @@ fetch(AJAX+'balance_inventario_get_filtros.php')
         todasSucursales = res.sucursales||[];
         buildSucList(todasSucursales);
         if (res.semana_actual) {
-            const sem = res.semana_actual.numero_semana;
+            const sem = parseInt(res.semana_actual.numero_semana) || 0;
             document.getElementById('biSemActualNum').textContent = sem;
             document.getElementById('biBadgeSem').classList.remove('d-none');
-            document.getElementById('filtroSemDesde').value = sem;
-            document.getElementById('filtroSemHasta').value = sem;
+            
+            // Bloquear semanas futuras y la actual (solo cerrado)
+            const maxSemana = Math.max(1, sem - 1);
+            document.getElementById('filtroSemDesde').max = maxSemana;
+            document.getElementById('filtroSemHasta').max = maxSemana;
+            
+            document.getElementById('filtroSemDesde').value = maxSemana;
+            document.getElementById('filtroSemHasta').value = maxSemana;
         }
     });
 
@@ -445,8 +451,14 @@ document.getElementById('btnAnalizar').addEventListener('click', cargarBalance);
 function cargarBalance() {
     const semD = parseInt(document.getElementById('filtroSemDesde').value)||0;
     const semH = parseInt(document.getElementById('filtroSemHasta').value)||0;
+    const maxS = parseInt(document.getElementById('filtroSemDesde').max)||99999;
+
     if (!semD || !semH) {
         Swal.fire({icon:'warning',title:'Filtros incompletos',text:'Ingresa los números de semana.',confirmButtonColor:'#0E544C'});
+        return;
+    }
+    if (semD > maxS || semH > maxS) {
+        Swal.fire({icon:'warning',title:'Semana inválida',text:`Solo puedes consultar hasta la semana cerrada ${maxS}.`,confirmButtonColor:'#0E544C'});
         return;
     }
     document.getElementById('panelInicial').classList.add('d-none');
