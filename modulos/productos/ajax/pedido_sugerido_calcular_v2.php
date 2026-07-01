@@ -780,6 +780,17 @@ try {
     foreach ($stmtPD->fetchAll(PDO::FETCH_ASSOC) as $pdRow)
         $planDespacho[$pdRow['categoria_insumo']] = $pdRow;
 
+    // 5c. Stock Manual Registrado (Grupo G)
+    $stmtG = $conn->prepare("
+        SELECT id_producto_presentacion, stock_minimo_unidades 
+        FROM configuracion_logistica_stock_producto
+        WHERE cod_sucursal = ?
+    ");
+    $stmtG->execute([$codSucursal]);
+    $stockManualG = [];
+    foreach ($stmtG->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $stockManualG[$row['id_producto_presentacion']] = (float)$row['stock_minimo_unidades'];
+    }
 
 
     // 7. Cálculos finales
@@ -840,7 +851,17 @@ try {
         $dD = $diasPrep   ?? ($cP ? (float)$cP['dias_desfase']  : 0);
 
         $diaC = $semC / 7;
-        $sMin = $diaC * $dSM;
+        $sMinCalc = $diaC * $dSM;
+        $sMin = $sMinCalc;
+        $sMinRegistrado = 0;
+        
+        if ($cat === 'G' && isset($stockManualG[$idP])) {
+            $sMinRegistrado = $stockManualG[$idP];
+            if ($sMinRegistrado > 0 && $sMinCalc < $sMinRegistrado) {
+                $sMin = $sMinRegistrado;
+            }
+        }
+        
         $sMax = ($diaC * $dC) + $sMin;
         // sumB sigue acumulando en unidades de uso (se convierte a paquetes después)
         if ($cat === 'B')
@@ -871,6 +892,7 @@ try {
             'stock_maximo' => round($sMax, 4),
             'stock_max_final' => null,
             'es_ajustado' => false,
+            'stock_minimo_registrado' => $sMinRegistrado,
 
             'fecha_proximo_despacho'  => $fechaProxDespacho,
             'fecha_ultimo_despacho'   => $fechaUltimoDespacho,

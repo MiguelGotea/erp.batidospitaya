@@ -93,6 +93,46 @@ $version = mt_rand(1, 10000);
         Ingresa el número de semana de un despacho real ya ocurrido. Ej: si la semana 540 fue el último despacho, escribe 540. El sistema usa esto para calcular si la semana actual "toca" según el intervalo configurado.
     </div>
 
+    <!-- Modal Configuración Stock Mínimo G -->
+    <div class="modal fade" id="modalConfigStockMinimoG" tabindex="-1" aria-labelledby="modalConfigStockMinimoGLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white" style="background-color: var(--pdg-green) !important;">
+                    <h5 class="modal-title" id="modalConfigStockMinimoGLabel"><i class="bi bi-box-seam me-2"></i>Stock Mínimo: Grupo G (<span id="stockMinimoGSucursalNombre"></span>)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="loaderStockG" class="text-center p-4">
+                        <div class="spinner-border text-success" role="status"></div>
+                        <p class="mt-2 text-muted small">Cargando productos...</p>
+                    </div>
+                    <div id="stockGContent" style="display:none;">
+                        <div class="p-3 bg-light border-bottom">
+                            <p class="small text-muted mb-0"><i class="bi bi-info-circle me-1"></i>Ingresa el stock mínimo en unidades para cada producto. Si ingresas 0 (cero), el sistema calculará dinámicamente el stock mínimo en base al consumo. Los cambios se guardan automáticamente.</p>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm mb-0 align-middle">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="ps-3 border-0">Producto</th>
+                                        <th class="border-0">Unidad</th>
+                                        <th style="width:180px;" class="pe-3 border-0">Stock Mín. Registrado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaStockG">
+                                    <!-- Generado por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-4 btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>

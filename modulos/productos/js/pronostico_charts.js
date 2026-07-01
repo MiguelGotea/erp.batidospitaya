@@ -593,7 +593,12 @@ async function calcularPronosticoAbastKardex(
             const dSM = p.dias_stock_min ?? 0;
             const df_ = p.despacho_factor > 0 ? p.despacho_factor : 1;
 
-            const sMinUso = cd * dSM;
+            let sMinUso = cd * dSM;
+            const sMinReg = parseFloat(p.stock_minimo_registrado) || 0;
+            if (sMinReg > 0 && sMinUso < sMinReg) {
+                sMinUso = sMinReg;
+            }
+            
             const sMaxUso = (cd * cicloSlot) + sMinUso;
 
             let ratio = 1;
@@ -921,6 +926,7 @@ function addStockLines(idPP, sk, chartId, allDays) {
         const wls_n = parseInt(row.attr('data-wls-n')) || 0;
         const wls_lff = row.attr('data-wls-lff');
         const dSM = parseFloat(row.attr('data-dsm')) || 0;
+        const sMinRegistrado = parseFloat(row.attr('data-smin-registrado')) || 0;
         const cicloSlotFijo = parseFloat(row.attr('data-ciclo')) || 0;
         const ratio = parseFloat(row.attr('data-ratio')) || 1;
 
@@ -988,7 +994,6 @@ function addStockLines(idPP, sk, chartId, allDays) {
 
         const minData = [];
         const maxData = [];
-        
         for (let i = 0; i < allDays.length; i++) {
             const day = allDays[i];
             if (!day) {
@@ -999,13 +1004,21 @@ function addStockLines(idPP, sk, chartId, allDays) {
             
             // Stock Mínimo cambia semanalmente basado en la fecha actual (no se ata a despachos)
             const cdSemanal = getDynamicCd(day);
-            const sMinHoy = cdSemanal * dSM;
+            let sMinHoy = cdSemanal * dSM;
+            
+            if (sMinRegistrado > 0 && sMinHoy < sMinRegistrado) {
+                sMinHoy = sMinRegistrado;
+            }
             
             // Requerido Total cambia por bloques de despacho
             const dispatchDay = getMostRecentDispatchDay(day);
             const cdDispatch = getDynamicCd(dispatchDay);
             const ciclo = calcularCicloSlot(dispatchDay);
-            const sMinDispatch = cdDispatch * dSM;
+            let sMinDispatch = cdDispatch * dSM;
+            
+            if (sMinRegistrado > 0 && sMinDispatch < sMinRegistrado) {
+                sMinDispatch = sMinRegistrado;
+            }
             
             const sMaxUso = (cdDispatch * ciclo) + sMinDispatch;
             const sMaxFinal = sMaxUso * ratio;

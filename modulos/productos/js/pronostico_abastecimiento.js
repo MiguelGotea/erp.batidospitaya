@@ -71,7 +71,12 @@ function calcularStockMaxSlot(p, cicloSlot, cd_dinamico = null) {
     const dSM = p.dias_stock_min ?? 0;
     const df = p.despacho_factor > 0 ? p.despacho_factor : 1;
 
-    const sMinUso = cd * dSM;
+    let sMinUso = cd * dSM;
+    const sMinReg = parseFloat(p.stock_minimo_registrado) || 0;
+    if (sMinReg > 0 && sMinUso < sMinReg) {
+        sMinUso = sMinReg;
+    }
+    
     const sMaxUso = (cd * cicloSlot) + sMinUso;
 
     let ratio = 1;
@@ -701,7 +706,7 @@ function consolidarResultados(storeResults) {
                             despacho_presentacion: p.despacho_presentacion,
                             despacho_factor: p.despacho_factor,
                             dias_stock_min: p.dias_stock_min,
-                            cons_semanal: 0, stock_minimo: 0, stock_maximo: 0, stock_max_final: 0,
+                            cons_semanal: 0, stock_minimo: 0, stock_maximo: 0, stock_max_final: 0, stock_minimo_registrado: p.stock_minimo_registrado || 0,
                             _sMinTotal: 0, _smTotal: 0, _smfTotal: 0,
                             _stockD1Total: null, _preHoyTotal: null, _invTeoricoAyerTotal: null, _porTienda: {}, _wls_m_forced: false
                         };
@@ -1035,7 +1040,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false, fecha 
 
             rows += `
             <tr class="pa-row-expandible-charts" style="cursor:pointer;" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}" data-sucursal="${sucVal}" data-fecha-despacho="${fDesp}" data-ciclo="${slot.cicloSlot}"
-                data-wls-m="${p.wls_m ?? 0}" data-wls-b="${p.wls_b ?? 0}" data-wls-n="${p.wls_n ?? 0}" data-wls-lff="${p._wls_lff || ''}" data-dsm="${p.dias_stock_min ?? 0}" data-ratio="${rowRatio}"
+                data-wls-m="${p.wls_m ?? 0}" data-wls-b="${p.wls_b ?? 0}" data-wls-n="${p.wls_n ?? 0}" data-wls-lff="${p._wls_lff || ''}" data-dsm="${p.dias_stock_min ?? 0}" data-ratio="${rowRatio}" data-smin-registrado="${p.stock_minimo_registrado ?? 0}"
                 data-plan-tipo="${esc(p.plan_tipo_frecuencia || '')}" data-plan-dias="${esc(JSON.stringify(p.plan_dias_semana || []))}" data-plan-semanas="${p.plan_intervalo_semanas || 1}" data-dias-ciclo="${p.dias_ciclo || 7}">
                 <td><div class="d-flex align-items-center"><div class="pa-prod-name">${esc(p.nombre)}</div><i class="bi bi-chevron-right pa-expand-icon ms-2" style="margin-right: 0;"></i></div></td>
                 <td>${csHtml}</td>

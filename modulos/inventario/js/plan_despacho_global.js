@@ -86,9 +86,12 @@ function buildCatRow(cod, cat, cfg) {
     return `<tr class="${rowCls}" data-cat="${cat}">
         <!-- Categoría -->
         <td>
-            <span class="pdg-badge-cat ${info.cls}">
-                <i class="bi ${info.icon}"></i>${cat} – ${info.nombre}
-            </span>
+            <div class="d-flex flex-column align-items-start gap-2">
+                <span class="pdg-badge-cat ${info.cls}">
+                    <i class="bi ${info.icon}"></i>${cat} – ${info.nombre}
+                </span>
+                ${cat === 'G' ? `<button type="button" class="btn btn-sm btn-outline-success mt-1" onclick="abrirConfigStockG('${cod}', '${escHtml(PDG.sucursales.find(s => s.codigo === cod)?.nombre || '')}')" ${disabled}><i class="bi bi-box-seam me-1"></i>Stock Mín. Registrado</button>` : ''}
+            </div>
         </td>
         <!-- Tipo -->
         <td>
@@ -485,3 +488,104 @@ function loadSucursales() {
 $(document).ready(function () {
     loadSucursales();
 });
+
+/* ══════════════════════════════════════════════════════════
+   STOCK MINIMO POR PRODUCTO (GRUPO G)
+   ══════════════════════════════════════════════════════════ */
+
+function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function abrirConfigStockG(codSucursal, nombreSucursal) {
+    $('#stockMinimoGSucursalNombre').text(nombreSucursal);
+    const $modal = new bootstrap.Modal(document.getElementById('modalConfigStockMinimoG'));
+    $modal.show();
+
+    $('#stockGContent').hide();
+    $('#loaderStockG').show();
+    $('#listaStockG').empty();
+
+    $.ajax({
+        url: PDG.AJAX_BASE + 'plan_despacho_get_stock_g.php',
+        method: 'POST',
+        data: { cod_sucursal: codSucursal },
+        dataType: 'json'
+    }).done(function (res) {
+        $('#loaderStockG').hide();
+        $('#stockGContent').show();
+
+        if (res.success && res.productos.length > 0) {
+            let html = '';
+            res.productos.forEach(p => {
+                const stockVal = parseFloat(p.stock_minimo_unidades) || 0;
+                // Formateamos visualmente para no mostrar 0.0000, sino 0 ó el número limpio.
+                const valStr = stockVal === 0 ? '0' : stockVal.toString();
+                
+                html += `
+                    <tr>
+                        <td class="ps-3"><span class="fw-medium">${escHtml(p.nombre)}</span></td>
+                        <td class="text-secondary small">${escHtml(p.presentacion || '')}</td>
+                        <td class="pe-3">
+                            <input type="number" step="0.0001" min="0" class="form-control form-control-sm text-end"
+                                value="${valStr}"
+                                data-id-pp="${p.id_producto_presentacion}"
+                                data-cod-sucursal="${codSucursal}"
+                                ${!PUEDE_EDITAR ? 'disabled' : ''}
+                                onfocus="this.dataset.initial = this.value"
+                                onblur="guardarStockG(this)">
+                        </td>
+                    </tr>
+                `;
+            });
+            $('#listaStockG').html(html);
+        } else {
+            $('#listaStockG').html('<tr><td colspan="3" class="text-center text-muted py-4">No se encontraron productos activos del Grupo G.</td></tr>');
+        }
+    }).fail(function () {
+        $('#loaderStockG').hide();
+        $('#listaStockG').html('<tr><td colspan="3" class="text-center text-danger py-4">Error de conexión al cargar productos.</td></tr>');
+        $('#stockGContent').show();
+    });
+}
+
+function guardarStockG(inputEl) {
+    if (!PUEDE_EDITAR) return;
+    const $input = $(inputEl);
+    const valorActual = $input.val();
+    const valorInicial = $input.data('initial');
+
+    if (valorActual === valorInicial) return;
+
+    const idPP = $input.data('id-pp');
+    const codSucursal = $input.data('cod-sucursal');
+    const valFinal = parseFloat(valorActual) || 0;
+
+    $input.addClass('border-warning');
+
+    $.ajax({
+        url: PDG.AJAX_BASE + 'plan_despacho_save_stock_g.php',
+        method: 'POST',
+        data: {
+            cod_sucursal: codSucursal,
+            id_producto_presentacion: idPP,
+            stock_minimo_unidades: valFinal
+        },
+        dataType: 'json'
+    }).done(function (res) {
+        $input.removeClass('border-warning');
+        if (res.success) {
+            $input.addClass('border-success');
+            setTimeout(() => $input.removeClass('border-success'), 1500);
+            $input.data('initial', valFinal);
+        } else {
+            $input.addClass('border-danger');
+            toastErr(res.message || 'Error al guardar.');
+        }
+    }).fail(function () {
+        $input.removeClass('border-warning').addClass('border-danger');
+        toastErr('Error de conexión al guardar.');
+    });
+}
+
