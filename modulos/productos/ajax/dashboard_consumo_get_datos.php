@@ -658,16 +658,26 @@ try {
     }
 
 
-    $configProductos = []; // [cod_sucursal][categoria] => {ajuste_demanda, ...}
+    $configProductos = []; // [cod_sucursal][categoria] => {ciclo}
     if (!empty($sucIdsPresentes)) {
         $phS = implode(',', array_fill(0, count($sucIdsPresentes), '?'));
-        $stmtCP = $conn->prepare("SELECT cod_sucursal, codigo_insumo, ajuste_demanda, dias_ciclo, dias_desfase FROM configuracion_logistica_producto WHERE cod_sucursal IN ($phS)");
+        $stmtCP = $conn->prepare("SELECT cod_sucursal, categoria_insumo, tipo_frecuencia, intervalo_semanas, dias_semana, activo FROM plan_despacho_sucursal WHERE cod_sucursal IN ($phS) AND activo = 1");
         $stmtCP->execute($sucIdsPresentes);
         foreach ($stmtCP->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $configProductos[$row['cod_sucursal']][$row['codigo_insumo']] = [
-                'ajuste' => (float) $row['ajuste_demanda'],
-                'ciclo' => (float) $row['dias_ciclo'],
-                'desfase' => (float) $row['dias_desfase']
+            $tipo = $row['tipo_frecuencia'];
+            $ciclo = 7.0; // Fallback
+            if ($tipo === 'n_semanas') {
+                $intervalo = (int)($row['intervalo_semanas'] ?? 1);
+                $ciclo = $intervalo * 7.0;
+            } elseif ($tipo === 'dias_semana') {
+                $dias = $row['dias_semana'];
+                if (is_string($dias)) $dias = json_decode($dias, true);
+                if (is_array($dias) && count($dias) > 0) {
+                    $ciclo = 7.0 / count($dias);
+                }
+            }
+            $configProductos[$row['cod_sucursal']][$row['categoria_insumo']] = [
+                'ciclo' => $ciclo
             ];
         }
     }
@@ -770,10 +780,9 @@ try {
             $sucCod = $idsSucursales[strtolower(trim($suc))] ?? null;
             $cat = $meta['categoria_insumo'];
             $cP = $sucCod ? ($configProductos[$sucCod][$cat] ?? null) : null;
-            $adj = $cP ? (float) $cP['ajuste'] : 0;
             $ciclo = $cP ? (float) $cP['ciclo'] : 7;
 
-            $diaC = ($semC * (1 + $adj)) / 7;
+            $diaC = $semC / 7;
             
             // Stock Maximo: sin Stock Minimo
             $sMax = ($diaC * $ciclo);

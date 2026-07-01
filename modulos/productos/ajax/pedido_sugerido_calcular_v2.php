@@ -763,12 +763,6 @@ try {
         : null;
     $capC = null;
 
-    $stmtP = $conn->prepare("SELECT codigo_insumo, dias_ciclo, dias_desfase, ajuste_demanda FROM configuracion_logistica_producto WHERE cod_sucursal = ?");
-    $stmtP->execute([$codSucursal]);
-    $cPs = [];
-    foreach ($stmtP->fetchAll() as $row)
-        $cPs[$row['codigo_insumo']] = $row;
-
     // 5c. Stock Manual Registrado (Grupo G)
     $stmtG = $conn->prepare("
         SELECT id_producto_presentacion, stock_minimo_unidades 
@@ -825,20 +819,26 @@ try {
         $wls_n = $wlsRes['n'];
         $m = $metaPP[$idP];
         $cat = $m['cat'];
-        $cP = $cat ? ($cPs[$cat] ?? null) : null;
-        $adj = $cP ? (float)$cP['ajuste_demanda'] : 0;
 
-        // Obtener ciclo desde el plan de despacho (si existe y está activo para esta cat).
-        // Se pasa $hoy para que en tipo 'dias_semana' el ciclo refleje los días reales
-        // entre el PRÓXIMO despacho y el subsiguiente (no el promedio 7/N).
-        $planCat   = $planDespacho[$cat] ?? null;
+        if (empty($cat)) {
+            throw new Exception("El producto '{$m['n']}' no tiene asignada una categoría de insumo, lo cual es requerido para el plan de despacho.");
+        }
+
+        $planCat = $planDespacho[$cat] ?? null;
+        if (!$planCat) {
+            throw new Exception("Error: No existe un Plan de Despacho activo para la categoría '{$cat}' en esta sucursal. Por favor, configúrelo antes de calcular el pronóstico.");
+        }
+
         $cicloReal = calcularCicloRealDias($planCat, $hoy);
         $diasPrep  = calcularDiasPreparacion($planCat);
 
-        // Fallback a configuracion_logistica_producto si no hay plan
-        $dC = $cicloReal  ?? ($cP ? (float)$cP['dias_ciclo']   : 0);
-        $dD = $diasPrep   ?? ($cP ? (float)$cP['dias_desfase']  : 0);
-        $dSM = $planCat ? (float) ($planCat['dias_stock_minimo'] ?? 0) : 0;
+        if ($cicloReal === null) {
+            throw new Exception("Error: No se pudo determinar el ciclo de despacho para la categoría '{$cat}'. Revise la configuración de su plan de despacho.");
+        }
+
+        $dC = $cicloReal;
+        $dD = $diasPrep;
+        $dSM = (float)($planCat['dias_stock_minimo'] ?? 0);
 
         $diaC = $semC / 7;
         $sMinCalc = $diaC * $dSM;
@@ -873,10 +873,6 @@ try {
             'prom_consumo' => round($prom, 4),
             'desv_estandar' => 0, // deprecado, mantenido para compatibilidad
             'cons_semanal' => round($semC, 4),
-            'ajuste_demanda' => $adj,
-            'dias_ciclo' => $dC,
-            'dias_desfase' => $dD,
-            'dias_stock_min' => $dSM,
             'cons_diario' => round($diaC, 6),
             'stock_minimo' => round($sMin, 4),
             'stock_maximo' => round($sMax, 4),

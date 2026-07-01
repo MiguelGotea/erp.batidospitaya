@@ -582,7 +582,7 @@ async function calcularPronosticoAbastKardex(
                 }
                 return 7 / n;
             }
-            return p.dias_ciclo || 7;
+            throw new Error(`Plan de despacho faltante o inválido para este producto. Por favor configure el plan de despacho.`);
         };
 
         const calcularStockMaxSlot = (p, cicloSlot, cd_dinamico) => {
@@ -933,7 +933,6 @@ function addStockLines(idPP, sk, chartId, allDays) {
         let planDias = [];
         try { planDias = JSON.parse(row.attr('data-plan-dias') || '[]'); } catch(e) {}
         const planSemanas = parseInt(row.attr('data-plan-semanas')) || 1;
-        const diasCiclo = parseInt(row.attr('data-dias-ciclo')) || 7;
 
         const calcularCicloSlot = (fechaStr) => {
             if (!planTipo) return cicloSlotFijo;
@@ -952,7 +951,7 @@ function addStockLines(idPP, sk, chartId, allDays) {
                 }
                 return 7 / n;
             }
-            return diasCiclo;
+            throw new Error(`Plan de despacho faltante o inválido para este producto. Por favor configure el plan de despacho.`);
         };
 
         const fDesp = row.attr('data-fecha-despacho');

@@ -2792,7 +2792,6 @@ async function cargarStockMinMaxKardex(idPP, semAnalisis) {
 
             const allDays = chartKardexExistencia._allDays || [];
             const dSM = prod.dias_stock_min || 0;
-            const adj = prod.ajuste_demanda || 0;
             const df = prod.despacho_factor > 0 ? prod.despacho_factor : 1;
 
             let item_wls_n = prod.wls_n || 0;
@@ -2846,7 +2845,7 @@ async function cargarStockMinMaxKardex(idPP, semAnalisis) {
                     }
                     return 7 / nDias; 
                 }
-                return p.dias_ciclo || 7;
+                throw new Error(`Plan de despacho faltante o inválido para este producto. Por favor configure el plan de despacho.`);
             };
 
             const calcularStockMaxSlot = (p, cicloSlot, cd_dinamico) => {
@@ -3021,7 +3020,7 @@ async function calcularPronosticoAbastKardex(
                 }
                 return 7 / n; 
             }
-            return p.dias_ciclo || 7;
+            throw new Error(`Plan de despacho faltante o inválido para este producto. Por favor configure el plan de despacho.`);
         };
 
         const calcularStockMaxSlot = (p, cicloSlot, cd_dinamico) => {

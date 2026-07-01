@@ -44,8 +44,8 @@ function calcularCicloSlot(p, fechaStr) {
         return 7 / n; // Fallback de seguridad
     }
 
-    // Fallback genérico
-    return p.dias_ciclo || 7;
+    // Fallback genérico: esto ya no debería ocurrir porque el backend lo exige
+    throw new Error(`Plan de despacho faltante o inválido para ${p.nombre}. Por favor configure el plan de despacho.`);
 }
 
 /**
@@ -1072,7 +1072,7 @@ function buildTablaProductos(slot, isConsolidado, slotKey, isHoy = false, fecha 
             rows += `
             <tr class="pa-row-expandible-charts" style="cursor:pointer;" data-pp-id="${p.id_pp}" data-slot-key="${slotKey}" data-sucursal="${sucVal}" data-fecha-despacho="${fDesp}" data-ciclo="${slot.cicloSlot}"
                 data-wls-m="${p.wls_m ?? 0}" data-wls-b="${p.wls_b ?? 0}" data-wls-n="${p.wls_n ?? 0}" data-wls-lff="${p._wls_lff || ''}" data-dsm="${p.dias_stock_min ?? 0}" data-ratio="${rowRatio}" data-smin-registrado="${p.stock_minimo_registrado ?? 0}"
-                data-plan-tipo="${esc(p.plan_tipo_frecuencia || '')}" data-plan-dias="${esc(JSON.stringify(p.plan_dias_semana || []))}" data-plan-semanas="${p.plan_intervalo_semanas || 1}" data-dias-ciclo="${p.dias_ciclo || 7}">
+                data-plan-tipo="${esc(p.plan_tipo_frecuencia || '')}" data-plan-dias="${esc(JSON.stringify(p.plan_dias_semana || []))}" data-plan-semanas="${p.plan_intervalo_semanas || 1}">
                 <td><div class="d-flex align-items-center"><div class="pa-prod-name">${esc(p.nombre)}</div><i class="bi bi-chevron-right pa-expand-icon ms-2" style="margin-right: 0;"></i></div></td>
                 <td>${csHtml}</td>
                 <td>${cdDisplay !== null ? fmt2(cdDisplay) : fmt2(null)}</td>
