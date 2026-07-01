@@ -244,32 +244,6 @@ $(document).ready(() => {
             }
         });
     });
-
-    $('#pa-agenda').on('change', '.pa-input-cap-b', function() {
-        const val = $(this).val();
-        const sucursal = $('#pa-sucursal').val();
-        if(!sucursal) return;
-        $.ajax({
-            url: '../inventario/ajax/plan_despacho_save_capacidad_b.php',
-            method: 'POST',
-            data: { cod_sucursal: sucursal, capacidad_congelados_paquetes: val },
-            dataType: 'json'
-        }).done(function(res) {
-            if(res.success) {
-                if (window.resPedido) {
-                    window.resPedido.capacidad_paquetes = val !== '' ? parseInt(val) : null;
-                }
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Capacidad guardada', showConfirmButton: false, timer: 2000 });
-                // We could recalculate here if needed, but it's optional as capacity just sets the limit
-                // To apply the visual red coloring dynamically, we can trigger a recalculation:
-                if (currentAgendaData) {
-                    calcularAgenda(new Event('click')); // Rerun to recompute capacity usage factors
-                }
-            } else {
-                Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al guardar capacidad', showConfirmButton: false, timer: 3000 });
-            }
-        });
-    });
 });
 
 
@@ -896,12 +870,6 @@ function buildCatsHtml(cats, isConsolidado, fechaArg, isHoy = false) {
 
                 if (despAUsar !== null && despAUsar !== undefined) totalDespacho += despAUsar;
             });
-            const capVal = (window.resPedido && window.resPedido.capacidad_paquetes !== null && window.resPedido.capacidad_paquetes !== undefined) ? window.resPedido.capacidad_paquetes : '';
-            
-            let pct = 0;
-            let pctText = 'N/A';
-            let colorBg = '#f3f4f6';
-            let colorText = '#374151';
             
             const capNumber = parseFloat(capVal);
             if (!isNaN(capNumber) && capNumber > 0) {
@@ -922,11 +890,10 @@ function buildCatsHtml(cats, isConsolidado, fechaArg, isHoy = false) {
                 }
             }
 
+            const displayCapVal = (capVal === '') ? 'N/A' : capVal;
             badgeB = `<div style="margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
                 <div style="font-size:12px; color:#4b5563; font-weight:600; display:flex; align-items:center; gap:6px;">
-                    Congelados Paquetes (Cap.: 
-                    <input type="number" class="pa-input-cap-b" style="width:60px; height:22px; text-align:center; border:1px solid #d1d5db; border-radius:4px; font-size:12px; padding:0; outline:none;" placeholder="Cap." value="${capVal}">
-                    )
+                    Congelados Paquetes (Cap.: ${displayCapVal})
                 </div>
                 <div class="pa-round-badge" style="background:${colorBg}; color:${colorText}; font-size:13px; font-weight:800; padding:4px 12px; border: 1px solid rgba(0,0,0,0.05); display:inline-flex; align-items:center; gap:6px;">
                     <span>Despacho: ${totalDespacho}</span>
