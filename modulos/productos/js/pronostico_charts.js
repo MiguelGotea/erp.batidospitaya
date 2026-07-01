@@ -586,9 +586,6 @@ async function calcularPronosticoAbastKardex(
         };
 
         const calcularStockMaxSlot = (p, cicloSlot, cd_dinamico) => {
-            if (p.plan_tipo_frecuencia !== 'dias_semana') {
-                return p.stock_max_final ?? 0;
-            }
             const cd = cd_dinamico ?? 0;
             const dSM = p.dias_stock_min ?? 0;
             const df_ = p.despacho_factor > 0 ? p.despacho_factor : 1;
@@ -956,7 +953,20 @@ function addStockLines(idPP, sk, chartId, allDays) {
             return diasCiclo;
         };
 
+        const fDesp = row.attr('data-fecha-despacho');
+
         const getMostRecentDispatchDay = (fechaStr) => {
+            if (planTipo === 'n_semanas' && fDesp) {
+                const target = new Date(fechaStr + 'T12:00:00');
+                const base = new Date(fDesp + 'T12:00:00');
+                const diffDays = Math.round((target - base) / (1000 * 60 * 60 * 24));
+                const cycleDays = planSemanas * 7;
+                let offset = diffDays % cycleDays;
+                if (offset < 0) offset += cycleDays;
+                const recent = new Date(target);
+                recent.setDate(recent.getDate() - offset);
+                return recent.toISOString().split('T')[0];
+            }
             if (planTipo !== 'dias_semana') return fechaStr;
             let dias = Array.isArray(planDias) ? planDias.map(Number) : [];
             if (dias.length === 0 || dias.length === 7) return fechaStr;
