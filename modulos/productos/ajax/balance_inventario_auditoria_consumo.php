@@ -353,6 +353,19 @@ try {
 
     // Pre-cargar P2/P3 para tipo_mapeo badge
     $cotP2P3Map = [];
+
+    // Detectar si el producto tiene presentacion_receta=1 para desactivar P2/P3
+    // (evita absorber consumo de ingredientes compartidos con otras presentaciones).
+    $esRecetaTarget = false;
+    if (!empty($phC_list)) {
+        // Buscar el entry del diccionario cuyo pp_id === $idPP
+        foreach ($dicMap as $row) {
+            if ((int)$row['pp_id'] === $idPP) {
+                $esRecetaTarget = (bool)$row['presentacion_receta'];
+                break;
+            }
+        }
+    }
     if (!empty($codIngs)) {
         $phCot2 = implode(',', array_fill(0, count($codIngs), '?'));
         $stmtCot2 = $conn->prepare("
@@ -390,7 +403,8 @@ try {
         if ($cp && isset($codMap[$cp])) {
             $mapeo = $codMap[$cp];
             $esP1  = true;
-        } elseif ($ci && isset($cotP2P3Map[$ci])) {
+        } elseif (!$esRecetaTarget && $ci && isset($cotP2P3Map[$ci])) {
+            // P2/P3 solo aplica si el producto NO es presentacion_receta
             $p2 = $cotP2P3Map[$ci]['p2'];
             $p3 = $cotP2P3Map[$ci]['p3'];
             if ($p2 && isset($codMap[(int)$p2])) $mapeo = $codMap[(int)$p2];

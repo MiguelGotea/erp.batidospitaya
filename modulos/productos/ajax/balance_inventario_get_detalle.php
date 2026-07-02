@@ -378,6 +378,17 @@ try {
     $rI1->execute(!empty($allCodsConsumo) ? $allCodsConsumo : []);
     $ingsRel = $rI1->fetchAll(PDO::FETCH_COLUMN);
 
+    // Detectar si el producto target es presentacion_receta=1
+    // (ej: Granola 230gr) para desactivar P2/P3 y evitar absorber
+    // consumo de ingredientes compartidos con otras presentaciones.
+    $esRecetaTarget = false;
+    foreach ($diccionarioRaw as $ditem) {
+        if ((int)$ditem['pp_id'] === $idPP) {
+            $esRecetaTarget = (bool)$ditem['es_receta'];
+            break;
+        }
+    }
+
     if (!empty($ingsRel) || !empty($allCodsConsumo)) {
         // 2. Pre-cargar cotizaciones para P2/P3
         $cotP2P3 = [];
@@ -433,7 +444,8 @@ try {
             if ($cp && isset($codMapConsumo[$cp])) {
                 $mapeo = $codMapConsumo[$cp];
                 $esP1 = true;
-            } elseif ($ci && isset($cotP2P3[$ci])) {
+            } elseif (!$esRecetaTarget && $ci && isset($cotP2P3[$ci])) {
+                // P2/P3 solo aplica si el producto NO es presentacion_receta
                 $p2 = $cotP2P3[$ci]['p2'];
                 $p3 = $cotP2P3[$ci]['p3'];
                 if ($p2 && isset($codMapConsumo[$p2])) $mapeo = $codMapConsumo[$p2];

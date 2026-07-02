@@ -337,6 +337,16 @@ try {
         $cmc = $codMapConsumoAll[$targetId] ?? [];
         if (empty($cmc)) continue;
         $allCodsCons = array_keys($cmc);
+
+        // Si el producto es presentacion_receta=1 (ej: Granola 230gr),
+        // desactivar P2/P3 para evitar absorber consumo de ingredientes compartidos.
+        $esRecetaTarget = false;
+        foreach ($diccionario as $ditem) {
+            if ((int)$ditem['pp_id'] === $targetId) {
+                $esRecetaTarget = (bool)$ditem['es_receta'];
+                break;
+            }
+        }
         $phCC = implode(',', array_fill(0, count($allCodsCons), '?'));
 
         $rI = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phCC)");
@@ -387,7 +397,8 @@ try {
             $cp = $f['codporcion'] ? (int)$f['codporcion'] : null;
             $ci = $f['CodIngrediente'];
             if ($cp && isset($cmc[$cp])) { $mapeo = $cmc[$cp]; $esP1 = true; }
-            elseif ($ci && isset($cotP2P3[$ci])) {
+            elseif (!$esRecetaTarget && $ci && isset($cotP2P3[$ci])) {
+                // P2/P3 solo aplica si el producto NO es presentacion_receta
                 $p2 = $cotP2P3[$ci]['p2']; $p3 = $cotP2P3[$ci]['p3'];
                 if      ($p2 && isset($cmc[$p2])) $mapeo = $cmc[$p2];
                 elseif  ($p3 && isset($cmc[$p3])) $mapeo = $cmc[$p3];
