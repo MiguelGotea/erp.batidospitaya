@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    ALERTAS DE AGOTAMIENTO — Módulo independiente
    js/alertas_agotamiento.js
 
@@ -97,20 +97,19 @@
         }
     }
 
-    /* ── Cálculo para una sucursal ───────────────────────────── */
+    /* Calculo para una sucursal */
     async function _calcularSucursal(suc, semDesde, semHasta, semCorte, ice) {
         try {
-            /* 1 — Pedido sugerido */
             const fdP = new FormData();
             fdP.append('semana_desde_num', semDesde);
             fdP.append('semana_hasta_num',  semHasta);
             fdP.append('cod_sucursal',       suc.codigo);
-            const rPed = await fetch('ajax/pedido_sugerido_calcular_v2.php', { method:'POST', body:fdP }).then(r=>r.json());
+            const rPed = await fetch('ajax/pedido_sugerido_calcular_v2.php', { method:'POST', body:fdP }).then(r => r.json());
             if (!rPed.ok) return [];
 
-            const GRUPOS   = ['B','D','F','G'];
-            const todayD   = _todayStr();
-            const wls_lff  = rPed.wls_last_fecha_fin;
+            const GRUPOS  = ['B','D','F','G'];
+            const todayD  = _todayStr();
+            const wls_lff = rPed.wls_last_fecha_fin;
 
             const productos = (rPed.productos || [])
                 .filter(p => GRUPOS.includes(p.categoria_insumo) && p.fecha_proximo_despacho)
@@ -118,7 +117,6 @@
 
             if (!productos.length) return [];
 
-            /* 2 — Pronóstico (stock D-1 + despachos reales) */
             const fdPr = new FormData();
             fdPr.append('semana_desde',  semDesde);
             fdPr.append('semana_hasta',  semHasta);
@@ -126,64 +124,44 @@
             fdPr.append('cod_sucursal',  suc.codigo);
             productos.forEach(p => {
                 const fDesp = p.hoy_es_despacho ? todayD : p.fecha_proximo_despacho;
-                fdPr.append('ids_pp[]',                    p.id_pp);
-                fdPr.append(`fechas_d1[${p.id_pp}]`,       _addDays(fDesp, -1));
+                fdPr.append('ids_pp[]',              p.id_pp);
+                fdPr.append('fechas_d1['+p.id_pp+']', _addDays(fDesp, -1));
             });
-            const rPro = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method:'POST', body:fdPr }).then(r=>r.json());
+
+            const rPro = await fetch('ajax/pedido_sugerido_pronostico_v2.php', { method:'POST', body:fdPr }).then(r => r.json());
             if (!rPro.ok) return [];
 
-            const stocks       = rPro.stocks          || {};
-            const despReales   = rPro.despachos_reales || {};
-            const diasProy     = rPro.dias_proy        || {};
+            const stocks     = rPro.stocks           || {};
+            const despReales = rPro.despachos_reales || {};
 
-            /* 3 — Calcular stock hoy y fecha de agotamiento */
             const incidencias = [];
-
             for (const p of productos) {
-                const id  = String(p.id_pp);
-                const su  = stocks[id];
+                const id    = String(p.id_pp);
+                const su    = stocks[id];
                 if (su === null || su === undefined) continue;
 
-                const fDesp  = p.hoy_es_despacho ? todayD : p.fecha_proximo_despacho;
-                const fD1    = _addDays(fDesp, -1);
-                const dP     = diasProy[id] || 0;
-                const drMap  = despReales[id] || {};
+                const fDesp = p.hoy_es_despacho ? todayD : p.fecha_proximo_despacho;
+                const drMap = despReales[id] || {};
 
-                /* Proyectar desde el corte hasta D-1 (igual que módulo principal) */
-                let stockD1 = su; // en Unidades de Control
-                if (dP > 0) {
-                    for (let k = 0; k < dP; k++) {
-                        stockD1 -= _getDynamicCD(p, wls_lff, _addDays(fD1, -k));
-                    }
-                }
-                stockD1 = Math.max(0, stockD1);
+                // su = stock real al final de AYER (anchorVal del PHP)
+                // Stock hoy = su - CD(hoy)
+                const cdHoy      = _getDynamicCD(p, wls_lff, todayD);
+                const stockHoyUC = su - cdHoy;
 
-                /* Simular desde D-1 hasta hoy, incluyendo despacho real */
-                let bal = stockD1;
-                const diasSimular = _daysDiff(fD1, todayD);
-                for (let d = 1; d <= diasSimular; d++) {
-                    const dia = _addDays(fD1, d);
-                    if (dia === fDesp) {
-                        const dr = drMap[fDesp];
-                        if (dr !== null && dr !== undefined) bal += dr;
-                    }
-                    bal -= _getDynamicCD(p, wls_lff, dia);
-                }
-                const stockHoyUC = bal; // puede ser negativo
+                // Simular desde hoy hacia adelante
+                let stockSim = stockHoyUC;
+                if (drMap[todayD] !== undefined && drMap[todayD] !== null) stockSim += drMap[todayD];
 
-                /* Calcular fecha de agotamiento (simular desde hoy hacia adelante) */
-                let stockSim = bal;
                 let fechaAgotamiento = null;
                 for (let d = 1; d <= 365; d++) {
                     const dia = _addDays(todayD, d);
+                    if (drMap[dia] !== undefined && drMap[dia] !== null) stockSim += drMap[dia];
                     stockSim -= _getDynamicCD(p, wls_lff, dia);
                     if (stockSim <= 0) { fechaAgotamiento = dia; break; }
                 }
 
                 if (stockHoyUC <= 0 && !fechaAgotamiento) fechaAgotamiento = todayD;
-                if (!fechaAgotamiento) continue; // no se agota en el próximo año
-
-                /* Filtro: solo si se agota ANTES o EN el próximo despacho */
+                if (!fechaAgotamiento) continue;
                 if (fechaAgotamiento > fDesp) continue;
 
                 incidencias.push({
@@ -195,11 +173,9 @@
                     diasHastaAgotamiento : _daysDiff(todayD, fechaAgotamiento)
                 });
             }
-
             return incidencias;
-
         } catch (err) {
-            console.warn(`[AlertasAgotamiento] ${suc.nombre}:`, err);
+            console.warn('[AlertasAgotamiento] '+suc.nombre+':', err);
             return [];
         }
     }
