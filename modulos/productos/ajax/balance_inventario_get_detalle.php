@@ -71,6 +71,7 @@ try {
     $rMeta = $conn->prepare("
         SELECT pp.id, pp.Nombre, pp.cantidad AS pp_cant,
                pp.id_unidad_producto, pp.id_producto_maestro,
+               pp.presentacion_receta,
                pm.Nombre AS maestro, u.nombre AS unidad
         FROM producto_presentacion pp
         LEFT JOIN producto_maestro pm ON pm.id = pp.id_producto_maestro
@@ -380,6 +381,14 @@ try {
     $rI1 = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phCodsCons)");
     $rI1->execute(!empty($allCodsConsumo) ? $allCodsConsumo : []);
     $ingsRel = $rI1->fetchAll(PDO::FETCH_COLUMN);
+
+    // Si el producto es simultáneamente base Y receta (ej: Granola 230gr con P.Básica=ON y P.Receta=ON),
+    // deshabilitar la búsqueda por CodIngrediente (P2/P3) para evitar que ventas de otras
+    // presentaciones del mismo ingrediente (ej: Granola oz) contaminen este consumo teórico.
+    // Solo se usará coincidencia directa por codporcion (P1).
+    if (!empty($prodMeta['presentacion_receta'])) {
+        $ingsRel = [];
+    }
 
     if (!empty($ingsRel) || !empty($allCodsConsumo)) {
         // 2. Pre-cargar cotizaciones para P2/P3

@@ -176,13 +176,16 @@ try {
         }
 
         // Consumo map — pasos A, B, C
-        $rMeta = $conn->prepare("SELECT pp.cantidad AS pp_cant, pp.id_unidad_producto, pp.id_producto_maestro, pp.Id_receta_producto FROM producto_presentacion pp WHERE pp.id = :id");
+        $rMeta = $conn->prepare("SELECT pp.cantidad AS pp_cant, pp.id_unidad_producto, pp.id_producto_maestro, pp.Id_receta_producto, pp.presentacion_receta FROM producto_presentacion pp WHERE pp.id = :id");
         $rMeta->execute([':id' => $targetId]);
         $prodMeta = $rMeta->fetch(PDO::FETCH_ASSOC);
         if (!$prodMeta) continue;
         $baseCant  = max((float)$prodMeta['pp_cant'], 0.001);
         $baseUnid  = (int)$prodMeta['id_unidad_producto'];
         $idMaestro = (int)$prodMeta['id_producto_maestro'];
+        // Flag: base+receta simultáneamente → desactivar P2/P3 en ventas para evitar
+        // que presentaciones hermanas del mismo ingrediente contaminen este consumo
+        $esProdBaseReceta[$targetId] = !empty($prodMeta['presentacion_receta']);
 
         foreach ($diccionario as $cod => $dic) {
             $mid = (int)$dic['id_maestro'];
@@ -345,6 +348,13 @@ try {
         $rI = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phCC)");
         $rI->execute($allCodsCons);
         $ingsRel = $rI->fetchAll(PDO::FETCH_COLUMN);
+
+        // Si el producto es simultáneamente base Y receta (presentacion_basica_inventario=1 Y presentacion_receta=1),
+        // deshabilitar búsqueda por CodIngrediente (P2/P3). Solo coincidencia directa por codporcion (P1).
+        // Evita que ventas de la Granola oz (mismo CodIngrediente) inflen el consumo de Granola 230gr.
+        if (!empty($esProdBaseReceta[$targetId])) {
+            $ingsRel = [];
+        }
 
         $cotP2P3 = []; $dbIng = [];
         if (!empty($ingsRel)) {
