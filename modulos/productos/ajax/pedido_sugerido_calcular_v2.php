@@ -945,7 +945,8 @@ try {
                        pp.id_unidad_producto  AS pp_uid,
                        ppd.Nombre             AS d_nombre,
                        ppd.presentacion       AS d_presentacion,
-                       ud.abreviado           AS d_unidad
+                       ud.abreviado           AS d_unidad,
+                       (pp.id = ppd.id)       AS es_mismo
                 FROM producto_presentacion pp
                 INNER JOIN producto_presentacion ppd
                        ON ppd.id_producto_maestro = pp.id_producto_maestro
@@ -954,8 +955,7 @@ try {
                       AND pp.id_producto_maestro IS NOT NULL
                 LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
                 WHERE pp.id IN ($phSin) AND pp.Activo = 'SI'
-                GROUP BY pp.id
-                ORDER BY ppd.id ASC
+                ORDER BY (pp.id = ppd.id) ASC, ppd.id ASC
             ");
             $stmtDA->execute(array_values($sinDF));
             foreach ($stmtDA->fetchAll(PDO::FETCH_ASSOC) as $row) {
