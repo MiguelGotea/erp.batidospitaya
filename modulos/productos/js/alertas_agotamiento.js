@@ -299,9 +299,9 @@
             /* Cargar sucursales solo una vez */
             if (!_sucursales.length) {
                 try {
-                    const rSuc = await fetch('ajax/configuracion_logistica_get_sucursales.php').then(r=>r.json());
+                    const rSuc = await fetch('ajax/configuracion_logistica_get_sucursales.php').then(r => r.json());
                     if (rSuc.success) _sucursales = rSuc.sucursales || [];
-                } catch(e) {}
+                } catch (e) {}
             }
 
             if (!_sucursales.length) {
@@ -312,12 +312,23 @@
                 return;
             }
 
-            /* Calcular todas las sucursales en PARALELO */
-            const resultados = await Promise.all(
-                _sucursales.map(s => _calcularSucursal(s, desde, hasta, corte, crecimiento))
-            );
+            /* Procesar SECUENCIALMENTE (una sucursal a la vez) para
+               evitar saturar el servidor con peticiones simultáneas a
+               pedido_sugerido_pronostico_v2.php → causa 504 en paralelo. */
+            const todasIncidencias = [];
+            const total = _sucursales.length;
+            const spinnerText = document.querySelector('#aa-spinner span');
 
-            _renderTabla(resultados.flat());
+            for (let i = 0; i < total; i++) {
+                const suc = _sucursales[i];
+                if (spinnerText) {
+                    spinnerText.textContent = `Analizando sucursal ${i + 1} de ${total}: ${suc.nombre}…`;
+                }
+                const inc = await _calcularSucursal(suc, desde, hasta, corte, crecimiento);
+                todasIncidencias.push(...inc);
+            }
+
+            _renderTabla(todasIncidencias);
 
         } catch (err) {
             console.error('[AlertasAgotamiento] Error general:', err);
@@ -328,6 +339,7 @@
             _calculando = false;
         }
     }
+
 
     /* ── Inicialización ──────────────────────────────────────── */
     function _init() {
