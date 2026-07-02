@@ -154,7 +154,10 @@ try {
             $mid = (int)$dic['id_maestro'];
             if ($dic['es_base'] && (int)$dic['pp_id'] === $targetId) {
                 $codMapConsumoAll[$targetId][$cod] = ['pp_id' => (int)$dic['pp_id'], 'pp_cant' => (float)$dic['pp_cant'], 'id_unid' => (int)$dic['pp_unid'], 'id_mae' => $mid, 'Id_receta_producto' => $dic['Id_receta_producto'], 'tipo' => 'directo'];
-            } elseif ($mid > 0 && isset($maestroToBase[$mid]) && $maestroToBase[$mid]['base_pp_id'] === $targetId) {
+            } elseif ($mid > 0 && !$dic['es_base'] && isset($maestroToBase[$mid]) && $maestroToBase[$mid]['base_pp_id'] === $targetId) {
+                // Paso B: presentación alternativa (NO base) del mismo maestro → mapea al base
+                // Se excluyen es_base=1 porque son presentaciones base hermanas con su propio kardex
+                // (ej: Granola oz y Granola 230gr comparten maestro pero son bases independientes)
                 $base = $maestroToBase[$mid];
                 $codMapConsumoAll[$targetId][$cod] = ['pp_id' => $base['base_pp_id'], 'pp_cant' => $base['base_cant'], 'id_unid' => $base['base_unid'], 'id_mae' => $mid, 'Id_receta_producto' => null, 'tipo' => 'auto'];
             }
