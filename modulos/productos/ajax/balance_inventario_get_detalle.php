@@ -104,28 +104,22 @@ try {
         SELECT pp.id, pp.id_unidad_producto AS unid, pp.cantidad AS cant, pp.id_producto_maestro AS mid, pp.Id_receta_producto
         FROM producto_presentacion pp
         WHERE pp.presentacion_basica_inventario=1 AND pp.Activo='SI'
-        ORDER BY pp.id ASC
+        ORDER BY pp.Nombre ASC
     ");
     $rMetaAll->execute();
     $maestroToBase = [];
     foreach ($rMetaAll->fetchAll(PDO::FETCH_ASSOC) as $pm) {
         $mid = (int) $pm['mid'];
         if ($mid > 0) {
+            // Priorizar el que NO es receta (insumo crudo). 
+            // Si tiene receta asignada (Id_receta_producto != 0 y no nulo), no sobreescribe al insumo puro.
             $esReceta = !empty($pm['Id_receta_producto']) && $pm['Id_receta_producto'] !== '0';
             
-            if (!isset($maestroToBase[$mid])) {
+            if (!isset($maestroToBase[$mid]) || !$esReceta) {
                 $maestroToBase[$mid] = [
                     'base_pp_id' => (int)$pm['id'], 
                     'base_unid'  => (int)$pm['unid'], 
-                    'base_cant'  => max((float)$pm['cant'], 0.001),
-                    'es_receta'  => $esReceta
-                ];
-            } elseif (!$esReceta && $maestroToBase[$mid]['es_receta']) {
-                $maestroToBase[$mid] = [
-                    'base_pp_id' => (int)$pm['id'], 
-                    'base_unid'  => (int)$pm['unid'], 
-                    'base_cant'  => max((float)$pm['cant'], 0.001),
-                    'es_receta'  => $esReceta
+                    'base_cant'  => max((float)$pm['cant'], 0.001)
                 ];
             }
         }
@@ -442,17 +436,8 @@ try {
             } elseif ($ci && isset($cotP2P3[$ci])) {
                 $p2 = $cotP2P3[$ci]['p2'];
                 $p3 = $cotP2P3[$ci]['p3'];
-                
-                $selectedCot = null;
-                if ($p2 && (isset($diccionario[$p2]) || isset($codMapConsumo[$p2]))) {
-                    $selectedCot = $p2;
-                } elseif ($p3 && (isset($diccionario[$p3]) || isset($codMapConsumo[$p3]))) {
-                    $selectedCot = $p3;
-                }
-                
-                if ($selectedCot && isset($codMapConsumo[$selectedCot])) {
-                    $mapeo = $codMapConsumo[$selectedCot];
-                }
+                if ($p2 && isset($codMapConsumo[$p2])) $mapeo = $codMapConsumo[$p2];
+                elseif ($p3 && isset($codMapConsumo[$p3])) $mapeo = $codMapConsumo[$p3];
             }
 
             if ($mapeo) {
@@ -531,7 +516,7 @@ try {
         }
     }
 
-    $response_data = [
+    echo json_encode([
         'ok'                     => true,
         'id_pp'                  => $idPP,
         'producto'               => $prodMeta,
@@ -549,9 +534,7 @@ try {
         'consumo_teorico_diario' => $consTeoDiario,
         'puntos_domingo'         => $puntosDomingo,
         'num_mapeos'             => count($codMapBalance)
-    ];
-    file_put_contents(__DIR__ . '/debug_balance.json', json_encode($response_data, JSON_PRETTY_PRINT));
-    echo json_encode($response_data, JSON_UNESCAPED_UNICODE);
+    ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);
