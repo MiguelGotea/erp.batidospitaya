@@ -176,25 +176,19 @@ try {
         }
 
         // Consumo map — pasos A, B, C
-        $rMeta = $conn->prepare("SELECT pp.cantidad AS pp_cant, pp.id_unidad_producto, pp.id_producto_maestro, pp.Id_receta_producto, pp.presentacion_receta FROM producto_presentacion pp WHERE pp.id = :id");
+        $rMeta = $conn->prepare("SELECT pp.cantidad AS pp_cant, pp.id_unidad_producto, pp.id_producto_maestro, pp.Id_receta_producto FROM producto_presentacion pp WHERE pp.id = :id");
         $rMeta->execute([':id' => $targetId]);
         $prodMeta = $rMeta->fetch(PDO::FETCH_ASSOC);
         if (!$prodMeta) continue;
         $baseCant  = max((float)$prodMeta['pp_cant'], 0.001);
         $baseUnid  = (int)$prodMeta['id_unidad_producto'];
         $idMaestro = (int)$prodMeta['id_producto_maestro'];
-        // Flag: base+receta simultáneamente → desactivar P2/P3 en ventas para evitar
-        // que presentaciones hermanas del mismo ingrediente contaminen este consumo
-        $esProdBaseReceta[$targetId] = !empty($prodMeta['presentacion_receta']);
 
         foreach ($diccionario as $cod => $dic) {
             $mid = (int)$dic['id_maestro'];
             if ($dic['es_base'] && (int)$dic['pp_id'] === $targetId) {
                 $codMapConsumoAll[$targetId][$cod] = ['pp_id' => (int)$dic['pp_id'], 'pp_cant' => (float)$dic['pp_cant'], 'id_unid' => (int)$dic['pp_unid'], 'id_mae' => $mid, 'Id_receta_producto' => $dic['Id_receta_producto'], 'tipo' => 'directo'];
-            } elseif ($mid > 0 && !$dic['es_base'] && isset($maestroToBase[$mid]) && $maestroToBase[$mid]['base_pp_id'] === $targetId) {
-                // Paso B: presentación alternativa (NO base) del mismo maestro → mapea al base
-                // Se excluyen es_base=1 porque son presentaciones base hermanas con su propio kardex
-                // (ej: Granola oz y Granola 230gr comparten maestro pero son bases independientes)
+            } elseif ($mid > 0 && isset($maestroToBase[$mid]) && $maestroToBase[$mid]['base_pp_id'] === $targetId) {
                 $base = $maestroToBase[$mid];
                 $codMapConsumoAll[$targetId][$cod] = ['pp_id' => $base['base_pp_id'], 'pp_cant' => $base['base_cant'], 'id_unid' => $base['base_unid'], 'id_mae' => $mid, 'Id_receta_producto' => null, 'tipo' => 'auto'];
             }
@@ -348,13 +342,6 @@ try {
         $rI = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phCC)");
         $rI->execute($allCodsCons);
         $ingsRel = $rI->fetchAll(PDO::FETCH_COLUMN);
-
-        // Si el producto es simultáneamente base Y receta (presentacion_basica_inventario=1 Y presentacion_receta=1),
-        // deshabilitar búsqueda por CodIngrediente (P2/P3). Solo coincidencia directa por codporcion (P1).
-        // Evita que ventas de la Granola oz (mismo CodIngrediente) inflen el consumo de Granola 230gr.
-        if (!empty($esProdBaseReceta[$targetId])) {
-            $ingsRel = [];
-        }
 
         $cotP2P3 = []; $dbIng = [];
         if (!empty($ingsRel)) {
