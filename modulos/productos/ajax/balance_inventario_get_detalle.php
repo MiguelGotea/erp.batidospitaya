@@ -436,8 +436,17 @@ try {
             } elseif ($ci && isset($cotP2P3[$ci])) {
                 $p2 = $cotP2P3[$ci]['p2'];
                 $p3 = $cotP2P3[$ci]['p3'];
-                if ($p2 && isset($codMapConsumo[$p2])) $mapeo = $codMapConsumo[$p2];
-                elseif ($p3 && isset($codMapConsumo[$p3])) $mapeo = $codMapConsumo[$p3];
+                
+                $selectedCot = null;
+                if ($p2 && (isset($diccionario[$p2]) || isset($codMapConsumo[$p2]))) {
+                    $selectedCot = $p2;
+                } elseif ($p3 && (isset($diccionario[$p3]) || isset($codMapConsumo[$p3]))) {
+                    $selectedCot = $p3;
+                }
+                
+                if ($selectedCot && isset($codMapConsumo[$selectedCot])) {
+                    $mapeo = $codMapConsumo[$selectedCot];
+                }
             }
 
             if ($mapeo) {

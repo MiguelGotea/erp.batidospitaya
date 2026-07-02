@@ -334,8 +334,10 @@ try {
             if ($cp && isset($cmc[$cp])) { $mapeo = $cmc[$cp]; $esP1 = true; }
             elseif ($ci && isset($cotP2P3[$ci])) {
                 $p2 = $cotP2P3[$ci]['p2']; $p3 = $cotP2P3[$ci]['p3'];
-                if ($p2 && isset($cmc[$p2])) $mapeo = $cmc[$p2];
-                elseif ($p3 && isset($cmc[$p3])) $mapeo = $cmc[$p3];
+                $selectedCot = null;
+                if ($p2 && (isset($diccionario[$p2]) || isset($cmc[$p2]))) $selectedCot = $p2;
+                elseif ($p3 && (isset($diccionario[$p3]) || isset($cmc[$p3]))) $selectedCot = $p3;
+                if ($selectedCot && isset($cmc[$selectedCot])) $mapeo = $cmc[$selectedCot];
             }
             if ($mapeo) {
                 $cantTotal = (float)$f['total']; $val = 0;
