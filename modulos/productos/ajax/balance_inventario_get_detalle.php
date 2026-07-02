@@ -378,10 +378,14 @@ try {
     $rI1->execute(!empty($allCodsConsumo) ? $allCodsConsumo : []);
     $ingsRel = $rI1->fetchAll(PDO::FETCH_COLUMN);
 
-    // Bloquear P2/P3 solo para productos "paquete" que apuntan a una BASE diferente
-    // (ej: Granola 230gr → Granola base). Productos que son su propia presentación
-    // control/despacho (cascadeMap apunta a sí mismos o no están en cascadeMap) conservan P2/P3.
-    $esRecetaTarget = isset($cascadeMap[$idPP]) && $cascadeMap[$idPP]['base_id'] !== $idPP;
+    // Bloquear P2/P3 si presentacion_receta=1 EXCEPTO cuando el producto
+    // está en cascadeMap apuntando a sí mismo (presentación receta=control=despacho).
+    $esRecetaFlag = false;
+    foreach ($diccionarioRaw as $ditem) {
+        if ((int)$ditem['pp_id'] === $idPP) { $esRecetaFlag = (bool)$ditem['es_receta']; break; }
+    }
+    $esRecetaTarget = $esRecetaFlag
+                   && !(isset($cascadeMap[$idPP]) && $cascadeMap[$idPP]['base_id'] === $idPP);
 
     if (!empty($ingsRel) || !empty($allCodsConsumo)) {
         // 2. Pre-cargar cotizaciones para P2/P3
