@@ -112,7 +112,7 @@ try {
         SELECT pp.id, pp.id_unidad_producto AS unid, pp.cantidad AS cant, pp.id_producto_maestro AS mid, pp.Id_receta_producto
         FROM producto_presentacion pp
         WHERE pp.presentacion_basica_inventario=1 AND pp.Activo='SI'
-        ORDER BY pp.Nombre ASC
+        ORDER BY pp.id ASC
     ");
     $rMB->execute();
     $maestroToBase = [];
@@ -120,11 +120,19 @@ try {
         $mid = (int) $pm['mid'];
         if ($mid > 0) {
             $esReceta = !empty($pm['Id_receta_producto']) && $pm['Id_receta_producto'] !== '0';
-            if (!isset($maestroToBase[$mid]) || !$esReceta) {
+            if (!isset($maestroToBase[$mid])) {
                 $maestroToBase[$mid] = [
                     'base_pp_id' => (int)$pm['id'], 
                     'base_unid'  => (int)$pm['unid'], 
-                    'base_cant'  => max((float)$pm['cant'], 0.001)
+                    'base_cant'  => max((float)$pm['cant'], 0.001),
+                    'es_receta'  => $esReceta
+                ];
+            } elseif (!$esReceta && $maestroToBase[$mid]['es_receta']) {
+                $maestroToBase[$mid] = [
+                    'base_pp_id' => (int)$pm['id'], 
+                    'base_unid'  => (int)$pm['unid'], 
+                    'base_cant'  => max((float)$pm['cant'], 0.001),
+                    'es_receta'  => $esReceta
                 ];
             }
         }
