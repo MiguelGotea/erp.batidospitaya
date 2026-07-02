@@ -3,6 +3,7 @@
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
 require_once '../../../core/database/conexion.php';
+require_once '_imagen_helpers.php';
 
 header('Content-Type: application/json');
 
@@ -50,8 +51,8 @@ try {
             throw new Exception("La imagen excede el tamaño máximo permitido de 50MB.");
         }
 
-        // Crear carpeta destino si no existe
-        $target_dir = "../../../../talento.batidospitaya/uploads/noticias/";
+        // Ruta absoluta real en Hostinger para talento.batidospitaya.com
+        $target_dir = '/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/noticias/';
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0755, true);
         }
@@ -65,6 +66,8 @@ try {
         $target_file = $target_dir . $filename;
 
         if (move_uploaded_file($file['tmp_name'], $target_file)) {
+            // Comprimir y convertir a WebP (fallback silencioso si GD no disponible)
+            $filename       = comprimirYConvertirWebP($target_file, 1920, 82);
             $portada_subida = $filename;
         } else {
             throw new Exception("Error al guardar la imagen de portada en el servidor.");
@@ -81,8 +84,8 @@ try {
 
         if ($portada_subida) {
             // Eliminar portada anterior física si existe
-            if ($foto_anterior && file_exists("../../../../talento.batidospitaya/uploads/noticias/" . $foto_anterior)) {
-                @unlink("../../../../talento.batidospitaya/uploads/noticias/" . $foto_anterior);
+            if ($foto_anterior && file_exists('/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/noticias/' . $foto_anterior)) {
+                @unlink('/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/noticias/' . $foto_anterior);
             }
             // Actualizar con nueva portada
             $stmt = $conn->prepare("UPDATE noticias_talento SET titulo = :titulo, categoria = :categoria, autor = :autor, fecha_publicacion = :fecha_publicacion, estado = :estado, resumen = :resumen, contenido = :contenido, imagen_principal = :imagen_principal WHERE id = :id");
@@ -117,8 +120,8 @@ try {
 
 } catch (Exception $e) {
     // Si falló el registro pero se subió la foto nueva, borrarla para no dejar basura
-    if (isset($portada_subida) && $portada_subida && file_exists("../../../../talento.batidospitaya/uploads/noticias/" . $portada_subida)) {
-        @unlink("../../../../talento.batidospitaya/uploads/noticias/" . $portada_subida);
+    if (isset($portada_subida) && $portada_subida && file_exists('/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/noticias/' . $portada_subida)) {
+        @unlink('/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/noticias/' . $portada_subida);
     }
     echo json_encode([
         'success' => false,

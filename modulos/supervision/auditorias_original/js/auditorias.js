@@ -156,24 +156,33 @@ function obtenerUrlDetalle(tipo, id) {
 function formatearFechaHora(fechaHora) {
     if (!fechaHora) return '-';
     
+    // Separar fecha y hora usando guiones, espacios, dos puntos o 'T' (para evitar conversiones de zona horaria por el navegador)
+    const partes = fechaHora.split(/[- :T]/);
+    if (partes.length < 3) return fechaHora;
+    
+    const anioStr = partes[0];
+    const mesIdx = parseInt(partes[1], 10) - 1;
+    const diaStr = partes[2].padStart(2, '0');
+    
     const mesesCortos = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    const fecha = new Date(fechaHora);
+    const mesStr = mesesCortos[mesIdx] || '???';
+    const anioCorto = anioStr.slice(-2);
     
-    const dia = String(fecha.getDate()).padStart(2, '0');
-    const mes = mesesCortos[fecha.getMonth()];
-    const anio = String(fecha.getFullYear()).slice(-2);
-    
-    let horas = fecha.getHours();
-    const minutos = String(fecha.getMinutes()).padStart(2, '0');
-    const periodo = horas >= 12 ? 'pm' : 'am';
-    
-    if (horas === 0) {
-        horas = 12;
-    } else if (horas > 12) {
-        horas = horas - 12;
+    if (partes.length >= 5 && partes[3] !== '') {
+        let horas = parseInt(partes[3], 10);
+        const minutos = partes[4].padStart(2, '0');
+        const periodo = horas >= 12 ? 'pm' : 'am';
+        
+        if (horas === 0) {
+            horas = 12;
+        } else if (horas > 12) {
+            horas = horas - 12;
+        }
+        
+        return `${diaStr}-${mesStr}-${anioCorto} ${horas}:${minutos} ${periodo}`;
+    } else {
+        return `${diaStr}-${mesStr}-${anioCorto}`;
     }
-    
-    return `${dia}-${mes}-${anio} ${horas}:${minutos} ${periodo}`;
 }
 
 // Capitalizar primera letra

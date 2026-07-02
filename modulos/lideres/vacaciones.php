@@ -916,15 +916,15 @@ function obtenerTiposFaltaConPorcentajes()
                                             <td>
                                                 <div class="action-buttons-cell">
                                                     <button type="button" class="btn-action-table btn-action-edit" onclick="mostrarModalEditarAprobar(
-                                                        '<?= $vacacion['ids_str'] ?>',
-                                                        '<?= htmlspecialchars(addslashes(trim($vacacion['operario_nombre'] . ' ' . $vacacion['operario_apellido']))) ?>',
-                                                        '<?= htmlspecialchars(addslashes($vacacion['sucursal_nombre'])) ?>',
-                                                        '<?= $vacacion['fecha_desde'] ?>',
-                                                        '<?= $vacacion['fecha_hasta'] ?>',
-                                                        '<?= $vacacion['tipo_falta'] ?>',
-                                                        '<?= htmlspecialchars(addslashes($vacacion['observaciones'] ?? '')) ?>',
-                                                        '<?= htmlspecialchars(addslashes($vacacion['observaciones_rrhh'] ?? '')) ?>',
-                                                        '<?= htmlspecialchars($vacacion['foto_path'] ?? '') ?>',
+                                                        <?= htmlspecialchars(json_encode($vacacion['ids_str']), ENT_QUOTES, 'UTF-8') ?>,
+                                                        <?= htmlspecialchars(json_encode(trim($vacacion['operario_nombre'] . ' ' . $vacacion['operario_apellido'])), ENT_QUOTES, 'UTF-8') ?>,
+                                                        <?= htmlspecialchars(json_encode($vacacion['sucursal_nombre']), ENT_QUOTES, 'UTF-8') ?>,
+                                                        <?= htmlspecialchars(json_encode($vacacion['fecha_desde']), ENT_QUOTES, 'UTF-8') ?>,
+                                                        <?= htmlspecialchars(json_encode($vacacion['fecha_hasta']), ENT_QUOTES, 'UTF-8') ?>,
+                                                        <?= htmlspecialchars(json_encode($vacacion['tipo_falta']), ENT_QUOTES, 'UTF-8') ?>,
+                                                        <?= htmlspecialchars(json_encode($vacacion['observaciones'] ?? ''), ENT_QUOTES, 'UTF-8') ?>,
+                                                        <?= htmlspecialchars(json_encode($vacacion['observaciones_rrhh'] ?? ''), ENT_QUOTES, 'UTF-8') ?>,
+                                                        <?= htmlspecialchars(json_encode($vacacion['foto_path'] ?? ''), ENT_QUOTES, 'UTF-8') ?>,
                                                         <?= number_format(isset($vacacion['cantidad_dias']) ? (float) $vacacion['cantidad_dias'] : 1.0, 2) ?>,
                                                         <?= (int) $vacacion['aprobado'] ?>
                                                     )">

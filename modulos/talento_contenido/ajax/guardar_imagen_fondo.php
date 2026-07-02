@@ -17,30 +17,15 @@ if (!tienePermiso('talento_contenido', 'editar', $usuario['CodNivelesCargos'])) 
 // En Hostinger los dos dominios tienen DocumentRoots separados, por lo que
 // la ruta relativa entre repos NO funciona en producción. Usamos la ruta
 // absoluta del servidor. En local (dev) el fallback relativo también se intenta.
-$rutasIntento = [
-    '/files/domains/talento.batidospitaya.com/public_html/uploads/fondos',
-    realpath(__DIR__ . '/../../../../talento.batidospitaya/uploads/fondos'),
-];
-$dirFondos = null;
-foreach ($rutasIntento as $ruta) {
-    if ($ruta && is_dir($ruta)) {
-        $dirFondos = $ruta;
-        break;
+// Ruta absoluta real en el servidor Hostinger para el dominio talento.batidospitaya.com.
+// NOTA: /files/domains/... es solo la URL del File Manager web, NO la ruta PHP real.
+$dirFondos = '/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/fondos';
+if (!is_dir($dirFondos)) {
+    if (!mkdir($dirFondos, 0755, true)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'No se puede crear el directorio de subida en el servidor.']);
+        exit();
     }
-}
-if (!$dirFondos) {
-    // Intentar crear con la ruta de Hostinger
-    $nuevaRuta = '/files/domains/talento.batidospitaya.com/public_html/uploads/fondos';
-    if (!mkdir($nuevaRuta, 0755, true)) {
-        // Fallback local
-        $nuevaRuta = __DIR__ . '/../../../../talento.batidospitaya/uploads/fondos';
-        if (!mkdir($nuevaRuta, 0755, true)) {
-            http_response_code(500);
-            echo json_encode(['error' => 'No se puede crear el directorio de subida. Verifica la ruta del servidor.']);
-            exit();
-        }
-    }
-    $dirFondos = realpath($nuevaRuta);
 }
 
 if (!isset($_FILES['imagen_fondo']) || $_FILES['imagen_fondo']['error'] !== UPLOAD_ERR_OK) {

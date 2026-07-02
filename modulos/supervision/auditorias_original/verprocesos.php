@@ -1,8 +1,10 @@
 <?php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
-require_once '../../../core/helpers/funciones.php'; // Antes llamaba a funciones.php de auditora
-require_once '../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditor�as, ahora llama al del core;
+require_once '../../../core/helpers/funciones.php'; 
+require_once '../../../core/database/conexion.php'; 
 
 //******************************Estándar para header******************************
 verificarAutenticacion();
@@ -76,139 +78,17 @@ $items_nombres = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ver Auditoría de Procesos</title>
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
+
+    <!-- Librerías Estándar ERP -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- Estilos Estándar ERP -->
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
+
     <style>
-        * {
-            font-family: 'Calibri', sans-serif;
-            font-size: clamp(11px, 2vw, 16px) !important;
-        }
-
-        body {
-            background-color: #F6F6F6;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 15px;
-            background-color: white;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 5px;
-            box-sizing: border-box;
-            margin: 1px auto;
-            flex-wrap: wrap;
-        }
-
-        .logo {
-            height: 50px;
-        }
-
-        .logo-container {
-            flex-shrink: 0;
-            margin-right: auto;
-        }
-
-        .buttons-container {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            flex-grow: 1;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-        .btn-agregar {
-            background-color: transparent;
-            color: #51B8AC;
-            border: 1px solid #51B8AC;
-            text-decoration: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            white-space: nowrap;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .btn-agregar.activo {
-            background-color: #51B8AC;
-            color: white;
-            font-weight: normal;
-        }
-
-        .btn-agregar:hover {
-            background-color: #0E544C;
-            color: white;
-            border-color: #0E544C;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background-color: #51B8AC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .btn-logout {
-            background: #51B8AC;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn-logout:hover {
-            background: #0E544C;
-        }
-
-        h1 {
-            color: black;
-            margin: 20px 0;
-            text-align: center;
-            width: 100%;
-        }
-
         .info-box {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -320,31 +200,6 @@ $items_nombres = [
         }
 
         @media (max-width: 768px) {
-            .header-container {
-                flex-direction: row;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .buttons-container {
-                position: static;
-                transform: none;
-                order: 3;
-                width: 100%;
-                justify-content: center;
-                margin-top: 10px;
-            }
-
-            .logo-container {
-                order: 1;
-                margin-right: 0;
-            }
-
-            .user-info {
-                order: 2;
-                margin-left: auto;
-            }
-
             .info-grid {
                 grid-template-columns: 1fr;
             }
@@ -353,66 +208,17 @@ $items_nombres = [
                 grid-template-columns: 1fr;
             }
         }
-
-        @media (max-width: 480px) {
-            .btn-agregar {
-                flex-grow: 1;
-                justify-content: center;
-                white-space: normal;
-                text-align: center;
-                padding: 8px 5px;
-            }
-
-            .user-info {
-                flex-direction: column;
-                align-items: flex-end;
-            }
-        }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
+    <?php echo renderMenuLateral($cargoOperario); ?>
 
-                <div class="buttons-container">
-                    <a href="index.php" class="btn-agregar <?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'activo' : '' ?>">
-                        <i class="fas fa-clipboard-check"></i> <span class="btn-text">Historial</span>
-                    </a>
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Ver Auditoría de Procesos'); ?>
 
-                    <?php if (tienePermiso('auditorias_desempeno', 'crear', $cargoOperario) || $esAdmin): ?>
-                        <a href="agregar.php" class="btn-agregar"><i class="fas fa-cash-register"></i> Auditoría Limpieza</a>
-                        <a href="agregarpersonal.php" class="btn-agregar"><i class="fas fa-wallet"></i> Auditoría Personal</a>
-                        <a href="agregarservicio.php" class="btn-agregar"><i class="fas fa-boxes"></i> Auditoría Servicio</a>
-                    <?php endif; ?>
-                </div>
-
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?= $esAdmin ?
-                            strtoupper(substr($usuario['nombre'], 0, 1)) :
-                            strtoupper(substr($usuario['Nombre'], 0, 1)) ?>
-                    </div>
-                    <div>
-                        <div>
-                            <?= $esAdmin ?
-                                htmlspecialchars($usuario['nombre']) :
-                                htmlspecialchars($usuario['Nombre'] . ' ' . $usuario['Apellido']) ?>
-                        </div>
-                        <small>
-                            <?= htmlspecialchars($cargoUsuario) ?>
-                        </small>
-                    </div>
-                    <a href="../../../index.php" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+            <div class="container-fluid p-3">
 
         <h1>Detalles de Auditoría de Procesos</h1>
 
@@ -495,7 +301,14 @@ $items_nombres = [
                 <i class="fas fa-arrow-left"></i> Volver al Historial
             </a>
         </div>
-    </div>
+
+            </div><!-- /.container-fluid -->
+        </div><!-- /.sub-container -->
+    </div><!-- /.main-container -->
+
+    <!-- jQuery y Bootstrap Bundle -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

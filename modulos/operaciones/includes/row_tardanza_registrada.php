@@ -14,7 +14,8 @@ $nombreCompleto = trim(
 
 $horariosInfo = obtenerInformacionHorariosTardanza(
     $tardanza['cod_operario'], 
-    $tardanza['fecha_tardanza']
+    $tardanza['fecha_tardanza'],
+    $tardanza['cod_sucursal']
 );
 ?>
 

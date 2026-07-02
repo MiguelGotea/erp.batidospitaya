@@ -69,7 +69,7 @@ try {
                 FROM auditoria_servicio asv 
                 JOIN sucursales s ON asv.cod_sucursal = s.codigo
                 UNION ALL
-                SELECT apr.id, apr.fecha AS fecha_hora, s.nombre as sucursal, apr.operario_nombre AS persona, (apr.porcentaje_cumplimiento / 20.0) AS promedio, 'proceso' AS tipo_auditoria 
+                SELECT apr.id, apr.created_at AS fecha_hora, s.nombre as sucursal, apr.operario_nombre AS persona, (apr.porcentaje_cumplimiento / 20.0) AS promedio, 'proceso' AS tipo_auditoria 
                 FROM auditoria_procesos apr 
                 JOIN sucursales s ON apr.sucursal_id = s.codigo
                 UNION ALL

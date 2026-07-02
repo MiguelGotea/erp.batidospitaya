@@ -94,11 +94,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $limpieza_insumos_1_4_5 = $_POST['limpieza_insumos_1_4_5'];
     $limpieza_insumos_1_4_6 = $_POST['limpieza_insumos_1_4_6'];
 
-    $promedio_exterior = $_POST['promedio_exterior'];
-    $promedio_interior = $_POST['promedio_interior'];
-    $promedio_equipo = $_POST['promedio_equipo'];
-    $promedio_insumos = $_POST['promedio_insumos'];
-    $promedio_general = $_POST['promedio_general'];
+    // Calcular promedios en el servidor (evita race condition con el confirm() de JS)
+    $calcular_promedio_bloque = function(array $valores) {
+        $total = 0; $count = 0;
+        foreach ($valores as $v) {
+            if (isset($v) && $v !== 'N/A' && is_numeric($v)) {
+                $total += (float)$v; $count++;
+            }
+        }
+        return $count > 0 ? round($total / $count, 2) : 0.00;
+    };
+
+    $vals_exterior = [];
+    for ($i = 1; $i <= 13; $i++) $vals_exterior[] = $_POST["limpieza_exterior_1_1_$i"] ?? 'N/A';
+    $promedio_exterior = $calcular_promedio_bloque($vals_exterior);
+
+    $vals_interior = [];
+    for ($i = 1; $i <= 14; $i++) $vals_interior[] = $_POST["limpieza_interior_1_2_$i"] ?? 'N/A';
+    $promedio_interior = $calcular_promedio_bloque($vals_interior);
+
+    $vals_equipo = [];
+    for ($i = 1; $i <= 13; $i++) $vals_equipo[] = $_POST["limpieza_equipo_1_3_$i"] ?? 'N/A';
+    $promedio_equipo = $calcular_promedio_bloque($vals_equipo);
+
+    $vals_insumos = [];
+    for ($i = 1; $i <= 6; $i++) $vals_insumos[] = $_POST["limpieza_insumos_1_4_$i"] ?? 'N/A';
+    $promedio_insumos = $calcular_promedio_bloque($vals_insumos);
+
+    // Promedio general: igual que el JS (media de todos los valores numéricos juntos)
+    $todos_vals = array_merge($vals_exterior, $vals_interior, $vals_equipo, $vals_insumos);
+    $promedio_general = $calcular_promedio_bloque($todos_vals);
 
     // Insertar los datos en la base de datos (sin fotos)
     $sql = "INSERT INTO auditoria (
@@ -898,6 +923,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Función para validar el formulario antes de enviarlo
         function validarFormulario() {
+            // Recalcular promedios antes de enviar (defensa extra contra race condition)
+            calcularPromedios();
+
             // Verificar que haya al menos una foto
             if (fotosArray.length === 0) {
                 alert("Por favor, capture al menos una foto antes de guardar.");

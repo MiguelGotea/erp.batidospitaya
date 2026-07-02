@@ -1,6 +1,8 @@
 <?php
 // ver_auditoria_promociones.php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php'; // Cambiado: anteriormente llamaba al auth de auditorías, ahora llama al auth del core
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/auth/auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/menu_lateral.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/core/layout/header_universal.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/core/permissions/permissions.php';
 // Antes llamaba a ../funciones.php de auditora
 // require_once 'config.php'; // Comentado por migración al core
@@ -74,22 +76,28 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ver Auditoría de Promociones - #<?php echo $id; ?></title>
     <link rel="icon" href="/core/assets/img/icon12.png" type="image/png">
+
+    <!-- Librerías Estándar ERP -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- Estilos Estándar ERP -->
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?php echo mt_rand(1, 10000); ?>">
+    <link rel="stylesheet" href="/core/assets/css/fab_button.css?v=<?php echo mt_rand(1, 10000); ?>">
+
+    <!-- CSS personalizado de la página -->
     <link rel="stylesheet" href="css/ver_auditoria_promociones.css?v=<?php echo mt_rand(1, 10000); ?>">
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="header-container">
-                <div class="logo-container">
-                    <img src="/core/assets/img/Logo.svg" alt="Batidos Pitaya" class="logo">
-                </div>
-                <a href="../index.php" class="btn-volver">
-                    <i class="fas fa-arrow-left"></i> Volver al Historial
-                </a>
-            </div>
-        </header>
+    <?php echo renderMenuLateral($cargoOperario); ?>
+
+    <div class="main-container">
+        <div class="sub-container">
+            <?php echo renderHeader($usuario, 'Auditoría de Promociones Combos Pitaya'); ?>
+
+            <div class="container-fluid p-3">
 
         <h1><i class="fas fa-tags"></i> Auditoría de Promociones Combos Pitaya</h1>
 
@@ -177,7 +185,14 @@ $fechaFormateada = date('d/m/Y H:i', strtotime($auditoria['fecha']));
                 <i class="fas fa-print"></i> Imprimir
             </button>
         </div>
-    </div>
+
+            </div><!-- /.container-fluid -->
+        </div><!-- /.sub-container -->
+    </div><!-- /.main-container -->
+
+    <!-- jQuery y Bootstrap Bundle -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

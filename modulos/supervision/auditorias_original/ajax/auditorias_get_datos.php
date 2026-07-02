@@ -1,6 +1,6 @@
 <?php
 // auditorias_get_datos.php
-require_once '../../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorías, ahora llama al del core;
+require_once '../../../../core/database/conexion.php'; // Cambiado: anteriormente llamaba al conexion de auditorï¿½as, ahora llama al del core;
 header('Content-Type: application/json');
 
 try {
@@ -94,7 +94,7 @@ try {
             JOIN sucursales s ON asv.cod_sucursal = s.codigo
             LEFT JOIN Operarios o ON asv.operario_id = o.CodOperario
             UNION ALL
-            SELECT ap.id, DATE_FORMAT(ap.fecha, '%Y-%m-%d %H:%i:%s') as fecha_hora, ap.sucursal_nombre as sucursal, 
+            SELECT ap.id, ap.created_at as fecha_hora, ap.sucursal_nombre as sucursal, 
                    ap.operario_nombre as persona, ap.porcentaje_cumplimiento AS promedio, 'procesos' AS tipo_auditoria,
                    ap.operario_id
             FROM auditoria_procesos ap

@@ -58,22 +58,13 @@ $version = mt_rand(1, 10000);
                                 <input type="number" class="form-control form-control-sm" id="filtroSemanaInv"
                                     placeholder="Ej: 538">
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-bold d-flex align-items-center gap-1">
-                                    <i class="bi bi-scissors text-warning" style="font-size:.8rem"></i>
-                                    Corte Para Pronóstico
-                                </label>
-                                <input type="number" class="form-control form-control-sm"
-                                    id="filtroSemanaCortePronostico" placeholder="Auto"
-                                    title="Semana cuyo inventario físico se usa como punto de partida del pronóstico. Por defecto: semana anterior.">
-                            </div>
-                            <div class="col-md-4 d-flex gap-2">
-                                <button class="btn btn-sm btn-primary-pitaya flex-grow-1" id="btnCalcular">
-                                    <i class="fas fa-calculator me-1"></i> Cargar y Calcular
+                            <div class="col-md-auto d-flex gap-2">
+                                <button class="btn btn-sm btn-primary-pitaya" id="btnCalcular" disabled>
+                                    <i class="fas fa-sync me-1"></i> Cargar
                                 </button>
                                 <?php if ($puedeEditar): ?>
-                                    <button class="btn btn-sm btn-success flex-grow-1" id="btnGuardarInventario"
-                                        style="display:none;">
+                                    <button class="btn btn-sm btn-success" id="btnGuardarInventario"
+                                        style="display:none;" disabled>
                                         <i class="fas fa-save me-1"></i> Guardar Inventario
                                     </button>
                                 <?php endif; ?>
@@ -94,7 +85,6 @@ $version = mt_rand(1, 10000);
                         class="alert alert-info py-2 px-3 small mb-2 d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center gap-3">
                             <span><i class="bi bi-info-circle me-1"></i> Mostrando inventario de la semana seleccionada.</span>
-                            <span id="noteReferenciaCalculo" class="text-muted border-start ps-3" style="font-size: 0.75rem;"></span>
                         </div>
                         <span id="labelRangoFechas" class="fw-bold"></span>
                     </div>
@@ -104,16 +94,10 @@ $version = mt_rand(1, 10000);
                                 <tr>
                                     <th rowspan="2" style="width:18%;">Producto</th>
                                     <th colspan="4" class="th-inventario">INVENTARIO SEMANAL</th>
-                                    <th class="th-pedido-sugerido">PEDIDO SUGERIDO (+B - A)</th>
-                                    <th colspan="3" class="th-pedido-dia">PEDIDO SUGERIDO EN CADA DÍA DE DESPACHO</th>
                                 </tr>
                                 <tr>
                                     <th colspan="2" class="th-inventario">En Unidades</th>
                                     <th colspan="2" class="th-inventario">(A) En Presentación Envío</th>
-                                    <th class="th-pedido-sugerido">Presentación de Envío</th>
-                                    <th class="th-pedido-dia">PEDIDO 1 (Si es quincenal solo 1 pedido)</th>
-                                    <th class="th-pedido-dia">PEDIDO 2</th>
-                                    <th class="th-pedido-dia">PEDIDO 3</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyInventario">
@@ -133,19 +117,18 @@ $version = mt_rand(1, 10000);
                 <div class="modal-header text-white"
                     style="background:var(--pitaya-dark,#2d3748);border-radius:15px 15px 0 0;">
                     <h5 class="modal-title d-flex align-items-center gap-2">
-                        <i class="bi bi-info-circle-fill"></i> Guía de Uso: Inventario Semanal y Pedido Sugerido
+                        <i class="bi bi-info-circle-fill"></i> Guía de Uso: Inventario Semanal
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
 
-                    <!-- Registro de inventario y lógica del pedido -->
+                    <!-- Registro de inventario -->
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <div class="p-3 bg-light rounded-3 border h-100">
-                                <h6 class="fw-bold small mb-2"><i class="bi bi-clipboard-check me-1"></i>1. Registro de
-                                    Inventario</h6>
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <h6 class="fw-bold small mb-2"><i class="bi bi-clipboard-check me-1"></i>1. Registro de Inventario</h6>
                                 <ul class="small text-muted mb-0">
                                     <li class="mb-1"><b>En Unidades:</b> Conteo físico en unidad básica de control
                                         (gramos, oz, unidades).</li>
@@ -153,23 +136,6 @@ $version = mt_rand(1, 10000);
                                         Si ingresas unidades, se calcula automáticamente ÷ factor de despacho.</li>
                                     <li class="mb-1">Al guardar, el sistema registra ambos valores en la BD para
                                         auditoría.</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="p-3 bg-light rounded-3 border h-100">
-                                <h6 class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i>2. Lógica del Pedido
-                                    Sugerido</h6>
-                                <ul class="small text-muted mb-0">
-                                    <li class="mb-1"><b>Cons. Semanal:</b> <code>Promedio + Desviación Estándar</code>
-                                        sobre la Ventana Activa.</li>
-                                    <li class="mb-1"><b>Stock Máximo (B):</b>
-                                        <code>Consumo Diario × (Ciclo + Desfase + Stock Mín)</code> ÷ Factor Despacho.
-                                    </li>
-                                    <li class="mb-1"><b>Pedido Sugerido:</b> <code>B − A</code> (en unidades de
-                                        despacho).</li>
-                                    <li class="mb-1">Los ceros al inicio/fin del periodo se excluyen automáticamente
-                                        (Ventana Activa).</li>
                                 </ul>
                             </div>
                         </div>
@@ -257,37 +223,6 @@ $version = mt_rand(1, 10000);
                         </div>
                     </div>
 
-                    <!-- Desglose de despachos -->
-                    <div>
-                        <h6 class="fw-bold text-dark small border-bottom pb-2">3. Desglose de Despachos (Pedidos 1, 2 y
-                            3)</h6>
-                        <p class="small text-muted">El pedido total se divide según la categoría y los porcentajes
-                            configurados por sucursal:</p>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered small">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Categorías</th>
-                                        <th>Lógica</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><b>B, D, F</b></td>
-                                        <td>Pedido 1 = % Congelados. Pedido 2 = el resto.</td>
-                                    </tr>
-                                    <tr>
-                                        <td><b>A, C</b></td>
-                                        <td>Pedido 1 = % Frescos. Pedido 2 = el resto.</td>
-                                    </tr>
-                                    <tr>
-                                        <td><b>E, G</b></td>
-                                        <td>100% en Pedido 1.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
 
                 </div>
                 <div class="modal-footer border-0">

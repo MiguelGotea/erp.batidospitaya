@@ -49,7 +49,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $presentacion_personal_2_6 = $_POST['presentacion_personal_2_6'];
     $presentacion_personal_2_7 = $_POST['presentacion_personal_2_7'];
 
-    $promedio_personal = $_POST['promedio_personal'];
+    // Calcular promedio_personal en el servidor (evita race condition con el confirm() de JS)
+    $promedio_personal_total = 0; $promedio_personal_count = 0;
+    for ($i = 1; $i <= 8; $i++) {
+        $v = $_POST["presentacion_personal_2_$i"] ?? 'N/A';
+        if ($v !== 'N/A' && is_numeric($v)) {
+            $promedio_personal_total += (float)$v;
+            $promedio_personal_count++;
+        }
+    }
+    $promedio_personal = $promedio_personal_count > 0 ? round($promedio_personal_total / $promedio_personal_count, 2) : 0.00;
 
     // Insertar los datos en la base de datos (sin fotos)
     $sql = "INSERT INTO auditoria_personal (
@@ -743,6 +752,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Función para validar el formulario antes de enviarlo
         function validarFormulario() {
+            // Recalcular promedio antes de enviar (defensa extra contra race condition)
+            calcularPromedios();
+
             var radiosPersonal = document.querySelectorAll('input[type="radio"][name^="presentacion_personal_2_"]:checked');
 
             if (radiosPersonal.length < <?php echo count($questions_personal); ?>) {

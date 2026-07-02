@@ -56,7 +56,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $evaluacion_servicio_4_13 = $_POST['evaluacion_servicio_4_13'];
     $evaluacion_servicio_4_14 = $_POST['evaluacion_servicio_4_14'];
     $evaluacion_servicio_4_15 = $_POST['evaluacion_servicio_4_15'];
-    $promedio_calificacion = $_POST['promedio_calificacion'];
+    // Calcular promedio_calificacion en el servidor (evita race condition con el confirm() de JS)
+    $promedio_cal_total = 0; $promedio_cal_count = 0;
+    for ($i = 1; $i <= 15; $i++) {
+        $v = $_POST["evaluacion_servicio_4_$i"] ?? 'N/A';
+        if ($v !== 'N/A' && is_numeric($v)) {
+            $promedio_cal_total += (float)$v;
+            $promedio_cal_count++;
+        }
+    }
+    $promedio_calificacion = $promedio_cal_count > 0 ? round($promedio_cal_total / $promedio_cal_count, 2) : 0.00;
 
     // Insertar los datos en la base de datos (sin fotos)
     $sql = "INSERT INTO auditoria_servicio (
@@ -631,6 +640,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Función para validar el formulario antes de enviarlo
         function validarFormulario() {
+            // Recalcular promedio antes de enviar (defensa extra contra race condition)
+            calcularPromedio();
+
             var radios = document.querySelectorAll('input[type="radio"][name^="evaluacion_servicio_4_"]:checked');
             if (radios.length < <?php echo count($questions_servicio); ?>) {
                 alert("Por favor, complete todas las preguntas antes de guardar.");
