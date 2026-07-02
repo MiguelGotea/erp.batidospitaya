@@ -525,7 +525,7 @@ try {
         }
     }
 
-    echo json_encode([
+    $response_data = [
         'ok'                     => true,
         'id_pp'                  => $idPP,
         'producto'               => $prodMeta,
@@ -543,7 +543,9 @@ try {
         'consumo_teorico_diario' => $consTeoDiario,
         'puntos_domingo'         => $puntosDomingo,
         'num_mapeos'             => count($codMapBalance)
-    ], JSON_UNESCAPED_UNICODE);
+    ];
+    file_put_contents(__DIR__ . '/debug_balance.json', json_encode($response_data, JSON_PRETTY_PRINT));
+    echo json_encode($response_data, JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);
