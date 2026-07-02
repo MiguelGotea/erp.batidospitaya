@@ -338,16 +338,13 @@ try {
         if (empty($cmc)) continue;
         $allCodsCons = array_keys($cmc);
 
-        // Bloquear P2/P3 si presentacion_receta=1 EXCEPTO cuando el producto
-        // está en cascadeMap apuntando a sí mismo (presentación receta=control=despacho).
-        // - Granola 230gr: receta=1, sin cascadeMap propio → BLOQUEADO
-        // - Electrolite/Maní: receta=1 con cascadeMap→self, o receta=0 → LIBRE
+        // P2/P3 se bloquea si el producto es receta=1 Y su CodIngrediente está
+        // compartido con otro producto no-receta (detectado en el loop cotP2P3).
         $esRecetaFlag = false;
         foreach ($diccionario as $ditem) {
             if ((int)$ditem['pp_id'] === $targetId) { $esRecetaFlag = (bool)$ditem['es_receta']; break; }
         }
-        $esRecetaTarget = $esRecetaFlag
-                       && !(isset($cascadeMap[$targetId]) && $cascadeMap[$targetId]['base_id'] === $targetId);
+        $esRecetaTarget = false;
         $phCC = implode(',', array_fill(0, count($allCodsCons), '?'));
 
         $rI = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phCC)");
@@ -361,9 +358,15 @@ try {
             $sCot->execute($ingsRel);
             foreach ($sCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
                 $ci = $c['CodIngrediente'];
+                $cod = (int)$c['CodCotizacion'];
+                if ($esRecetaFlag && !$esRecetaTarget && isset($diccionario[$cod])) {
+                    $d = $diccionario[$cod];
+                    if (!(bool)$d['es_receta'] && (int)$d['pp_id'] !== $targetId)
+                        $esRecetaTarget = true;
+                }
                 if (!isset($cotP2P3[$ci])) $cotP2P3[$ci] = ['p2' => null, 'p3' => null];
-                if ($c['Conversion']==1 && $c['Prioridad']==1 && !$cotP2P3[$ci]['p2']) $cotP2P3[$ci]['p2'] = (int)$c['CodCotizacion'];
-                if (!$cotP2P3[$ci]['p3']) $cotP2P3[$ci]['p3'] = (int)$c['CodCotizacion'];
+                if ($c['Conversion']==1 && $c['Prioridad']==1 && !$cotP2P3[$ci]['p2']) $cotP2P3[$ci]['p2'] = $cod;
+                if (!$cotP2P3[$ci]['p3']) $cotP2P3[$ci]['p3'] = $cod;
             }
             $sIng = $conn->prepare("SELECT CodIngrediente, Unidad FROM DBIngredientes WHERE CodIngrediente IN ($phI)");
             $sIng->execute($ingsRel);

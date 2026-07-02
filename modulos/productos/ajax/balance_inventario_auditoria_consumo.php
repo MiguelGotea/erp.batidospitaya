@@ -354,14 +354,13 @@ try {
     // Pre-cargar P2/P3 para tipo_mapeo badge
     $cotP2P3Map = [];
 
-    // Bloquear P2/P3 si presentacion_receta=1 EXCEPTO cuando el producto
-    // está en cascadeMap apuntando a sí mismo (presentación receta=control=despacho).
+    // P2/P3 se bloquea si el producto es receta=1 Y su CodIngrediente está
+    // compartido con otro producto no-receta (detectado en el loop cotP2P3Map).
     $esRecetaFlag = false;
     foreach ($dicMap as $row) {
         if ((int)$row['pp_id'] === $idPP) { $esRecetaFlag = (bool)$row['presentacion_receta']; break; }
     }
-    $esRecetaTarget = $esRecetaFlag
-                   && !(isset($cascadeMap[$idPP]) && $cascadeMap[$idPP]['base_id'] === $idPP);
+    $esRecetaTarget = false;
     if (!empty($codIngs)) {
         $phCot2 = implode(',', array_fill(0, count($codIngs), '?'));
         $stmtCot2 = $conn->prepare("
@@ -374,12 +373,20 @@ try {
         ");
         $stmtCot2->execute(array_values($codIngs));
         foreach ($stmtCot2->fetchAll(PDO::FETCH_ASSOC) as $ct) {
-            $ci = $ct['CodIngrediente'];
+            $ci  = $ct['CodIngrediente'];
+            $cod = (string)$ct['CodCotizacion'];
+            $codInt = (int)$ct['CodCotizacion'];
+            // Detectar sharing: otro producto no-receta con el mismo CodIngrediente
+            if ($esRecetaFlag && !$esRecetaTarget && isset($dicMap[$codInt])) {
+                $dm = $dicMap[$codInt];
+                if (!(bool)$dm['presentacion_receta'] && (int)$dm['pp_id'] !== $idPP)
+                    $esRecetaTarget = true;
+            }
             if (!isset($cotP2P3Map[$ci])) $cotP2P3Map[$ci] = ['p2' => null, 'p3' => null];
             if ($ct['Conversion'] == 1 && $ct['Prioridad'] == 1 && !$cotP2P3Map[$ci]['p2'])
-                $cotP2P3Map[$ci]['p2'] = (string)$ct['CodCotizacion'];
+                $cotP2P3Map[$ci]['p2'] = $cod;
             if (!$cotP2P3Map[$ci]['p3'])
-                $cotP2P3Map[$ci]['p3'] = (string)$ct['CodCotizacion'];
+                $cotP2P3Map[$ci]['p3'] = $cod;
         }
     }
 

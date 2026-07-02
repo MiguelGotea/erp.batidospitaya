@@ -378,14 +378,13 @@ try {
     $rI1->execute(!empty($allCodsConsumo) ? $allCodsConsumo : []);
     $ingsRel = $rI1->fetchAll(PDO::FETCH_COLUMN);
 
-    // Bloquear P2/P3 si presentacion_receta=1 EXCEPTO cuando el producto
-    // está en cascadeMap apuntando a sí mismo (presentación receta=control=despacho).
+    // P2/P3 se bloquea si el producto es receta=1 Y su CodIngrediente está
+    // compartido con otro producto no-receta (detectado en el loop cotP2P3).
     $esRecetaFlag = false;
     foreach ($diccionarioRaw as $ditem) {
         if ((int)$ditem['pp_id'] === $idPP) { $esRecetaFlag = (bool)$ditem['es_receta']; break; }
     }
-    $esRecetaTarget = $esRecetaFlag
-                   && !(isset($cascadeMap[$idPP]) && $cascadeMap[$idPP]['base_id'] === $idPP);
+    $esRecetaTarget = false;
 
     if (!empty($ingsRel) || !empty($allCodsConsumo)) {
         // 2. Pre-cargar cotizaciones para P2/P3
@@ -396,9 +395,15 @@ try {
             $stmtCot->execute($ingsRel);
             foreach ($stmtCot->fetchAll(PDO::FETCH_ASSOC) as $c) {
                 $ci = $c['CodIngrediente'];
+                $cod = (int)$c['CodCotizacion'];
+                if ($esRecetaFlag && !$esRecetaTarget && isset($diccionario[$cod])) {
+                    $d = $diccionario[$cod];
+                    if (!(bool)$d['es_receta'] && (int)$d['pp_id'] !== $idPP)
+                        $esRecetaTarget = true;
+                }
                 if (!isset($cotP2P3[$ci])) $cotP2P3[$ci] = ['p2' => null, 'p3' => null];
-                if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotP2P3[$ci]['p2']) $cotP2P3[$ci]['p2'] = (int)$c['CodCotizacion'];
-                if (!$cotP2P3[$ci]['p3']) $cotP2P3[$ci]['p3'] = (int)$c['CodCotizacion'];
+                if ($c['Conversion'] == 1 && $c['Prioridad'] == 1 && !$cotP2P3[$ci]['p2']) $cotP2P3[$ci]['p2'] = $cod;
+                if (!$cotP2P3[$ci]['p3']) $cotP2P3[$ci]['p3'] = $cod;
             }
             $stmtIng = $conn->prepare("SELECT CodIngrediente, Unidad FROM DBIngredientes WHERE CodIngrediente IN ($phI)");
             $stmtIng->execute($ingsRel);
