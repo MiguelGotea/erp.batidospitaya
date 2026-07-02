@@ -354,18 +354,10 @@ try {
     // Pre-cargar P2/P3 para tipo_mapeo badge
     $cotP2P3Map = [];
 
-    // Detectar si el producto tiene presentacion_receta=1 para desactivar P2/P3
-    // (evita absorber consumo de ingredientes compartidos con otras presentaciones).
-    $esRecetaTarget = false;
-    if (!empty($phC_list)) {
-        // Buscar el entry del diccionario cuyo pp_id === $idPP
-        foreach ($dicMap as $row) {
-            if ((int)$row['pp_id'] === $idPP) {
-                $esRecetaTarget = (bool)$row['presentacion_receta'];
-                break;
-            }
-        }
-    }
+    // Bloquear P2/P3 solo para productos "paquete" que apuntan a una BASE diferente
+    // (ej: Granola 230gr → Granola base). Productos que son su propia presentación
+    // control/despacho conservan P2/P3.
+    $esRecetaTarget = isset($cascadeMap[$idPP]) && $cascadeMap[$idPP]['base_id'] !== $idPP;
     if (!empty($codIngs)) {
         $phCot2 = implode(',', array_fill(0, count($codIngs), '?'));
         $stmtCot2 = $conn->prepare("

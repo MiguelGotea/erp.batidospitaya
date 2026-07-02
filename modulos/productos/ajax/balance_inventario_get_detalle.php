@@ -378,16 +378,10 @@ try {
     $rI1->execute(!empty($allCodsConsumo) ? $allCodsConsumo : []);
     $ingsRel = $rI1->fetchAll(PDO::FETCH_COLUMN);
 
-    // Detectar si el producto target es presentacion_receta=1
-    // (ej: Granola 230gr) para desactivar P2/P3 y evitar absorber
-    // consumo de ingredientes compartidos con otras presentaciones.
-    $esRecetaTarget = false;
-    foreach ($diccionarioRaw as $ditem) {
-        if ((int)$ditem['pp_id'] === $idPP) {
-            $esRecetaTarget = (bool)$ditem['es_receta'];
-            break;
-        }
-    }
+    // Bloquear P2/P3 solo para productos "paquete" que apuntan a una BASE diferente
+    // (ej: Granola 230gr → Granola base). Productos que son su propia presentación
+    // control/despacho (cascadeMap apunta a sí mismos o no están en cascadeMap) conservan P2/P3.
+    $esRecetaTarget = isset($cascadeMap[$idPP]) && $cascadeMap[$idPP]['base_id'] !== $idPP;
 
     if (!empty($ingsRel) || !empty($allCodsConsumo)) {
         // 2. Pre-cargar cotizaciones para P2/P3

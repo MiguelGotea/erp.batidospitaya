@@ -298,15 +298,11 @@ try {
         if (empty($cmc)) continue;
         $allCodsCons = array_keys($cmc);
 
-        // Si el producto es presentacion_receta=1 (ej: Granola 230gr),
-        // desactivar P2/P3 para evitar absorber consumo de ingredientes compartidos.
-        $esRecetaTarget = false;
-        foreach ($diccionario as $ditem) {
-            if ((int)$ditem['pp_id'] === $targetId) {
-                $esRecetaTarget = (bool)$ditem['es_receta'];
-                break;
-            }
-        }
+        // Bloquear P2/P3 solo para productos "paquete" que apuntan a una BASE diferente
+        // (ej: Granola 230gr → Granola base). Esto evita absorber consumo del ingrediente
+        // compartido (oz). Productos que SON su propia presentación control/despacho
+        // (cascadeMap apunta a sí mismos o no están en cascadeMap) conservan P2/P3.
+        $esRecetaTarget = isset($cascadeMap[$targetId]) && $cascadeMap[$targetId]['base_id'] !== $targetId;
         $phCC = implode(',', array_fill(0, count($allCodsCons), '?'));
 
         $rI = $conn->prepare("SELECT DISTINCT CodIngrediente FROM Cotizaciones WHERE CodCotizacion IN ($phCC)");
