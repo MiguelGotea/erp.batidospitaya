@@ -3,6 +3,7 @@
 require_once '../../../core/auth/auth.php';
 require_once '../../../core/permissions/permissions.php';
 require_once '../../../core/database/conexion.php';
+require_once '_imagen_helpers.php';
 
 header('Content-Type: application/json');
 
@@ -35,8 +36,8 @@ try {
         throw new Exception("La imagen excede el tamaño máximo permitido de 50MB.");
     }
 
-    // Crear carpeta destino si no existe
-    $target_dir = "../../../../talento.batidospitaya/uploads/noticias/galeria/";
+    // Ruta absoluta real en Hostinger para talento.batidospitaya.com
+    $target_dir = '/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/noticias/galeria/';
     if (!is_dir($target_dir)) {
         mkdir($target_dir, 0755, true);
     }
@@ -50,6 +51,8 @@ try {
     $target_file = $target_dir . $filename;
 
     if (move_uploaded_file($file['tmp_name'], $target_file)) {
+        // Comprimir y convertir a WebP (fallback silencioso si GD no disponible)
+        $filename = comprimirYConvertirWebP($target_file, 1280, 82);
         // Insertar en base de datos
         $stmt = $conn->prepare("INSERT INTO noticias_fotos_talento (noticia_id, ruta_foto, descripcion, orden) VALUES (:noticia_id, :ruta_foto, :descripcion, :orden)");
         $stmt->bindValue(':noticia_id', $noticia_id, PDO::PARAM_INT);

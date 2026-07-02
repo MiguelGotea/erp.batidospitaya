@@ -345,7 +345,13 @@ function obtenerOperariosSucursalEnRango($codSucursal, $fechaDesde, $fechaHasta)
 /**
  * Obtiene información de horarios programados y marcados para una tardanza específica
  */
-function obtenerInformacionHorariosTardanza($codOperario, $fechaTardanza)
+/**
+ * @param int         $codOperario
+ * @param string      $fechaTardanza
+ * @param int|null    $codSucursal   Cuando se provee, filtra horario y marcación por sucursal
+ *                                   (imprescindible cuando el colaborador tiene doble jornada en el mismo día).
+ */
+function obtenerInformacionHorariosTardanza($codOperario, $fechaTardanza, $codSucursal = null)
 {
     global $conn;
 
@@ -358,16 +364,27 @@ function obtenerInformacionHorariosTardanza($codOperario, $fechaTardanza)
     ];
 
     try {
-        // 1. Obtener horario programado
+        // 1. Obtener horario programado (filtrando por sucursal si está disponible)
         $semana = obtenerSemanaPorFecha($fechaTardanza);
         if ($semana) {
-            $stmt = $conn->prepare("
-                SELECT * FROM HorariosSemanalesOperaciones
-                WHERE cod_operario = ? 
-                AND id_semana_sistema = ?
-                LIMIT 1
-            ");
-            $stmt->execute([$codOperario, $semana['id']]);
+            if ($codSucursal !== null) {
+                $stmt = $conn->prepare("
+                    SELECT * FROM HorariosSemanalesOperaciones
+                    WHERE cod_operario = ?
+                    AND id_semana_sistema = ?
+                    AND cod_sucursal = ?
+                    LIMIT 1
+                ");
+                $stmt->execute([$codOperario, $semana['id'], $codSucursal]);
+            } else {
+                $stmt = $conn->prepare("
+                    SELECT * FROM HorariosSemanalesOperaciones
+                    WHERE cod_operario = ?
+                    AND id_semana_sistema = ?
+                    LIMIT 1
+                ");
+                $stmt->execute([$codOperario, $semana['id']]);
+            }
             $horario = $stmt->fetch();
 
             if ($horario) {
@@ -387,15 +404,28 @@ function obtenerInformacionHorariosTardanza($codOperario, $fechaTardanza)
             }
         }
 
-        // 2. Obtener marcaciones
-        $stmt = $conn->prepare("
-            SELECT hora_ingreso, hora_salida 
-            FROM marcaciones 
-            WHERE CodOperario = ? 
-            AND fecha = ?
-            LIMIT 1
-        ");
-        $stmt->execute([$codOperario, $fechaTardanza]);
+        // 2. Obtener marcaciones (filtrando por sucursal si está disponible para evitar
+        //    tomar la marcación de otra sucursal cuando el colaborador tiene doble jornada)
+        if ($codSucursal !== null) {
+            $stmt = $conn->prepare("
+                SELECT hora_ingreso, hora_salida
+                FROM marcaciones
+                WHERE CodOperario = ?
+                AND fecha = ?
+                AND sucursal_codigo = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$codOperario, $fechaTardanza, $codSucursal]);
+        } else {
+            $stmt = $conn->prepare("
+                SELECT hora_ingreso, hora_salida
+                FROM marcaciones
+                WHERE CodOperario = ?
+                AND fecha = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$codOperario, $fechaTardanza]);
+        }
         $marcacion = $stmt->fetch();
 
         if ($marcacion) {
@@ -2103,6 +2133,7 @@ function contarTardanzasReportadas($codOperario, $codSucursal, $fechaDesde, $fec
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+    <link rel="stylesheet" href="/core/assets/css/global_tools.css?v=<?= time() ?>">
     <link rel="stylesheet" href="css/tardanzas_manual.css?v=<?= time() ?>">
     <!-- Library for HEIC support -->
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>

@@ -51,18 +51,6 @@
 }
 
 
-.ped-sugerido {
-    background-color: rgba(81, 184, 172, 0.1);
-    color: #0E544C;
-}
-
-.ped-1, .ped-2, .ped-3 {
-    font-weight: 500;
-}
-
-.ped-1 { color: #2c7be5; }
-.ped-2 { color: #f6c343; }
-.ped-3 { color: #6e84a3; }
 
 .table-dark td {
     background-color: #f8f9fa !important;
@@ -113,44 +101,4 @@
     font-weight: bold;
 }
 
-.th-pedido-sugerido {
-    background-color: #f9cb9c !important;
-    color: #333 !important;
-    font-weight: bold;
-}
 
-.th-pedido-dia {
-    background-color: #fff2cc !important;
-    color: #333 !important;
-    font-weight: bold;
-}
-
-/* ── Columna Stock Pronóstico ──────────────────────────────── */
-.th-pronostico {
-    background: linear-gradient(135deg, #1a6b62 0%, #0E544C 100%) !important;
-    color: #fff !important;
-    font-weight: bold;
-    font-size: 0.78rem;
-    text-align: center;
-    vertical-align: middle !important;
-    border-left: 3px solid #51B8AC !important;
-    border-right: 3px solid #51B8AC !important;
-    min-width: 90px;
-}
-
-.th-pronostico .bi-graph-up-arrow {
-    animation: pulse-pron 2s infinite;
-}
-
-@keyframes pulse-pron {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.55; }
-}
-
-/* Celda pronóstico — borde sutil para distinguirla */
-.tabla-inventario tbody td.bg-light:has(span.text-danger),
-.tabla-inventario tbody td.bg-light:has(span.text-warning),
-.tabla-inventario tbody td.bg-light:has(span.text-success) {
-    border-left: 2px solid rgba(81, 184, 172, 0.3);
-    border-right: 2px solid rgba(81, 184, 172, 0.3);
-}

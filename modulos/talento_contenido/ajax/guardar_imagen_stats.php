@@ -13,30 +13,15 @@ if (!tienePermiso('talento_contenido', 'editar', $usuario['CodNivelesCargos'])) 
     exit();
 }
 
-// Ruta física donde se almacenará la imagen de los indicadores.
-// En Hostinger los dominios tienen rutas absolutas separadas.
-$rutasIntento = [
-    '/files/domains/talento.batidospitaya.com/public_html/uploads/nosotros',
-    realpath(__DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros'),
-];
-$dirNosotros = null;
-foreach ($rutasIntento as $ruta) {
-    if ($ruta && is_dir($ruta)) {
-        $dirNosotros = $ruta;
-        break;
+// Ruta absoluta real en el servidor Hostinger para el dominio talento.batidospitaya.com.
+// NOTA: /files/domains/... es solo la URL del File Manager web, NO la ruta PHP real.
+$dirNosotros = '/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/nosotros';
+if (!is_dir($dirNosotros)) {
+    if (!mkdir($dirNosotros, 0755, true)) {
+        http_response_code(500);
+        echo json_encode(['error' => 'No se puede crear el directorio de subida en el servidor.']);
+        exit();
     }
-}
-if (!$dirNosotros) {
-    $nuevaRuta = '/files/domains/talento.batidospitaya.com/public_html/uploads/nosotros';
-    if (!mkdir($nuevaRuta, 0755, true)) {
-        $nuevaRuta = __DIR__ . '/../../../../talento.batidospitaya/uploads/nosotros';
-        if (!mkdir($nuevaRuta, 0755, true)) {
-            http_response_code(500);
-            echo json_encode(['error' => 'No se puede crear el directorio de subida.']);
-            exit();
-        }
-    }
-    $dirNosotros = realpath($nuevaRuta);
 }
 
 if (!isset($_FILES['imagen_stats_nosotros']) || $_FILES['imagen_stats_nosotros']['error'] !== UPLOAD_ERR_OK) {

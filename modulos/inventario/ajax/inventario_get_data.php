@@ -27,7 +27,6 @@ $codSucursal        = $_GET['cod_sucursal'] ?? '';
 $numSemanaInv       = isset($_GET['semana_inv'])              ? (int)$_GET['semana_inv']              : 0;
 $numDesde           = isset($_GET['semana_desde'])            ? (int)$_GET['semana_desde']            : 0;
 $numHasta           = isset($_GET['semana_hasta'])            ? (int)$_GET['semana_hasta']            : 0;
-$semCortePron       = isset($_GET['semana_corte_pronostico']) ? (int)$_GET['semana_corte_pronostico'] : max(1, $numSemanaInv - 1);
 
 if (empty($codSucursal) || !$numSemanaInv) {
     echo json_encode(['ok' => false, 'msg' => 'Sucursal y semana de inventario requeridas.']);
@@ -87,6 +86,7 @@ try {
         SELECT id_producto_presentacion, cantidad_unidades, cantidad_presentacion
         FROM inventario_semanal
         WHERE cod_sucursal = ? AND fecha_inventario BETWEEN ? AND ?
+        ORDER BY fecha_inventario ASC
     ");
     $stmtInv->execute([$codSucursal, $semInv['fecha_inicio'], $semInv['fecha_fin']]);
     $inventarioSemana = [];
@@ -288,7 +288,6 @@ try {
         'capacidad_c'            => null,
         'sum_smax_b'             => 0,
         'porcentajes'            => $configPct,
-        'semana_corte_pronostico'=> $semCortePron,
         'productos'              => $productos,
     ]);
 } catch (Exception $e) {

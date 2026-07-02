@@ -3,13 +3,19 @@
        son 100% del backend (inventario_get_data.php)
    ============================================================ */
 let semanaActual = 0;
+let filasModificadas = new Set();
 
 $(document).ready(function () {
     cargarSucursales();
     establecerSemanasDefecto();
+
+    // Botón Cargar: deshabilitado por defecto, se habilita al cambiar filtros
+    $('#filtroSucursal, #filtroSemanaInv').on('change input', function () {
+        $('#btnCalcular').prop('disabled', false);
+    });
+
     $('#btnCalcular').on('click', cargarDatosInventario);
     $('#btnGuardarInventario').on('click', guardarInventario);
-    $('#filtroSemanaInv').on('input change', actualizarNotaReferencia);
 });
 
 /* ── semana por defecto ───────────────────────────────────── */
@@ -18,21 +24,9 @@ function establecerSemanasDefecto() {
         if (!res.ok) return;
         semanaActual = parseInt(res.semana);
         $('#filtroSemanaInv').val(semanaActual);
-        // Default: corte = semana anterior
-        $('#filtroSemanaCortePronostico').val(semanaActual - 1);
-        actualizarNotaReferencia();
+        // El cambio de valor por JS no dispara 'input', así que habilitamos manualmente
+        $('#btnCalcular').prop('disabled', false);
     });
-}
-
-function actualizarNotaReferencia() {
-    const semInv = parseInt($('#filtroSemanaInv').val());
-    if (semInv) {
-        const semDesde = semInv - 5;
-        const semHasta = semInv - 1;
-        $('#noteReferenciaCalculo').html(`<i class="bi bi-calculator me-1"></i> Ref. cálculo stock mín/máx sugerido: Semanas <strong>${semDesde}</strong> a <strong>${semHasta}</strong>`);
-    } else {
-        $('#noteReferenciaCalculo').text('');
-    }
 }
 
 /* ── lista de sucursales ──────────────────────────────────── */
@@ -45,27 +39,21 @@ function cargarSucursales() {
     });
 }
 
-/* ── obtener y calcular ───────────────────────────────────── */
+/* ── cargar datos ─────────────────────────────────────────── */
 function cargarDatosInventario() {
     const sucursal = $('#filtroSucursal').val();
     const semInv = parseInt($('#filtroSemanaInv').val());
-    const semCorte = parseInt($('#filtroSemanaCortePronostico').val()) || (semInv - 1);
 
-    // El rango ahora es automático: 5 semanas hacia atrás desde la semana de inventario
     const semDesde = semInv - 5;
     const semHasta = semInv - 1;
-    actualizarNotaReferencia();
 
     if (!sucursal || !semInv) {
         Swal.fire('Atención', 'Seleccione sucursal y semana de inventario.', 'warning');
         return;
     }
 
-    // Sincronizar corte con semana_inv si el usuario no lo editó aún
-    if (!$('#filtroSemanaCortePronostico').val()) {
-        $('#filtroSemanaCortePronostico').val(semInv - 1);
-    }
-
+    // Deshabilitar el botón mientras carga (indica que ya se aplicó este filtro)
+    $('#btnCalcular').prop('disabled', true);
     $('#loader').show();
     $('#tablaInventarioContainer').hide();
     $('#btnGuardarInventario').hide();
@@ -73,21 +61,24 @@ function cargarDatosInventario() {
     $.ajax({
         url: 'ajax/inventario_get_data.php',
         method: 'GET',
-        data: { cod_sucursal: sucursal, semana_inv: semInv, semana_desde: semDesde, semana_hasta: semHasta, semana_corte_pronostico: semCorte },
+        data: { cod_sucursal: sucursal, semana_inv: semInv, semana_desde: semDesde, semana_hasta: semHasta },
         success: function (res) {
             $('#loader').hide();
-            if (!res.ok) return Swal.fire('Error', res.msg, 'error');
+            if (!res.ok) {
+                // Re-habilitar para que pueda reintentar
+                $('#btnCalcular').prop('disabled', false);
+                return Swal.fire('Error', res.msg, 'error');
+            }
 
-            // Actualizar label del corte en el encabezado de la tabla
-            const corteUsado = res.semana_corte_pronostico || semCorte;
-            $('#labelCortePronostico').text(`Corte: ${corteUsado}`);
+            // Resetear seguimiento de modificaciones
+            filasModificadas = new Set();
 
             renderizarTabla(res, semInv);
             $('#tablaInventarioContainer').show();
 
             // Solo mostramos botón guardar si la semana es actual o futura
             if (semInv >= semanaActual) {
-                $('#btnGuardarInventario').show();
+                $('#btnGuardarInventario').show().prop('disabled', true);
             } else {
                 $('#btnGuardarInventario').hide();
             }
@@ -97,6 +88,8 @@ function cargarDatosInventario() {
         },
         error: function () {
             $('#loader').hide();
+            // Re-habilitar para que pueda reintentar
+            $('#btnCalcular').prop('disabled', false);
             Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
         }
     });
@@ -138,7 +131,7 @@ function renderizarTabla(res, semInv) {
             const labelGrupo = cat !== '—' ? `${cat} — ${nomCat}` : nomCat;
             tbody.append(`
                 <tr class="table-light">
-                    <td colspan="12" class="fw-bold py-2 ps-3" style="background-color: #e9ecef; color: #495057; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
+                    <td colspan="5" class="fw-bold py-2 ps-3" style="background-color: #e9ecef; color: #495057; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
                         ${labelGrupo}
                     </td>
                 </tr>
@@ -150,22 +143,11 @@ function renderizarTabla(res, semInv) {
         const invPres = p._inv_pres !== null && p._inv_pres !== undefined ? p._inv_pres : '';
         const invUnid = p._inv_unidades !== null && p._inv_unidades !== undefined ? p._inv_unidades : '';
 
-        // Pedido sugerido
-        const pedidoHtml = p.pedido_sugerido !== null
-            ? (p.pedido_sugerido <= 0
-                ? '<span class="badge bg-success">No pedir</span>'
-                : `<strong class="text-primary">${fmt(p.pedido_sugerido)}</strong>`)
-            : '<span class="text-muted small">—</span>';
-
         const readonlyAttr = esSoloLectura ? 'readonly' : '';
         const despFactor = p.despacho_factor ? parseFloat(p.despacho_factor) : 0;
-        const invPresNum = invPres !== '' ? parseFloat(invPres) : null;
-
-
 
         tbody.append(`
             <tr data-id="${idPP}" data-cat="${cat}"
-                data-smax="${p.stock_max_final ?? ''}"
                 data-cant-pres="${p.cant_pres || 1}"
                 data-despacho-factor="${despFactor}"
                 data-despacho-unidad="${p.despacho_unidad ?? ''}">
@@ -181,54 +163,22 @@ function renderizarTabla(res, semInv) {
                 <td class="small text-muted">
                     ${p.despacho_nombre ? p.despacho_nombre : ''}
                 </td>
-                <td class="col-sug">${pedidoHtml}</td>
-                <td class="bg-highlight-p1">${p.p1 !== null ? fmt(p.p1) : '—'}</td>
-                <td class="bg-highlight-p2">${p.p2 !== null ? fmt(p.p2) : '—'}</td>
-                <td class="text-muted">—</td>
             </tr>
         `);
     }); // end forEach productos
 
-    // Recalcular pedido en tiempo real al editar inventario
-    $('#tbodyInventario').off('input').on('input', '.input-inv-pres, .input-inv-unidades', function (e) {
-        recalcularFila($(this).closest('tr'), e.target, res.porcentajes);
+    // Rastrear modificaciones para habilitar el botón Guardar
+    $('#tbodyInventario').off('input').on('input', '.input-inv-pres, .input-inv-unidades', function () {
+        const idFila = $(this).closest('tr').data('id');
+        if (idFila !== undefined) filasModificadas.add(idFila);
+        actualizarEstadoGuardar();
     });
 }
 
-/* ── recalcular una fila al cambiar inventario ────────────── */
-function recalcularFila(tr, target, porcentajes) {
-    const sMax = parseFloat(tr.data('smax')) || 0;
-    const cantPPFactor = parseFloat(tr.data('cant-pres')) || 1;
-    const cat = tr.data('cat');
-
-    let invPres = parseFloat(tr.find('.input-inv-pres').val()) || 0;
-
-    // Las columnas son independientes, no se calcula una desde la otra.
-    // Solo leemos el valor actual de la presentación para el cálculo del pedido.
-
-    const pedido = Math.max(0, sMax - invPres);
-
-    // Desglose P1 / P2
-    const pctCong = parseFloat(porcentajes.porcentaje_congelados) || 0;
-    const pctFresc = parseFloat(porcentajes.porcentaje_frescos) || 0;
-    let p1 = 0, p2 = 0;
-    if (['B', 'D', 'F'].includes(cat)) {
-        p1 = pedido * pctCong; p2 = pedido - p1;
-    } else if (['A', 'C'].includes(cat)) {
-        p1 = pedido * pctFresc; p2 = pedido - p1;
-    } else {
-        p1 = pedido;
-    }
-
-    const pedidoHtml = pedido <= 0
-        ? '<span class="badge bg-success">No pedir</span>'
-        : `<strong class="text-primary">${fmt(pedido)}</strong>`;
-
-    tr.find('.col-sug').html(pedidoHtml);
-    tr.find('.bg-highlight-p1').text(fmt(p1));
-    tr.find('.bg-highlight-p2').text(fmt(p2));
-
-
+/* ── habilitar / deshabilitar botón guardar ───────────────── */
+function actualizarEstadoGuardar() {
+    const hayModificaciones = filasModificadas.size > 0;
+    $('#btnGuardarInventario').prop('disabled', !hayModificaciones);
 }
 
 /* ── guardar inventario ───────────────────────────────────── */
@@ -239,12 +189,19 @@ function guardarInventario() {
 
     $('#tbodyInventario tr').each(function () {
         const tr = $(this);
+        const idPP = tr.data('id');
+        if (!idPP || !filasModificadas.has(idPP)) return; // solo modificados!
         items.push({
-            id_producto_presentacion: tr.data('id'),
+            id_producto_presentacion: idPP,
             cantidad_unidades: parseFloat(tr.find('.input-inv-unidades').val()) || 0,
             cantidad_presentacion: parseFloat(tr.find('.input-inv-pres').val()) || 0
         });
     });
+
+    if (items.length === 0) {
+        Swal.fire('Atención', 'No hay modificaciones para guardar.', 'info');
+        return;
+    }
 
     Swal.fire({
         title: '¿Guardar Inventario?',
@@ -252,7 +209,9 @@ function guardarInventario() {
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Sí, guardar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#0E544C',
+        cancelButtonColor: '#6c757d'
     }).then(result => {
         if (!result.isConfirmed) return;
         $.ajax({
@@ -261,8 +220,14 @@ function guardarInventario() {
             contentType: 'application/json',
             data: JSON.stringify({ cod_sucursal: sucursal, semana_inv: semInv, items }),
             success: function (res) {
-                if (res.ok) Swal.fire('Guardado', res.msg, 'success');
-                else Swal.fire('Error', res.msg, 'error');
+                if (res.ok) {
+                    // Resetear modificaciones y deshabilitar el botón guardar
+                    filasModificadas = new Set();
+                    actualizarEstadoGuardar();
+                    Swal.fire('Guardado', res.msg, 'success');
+                } else {
+                    Swal.fire('Error', res.msg, 'error');
+                }
             }
         });
     });

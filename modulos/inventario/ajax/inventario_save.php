@@ -39,20 +39,26 @@ try {
     $sem = $stmtS->fetch();
     if (!$sem) throw new Exception("Semana de inventario inválida.");
     
-    $fechaParaRegistro = $sem['fecha_inicio']; // Usamos el inicio de semana como fecha ancla
+    // Determinar la fecha para el registro: hoy (si cae dentro de la semana) o el fin de semana
+    $hoy = date('Y-m-d');
+    if ($hoy >= $sem['fecha_inicio'] && $hoy <= $sem['fecha_fin']) {
+        $fechaParaRegistro = $hoy;
+    } else {
+        $fechaParaRegistro = $sem['fecha_fin'];
+    }
 
     $conn->beginTransaction();
 
-    // 2. Limpiar inventario previo de esa semana y sucursal
-    $stmtDel = $conn->prepare("DELETE FROM inventario_semanal WHERE cod_sucursal = ? AND fecha_inventario BETWEEN ? AND ?");
-    $stmtDel->execute([$codSucursal, $sem['fecha_inicio'], $sem['fecha_fin']]);
-
-    // 3. Insertar nuevos registros
+    // Guardar usando ON DUPLICATE KEY UPDATE por día
     $stmt = $conn->prepare("
         INSERT INTO inventario_semanal (
             cod_sucursal, id_producto_presentacion, cantidad_unidades, 
             cantidad_presentacion, fecha_inventario, creado_por
         ) VALUES (?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            cantidad_unidades = VALUES(cantidad_unidades),
+            cantidad_presentacion = VALUES(cantidad_presentacion),
+            modificado_por = ?
     ");
 
     $count = 0;
@@ -63,7 +69,8 @@ try {
             $it['cantidad_unidades'] ?: 0,
             $it['cantidad_presentacion'] ?: 0,
             $fechaParaRegistro,
-            $idOperario
+            $idOperario,
+            $idOperario // para modificado_por
         ]);
         $count++;
     }

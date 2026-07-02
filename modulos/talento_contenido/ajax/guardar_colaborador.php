@@ -49,8 +49,8 @@ try {
             throw new Exception("La imagen excede el tamaño máximo permitido de 50MB.");
         }
 
-        // Crear carpeta destino si no existe
-        $target_dir = "../../../../talento.batidospitaya/uploads/equipo/";
+        // Ruta absoluta real en Hostinger para talento.batidospitaya.com
+        $target_dir = '/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/equipo/';
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0755, true);
         }
@@ -80,8 +80,8 @@ try {
 
         if ($foto_subida) {
             // Eliminar foto anterior física si existe
-            if ($foto_anterior && file_exists("../../../../talento.batidospitaya/uploads/equipo/" . $foto_anterior)) {
-                @unlink("../../../../talento.batidospitaya/uploads/equipo/" . $foto_anterior);
+            if ($foto_anterior && file_exists('/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/equipo/' . $foto_anterior)) {
+                @unlink('/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/equipo/' . $foto_anterior);
             }
             // Actualizar con nueva foto
             $stmt = $conn->prepare("UPDATE colaboradores_talento SET nombre = :nombre, cargo = :cargo, departamento = :departamento, testimonio = :testimonio, orden = :orden, activo = :activo, foto = :foto WHERE id = :id");
@@ -115,8 +115,8 @@ try {
 
 } catch (Exception $e) {
     // Si falló el registro pero se subió la foto nueva, borrarla para no dejar basura
-    if (isset($foto_subida) && $foto_subida && file_exists("../../../../talento.batidospitaya/uploads/equipo/" . $foto_subida)) {
-        @unlink("../../../../talento.batidospitaya/uploads/equipo/" . $foto_subida);
+    if (isset($foto_subida) && $foto_subida && file_exists('/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/equipo/' . $foto_subida)) {
+        @unlink('/home/u839374897/domains/talento.batidospitaya.com/public_html/uploads/equipo/' . $foto_subida);
     }
     echo json_encode([
         'success' => false,

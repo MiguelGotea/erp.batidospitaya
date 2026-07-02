@@ -743,10 +743,14 @@ function renderizarFotosGaleria(fotos) {
     fotos.forEach(foto => {
         const col = document.createElement('div');
         col.className = 'col-6 col-md-3';
+        col.dataset.fotoId = foto.id;  // Necesario para Sortable
         const fotoUrl = `https://talento.batidospitaya.com/uploads/noticias/galeria/${foto.ruta_foto}`;
         
         col.innerHTML = `
-            <div class="galeria-item-card">
+            <div class="galeria-item-card" style="cursor: grab;">
+                <div class="galeria-drag-handle" title="Arrastra para reordenar" style="position:absolute; top:6px; left:6px; background:rgba(0,0,0,0.45); color:#fff; border-radius:4px; padding:2px 5px; font-size:0.75rem; z-index:2; cursor:grab;">
+                    <i class="bi bi-grip-vertical"></i>
+                </div>
                 <img src="${fotoUrl}" class="galeria-item-img" alt="Foto galería">
                 <button class="galeria-item-delete" onclick="eliminarFotoGaleria(${foto.id})" title="Eliminar foto">
                     <i class="bi bi-trash-fill"></i>
@@ -755,6 +759,38 @@ function renderizarFotosGaleria(fotos) {
         `;
         container.appendChild(col);
     });
+
+    // Inicializar SortableJS si está disponible
+    if (typeof Sortable !== 'undefined') {
+        if (container._sortableInstance) {
+            container._sortableInstance.destroy();
+        }
+        container._sortableInstance = new Sortable(container, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            handle: '.galeria-drag-handle',
+            onEnd: async function () {
+                // Recopilar nuevo orden
+                const cols = container.querySelectorAll('[data-foto-id]');
+                const nuevoOrden = Array.from(cols).map(c => parseInt(c.dataset.fotoId));
+
+                try {
+                    const res = await fetch('ajax/reordenar_galeria.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orden: nuevoOrden })
+                    });
+                    const data = await res.json();
+                    if (!data.success) {
+                        console.warn('No se pudo guardar el orden:', data.message);
+                    }
+                } catch (err) {
+                    console.error('Error al reordenar:', err);
+                }
+            }
+        });
+    }
 }
 
 async function subirFotoGaleriaDirecto() {

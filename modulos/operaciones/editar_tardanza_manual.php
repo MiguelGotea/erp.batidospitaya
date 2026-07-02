@@ -82,7 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_tardanza'])) {
             // No Válido o Pendiente → revertir si la marcación fue ajustada previamente
             revertirAjusteMarcacionPorFecha(
                 $tardanzaExistente['cod_operario'],
-                $tardanzaExistente['fecha_tardanza']
+                $tardanzaExistente['fecha_tardanza'],
+                $tardanzaExistente['cod_sucursal']
             );
         }
 
@@ -184,24 +185,40 @@ function ajustarMarcacionPorTardanzaManual($codOperario, $fechaTardanza, $codSuc
 }
 
 /**
- * Revierte el ajuste de marcación buscando por operario y fecha.
+ * Revierte el ajuste de marcación buscando por operario, fecha y sucursal.
  * Solo actúa si la marcación fue ajustada por tardanza (id_tardanza_ajuste IS NOT NULL).
  * No revierte ajustes originados en faltas (esos solo tienen id_falta_ajuste).
+ * El parámetro $codSucursal filtra correctamente cuando el colaborador tiene
+ * doble jornada el mismo día en dos sucursales distintas.
  */
-function revertirAjusteMarcacionPorFecha($codOperario, $fechaTardanza)
+function revertirAjusteMarcacionPorFecha($codOperario, $fechaTardanza, $codSucursal = null)
 {
     global $conn;
 
-    $stmt = $conn->prepare("
-        SELECT id, hora_ingreso_original, hora_salida_original
-        FROM marcaciones
-        WHERE CodOperario = ?
-          AND fecha = ?
-          AND ajustado_por_tardanza = 1
-          AND id_tardanza_ajuste IS NOT NULL
-        LIMIT 1
-    ");
-    $stmt->execute([$codOperario, $fechaTardanza]);
+    if ($codSucursal !== null) {
+        $stmt = $conn->prepare("
+            SELECT id, hora_ingreso_original, hora_salida_original
+            FROM marcaciones
+            WHERE CodOperario = ?
+              AND fecha = ?
+              AND sucursal_codigo = ?
+              AND ajustado_por_tardanza = 1
+              AND id_tardanza_ajuste IS NOT NULL
+            LIMIT 1
+        ");
+        $stmt->execute([$codOperario, $fechaTardanza, $codSucursal]);
+    } else {
+        $stmt = $conn->prepare("
+            SELECT id, hora_ingreso_original, hora_salida_original
+            FROM marcaciones
+            WHERE CodOperario = ?
+              AND fecha = ?
+              AND ajustado_por_tardanza = 1
+              AND id_tardanza_ajuste IS NOT NULL
+            LIMIT 1
+        ");
+        $stmt->execute([$codOperario, $fechaTardanza]);
+    }
     $marcacion = $stmt->fetch();
 
     if (!$marcacion) {

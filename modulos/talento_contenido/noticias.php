@@ -130,6 +130,10 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
         .dropzone-area:hover {
             background: rgba(81, 184, 172, 0.08);
         }
+        #modalNoticia .modal-body, #modalGaleria .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
@@ -344,7 +348,8 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
                     </form>
 
                     <!-- Lista de fotos actuales -->
-                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">Fotos en la Galería</h6>
+                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-1">Fotos en la Galería</h6>
+                    <p class="text-muted small mb-3"><i class="bi bi-grip-vertical"></i> Arrastra las fotos para cambiar el orden en que aparecen en el carrusel.</p>
                     <div class="row g-3" id="galeriaFotosContainer">
                         <!-- Renderizado dinámico vía JS -->
                         <div class="col-12 text-center py-4 text-muted">
@@ -370,6 +375,7 @@ $canDelete = tienePermiso('talento_contenido', 'eliminar', $cargoOperario);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
     <script src="js/talento_contenido.js?v=<?php echo mt_rand(1, 10000); ?>"></script>
     <script>
         /**
