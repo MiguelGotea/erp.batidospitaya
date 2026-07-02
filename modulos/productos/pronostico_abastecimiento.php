@@ -20,9 +20,10 @@ if (!tienePermiso('pronostico_abastecimiento', 'vista', $cargoOperario)) {
     exit();
 }
 
-$permisoDatosCompletos = tienePermiso('pronostico_abastecimiento', 'datos_completos', $cargoOperario);
-$permisoAuditoriaPasada = tienePermiso('pronostico_abastecimiento', 'auditoria_pasada', $cargoOperario);
+$permisoDatosCompletos      = tienePermiso('pronostico_abastecimiento', 'datos_completos',      $cargoOperario);
+$permisoAuditoriaPasada     = tienePermiso('pronostico_abastecimiento', 'auditoria_pasada',     $cargoOperario);
 $permisoPronosticoExtendido = tienePermiso('pronostico_abastecimiento', 'pronostico_extendido', $cargoOperario);
+$permisoAlertaAgotamiento   = tienePermiso('pronostico_abastecimiento', 'alerta_agotamiento',   $cargoOperario);
 
 $version = mt_rand(1, 10000);
 
@@ -139,6 +140,57 @@ try {
 
                     </div>
                 </div><!-- /filtros -->
+
+                <?php if ($permisoAlertaAgotamiento): ?>
+                <!-- ══ ALERTAS DE AGOTAMIENTO (siempre visible) ══ -->
+                <div id="aa-card" class="aa-card mb-3">
+
+                    <!-- Header colapsable -->
+                    <div id="aa-header" class="aa-card-header" title="Clic para expandir / colapsar">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b;font-size:1.1rem;"></i>
+                            <span class="fw-bold" style="font-size:0.95rem;">Insumos a agotarse</span>
+                            <span id="aa-header-badge" class="aa-header-count"></span>
+                        </div>
+
+                        <!-- Inputs de parámetros -->
+                        <div class="aa-params d-flex align-items-center gap-2 flex-wrap" onclick="event.stopPropagation()">
+                            <div class="d-flex align-items-center gap-1">
+                                <label class="aa-param-label" for="aa-semDesde">Desde</label>
+                                <input type="number" id="aa-semDesde" class="aa-param-input" style="width:75px" min="1" max="9999">
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <label class="aa-param-label" for="aa-semHasta">Hasta</label>
+                                <input type="number" id="aa-semHasta" class="aa-param-input" style="width:75px" min="1" max="9999">
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <label class="aa-param-label" for="aa-semCorte">Corte</label>
+                                <input type="number" id="aa-semCorte" class="aa-param-input" style="width:75px" min="1" max="9999">
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <label class="aa-param-label" for="aa-crecimiento">ICE&nbsp;%</label>
+                                <input type="number" id="aa-crecimiento" class="aa-param-input" style="width:65px" min="0" max="500" value="15">
+                            </div>
+                            <button id="aa-btn-calcular" class="aa-btn-recalcular">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Recalcular
+                            </button>
+                            <i id="aa-expand-icon" class="bi bi-chevron-down" style="color:#6b7280;font-size:1rem;transition:transform .3s;margin-left:4px;"></i>
+                        </div>
+                    </div>
+
+                    <!-- Cuerpo colapsable -->
+                    <div id="aa-body" class="aa-card-body">
+                        <!-- Spinner -->
+                        <div id="aa-spinner" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:24px;">
+                            <div class="pa-spinner" style="width:28px;height:28px;"></div>
+                            <span class="text-muted" style="font-size:0.9rem;">Analizando stock de todas las sucursales…</span>
+                        </div>
+                        <!-- Tabla de incidencias -->
+                        <div id="aa-tabla-container" style="display:none;"></div>
+                    </div>
+
+                </div><!-- /aa-card -->
+                <?php endif; ?>
 
                 <!-- ══ ESTADO INICIAL ══ -->
                 <div id="pa-panel-inicial" class="pa-empty-state">
@@ -485,9 +537,10 @@ try {
     </div>
 
     <script>
-        window.PA_DATOS_COMPLETOS = <?php echo $permisoDatosCompletos ? 'true' : 'false'; ?>;
-        window.PA_AUDITORIA_PASADA = <?php echo $permisoAuditoriaPasada ? 'true' : 'false'; ?>;
-        window.PA_SEMANA_ACTUAL = <?php echo !empty($semActual) ? $semActual : 'null'; ?>;
+        window.PA_DATOS_COMPLETOS     = <?php echo $permisoDatosCompletos      ? 'true' : 'false'; ?>;
+        window.PA_AUDITORIA_PASADA    = <?php echo $permisoAuditoriaPasada     ? 'true' : 'false'; ?>;
+        window.PA_SEMANA_ACTUAL       = <?php echo !empty($semActual) ? $semActual : 'null'; ?>;
+        window.PA_ALERTA_AGOTAMIENTO  = <?php echo $permisoAlertaAgotamiento   ? 'true' : 'false'; ?>;
     </script>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -498,6 +551,7 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="js/pronostico_charts.js?v=<?php echo $version; ?>"></script>
     <script src="js/pronostico_abastecimiento.js?v=<?php echo $version; ?>"></script>
+    <script src="js/alertas_agotamiento.js?v=<?php echo $version; ?>"></script>
     <script src="/core/assets/js/fab_button.js?v=<?php echo $version; ?>"></script>
 </body>
 
