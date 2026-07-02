@@ -523,6 +523,7 @@ function renderKardexCore(canvas, res, fechaObjetivoPronostico, sk, semDesde, se
                                 let tpe = (context.dataset.despachoTypes && context.dataset.despachoTypes[context.dataIndex] === 'curso') ? 'en curso' : 'proyectados';
                                 extra = ` (+${qty} paq ${tpe})`;
                             }
+                            if (label.startsWith('Existencia real')) label = 'Existencia real';
                             if (label) label += ': ';
                             label += fmtKardex(context.raw, 1) + extra;
                             return label;
@@ -944,6 +945,7 @@ function _finalizarChartKardex(datasets, ctx, chartId, labels) {
                                 let tpe = (context.dataset.despachoTypes && context.dataset.despachoTypes[context.dataIndex] === 'curso') ? 'en curso' : 'proyectados';
                                 extra = ` (+${qty} paq ${tpe})`;
                             }
+                            if (label.startsWith('Existencia real')) label = 'Existencia real';
                             if (label) label += ': ';
                             label += (typeof fmtKardex === 'function' ? fmtKardex(context.raw, 1) : context.raw.toFixed(1)) + extra;
                             return label;
