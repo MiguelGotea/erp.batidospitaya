@@ -927,7 +927,7 @@ try {
                   WHERE crp2.id_receta_producto_global = ppd.Id_receta_producto
               ) = 1
             GROUP BY crp.id_presentacion_producto
-            ORDER BY ppd.id ASC
+            ORDER BY ppd.id DESC
         ");
         $stmtDB->execute(array_values($idsPP));
         foreach ($stmtDB->fetchAll(PDO::FETCH_ASSOC) as $row)
@@ -955,7 +955,7 @@ try {
                       AND pp.id_producto_maestro IS NOT NULL
                 LEFT  JOIN unidad_producto ud ON ud.id = ppd.id_unidad_producto
                 WHERE pp.id IN ($phSin) AND pp.Activo = 'SI'
-                ORDER BY (pp.id = ppd.id) ASC, ppd.id ASC
+                ORDER BY (pp.id = ppd.id) ASC, ppd.id DESC
             ");
             $stmtDA->execute(array_values($sinDF));
             foreach ($stmtDA->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -1002,7 +1002,7 @@ try {
                 WHERE pp.id IN ($phSinC)
                   AND pp.Activo = 'SI'
                 GROUP BY pp.id
-                ORDER BY ppd.id ASC
+                ORDER BY ppd.id DESC
             ");
             $stmtDC->execute(array_values($sinDFC));
             foreach ($stmtDC->fetchAll(PDO::FETCH_ASSOC) as $row) {
